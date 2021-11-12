@@ -1,7 +1,7 @@
 import concurrent
 import functools
 import asyncio
-from typing import Optional, Any, Iterable, TYPE_CHECKING
+from typing import AsyncGenerator, Generator, Optional, Any, Iterable, TYPE_CHECKING, Tuple
 from typing_extensions import Protocol
 from contextlib import contextmanager
 from async_generator import asynccontextmanager
@@ -13,6 +13,7 @@ from libertem.utils.async_utils import (
 
 if TYPE_CHECKING:
     from libertem.udf.base import UDFParams
+    from libertem.io.dataset.base import Partition
 
 
 class ExecutorError(Exception):
@@ -27,7 +28,7 @@ class JobCancelledError(Exception):
 
 
 class Environment:
-    def __init__(self, threads_per_worker):
+    def __init__(self, threads_per_worker: Optional[int]):
         self._threads_per_worker = threads_per_worker
 
     @property
@@ -59,6 +60,8 @@ class Environment:
 
 
 class TaskProtocol(Protocol):
+    partition: "Partition"
+
     def __call__(self, params: "UDFParams", env: Environment):
         pass
 
@@ -93,7 +96,7 @@ class JobExecutor:
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-    ):
+    ) -> Generator[Tuple[Any, TaskProtocol], None, None]:
         """
         Run the tasks with the given parameters
 
@@ -232,7 +235,12 @@ class JobExecutor:
 
 
 class AsyncJobExecutor:
-    async def run_tasks(self, tasks, params_handle, cancel_id):
+    async def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        cancel_id: Any,
+    ) -> AsyncGenerator[Tuple[Any, TaskProtocol], None]:
         """
         Run a number of Tasks, yielding (result, task) tuples
         """
@@ -345,7 +353,12 @@ class AsyncAdapter(AsyncJobExecutor):
             )
             await sync_to_async(exit_fn, self._pool)
 
-    async def run_tasks(self, tasks, params_handle, cancel_id):
+    async def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        cancel_id: Any,
+    ):
         """
         run a number of Tasks
         """

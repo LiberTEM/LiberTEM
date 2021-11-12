@@ -404,7 +404,7 @@ def test_udf_pickle(lt_ctx):
     pixelsum.set_backend("numpy")
     pixelsum.set_meta(meta)
     pixelsum.init_result_buffers()
-    pixelsum.allocate_for_part(partition, None)
+    pixelsum.allocate_for_part(partition.slice, None)
     pickle.loads(pickle.dumps(pixelsum))
 
 

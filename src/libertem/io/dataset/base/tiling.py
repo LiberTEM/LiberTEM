@@ -1,12 +1,16 @@
 import logging
+import typing
 
 import numba
 from numba.typed import List as NumbaList
 import numpy as np
 
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
+from libertem.common.slice import Slice
 from .roi import _roi_to_indices
 
+if typing.TYPE_CHECKING:
+    import numpy.typing as nt
 
 log = logging.getLogger(__name__)
 
@@ -264,7 +268,10 @@ default_get_read_ranges = make_get_read_ranges()
 
 
 class DataTile(np.ndarray):
-    def __new__(cls, input_array, tile_slice, scheme_idx):
+    tile_slice: Slice
+    scheme_idx: int
+
+    def __new__(cls, input_array: "nt.ArrayLike", tile_slice: Slice, scheme_idx: int):
         obj = np.asarray(input_array).view(cls)
         obj.tile_slice = tile_slice
         obj.scheme_idx = scheme_idx

@@ -5,6 +5,14 @@ import socket
 log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'."
 
 
+_preload_help = (
+    'Module, file or code to preload on workers, for example HDF5 plugins. '
+    'Can be specified multiple times. See also '
+    'https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts '
+    'and https://libertem.github.io/LiberTEM/reference/dataset.html#hdf5.'
+)
+
+
 @click.command()
 @click.argument('scheduler', default="tcp://localhost:8786", type=str)
 @click.option('-k', '--kind', help='Worker kind. Currently only "dask" is implemented.',
@@ -22,7 +30,10 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
               type=str)
 @click.option('-l', '--log-level', help=f"set logging level. Default is 'info'. {log_values}",
               default='INFO')
-def main(kind, scheduler, local_directory, n_cpus, cudas, has_cupy, name, log_level):
+@click.option('--preload', help=_preload_help,
+              default=None, type=str, multiple=True)
+def main(kind, scheduler, local_directory, n_cpus, cudas,
+         has_cupy, name, log_level, preload: tuple):
     from libertem.utils.threading import set_num_threads_env
     with set_num_threads_env(1):
         from libertem.utils.devices import detect
@@ -66,5 +77,6 @@ def main(kind, scheduler, local_directory, n_cpus, cudas, has_cupy, name, log_le
             cudas=cudas,
             has_cupy=has_cupy,
             name=name,
-            log_level=numeric_level
+            log_level=numeric_level,
+            preload=preload
         )

@@ -1,6 +1,8 @@
 import click
 import logging
 
+from libertem.executor.cli import _preload_help
+
 log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'."
 
 
@@ -31,7 +33,10 @@ def get_token(token_path):
 @click.option('-t', '--token-path',
               help="path to a file containing a token for authenticating API requests",
               type=click.Path(exists=True))
-def main(port, local_directory, browser, log_level, host="localhost", token_path=None):
+@click.option('--preload', help=_preload_help, default=(), type=str, multiple=True)
+def main(
+        port, local_directory, browser, log_level, host="localhost",
+        token_path=None, preload: tuple = ()):
     from libertem.utils.threading import set_num_threads_env
     token = get_token(token_path)
     if token is None and host != 'localhost':
@@ -45,4 +50,4 @@ def main(port, local_directory, browser, log_level, host="localhost", token_path
         numeric_level = getattr(logging, log_level.upper(), None)
         if not isinstance(numeric_level, int):
             raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
-        run(host, port, browser, local_directory, numeric_level, token)
+        run(host, port, browser, local_directory, numeric_level, token, preload)

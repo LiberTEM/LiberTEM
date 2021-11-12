@@ -44,6 +44,13 @@ There are a few command line options available::
       -t, --token-path PATH           path to a file containing a token for
                                       authenticating API requests
 
+        --preload TEXT                Module to preload on workers, for example
+                                      HDF5 plugins. Can be specified multiple
+                                      times. See also
+                                      https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
+                                      and
+                                      https://libertem.github.io/LiberTEM/reference/dataset.html#hdf5.
+
       --help                          Show this message and exit.
 
 .. versionadded:: 0.4.0
@@ -52,6 +59,9 @@ There are a few command line options available::
     :code:`-l, --log-level` was added.
 .. versionadded:: 0.8.0
     :code:`-t, --token-path` was added and :code:`-h, --host` was re-enabled.
+.. versionadded:: 0.9.0.dev0
+    :code:`--preload` was added.
+
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`
 or our :ref:`jupyter integration`, if you already have JupyterHub or JupyterLab
@@ -100,21 +110,37 @@ There are a few command line options available::
     Usage: libertem-worker [OPTIONS] [SCHEDULER]
 
     Options:
-    -k, --kind TEXT             Worker kind. Currently only "dask" is
-                                implemented.
-    -d, --local-directory TEXT  local directory to manage temporary files
-    -c, --n-cpus INTEGER        Number of CPUs to use, defaults to number of CPU
-                                cores without hyperthreading.
-    -u, --cudas TEXT            List of CUDA device IDs to use, defaults to all
-                                detected CUDA devices. Use "" to deactivate
-                                CUDA.
-    -n, --name TEXT             Name of the cluster node, defaults to host name
-    -l, --log-level TEXT        set logging level. Default is 'info'. Allowed
-                                values are 'critical', 'error', 'warning',
-                                'info', 'debug'.
-    --help                      Show this message and exit.
+      -k, --kind TEXT             Worker kind. Currently only "dask" is
+                                  implemented.
+
+      -d, --local-directory TEXT  local directory to manage temporary files
+      -c, --n-cpus INTEGER        Number of CPUs to use, defaults to number of CPU
+                                  cores without hyperthreading.
+
+      -u, --cudas TEXT            List of CUDA device IDs to use, defaults to all
+                                  detected CUDA devices. Use "" to deactivate
+                                  CUDA.
+
+      -p, --has-cupy BOOLEAN      Activate CuPy integration, defaults to detection
+                                  of installed CuPy module.
+
+      -n, --name TEXT             Name of the cluster node, defaults to host name
+      -l, --log-level TEXT        set logging level. Default is 'info'. Allowed
+                                  values are 'critical', 'error', 'warning',
+                                  'info', 'debug'.
+
+      --preload TEXT              Module, file or code to preload on workers, for
+                                  example HDF5 plugins. Can be specified multiple
+                                  times. See also
+                                  https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
+                                  and
+                                  https://libertem.github.io/LiberTEM/reference/dataset.html#hdf5.
+
+      --help                      Show this message and exit.
 
 .. versionadded:: 0.6.0
+.. versionadded:: 0.9.0.dev0
+    :code:`--preload` was added.
 
 For a cluster setup, you can run the scheduler on the appropriate network interface and
 run workers on all cluster nodes to connect to the scheduler.

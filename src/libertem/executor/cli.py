@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import click
 import logging
 import socket
@@ -5,11 +7,13 @@ import socket
 log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'."
 
 
-_preload_help = (
+preload_help = (
     'Module, file or code to preload on workers, for example HDF5 plugins. '
     'Can be specified multiple times. See also '
     'https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts '
-    'and https://libertem.github.io/LiberTEM/reference/dataset.html#hdf5.'
+    'for the behavior with Dask workers (current default)'
+    'and https://libertem.github.io/LiberTEM/reference/dataset.html#hdf5 '
+    'for information on loading HDF5 files that depend on custom filters.'
 )
 
 
@@ -30,7 +34,7 @@ _preload_help = (
               type=str)
 @click.option('-l', '--log-level', help=f"set logging level. Default is 'info'. {log_values}",
               default='INFO')
-@click.option('--preload', help=_preload_help,
+@click.option('--preload', help=preload_help,
               default=None, type=str, multiple=True)
 def main(kind, scheduler, local_directory, n_cpus, cudas,
          has_cupy, name, log_level, preload: Tuple[str]):

@@ -109,7 +109,7 @@ def make_app(event_registry, shared_state, token=None, preload: tuple = ()):
         (r"/api/shutdown/", ShutdownHandler, common_kwargs),
         (r"/api/config/", ConfigHandler, common_kwargs),
         (r"/api/config/cluster/", ClusterDetailHandler, common_kwargs),
-        (r"/api/config/connection/", ConnectHandler, {**common_kwargs, **{'preload': preload}}),
+        (r"/api/config/connection/", ConnectHandler, {**common_kwargs, 'preload': preload}),
     ], **settings)
     app = check_token_auth_middleware(app, token)
     return app

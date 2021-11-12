@@ -202,6 +202,7 @@ class H5DataSet(DataSet):
     necessary imports as :code:`--preload` arguments to the launch command,
     for example with :code:`libertem-server --preload hdf5plugin` resp.
     :code:`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`.
+    :code:`--preload` can be specified multiple times.
 
     See the `h5py documentation on filter pipelines
     <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_ for

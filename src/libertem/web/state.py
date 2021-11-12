@@ -310,6 +310,7 @@ class SharedState:
 
         self.dataset_for_job = {}
         self.local_directory = "dask-worker-space"
+        self.preload = ()
 
     def get_local_cores(self, default=2):
         cores = psutil.cpu_count(logical=False)
@@ -358,3 +359,9 @@ class SharedState:
             # '/' works on Windows, too.
             "separator": '/'
         }
+
+    def set_preload(self, preload: typing.Tuple[str]):
+        self.preload = preload
+
+    def get_preload(self) -> typing.Tuple[str]:
+        return self.preload

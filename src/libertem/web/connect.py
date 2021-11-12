@@ -14,10 +14,9 @@ log = logging.getLogger(__name__)
 
 
 class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
-    def initialize(self, state: SharedState, event_registry, preload: tuple):
+    def initialize(self, state: SharedState, event_registry):
         self.state = state
         self.event_registry = event_registry
-        self._preload = preload
 
     async def get(self):
         log.info("ConnectHandler.get")
@@ -61,7 +60,7 @@ class ConnectHandler(ResultHandlerMixin, tornado.web.RequestHandler):
             devices["cudas"] = connection.get("cudas", [])
 
             sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
-                spec=cluster_spec(**devices, options=options, preload=self._preload)
+                spec=cluster_spec(**devices, options=options, preload=self.state.get_preload())
             ), pool=pool)
         else:
             raise ValueError("unknown connection type")

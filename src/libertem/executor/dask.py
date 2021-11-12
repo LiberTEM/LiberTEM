@@ -3,7 +3,7 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional
+from typing import Iterable, Any, Optional, Tuple
 
 from dask import distributed as dd
 
@@ -36,7 +36,7 @@ def worker_setup(resource, device):
 
 def cluster_spec(
         cpus, cudas, has_cupy, name='default', num_service=1, options=None,
-        preload: Optional[tuple] = None):
+        preload: Optional[Tuple[str]] = None):
 
     if options is None:
         options = {}
@@ -446,7 +446,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
     @classmethod
     def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None,
-            preload: Optional[tuple] = None):
+            preload: Optional[Tuple[str]] = None):
         """
         Spin up a local dask cluster
 
@@ -519,7 +519,8 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
 
-def cli_worker(scheduler, local_directory, cpus, cudas, has_cupy, name, log_level, preload: tuple):
+def cli_worker(
+        scheduler, local_directory, cpus, cudas, has_cupy, name, log_level, preload: Tuple[str]):
     import asyncio
 
     options = {

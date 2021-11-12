@@ -77,7 +77,7 @@ def check_token_auth_middleware(app, expected_token):
     return _middleware
 
 
-def make_app(event_registry, shared_state, token=None):
+def make_app(event_registry, shared_state, token=None, preload: tuple = ()):
     """
     Returns the fully assembled web API app, which is a
     callable(request) (not the "raw" tornado Application
@@ -109,7 +109,7 @@ def make_app(event_registry, shared_state, token=None):
         (r"/api/shutdown/", ShutdownHandler, common_kwargs),
         (r"/api/config/", ConfigHandler, common_kwargs),
         (r"/api/config/cluster/", ClusterDetailHandler, common_kwargs),
-        (r"/api/config/connection/", ConnectHandler, common_kwargs),
+        (r"/api/config/connection/", ConnectHandler, {**common_kwargs, **{'preload': preload}}),
     ], **settings)
     app = check_token_auth_middleware(app, token)
     return app
@@ -147,13 +147,13 @@ def sig_exit(signum, frame, shared_state):
     )
 
 
-def main(host, port, numeric_level, event_registry, shared_state, token):
+def main(host, port, numeric_level, event_registry, shared_state, token, preload):
     logging.basicConfig(
         level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
     log.info(f"listening on {host}:{port}")
-    app = make_app(event_registry, shared_state, token)
+    app = make_app(event_registry, shared_state, token, preload)
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(address=host, port=port)
     return http_server
@@ -196,13 +196,13 @@ def handle_signal(shared_state):
         signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
 
 
-def run(host, port, browser, local_directory, numeric_level, token):
+def run(host, port, browser, local_directory, numeric_level, token, preload):
     # shared state:
     event_registry = EventRegistry()
     shared_state = SharedState()
 
     shared_state.set_local_directory(local_directory)
-    main(host, port, numeric_level, event_registry, shared_state, token)
+    main(host, port, numeric_level, event_registry, shared_state, token, preload)
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()

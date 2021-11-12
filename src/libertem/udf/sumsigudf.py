@@ -27,6 +27,9 @@ class SumSigUDF(UDF):
         ""
         self.results.intensity[:] += np.sum(tile, axis=tuple(range(1, len(tile.shape))))
 
+    def merge(self, dest, src):
+        dest.intensity += src.intensity
+
 
 def run_sumsig(ctx, dataset):
     udf = SumSigUDF()

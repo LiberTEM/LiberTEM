@@ -192,19 +192,19 @@ class DaskDataSet(DataSet):
         if any([len(array.chunks[c]) > 1 for c in sig_dim_idxs]):
             original_n_chunks = [len(c) for c in array.chunks]
             array = array.rechunk({idx: -1 for idx in sig_dim_idxs})
-            log.info('Merging sig dim chunks as LiberTEM does not '
-                     'support paritioning along the sig axes. '
-                     f'Original n_blocks: {original_n_chunks}. '
-                     f'New n_blocks: {[len(c) for c in array.chunks]}.')
+            log.warning('Merging sig dim chunks as LiberTEM does not '
+                        'support paritioning along the sig axes. '
+                        f'Original n_blocks: {original_n_chunks}. '
+                        f'New n_blocks: {[len(c) for c in array.chunks]}.')
         # Warn if there is no nav_dim chunking
         n_nav_chunks = [len(dim_chunking) for dim_chunking in array.chunks[:-sig_dims]]
         if set(n_nav_chunks) == {1}:
-            log.info('Dask array is not chunked in navigation dimensions, '
-                     'cannot split into nav-partitions without loading the '
-                     'whole dataset on each worker. '
-                     f'Array shape: {array.shape}. '
-                     f'Chunking: {array.chunks}. '
-                     f'array size {array.nbytes / 1e6} MiB.')
+            log.warning('Dask array is not chunked in navigation dimensions, '
+                        'cannot split into nav-partitions without loading the '
+                        'whole dataset on each worker. '
+                        f'Array shape: {array.shape}. '
+                        f'Chunking: {array.chunks}. '
+                        f'array size {array.nbytes / 1e6} MiB.')
             # If we are here there is nothing else to do.
             return array
         # Orient the nav dimensions so that the zeroth dimension is
@@ -217,13 +217,13 @@ class DaskDataSet(DataSet):
                 original_shape = array.shape
                 original_n_chunks = [len(c) for c in array.chunks]
                 array = da.transpose(array, axes=sort_order)
-                log.info('Re-ordered nav_dimensions to improve partitioning, '
-                         'create the dataset with preserve_dimensions=True '
-                         'to suppress this behaviour. '
-                         f'Original shape: {original_shape} with '
-                         f'n_blocks: {original_n_chunks}. '
-                         f'New shape: {array.shape} with '
-                         f'n_blocks: {[len(c) for c in array.chunks]}.')
+                log.warning('Re-ordered nav_dimensions to improve partitioning, '
+                            'create the dataset with preserve_dimensions=True '
+                            'to suppress this behaviour. '
+                            f'Original shape: {original_shape} with '
+                            f'n_blocks: {original_n_chunks}. '
+                            f'New shape: {array.shape} with '
+                            f'n_blocks: {[len(c) for c in array.chunks]}.')
         # Handle chunked nav_dimensions
         # We can allow nav_dimensions to be fully chunked (one chunk per element)
         # up-to-but-not-including the first non-fully chunked dimension. After this point
@@ -242,11 +242,11 @@ class DaskDataSet(DataSet):
         if nav_rechunk_dict:
             original_n_chunks = [len(c) for c in array.chunks]
             array = array.rechunk(nav_rechunk_dict)
-            log.info('Merging nav dimension chunks according to scheme '
-                     f'{nav_rechunk_dict} as we cannot maintain continuity '
-                     'of frame indexing in the flattened navigation dimension. '
-                     f'Original n_blocks: {original_n_chunks}. '
-                     f'New n_blocks: {[len(c) for c in array.chunks]}.')
+            log.warning('Merging nav dimension chunks according to scheme '
+                        f'{nav_rechunk_dict} as we cannot maintain continuity '
+                        'of frame indexing in the flattened navigation dimension. '
+                        f'Original n_blocks: {original_n_chunks}. '
+                        f'New n_blocks: {[len(c) for c in array.chunks]}.')
         # Merge remaining chunks maintaining C-ordering until we reach a target chunk sizes
         # or a minmum number of partitions corresponding to the number of workers
         new_chunking, min_size, max_size = merge_until_target(array, self._min_size,
@@ -256,10 +256,10 @@ class DaskDataSet(DataSet):
             chunksizes = get_chunksizes(array)
             orig_min, orig_max = chunksizes.min(), chunksizes.max()
             array = array.rechunk(new_chunking)
-            log.info('Applying re-chunking to increase minimum partition size. '
-                     f'n_blocks: {original_n_chunks} => {[len(c) for c in array.chunks]}. '
-                     f'Min chunk size {orig_min / 1e6:.1f} => {min_size / 1e6:.1f} MiB , '
-                     f'Max chunk size {orig_max / 1e6:.1f} => {max_size / 1e6:.1f} MiB.')
+            log.warning('Applying re-chunking to increase minimum partition size. '
+                        f'n_blocks: {original_n_chunks} => {[len(c) for c in array.chunks]}. '
+                        f'Min chunk size {orig_min / 1e6:.1f} => {min_size / 1e6:.1f} MiB , '
+                        f'Max chunk size {orig_max / 1e6:.1f} => {max_size / 1e6:.1f} MiB.')
         return array
 
     def _check_array(self, array, sig_dims):

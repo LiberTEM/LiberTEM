@@ -44,8 +44,11 @@ class FakeDaskMMapFile(MMapFile):
     def open(self):
         # scheduler='threads' ensures that upstream computation for this array
         # chunk happens completely on this worker and not elsewhere
-        computed = self.desc._array.compute(scheduler='threads')
-        self._arr = np.ascontiguousarray(computed)
+        self._arr = self.desc._array.compute(scheduler='threads')
+        # need to be aware that Dask can create Fortran-ordered arrays
+        # when .compute is called, which can lead to downstream issues when
+        # np.frombuffer is called on self._mmap in the backend. Currently it seems
+        # like np.frombuffer cannot handle Fortran ordering and throws a ValueError
         self._mmap = self._arr
         return self
 

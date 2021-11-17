@@ -44,7 +44,8 @@ class FakeDaskMMapFile(MMapFile):
     def open(self):
         # scheduler='threads' ensures that upstream computation for this array
         # chunk happens completely on this worker and not elsewhere
-        self._arr = self.desc._array.compute(scheduler='threads')
+        computed = self.desc._array.compute(scheduler='threads')
+        self._arr = np.ascontiguousarray(computed)
         self._mmap = self._arr
         return self
 

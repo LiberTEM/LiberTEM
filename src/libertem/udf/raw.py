@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.udf import UDF
 
 
@@ -30,9 +31,9 @@ class PickUDF(UDF):
         if self.meta.roi is not None:
             navsize = np.count_nonzero(self.meta.roi)
         else:
-            navsize = np.prod(self.meta.dataset_shape.nav, dtype=np.int64)
+            navsize = prod(self.meta.dataset_shape.nav)
         warn_limit = 2**28
-        loaded_size = np.prod(sigshape, dtype=np.int64) * navsize * np.dtype(dtype).itemsize
+        loaded_size = prod(sigshape) * navsize * np.dtype(dtype).itemsize
         if loaded_size > warn_limit:
             log.warning("PickUDF is loading %s bytes, exceeding warning limit %s. "
                 "Consider using or implementing an UDF to process data on the worker "

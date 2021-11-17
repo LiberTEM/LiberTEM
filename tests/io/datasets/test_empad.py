@@ -156,6 +156,27 @@ def test_read(default_empad):
     assert tuple(t.tile_slice.shape) == (16, 128, 128)
 
 
+def test_scheme_too_large(default_empad):
+    partitions = default_empad.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_empad.shape.sig),
+        sig_dims=default_empad.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_empad.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_empad.shape.sig)
+
+
 def test_pickle_is_small(default_empad):
     pickled = pickle.dumps(default_empad)
     pickle.loads(pickled)

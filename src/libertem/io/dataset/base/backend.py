@@ -69,7 +69,7 @@ class IOBackendImpl:
     def need_copy(
         self, decoder, roi, native_dtype, read_dtype, tiling_scheme=None, fileset=None,
         sync_offset=0, corrections=None,
-    ):
+    ) -> bool:
         # checking conditions in which "straight mmap" is not possible
         # straight mmap means our dataset can just return views into the underlying mmap object
         # as tiles and use them as they are in the UDFs

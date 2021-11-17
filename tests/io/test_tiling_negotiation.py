@@ -1,4 +1,5 @@
 import sparse
+import pytest
 import numpy as np
 
 from libertem.corrections import CorrectionSet
@@ -81,7 +82,13 @@ def test_get_scheme_tile(default_raw):
     neg = Negotiator()
     p = next(default_raw.get_partitions())
     udf = TilingUDFBestFit()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        dataset=default_raw,
+        approx_partition_shape=p.shape,
+        read_dtype=np.float32,
+        roi=None
+    )
     assert scheme.shape.sig.dims == 2
     print(neg._get_udf_size_pref(udf))
     print(scheme._debug)
@@ -93,7 +100,13 @@ def test_get_scheme_frame(default_raw):
     neg = Negotiator()
     p = next(default_raw.get_partitions())
     udf = TilingUDFFrame()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        dataset=default_raw,
+        approx_partition_shape=p.shape,
+        read_dtype=np.float32,
+        roi=None
+    )
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (16, 128, 128)
 
@@ -102,7 +115,13 @@ def test_get_scheme_partition(default_raw):
     neg = Negotiator()
     p = next(default_raw.get_partitions())
     udf = TilingUDFPartition()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        dataset=default_raw,
+        approx_partition_shape=p.shape,
+        read_dtype=np.float32,
+        roi=None
+    )
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (128, 128, 128)
 
@@ -121,11 +140,22 @@ def test_get_scheme_upper_size_1():
     neg = Negotiator()
     p = next(dataset.get_partitions())
     udf = TilingUDFBestFit()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        dataset=dataset,
+        approx_partition_shape=p.shape,
+        read_dtype=np.float32,
+        roi=None
+    )
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (65, 28, 144)
 
 
+@pytest.mark.xfail(
+    reason="With global TilingScheme we can't handle this as before,"
+           " will be fixed with #382",
+    raises=AssertionError,
+)
 def test_get_scheme_upper_size_roi():
     """
     Confirm that a small ROI will not be split
@@ -147,7 +177,13 @@ def test_get_scheme_upper_size_roi():
     neg = Negotiator()
     p = next(dataset.get_partitions())
     udf = TilingUDFBestFit()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=roi)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        approx_partition_shape=p.shape,
+        dataset=dataset,
+        read_dtype=np.float32,
+        roi=roi
+    )
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (3, 144, 144)
 
@@ -167,7 +203,13 @@ def test_get_scheme_upper_size_2():
     neg = Negotiator()
     p = next(dataset.get_partitions())
     udf = TilingUDFBestFit()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        approx_partition_shape=p.shape,
+        dataset=dataset,
+        read_dtype=np.float32,
+        roi=None
+    )
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (124, 8, 264)
 
@@ -207,7 +249,13 @@ def test_limited_depth():
     neg = Negotiator()
     p = next(dataset.get_partitions())
     udf = UDFWithLargeDepth()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        approx_partition_shape=p.shape,
+        dataset=dataset,
+        read_dtype=np.float32,
+        roi=None
+    )
     print(scheme._debug)
     assert scheme._debug["need_decode"]
     assert scheme.shape.sig.dims == 2
@@ -236,7 +284,9 @@ def test_correction_size_overflow():
     corr = CorrectionSet(excluded_pixels=excluded_pixels)
 
     scheme = neg.get_scheme(
-        udfs=[udf], partition=p, read_dtype=np.float32, roi=None,
+        udfs=[udf], approx_partition_shape=p.shape,
+        dataset=dataset,
+        read_dtype=np.float32, roi=None,
         corrections=corr,
     )
     print(scheme._debug)
@@ -258,7 +308,13 @@ def test_depth_max_size_max():
     neg = Negotiator()
     p = next(dataset.get_partitions())
     udf = UDFUnlimitedDepth()
-    scheme = neg.get_scheme(udfs=[udf], partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=[udf],
+        approx_partition_shape=p.shape,
+        dataset=dataset,
+        read_dtype=np.float32,
+        roi=None
+    )
     print(scheme._debug)
     assert not scheme._debug["need_decode"]
     assert scheme.shape.sig.dims == 2
@@ -289,7 +345,13 @@ def test_multi_by_frame_wins():
 
     neg = Negotiator()
     p = next(dataset.get_partitions())
-    scheme = neg.get_scheme(udfs=udfs, partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=udfs,
+        dataset=dataset,
+        approx_partition_shape=p.shape,
+        read_dtype=np.float32,
+        roi=None
+    )
     print(scheme._debug)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (1, 1860, 2048)
@@ -317,7 +379,13 @@ def test_multi_no_by_frame_small_size_wins():
 
     neg = Negotiator()
     p = next(dataset.get_partitions())
-    scheme = neg.get_scheme(udfs=udfs, partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=udfs,
+        dataset=dataset,
+        approx_partition_shape=p.shape,
+        read_dtype=np.float32,
+        roi=None
+    )
     print(scheme._debug)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (17, 930, 16)
@@ -351,7 +419,13 @@ def test_multi_partition_wins():
 
     neg = Negotiator()
     p = next(dataset.get_partitions())
-    scheme = neg.get_scheme(udfs=udfs, partition=p, read_dtype=np.float32, roi=None)
+    scheme = neg.get_scheme(
+        udfs=udfs,
+        approx_partition_shape=p.shape,
+        dataset=dataset,
+        read_dtype=np.float32,
+        roi=None
+    )
     print(scheme._debug)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (32, 1860, 2048)

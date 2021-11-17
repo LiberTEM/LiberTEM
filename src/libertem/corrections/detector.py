@@ -2,6 +2,7 @@ import numpy as np
 import numba
 import sparse
 
+from libertem.common.math import prod
 from libertem.masks import is_sparse
 from libertem.common.numba import (
     numba_ravel_multi_index_multi, numba_unravel_index_multi
@@ -254,7 +255,7 @@ def correct(
             raise ValueError("Invalid arguments: Bot repair_descriptor and excluded_pixels set")
 
     _correct_numba_inplace(
-        buffer=out.reshape((np.prod(nav_shape), np.prod(sig_shape))),
+        buffer=out.reshape((prod(nav_shape), prod(sig_shape))),
         dark_image=dark_image,
         gain_map=gain_map,
         exclude_pixels=repair_descriptor.exclude_flat,
@@ -293,7 +294,7 @@ class RepairDescriptor:
 def correct_dot_masks(masks, gain_map, excluded_pixels=None, allow_empty=False):
     mask_shape = masks.shape
     sig_shape = gain_map.shape
-    masks = masks.reshape((-1, np.prod(sig_shape)))
+    masks = masks.reshape((-1, prod(sig_shape)))
 
     if excluded_pixels is not None:
         if is_sparse(masks):

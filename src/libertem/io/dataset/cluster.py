@@ -4,6 +4,7 @@ from collections import defaultdict
 
 import numpy as np
 
+from libertem.common.math import prod
 from .base import (
     DataSet, BasePartition, DataSetMeta, DataSetException,
     WritablePartition, WritableDataSet
@@ -50,7 +51,7 @@ class ClusterDataSet(WritableDataSet, DataSet):
             shape=structure.shape,
             raw_dtype=np.dtype(structure.dtype),
             sync_offset=0,
-            image_count=int(np.prod(structure.shape.nav)),
+            image_count=int(prod(structure.shape.nav)),
         )
         self._executor = None
 
@@ -93,10 +94,6 @@ class ClusterDataSet(WritableDataSet, DataSet):
 
     @property
     def dtype(self):
-        return self._dtype
-
-    @property
-    def raw_dtype(self):
         return self._dtype
 
     @property

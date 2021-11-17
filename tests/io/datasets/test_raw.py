@@ -77,6 +77,27 @@ def test_read(default_raw):
     assert tuple(t.tile_slice.shape) == (16, 128, 128)
 
 
+def test_scheme_too_large(default_raw):
+    partitions = default_raw.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_raw.shape.sig),
+        sig_dims=default_raw.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_raw.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_raw.shape.sig)
+
+
 def test_comparison(default_raw, default_raw_data, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_raw_data, (-1, *tuple(default_raw.shape.sig)))

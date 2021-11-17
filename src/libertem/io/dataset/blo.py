@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from .base import (
     DataSet, DataSetException, DataSetMeta,
@@ -148,11 +149,11 @@ class BloDataSet(DataSet):
             self._nav_shape = (NY, NX)
         if self._sig_shape is None:
             self._sig_shape = (DP_SZ, DP_SZ)
-        elif int(np.prod(self._sig_shape)) != (DP_SZ * DP_SZ):
+        elif int(prod(self._sig_shape)) != (DP_SZ * DP_SZ):
             raise DataSetException(
                 "sig_shape must be of size: %s" % (DP_SZ * DP_SZ)
             )
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
         self._meta = DataSetMeta(
@@ -180,7 +181,7 @@ class BloDataSet(DataSet):
                     "endianess": "<",
                 },
                 "info": {
-                    "image_count": int(np.prod(ds.shape.nav)),
+                    "image_count": int(prod(ds.shape.nav)),
                     "native_sig_shape": tuple(ds.shape.sig),
                 }
             }

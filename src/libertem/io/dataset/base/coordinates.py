@@ -1,10 +1,11 @@
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import _roi_to_nd_indices
 
 
-def get_coordinates(slice_, ds_shape, roi=None):
+def get_coordinates(slice_: Slice, ds_shape: Shape, roi=None) -> np.ndarray:
     """
     Returns `numpy.ndarray` of coordinates that correspond to the frames in the actual
     navigation space which are part of the current tile or partition.
@@ -28,7 +29,7 @@ def get_coordinates(slice_, ds_shape, roi=None):
     end_idx = o[0] + s[0]
     nav_shape = ds_shape[:-sig_dims]
     if roi is None:
-        flat_nav_shape = tuple((int(np.prod(nav_shape)),))
+        flat_nav_shape = tuple((int(prod(nav_shape)),))
         coordinates = np.stack(
             np.unravel_index(
                 np.ravel_multi_index([np.arange(start_idx, end_idx)], flat_nav_shape),

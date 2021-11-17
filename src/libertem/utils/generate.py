@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
+
+from libertem.common.math import prod
 from libertem.utils import make_cartesian, make_polar, frame_peaks
 import libertem.masks as m
 
@@ -118,7 +120,7 @@ def hologram_frame(amp, phi,
 
 def gradient_data(nav_dims, sig_dims):
     data = np.linspace(
-        start=5, stop=30, num=np.prod(nav_dims) * np.prod(sig_dims), dtype=np.float32
+        start=5, stop=30, num=prod(nav_dims) * prod(sig_dims), dtype=np.float32
     )
     return data.reshape(nav_dims + sig_dims)
 

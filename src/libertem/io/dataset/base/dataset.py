@@ -1,27 +1,36 @@
 import typing
+from typing import Generator, Optional, Tuple
 
 import numpy as np
+from libertem.common.shape import Shape
 
+from libertem.common.math import prod
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.web.messageconverter import MessageConverter
 from libertem.corrections.corrset import CorrectionSet
-from .partition import BasePartition
+from .partition import BasePartition, Partition
+
+if typing.TYPE_CHECKING:
+    from libertem.executor.base import JobExecutor
+    from libertem.io.dataset.base import IOBackend, Decoder, DataSetMeta
+    from numpy import typing as nt
 
 
 class DataSet:
     # The default partition size in bytes
     MAX_PARTITION_SIZE = 512*1024*1024
 
-    def __init__(self, io_backend=None):
+    def __init__(self, io_backend: Optional["IOBackend"] = None):
         self._cores = 1
         self._sync_offset = 0
         self._sync_offset_info = None
         self._image_count = 0
         self._nav_shape_product = 0
         self._io_backend = io_backend
+        self._meta: Optional[DataSetMeta] = None
 
-    def initialize(self, executor):
+    def initialize(self, executor) -> "DataSet":
         """
         Perform possibly expensive initialization, like pre-loading metadata.
 
@@ -38,7 +47,7 @@ class DataSet:
         """
         raise NotImplementedError()
 
-    def set_num_cores(self, cores):
+    def set_num_cores(self, cores: int) -> None:
         self._cores = cores
 
     def get_sync_offset_info(self):
@@ -61,7 +70,7 @@ class DataSet:
             )
         }
 
-    def get_num_partitions(self):
+    def get_num_partitions(self) -> int:
         """
         Returns the number of partitions the dataset should be split into.
 
@@ -71,8 +80,8 @@ class DataSet:
         are created.
         """
         partition_size_float_px = self.MAX_PARTITION_SIZE // 4
-        dataset_size_px = np.prod(self.shape, dtype=np.int64)
-        num = max(self._cores, dataset_size_px // partition_size_float_px)
+        dataset_size_px = prod(self.shape)
+        num: int = max(self._cores, dataset_size_px // partition_size_float_px)
         return num
 
     def get_slices(self):
@@ -85,7 +94,7 @@ class DataSet:
             sync_offset=self._sync_offset,
         )
 
-    def get_partitions(self):
+    def get_partitions(self) -> Generator[Partition, None, None]:
         """
         Return a generator over all Partitions in this DataSet. Should only
         be called on the master node.
@@ -93,28 +102,22 @@ class DataSet:
         raise NotImplementedError()
 
     @property
-    def dtype(self):
+    def dtype(self) -> "nt.DTypeLike":
         """
-        the destination data type
-        """
-        raise NotImplementedError()
-
-    @property
-    def raw_dtype(self):
-        """
-        the underlying data type
+        The "native" data type
+        (either one matching the data on disk, or one that is closest)
         """
         raise NotImplementedError()
 
     @property
-    def shape(self):
+    def shape(self) -> Shape:
         """
         The shape of the DataSet, as it makes sense for the application domain
         (for example, 4D for pixelated STEM)
         """
         raise NotImplementedError()
 
-    def check_valid(self):
+    def check_valid(self) -> bool:
         """
         check validity of the DataSet. this will be executed (after initialize) on a worker node.
         should raise DataSetException in case of errors, return True otherwise.
@@ -122,7 +125,7 @@ class DataSet:
         raise NotImplementedError()
 
     @classmethod
-    def detect_params(cls, path, executor):
+    def detect_params(cls, path: str, executor: "JobExecutor"):
         """
         Guess if path can be opened using this DataSet implementation and
         detect parameters.
@@ -168,7 +171,12 @@ class DataSet:
         """
         return []
 
-    def partition_shape(self, dtype, target_size, min_num_partitions=None):
+    def partition_shape(
+        self,
+        dtype: "nt.DTypeLike",
+        target_size: int,
+        min_num_partitions: Optional[int] = None,
+    ) -> typing.Tuple[int, ...]:
         """
         Calculate partition shape for the given ``target_size``
 
@@ -205,11 +213,11 @@ class DataSet:
         """
         return set()
 
-    def get_cache_key(self):
+    def get_cache_key(self) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def get_default_io_backend(cls):
+    def get_default_io_backend(cls) -> "IOBackend":
         import platform
         if platform.system() == "Windows":
             from libertem.io.dataset.base import BufferedBackend
@@ -224,12 +232,12 @@ class DataSet:
         """
         return ["mmap", "buffered", "direct"]
 
-    def get_io_backend(self):
+    def get_io_backend(self) -> "IOBackend":
         if self._io_backend is None:
             return self.get_default_io_backend()
         return self._io_backend
 
-    def get_correction_data(self):
+    def get_correction_data(self) -> CorrectionSet:
         """
         Correction parameters that are part of this DataSet.
         This should only be called after the DataSet is initialized.
@@ -240,6 +248,51 @@ class DataSet:
             correction parameters that are part of this DataSet
         """
         return CorrectionSet()
+
+    def get_decoder(self) -> Optional["Decoder"]:
+        return None
+
+    def get_base_shape(self, roi: Optional[np.ndarray]) -> Tuple[int, ...]:
+        return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
+
+    def adjust_tileshape(self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray]):
+        """
+        Final veto of the DataSet in the tileshape negotiation process,
+        make sure that corrections are taken into account!
+        """
+        return tileshape
+
+    def need_decode(
+        self,
+        read_dtype: "nt.DTypeLike",
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+    ) -> bool:
+        io_backend = self.get_io_backend().get_impl()
+        return io_backend.need_copy(
+            decoder=self.get_decoder(),
+            roi=roi,
+            native_dtype=self.meta.raw_dtype,
+            read_dtype=read_dtype,
+            sync_offset=self._sync_offset,
+            corrections=corrections,
+        )
+
+    def get_min_sig_size(self) -> int:
+        """
+        minimum signal size, in number of elements
+        """
+        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
+
+    def get_max_io_size(self) -> Optional[int]:
+        """
+        Override this method to implement a custom maximum I/O size (in bytes)
+        """
+        return None
+
+    @property
+    def meta(self) -> Optional["DataSetMeta"]:
+        return self._meta
 
 
 class WritableDataSet:

@@ -5,7 +5,8 @@ import pytest
 
 from libertem.io.dataset.mrc import MRCDataSet
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.base import BufferedBackend
+from libertem.io.dataset.base import BufferedBackend, TilingScheme
+from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.raw import PickUDF
 
@@ -225,3 +226,24 @@ def test_incorrect_sig_shape(lt_ctx):
     assert e.match(
         r"sig_shape must be of size: 1048576"
     )
+
+
+def test_scheme_too_large(default_mrc):
+    partitions = default_mrc.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_mrc.shape.sig),
+        sig_dims=default_mrc.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_mrc.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_mrc.shape.sig)

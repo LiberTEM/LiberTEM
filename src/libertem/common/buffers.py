@@ -1,4 +1,5 @@
-from typing import Iterable
+from typing import Any, Iterable, Optional, Tuple, Union, TYPE_CHECKING
+from typing_extensions import Literal
 import mmap
 import math
 from contextlib import contextmanager
@@ -6,11 +7,20 @@ import collections
 
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common.slice import Slice
 from .backend import get_use_cuda
 
+if TYPE_CHECKING:
+    from numpy import typing as nt
 
-def _alloc_aligned(size, blocksize=4096):
+BufferKind = Literal['nav', 'sig', 'single']
+BufferLocation = Optional[Literal['device']]
+BufferUse = Literal['private', 'result_only']
+BufferSize = Union[int, Tuple[int, ...]]
+
+
+def _alloc_aligned(size: int, blocksize: int = 4096) -> mmap.mmap:
     # round up to (default 4k) blocks:
     blocks = math.ceil(size / blocksize)
 
@@ -26,23 +36,23 @@ def _alloc_aligned(size, blocksize=4096):
     return buf
 
 
-def bytes_aligned(size):
+def bytes_aligned(size: int) -> memoryview:
     buf = _alloc_aligned(size)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
     return memoryview(buf)[:size]
 
 
-def empty_aligned(size, dtype):
-    size_flat = np.prod(size, dtype=np.int64)
+def empty_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
+    size_flat = prod(size)
     dtype = np.dtype(dtype)
     buf = _alloc_aligned(dtype.itemsize * size_flat)
     # _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:
-    npbuf = np.frombuffer(buf, dtype=dtype)[:size_flat]
+    npbuf: np.ndarray = np.frombuffer(buf, dtype=dtype)[:size_flat]
     return npbuf.reshape(size)
 
 
-def zeros_aligned(size, dtype):
-    if dtype == object or np.prod(size, dtype=np.int64) == 0:
+def zeros_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
+    if dtype == object or prod(size) == 0:
         res = np.zeros(size, dtype=dtype)
     else:
         res = empty_aligned(size, dtype)
@@ -50,7 +60,8 @@ def zeros_aligned(size, dtype):
     return res
 
 
-def to_numpy(a):
+# FIXME: type annotation for cupy.ndarray without importing?
+def to_numpy(a: Union[np.ndarray, Any]) -> np.ndarray:
     # .. versionadded:: 0.6.0
     cuda_device = get_use_cuda()
     if isinstance(a, np.ndarray):
@@ -105,7 +116,7 @@ class BufferPool:
 
     @contextmanager
     def zeros(self, size, dtype, alignment=4096):
-        if dtype == object or np.prod(size, dtype=np.int64) == 0:
+        if dtype == object or prod(size) == 0:
             yield np.zeros(size, dtype=dtype)
         else:
             with self.empty(size, dtype, alignment) as res:
@@ -114,7 +125,7 @@ class BufferPool:
 
     @contextmanager
     def empty(self, size, dtype, alignment=4096):
-        size_flat = np.prod(size, dtype=np.int64)
+        size_flat = prod(size)
         dtype = np.dtype(dtype)
         with self.bytes(dtype.itemsize * size_flat, alignment) as buf:
             # self.bytes may give us more memory (for alignment reasons), so
@@ -206,12 +217,12 @@ class BufferWrapper:
 
         .. versionadded:: 0.7.0
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
         self._where = where
-        self._data = None
+        self._data: Optional[np.ndarray] = None
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None
@@ -314,7 +325,7 @@ class BufferWrapper:
         return self._dtype
 
     @property
-    def raw_data(self):
+    def raw_data(self) -> Optional[np.ndarray]:
         """
         Get the raw data underlying this buffer, which is flattened and
         may be even filtered to a ROI
@@ -380,7 +391,7 @@ class BufferWrapper:
         return self._roi_is_zero
 
     def _update_roi_is_zero(self):
-        self._roi_is_zero = np.prod(self._shape) == 0
+        self._roi_is_zero = prod(self._shape) == 0
 
     def _slice_for_partition(self, partition):
         """
@@ -623,7 +634,7 @@ class AuxBufferWrapper(BufferWrapper):
             new_data = self._data[ps]
         buf.set_buffer(new_data, is_global=False)
         buf.set_roi(roi)
-        assert np.prod(new_data.shape) > 0
+        assert prod(new_data.shape) > 0
         assert not buf._data_coords_global
         return buf
 

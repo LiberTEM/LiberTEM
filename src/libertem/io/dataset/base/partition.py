@@ -5,7 +5,8 @@ import numpy as np
 
 from libertem.common import Slice, Shape
 from libertem.corrections import CorrectionSet
-from .tiling import DataTile, TilingScheme
+from .tiling import DataTile
+from .tiling_scheme import TilingScheme
 from .meta import DataSetMeta
 from .fileset import FileSet
 from . import IOBackend
@@ -36,13 +37,21 @@ class Partition:
 
     io_backend
         The I/O backend to use for accessing this partition
+
+    decoder
+        The decoder that needs to be used for decoding this partition's data
     """
     def __init__(
-        self, meta: DataSetMeta, partition_slice: Slice, io_backend: IOBackend,
+        self,
+        meta: DataSetMeta,
+        partition_slice: Slice,
+        io_backend: IOBackend,
+        decoder: Optional[Decoder],
     ):
         self.meta = meta
         self.slice = partition_slice
         self._io_backend = io_backend
+        self._decoder = decoder
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 
@@ -68,9 +77,6 @@ class Partition:
             )
             yield part_slice, start + sync_offset, stop + sync_offset
 
-    def need_decode(self, read_dtype, roi, corrections):
-        raise NotImplementedError()
-
     def set_io_backend(self, backend):
         raise NotImplementedError()
 
@@ -81,9 +87,6 @@ class Partition:
         raise NotImplementedError()
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
-        raise NotImplementedError()
-
-    def get_base_shape(self, roi):
         raise NotImplementedError()
 
     def __repr__(self):
@@ -104,25 +107,6 @@ class Partition:
 
     def get_macrotile(self, dest_dtype="float32", roi=None):
         raise NotImplementedError()
-
-    def adjust_tileshape(self, tileshape, roi):
-        """
-        Final veto of the Partition in the tileshape negotiation process,
-        make sure that corrections are taken into account!
-        """
-        raise NotImplementedError()
-
-    def get_max_io_size(self):
-        """
-        Override this method to implement a custom maximum I/O size
-        """
-        return None
-
-    def get_min_sig_size(self):
-        """
-        minimum signal size, in number of elements
-        """
-        return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
     def get_locations(self):
         raise NotImplementedError()
@@ -160,8 +144,14 @@ class BasePartition(Partition):
         self, meta: DataSetMeta, partition_slice: Slice,
         fileset: FileSet, start_frame: int, num_frames: int,
         io_backend: IOBackend,
+        decoder: Optional[Decoder] = None,
     ):
-        super().__init__(meta=meta, partition_slice=partition_slice, io_backend=io_backend)
+        super().__init__(
+            meta=meta,
+            partition_slice=partition_slice,
+            io_backend=io_backend,
+            decoder=decoder,
+        )
         if start_frame < self.meta.image_count:
             self._fileset = fileset.get_for_range(
                 max(0, start_frame), max(0, start_frame + num_frames - 1)
@@ -175,12 +165,6 @@ class BasePartition(Partition):
     def get_locations(self):
         # Allow using any worker by default
         return None
-
-    def adjust_tileshape(self, tileshape, roi):
-        return tileshape
-
-    def get_base_shape(self, roi):
-        return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
 
     def get_max_io_size(self):
         # delegate to I/O backend by default:
@@ -219,20 +203,6 @@ class BasePartition(Partition):
                 tile_slice=tile_slice,
                 scheme_idx=0,
             )
-
-    def need_decode(self, read_dtype, roi, corrections):
-        io_backend = self.get_io_backend().get_impl()
-        return io_backend.need_copy(
-            decoder=self._get_decoder(),
-            roi=roi,
-            native_dtype=self.meta.raw_dtype,
-            read_dtype=read_dtype,
-            sync_offset=self.meta.sync_offset,
-            corrections=corrections,
-        )
-
-    def _get_decoder(self) -> Optional[Decoder]:
-        return None
 
     def _get_read_ranges(self, tiling_scheme, roi=None):
         return self._fileset.get_read_ranges(
@@ -289,7 +259,7 @@ class BasePartition(Partition):
                 native_dtype=self.meta.raw_dtype,
                 read_dtype=dest_dtype,
                 sync_offset=self.meta.sync_offset,
-                decoder=self._get_decoder(),
+                decoder=self._decoder,
                 corrections=self._corrections,
             )
 

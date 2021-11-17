@@ -3,7 +3,7 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any
+from typing import Iterable, Any, Optional, Tuple
 
 from dask import distributed as dd
 
@@ -34,10 +34,14 @@ def worker_setup(resource, device):
         raise ValueError("Unknown resource %s, use 'CUDA' or 'CPU'", resource)
 
 
-def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=None):
+def cluster_spec(
+        cpus, cudas, has_cupy, name='default', num_service=1, options=None,
+        preload: Optional[Tuple[str]] = None):
 
     if options is None:
         options = {}
+    if preload is None:
+        preload = ()
     if options.get("nthreads") is None:
         options["nthreads"] = 1
     if options.get("silence_logs") is None:
@@ -72,9 +76,10 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
 
     for cpu in cpus:
         cpu_spec = deepcopy(cpu_base_spec)
-        cpu_spec['options']['preload'] = \
-            'from libertem.executor.dask import worker_setup; ' + \
-            f'worker_setup(resource="CPU", device={cpu})'
+        cpu_spec['options']['preload'] = preload + (
+            'from libertem.executor.dask import worker_setup; '
+            + f'worker_setup(resource="CPU", device={cpu})',
+        )
         workers_spec[f'{name}-cpu-{cpu}'] = cpu_spec
 
     for service in range(num_service):
@@ -82,9 +87,10 @@ def cluster_spec(cpus, cudas, has_cupy, name='default', num_service=1, options=N
 
     for cuda in cudas:
         cuda_spec = deepcopy(cuda_base_spec)
-        cuda_spec['options']['preload'] = \
-            'from libertem.executor.dask import worker_setup; ' + \
-            f'worker_setup(resource="CUDA", device={cuda})'
+        cuda_spec['options']['preload'] = preload + (
+            'from libertem.executor.dask import worker_setup; '
+            + f'worker_setup(resource="CUDA", device={cuda})',
+        )
         workers_spec[f'{name}-cuda-{cuda}'] = cuda_spec
 
     return workers_spec
@@ -439,7 +445,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return cls(client=client, is_local=False, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None):
+    def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None,
+            preload: Optional[Tuple[str]] = None):
         """
         Spin up a local dask cluster
 
@@ -460,7 +467,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
 
         if spec is None:
             from libertem.utils.devices import detect
-            spec = cluster_spec(**detect())
+            spec = cluster_spec(**detect(), preload=preload)
         if client_kwargs is None:
             client_kwargs = {}
         if client_kwargs.get('set_as_default') is None:
@@ -512,7 +519,8 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
 
-def cli_worker(scheduler, local_directory, cpus, cudas, has_cupy, name, log_level):
+def cli_worker(
+        scheduler, local_directory, cpus, cudas, has_cupy, name, log_level, preload: Tuple[str]):
     import asyncio
 
     options = {
@@ -521,7 +529,8 @@ def cli_worker(scheduler, local_directory, cpus, cudas, has_cupy, name, log_leve
 
     }
 
-    spec = cluster_spec(cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name, options=options)
+    spec = cluster_spec(
+        cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name, options=options, preload=preload)
 
     async def run(spec):
         workers = []

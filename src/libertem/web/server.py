@@ -196,12 +196,13 @@ def handle_signal(shared_state):
         signal.signal(signal.SIGINT, partial(sig_exit, shared_state=shared_state))
 
 
-def run(host, port, browser, local_directory, numeric_level, token):
+def run(host, port, browser, local_directory, numeric_level, token, preload):
     # shared state:
     event_registry = EventRegistry()
     shared_state = SharedState()
 
     shared_state.set_local_directory(local_directory)
+    shared_state.set_preload(preload)
     main(host, port, numeric_level, event_registry, shared_state, token)
     if browser:
         webbrowser.open(f'http://{host}:{port}')

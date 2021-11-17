@@ -1,4 +1,5 @@
 import functools
+from typing import Optional
 
 import numpy as np
 import sparse
@@ -18,7 +19,8 @@ def factorizations(n, primes):
     while np.any(n > 1):
         zero_modulos = (n[:, np.newaxis] % primes[np.newaxis, :]) == 0
         factorization[zero_modulos] += 1
-        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1)
+        # NumPy is probably faster than common.math.prod here
+        f = np.prod(primes[np.newaxis, :]**zero_modulos, axis=1, dtype=np.int64)
         n = n // f
 
     return factorization
@@ -78,7 +80,13 @@ class CorrectionSet:
         Do not throw an exception if a repair environment for an excluded pixel
         is empty. The pixel is left uncorrected in that case.
     """
-    def __init__(self, dark=None, gain=None, excluded_pixels=None, allow_empty=False):
+    def __init__(
+        self,
+        dark: Optional[np.ndarray] = None,
+        gain: Optional[np.ndarray] = None,
+        excluded_pixels: Optional[sparse.COO] = None,
+        allow_empty: bool = False
+    ):
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
@@ -94,16 +102,16 @@ class CorrectionSet:
                 allow_empty=False
             )
 
-    def get_dark_frame(self):
+    def get_dark_frame(self) -> Optional[np.ndarray]:
         return self._dark
 
-    def get_gain_map(self):
+    def get_gain_map(self) -> Optional[np.ndarray]:
         return self._gain
 
-    def get_excluded_pixels(self):
+    def get_excluded_pixels(self) -> Optional[sparse.COO]:
         return self._excluded_pixels
 
-    def have_corrections(self):
+    def have_corrections(self) -> bool:
         corrs = [
             self.get_dark_frame(),
             self.get_gain_map(),
@@ -111,7 +119,7 @@ class CorrectionSet:
         ]
         return any(c is not None for c in corrs)
 
-    def apply(self, data: np.ndarray, tile_slice: Slice):
+    def apply(self, data: np.ndarray, tile_slice: Slice) -> None:
         """
         Apply corrections in-place to `data`, cropping the
         correction data to the `tile_slice`.

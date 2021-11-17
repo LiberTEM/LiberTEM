@@ -25,6 +25,7 @@
 
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.udf import UDF
 
 
@@ -198,14 +199,14 @@ class HoloReconstructUDF(UDF):
         aperture = self.task_data.aperture
         slice_fft = self.task_data.slice
 
-        fft_frame = self.xp.fft.fft2(frame) / np.prod(frame_size)
+        fft_frame = self.xp.fft.fft2(frame) / prod(frame_size)
         fft_frame = self.xp.roll(fft_frame, sb_pos, axis=(0, 1))
 
         fft_frame = self.xp.fft.fftshift(self.xp.fft.fftshift(fft_frame)[slice_fft])
 
         fft_frame = fft_frame * aperture
 
-        wav = self.xp.fft.ifft2(fft_frame) * np.prod(frame_size)
+        wav = self.xp.fft.ifft2(fft_frame) * prod(frame_size)
         # FIXME check if result buffer with where='device' and export is faster
         # than exporting frame by frame, as implemented now.
         if self.meta.device_class == 'cuda':

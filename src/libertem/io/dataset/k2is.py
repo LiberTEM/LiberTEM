@@ -11,6 +11,7 @@ import numba
 from numba.typed import List
 from ncempy.io import dm
 
+from libertem.common.math import prod
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
@@ -764,11 +765,11 @@ class K2ISDataSet(DataSet):
         self._set_skip_frames_and_nav_shape()
         if self._sig_shape is None:
             self._sig_shape = (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
-        elif int(np.prod(self._sig_shape)) != int(np.prod(
+        elif int(prod(self._sig_shape)) != int(prod(
                     (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
                 )):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(
+                "sig_shape must be of size: %s" % int(prod(
                     (SECTOR_SIZE[0], NUM_SECTORS * SECTOR_SIZE[1])
                 ))
             )
@@ -813,7 +814,7 @@ class K2ISDataSet(DataSet):
         self._native_sync_offset = self._image_count - self._num_frames_w_shutter_active_flag_set
         if self._user_sync_offset is None:
             self._user_sync_offset = self._native_sync_offset
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self._get_sync_offset_info()
         if not self._is_time_series:
             if self._user_sync_offset == self._native_sync_offset:
@@ -997,6 +998,12 @@ class K2ISDataSet(DataSet):
             )
         return sy
 
+    def get_decoder(self) -> Decoder:
+        return K2ISDecoder()
+
+    def get_base_shape(self, roi):
+        return (1, 930, 16)
+
     def _get_fileset(self):
         files = [
             K2ISFile(
@@ -1022,6 +1029,7 @@ class K2ISDataSet(DataSet):
                 start_frame=start,
                 num_frames=stop - start,
                 io_backend=io_backend,
+                decoder=self.get_decoder(),
             )
 
     def __repr__(self):
@@ -1031,9 +1039,6 @@ class K2ISDataSet(DataSet):
 
 
 class K2ISPartition(BasePartition):
-    def _get_decoder(self):
-        return K2ISDecoder()
-
     def validate_tiling_scheme(self, tiling_scheme):
         a = len(tiling_scheme.shape) == 3
         b = tiling_scheme.shape[1] % 930 == 0
@@ -1042,6 +1047,3 @@ class K2ISPartition(BasePartition):
             raise ValueError(
                 "Invalid tiling scheme: needs to be aligned to blocksize (930, 16)"
             )
-
-    def get_base_shape(self, roi):
-        return (1, 930, 16)

@@ -1,4 +1,5 @@
 import contextlib
+from typing import Optional
 import warnings
 import logging
 import time
@@ -6,6 +7,7 @@ import time
 import numpy as np
 import h5py
 
+from libertem.common.math import prod
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.corrections import CorrectionSet
@@ -88,7 +90,7 @@ def _have_contig_chunks(chunks, ds_shape):
     False
     """
     # In other terms:
-    # There exists an index `i` such that `np.prod(chunks[:i]) == 1` and
+    # There exists an index `i` such that `prod(chunks[:i]) == 1` and
     # chunks[i+1:] == ds_shape[i+1:], limited to the nav part of chunks and ds_shape
     #
     nav_shape = tuple(ds_shape.nav)
@@ -97,7 +99,7 @@ def _have_contig_chunks(chunks, ds_shape):
 
     for i in range(nav_dims):
         left = chunks_nav[:i]
-        left_prod = np.prod(left, dtype=np.uint64)
+        left_prod = prod(left)
         if left_prod == 1 and chunks_nav[i + 1:] == nav_shape[i + 1:]:
             return True
     return False
@@ -195,14 +197,16 @@ class H5DataSet(DataSet):
     importing LiberTEM in their main script, for example the library
     `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_.
 
-    If running LiberTEM in a cluster with existing workers (e.g. by running
-    `libertem-worker` or `dask-worker` on nodes), it is recommended to add the
-    necessary imports as `--preload` arguments to the worker launch command,
-    for example with "`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`".
+    For the web GUI or for running LiberTEM in a cluster with existing workers (e.g. by running
+    :code:`libertem-worker` or :code:`dask-worker` on nodes), it is recommended to add the
+    necessary imports as :code:`--preload` arguments to the launch command,
+    for example with :code:`libertem-server --preload hdf5plugin` resp.
+    :code:`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`.
+    :code:`--preload` can be specified multiple times.
 
-    See the following `h5py documentation
+    See the `h5py documentation on filter pipelines
     <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_ for
-    more information on filter pipelines.
+    more information.
     """
     def __init__(self, path, ds_path=None, tileshape=None,
                  target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None):
@@ -378,6 +382,53 @@ class H5DataSet(DataSet):
                 {"name": "datasets", "value": datasets},
             ]
 
+    def get_min_sig_size(self):
+        if self._chunks is not None:
+            return 1024  # allow for tiled processing w/ small-ish chunks
+        # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
+        return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
+
+    def get_max_io_size(self) -> Optional[int]:
+        if self._chunks is not None:
+            # this may result in larger tile depth than necessary, but
+            # it needs to be so big to pass the validation of the Negotiator. The tiles
+            # won't ever be as large as the scheme dictates, anyway.
+            # We limit it here to 256e6 elements, to also keep the chunk cache
+            # usage reasonable:
+            return int(256e6)
+        return None  # use default value from Negotiator
+
+    def get_base_shape(self, roi):
+        if roi is not None:
+            return (1,) + self.shape.sig
+        if self._chunks is not None:
+            sig_chunks = self._chunks[-self.shape.sig.dims:]
+            return (1,) + sig_chunks
+        return (1, 1,) + (self.shape[-1],)
+
+    def adjust_tileshape(self, tileshape, roi):
+        chunks = self._chunks
+        sig_shape = self.shape.sig
+        if roi is not None:
+            return (1,) + sig_shape
+        if chunks is not None and not _have_contig_chunks(chunks, self.shape):
+            sig_chunks = chunks[-sig_shape.dims:]
+            sig_ts = tileshape[-sig_shape.dims:]
+            # if larger signal chunking is requested in the negotiation,
+            # switch to full frames:
+            if any(t > c for t, c in zip(sig_ts, sig_chunks)):
+                # try to keep total tileshape size:
+                tileshape_size = prod(tileshape)
+                depth = max(1, tileshape_size // sig_shape.size)
+                return (depth,) + sig_shape
+            else:
+                # depth needs to be limited to prod(chunks.nav)
+                return _tileshape_for_chunking(chunks, self.shape)
+        return tileshape
+
+    def need_decode(self, roi, read_dtype, corrections):
+        return True
+
     def get_partitions(self):
         ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
         ds_slice = Slice(origin=[0] * len(self.shape), shape=ds_shape)
@@ -406,6 +457,7 @@ class H5DataSet(DataSet):
                 slice_nd=pslice,
                 io_backend=self.get_io_backend(),
                 chunks=self._chunks,
+                decoder=None,
             )
 
     def __repr__(self):
@@ -518,7 +570,7 @@ class H5Partition(Partition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
-    def _get_read_cache_size(self) -> int:
+    def _get_read_cache_size(self) -> float:
         chunks = self._chunks
         if chunks is None:
             return 1*1024*1024
@@ -528,9 +580,11 @@ class H5Partition(Partition):
             import psutil
             mem = psutil.virtual_memory()
             num_cores = psutil.cpu_count(logical=False)
+            available: int = mem.available
             if num_cores is None:
                 num_cores = 2
-            return max(256*1024*1024, mem.available * 0.8 / num_cores)
+            cache_size: float = max(256*1024*1024, available * 0.8 / num_cores)
+            return cache_size
 
     def _get_h5ds(self):
         cache_size = self._get_read_cache_size()
@@ -601,54 +655,8 @@ class H5Partition(Partition):
                 )
                 frames_read += 1
 
-    def get_base_shape(self, roi):
-        if roi is not None:
-            return (1,) + self.shape.sig
-        if self._chunks is not None:
-            sig_chunks = self._chunks[-self.shape.sig.dims:]
-            return (1,) + sig_chunks
-        return (1, 1,) + (self.shape[-1],)
-
-    def get_min_sig_size(self):
-        if self._chunks is not None:
-            return 1024  # allow for tiled processing w/ small-ish chunks
-        # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
-        return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
-
-    def adjust_tileshape(self, tileshape, roi):
-        chunks = self._chunks
-        if roi is not None:
-            return (1,) + self.shape.sig
-        if chunks is not None and not _have_contig_chunks(chunks, self.shape):
-            sig_chunks = chunks[-self.shape.sig.dims:]
-            sig_ts = tileshape[-self.shape.sig.dims:]
-            # if larger signal chunking is requested in the negotiation,
-            # switch to full frames:
-            if any(t > c for t, c in zip(sig_ts, sig_chunks)):
-                # try to keep total tileshape size:
-                tileshape_size = np.prod(tileshape, dtype=np.int64)
-                depth = max(1, tileshape_size // self.shape.sig.size)
-                return (depth,) + self.shape.sig
-            else:
-                # depth needs to be limited to prod(chunks.nav)
-                return _tileshape_for_chunking(chunks, self.meta.shape)
-        return tileshape
-
-    def need_decode(self, roi, read_dtype, corrections):
-        return True
-
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
-
-    def get_max_io_size(self):
-        if self._chunks is not None:
-            # this may result in larger tile depth than necessary, but
-            # it needs to be so big to pass the validation of the Negotiator. The tiles
-            # won't ever be as large as the scheme dictates, anyway.
-            # We limit it here to 256e6 elements, to also keep the chunk cache
-            # usage reasonable:
-            return 256e6
-        return None  # use default value from Negotiator
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         if roi is not None:

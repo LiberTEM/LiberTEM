@@ -6,6 +6,7 @@ import numpy as np
 import sparse
 
 from libertem import masks
+from libertem.common.math import prod
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from .helper import GeneratorHelper
@@ -129,7 +130,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
         '''
         shape = tuple(self.dataset.shape.nav)
         # NOTE: transposed for historical reasons
-        udf_results = udf_results['intensity'].data.reshape((np.prod(shape), -1)).T
+        udf_results = udf_results['intensity'].data.reshape((prod(shape), -1)).T
         orders = self.parameters['max_order'] + 1
         n_bins = self.parameters['n_bins']
         udf_results = udf_results.reshape((n_bins, orders, *shape))

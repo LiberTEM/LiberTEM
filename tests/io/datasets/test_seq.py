@@ -796,3 +796,25 @@ def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq):
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_seq, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+@needsdata
+def test_scheme_too_large(default_seq):
+    partitions = default_seq.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_seq.shape.sig),
+        sig_dims=default_seq.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_seq.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_seq.shape.sig)

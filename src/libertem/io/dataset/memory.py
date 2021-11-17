@@ -4,6 +4,7 @@ import logging
 import psutil
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
@@ -218,8 +219,8 @@ class MemoryDataSet(DataSet):
         # if tileshape is None:
         #     sig_shape = data.shape[-sig_dims:]
         #     target = 2**20
-        #     framesize = np.prod(sig_shape)
-        #     framecount = max(1, min(np.prod(data.shape[:-sig_dims]), int(target / framesize)))
+        #     framesize = prod(sig_shape)
+        #     framecount = max(1, min(prod(data.shape[:-sig_dims]), int(target / framesize)))
         #     tileshape = (framecount, ) + sig_shape
         self.data = data
         self._base_shape = base_shape
@@ -238,7 +239,7 @@ class MemoryDataSet(DataSet):
         self._check_cast = check_cast
         self._tiledelay = tiledelay
         self._force_need_decode = force_need_decode
-        self._image_count = int(np.prod(self._nav_shape))
+        self._image_count = int(prod(self._nav_shape))
         self._shape = Shape(
             tuple(self._nav_shape) + tuple(self._sig_shape), sig_dims=self.sig_dims
         )
@@ -247,7 +248,7 @@ class MemoryDataSet(DataSet):
         else:
             assert len(tileshape) == self.sig_dims + 1
             self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=self._shape,
@@ -280,6 +281,19 @@ class MemoryDataSet(DataSet):
     def get_num_partitions(self):
         return self.num_partitions
 
+    def get_base_shape(self, roi):
+        if self._base_shape is not None:
+            return self._base_shape
+        return super().get_base_shape(roi)
+
+    def need_decode(self, read_dtype, roi, corrections):
+        if self._force_need_decode:
+            return True
+        return super().need_decode(read_dtype, roi, corrections)
+
+    def get_io_backend(self):
+        return MemBackend()
+
     def get_partitions(self):
         fileset = FileSet([
             MemoryFile(
@@ -306,24 +320,20 @@ class MemoryDataSet(DataSet):
                 num_frames=stop - start,
                 tiledelay=self._tiledelay,
                 tileshape=self.tileshape,
-                base_shape=self._base_shape,
                 force_need_decode=self._force_need_decode,
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder(),
             )
 
 
 class MemPartition(BasePartition):
-    def __init__(self, tiledelay, tileshape, base_shape=None, force_need_decode=False,
+    def __init__(self, tiledelay, tileshape, force_need_decode=False,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tiledelay = tiledelay
         self._tileshape = tileshape
         self._force_tileshape = True
-        self._base_shape = base_shape
         self._force_need_decode = force_need_decode
-
-    def _get_decoder(self):
-        return None
 
     def get_io_backend(self):
         return MemBackend()
@@ -333,16 +343,6 @@ class MemPartition(BasePartition):
         mt = super().get_macrotile(*args, **kwargs)
         self._force_tileshape = True
         return mt
-
-    def get_base_shape(self, roi):
-        if self._base_shape is not None:
-            return self._base_shape
-        return super().get_base_shape(roi)
-
-    def need_decode(self, read_dtype, roi, corrections):
-        if self._force_need_decode:
-            return True
-        return super().need_decode(read_dtype, roi, corrections)
 
     def get_tiles(self, *args, **kwargs):
         # force our own tiling_scheme, if a tileshape is given:

@@ -6,6 +6,7 @@ import contextlib
 import numpy as np
 from ncempy.io.ser import fileSER
 
+from libertem.common.math import prod
 from libertem.common import Shape, Slice
 from libertem.web.messages import MessageConverter
 from .base import (
@@ -151,11 +152,11 @@ class SERDataSet(DataSet):
                 self._nav_shape = nav_dims
             if self._sig_shape is None:
                 self._sig_shape = tuple(data.shape)
-            elif int(np.prod(self._sig_shape)) != int(np.prod(data.shape)):
+            elif int(prod(self._sig_shape)) != int(prod(data.shape)):
                 raise DataSetException(
-                    "sig_shape must be of size: %s" % int(np.prod(data.shape))
+                    "sig_shape must be of size: %s" % int(prod(data.shape))
                 )
-            self._nav_shape_product = int(np.prod(self._nav_shape))
+            self._nav_shape_product = int(prod(self._nav_shape))
             self._sync_offset_info = self.get_sync_offset_info()
             self._shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
             self._meta = DataSetMeta(
@@ -193,7 +194,7 @@ class SERDataSet(DataSet):
                     "sig_shape": tuple(ds.shape.sig),
                 },
                 "info": {
-                    "image_count": int(np.prod(ds.shape.nav)),
+                    "image_count": int(prod(ds.shape.nav)),
                     "native_sig_shape": tuple(ds.shape.sig),
                 }
             }
@@ -234,6 +235,13 @@ class SERDataSet(DataSet):
             )
         ])
 
+    def get_base_shape(self, roi):
+        return (1,) + tuple(self.shape.sig)
+
+    def adjust_tileshape(self, tileshape, roi):
+        # force single-frame tiles
+        return (1,) + tileshape[1:]
+
     def get_partitions(self):
         fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():
@@ -245,6 +253,7 @@ class SERDataSet(DataSet):
                 start_frame=start,
                 num_frames=stop - start,
                 io_backend=self.get_io_backend(),
+                decoder=None,
             )
 
     def __repr__(self):
@@ -257,18 +266,10 @@ class SERPartition(BasePartition):
         super().__init__(*args, **kwargs)
 
     def validate_tiling_scheme(self, tiling_scheme):
-        supported = (1,) + tuple(self.shape.sig)
-        if tuple(tiling_scheme.shape) != supported:
+        if tiling_scheme.shape.sig != self.shape.sig:
             raise ValueError(
-                f"invalid tiling scheme: only supports {supported!r}, not {tiling_scheme.shape!r}"
+                f"invalid tiling scheme ({tiling_scheme.shape!r}): sig shape must match"
             )
-
-    def adjust_tileshape(self, tileshape, roi):
-        # force single-frame tiles
-        return (1,) + tileshape[1:]
-
-    def get_base_shape(self, roi):
-        return (1,) + tuple(self.shape.sig)
 
     def _preprocess(self, tile_data, tile_slice):
         if self._corrections is None:

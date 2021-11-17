@@ -1,8 +1,11 @@
+import os
+
 import numpy as np
 import pytest
 import distributed as dd
 
 from libertem import api
+from libertem.udf.base import NoOpUDF
 from utils import _naive_mask_apply, _mk_random
 from libertem.executor.dask import cluster_spec, DaskJobExecutor
 from libertem.utils.devices import detect, has_cupy
@@ -226,6 +229,28 @@ def test_start_local_cudaonly(hdf5_ds_1):
 
     assert np.all(udf_res['device_class'].data == 'cuda')
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
+
+
+@pytest.mark.functional
+def test_preload(hdf5_ds_1):
+    # We don't use all since that might be too many
+    cpus = (0, 1)
+    hdf5_ds_1.set_num_cores(len(cpus))
+
+    class CheckEnvUDF(NoOpUDF):
+        def process_tile(self, tile):
+            assert os.environ['LT_TEST_1'] == 'hello'
+            assert os.environ['LT_TEST_2'] == 'world'
+
+    preloads = (
+        "import os; os.environ['LT_TEST_1'] = 'hello'",
+        "import os; os.environ['LT_TEST_2'] = 'world'",
+    )
+
+    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False, preload=preloads)
+    with DaskJobExecutor.make_local(spec=spec) as executor:
+        ctx = api.Context(executor=executor)
+        ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)
 
 
 @pytest.mark.functional

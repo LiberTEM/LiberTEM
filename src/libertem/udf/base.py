@@ -1,5 +1,9 @@
-from typing import Dict, Optional, List, Type, Iterable, Union, Set
-from typing_extensions import Protocol, runtime_checkable, Literal
+from enum import Enum
+from typing import (
+    Any, AsyncGenerator, Dict, Generator, Iterator, Optional, List,
+    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
+)
+from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
 import warnings
 import logging
 import uuid
@@ -7,14 +11,17 @@ from concurrent.futures import ThreadPoolExecutor
 
 import cloudpickle
 import numpy as np
+
 from libertem.io.dataset.base.tiling import DataTile
 
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper, PreallocBufferWrapper,
+    BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
+from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
@@ -24,6 +31,8 @@ from libertem.utils.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.base import Environment, JobExecutor
 
+if TYPE_CHECKING:
+    from numpy import typing as nt
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +44,23 @@ ResourceDef = Dict[
     ],
     int
 ]
+DeviceClass = Literal['cpu', 'cuda']
+UDFKwarg = Union[Any, AuxBufferWrapper]
+UDFKwargs = Dict[str, UDFKwarg]
+
+
+# markers for special values:
+class TileDepthEnum(Enum):
+    TILE_DEPTH_DEFAULT = object()
+
+
+class TileSizeEnum(Enum):
+    TILE_SIZE_BEST_FIT = object()
+
+
+class TilingPreferences(TypedDict):
+    depth: Union[int, TileDepthEnum]
+    total_size: Union[float, int]
 
 
 class UDFMeta:
@@ -54,8 +80,12 @@ class UDFMeta:
         partition_slice: Optional[Slice],
         dataset_shape: Shape,
         roi: Optional[np.ndarray],
-        dataset_dtype: np.dtype, input_dtype: np.dtype, tiling_scheme: TilingScheme = None,
-        tiling_index: int = 0, corrections=None, device_class: str = None,
+        dataset_dtype: "nt.DTypeLike",
+        input_dtype: "nt.DTypeLike",
+        tiling_scheme: TilingScheme = None,
+        tiling_index: int = 0,
+        corrections: Optional[CorrectionSet] = None,
+        device_class: Optional[DeviceClass] = None,
         threads_per_worker: Optional[int] = None
     ):
         self._partition_slice = partition_slice
@@ -68,10 +98,10 @@ class UDFMeta:
             device_class = 'cpu'
         self._device_class = device_class
         if roi is not None:
-            roi = roi.reshape(dataset_shape.nav)
+            roi = roi.reshape(tuple(dataset_shape.nav))
         self._roi = roi
         self._slice: Optional[Slice] = None
-        self._cached_coordinates = None
+        self._cached_coordinates: Optional[np.ndarray] = None
         if corrections is None:
             corrections = CorrectionSet()
         self._corrections = corrections
@@ -86,7 +116,7 @@ class UDFMeta:
         return self._slice
 
     @slice.setter
-    def slice(self, new_slice: Slice):
+    def slice(self, new_slice: Slice) -> None:
         self._slice = new_slice
 
     @property
@@ -124,14 +154,14 @@ class UDFMeta:
         return self._roi
 
     @property
-    def dataset_dtype(self) -> np.dtype:
+    def dataset_dtype(self) -> "nt.DTypeLike":
         """
         numpy.dtype : Native dtype of the dataset
         """
         return self._dataset_dtype
 
     @property
-    def input_dtype(self) -> np.dtype:
+    def input_dtype(self) -> "nt.DTypeLike":
         """
         numpy.dtype : dtype of the data that will be passed to the UDF
 
@@ -175,15 +205,16 @@ class UDFMeta:
 
         .. versionadded:: 0.6.0
         """
+        assert self._slice is not None
+        assert self._partition_slice is not None
         if self._cached_coordinates is None:
             self._cached_coordinates = get_coordinates(
                 self._partition_slice,
                 self._dataset_shape,
                 self._roi
             )
-        assert self._slice is not None
-        shifted_slice = self._slice.shift(self._partition_slice)
-        return shifted_slice.get(arr=self._cached_coordinates, nav_only=True)
+        shifted_slice = self._slice.shift(self._partition_slice).get(nav_only=True)
+        return self._cached_coordinates[shifted_slice]
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -216,25 +247,25 @@ class UDFMeta:
 
 
 class MergeAttrMapping:
-    def __init__(self, dict_input):
-        self._dict = dict_input
+    def __init__(self, dict_input: Dict[str, np.ndarray]):
+        self._dict: Dict[str, np.ndarray] = dict_input
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._dict)
 
-    def __contains__(self, k):
+    def __contains__(self, k: str) -> bool:
         return k in self._dict
 
-    def __getattr__(self, k):
+    def __getattr__(self, k: str) -> np.ndarray:
         return self._dict[k]
 
-    def __setattr__(self, k, v):
+    def __setattr__(self, k: str, v: np.ndarray) -> None:
         if k in ['_dict']:
             super().__setattr__(k, v)
         else:
             self._dict[k][:] = v
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: str) -> np.ndarray:
         warnings.warn(
             "dict-like access is discouraged, as it can be "
             "confusing vs. using attribute access",
@@ -242,6 +273,9 @@ class MergeAttrMapping:
             stacklevel=2,
         )
         return self._dict[k]
+
+
+T = TypeVar('T')
 
 
 class UDFData:
@@ -258,7 +292,7 @@ class UDFData:
             self._data
         )
 
-    def __getattr__(self, k: str):
+    def __getattr__(self, k: str) -> Union[np.ndarray, BufferWrapper]:
         if k.startswith("_"):
             raise AttributeError("no such attribute: %s" % k)
         try:
@@ -266,7 +300,7 @@ class UDFData:
         except KeyError as e:
             raise AttributeError(str(e))
 
-    def get_buffer(self, name):
+    def get_buffer(self, name: str) -> BufferWrapper:
         """
         Return the `BufferWrapper` for buffer `name`
 
@@ -274,28 +308,30 @@ class UDFData:
         """
         return self._data[name]
 
-    def get(self, k, default=None):
+    def get(
+        self, k: str, default: Optional[T] = None
+    ) -> Optional[Union[T, np.ndarray, BufferWrapper]]:
         try:
             return self.__getattr__(k)
         except KeyError:
             return default
 
-    def __setattr__(self, k, v):
+    def __setattr__(self, k: str, v: "nt.ArrayLike") -> None:
         if not k.startswith("_"):
             # convert UDFData.some_attr = something to array slice assignment
             getattr(self, k)[:] = v
         else:
             super().__setattr__(k, v)
 
-    def _get_view_or_data(self, k):
+    def _get_view_or_data(self, k: str) -> Union[np.ndarray, BufferWrapper]:
         if k in self._views:
             return self._views[k]
         res = self._data[k]
-        if hasattr(res, 'raw_data'):
+        if isinstance(res, BufferWrapper) and res.raw_data is not None:
             return res.raw_data
         return res
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: str) -> BufferWrapper:
         warnings.warn(
             "dict-like access is discouraged, as it can be "
             "confusing vs. using attribute access. Please use `get_buffer` instead, "
@@ -305,7 +341,7 @@ class UDFData:
         )
         return self._data[k]
 
-    def __contains__(self, k):
+    def __contains__(self, k: str) -> bool:
         return k in self._data
 
     def items(self):
@@ -317,20 +353,22 @@ class UDFData:
     def as_dict(self) -> Dict[str, BufferWrapper]:
         return dict(self.items())
 
-    def get_proxy(self):
+    def get_proxy(self) -> MergeAttrMapping:
         return MergeAttrMapping({
             k: (self._views[k] if k in self._views else self._data[k].raw_data)
             for k, v in self.items()
             if v and v.has_data()
         })
 
-    def _get_buffers(self, filter_allocated: bool = False):
+    def _get_buffers(
+        self, filter_allocated: bool = False
+    ) -> Generator[Tuple[str, BufferWrapper], None, None]:
         for k, buf in self._data.items():
             if not hasattr(buf, 'has_data') or (buf.has_data() and filter_allocated):
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition: Shape, roi: np.ndarray, lib=None):
+    def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray], lib=None) -> None:
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
@@ -340,49 +378,68 @@ class UDFData:
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate(lib=lib)
 
-    def allocate_for_full(self, dataset, roi: np.ndarray):
+    def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
         for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset.shape, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
-    def set_view_for_dataset(self, dataset):
+    def set_view_for_dataset(self, dataset: DataSet) -> None:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_dataset(dataset)
 
-    def set_view_for_partition(self, partition: Shape):
+    def set_view_for_partition(self, partition: Partition) -> None:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_partition(partition)
 
-    def set_view_for_tile(self, partition, tile):
+    def set_view_for_tile(self, partition: Partition, tile: DataTile) -> None:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_tile(partition, tile)
 
-    def set_contiguous_view_for_tile(self, partition, tile):
+    def set_contiguous_view_for_tile(self, partition: Partition, tile: DataTile) -> None:
         # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_contiguous_view_for_tile(partition, tile)
 
-    def flush(self, debug=False):
+    def flush(self, debug: bool = False) -> None:
         # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
             buf.flush(debug=debug)
 
-    def export(self):
+    def export(self) -> None:
         # .. versionadded:: 0.6.0
         for k, buf in self._get_buffers():
             buf.export()
 
-    def set_view_for_frame(self, partition, tile, frame_idx):
+    def set_view_for_frame(self, partition: Partition, tile: DataTile, frame_idx: int) -> None:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
 
-    def new_for_partition(self, partition, roi: np.ndarray):
+    def clear_views(self) -> None:
+        self._views = {}
+
+
+class UDFKwargsWrapper(UDFData):
+    """
+    Wrapper for UDF kwargs, used for slicing/viewing AUX data
+    """
+    def __init__(self, data: UDFKwargs):
+        super().__init__(data)
+        self._data = data
+        self._views = {}
+
+    def _get_buffers(
+        self, filter_allocated: bool = False
+    ) -> Generator[Tuple[str, AuxBufferWrapper], None, None]:
+        for k, buf in self._data.items():
+            if isinstance(buf, AuxBufferWrapper):
+                if buf.has_data() and filter_allocated:
+                    continue
+                yield k, buf
+
+    def new_for_partition(self, partition: Partition, roi: np.ndarray):
         for k, buf in self._get_buffers():
             self._data[k] = buf.new_for_partition(partition, roi)
-
-    def clear_views(self):
-        self._views = {}
 
 
 @runtime_checkable
@@ -445,7 +502,7 @@ class UDFPartitionMixin(Protocol):
     Implement :code:`process_partition` for per-partition processing.
     '''
 
-    def process_partition(self, partition: np.ndarray):
+    def process_partition(self, partition: np.ndarray) -> None:
         """
         Implement this method to process the data partitioned into large
         (100s of MiB) partitions.
@@ -483,7 +540,7 @@ class UDFPreprocessMixin(Protocol):
     .. versionadded:: 0.3.0
     '''
 
-    def preprocess(self):
+    def preprocess(self) -> None:
         """
         Implement this method to preprocess the result data for a partition.
 
@@ -507,7 +564,7 @@ class UDFPostprocessMixin(Protocol):
     main node for the final merging step.
     '''
 
-    def postprocess(self):
+    def postprocess(self) -> None:
         """
         Implement this method to postprocess the result data for a partition.
 
@@ -527,62 +584,72 @@ class UDFBase:
     '''
     Base class for UDFs with helper functions.
     '''
+    def __init__(self, *args, **kwargs) -> None:
+        # this should not execute - it is mostly for getting the typing right:
+        self.params = UDFKwargsWrapper({})
+        self.results = UDFData({})
 
-    def allocate_for_part(self, partition, roi):
+    def get_task_data(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+        raise NotImplementedError()
+
+    def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray]) -> None:
         for ns in [self.results]:
             ns.allocate_for_part(partition, roi, lib=self.xp)
 
-    def allocate_for_full(self, dataset, roi):
+    def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
         for ns in [self.params, self.results]:
             ns.allocate_for_full(dataset, roi)
 
-    def set_views_for_dataset(self, dataset):
+    def set_views_for_dataset(self, dataset: DataSet) -> None:
         for ns in [self.params]:
             ns.set_view_for_dataset(dataset)
 
-    def set_views_for_partition(self, partition):
+    def set_views_for_partition(self, partition: Partition) -> None:
         for ns in [self.params, self.results]:
             ns.set_view_for_partition(partition)
 
-    def set_views_for_tile(self, partition, tile):
+    def set_views_for_tile(self, partition: Partition, tile: DataTile) -> None:
         for ns in [self.params, self.results]:
             ns.set_view_for_tile(partition, tile)
 
-    def set_contiguous_views_for_tile(self, partition, tile):
+    def set_contiguous_views_for_tile(self, partition: Partition, tile: DataTile) -> None:
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
             ns.set_contiguous_view_for_tile(partition, tile)
 
-    def flush(self, debug=False):
+    def flush(self, debug: bool = False) -> None:
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
             ns.flush(debug=debug)
 
-    def set_views_for_frame(self, partition, tile, frame_idx):
+    def set_views_for_frame(self, partition: Partition, tile: DataTile, frame_idx: int):
         for ns in [self.params, self.results]:
             ns.set_view_for_frame(partition, tile, frame_idx)
 
-    def clear_views(self):
+    def clear_views(self) -> None:
         for ns in [self.params, self.results]:
             ns.clear_views()
 
-    def init_task_data(self):
+    def init_task_data(self) -> None:
         self.task_data = UDFData(self.get_task_data())
 
-    def init_result_buffers(self):
+    def init_result_buffers(self) -> None:
         self.results = UDFData(self.get_result_buffers())
 
-    def export_results(self):
+    def export_results(self) -> None:
         # .. versionadded:: 0.6.0.dev0
         self.results.export()
 
-    def set_meta(self, meta):
+    def set_meta(self, meta: UDFMeta) -> None:
         self.meta = meta
 
-    def set_slice(self, slice_):
+    def set_slice(self, slice_: Slice) -> None:
         self.meta.slice = slice_
 
-    def set_backend(self, backend: Backend):
+    def set_backend(self, backend: Backend) -> None:
         assert backend in self.get_backends()
         self._backend = backend
 
@@ -612,16 +679,15 @@ class UDFBase:
         else:
             raise ValueError(f"Backend name can be 'numpy', 'cuda' or 'cupy', got {self._backend}")
 
-    def get_method(self):
+    def get_method(self) -> Literal['tile', 'frame', 'partition']:
         if hasattr(self, 'process_tile'):
-            method = 'tile'
+            return 'tile'
         elif hasattr(self, 'process_frame'):
-            method = 'frame'
+            return 'frame'
         elif hasattr(self, 'process_partition'):
-            method = 'partition'
+            return 'partition'
         else:
             raise TypeError("UDF should implement one of the `process_*` methods")
-        return method
 
     def _check_results(self, decl, arr, name):
         """
@@ -708,36 +774,41 @@ class UDF(UDFBase):
         to the current unit of data (frame, tile, partition).
     """
     USE_NATIVE_DTYPE = bool
-    TILE_SIZE_BEST_FIT = object()
+    TILE_SIZE_BEST_FIT = TileSizeEnum.TILE_SIZE_BEST_FIT
     TILE_SIZE_MAX = np.inf
-    TILE_DEPTH_DEFAULT = object()
+    TILE_DEPTH_DEFAULT = TileDepthEnum.TILE_DEPTH_DEFAULT
     TILE_DEPTH_MAX = np.inf
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: UDFKwarg) -> None:
         self._backend = 'numpy'  # default so that self.xp can always be used
         self._kwargs = kwargs
-        self.params = UDFData(kwargs)
-        self.task_data = None
-        self.results = None
+        self.params = UDFKwargsWrapper(kwargs)
+        self.task_data = UDFData({})
+        self.results = UDFData({})
         self._requires_custom_merge = None
 
-    def copy(self):
+    def copy(self) -> "UDF":
         return self.__class__(**self._kwargs)
 
     @classmethod
-    def new_for_partition(cls, kwargs, partition: Partition, roi: np.ndarray):
+    def new_for_partition(
+        cls,
+        kwargs: Dict[str, Any],
+        partition: Partition,
+        roi: np.ndarray,
+    ) -> "UDF":
         new_instance = cls(**kwargs)
         new_instance.params.new_for_partition(partition, roi)
         return new_instance
 
-    def copy_for_partition(self, partition: Partition, roi: np.ndarray):
+    def copy_for_partition(self, partition: Partition, roi: np.ndarray) -> "UDF":
         """
         create a copy of the UDF, specifically slicing aux data to the
         specified pratition and roi
         """
         return self.__class__.new_for_partition(self._kwargs, partition, roi)
 
-    def get_task_data(self):
+    def get_task_data(self) -> Dict[str, Any]:
         """
         Initialize per-task data.
 
@@ -762,7 +833,7 @@ class UDF(UDFBase):
         """
         return {}
 
-    def get_result_buffers(self):
+    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
         """
         Return result buffer declaration.
 
@@ -873,7 +944,7 @@ class UDF(UDFBase):
             if decls[k].use != "private"
         }
 
-    def get_preferred_input_dtype(self):
+    def get_preferred_input_dtype(self) -> "nt.DTypeLike":
         '''
         Override this method to specify the preferred input dtype of the UDF.
 
@@ -903,7 +974,7 @@ class UDF(UDFBase):
         '''
         return np.float32
 
-    def get_tiling_preferences(self):
+    def get_tiling_preferences(self) -> TilingPreferences:
         """
         Configure tiling preferences. Return a dictionary with the
         following keys:
@@ -941,10 +1012,17 @@ class UDF(UDFBase):
         # mypy error here fixed in master: https://github.com/python/mypy/pull/11236
         return ('numpy', )  # type: ignore
 
-    def cleanup(self):  # FIXME: name? implement cleanup as context manager somehow?
+    def cleanup(self) -> None:  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
-    def buffer(self, kind, extra_shape=(), dtype="float32", where=None, use=None):
+    def buffer(
+        self,
+        kind: BufferKind,
+        extra_shape: Tuple[int, ...] = (),
+        dtype: "nt.DTypeLike" = "float32",
+        where: BufferLocation = None,
+        use: Optional[BufferUse] = None,
+    ) -> BufferWrapper:
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
         in :meth:`get_result_buffers`.
@@ -1039,7 +1117,7 @@ class NoOpUDF(UDF):
     preferred_input_dtype : numpy.dtype
         Perform dtype conversion. By default, this is :attr:`UDF.USE_NATIVE_DTYPE`.
     '''
-    def __init__(self, preferred_input_dtype=UDF.USE_NATIVE_DTYPE):
+    def __init__(self, preferred_input_dtype=UDF.USE_NATIVE_DTYPE) -> None:
         super().__init__(preferred_input_dtype=preferred_input_dtype)
 
     def process_tile(self, tile):
@@ -1073,6 +1151,7 @@ class UDFParams:
         kwargs: List[dict],
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
+        tiling_scheme: TilingScheme,
     ):
         """
         Container class for UDF parameters for multiple UDFs
@@ -1090,11 +1169,18 @@ class UDFParams:
         self._kwargs = kwargs
         self._roi = roi
         self._corrections = corrections
+        self._tiling_scheme = tiling_scheme
 
     @classmethod
-    def from_udfs(cls, udfs, roi, corrections):
+    def from_udfs(
+        cls,
+        udfs: Iterable[UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        tiling_scheme: TilingScheme,
+    ):
         kwargs = [udf._kwargs for udf in udfs]
-        return cls(kwargs, roi, corrections)
+        return cls(kwargs, roi, corrections, tiling_scheme)
 
     @property
     def roi(self):
@@ -1107,6 +1193,10 @@ class UDFParams:
     @property
     def kwargs(self):
         return self._kwargs
+
+    @property
+    def tiling_scheme(self):
+        return self._tiling_scheme
 
 
 class Task:
@@ -1304,13 +1394,18 @@ class UDFTask(Task):
 
 
 class UDFRunner:
-    def __init__(self, udfs, debug=False):
+    def __init__(self, udfs: List[UDF], debug: bool = False):
         self._udfs = udfs
         self._debug = debug
         self._pool = ThreadPoolExecutor(max_workers=4)
 
     @classmethod
-    def inspect_udf(cls, udf, dataset, roi=None):
+    def inspect_udf(
+        cls,
+        udf: UDF,
+        dataset: DataSet,
+        roi: Optional[np.ndarray] = None,
+    ) -> Dict[str, BufferWrapper]:
         """
         Return result buffer declarations for a given UDF/DataSet/roi combination
         """
@@ -1354,11 +1449,15 @@ class UDFRunner:
         )
         return res
 
-    def _get_dtype(self, dtype, corrections):
+    def _get_dtype(
+        self,
+        dtype: "nt.DTypeLike",
+        corrections: Optional[CorrectionSet]
+    ) -> "nt.DTypeLike":
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
         else:
-            tmp_dtype = dtype
+            tmp_dtype = np.dtype(dtype)
         for udf in self._udfs:
             tmp_dtype = np.result_type(
                 udf.get_preferred_input_dtype(),
@@ -1375,7 +1474,8 @@ class UDFRunner:
         corrections: CorrectionSet,
         device_class,
         env: Environment,
-    ):
+        tiling_scheme: TilingScheme,
+    ) -> Tuple[UDFMeta, "nt.DTypeLike"]:
         dtype = self._get_dtype(partition.dtype, corrections)
         meta = UDFMeta(
             partition_slice=partition.slice.adjust_for_roi(roi),
@@ -1408,18 +1508,6 @@ class UDFRunner:
             if isinstance(udf, UDFPreprocessMixin):
                 udf.clear_views()
                 udf.preprocess()
-        neg = Negotiator()
-        # FIXME take compute backend into consideration as well
-        # Other boundary conditions when moving input data to device
-        tiling_scheme = neg.get_scheme(
-            udfs=udfs,
-            partition=partition,
-            read_dtype=dtype,
-            roi=roi,
-            corrections=corrections,
-        )
-
-        # print(tiling_scheme)
 
         # FIXME: don't fully re-create?
         meta = UDFMeta(
@@ -1435,7 +1523,7 @@ class UDFRunner:
         )
         for udf in udfs:
             udf.set_meta(meta)
-        return (meta, tiling_scheme, dtype)
+        return (meta, dtype)
 
     def _run_tile(
         self,
@@ -1443,7 +1531,7 @@ class UDFRunner:
         partition: Partition,
         tile: DataTile,
         device_tile: DataTile
-    ):
+    ) -> None:
         for udf in udfs:
             if isinstance(udf, UDFTileMixin):
                 udf.set_contiguous_views_for_tile(partition, tile)
@@ -1473,7 +1561,7 @@ class UDFRunner:
         tiling_scheme: TilingScheme,
         roi: Optional[np.ndarray],
         dtype,
-    ):
+    ) -> None:
         # FIXME pass information on target location (numpy or cupy)
         # to dataset so that is can already move it there.
         # In the future, it might even decode data on the device instead of CPU
@@ -1492,7 +1580,12 @@ class UDFRunner:
                 device_tile = xp.asanyarray(tile)
                 self._run_tile(cupy_udfs, partition, tile, device_tile)
 
-    def _wrapup_udfs(self, numpy_udfs: List[UDF], cupy_udfs: List[UDF], partition: Partition):
+    def _wrapup_udfs(
+        self,
+        numpy_udfs: List[UDF],
+        cupy_udfs: List[UDF],
+        partition: Partition
+    ) -> None:
         udfs = numpy_udfs + cupy_udfs
         for udf in udfs:
             udf.flush(self._debug)
@@ -1516,7 +1609,7 @@ class UDFRunner:
             except TypeError:
                 raise TypeError("could not pickle results")
 
-    def _udf_lists(self, device_class):
+    def _udf_lists(self, device_class: DeviceClass) -> Tuple[List[UDF], List[UDF]]:
         numpy_udfs = []
         cupy_udfs = []
         if device_class == 'cuda':
@@ -1542,7 +1635,7 @@ class UDFRunner:
         partition: Partition,
         params: UDFParams,
         env: Environment
-    ):
+    ) -> Tuple[UDFData, ...]:
         roi = params.roi
         corrections = params.corrections
         with env.enter():
@@ -1560,12 +1653,12 @@ class UDFRunner:
                     device = get_use_cuda()
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
-                (meta, tiling_scheme, dtype) = self._init_udfs(
+                (meta, dtype) = self._init_udfs(
                     numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
+                    params.tiling_scheme,
                 )
-                # print("UDF TilingScheme: %r" % tiling_scheme.shape)
                 partition.set_corrections(corrections)
-                self._run_udfs(numpy_udfs, cupy_udfs, partition, tiling_scheme, roi, dtype)
+                self._run_udfs(numpy_udfs, cupy_udfs, partition, params.tiling_scheme, roi, dtype)
                 self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
             finally:
                 if previous_id is not None:
@@ -1573,12 +1666,12 @@ class UDFRunner:
             # Make sure results are in the same order as the UDFs
             return tuple(udf.results for udf in self._udfs)
 
-    def _debug_task_pickling(self, tasks):
+    def _debug_task_pickling(self, tasks: List[UDFTask]) -> None:
         if self._debug:
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
-    def _check_preconditions(self, dataset: DataSet, roi):
-        if roi is not None and np.product(roi.shape) != np.product(dataset.shape.nav):
+    def _check_preconditions(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
+        if roi is not None and prod(roi.shape) != prod(dataset.shape.nav):
             raise ValueError(
                 "roi: incompatible shapes: {} (roi) vs {} (dataset)".format(
                     roi.shape, dataset.shape.nav
@@ -1593,7 +1686,7 @@ class UDFRunner:
         corrections: Optional[CorrectionSet],
         backends: Optional[BackendSpec],
         dry: bool,
-    ):
+    ) -> Tuple[List[UDFTask], UDFParams]:
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_slice=None,
@@ -1603,18 +1696,34 @@ class UDFRunner:
             input_dtype=self._get_dtype(dataset.dtype, corrections),
             corrections=corrections,
         )
+
+        neg = Negotiator()
+        # FIXME take compute backend into consideration as well
+        # Other boundary conditions when moving input data to device
+        # FIXME: approximate partition shape here
+        partition = next(dataset.get_partitions())
+        tiling_scheme = neg.get_scheme(
+            udfs=self._udfs,
+            approx_partition_shape=partition.shape,
+            dataset=dataset,
+            read_dtype=meta.input_dtype,
+            roi=roi,
+            corrections=corrections,
+        )
+
         for udf in self._udfs:
             udf.set_meta(meta)
             udf.init_result_buffers()
             udf.allocate_for_full(dataset, roi)
 
-            if hasattr(udf, 'preprocess'):
+            if isinstance(udf, UDFPreprocessMixin):
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,
-            corrections=corrections
+            corrections=corrections,
+            tiling_scheme=tiling_scheme,
         )
         if dry:
             tasks = []
@@ -1622,8 +1731,16 @@ class UDFRunner:
             tasks = list(self._make_udf_tasks(dataset, roi, backends))
         return (tasks, params)
 
-    def run_for_dataset(self, dataset: DataSet, executor,
-                        roi=None, progress=False, corrections=None, backends=None, dry=False):
+    def run_for_dataset(
+        self,
+        dataset: DataSet,
+        executor: JobExecutor,
+        roi: Optional[np.ndarray] = None,
+        progress: bool = False,
+        corrections: Optional[CorrectionSet] = None,
+        backends: Optional[BackendSpec] = None,
+        dry: bool = False
+    ) -> "UDFResults":
         for res in self.run_for_dataset_sync(
             dataset=dataset,
             executor=executor.ensure_sync(),
@@ -1645,7 +1762,7 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         dry: bool = False
-    ):
+    ) -> Generator["UDFResults", None, None]:
         tasks, params = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends, dry
         )
@@ -1712,7 +1829,7 @@ class UDFRunner:
         backends: Optional[BackendSpec] = None,
         progress: bool = False,
         dry: bool = False
-    ):
+    ) -> AsyncGenerator["UDFResults", None]:
         gen = self.run_for_dataset_sync(
             dataset=dataset,
             executor=executor.ensure_sync(),
@@ -1726,7 +1843,7 @@ class UDFRunner:
         async for res in async_generator_eager(gen, pool=self._pool):
             yield res
 
-    def _roi_for_partition(self, roi, partition: Partition):
+    def _roi_for_partition(self, roi, partition: Partition) -> np.ndarray:
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
     def _make_udf_tasks(
@@ -1734,7 +1851,7 @@ class UDFRunner:
         dataset: DataSet,
         roi: Optional[np.ndarray],
         backends: Optional[BackendSpec]
-    ):
+    ) -> Generator[UDFTask, None, None]:
         udf_backends = [
             udf.get_backends()
             for udf in self._udfs
@@ -1780,6 +1897,6 @@ class UDFResults:
         :class:`libertem.common.buffers.BufferWrapper` of :code:`kind='nav'`, :code:`dtype=bool`.
         It is set to :code:`True` for all positions in nav space that have been processed already.
     '''
-    def __init__(self, buffers, damage):
+    def __init__(self, buffers: Iterable[Dict], damage: BufferWrapper):
         self.buffers = buffers
         self.damage = damage

@@ -498,8 +498,7 @@ def test_chunked_weird(lt_ctx, tmpdir_factory, chunks, udf, shared_random_data):
 
     ds = lt_ctx.load("hdf5", path=filename)
 
-    p = next(ds.get_partitions())
-    base_shape = p.get_base_shape(roi=None)
+    base_shape = ds.get_base_shape(roi=None)
     print(base_shape)
 
     res = lt_ctx.run_udf(dataset=ds, udf=udf)
@@ -544,7 +543,8 @@ def test_hdf5_result_dtype(lt_ctx, tmpdir_factory, in_dtype, read_dtype, use_roi
     neg = Negotiator()
     tiling_scheme = neg.get_scheme(
         udfs=udfs,
-        partition=p,
+        dataset=ds,
+        approx_partition_shape=p.shape,
         read_dtype=read_dtype,
         roi=roi,
         corrections=None,
@@ -580,13 +580,38 @@ def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
     neg = Negotiator()
     tiling_scheme = neg.get_scheme(
         udfs=udfs,
-        partition=p,
+        dataset=ds,
+        approx_partition_shape=p.shape,
         read_dtype=np.float32,
         roi=None,
         corrections=None,
     )
     assert len(tiling_scheme) > 1
     next(p.get_tiles(tiling_scheme=tiling_scheme, roi=None, dest_dtype=np.float32))
+
+
+def test_scheme_too_large(hdf5_ds_1):
+    partitions = hdf5_ds_1.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(hdf5_ds_1.shape.sig),
+        sig_dims=hdf5_ds_1.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=hdf5_ds_1.shape,
+    )
+
+    # tile shape is clamped to partition shape.
+    # in case of hdf5, it is even smaller than the
+    # partition, as the depth from the negotiation
+    # is overridden:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert t.tile_slice.shape[0] <= hdf5_ds_1.shape[0]
 
 
 def test_hdf5_macrotile(lt_ctx, tmpdir_factory):

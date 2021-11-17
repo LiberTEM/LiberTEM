@@ -8,6 +8,7 @@ import warnings
 import numba
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.web.messages import MessageConverter
@@ -561,9 +562,9 @@ class MIBDataSet(DataSet):
             self._nav_shape = nav_shape_from_hdr(hdr)
         if self._sig_shape is None:
             self._sig_shape = first_file.fields['image_size']
-        elif int(np.prod(self._sig_shape)) != int(np.prod(first_file.fields['image_size'])):
+        elif int(prod(self._sig_shape)) != int(prod(first_file.fields['image_size'])):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(first_file.fields['image_size']))
+                "sig_shape must be of size: %s" % int(prod(first_file.fields['image_size']))
             )
         self._sig_dims = len(self._sig_shape)
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
@@ -576,7 +577,7 @@ class MIBDataSet(DataSet):
         self._files_sorted = list(sorted(self._files(),
                                          key=lambda f: f.fields['sequence_first_image']))
         self._image_count = self._num_images()
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=shape,
@@ -680,6 +681,16 @@ class MIBDataSet(DataSet):
             "sync_offset": self._sync_offset,
         }
 
+    def get_decoder(self) -> Decoder:
+        first_file = self._files_sorted[0]
+        kind = first_file.fields['mib_kind']
+        bit_depth = first_file.fields['bits_per_pixel']
+        return MIBDecoder(
+            kind=kind,
+            dtype=self.meta.raw_dtype,
+            bit_depth=bit_depth,
+        )
+
     def _get_fileset(self):
         assert self._sequence_start is not None
         first_file = self._files_sorted[0]
@@ -715,6 +726,7 @@ class MIBDataSet(DataSet):
                 kind=kind,
                 bit_depth=first_file.fields['bits_per_pixel'],
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder(),
             )
 
     def __repr__(self):
@@ -726,10 +738,3 @@ class MIBPartition(BasePartition):
         super().__init__(*args, **kwargs)
         self._kind = kind
         self._bit_depth = bit_depth
-
-    def _get_decoder(self):
-        return MIBDecoder(
-            kind=self._kind,
-            dtype=self.meta.raw_dtype,
-            bit_depth=self._bit_depth,
-        )

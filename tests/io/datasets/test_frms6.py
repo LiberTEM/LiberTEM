@@ -414,6 +414,28 @@ def test_read_invalid_tileshape(default_frms6):
 
 
 @needsdata
+def test_scheme_too_large(default_frms6):
+    partitions = default_frms6.get_partitions()
+    p = next(partitions)
+    depth = p.shape[0]
+
+    # we make a tileshape that is too large for the partition here:
+    tileshape = Shape(
+        (depth + 1,) + tuple(default_frms6.shape.sig),
+        sig_dims=default_frms6.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=default_frms6.shape,
+    )
+
+    # tile shape is clamped to partition shape:
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
+    t = next(tiles)
+    assert tuple(t.tile_slice.shape) == tuple((depth,) + default_frms6.shape.sig)
+
+
+@needsdata
 def test_positive_sync_offset(default_frms6, lt_ctx):
     udf = PickUDF()
     sync_offset = 2

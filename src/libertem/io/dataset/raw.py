@@ -2,6 +2,7 @@ import os
 import warnings
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.web.messages import MessageConverter
 from .base import (
@@ -158,7 +159,7 @@ class RawFileDataSet(DataSet):
 
     def initialize(self, executor):
         self._filesize = executor.run_function(self._get_filesize)
-        if int(np.prod(self._sig_shape)) > int(self._filesize / np.dtype(self._dtype).itemsize):
+        if int(prod(self._sig_shape)) > int(self._filesize / np.dtype(self._dtype).itemsize):
             raise DataSetException(
                 "sig_shape must be less than size: %s" % (
                     int(self._filesize / np.dtype(self._dtype).itemsize)
@@ -166,10 +167,10 @@ class RawFileDataSet(DataSet):
             )
         self._image_count = int(
             self._filesize / (
-                np.dtype(self._dtype).itemsize * np.prod(self._sig_shape, dtype=np.int64)
+                np.dtype(self._dtype).itemsize * prod(self._sig_shape)
             )
         )
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
         self._meta = DataSetMeta(

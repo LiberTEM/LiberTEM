@@ -6,6 +6,7 @@ import numba
 from numba.typed import Dict
 import contextlib
 
+from libertem.common.math import prod
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
 from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
@@ -291,7 +292,7 @@ class BufferedBackendImpl(IOBackendImpl):
         ds_shape = np.array(tiling_scheme.dataset_shape)
 
         largest_slice = sorted((
-            (np.prod(s_.shape), s_)
+            (prod(s_.shape), s_)
             for _, s_ in tiling_scheme.slices
         ), key=lambda x: x[0], reverse=True)[0][1]
 
@@ -300,7 +301,8 @@ class BufferedBackendImpl(IOBackendImpl):
         need_clear = decoder.do_clear()
 
         slices = read_ranges[0]
-        shape_prods = np.prod(slices[..., 1, :], axis=1)
+        # Use NumPy prod for multidimensional array and axis parameter
+        shape_prods = np.prod(slices[..., 1, :], axis=1, dtype=np.int64)
         ranges = read_ranges[1]
         scheme_indices = read_ranges[2]
         tile_block_size = len(tiling_scheme)

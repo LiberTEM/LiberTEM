@@ -1,6 +1,10 @@
 import math
+from typing import Any, Dict, Generator, Optional, Sequence, Tuple, overload
+
 import numpy as np
-from libertem.common.shape import Shape
+
+from libertem.common.math import prod
+from libertem.common.shape import Shape, ShapeLike
 
 
 class Slice:
@@ -17,7 +21,7 @@ class Slice:
 
     __slots__ = ["origin", "shape"]
 
-    def __init__(self, origin, shape):
+    def __init__(self, origin: Sequence[int], shape: Shape):
         self.origin = tuple(origin)
         self.shape = shape
         if len(self.origin) != len(self.shape):
@@ -30,19 +34,21 @@ class Slice:
         if not hasattr(shape, 'sig'):
             raise ValueError("please use libertem.common.Shape instance as shape parameter")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Slice origin={self.origin!r} shape={self.shape!r}>"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # enables using a Slice as a key in dict, an item in sets etc.
         # in this case important for use as cache key for our mask container
         return hash((self.origin, tuple(self.shape)))
 
-    def __eq__(self, other):
-        return self.shape == other.shape and self.origin == other.origin
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Slice) and (
+            self.shape == other.shape and self.origin == other.origin
+        )
 
     @classmethod
-    def from_shape(cls, shape: tuple, sig_dims: int) -> "Slice":
+    def from_shape(cls, shape: Sequence[int], sig_dims: int) -> "Slice":
         """
         Construct a `Slice` at zero-origin from `shape` and `sig_dims`.
         """
@@ -51,7 +57,7 @@ class Slice:
             shape=Shape(shape, sig_dims=sig_dims),
         )
 
-    def intersection_with(self, other):
+    def intersection_with(self, other: "Slice") -> "Slice":
         """
         Calculate the intersection between this slice and `other`. May result in
         dimensions that are zero, which means that there is no intersection.
@@ -78,7 +84,7 @@ class Slice:
             max(o1, o2)
             for (o1, o2) in zip(self.origin, other.origin)
         )
-        new_shape = tuple(
+        new_shape = [
             min(
                 (o1 + s1) - no,
                 (o2 + s2) - no,
@@ -86,7 +92,7 @@ class Slice:
             for (o1, o2, no, s1, s2) in zip(
                     self.origin, other.origin, new_origin, self.shape, other.shape
             )
-        )
+        ]
         new_shape = [max(0, s) for s in new_shape]
         result = Slice(
             origin=new_origin,
@@ -94,13 +100,13 @@ class Slice:
         )
         return result
 
-    def is_null(self):
+    def is_null(self) -> bool:
         """
         If any part of our shape is zero, this slice doesn't span any data and is null / empty.
         """
         return any(s == 0 for s in self.shape)
 
-    def shift(self, other):
+    def shift(self, other: "Slice") -> "Slice":
         """
         make a new ``Slice`` with origin relative to ``other.origin``
         and the same shape as this ``Slice``
@@ -115,7 +121,28 @@ class Slice:
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
 
-    def get(self, arr=None, sig_only=False, nav_only=False):
+    @overload
+    def get(
+        self,
+        arr: None = None,
+        sig_only: bool = False,
+        nav_only: bool = False
+    ) -> Tuple[slice, ...]: ...
+
+    @overload
+    def get(
+        self,
+        arr: np.ndarray,
+        sig_only: bool = False,
+        nav_only: bool = False
+    ) -> np.ndarray: ...
+
+    def get(
+        self,
+        arr: Optional[np.ndarray] = None,
+        sig_only: bool = False,
+        nav_only: bool = False
+    ):
         """
         Get a standard python tuple-of-slice-object which can be used
         to slice any compatible numpy.ndarray
@@ -178,7 +205,7 @@ class Slice:
         else:
             return slice_
 
-    def discard_nav(self):
+    def discard_nav(self) -> "Slice":
         """
         returns a copy with the origin/shape zeroed in the nav dimensions
 
@@ -188,7 +215,7 @@ class Slice:
         new_shape = Shape(tuple([0] * s.nav.dims) + s[s.nav.dims:], sig_dims=s.sig.dims)
         return Slice(origin=tuple([0] * s.nav.dims) + o[s.nav.dims:], shape=new_shape)
 
-    def subslices(self, shape):
+    def subslices(self, shape: ShapeLike) -> Generator["Slice", None, None]:
         """
         Generator for all subslices of this slice with dimensions
         specified by ``shape``.
@@ -216,15 +243,15 @@ class Slice:
         ni = tuple(math.ceil(s1 / s)
                    for (s1, s) in zip(self.shape, shape))
 
-        def _make_slice(origin, new_shape):
+        def _make_slice(origin: Tuple[int, ...], new_shape: Shape) -> Slice:
             sig_dims = new_shape.sig.dims
             # this makes sure that the border tiles have the correct shape set
-            new_shape = tuple(
+            new_shape_tuple = tuple(
                 min(ns, so + s - o)
                 for (ns, so, s, o) in zip(new_shape, self.origin, self.shape, origin)
             )
-            new_shape = Shape(new_shape, sig_dims=sig_dims)
-            for x in new_shape:
+            new_shape = Shape(new_shape_tuple, sig_dims=sig_dims)
+            for x in new_shape_tuple:
                 assert x > 0,\
                     "invalid shape: {!r} while subslicing {!r} with {!r} (origin={!r})".format(
                         new_shape, self.shape, shape, origin
@@ -244,7 +271,7 @@ class Slice:
         )
 
     @property
-    def nav(self):
+    def nav(self) -> "Slice":
         """
         Returns a new Slice, with sig_dims=0, limited to the nav part
         """
@@ -254,7 +281,7 @@ class Slice:
         )
 
     @property
-    def sig(self):
+    def sig(self) -> "Slice":
         """
         Returns a new Slice, limited to the sig part
         """
@@ -263,7 +290,7 @@ class Slice:
             shape=self.shape.sig,
         )
 
-    def flatten_nav(self, containing_shape):
+    def flatten_nav(self, containing_shape: ShapeLike) -> "Slice":
         sig_dims = self.shape.sig.dims
         nav_dims = self.shape.dims - sig_dims
         containing_shape = tuple(containing_shape)[:nav_dims]
@@ -299,13 +326,13 @@ class Slice:
             origin,
             containing_shape
         )
-        nav_shape = np.product(tuple(self.shape.nav))
+        nav_shape = prod(self.shape.nav)
         return Slice(
             origin=(nav_origin,) + self.origin[nav_dims:],
             shape=Shape((nav_shape,) + tuple(self.shape.sig), sig_dims=sig_dims)
         )
 
-    def adjust_for_roi(self, roi):
+    def adjust_for_roi(self, roi: Optional[np.ndarray]) -> "Slice":
         """
         Make a new slice that has origin and shape modified according to `roi`.
         """
@@ -326,12 +353,12 @@ class Slice:
             shape=Shape((shape,) + tuple(self.shape.sig), sig_dims=sig_dims),
         )
 
-    def __getstate__(self):
+    def __getstate__(self) -> Dict[str, Any]:
         return {
             k: getattr(self, k)
             for k in self.__slots__
         }
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: Dict[str, Any]) -> None:
         for k, v in state.items():
             setattr(self, k, v)

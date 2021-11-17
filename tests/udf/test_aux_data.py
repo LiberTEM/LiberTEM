@@ -70,7 +70,7 @@ def test_aux_1(lt_ctx):
         num_partitions=2, sig_dims=2
     )
 
-    echo_udf = EchoUDF(aux=aux_data)
+    echo_udf = EchoUDF(aux=aux_data, other_stuff=object())
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf)
     assert 'echo_preprocess' in res
     print(data.shape, res['echo_preprocess'].data.shape)

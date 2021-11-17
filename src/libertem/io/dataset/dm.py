@@ -6,6 +6,7 @@ import warnings
 from ncempy.io.dm import fileDM
 import numpy as np
 
+from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.web.messageconverter import MessageConverter
@@ -14,6 +15,9 @@ from .base import (
 )
 
 log = logging.getLogger(__name__)
+
+if typing.TYPE_CHECKING:
+    from numpy import typing as nt
 
 
 class DMDatasetParams(MessageConverter):
@@ -43,7 +47,7 @@ class StackedDMFile(File):
         mem = mem[slicing.file_offset:-slicing.skip_end]
         res = np.frombuffer(mem, dtype="uint8")
         itemsize = np.dtype(self._native_dtype).itemsize
-        sigsize = int(np.prod(self._sig_shape, dtype=np.int64))
+        sigsize = int(prod(self._sig_shape))
         cutoff = 0
         cutoff += (
             self.num_frames * itemsize * sigsize
@@ -220,12 +224,12 @@ class DMDataSet(DataSet):
         native_sig_shape, native_dtype = executor.run_function(self._get_sig_shape_and_native_dtype)
         if self._sig_shape is None:
             self._sig_shape = tuple(native_sig_shape)
-        elif int(np.prod(self._sig_shape)) != int(np.prod(native_sig_shape)):
+        elif int(prod(self._sig_shape)) != int(prod(native_sig_shape)):
             raise DataSetException(
-                "sig_shape must be of size: %s" % int(np.prod(native_sig_shape))
+                "sig_shape must be of size: %s" % int(prod(native_sig_shape))
             )
         shape = self._nav_shape + self._sig_shape
-        self._nav_shape_product = int(np.prod(self._nav_shape))
+        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=Shape(shape, sig_dims=len(self._sig_shape)),
@@ -257,7 +261,7 @@ class DMDataSet(DataSet):
         return False
 
     @property
-    def dtype(self):
+    def dtype(self) -> "nt.DTypeLike":
         return self._meta.raw_dtype
 
     @property

@@ -1,3 +1,5 @@
+import pathlib
+import importlib
 import numpy as np
 import pytest
 import dask.array as da
@@ -8,7 +10,14 @@ from libertem.io.dataset.base import DataSetException
 from libertem.io.dataset.dask import DaskDataSet
 
 from utils import dataset_correction_verification
-from utils_dask import _mk_dask_from_delayed
+# Load the dask dataset utils from this same folder
+# This is really ugly but necessary to ensure that
+# dask-worker processes can find utils_dask.py
+location = pathlib.Path(__file__).parent / "utils_dask.py"
+spec = importlib.util.spec_from_file_location("utils_dask", location)
+utils_dask = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils_dask)
+_mk_dask_from_delayed = utils_dask._mk_dask_from_delayed
 
 
 @pytest.mark.parametrize(

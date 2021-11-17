@@ -69,12 +69,13 @@ def test_reorient_nav3(lt_ctx):
     assert ds.array.shape == data.shape
 
 
-def test_size_based_merging(lt_ctx):
+@pytest.mark.dist
+def test_size_based_merging(dist_ctx):
     dtype = np.float32
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(1, -1, -1, -1), dtype=dtype)
     chunksize = np.prod(data.shape[1:]) * np.dtype(dtype).itemsize
     min_size = chunksize * 2 - 1
-    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=min_size)
+    ds = dist_ctx.load('dask', data, sig_dims=2, min_size=min_size)
     assert tuple(ds.array.chunks) == ((3, 2), (25,), (16,), (16,))
 
 

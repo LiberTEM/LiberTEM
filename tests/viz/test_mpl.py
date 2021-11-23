@@ -34,7 +34,6 @@ def test_mpl_nodisplay(monkeypatch, lt_ctx, default_raw):
 
 
 def test_empty(monkeypatch, lt_ctx, default_raw):
-    pytest.importorskip("bqplot")
     udf = SumSigUDF()
     monkeypatch.setattr(
         matplotlib.pyplot,

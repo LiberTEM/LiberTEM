@@ -26,7 +26,6 @@ def test_gms_nodisplay(monkeypatch, lt_ctx, default_raw):
 
 
 def test_empty(monkeypatch, lt_ctx, default_raw):
-    pytest.importorskip("bqplot")
     udf = SumSigUDF()
     monkeypatch.setitem(sys.modules, 'DigitalMicrograph', mock.MagicMock())
     monkeypatch.setattr(lt_ctx, 'plot_class', GMSLive2DPlot)

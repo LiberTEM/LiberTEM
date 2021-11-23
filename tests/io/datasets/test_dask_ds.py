@@ -88,6 +88,22 @@ def test_size_based_merging2(lt_ctx):
     assert tuple(ds.array.chunks) == ((1,) * data.shape[0], (6, 4, 4, 4, 7), (16,), (16,))
 
 
+def test_size_based_merging3(lt_ctx):
+    dtype = np.float32
+    data = _mk_dask_from_delayed(shape=(12, 25, 16, 16), chunking=(1, 2, -1, -1), dtype=dtype)
+    min_size = 0  # a zero minimum size should have no size-based merging
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=min_size)
+    assert tuple(ds.array.chunks) == data.chunks
+
+
+def test_size_based_merging4(lt_ctx):
+    dtype = np.float32
+    data = _mk_dask_from_delayed(shape=(6, 10, 16, 16), chunking=(1, -1, -1, -1), dtype=dtype)
+    min_size = np.inf  # should result in one large partition
+    ds = lt_ctx.load('dask', data, sig_dims=2, min_size=min_size)
+    assert tuple(ds.array.chunks) == tuple((el,) for el in data.shape)
+
+
 def test_no_chunking(lt_ctx):
     dtype = np.float32
     data = _mk_dask_from_delayed(shape=(5, 25, 16, 16), chunking=(-1, -1, -1, -1), dtype=dtype)

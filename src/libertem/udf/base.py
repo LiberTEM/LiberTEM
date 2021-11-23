@@ -736,7 +736,7 @@ class UDFBase:
     def get_results(self) -> Dict[str, np.ndarray]:
         raise NotImplementedError()
 
-    def _do_get_results(self) -> Mapping[str, BufferWrapper]:
+    def do_get_results(self) -> Mapping[str, BufferWrapper]:
         results_tmp = self.get_results()
         decl = self.get_result_buffers()
 
@@ -1414,6 +1414,33 @@ class UDFTask(Task):
         return f"<UDFTask {self._udf_classes!r}>"
 
 
+# Not a method of UDFRunner to avoid potentially including self in dask.delayed
+def _apply_part_result(udfs, damage, part_results, task):
+    for results, udf in zip(part_results, udfs):
+        udf.set_views_for_partition(task.partition)
+        udf.merge(
+            dest=udf.results.get_proxy(),
+            src=results.get_proxy()
+        )
+    v = damage.get_view_for_partition(task.partition)
+    v[:] = True
+    return (udfs, damage)
+
+
+# Not a method of UDFRunner to avoid potentially including self in dask.delayed
+def _make_udf_result(udfs, damage):
+    for udf in udfs:
+        udf.clear_views()
+    return UDFResults(
+        buffers=tuple(
+            # Explicit indexing for compatibility with Dask.delayed
+            udf.do_get_results()
+            for udf in udfs
+        ),
+        damage=damage
+    )
+
+
 class UDFRunner:
     def __init__(self, udfs: List[UDF], debug: bool = False):
         self._udfs = udfs
@@ -1614,7 +1641,7 @@ class UDFRunner:
                 raise TypeError("could not pickle partition")
             try:
                 cloudpickle.loads(cloudpickle.dumps(
-                    [u._do_get_results() for u in udfs]
+                    [u.do_get_results() for u in udfs]
                 ))
             except TypeError:
                 raise TypeError("could not pickle results")
@@ -1756,7 +1783,8 @@ class UDFRunner:
             progress=progress,
             corrections=corrections,
             backends=backends,
-            dry=dry
+            dry=dry,
+            iterate=False
         ):
             pass
         return res
@@ -1769,7 +1797,8 @@ class UDFRunner:
         progress: bool = False,
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
-        dry: bool = False
+        dry: bool = False,
+        iterate: bool = True
     ) -> Generator["UDFResults", None, None]:
         tasks, params = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends, dry
@@ -1796,31 +1825,26 @@ class UDFRunner:
                     for part_results, task in result_iter:
                         if progress:
                             t.update(1)
-                        for results, udf in zip(part_results, self._udfs):
-                            udf.set_views_for_partition(task.partition)
-                            udf.merge(
-                                dest=udf.results.get_proxy(),
-                                src=results.get_proxy()
-                            )
-                            udf.clear_views()
-                        v = damage.get_view_for_partition(task.partition)
-                        v[:] = True
-                        yield UDFResults(
-                            buffers=tuple(
-                                udf._do_get_results()
-                                for udf in self._udfs
-                            ),
-                            damage=damage
+                        res = executor.run_wrap(
+                            _apply_part_result,
+                            udfs=self._udfs,
+                            damage=damage,
+                            part_results=part_results,
+                            task=task
                         )
-                else:
-                    # yield at least one result (which should be empty):
-                    for udf in self._udfs:
-                        udf.clear_views()
-                    yield UDFResults(
-                        buffers=tuple(
-                            udf._do_get_results()
-                            for udf in self._udfs
-                        ),
+                        # Explicit indexing for compatibility with Dask.delayed
+                        self._udfs = res[0]
+                        damage = res[1]
+                        if iterate:
+                            yield executor.run_wrap(
+                                _make_udf_result,
+                                udfs=self._udfs,
+                                damage=damage
+                            )
+                if not tasks or not iterate:
+                    yield executor.run_wrap(
+                        _make_udf_result,
+                        udfs=self._udfs,
                         damage=damage
                     )
         finally:
@@ -1836,7 +1860,8 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         progress: bool = False,
-        dry: bool = False
+        dry: bool = False,
+        iterate: bool = True,
     ) -> AsyncGenerator["UDFResults", None]:
         gen = self.run_for_dataset_sync(
             dataset=dataset,
@@ -1845,7 +1870,8 @@ class UDFRunner:
             progress=progress,
             corrections=corrections,
             backends=backends,
-            dry=dry
+            dry=dry,
+            iterate=iterate,
         )
 
         async for res in async_generator_eager(gen, pool=self._pool):

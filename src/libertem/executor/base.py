@@ -70,6 +70,14 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
+    def run_wrap(self, fn, *args, **kwargs):
+        """
+        Run a callable `fn` locally or remotely at the discretion of the executor.
+        This is used to merge UDF partial results and compute final UDF results.
+        By defult it runs locally.
+        """
+        return fn(*args, **kwargs)
+
     @contextmanager
     def scatter(self, obj):
         '''
@@ -244,6 +252,14 @@ class AsyncJobExecutor:
         """
         raise NotImplementedError()
 
+    def run_wrap(self, fn, *args, **kwargs):
+        """
+        Run a callable `fn` locally or remotely at the discretion of the executor.
+        This is used to merge UDF partial results and compute final UDF results.
+        By defult it runs locally.
+        """
+        return fn(*args, **kwargs)
+
     async def run_each_partition(self, partitions, fn, all_nodes=False):
         raise NotImplementedError()
 
@@ -359,6 +375,13 @@ class AsyncAdapter(AsyncJobExecutor):
         run a callable `fn` on an arbitrary worker node
         """
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
+        return await sync_to_async(fn_with_args, self._pool)
+
+    async def run_wrap(self, fn, *args, **kwargs):
+        """
+        Run a callable `fn` locally or remotely at the discretion of the executor.
+        """
+        fn_with_args = functools.partial(self._wrapped.run_wrap, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
 
     async def run_each_partition(self, partitions, fn, all_nodes=False):

@@ -793,6 +793,7 @@ class Context:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
+                iterate=iterate
             )
             for udf_results in result_iter:
                 yield udf_results

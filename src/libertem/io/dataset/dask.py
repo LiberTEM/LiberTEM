@@ -375,6 +375,7 @@ class DaskDataSet(DataSet):
                 start_frame=start,
                 num_frames=stop - start,
                 io_backend=self.get_io_backend(),
+                decoder=self.get_decoder()
             )
 
     def __repr__(self):
@@ -400,12 +401,6 @@ class DaskPartition(BasePartition):
     def __init__(self, dask_array, *args, **kwargs):
         self._array = dask_array
         super().__init__(*args, **kwargs)
-
-    def _get_decoder(self):
-        return None
-
-    def get_io_backend(self):
-        return DaskBackend()
 
 
 def array_mult(*arrays, dtype=np.float64):

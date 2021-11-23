@@ -683,20 +683,23 @@ class FRMS6DataSet(DataSet):
     def get_base_shape(self, roi):
         return (1, self._get_binning(), self.shape.sig[-1])
 
-    def get_partitions(self):
+    def get_partition_for_slice(self, start: int, stop: int) -> "FRMS6Partition":
+        assert self._meta is not None
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
-            yield FRMS6Partition(
-                meta=self._meta,
-                partition_slice=part_slice,
-                fileset=fileset,
-                start_frame=start,
-                num_frames=stop - start,
-                binning=self._get_binning(),
-                header=self._headers[0],
-                io_backend=self.get_io_backend(),
-                decoder=self.get_decoder(),
-            )
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        return FRMS6Partition(
+            meta=self._meta,
+            partition_slice=part_slice,
+            fileset=fileset,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            binning=self._get_binning(),
+            header=self._headers[0],
+            io_backend=self.get_io_backend(),
+            decoder=self.get_decoder(),
+        )
 
 
 class FRMS6Partition(BasePartition):

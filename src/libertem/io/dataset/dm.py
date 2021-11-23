@@ -277,16 +277,19 @@ class DMDataSet(DataSet):
         except OSError as e:
             raise DataSetException("invalid dataset: %s" % e)
 
-    def get_partitions(self):
-        for part_slice, start, stop in self.get_slices():
-            yield BasePartition(
-                meta=self._meta,
-                partition_slice=part_slice,
-                fileset=self._fileset,
-                start_frame=start,
-                num_frames=stop - start,
-                io_backend=self.get_io_backend(),
-            )
+    def get_partition_for_slice(self, start: int, stop: int) -> BasePartition:
+        assert self._meta is not None
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        return BasePartition(
+            meta=self._meta,
+            partition_slice=part_slice,
+            fileset=self._fileset,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            io_backend=self.get_io_backend(),
+        )
 
     def __repr__(self):
         return "<DMDataSet for a stack of %d files>" % (len(self._get_files()),)

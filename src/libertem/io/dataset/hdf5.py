@@ -1,5 +1,5 @@
 import contextlib
-from typing import Optional
+from typing import Iterable, Optional, Tuple
 import warnings
 import logging
 import time
@@ -11,6 +11,7 @@ from libertem.common.math import prod
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.corrections import CorrectionSet
+from libertem.io.dataset.base.dataset import PartitioningConstraints
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices,
@@ -105,7 +106,10 @@ def _have_contig_chunks(chunks, ds_shape):
     return False
 
 
-def _partition_shape_for_chunking(chunks, ds_shape):
+def _partition_shape_for_chunking(
+    chunks: Iterable[int],
+    ds_shape: Tuple[int, ...]
+) -> Tuple[int, ...]:
     """
     Get the minimum partition shape for that allows us to prevent read amplification
     with chunked HDF5 files.
@@ -130,6 +134,7 @@ def _partition_shape_for_chunking(chunks, ds_shape):
     >>> _partition_shape_for_chunking((2, 1, 1, 32, 32), ds_shape_5d)
     (2, 64, 64, 128, 128)
     """
+    chunks = tuple(chunks)
     first_non_one = [x == 1 for x in chunks].index(False)
     shape_left = chunks[:first_non_one + 1]
     return shape_left + ds_shape[first_non_one + 1:]
@@ -440,7 +445,43 @@ class H5DataSet(DataSet):
     def need_decode(self, roi, read_dtype, corrections):
         return True
 
+    def get_partition_constraints(self) -> PartitioningConstraints:
+        chunks = self._chunks
+        if chunks is None:
+            # if we don't have chunking, the "base shape" used for further calculations
+            # is (1, 1, ..., S_1, S_2, ..., S_n) for sig dims S_i
+            chunks = tuple([1] * self.shape.nav.dims) + self.shape.sig
+        # pshape is the smallest contiguous shape we can support for the chunking scheme,
+        # partitions are created as multiples of this contiguous shape, which means we have
+        pshape = _partition_shape_for_chunking(chunks[self.shape.nav.dims:], tuple(self.shape.nav))
+        base_step_size = prod(pshape)
+        bytes_per_nav = prod(self.shape.sig) * self.dtype.itemsize
+        return PartitioningConstraints(
+            base_step_size=base_step_size,
+            bytes_per_nav=bytes_per_nav,
+        )
+
+    def get_partition_for_slice(self, start: int, stop: int) -> Partition:
+        pslice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop,
+            sync_offset=0,  # FIXME: support for sync_offset
+        )
+        pslice_nd = pslice.unravel_nav(self.shape)
+
+        assert True
+
+        return H5Partition(
+            meta=self._meta,
+            reader=self.get_reader(),
+            partition_slice=pslice_nd.flatten_nav(self.shape),
+            slice_nd=pslice_nd,
+            io_backend=self.get_io_backend(),
+            chunks=self._chunks,
+            decoder=None,
+        )
+
     def get_partitions(self):
+        assert False, "don't call me please"
         ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
         ds_slice = Slice(origin=[0] * len(self.shape), shape=ds_shape)
         target_size = self.target_size

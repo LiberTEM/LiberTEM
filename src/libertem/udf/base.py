@@ -1,7 +1,8 @@
+import time
 from collections import defaultdict
 from enum import Enum
 from typing import (
-    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
+    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, NamedTuple, Optional, List,
     Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
 )
 from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
@@ -14,6 +15,7 @@ import cloudpickle
 import numpy as np
 
 from libertem.io.dataset.base.tiling import DataTile
+from libertem.io.partitioner import AdaptivePartitioner, PartitionGenerator, TaskStats
 
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
@@ -1343,9 +1345,8 @@ class Task:
         Moved from libertem.job.base to libertem.udf.base as part of Job API deprecation
     """
 
-    def __init__(self, partition, idx):
+    def __init__(self, partition: Partition):
         self.partition = partition
-        self.idx = idx
 
     def get_locations(self):
         return self.partition.get_locations()
@@ -1481,7 +1482,6 @@ class UDFTask(Task):
     def __init__(
         self,
         partition: Partition,
-        idx: int,
         udf_classes: List[Type[UDF]],
         udf_backends: List[BackendSpec],
         backends: Optional[BackendSpec],
@@ -1496,14 +1496,12 @@ class UDFTask(Task):
         ----------
         partition : Partition
             The partition to work on
-        idx : int
-            the index of the task, used to identify results (?)
         udf_classes : List[Type[UDF]]
             The UDFs to run
         backends : List[str]
             The specified backends we want to run on
         """
-        super().__init__(partition=partition, idx=idx)
+        super().__init__(partition=partition)
         self._backends = backends
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
@@ -1525,6 +1523,26 @@ class UDFTask(Task):
         See docstring of super class for details.
         """
         return get_resources_for_backends(self._udf_backends, user_backends=self._backends)
+
+    def get_size(self, roi: Optional[np.ndarray]) -> int:
+        """
+        Returns the number of navigation items of input data that are part of this task.
+
+        Parameters
+        ----------
+        roi : Optional[np.ndarray]
+            The roi, with shape matching the dataset navigation shape
+
+        Returns
+        -------
+        int
+            The number of navigation items in this task
+        """
+        if roi is None:
+            task_size = self.partition.shape.nav.size
+        else:
+            task_size = int(np.count_nonzero(roi[self.partition.slice.get(nav_only=True)]))
+        return task_size
 
     def __repr__(self):
         return f"<UDFTask {self._udf_classes!r}>"
@@ -1804,9 +1822,10 @@ class UDFRunner:
         partition: Partition,
         params: UDFParams,
         env: Environment
-    ) -> Tuple[UDFData, ...]:
+    ) -> "UDFPartitionResult":
         roi = params.roi
         corrections = params.corrections
+        t0 = time.perf_counter()
         with env.enter():
             try:
                 previous_id = None
@@ -1832,12 +1851,16 @@ class UDFRunner:
             finally:
                 if previous_id is not None:
                     cupy.cuda.Device(previous_id).use()
-            # Make sure results are in the same order as the UDFs
-            return tuple(udf.results for udf in self._udfs)
+            t1 = time.perf_counter()
 
-    def _debug_task_pickling(self, tasks: List[UDFTask]) -> None:
-        if self._debug:
-            cloudpickle.loads(cloudpickle.dumps(tasks))
+            # Make sure results are in the same order as the UDFs
+            udf_results = tuple(udf.results for udf in self._udfs)
+            return UDFPartitionResult(
+                results=udf_results,
+                timings=PartTiming(
+                    total=t1 - t0,
+                )
+            )
 
     def _check_preconditions(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
         if roi is not None and prod(roi.shape) != prod(dataset.shape.nav):
@@ -1855,7 +1878,7 @@ class UDFRunner:
         corrections: Optional[CorrectionSet],
         backends: Optional[BackendSpec],
         dry: bool,
-    ) -> Tuple[List[UDFTask], UDFParams]:
+    ) -> Tuple["TaskGenerator", UDFParams]:
         self._check_preconditions(dataset, roi)
         meta = UDFMeta(
             partition_slice=None,
@@ -1876,11 +1899,11 @@ class UDFRunner:
         neg = Negotiator()
         # FIXME take compute backend into consideration as well
         # Other boundary conditions when moving input data to device
-        # FIXME: approximate partition shape here
-        partition = next(dataset.get_partitions())
+        # FIXME: better approximate partition shape here?
+        approx_partition_shape = (1024,) + dataset.shape.sig
         tiling_scheme = neg.get_scheme(
             udfs=self._udfs,
-            approx_partition_shape=partition.shape,
+            approx_partition_shape=approx_partition_shape,
             dataset=dataset,
             read_dtype=meta.input_dtype,
             roi=roi,
@@ -1893,9 +1916,9 @@ class UDFRunner:
             tiling_scheme=tiling_scheme,
         )
         if dry:
-            tasks = []
+            tasks: TaskGenerator = EmptyTaskGenerator()
         else:
-            tasks = list(self._make_udf_tasks(dataset, roi, backends))
+            tasks = self._make_udf_tasks(dataset, roi, backends)
         return (tasks, params)
 
     def run_for_dataset(
@@ -1940,19 +1963,23 @@ class UDFRunner:
         executor = executor.ensure_sync()
 
         try:
+            if roi is None:
+                total = dataset.shape.nav.size
+            else:
+                total = np.count_nonzero(roi)
             if progress:
                 from tqdm import tqdm
-                t = tqdm(total=len(tasks))
+                t = tqdm(total=total)
             with executor.scatter(params) as params_handle:
                 if tasks:
-                    for res in executor.run_tasks(
+                    for part_results, task in executor.run_tasks(
                         tasks,
                         params_handle,
                         cancel_id,
                     ):
                         if progress:
-                            t.update(1)
-                        yield res
+                            t.update(task.get_task_size(roi))
+                        yield part_results, task
         finally:
             if progress:
                 t.close()
@@ -1984,11 +2011,18 @@ class UDFRunner:
         any_result = False
         for part_results, task in result_iter:
             any_result = True
+            t_merge_0 = time.perf_counter()
             self._apply_part_result(
                 udfs=self._udfs,
                 damage=damage,
                 part_results=part_results,
                 task=task
+            )
+            t_merge_1 = time.perf_counter()
+            task_size = task.get_size(roi)
+            tasks.add_merge_stats(task_size=task_size, merge_time=t_merge_1 - t_merge_0)
+            tasks.add_task_stats(
+                TaskStats(task_size_nav=task_size, duration_seconds=part_results.timings)
             )
             if iterate:
                 yield self._make_udf_result(
@@ -2027,36 +2061,82 @@ class UDFRunner:
         async for res in async_generator_eager(gen, pool=self._pool):
             yield res
 
-    def _roi_for_partition(self, roi, partition: Partition) -> np.ndarray:
-        return roi.reshape(-1)[partition.slice.get(nav_only=True)]
-
     def _make_udf_tasks(
         self,
         dataset: DataSet,
         roi: Optional[np.ndarray],
         backends: Optional[BackendSpec]
-    ) -> Generator[UDFTask, None, None]:
-        udf_backends = [
+    ) -> "TaskGenerator":
+        partitioner = AdaptivePartitioner(
+            dataset_shape=dataset.shape,
+            roi=roi,
+            target_feedback_rate_hz=10,
+        )
+        partition_gen = PartitionGenerator(
+            dataset=dataset,
+            partitioner=partitioner,
+            part_constraints=dataset.get_partition_constraints(),
+        )
+        task_gen = TaskGenerator(
+            backends=backends,
+            partition_gen=partition_gen,
+            udfs=self._udfs,
+        )
+        return task_gen
+
+
+class TaskGenerator:
+    """
+    Generate UDFTask instances for the Partitions coming out of
+    :class:`PartitionGenerator`
+    """
+    def __init__(
+        self,
+        partition_gen: PartitionGenerator,
+        udfs: List[UDF],
+        backends: Optional[BackendSpec]
+    ):
+        self._partition_gen = partition_gen
+        self._udfs = udfs
+        self._udf_classes = [
+            udf.__class__
+            for udf in self._udfs
+        ]
+        self._udf_backends = [
             udf.get_backends()
             for udf in self._udfs
         ]
-        for idx, partition in enumerate(dataset.get_partitions()):
-            if roi is not None:
-                roi_for_part = self._roi_for_partition(roi, partition)
-                if np.count_nonzero(roi_for_part) == 0:
-                    # roi is empty for this partition, ignore
-                    continue
-            udf_classes = [
-                udf.__class__
-                for udf in self._udfs
-            ]
-            tasks = UDFTask(
-                partition=partition, idx=idx, udf_classes=udf_classes,
-                udf_backends=udf_backends,
-                backends=backends,
-                runner_cls=self.__class__,
-            )
-            yield tasks
+        self._backends = backends
+
+    def __next__(self) -> UDFTask:
+        log.debug("TaskGenerator.__next__")
+        partition = next(self._partition_gen)
+        log.debug(f"got a partition: {partition}")
+        task = UDFTask(
+            partition=partition, udf_classes=self._udf_classes,
+            udf_backends=self._udf_backends,
+            backends=self._backends,
+            runner_cls=None,  # FIXME: pass the runner class down here!
+        )
+        return task
+
+    def __iter__(self) -> "TaskGenerator":
+        log.debug("TaskGenerator.__iter__")
+        return self
+
+    def add_task_stats(self, stats: TaskStats) -> None:
+        self._partition_gen.add_task_stats(stats)
+
+    def add_merge_stats(self, task_size: int, merge_time: float):
+        pass  # FIXME: record merge time here!
+
+
+class EmptyTaskGenerator(TaskGenerator):
+    def __init__(self):
+        pass
+
+    def __next__(self) -> UDFTask:
+        raise StopIteration
 
 
 UDFResultDict = Mapping[str, BufferWrapper]
@@ -2064,7 +2144,9 @@ UDFResultDict = Mapping[str, BufferWrapper]
 
 class UDFResults:
     '''
-    Container class to combine UDF results with additional information.
+    Container class to combine UDF results with additional information.  Used
+    for the partial results from `UDFRunner.run_for_dataset`. For the equivalent
+    per-Partition class, see :class:`UDFPartitionResult`.
 
     This class allows to return additional information from UDF execution
     together with UDF result buffers. This is currently used to pass
@@ -2088,3 +2170,29 @@ class UDFResults:
     def __init__(self, buffers: Iterable[UDFResultDict], damage: BufferWrapper):
         self.buffers = tuple(buffers)
         self.damage = damage
+
+
+class PartTiming(NamedTuple):
+    """
+    Timing per partition
+    """
+    total: float
+
+
+class UDFPartitionResult:
+    """
+    Container class to combine the per-partition results with
+    additional information, like timings.
+
+    Parameters
+    ----------
+
+    results
+        Tuple containing the results for all UDFs for a partition
+
+    timing
+        Per-partition timings
+    """
+    def __init__(self, results: Tuple[UDFData, ...], timings: PartTiming):
+        self.results = results
+        self.timings = timings

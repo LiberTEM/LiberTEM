@@ -3,7 +3,7 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional, Tuple
+from typing import Iterable, Any, List, Optional, Tuple
 
 from dask import distributed as dd
 import distributed
@@ -330,11 +330,11 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         params_handle: Any,
         cancel_id: Any,
     ):
-        tasks = list(tasks)
-        tasks_w_index = list(enumerate(tasks))
+        task_history: List[TaskProtocol] = []
+        tasks = iter(tasks)
 
         def _id_to_task(task_id):
-            return tasks[task_id]
+            return task_history[task_id]
 
         workers = self.get_available_workers()
         threaded_executor = workers.has_threaded_workers()
@@ -343,10 +343,13 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         initial = []
 
         for w in range(int(len(workers))):
-            if not tasks_w_index:
-                break
-            idx, wrapped_task = tasks_w_index.pop(0)
-            future = self._get_future(wrapped_task, workers, idx, params_handle, threaded_executor)
+            try:
+                task = next(tasks)
+            except StopIteration:
+                break  # no more tasks in the iterator, we are done
+            idx = len(task_history)
+            future = self._get_future(task, workers, idx, params_handle, threaded_executor)
+            task_history.append(task)
             initial.append(future)
             self._futures[cancel_id].append(future)
 
@@ -357,15 +360,19 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
                     del self._futures[cancel_id]
                     raise JobCancelledError()
                 result = result_wrap['task_result']
-                task = _id_to_task(result_wrap['task_id'])
-                if tasks_w_index:
-                    idx, wrapped_task = tasks_w_index.pop(0)
+                finished_task = _id_to_task(result_wrap['task_id'])
+                try:
+                    idx = len(task_history)
+                    next_task = next(tasks)
+                    task_history.append(next_task)
                     future = self._get_future(
-                        wrapped_task, workers, idx, params_handle, threaded_executor,
+                        next_task, workers, idx, params_handle, threaded_executor
                     )
                     as_completed.add(future)
                     self._futures[cancel_id].append(future)
-                yield result, task
+                except StopIteration:
+                    pass
+                yield result, finished_task
         finally:
             if cancel_id in self._futures:
                 del self._futures[cancel_id]

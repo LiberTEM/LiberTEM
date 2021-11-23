@@ -285,7 +285,7 @@ def test_pick_analysis(default_k2is, lt_ctx):
     # Default is too large for test without ROI
     "with_roi", (True, )
 )
-def test_correction(default_k2is, lt_ctx, with_roi):
+def test_correction(default_k2is, lt_ctx_fast, with_roi):
     ds = default_k2is
 
     if with_roi:
@@ -294,7 +294,7 @@ def test_correction(default_k2is, lt_ctx, with_roi):
     else:
         roi = None
 
-    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx_fast)
 
 
 @needsdata

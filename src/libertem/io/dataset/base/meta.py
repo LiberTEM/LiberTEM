@@ -63,10 +63,6 @@ class PartitionStructure:
     Parameters
     ----------
 
-    slices : List[Tuple[Int]]
-        List of tuples [start_idx, end_idx) that partition the data set by the flattened
-        navigation axis
-
     shape : Shape
         shape of the whole dataset
 
@@ -81,16 +77,6 @@ class PartitionStructure:
         "type": "object",
         "properties": {
             "version": {"const": 1},
-            "slices": {
-                "type": "array",
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "type": "number", "minItems": 2, "maxItems": 2,
-                    }
-                },
-                "minItems": 1,
-            },
             "shape": {
                 "type": "array",
                 "items": {"type": "number", "minimum": 1},
@@ -99,18 +85,16 @@ class PartitionStructure:
             "sig_dims": {"type": "number"},
             "dtype": {"type": "string"},
         },
-        "required": ["version", "slices", "shape", "sig_dims", "dtype"]
+        "required": ["version", "shape", "sig_dims", "dtype"]
     }
 
-    def __init__(self, shape, slices, dtype):
-        self.slices = slices
+    def __init__(self, shape, dtype):
         self.shape = shape
         self.dtype = np.dtype(dtype)
 
     def serialize(self):
         data = {
             "version": 1,
-            "slices": [[s[0], s[1]] for s in self.slices],
             "shape": list(self.shape),
             "sig_dims": self.shape.sig.dims,
             "dtype": str(self.dtype),
@@ -123,7 +107,6 @@ class PartitionStructure:
         jsonschema.validate(schema=cls.SCHEMA, instance=data)
         shape = Shape(tuple(data["shape"]), sig_dims=data["sig_dims"])
         return PartitionStructure(
-            slices=[tuple(item) for item in data["slices"]],
             shape=shape,
             dtype=np.dtype(data["dtype"]),
         )
@@ -132,10 +115,6 @@ class PartitionStructure:
     def from_ds(cls, ds):
         data = {
             "version": 1,
-            "slices": [
-                [p.slice.origin[0], p.slice.origin[0] + p.slice.shape[0]]
-                for p in ds.get_partitions()
-            ],
             "shape": list(ds.shape),
             "sig_dims": ds.shape.sig.dims,
             "dtype": str(ds.dtype),

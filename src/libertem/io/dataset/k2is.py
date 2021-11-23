@@ -1018,19 +1018,22 @@ class K2ISDataSet(DataSet):
         ]
         return K2FileSet(files=files)
 
-    def get_partitions(self):
-        io_backend = self.get_io_backend()
+    def get_partition_for_slice(self, start: int, stop: int) -> "K2ISPartition":
+        assert self._meta is not None
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
-            yield K2ISPartition(
-                meta=self._meta,
-                fileset=fileset,
-                partition_slice=part_slice,
-                start_frame=start,
-                num_frames=stop - start,
-                io_backend=io_backend,
-                decoder=self.get_decoder(),
-            )
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        io_backend = self.get_io_backend()
+        return K2ISPartition(
+            meta=self._meta,
+            fileset=fileset,
+            partition_slice=part_slice,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            io_backend=io_backend,
+            decoder=self.get_decoder(),
+        )
 
     def __repr__(self):
         return "<K2ISDataSet for pattern={} nav_shape={}>".format(

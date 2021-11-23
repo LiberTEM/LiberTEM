@@ -62,6 +62,7 @@ class Partition:
         yielding the partition slice, and additionally start and stop frame
         indices for each partition.
         """
+        raise RuntimeError("don't call me please")
         num_frames = shape.nav.size
         f_per_part = max(1, num_frames // num_partitions)
         c0 = itertools.count(start=0, step=f_per_part)

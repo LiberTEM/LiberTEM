@@ -242,19 +242,22 @@ class SERDataSet(DataSet):
         # force single-frame tiles
         return (1,) + tileshape[1:]
 
-    def get_partitions(self):
+    def get_partition_for_slice(self, start: int, stop: int) -> "SERPartition":
+        assert self._meta is not None
         fileset = self._get_fileset()
-        for part_slice, start, stop in self.get_slices():
-            yield SERPartition(
-                path=self._path,
-                meta=self._meta,
-                partition_slice=part_slice,
-                fileset=fileset,
-                start_frame=start,
-                num_frames=stop - start,
-                io_backend=self.get_io_backend(),
-                decoder=None,
-            )
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        return SERPartition(
+            path=self._path,
+            meta=self._meta,
+            partition_slice=part_slice,
+            fileset=fileset,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            io_backend=self.get_io_backend(),
+            decoder=None,
+        )
 
     def __repr__(self):
         return f"<SERDataSet for {self._path}>"

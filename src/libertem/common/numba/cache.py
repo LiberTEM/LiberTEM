@@ -134,11 +134,21 @@ def prime_numba_cache(ds):
         from libertem.udf.raw import PickUDF
         from libertem.corrections.corrset import CorrectionSet
         from libertem.io.dataset.base import Negotiator
+        from libertem.io.partitioner import PartitionGenerator, AdaptivePartitioner
 
         # need to have at least one UDF; here we run for both sum and pick
         # to reduce the initial latency when switching to pick mode
         udfs = [SumUDF(), PickUDF()]
         neg = Negotiator()
+        partitioner = AdaptivePartitioner(
+            dataset_shape=ds.shape,
+            roi=roi,
+            target_feedback_rate_hz=10,
+        )
+        partition_gen = PartitionGenerator(
+            dataset=ds,
+            partitioner=partitioner,
+        )
         for udf in udfs:
             for corr_dtype in (np.float32, None):
                 if corr_dtype is not None:
@@ -146,7 +156,7 @@ def prime_numba_cache(ds):
                 else:
                     corrections = None
                 found_first_tile = False
-                for p in ds.get_partitions():
+                for p in partition_gen:
                     if found_first_tile:
                         break
                     p.set_corrections(corrections)

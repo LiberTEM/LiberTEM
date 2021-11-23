@@ -4,7 +4,9 @@ import asyncio
 from typing import Callable, Optional, Any, Iterable, TYPE_CHECKING, TypeVar, Type
 from typing_extensions import Protocol
 from contextlib import contextmanager
+
 from async_generator import asynccontextmanager
+import numpy as np
 
 from libertem.utils.threading import set_num_threads, mitigations
 from libertem.utils.async_utils import (
@@ -68,7 +70,13 @@ class Environment:
 
 
 class TaskProtocol(Protocol):
+    """
+    The interface between the UDFRunner and JobExecutor
+    """
     def __call__(self, params: "UDFParams", env: Environment):
+        pass
+
+    def get_size(self, roi: Optional[np.ndarray]) -> int:
         pass
 
 

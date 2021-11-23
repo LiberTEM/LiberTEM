@@ -56,7 +56,7 @@ def zeros_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
         res = np.zeros(size, dtype=dtype)
     else:
         res = empty_aligned(size, dtype)
-        res[:] = 0
+        # res[:] = 0
     return res
 
 

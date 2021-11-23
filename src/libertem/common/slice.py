@@ -317,10 +317,10 @@ class Slice:
             if state == 0:
                 if s != 1:
                     state = 1
-                    assert s <= cs, "invalid nav_shape #1"
+                    assert s <= cs, f"invalid nav_shape #1: {containing_shape}, {self.shape.nav}"
             elif state == 1:
-                assert s == cs, "invalid nav_shape #2"
-                assert o == 0, "invalid origin"
+                assert s == cs, f"invalid nav_shape #2: {containing_shape}, {self.shape.nav}"
+                assert o == 0, f"invalid origin: {origin}"
 
         nav_origin = np.ravel_multi_index(
             origin,
@@ -331,6 +331,36 @@ class Slice:
             origin=(nav_origin,) + self.origin[nav_dims:],
             shape=Shape((nav_shape,) + tuple(self.shape.sig), sig_dims=sig_dims)
         )
+
+    def unravel_nav(self, containing_shape: Shape) -> "Slice":
+        nav_shape = self.shape.nav
+        sig_shape = self.shape.sig
+        container = tuple(containing_shape.nav)
+        assert len(nav_shape) == 1,\
+            "Slice needs to be flat in nav axis for `unravel_nav` to work"
+
+        new_nav_origin = tuple(np.hstack(np.unravel_index(
+            (self.origin[0],),
+            container,
+        )))
+        new_stop = tuple(np.hstack(np.unravel_index(
+            (self.origin[0] + nav_shape[0] - 1,),
+            container,
+        )) + 1)
+
+        new_nav_shape = tuple(
+            o + s
+            for o, s in zip(new_nav_origin, new_stop)
+        )
+
+        new_shape = Shape(new_nav_shape + sig_shape, sig_dims=len(sig_shape))
+        new_origin = new_nav_origin + self.origin[1:]
+
+        new_slice = Slice(
+            origin=new_origin,
+            shape=new_shape,
+        )
+        return new_slice
 
     def adjust_for_roi(self, roi: Optional[np.ndarray]) -> "Slice":
         """

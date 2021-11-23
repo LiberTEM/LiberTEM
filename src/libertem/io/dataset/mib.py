@@ -1227,22 +1227,24 @@ class MIBDataSet(DataSet):
         assert self.meta is not None and base_shape[-1] == self.meta.shape[-1]
         return base_shape
 
-    def get_partitions(self):
+    def get_partition_for_slice(self, start: int, stop: int) -> "MIBPartition":
         first_file = self._files_sorted[0]
         fileset = self._get_fileset()
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
         kind = first_file.fields['mib_kind']
-        for part_slice, start, stop in self.get_slices():
-            yield MIBPartition(
-                meta=self._meta,
-                fileset=fileset,
-                partition_slice=part_slice,
-                start_frame=start,
-                num_frames=stop - start,
-                kind=kind,
-                bit_depth=first_file.fields['bits_per_pixel'],
-                io_backend=self.get_io_backend(),
-                decoder=self.get_decoder(),
-            )
+        return MIBPartition(
+            meta=self._meta,
+            fileset=fileset,
+            partition_slice=part_slice,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            kind=kind,
+            bit_depth=first_file.fields['bits_per_pixel'],
+            io_backend=self.get_io_backend(),
+            decoder=self.get_decoder(),
+        )
 
     def __repr__(self):
         return f"<MIBDataSet of {self.dtype} shape={self.shape}>"

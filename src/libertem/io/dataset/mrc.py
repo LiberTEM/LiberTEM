@@ -235,20 +235,20 @@ class MRCDataSet(DataSet):
     def get_io_backend(self):
         return MRCBackend()
 
-    def get_partitions(self):
+    def get_partition_for_slice(self, start: int, stop: int) -> BasePartition:
+        assert self._meta is not None
         fileset = self._get_fileset()
-        for part_slice, start, stop in MRCPartition.make_slices(
-                shape=self.shape,
-                num_partitions=self.get_num_partitions(),
-                sync_offset=self._sync_offset):
-            yield MRCPartition(
-                meta=self._meta,
-                fileset=fileset,
-                partition_slice=part_slice,
-                start_frame=start,
-                num_frames=stop - start,
-                io_backend=self.get_io_backend(),
-            )
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        return MRCPartition(
+            meta=self._meta,
+            fileset=fileset,
+            partition_slice=part_slice,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            io_backend=self.get_io_backend(),
+        )
 
     def __repr__(self):
         return f"<MRCDataSet for {self._path}>"

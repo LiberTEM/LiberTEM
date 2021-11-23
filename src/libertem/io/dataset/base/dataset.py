@@ -1,10 +1,11 @@
 import typing
-from typing import Generator, Optional, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 import numpy as np
 from libertem.common.shape import Shape
 
 from libertem.common.math import prod
+from libertem.common.slice import Slice
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.web.messageconverter import MessageConverter
@@ -15,6 +16,12 @@ if typing.TYPE_CHECKING:
     from libertem.executor.base import JobExecutor
     from libertem.io.dataset.base import IOBackend, Decoder, DataSetMeta
     from numpy import typing as nt
+
+
+class PartitioningConstraints(NamedTuple):
+    base_step_size: int  # constrain navitems per partition to multiples of this
+    bytes_per_nav: int  # how many bytes per nav item ("frame")
+    # FIXME: add hard constraints for non-uniform chunking?
 
 
 class DataSet:
@@ -94,11 +101,39 @@ class DataSet:
             sync_offset=self._sync_offset,
         )
 
-    def get_partitions(self) -> Generator[Partition, None, None]:
+    def get_partition_constraints(self) -> PartitioningConstraints:
+        return PartitioningConstraints(
+            base_step_size=1,
+            bytes_per_nav=1,
+        )
+
+    def get_slice_for_start_stop(
+        self,
+        shape: Shape,
+        start: int,
+        stop: int,
+        sync_offset: int,
+    ) -> Tuple[Slice, int, int]:
+        stop = min(stop, shape.flatten_nav().nav[0])
+        sig_shape = shape.sig
+        sig_dims = sig_shape.dims
+        part_slice = Slice(
+            origin=(start,) + tuple([0] * sig_dims),
+            shape=Shape(((stop - start),) + tuple(sig_shape),
+                        sig_dims=sig_dims)
+        )
+        return part_slice, start + sync_offset, stop + sync_offset
+
+    def get_partition_for_slice(self, start: int, stop: int) -> Partition:
         """
-        Return a generator over all Partitions in this DataSet. Should only
-        be called on the master node.
-        """
+        Get the partition for the slice specified by (start, stop)
+
+        Note that subclasses may have constraints on the shape of partitions,
+        which can be queried by FIXME
+
+        If `start` is out of bounds, raises ValueError; `stop` will be clamped
+        to `min(dataset.shape.nav[0], stop)`
+        """  # FIXME: update docstring
         raise NotImplementedError()
 
     @property
@@ -146,13 +181,8 @@ class DataSet:
         """
         Diagnostics common for all DataSet implementations
         """
-        p = next(self.get_partitions())
 
         return self.get_diagnostics() + [
-            {"name": "Partition shape",
-             "value": str(p.shape)},
-            {"name": "Number of partitions",
-             "value": str(len(list(self.get_partitions())))},
             {"name": "Number of frames skipped at the beginning",
              "value": self._sync_offset_info["frames_skipped_start"]},
             {"name": "Number of frames ignored at the end",
@@ -271,6 +301,7 @@ class DataSet:
         corrections: Optional[CorrectionSet],
     ) -> bool:
         io_backend = self.get_io_backend().get_impl()
+        assert self.meta is not None
         return io_backend.need_copy(
             decoder=self.get_decoder(),
             roi=roi,
@@ -284,6 +315,7 @@ class DataSet:
         """
         minimum signal size, in number of elements
         """
+        assert self.meta is not None
         return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
     def get_max_io_size(self) -> Optional[int]:

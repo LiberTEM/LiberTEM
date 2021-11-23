@@ -2,12 +2,13 @@ import pytest
 import numpy as np
 
 from libertem.io.dataset.memory import (
-    MemPartition, MemoryDataSet, FileSet, MemoryFile
+    MemPartition, MemoryDataSet,
 )
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, reshaped_view, PlaceholderBufferWrapper,
 )
 from libertem.common import Shape, Slice
+from libertem.io.partitioner import PartitionGenerator, ConstantPartitioner
 from libertem.udf.base import UDF
 
 from utils import _mk_random
@@ -26,7 +27,17 @@ def test_new_for_partition():
 
     roi = _mk_random(size=dataset.shape.nav, dtype="bool")
 
-    for idx, partition in enumerate(dataset.get_partitions()):
+    partitioner = ConstantPartitioner(
+        dataset_shape=dataset.shape,
+        roi=roi,
+        partition_size=128,
+    )
+    partition_gen = PartitionGenerator(
+        dataset=dataset,
+        partitioner=partitioner,
+    )
+
+    for idx, partition in enumerate(partition_gen):
         print("partition number", idx)
         new_buf = buf.new_for_partition(partition, roi=roi)
         ps = partition.slice.get(nav_only=True)
@@ -84,6 +95,8 @@ class BadMemPartition(MemPartition):
     def get_tiles(self, *args, **kwargs):
         for t in super().get_tiles(*args, **kwargs):
             sl = t.tile_slice
+            # replace tile slice with one that has an off-by-one error in the origin,
+            # which should be caught by the BufferWrapper:
             origin = np.array(sl.origin)
             origin += 1
             new_sl = Slice(origin=tuple(origin), shape=sl.shape)
@@ -92,32 +105,24 @@ class BadMemPartition(MemPartition):
 
 
 class BadMemoryDS(MemoryDataSet):
-    def get_partitions(self):
-        fileset = FileSet([
-            MemoryFile(
-                path=None,
-                start_idx=0,
-                end_idx=self._image_count,
-                native_dtype=self.data.dtype,
-                sig_shape=self.shape.sig,
-                data=self.data.reshape(self.shape.flatten_nav()),
-                check_cast=self._check_cast,
-            )
-        ])
-
-        for part_slice, start, stop in self.get_slices():
-            yield BadMemPartition(
-                meta=self._meta,
-                partition_slice=part_slice,
-                fileset=fileset,
-                start_frame=start,
-                num_frames=stop - start,
-                tiledelay=self._tiledelay,
-                tileshape=self.tileshape,
-                force_need_decode=self._force_need_decode,
-                io_backend=self.get_io_backend(),
-                decoder=self.get_decoder(),
-            )
+    def get_partition_for_slice(self, start: int, stop: int) -> "MemPartition":
+        fileset = self._get_fileset()
+        assert stop > start
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        return BadMemPartition(
+            meta=self._meta,
+            partition_slice=part_slice,
+            fileset=fileset,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            tiledelay=self._tiledelay,
+            tileshape=self.tileshape,
+            force_need_decode=self._force_need_decode,
+            io_backend=self.get_io_backend(),
+            decoder=self.get_decoder(),
+        )
 
 
 class BaseSigUDF(UDF):
@@ -190,7 +195,7 @@ def test_buffer_slices(lt_ctx, tileshape, udf_cls):
         sig_dims=2
     )
 
-    _ = lt_ctx.run_udf(dataset=ds, udf=udf_cls())
     with pytest.raises(Exception) as exc_info:
         _ = lt_ctx.run_udf(dataset=bad_ds, udf=udf_cls())
+    _ = lt_ctx.run_udf(dataset=ds, udf=udf_cls())
     assert exc_info.errisinstance((AssertionError, IndexError))

@@ -304,8 +304,8 @@ class MemoryDataSet(DataSet):
     def get_io_backend(self):
         return MemBackend()
 
-    def get_partitions(self):
-        fileset = FileSet([
+    def _get_fileset(self):
+        return FileSet([
             MemoryFile(
                 path=None,
                 start_idx=0,
@@ -317,23 +317,24 @@ class MemoryDataSet(DataSet):
             )
         ])
 
-        for part_slice, start, stop in self.get_slices():
-            log.debug(
-                "creating partition slice %s start %s stop %s",
-                part_slice, start, stop,
-            )
-            yield MemPartition(
-                meta=self._meta,
-                partition_slice=part_slice,
-                fileset=fileset,
-                start_frame=start,
-                num_frames=stop - start,
-                tiledelay=self._tiledelay,
-                tileshape=self.tileshape,
-                force_need_decode=self._force_need_decode,
-                io_backend=self.get_io_backend(),
-                decoder=self.get_decoder(),
-            )
+    def get_partition_for_slice(self, start: int, stop: int) -> "MemPartition":
+        fileset = self._get_fileset()
+        assert stop > start
+        part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
+            self.shape, start, stop, self._sync_offset,
+        )
+        return MemPartition(
+            meta=self._meta,
+            partition_slice=part_slice,
+            fileset=fileset,
+            start_frame=idx_start,
+            num_frames=idx_stop - idx_start,
+            tiledelay=self._tiledelay,
+            tileshape=self.tileshape,
+            force_need_decode=self._force_need_decode,
+            io_backend=self.get_io_backend(),
+            decoder=self.get_decoder(),
+        )
 
 
 class MemPartition(BasePartition):

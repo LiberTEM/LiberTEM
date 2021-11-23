@@ -157,7 +157,6 @@ class DaskDataSet(DataSet):
         return DaskBackend()
 
     def initialize(self, executor):
-        self._min_npart = len(executor.get_available_workers())
         self._array = self._adapt_chunking(self._array, self._sig_dims)
         self._nav_shape = self._array.shape[:-self._sig_dims]
 
@@ -253,8 +252,7 @@ class DaskDataSet(DataSet):
                         f'New n_blocks: {[len(c) for c in array.chunks]}.')
         # Merge remaining chunks maintaining C-ordering until we reach a target chunk sizes
         # or a minmum number of partitions corresponding to the number of workers
-        new_chunking, min_size, max_size = merge_until_target(array, self._min_size,
-                                                              self._min_npart)
+        new_chunking, min_size, max_size = merge_until_target(array, self._min_size)
         if new_chunking != array.chunks:
             original_n_chunks = [len(c) for c in array.chunks]
             chunksizes = get_chunksizes(array)
@@ -495,7 +493,7 @@ def get_values(sequence, idxs):
     return [sequence[idx] for idx in idxs]
 
 
-def merge_until_target(array, target, min_chunks):
+def merge_until_target(array, target, min_chunks=0):
     chunking = array.chunks
     if array.nbytes < target:
         # A really small dataset, better to treat as one partition

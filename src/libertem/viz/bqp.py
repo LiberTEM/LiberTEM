@@ -91,15 +91,18 @@ class BQLive2DPlot(Live2DPlot):
             title=self.title
         )
 
+        color_scale = ColorScale(min=0, max=1)
+
         scales_image = {'x': scale_x,
                         'y': scale_y,
-                        'image': ColorScale(min=0, max=1)}
+                        'image': color_scale}
 
         dtype = np.result_type(self.data, np.int8)
         image = ImageGL(image=self.data.astype(dtype), scales=scales_image)
         figure.marks = (image,)
         self.figure = figure
         self.image = image
+        self.color_scale = color_scale
 
     def display(self):
         from IPython.display import display
@@ -109,8 +112,12 @@ class BQLive2DPlot(Live2DPlot):
         dtype = np.result_type(self.data, np.int8)
         # Map on dtype that supports subtraction
         valid_data = self.data[damage].astype(dtype)
-        mmin = valid_data.min()
-        mmax = valid_data.max()
+        if valid_data.size > 0:
+            mmin = valid_data.min()
+            mmax = valid_data.max()
+        else:
+            mmin = 1
+            mmax = 1 + 1e-12
         delta = mmax - mmin
         if delta <= 0:
             delta = 1

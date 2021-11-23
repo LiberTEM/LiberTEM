@@ -6,6 +6,8 @@ from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
 
+from libertem.analysis.com import apply_correction, guess_corrections
+
 
 @pytest.fixture
 def ds_w_zero_frame():
@@ -453,3 +455,178 @@ def test_com_valid_parameters(lt_ctx, ds_random):
 
     assert a.parameters['r'] == 12
     assert a.parameters['ri'] == 7
+
+
+@pytest.mark.parametrize(
+    'roi', (
+        None,
+        (slice(1, 4), slice(1, 4)),
+        np.array([
+            (True, True, True, True, False),
+            (True, True, True, True, False),
+            (True, True, True, True, False),
+            (True, True, True, True, False),
+            (False, False, False, False, False),
+        ])
+    )
+)
+def test_com_parameter_guess(lt_ctx, roi):
+    data = np.zeros((5, 5, 5, 5), dtype=np.float32)
+    # data with negative divergence and no curl
+    for i in range(3):
+        for j in range(3):
+            data[i+1, j+1, 3-i, 3-j] = 1
+    data[0, :, 2, 2] = 1
+    data[4, :, 2, 2] = 1
+    data[:, 0, 2, 2] = 1
+    data[:, 4, 2, 2] = 1
+
+    data_fliprot = data.transpose(0, 1, 3, 2)
+
+    dataset = MemoryDataSet(
+        data=data,
+        sig_dims=2,
+    )
+
+    analysis = lt_ctx.create_com_analysis(
+        dataset=dataset,
+        cy=2,
+        cx=2,
+        scan_rotation=0.,
+        flip_y=False
+    )
+    res = lt_ctx.run(analysis)
+
+    print(res.divergence.raw_data)
+    print(res.curl.raw_data)
+
+    guess = guess_corrections(res.y.raw_data, res.x.raw_data, roi=roi)
+    print(guess)
+
+    g_rot, g_flip_y, g_cy, g_cx = guess
+    # Check namedtuple
+    assert guess.scan_rotation == g_rot
+    assert guess.flip_y == g_flip_y
+    assert guess.cy == g_cy
+    assert guess.cx == g_cx
+
+    assert g_rot == 0
+    assert g_flip_y is False
+    assert g_cy == 0
+    assert g_cx == 0
+
+    dataset_changed = MemoryDataSet(
+        data=data_fliprot,
+        sig_dims=2,
+    )
+
+    analysis_changed = lt_ctx.create_com_analysis(
+        dataset=dataset_changed,
+        cy=3,
+        cx=1,
+        scan_rotation=0.,
+        flip_y=False,
+    )
+    res_changed = lt_ctx.run(analysis_changed)
+
+    guess = guess_corrections(res_changed.y.raw_data, res_changed.x.raw_data, roi=roi)
+    print(guess)
+
+    g_rot, g_flip_y, g_cy, g_cx = guess
+
+    # Transposing is equivalent to flipping and rotating 90°
+    assert g_rot == 90
+    assert g_flip_y is True
+    assert g_cy == -1
+    assert g_cx == 1
+
+    # We apply the corrections
+    analysis_corrected = lt_ctx.create_com_analysis(
+        dataset=dataset_changed,
+        cy=3+g_cy,
+        cx=1+g_cx+1,
+        scan_rotation=0.+g_rot,
+        flip_y=(g_flip_y is not False),
+    )
+    res_corrected = lt_ctx.run(analysis_corrected)
+
+    corrected_guess = guess_corrections(res_corrected.y.raw_data, res_corrected.x.raw_data, roi=roi)
+    print(corrected_guess)
+    print(res_corrected.divergence.raw_data)
+    print(res_corrected.curl.raw_data)
+
+    g_rot, g_flip_y, g_cy, g_cx = corrected_guess
+
+    # Backtransform of the shift
+    g_cy, g_cx = apply_correction(g_cy, g_cx, 90, True, forward=False)
+
+    print(g_cy, g_cx)
+
+    assert g_rot == 0
+    assert g_flip_y is False
+    assert np.allclose(g_cy, 0)
+    assert np.allclose(g_cx, -1)
+
+
+def test_apply_correction():
+    y_centers = np.array((
+        [1, 1],
+        [-1, 0]
+    ))
+    x_centers = np.array((
+        [0, 1],
+        [1, 1]
+    ))
+
+    forward_1 = apply_correction(y_centers, x_centers, 90, False)
+    forward_2 = apply_correction(y_centers, x_centers, 90, True)
+    assert np.allclose(
+        forward_1[0],
+        np.array((
+            [0, 1],
+            [1, 1]
+        ))
+    )
+    assert np.allclose(
+        forward_1[1],
+        np.array((
+            [-1, -1],
+            [1, 0]
+        ))
+    )
+    assert np.allclose(
+        forward_2[0],
+        np.array((
+            [0, 1],
+            [1, 1]
+        ))
+    )
+    assert np.allclose(
+        forward_2[1],
+        np.array((
+            [1, 1],
+            [-1, 0]
+        ))
+    )
+
+
+@pytest.mark.parametrize(
+    'angle', (0, -173, 23)
+)
+@pytest.mark.parametrize(
+    'flip_y', (False, True)
+)
+def test_apply_correction_2(angle, flip_y):
+    y_centers = np.array((
+        [1, 2],
+        [3, 4]
+    ))
+    x_centers = np.array((
+        [8, 7],
+        [6, 5]
+    ))
+
+    forward = apply_correction(y_centers, x_centers, angle, flip_y)
+    back = apply_correction(forward[0], forward[1], angle, flip_y, forward=False)
+    assert np.allclose(back[0], y_centers)
+    assert np.allclose(back[1], x_centers)

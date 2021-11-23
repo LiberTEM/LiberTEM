@@ -1,5 +1,7 @@
 import logging
 import inspect
+from collections import namedtuple
+
 import numpy as np
 
 from libertem import masks
@@ -172,24 +174,46 @@ def magnitude(y_centers, x_centers):
     return np.sqrt(y_centers**2 + x_centers**2)
 
 
-def coordinate_check(y_centers, x_centers):
+def coordinate_check(y_centers, x_centers, roi=None):
     '''
     Calculate the RMS curl as a function of :code:`scan_rotation` and :code:`flip_y`.
 
     The curl for a purely electrostatic field is zero. That means
     the correct settings for :code:`scan_rotation` and :code:`flip_y` should
-    minimize the RMS curl for non-magnetic specimens.
+    minimize the RMS curl for atomic resolution STEM of non-magnetic specimens
+    along a high-symmetry zone axis.
+
+    Parameters
+    ----------
+    y_centers, x_centers : numpy.ndarray
+        2D arrays with y and x component of the center of mass shift for each
+        scan position, as returned by :meth:`center_shifts` or
+        :meth:`apply_correction`
+    roi : Optional[numpy.ndarray]
+        Selector for values to consider in the statistics, compatible
+        with indexing an array with the shape of y_centers and x_centers.
+        By default, everything except the last row and last column are used
+        since these contain artefacts.
+
+    Returns
+    -------
+    (straight, flipped)
+        Root mean square of the curl as a function of :code:`scan_rotation` from
+        0 to 359 degrees in steps of one, with :code:`flip_y=False` (straight)
+        and code:`flip_y=True` (flipped).
     '''
     straight = np.zeros(360)
     flipped = np.zeros(360)
+    if roi is None:
+        # The last row and column contain artefacts
+        roi = (slice(0, -1), slice(0, -1))
     for angle in range(360):
         for flip_y in (True, False):
             y_transformed, x_transformed = apply_correction(
                 y_centers, x_centers, scan_rotation=angle, flip_y=flip_y
             )
             curl = curl_2d(y_transformed, x_transformed)
-            # The last row and column contain artefacts
-            result = np.sqrt(np.mean(curl[:-1, :-1]**2))
+            result = np.sqrt(np.mean(curl[roi]**2))
             if flip_y:
                 flipped[angle] = result
             else:
@@ -197,7 +221,10 @@ def coordinate_check(y_centers, x_centers):
     return (straight, flipped)
 
 
-def guess_corrections(y_centers, x_centers):
+GuessResult = namedtuple('GuessResult', ('scan_rotation', 'flip_y', 'cy', 'cx'))
+
+
+def guess_corrections(y_centers, x_centers, roi=None):
     '''
     Guess corrections for center shift, :code:`scan_rotation` and :code:`flip_y` from CoM data
 
@@ -213,14 +240,30 @@ def guess_corrections(y_centers, x_centers):
 
     If any corrections were applied when generating the input data, please note that the corrections
     should be applied relative to these previous value. In particular, the
-    center corrections have to be back-transformed, for example with
-    :code:`apply_corrections(..., forward=False)
+    center corrections returned by this function have to be back-transformed to the uncorrected
+    coordinate system, for example with :code:`apply_corrections(..., forward=False)
+
+    Parameters
+    ----------
+    y_centers, x_centers : numpy.ndarray
+        2D arrays with y and x component of the center of mass shift for each
+        scan position, as returned by :meth:`center_shifts` or
+        :meth:`apply_correction`
+    roi : Optional[numpy.ndarray]
+        Selector for values to consider in the statistics, compatible
+        with indexing an array with the shape of y_centers and x_centers.
+        By default, everything except the last row and last column are used
+        since these contain artefacts.
+
 
     Returns
     -------
-    scan_rotation, flip_y, cy, cx : relative to current values
+    GuessResult : relative to current values
     '''
-    straight, flipped = coordinate_check(y_centers, x_centers)
+    if roi is None:
+        # The last row and column contain artefacts
+        roi = (slice(0, -1), slice(0, -1))
+    straight, flipped = coordinate_check(y_centers, x_centers, roi=roi)
     # The one with lower minima is the correct one
     flip_y = bool(np.min(flipped) < np.min(straight))
     if flip_y:
@@ -239,7 +282,7 @@ def guess_corrections(y_centers, x_centers):
     # the beam is deflected most strongly near the nuclei, the histogram should
     # have more values at the negative end of the range than at the positive
     # end.
-    div = divergence(corrected_y, corrected_x)
+    div = divergence(corrected_y, corrected_x)[roi]
     all_range = np.maximum(-np.min(div), np.max(div))
     hist, bins = np.histogram(div, range=(-all_range, all_range), bins=5)
     polarity_off = np.sum(hist[:1]) < np.sum(hist[-1:])
@@ -247,7 +290,12 @@ def guess_corrections(y_centers, x_centers):
         angle += 180
     if angle > 180:
         angle -= 360
-    return (angle, flip_y, np.mean(y_centers), np.mean(x_centers))
+    return GuessResult(
+        scan_rotation=angle,
+        flip_y=flip_y,
+        cy=np.mean(y_centers[roi]),
+        cx=np.mean(x_centers[roi])
+    )
 
 
 class COMResultSet(AnalysisResultSet):
@@ -315,6 +363,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         y_centers_raw, x_centers_raw = center_shifts(img_sum, img_y, img_x, ref_y, ref_x)
+        shape = y_centers_raw.shape
         y_centers, x_centers = apply_correction(
             y_centers_raw, x_centers_raw,
             scan_rotation=self.parameters["scan_rotation"],

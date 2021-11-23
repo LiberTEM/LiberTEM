@@ -457,7 +457,20 @@ def test_com_valid_parameters(lt_ctx, ds_random):
     assert a.parameters['ri'] == 7
 
 
-def test_com_parameter_guess(lt_ctx):
+@pytest.mark.parametrize(
+    'roi', (
+        None,
+        (slice(1, 4), slice(1, 4)),
+        np.array([
+            (True, True, True, True, False),
+            (True, True, True, True, False),
+            (True, True, True, True, False),
+            (True, True, True, True, False),
+            (False, False, False, False, False),
+        ])
+    )
+)
+def test_com_parameter_guess(lt_ctx, roi):
     data = np.zeros((5, 5, 5, 5), dtype=np.float32)
     # data with negative divergence and no curl
     for i in range(3):
@@ -487,10 +500,15 @@ def test_com_parameter_guess(lt_ctx):
     print(res.divergence.raw_data)
     print(res.curl.raw_data)
 
-    guess = guess_corrections(res.y.raw_data, res.x.raw_data)
+    guess = guess_corrections(res.y.raw_data, res.x.raw_data, roi=roi)
     print(guess)
 
     g_rot, g_flip_y, g_cy, g_cx = guess
+    # Check namedtuple
+    assert guess.scan_rotation == g_rot
+    assert guess.flip_y == g_flip_y
+    assert guess.cy == g_cy
+    assert guess.cx == g_cx
 
     assert g_rot == 0
     assert g_flip_y is False
@@ -511,7 +529,7 @@ def test_com_parameter_guess(lt_ctx):
     )
     res_changed = lt_ctx.run(analysis_changed)
 
-    guess = guess_corrections(res_changed.y.raw_data, res_changed.x.raw_data)
+    guess = guess_corrections(res_changed.y.raw_data, res_changed.x.raw_data, roi=roi)
     print(guess)
 
     g_rot, g_flip_y, g_cy, g_cx = guess
@@ -532,7 +550,7 @@ def test_com_parameter_guess(lt_ctx):
     )
     res_corrected = lt_ctx.run(analysis_corrected)
 
-    corrected_guess = guess_corrections(res_corrected.y.raw_data, res_corrected.x.raw_data)
+    corrected_guess = guess_corrections(res_corrected.y.raw_data, res_corrected.x.raw_data, roi=roi)
     print(corrected_guess)
     print(res_corrected.divergence.raw_data)
     print(res_corrected.curl.raw_data)

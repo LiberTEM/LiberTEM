@@ -146,7 +146,8 @@ class DaskDataSet(DataSet):
         self._preserve_dimension = preserve_dimensions
         self._min_size = min_size
         if self._min_size is None:
-            self._min_size = 128e6  # TODO add a method to determine a sensible partition byte-size
+            # TODO add a method to determine a sensible partition byte-size
+            self._min_size = 128 * (2**20)  # MB
 
     @property
     def array(self):

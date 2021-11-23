@@ -252,7 +252,7 @@ class AsyncJobExecutor:
         """
         raise NotImplementedError()
 
-    def run_wrap(self, fn, *args, **kwargs):
+    async def run_wrap(self, fn, *args, **kwargs):
         """
         Run a callable `fn` locally or remotely at the discretion of the executor.
         This is used to merge UDF partial results and compute final UDF results.

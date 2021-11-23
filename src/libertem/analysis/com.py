@@ -205,7 +205,7 @@ def coordinate_check(y_centers, x_centers, roi=None):
     straight = np.zeros(360)
     flipped = np.zeros(360)
     if roi is None:
-        # The last row and column contain artefacts
+        # The last row and column contain artifacts
         roi = (slice(0, -1), slice(0, -1))
     for angle in range(360):
         for flip_y in (True, False):

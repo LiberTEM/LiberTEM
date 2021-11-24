@@ -736,7 +736,7 @@ class UDFBase:
     def get_results(self) -> Dict[str, np.ndarray]:
         raise NotImplementedError()
 
-    def do_get_results(self) -> Mapping[str, BufferWrapper]:
+    def _do_get_results(self) -> Mapping[str, BufferWrapper]:
         results_tmp = self.get_results()
         decl = self.get_result_buffers()
 
@@ -1434,7 +1434,7 @@ def _make_udf_result(udfs, damage):
     return UDFResults(
         buffers=tuple(
             # Explicit indexing for compatibility with Dask.delayed
-            udf.do_get_results()
+            udf._do_get_results()
             for udf in udfs
         ),
         damage=damage
@@ -1641,7 +1641,7 @@ class UDFRunner:
                 raise TypeError("could not pickle partition")
             try:
                 cloudpickle.loads(cloudpickle.dumps(
-                    [u.do_get_results() for u in udfs]
+                    [u._do_get_results() for u in udfs]
                 ))
             except TypeError:
                 raise TypeError("could not pickle results")

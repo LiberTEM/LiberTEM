@@ -6,31 +6,14 @@ from typing import Iterable, Any
 
 from .base import (
     JobExecutor, JobCancelledError, TaskProtocol, sync_to_async, AsyncAdapter,
-    Environment
 )
 from libertem.utils.devices import detect
 from .scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
+from .dask import _run_task
 
 
 log = logging.getLogger(__name__)
-
-
-def _run_task(task, params, task_id):
-    """
-    Very simple wrapper function. As dask internally caches functions that are
-    submitted to the cluster in various ways, we need to make sure to
-    consistently use the same function, and not build one on the fly.
-
-    Without this function, UDFTask->UDF->UDFData ends up in the
-    cache, which blows up memory usage over time.
-    """
-    env = Environment(threads_per_worker=1)
-    task_result = task(env=env, params=params)
-    return {
-        "task_result": task_result,
-        "task_id": task_id,
-    }
 
 
 class ConcurrentJobExecutor(JobExecutor):

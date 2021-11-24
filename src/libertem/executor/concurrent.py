@@ -88,8 +88,7 @@ class ConcurrentJobExecutor(JobExecutor):
         iterable : Iterable
             Which elements to call the function on.
         """
-        return [future.result()
-                for future in self.client.map(fn, iterable)]
+        return self.client.map(fn, iterable)
 
     def get_available_workers(self):
         resources = {"compute": 1, "CPU": 1}

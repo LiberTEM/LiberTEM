@@ -185,7 +185,9 @@ def test_executors(ctx, load_kwargs, reference):
             assert item.keys() == res[i].keys()
             for buf_key in item.keys():
                 print(f"buffer {buf_key}")
-                assert np.allclose(
-                    item[buf_key].raw_data,
-                    res[i][buf_key].raw_data
-                )
+                left = item[buf_key].raw_data
+                right = res[i][buf_key].raw_data
+                print(np.max(np.abs(left - right)))
+                print(np.min(np.abs(left)))
+                print(np.min(np.abs(right)))
+                assert np.allclose(left, right)

@@ -297,13 +297,15 @@ class StdDevUDF(UDF):
         n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]
 
+        dtype = self.results.varsum.dtype
+
         if n_0 == 0:
             self.results.sum[:] = tile.sum(axis=0)
             # ddof changes the number the sum of variances is divided by.
             # Setting it like here avoids multiplying by n_1 to get the sum
             # of variances
             # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.var.html
-            self.results.varsum[:] = np.var(tile, axis=0, ddof=n_1 - 1)
+            self.results.varsum[:] = np.var(tile, axis=0, ddof=n_1 - 1, dtype=dtype)
             self.task_data.num_frames[key] = n_1
         else:
             self.task_data.num_frames[key] = process_tile(

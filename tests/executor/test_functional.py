@@ -4,6 +4,7 @@ import numpy as np
 
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
@@ -12,7 +13,7 @@ from libertem.udf.masks import ApplyMasksUDF
 @pytest.fixture(
     params=[
         "inline_executor_fast", "dask_executor", "delayed_default",
-        "delayed_dist", "threaded_dask_executor"
+        "delayed_dist", "threaded_dask_executor", "concurrent"
     ]
 )
 def executor(request, inline_executor_fast, dask_executor):
@@ -36,6 +37,8 @@ def executor(request, inline_executor_fast, dask_executor):
                 processes=False
         ) as c:
             yield DaskJobExecutor(client=c)
+    elif request.param == "concurrent":
+        yield ConcurrentJobExecutor.make_local()
 
 
 @pytest.fixture
@@ -57,6 +60,7 @@ def ds(request, ctx, hdf5_same_data_4d, raw_same_dataset_4d):
         )
 
 
+@pytest.mark.functional
 def test_executors(lt_ctx_fast, ctx, ds):
     def factory():
         m = np.zeros(ds.shape.sig)

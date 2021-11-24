@@ -35,8 +35,7 @@ class DelayedJobExecutor(JobExecutor):
         return result
 
     def map(self, fn, iterable):
-        d_fn = delayed(fn)
-        return [d_fn(item)
+        return [fn(item)
                 for item in iterable]
 
     def run_each_host(self, fn, *args, **kwargs):

@@ -1,30 +1,28 @@
+from typing import Optional, TYPE_CHECKING
+
+import numpy as np
 import dask
 import dask.array
+from libertem.io.dataset.base.dataset import DataSet
 
-from libertem.io.partitioner import (
-    Partitioner, PartitionGenerator,
-)
+if TYPE_CHECKING:
+    import numpy.typing as nt
 
 
-def make_dask_array(dataset, dtype='float32', roi=None):
+def make_dask_array(
+    dataset: DataSet,
+    dtype: "nt.DTypeLike" = 'float32',
+    roi: Optional[np.ndarray] = None
+):
     '''
     Create a Dask array using the DataSet's partitions as blocks.
     '''
     chunks = []
     workers = {}
-    # FIXME: we need static partition sizing here
-    # static partition sizing should be fine here,
-    # as we don't know anything about downstream usage (task timing etc.)
-    # and dask also doesn't care about a feedback rate
-    partitioner = Partitioner(
-        dataset_shape=dataset.shape,
-        roi=roi,
-        target_feedback_rate_hz=10,
-    )
-    partition_gen = PartitionGenerator(
-        dataset=dataset,
-        partitioner=partitioner,
-    )
+    # static partition sizing here, as we don't know anything about downstream
+    # usage (task timing etc.) and dask also doesn't care about a feedback rate
+    size = 128  # FIXME: get default partition size here!
+    partition_gen = dataset.get_const_partitions(partition_size=size)
     for p in partition_gen:
         d = dask.delayed(p.get_macrotile)(
             dest_dtype=dtype, roi=roi

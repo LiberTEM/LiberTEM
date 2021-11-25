@@ -229,7 +229,7 @@ def test_incorrect_sig_shape(lt_ctx):
 
 
 def test_scheme_too_large(default_mrc):
-    partitions = default_mrc.get_partitions()
+    partitions = default_mrc.get_const_partitions(partition_size=42)
     p = next(partitions)
     depth = p.shape[0]
 

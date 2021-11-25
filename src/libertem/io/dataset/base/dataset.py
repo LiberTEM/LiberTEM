@@ -16,11 +16,13 @@ if typing.TYPE_CHECKING:
     from libertem.executor.base import JobExecutor
     from libertem.io.dataset.base import IOBackend, Decoder, DataSetMeta
     from numpy import typing as nt
+    from libertem.io.partitioner import PartitionGenerator
 
 
 class PartitioningConstraints(NamedTuple):
     base_step_size: int  # constrain navitems per partition to multiples of this
     bytes_per_nav: int  # how many bytes per nav item ("frame")
+    need_contiguous: bool = False  # need contiguous slices in the ND shape of the dataset
     # FIXME: add hard constraints for non-uniform chunking?
 
 
@@ -135,6 +137,28 @@ class DataSet:
         to `min(dataset.shape.nav[0], stop)`
         """  # FIXME: update docstring
         raise NotImplementedError()
+
+    def get_const_partitions(
+        self,
+        partition_size: int,
+        roi: Optional[np.ndarray] = None
+    ) -> "PartitionGenerator":
+        """
+        Get a PartitionGenerator for constant-size partitions, meaning
+        they are not adapted to dynamic parameters (like task run times etc.)
+        """
+        from libertem.io.partitioner import ConstantPartitioner, PartitionGenerator
+        cp = ConstantPartitioner(
+            partition_size=partition_size,
+            roi=roi,
+            dataset_shape=self.shape,
+        )
+        pg = PartitionGenerator(
+            dataset=self,
+            part_constraints=self.get_partition_constraints(),
+            partitioner=cp,
+        )
+        return pg
 
     @property
     def dtype(self) -> "nt.DTypeLike":

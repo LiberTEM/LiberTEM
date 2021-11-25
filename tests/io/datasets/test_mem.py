@@ -15,10 +15,9 @@ def test_get_macrotile():
     ds = MemoryDataSet(
         data=data,
         tileshape=(16, 16, 16),
-        num_partitions=2,
     )
 
-    p = next(ds.get_partitions())
+    p = next(ds.get_const_partitions(partition_size=128))
     mt = p.get_macrotile()
     assert tuple(mt.shape) == (128, 16, 16)
 
@@ -55,7 +54,7 @@ def test_positive_sync_offset(lt_ctx):
         sync_offset=sync_offset,
     )
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=16))
     assert p0._start_frame == 2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -68,7 +67,7 @@ def test_positive_sync_offset(lt_ctx):
         dataset_shape=ds_with_offset.shape,
     )
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=16):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -104,7 +103,7 @@ def test_negative_sync_offset(lt_ctx):
         sync_offset=sync_offset,
     )
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=16))
     assert p0._start_frame == -2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -117,7 +116,7 @@ def test_negative_sync_offset(lt_ctx):
         dataset_shape=ds_with_offset.shape,
     )
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=16):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -209,7 +208,7 @@ def test_scheme_too_large():
         num_partitions=2,
     )
 
-    partitions = ds.get_partitions()
+    partitions = ds.get_const_partitions(partition_size=128)
     p = next(partitions)
     depth = p.shape[0]
 

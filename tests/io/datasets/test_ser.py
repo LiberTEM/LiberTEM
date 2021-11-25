@@ -41,7 +41,7 @@ def default_ser_raw():
 
 def test_smoke(lt_ctx):
     ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
-    p = next(ds.get_partitions())
+    p = next(ds.get_const_partitions(partition_size=16))
     tileshape = Shape(
         (1,) + tuple(ds.shape.sig),
         sig_dims=ds.shape.sig.dims
@@ -79,7 +79,7 @@ def test_roi(lt_ctx):
     roi[0, 1] = True
 
     ds.set_num_cores(2)
-    parts = ds.get_partitions()
+    parts = ds.get_const_partitions(partition_size=16, roi=roi)
 
     p = next(parts)
     tileshape = Shape(
@@ -94,11 +94,15 @@ def test_roi(lt_ctx):
     t0 = next(p.get_tiles(tiling_scheme, roi=roi))
     assert t0.tile_slice.origin[0] == 0
 
+    # re-do with all-ones roi
+    roi[:] = True
+    parts = ds.get_const_partitions(partition_size=16, roi=roi)
+
+    next(parts)
     p1 = next(parts)
-    roi.reshape((-1,))[p1.slice.get(nav_only=True)] = True
 
     t1 = next(p1.get_tiles(tiling_scheme, roi=roi))
-    assert t1.tile_slice.origin[0] == 1
+    assert t1.tile_slice.origin[0] == 16
 
 
 def test_with_udf(lt_ctx):
@@ -108,7 +112,7 @@ def test_with_udf(lt_ctx):
 
     # compare result with a known-working variant:
     result = np.zeros(ds.shape.sig)
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=128):
         tileshape = Shape(
             (1,) + tuple(ds.shape.sig),
             sig_dims=ds.shape.sig.dims
@@ -149,7 +153,7 @@ def test_positive_sync_offset(default_ser, lt_ctx):
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=70))
     assert p0._start_frame == 2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -165,7 +169,7 @@ def test_positive_sync_offset(default_ser, lt_ctx):
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=70):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -194,7 +198,7 @@ def test_negative_sync_offset(default_ser, lt_ctx):
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=70))
     assert p0._start_frame == -2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -210,7 +214,7 @@ def test_negative_sync_offset(default_ser, lt_ctx):
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=70):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -280,7 +284,7 @@ def test_missing_frames(lt_ctx):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=87):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -308,7 +312,7 @@ def test_too_many_frames(lt_ctx):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=70):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -374,7 +378,7 @@ def test_incorrect_sig_shape(lt_ctx):
 
 
 def test_scheme_too_large(default_ser):
-    partitions = default_ser.get_partitions()
+    partitions = default_ser.get_const_partitions(partition_size=70)
     p = next(partitions)
     depth = p.shape[0]
 

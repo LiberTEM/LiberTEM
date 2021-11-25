@@ -103,7 +103,8 @@ def test_read_1(lt_ctx, hdf5):
         tileshape=tileshape,
         dataset_shape=ds.shape,
     )
-    for p in ds.get_partitions():
+    pg = ds.get_const_partitions(partition_size=42)
+    for p in pg:
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             print(t.tile_slice)
 
@@ -121,7 +122,8 @@ def test_read_2(lt_ctx, hdf5):
         tileshape=tileshape,
         dataset_shape=ds.shape,
     )
-    for p in ds.get_partitions():
+    pg = ds.get_const_partitions(partition_size=42)
+    for p in pg:
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             print(t.tile_slice)
 
@@ -141,7 +143,8 @@ def test_read_3(lt_ctx, random_hdf5):
         tileshape=tileshape,
         dataset_shape=ds.shape,
     )
-    for p in ds.get_partitions():
+    pg = ds.get_const_partitions(partition_size=42)
+    for p in pg:
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             print(t.tile_slice)
 
@@ -188,9 +191,13 @@ def test_roi_1(hdf5, lt_ctx):
         path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
-    p = next(ds.get_partitions())
-    roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
+    roi = np.zeros(ds.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
+    pg = ds.get_const_partitions(
+        roi=roi,
+        partition_size=42,
+    )
+    p = next(pg)
     tiles = []
     tileshape = Shape(
         (16,) + tuple(ds.shape.sig),
@@ -217,6 +224,10 @@ def test_roi_3(hdf5, lt_ctx):
     ds = ds.initialize(lt_ctx.executor)
     roi = np.zeros(ds.shape.flatten_nav().nav, dtype=bool)
     roi[24] = 1
+    pg = ds.get_const_partitions(
+        roi=roi,
+        partition_size=42,
+    )
 
     tileshape = Shape(
         (16,) + tuple(ds.shape.sig),
@@ -228,7 +239,7 @@ def test_roi_3(hdf5, lt_ctx):
     )
 
     tiles = []
-    for p in ds.get_partitions():
+    for p in pg:
         for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
             print("tile:", tile)
             tiles.append(tile)
@@ -400,7 +411,10 @@ def test_scheme_idx(lt_ctx, hdf5):
         path=hdf5.filename, ds_path="data",
     )
     ds = ds.initialize(lt_ctx.executor)
-    p = next(ds.get_partitions())
+    pg = ds.get_const_partitions(
+        partition_size=42,
+    )
+    p = next(pg)
 
     sig_shape = tuple(ds.shape.sig)
     tileshape = Shape(
@@ -540,7 +554,8 @@ def test_hdf5_result_dtype(lt_ctx, tmpdir_factory, in_dtype, read_dtype, use_roi
     else:
         roi = None
     udfs = [SumSigUDF()]  # need to have at least one UDF
-    p = next(ds.get_partitions())
+    pg = ds.get_const_partitions(roi=roi, partition_size=42)
+    p = next(pg)
     neg = Negotiator()
     tiling_scheme = neg.get_scheme(
         udfs=udfs,
@@ -577,7 +592,8 @@ def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
     ds = lt_ctx.load("hdf5", path=filename)
 
     udfs = [UDFWithLargeDepth()]
-    p = next(ds.get_partitions())
+    pg = ds.get_const_partitions(partition_size=42)
+    p = next(pg)
     neg = Negotiator()
     tiling_scheme = neg.get_scheme(
         udfs=udfs,
@@ -592,8 +608,8 @@ def test_hdf5_tileshape_negotation(lt_ctx, tmpdir_factory):
 
 
 def test_scheme_too_large(hdf5_ds_1):
-    partitions = hdf5_ds_1.get_partitions()
-    p = next(partitions)
+    pg = hdf5_ds_1.get_const_partitions(partition_size=42)
+    p = next(pg)
     depth = p.shape[0]
 
     # we make a tileshape that is too large for the partition here:
@@ -626,13 +642,13 @@ def test_hdf5_macrotile(lt_ctx, tmpdir_factory):
     ds = lt_ctx.load("hdf5", path=filename)
     ds.set_num_cores(4)
 
-    partitions = ds.get_partitions()
-    p0 = next(partitions)
+    pg = ds.get_const_partitions(partition_size=42)
+    p0 = next(pg)
     m0 = p0.get_macrotile()
     assert m0.tile_slice.origin == (0, 0, 0)
     assert m0.tile_slice.shape == p0.shape
 
-    p1 = next(partitions)
+    p1 = next(pg)
     m1 = p1.get_macrotile()
     assert m1.tile_slice.origin == (p0.shape[0], 0, 0)
     assert m1.tile_slice.shape == p1.shape
@@ -643,8 +659,8 @@ def test_hdf5_macrotile_roi(lt_ctx, hdf5_ds_1):
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
         expected = data.reshape(hdf5_ds_1.shape.flatten_nav())[roi]
-    partitions = hdf5_ds_1.get_partitions()
-    p0 = next(partitions)
+    pg = hdf5_ds_1.get_const_partitions(partition_size=42)
+    p0 = next(pg)
     m0 = p0.get_macrotile(roi=roi)
     assert_allclose(
         m0,
@@ -654,8 +670,8 @@ def test_hdf5_macrotile_roi(lt_ctx, hdf5_ds_1):
 
 def test_hdf5_macrotile_empty_roi(lt_ctx, hdf5_ds_1):
     roi = np.zeros(hdf5_ds_1.shape.flatten_nav().nav, dtype=bool)
-    partitions = hdf5_ds_1.get_partitions()
-    p0 = next(partitions)
+    pg = hdf5_ds_1.get_const_partitions(partition_size=42)
+    p0 = next(pg)
     m0 = p0.get_macrotile(roi=roi)
     assert m0.shape == (0, 16, 16)
     assert_allclose(

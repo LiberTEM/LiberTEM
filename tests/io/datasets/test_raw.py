@@ -56,10 +56,9 @@ def test_check_valid(default_raw):
 
 @pytest.mark.with_numba
 def test_read(default_raw):
-    partitions = default_raw.get_partitions()
+    partitions = default_raw.get_const_partitions(partition_size=32)
     p = next(partitions)
-    # FIXME: partition shape can vary by number of cores
-    # assert tuple(p.shape) == (2, 16, 128, 128)
+    assert tuple(p.shape) == (32, 128, 128)
 
     tileshape = Shape(
         (16,) + tuple(default_raw.shape.sig),
@@ -78,7 +77,7 @@ def test_read(default_raw):
 
 
 def test_scheme_too_large(default_raw):
-    partitions = default_raw.get_partitions()
+    partitions = default_raw.get_const_partitions(partition_size=32)
     p = next(partitions)
     depth = p.shape[0]
 
@@ -160,9 +159,9 @@ def test_correction_default(default_raw, lt_ctx, with_roi):
 
 @pytest.mark.with_numba
 def test_roi_1(default_raw, lt_ctx):
-    p = next(default_raw.get_partitions())
-    roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
+    roi = np.zeros(default_raw.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
+    p = next(default_raw.get_const_partitions(roi=roi, partition_size=32))
     tiles = []
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=Shape((1, 128, 128), sig_dims=2),
@@ -178,28 +177,27 @@ def test_roi_1(default_raw, lt_ctx):
 
 @pytest.mark.with_numba
 def test_roi_2(default_raw, lt_ctx):
-    p = next(default_raw.get_partitions())
-    roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
+    roi = np.zeros(default_raw.shape.flatten_nav().nav, dtype=bool)
     stackheight = 4
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=Shape((stackheight, 128, 128), sig_dims=2),
         dataset_shape=default_raw.shape,
     )
     roi[0:stackheight + 2] = 1
+    p = next(default_raw.get_const_partitions(partition_size=32, roi=roi))
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 
 
 def test_uint16_as_float32(uint16_raw, lt_ctx):
-    p = next(uint16_raw.get_partitions())
-    roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
-
+    roi = np.zeros(uint16_raw.shape.flatten_nav().nav, dtype=bool)
     stackheight = 4
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=Shape((stackheight, 128, 128), sig_dims=2),
         dataset_shape=uint16_raw.shape,
     )
     roi[0:stackheight + 2] = 1
+    p = next(uint16_raw.get_const_partitions(partition_size=128, roi=roi))
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 
@@ -220,7 +218,7 @@ def test_correction_uint16(uint16_raw, lt_ctx, with_roi):
 
 
 def test_macrotile_normal(lt_ctx, default_raw):
-    ps = default_raw.get_partitions()
+    ps = default_raw.get_const_partitions(partition_size=128)
     _ = next(ps)
     p2 = next(ps)
     macrotile = p2.get_macrotile()
@@ -232,34 +230,27 @@ def test_macrotile_roi_1(lt_ctx, default_raw):
     roi = np.zeros(default_raw.shape.nav, dtype=bool)
     roi[0, 5] = 1
     roi[0, 1] = 1
-    p = next(default_raw.get_partitions())
+    # set small partition_size here to make sure that the `roi` is taken into
+    # account when partitioning:
+    p = next(default_raw.get_const_partitions(partition_size=2, roi=roi))
     macrotile = p.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == (2, 128, 128)
 
 
 def test_macrotile_roi_2(lt_ctx, default_raw):
     roi = np.zeros(default_raw.shape.nav, dtype=bool)
-    # all ones are in the first partition, so we don't get any data in p2:
+    # all ones are in the first partition, so we only get a single partition:
     roi[0, 5] = 1
     roi[0, 1] = 1
-    ps = default_raw.get_partitions()
+    ps = default_raw.get_const_partitions(partition_size=128, roi=roi)
     _ = next(ps)
-    p2 = next(ps)
-
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=p2.shape,
-        dataset_shape=default_raw.shape,
-    )
-    p2._get_read_ranges(tiling_scheme, roi=None)
-    p2._get_read_ranges(tiling_scheme, roi=roi)
-
-    macrotile = p2.get_macrotile(roi=roi)
-    assert tuple(macrotile.tile_slice.shape) == (0, 128, 128)
+    with pytest.raises(StopIteration):
+        next(ps)
 
 
 def test_macrotile_roi_3(lt_ctx, default_raw):
     roi = np.ones(default_raw.shape.nav, dtype=bool)
-    ps = default_raw.get_partitions()
+    ps = default_raw.get_const_partitions(partition_size=128, roi=roi)
     _ = next(ps)
     p2 = next(ps)
     macrotile = p2.get_macrotile(roi=roi)
@@ -357,16 +348,17 @@ def test_load_direct(lt_ctx, default_raw):
     reason="No support for direct I/O on Mac OS X"
 )
 def test_load_legacy_direct(lt_ctx, default_raw):
-    ds_direct = lt_ctx.load(
-        "raw",
-        path=default_raw._path,
-        nav_shape=(16, 16),
-        sig_shape=(16, 16),
-        dtype="float32",
-        enable_direct=True,
-    )
-    analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
-    lt_ctx.run(analysis)
+    with pytest.warns(FutureWarning):
+        ds_direct = lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            nav_shape=(16, 16),
+            sig_shape=(16, 16),
+            dtype="float32",
+            enable_direct=True,
+        )
+        analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
+        lt_ctx.run(analysis)
 
 
 @pytest.mark.skipif(
@@ -430,7 +422,7 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=128))
     assert p0._start_frame == 2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -446,7 +438,7 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=48):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -486,7 +478,7 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=48))
     assert p0._start_frame == -2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -502,7 +494,7 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=48):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -544,7 +536,7 @@ def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=20):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -582,7 +574,7 @@ def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=128):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 

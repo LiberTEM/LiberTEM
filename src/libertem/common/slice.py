@@ -349,7 +349,7 @@ class Slice:
         )) + 1)
 
         new_nav_shape = tuple(
-            o + s
+            s - o
             for o, s in zip(new_nav_origin, new_stop)
         )
 

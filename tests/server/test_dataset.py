@@ -165,7 +165,7 @@ async def test_initial_state_after_reconnect(
             'type': 'RAW',
             'sync_offset': 0
         }
-        assert len(initial_msg["datasets"][0]["diagnostics"]) == 6
+        assert len(initial_msg["datasets"][0]["diagnostics"]) == 4
 
 
 @pytest.mark.asyncio
@@ -224,4 +224,4 @@ async def test_prime_cache(
             'type': 'RAW',
             'sync_offset': 0
         }
-        assert len(initial_msg["datasets"][0]["diagnostics"]) == 6
+        assert len(initial_msg["datasets"][0]["diagnostics"]) == 4

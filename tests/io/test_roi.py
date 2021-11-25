@@ -25,7 +25,9 @@ def test_partition3d_correct_slices():
     mask[0, 0] = True
     mask[15, 0] = True
 
-    partitions = dataset.get_partitions()
+    # because get_const_partitions now takes the `roi` into account, we need
+    # to set the size to 1 to get two partitions here:
+    partitions = dataset.get_const_partitions(partition_size=1, roi=mask)
     p1 = next(partitions)
     p2 = next(partitions)
 

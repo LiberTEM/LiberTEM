@@ -129,7 +129,7 @@ def test_sync(default_k2is):
 
 @needsdata
 def test_read(default_k2is):
-    partitions = default_k2is.get_partitions()
+    partitions = default_k2is.get_const_partitions(partition_size=35)
     p = next(partitions)
     assert tuple(p.shape)[1:] == (2 * 930, 8 * 256)
 
@@ -150,7 +150,7 @@ def test_read(default_k2is):
 
 @needsdata
 def test_scheme_too_large(default_k2is):
-    partitions = default_k2is.get_partitions()
+    partitions = default_k2is.get_const_partitions(partition_size=35)
     p = next(partitions)
     depth = p.shape[0]
 
@@ -216,7 +216,7 @@ def test_comparison_mask(default_k2is, default_k2is_raw, local_cluster_ctx, lt_c
 
 @needsdata
 def test_read_full_frames(default_k2is):
-    partitions = default_k2is.get_partitions()
+    partitions = default_k2is.get_const_partitions(partition_size=35)
     p = next(partitions)
     assert tuple(p.shape)[1:] == (2 * 930, 8 * 256)
 
@@ -240,7 +240,7 @@ def test_read_full_frames(default_k2is):
 
 @needsdata
 def test_read_invalid_tileshape(default_k2is):
-    partitions = default_k2is.get_partitions()
+    partitions = default_k2is.get_const_partitions(partition_size=35)
     p = next(partitions)
 
     tileshape = Shape(
@@ -308,7 +308,7 @@ def test_dataset_is_picklable(default_k2is):
 
 @needsdata
 def test_partition_is_picklable(default_k2is):
-    pickled = pickle.dumps(next(default_k2is.get_partitions()))
+    pickled = pickle.dumps(next(default_k2is.get_const_partitions(partition_size=35)))
     pickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
@@ -361,10 +361,10 @@ def test_udf_roi(lt_ctx, default_k2is):
 
 @needsdata
 def test_roi(lt_ctx, default_k2is):
-    p = next(default_k2is.get_partitions())
-    roi = np.zeros(p.shape.flatten_nav().nav, dtype=bool)
+    roi = np.zeros(default_k2is.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
     tiles = []
+    p = next(default_k2is.get_const_partitions(partition_size=16))
 
     tileshape = Shape(
         (16, 930, 16),
@@ -383,7 +383,7 @@ def test_roi(lt_ctx, default_k2is):
 
 @needsdata
 def test_macrotile_normal(lt_ctx, default_k2is):
-    ps = default_k2is.get_partitions()
+    ps = default_k2is.get_const_partitions(partition_size=35)
     _ = next(ps)
     p2 = next(ps)
     macrotile = p2.get_macrotile()
@@ -396,7 +396,7 @@ def test_macrotile_roi_1(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.nav, dtype=bool)
     roi[0, 5] = 1
     roi[0, 17] = 1
-    p = next(default_k2is.get_partitions())
+    p = next(default_k2is.get_const_partitions(partition_size=35))
     macrotile = p.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == (2, 1860, 2048)
 
@@ -404,20 +404,19 @@ def test_macrotile_roi_1(lt_ctx, default_k2is):
 @needsdata
 def test_macrotile_roi_2(lt_ctx, default_k2is):
     roi = np.zeros(default_k2is.shape.nav, dtype=bool)
-    # all ones are in the first partition, so we don't get any data in p2:
+    # all ones are in the first partition, so we only get a single partition:
     roi[0, 5] = 1
     roi[0, 17] = 1
-    ps = default_k2is.get_partitions()
+    ps = default_k2is.get_const_partitions(partition_size=32, roi=roi)
     _ = next(ps)
-    p2 = next(ps)
-    macrotile = p2.get_macrotile(roi=roi)
-    assert tuple(macrotile.tile_slice.shape) == (0, 1860, 2048)
+    with pytest.raises(StopIteration):
+        next(ps)
 
 
 @needsdata
 def test_macrotile_roi_3(lt_ctx, default_k2is):
     roi = np.ones(default_k2is.shape.nav, dtype=bool)
-    ps = default_k2is.get_partitions()
+    ps = default_k2is.get_const_partitions(partition_size=35)
     _ = next(ps)
     p2 = next(ps)
     macrotile = p2.get_macrotile(roi=roi)
@@ -505,7 +504,7 @@ def test_regression_simple_stride(lt_ctx, default_k2is):
         dataset_shape=default_k2is.shape.flatten_nav()
     )
     print(ts)
-    p = list(default_k2is.get_partitions())[-1]
+    p = list(default_k2is.get_const_partitions(partition_size=16))[-1]
     next(p.get_tiles(tiling_scheme=ts))
 
 

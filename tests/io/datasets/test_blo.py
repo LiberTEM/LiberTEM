@@ -84,10 +84,9 @@ def test_detect():
 
 
 def test_read(default_blo):
-    partitions = default_blo.get_partitions()
+    partitions = default_blo.get_const_partitions(partition_size=11*121)
     p = next(partitions)
-    # FIXME: partition shape can vary by number of cores
-    # assert tuple(p.shape) == (11, 121, 144, 144)
+    assert tuple(p.shape) == (11 * 121, 144, 144)
     tileshape = Shape(
         (8,) + tuple(default_blo.shape.sig),
         sig_dims=default_blo.shape.sig.dims
@@ -103,7 +102,7 @@ def test_read(default_blo):
 
 
 def test_scheme_too_large(default_blo):
-    partitions = default_blo.get_partitions()
+    partitions = default_blo.get_const_partitions(partition_size=32)
     p = next(partitions)
     depth = p.shape[0]
 
@@ -176,7 +175,8 @@ def test_pick_analysis(default_blo, lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-def test_correction(default_blo, lt_ctx, with_roi):
+def test_correction(default_blo, lt_ctx_fast, with_roi):
+    lt_ctx = lt_ctx_fast
     ds = default_blo
 
     if with_roi:

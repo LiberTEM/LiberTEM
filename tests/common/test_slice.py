@@ -317,3 +317,16 @@ def test_from_shape():
         origin=(0, 0, 0),
         shape=Shape((1, 16, 16), sig_dims=2),
     )
+
+
+def test_unravel_1():
+    s = Slice(
+        origin=(45,),
+        shape=Shape((45,), sig_dims=0)
+    )
+    container = Shape(
+        (3, 5, 9), sig_dims=0,
+    )
+    unraveled = s.unravel_nav(container)
+    flattened = unraveled.flatten_nav(container)
+    assert flattened == s

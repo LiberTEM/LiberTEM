@@ -3,7 +3,7 @@ import pytest
 
 from libertem.io.dataset import get_extensions
 from libertem.io.dataset.base import (
-    Partition, _roi_to_nd_indices, DataSetException
+    _roi_to_nd_indices, DataSetException
 )
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
@@ -28,17 +28,9 @@ def test_sweep_stackheight():
             dataset_shape=dataset.shape,
         )
         print("testing with stackheight", stackheight)
-        for p in dataset.get_partitions():
+        for p in dataset.get_const_partitions(partition_size=128):
             for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32"):
                 pass
-
-
-def test_num_part_larger_than_num_frames():
-    shape = Shape((1, 1, 256, 256), sig_dims=2)
-    slice_iter = Partition.make_slices(shape=shape, num_partitions=2)
-    next(slice_iter)
-    with pytest.raises(StopIteration):
-        next(slice_iter)
 
 
 def test_roi_to_nd_indices():

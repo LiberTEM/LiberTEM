@@ -80,7 +80,7 @@ class TilingUDFPartition(UDF):
 
 def test_get_scheme_tile(default_raw):
     neg = Negotiator()
-    p = next(default_raw.get_partitions())
+    p = next(default_raw.get_const_partitions(partition_size=128))
     udf = TilingUDFBestFit()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -98,7 +98,7 @@ def test_get_scheme_tile(default_raw):
 
 def test_get_scheme_frame(default_raw):
     neg = Negotiator()
-    p = next(default_raw.get_partitions())
+    p = next(default_raw.get_const_partitions(partition_size=128))
     udf = TilingUDFFrame()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -113,7 +113,7 @@ def test_get_scheme_frame(default_raw):
 
 def test_get_scheme_partition(default_raw):
     neg = Negotiator()
-    p = next(default_raw.get_partitions())
+    p = next(default_raw.get_const_partitions(partition_size=128))
     udf = TilingUDFPartition()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -138,7 +138,7 @@ def test_get_scheme_upper_size_1():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=1024))
     udf = TilingUDFBestFit()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -175,7 +175,7 @@ def test_get_scheme_upper_size_roi():
     roi[-1] = True
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=1024, roi=roi))
     udf = TilingUDFBestFit()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -201,7 +201,7 @@ def test_get_scheme_upper_size_2():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=2048))
     udf = TilingUDFBestFit()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -247,7 +247,7 @@ def test_limited_depth():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=32))
     udf = UDFWithLargeDepth()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -273,7 +273,7 @@ def test_correction_size_overflow():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=32))
     udf = UDFWithLargeDepth()
 
     excluded_coords = np.array([
@@ -306,7 +306,7 @@ def test_depth_max_size_max():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=32))
     udf = UDFUnlimitedDepth()
     scheme = neg.get_scheme(
         udfs=[udf],
@@ -344,7 +344,7 @@ def test_multi_by_frame_wins():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=32))
     scheme = neg.get_scheme(
         udfs=udfs,
         dataset=dataset,
@@ -378,7 +378,7 @@ def test_multi_no_by_frame_small_size_wins():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=32))
     scheme = neg.get_scheme(
         udfs=udfs,
         dataset=dataset,
@@ -418,7 +418,7 @@ def test_multi_partition_wins():
     )
 
     neg = Negotiator()
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=32))
     scheme = neg.get_scheme(
         udfs=udfs,
         approx_partition_shape=p.shape,

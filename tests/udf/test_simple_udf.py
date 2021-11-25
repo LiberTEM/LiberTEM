@@ -391,7 +391,7 @@ def test_udf_pickle(lt_ctx):
     dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
                             num_partitions=16, sig_dims=2)
 
-    partition = next(dataset.get_partitions())
+    partition = next(dataset.get_const_partitions(partition_size=16))
     pixelsum = PixelsumUDF()
     meta = UDFMeta(
         partition_slice=partition.slice,
@@ -554,7 +554,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
             set_use_cuda(cudas[0])
         udf = ReshapedViewUDF()
         res = lt_ctx.run_udf(udf=udf, dataset=dataset)
-        partition = next(dataset.get_partitions())
+        partition = next(dataset.get_const_partitions(partition_size=15))
         p_udf = udf.copy_for_partition(partition=partition, roi=None)
         tiling_scheme = TilingScheme.make_for_shape(
             tileshape=dataset.tileshape,

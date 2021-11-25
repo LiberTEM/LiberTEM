@@ -57,7 +57,7 @@ def test_weird_partition_shapes_1_slow(lt_ctx):
 
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=128))
     t = next(p.get_tiles())
     assert tuple(t.tile_slice.shape) == (1, 1, 2, 2)
 
@@ -75,7 +75,7 @@ def test_weird_partition_shapes_1_fast(lt_ctx):
 
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
-    p = next(dataset.get_partitions())
+    p = next(dataset.get_const_partitions(partition_size=128))
     t = next(p.get_tiles())
     assert tuple(t.tile_slice.shape) == (1, 8, 8, 8)
 

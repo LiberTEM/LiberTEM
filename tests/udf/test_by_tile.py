@@ -66,7 +66,7 @@ def test_mem_cropped(lt_ctx):
                             num_partitions=2, sig_dims=2)
 
     buf = np.zeros((256, 24, 24), dtype="float32")
-    for p in dataset.get_partitions():
+    for p in dataset.get_const_partitions(partition_size=128):
         for tile in p.get_tiles():
             assert tuple(tile.tile_slice.shape)[0] in (7, 2)
             assert tuple(tile.tile_slice.shape)[1:] in [(7, 7),

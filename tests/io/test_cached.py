@@ -35,8 +35,8 @@ def client_in_background():
         client.close()
 
 
-def test_simple(default_cached_ds):
-    parts = list(default_cached_ds.get_partitions())
+def test_simple(default_cached_ds: CachedDataSet):
+    parts = list(default_cached_ds.get_const_partitions(partition_size=128))
     p = parts[0]
 
     datadir = default_cached_ds._cache_path
@@ -56,19 +56,23 @@ def test_simple(default_cached_ds):
     print(p)
 
     t_cache = next(p.get_tiles(tiling_scheme=tiling_scheme))
-    t_orig = next(next(default_raw.get_partitions()).get_tiles(tiling_scheme=tiling_scheme))
+    t_orig = next(
+        next(
+            default_raw.get_const_partitions(partition_size=128)
+        ).get_tiles(tiling_scheme=tiling_scheme)
+    )
 
     print(t_cache)
     print(t_orig)
     assert np.allclose(t_cache.data, t_orig.data)
 
-    for p in default_cached_ds.get_partitions():
+    for p in default_cached_ds.get_const_partitions(partition_size=128):
         for tile in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
 
 @pytest.mark.slow
-def test_with_roi(default_cached_ds):
+def test_with_roi(default_cached_ds: CachedDataSet):
     roi = np.random.choice(a=[0, 1], size=tuple(default_cached_ds.shape.nav))
 
     tileshape = Shape(
@@ -80,7 +84,7 @@ def test_with_roi(default_cached_ds):
         dataset_shape=default_cached_ds.shape,
     )
 
-    for p in default_cached_ds.get_partitions():
+    for p in default_cached_ds.get_const_partitions(partition_size=128):
         for tile in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
             pass
 
@@ -98,12 +102,12 @@ async def test_with_dask_executor(tmpdir_factory, default_raw, dask_executor):
         strategy=strategy,
     )
     ds = ds.initialize(executor=dask_executor)
-    list(ds.get_partitions())  # trigger data locality queries
+    list(ds.get_const_partitions(partition_size=128))  # trigger data locality queries
 
 
 def test_partition_pickles(default_cached_ds):
     """
     assert that we don't do anything unpickleable in the Partition code!
     """
-    p = next(default_cached_ds.get_partitions())
+    p = next(default_cached_ds.get_const_partitions(partition_size=128))
     pickle.loads(pickle.dumps(p))

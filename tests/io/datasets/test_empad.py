@@ -125,10 +125,9 @@ def test_comparison_roi(default_empad, default_empad_raw, lt_ctx_fast):
 
 
 def test_read_random(random_empad):
-    partitions = random_empad.get_partitions()
+    partitions = random_empad.get_const_partitions(partition_size=32)
     p = next(partitions)
-    # FIXME: partition shape can vary by number of cores
-    # assert tuple(p.shape) == (2, 16, 128, 128)
+    assert tuple(p.shape) == (32, 128, 128)
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=Shape((16, 128, 128), sig_dims=2),
         dataset_shape=random_empad.shape,
@@ -141,10 +140,9 @@ def test_read_random(random_empad):
 
 
 def test_read(default_empad):
-    partitions = default_empad.get_partitions()
+    partitions = default_empad.get_const_partitions(partition_size=16)
     p = next(partitions)
-    # FIXME: partition shape can vary by number of cores
-    # assert tuple(p.shape) == (2, 16, 128, 128)
+    assert tuple(p.shape) == (16, 128, 128)
     tiling_scheme = TilingScheme.make_for_shape(
         tileshape=Shape((16, 128, 128), sig_dims=2),
         dataset_shape=default_empad.shape,
@@ -157,7 +155,7 @@ def test_read(default_empad):
 
 
 def test_scheme_too_large(default_empad):
-    partitions = default_empad.get_partitions()
+    partitions = default_empad.get_const_partitions(partition_size=32)
     p = next(partitions)
     depth = p.shape[0]
 

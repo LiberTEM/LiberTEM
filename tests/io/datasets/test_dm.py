@@ -294,7 +294,7 @@ def test_missing_frames(lt_ctx, io_backend):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=3):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -307,7 +307,7 @@ def test_missing_frames(lt_ctx, io_backend):
 
 
 def test_scheme_too_large(default_dm):
-    partitions = default_dm.get_partitions()
+    partitions = default_dm.get_const_partitions(partition_size=12)
     p = next(partitions)
     depth = p.shape[0]
 

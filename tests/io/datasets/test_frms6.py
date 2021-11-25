@@ -397,7 +397,7 @@ def test_with_roi(default_frms6, lt_ctx):
 
 @needsdata
 def test_read_invalid_tileshape(default_frms6):
-    partitions = default_frms6.get_partitions()
+    partitions = default_frms6.get_const_partitions(partition_size=16)
     p = next(partitions)
 
     tileshape = Shape(
@@ -415,7 +415,7 @@ def test_read_invalid_tileshape(default_frms6):
 
 @needsdata
 def test_scheme_too_large(default_frms6):
-    partitions = default_frms6.get_partitions()
+    partitions = default_frms6.get_const_partitions(partition_size=16)
     p = next(partitions)
     depth = p.shape[0]
 

@@ -116,7 +116,7 @@ def test_positive_sync_offset(default_seq, lt_ctx):
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=16))
     assert p0._start_frame == 2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -132,7 +132,7 @@ def test_positive_sync_offset(default_seq, lt_ctx):
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=16):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -447,7 +447,7 @@ def test_negative_sync_offset(default_seq, lt_ctx):
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=16))
     assert p0._start_frame == -2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -463,7 +463,7 @@ def test_negative_sync_offset(default_seq, lt_ctx):
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=16):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -497,7 +497,7 @@ def test_missing_frames(lt_ctx):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=32):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -529,7 +529,7 @@ def test_missing_data_with_positive_sync_offset(lt_ctx):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=32):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -559,7 +559,7 @@ def test_missing_data_with_negative_sync_offset(lt_ctx):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=32):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -587,7 +587,7 @@ def test_too_many_frames(lt_ctx):
         dataset_shape=ds.shape,
     )
 
-    for p in ds.get_partitions():
+    for p in ds.get_const_partitions(partition_size=8):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -800,7 +800,7 @@ def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq):
 
 @needsdata
 def test_scheme_too_large(default_seq):
-    partitions = default_seq.get_partitions()
+    partitions = default_seq.get_const_partitions(partition_size=32)
     p = next(partitions)
     depth = p.shape[0]
 

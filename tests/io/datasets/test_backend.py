@@ -16,7 +16,7 @@ def test_backend_selection(lt_ctx, default_raw):
         nav_shape=(16, 16),
         sig_shape=(128, 128),
     )
-    p = next(ds.get_partitions())
+    p = next(ds.get_const_partitions(partition_size=1))
 
     expected_backend = 'MMapBackend'
     if platform.system() == 'Windows':

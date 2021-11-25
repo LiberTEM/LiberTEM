@@ -82,8 +82,8 @@ async def test_fd_limit(async_executor):
 
 def test_run_each_partition(dask_executor):
     data = _mk_random(size=(16, 16, 16), dtype='<u2')
-    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=16)
-    partitions = dataset.get_partitions()
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16))
+    partitions = dataset.get_const_partitions(partition_size=1)  # -> num_partitions ~= 16
 
     def fn1(partition):
         return 42
@@ -98,7 +98,7 @@ def test_run_each_partition(dask_executor):
 def test_run_each_partition_2(dask_executor):
     data = _mk_random(size=(16, 16, 16), dtype='<u2')
     dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=16)
-    partitions = dataset.get_partitions()
+    partitions = dataset.get_const_partitions(partition_size=1)  # -> num_partitions ~= 16
 
     i = 0
     for result in dask_executor.run_each_partition(partitions, lambda p: False, all_nodes=True):

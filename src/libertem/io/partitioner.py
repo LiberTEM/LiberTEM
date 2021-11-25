@@ -1,12 +1,13 @@
 import logging
 import math
-from typing import List, NamedTuple, Optional, Tuple
+from typing import Iterable, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 import numba
 
 from libertem.common import Shape
 from libertem.common.math import prod
+from libertem.common.slice import Slice
 from libertem.io.dataset.base.dataset import DataSet, PartitioningConstraints
 from libertem.io.dataset.base.partition import Partition
 
@@ -48,6 +49,46 @@ def get_stop_for_roi(
         if counter >= size:
             break
     return stop
+
+
+def fill_contiguous(
+    shape: Iterable[int],
+    containing_shape: Tuple[int, ...]
+) -> Tuple[int, ...]:
+    """
+    Make `shape` C-contiguous in `containing_shape`
+    (meaining each dimension is either the last one > 1 from right to left, or
+    is equal to the corresponding dimension in `containing_shape`)
+
+    Examples
+    --------
+
+    >>> ds_shape = (64, 64, 128, 128)
+    >>> fill_contiguous((1, 4, 32, 32), ds_shape)
+    (1, 4, 128, 128)
+    >>> fill_contiguous((2, 4, 32, 32), ds_shape)
+    (2, 64, 128, 128)
+    >>> fill_contiguous((2, 64, 32, 32), ds_shape)
+    (2, 64, 128, 128)
+    >>> fill_contiguous((64, 1, 32, 32), ds_shape)
+    (64, 64, 128, 128)
+    >>> ds_shape_5d = (16, 64, 64, 128, 128)
+    >>> fill_contiguous((1, 1, 2, 32, 32), ds_shape_5d)
+    (1, 1, 2, 128, 128)
+    >>> fill_contiguous((1, 2, 1, 32, 32), ds_shape_5d)
+    (1, 2, 64, 128, 128)
+    >>> fill_contiguous((2, 1, 1, 32, 32), ds_shape_5d)
+    (2, 64, 64, 128, 128)
+    >>> fill_contiguous((1, 1, 1), (16, 16, 16))
+    (1, 1, 1)
+    """
+    shape = tuple(shape)
+    non_ones = [x == 1 for x in shape]
+    if False not in non_ones:
+        return shape
+    first_non_one = non_ones.index(False)
+    shape_left = shape[:first_non_one + 1]
+    return shape_left + containing_shape[first_non_one + 1:]
 
 
 class TaskStats(NamedTuple):
@@ -118,19 +159,48 @@ class Partitioner:
         assert not self.is_done()
         size = self.calc_partition_size()
 
-        if constraints and size % constraints.base_step_size != 0:
-            num_blocks = math.ceil(size / constraints.base_step_size)
-            size = num_blocks * constraints.base_step_size
-
         start = self._seek_pos
 
         if self._roi is None:
             stop = start + size
         else:
+            # eagerly grow partition based on the `roi`
             stop = get_stop_for_roi(start, size, self._roi)
+
+        # align `new_size` to be a multiple of `base_step_size`:
+        new_size = stop - start
+        if constraints and new_size % constraints.base_step_size != 0:
+            num_blocks = math.ceil(new_size / constraints.base_step_size)
+            new_size = num_blocks * constraints.base_step_size
+
+        # align such that (`start`, `new_size`) is a contiguous slice into `dataset_shape`:
+        log.debug(f"before contig align: start={start}, new_size={new_size}")
+        if constraints and constraints.need_contiguous:
+            # first, make sure `new_size` is not out of bounds for `dataset_shape`:
+            nd_shape = self._dataset_shape.nav
+            new_size = min(new_size, prod(nd_shape) - start)
+
+            # now, make contiguous:
+            flat_nav_slice = Slice(
+                origin=(start,),
+                shape=Shape((new_size,), sig_dims=0),
+            )
+            nav_slice = flat_nav_slice.unravel_nav(nd_shape)
+            contig = fill_contiguous(nav_slice.shape, tuple(nd_shape))
+            new_size = prod(contig)
+
+            # validate: result is compatible to the nd_shape:
+            Slice(
+                origin=(start,),
+                shape=Shape((new_size,), sig_dims=0),
+            ).unravel_nav(nd_shape).flatten_nav(nd_shape)
+
+        stop = start + new_size
 
         if stop == start:
             stop += 1  # must have at least one frame per partition
+
+        log.debug(f"after alignments: start={start}, new_size={new_size}")
 
         log.debug(f"yielding slice: {start}, {stop}")
         log.debug(f"seeking from {self._seek_pos} to {stop}")

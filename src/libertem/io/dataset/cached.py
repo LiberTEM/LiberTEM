@@ -373,7 +373,13 @@ class CachedDataSet(DataSet):
     strategy : CacheStrategy
         A class implementing a cache eviction strategy, for example LRUCacheStrategy
     """
-    def __init__(self, source_ds, cache_path, strategy, io_backend=None):
+    def __init__(
+        self,
+        source_ds: DataSet,
+        cache_path: str,
+        strategy: CacheStrategy,
+        io_backend=None
+    ):
         super().__init__(io_backend=io_backend)
         self._source_ds = source_ds
         self._cache_path = cache_path

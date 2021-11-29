@@ -53,17 +53,16 @@ def task_results_array(
 
     Any merging or results computation is the responsibility of the user since
     LiberTEM depends on assignment into buffers for merging. This is not
-    supported by Dask arrays at the time this is implemented.
-
-    Please note that this is *not* the result that
+    supported by Dask arrays at the time this is implemented. That means this
+    function does *not* return the result that
     :meth:`libertem.api.Context.run_udf` returns since no merging or results
     computation is performed! Instead, this returns a collection of intermediate
     results.
 
     If you wish to obtain the same final result as running with
-    :meth:`~libertem.api.Context.run_udf`, please check the implementation of
-    merging and results computation for the specific UDFs you intend to run to
-    implement an equivalent merging and results computation routine.
+    :meth:`~libertem.api.Context.run_udf`, implement an equivalent merging
+    and results computation routine following the UDF's implementation,
+    but using only Dask array functions.
 
     For the special case of :code:`kind='nav'` buffers with default merge and
     without a ROI, the final result can be obtained just by reshaping axis 0 of
@@ -83,8 +82,8 @@ def task_results_array(
     Union[dict, List[dict]]
         List of result dictionaries for list of UDFs and
         single result dictionary for single UDFs with buffer names as keys and
-        Dask arrays as values. Please note that the keys, shapes and values are
-        often different from the normal UDF results, depending on the UDF's
+        Dask arrays as values. Please note that the keys, shapes and values can be
+        different from the normal UDF results, depending on the UDF's
         implementation for merging and results computation.
     '''
     udf_is_list = isinstance(udf, (tuple, list))

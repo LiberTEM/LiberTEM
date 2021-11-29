@@ -536,10 +536,14 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             :func:`libertem.utils.devices.detect` allows to detect devices that can be used
             with LiberTEM, and :func:`cluster_spec` can be used to create a :code:`spec`
             with customized parameters.
-
-        interesting client_kwargs
-            Pass :code:`client_kwargs={'set_as_default': True}` to set the Client as the
+        cluster_kwargs
+            Passed to :class:`distributed.SpecCluster`.
+        client_kwargs
+            Passed to :class:`distributed.Client`. Pass
+            :code:`client_kwargs={'set_as_default': True}` to set the Client as the
             default Dask scheduler.
+        preload: Optional[Tuple[str]]
+            Passed to :func:`cluster_spec` if :code:`spec` is :code:`None`.
 
         Returns
         -------
@@ -555,6 +559,12 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if spec is None:
             from libertem.utils.devices import detect
             spec = cluster_spec(**detect(), preload=preload)
+        else:
+            if preload is not None:
+                raise ValueError(
+                    "Passing both spec and preload is not supported. "
+                    "Instead, include preloading specification in the spec"
+                )
         if client_kwargs is None:
             client_kwargs = {}
         if client_kwargs.get('set_as_default') is None:

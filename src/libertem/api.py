@@ -57,35 +57,12 @@ class Context:
     Parameters
     ----------
 
-    executor : ~libertem.executor.base.JobExecutor, str, or None
+    executor : ~libertem.executor.base.JobExecutor or None
         If None, create a local dask.distributed cluster and client using
         :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` with optimal configuration
         for LiberTEM. It uses all cores and compatible GPUs
         on the local system, but is not set as default Dask scheduler to not interfere
         with other uses of Dask.
-
-        .. versionadded:: 0.9.0
-
-            Specify some common variants as string:
-            * "synchronous", "inline": Create a :class:`InlineJobExecutor`
-            * "threads": Create a :class:`ConcurrentJobExecutor`
-            * "dask-integration": Create a JobExecutor that is compatible with the
-              currently active Dask scheduler. If a
-              dask.distributed :code:`Client` is active, use that with a
-              :class:`DaskJobExecutor`. This can be used to integrate LiberTEM
-              in an existing Dask workflow. This may not achieve
-              optimal LiberTEM performance and will usually not allow GPU processing with LiberTEM,
-              but avoids potential compatibility issues from changing the Dask scheduler in
-              an existing workflow. In particular, it will use
-              a local threading executor if Dask is currently using local threading.
-              That supports workflows that rely on direct data sharing between main node and
-              workers.
-            * "dask-make-default": Create a local dask.distributed cluster and client
-              using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` like in the
-              :code:`None` case, but set it's Client as default Dask scheduler and
-              don't close this Client or Cluster when the LiberTEM Context closes. This is
-              recommended to start a dask.distributed Client for Dask workflows that are
-              compatible with the dask.distributed scheduler.
 
     plot_class : libertem.viz.base.Live2DPlot
         Default plot class for live plotting.
@@ -112,10 +89,72 @@ class Context:
     >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
     """
 
-    def __init__(self, executor: Optional[Union[JobExecutor, str]] = None, plot_class=None):
-        executor = self._create_executor(executor)
+    def __init__(self, executor: Optional[JobExecutor] = None, plot_class=None):
+        if executor is None:
+            executor = DaskJobExecutor.make_local()
         self.executor = executor
         self._plot_class = plot_class
+
+    @classmethod
+    def make_with(cls, executor_spec: str, *args, **kwargs):
+        '''
+        Create a Context with a specific kind of executor.
+
+        .. versionadded:: 0.9.0
+
+        This simplifies creating a :class:`Context` for a number of common executor
+        choices. See :ref:`executors` for general information on executors.
+
+        Parameters
+        ----------
+
+        executor_spec:
+            Specify some common variants as string:
+
+            :"synchronous", "inline":
+                Use a :class:`InlineJobExecutor`
+            :"threads":
+                Use a :class:`ConcurrentJobExecutor`
+            :"dask-integration":
+                Use a JobExecutor that is compatible with the
+                currently active Dask scheduler. If a
+                dask.distributed :code:`Client` is active, use that with a
+                :class:`DaskJobExecutor`. This can be used to integrate LiberTEM
+                in an existing Dask workflow. This may not achieve
+                optimal LiberTEM performance and will usually not allow GPU processing with
+                LiberTEM, but avoids potential compatibility issues from changing the Dask
+                scheduler in an existing workflow. In particular, it will use
+                a local threading executor if Dask is currently using local threading.
+                That supports workflows that rely on direct data sharing between main node and
+                workers.
+            :"dask-make-default":
+                Use a local dask.distributed cluster and client
+                using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` like in the
+                :code:`None` case, but set it's Client as default Dask scheduler and
+                don't close this Client or Cluster when the LiberTEM Context closes. This is
+                recommended to start a dask.distributed Client for Dask workflows that are
+                compatible with the dask.distributed scheduler.
+        *args, **kwargs
+            Passed to :class:`Context`.
+
+        Returns
+        -------
+        Instance of :class:`Context` using a new instance of the specified executor.
+        '''
+        if executor_spec in ('synchronous', 'inline'):
+            executor = InlineJobExecutor()
+        elif executor_spec == 'threads':
+            executor = ConcurrentJobExecutor.make_local()
+        elif executor_spec == 'dask-integration':
+            executor = get_dask_integration_executor()
+        elif executor_spec == 'dask-make-default':
+            executor = DaskJobExecutor.make_local(client_kwargs={"set_as_default": True})
+        else:
+            raise ValueError(
+                f'Argument `executor_spec` is {executor_spec}. Allowed are '
+                f'synchronous", "inline", "threads", "dask-integration" or "dask-make-default".'
+            )
+        return cls(executor=executor, *args, **kwargs)
 
     @property
     def plot_class(self):
@@ -1287,26 +1326,6 @@ class Context:
             backends=backends,
         )
         return results['result']
-
-    def _create_executor(self, executor: Optional[Union[JobExecutor, str]]):
-        if isinstance(executor, JobExecutor):
-            return executor
-        elif executor is None:
-            return DaskJobExecutor.make_local()
-        elif executor in ('synchronous', 'inline'):
-            return InlineJobExecutor()
-        elif executor == 'threads':
-            return ConcurrentJobExecutor.make_local()
-        elif executor == 'dask-integration':
-            return get_dask_integration_executor()
-        elif executor == 'dask-make-default':
-            return DaskJobExecutor.make_local(client_kwargs={"set_as_default": True})
-        else:
-            raise ValueError(
-                f'Argument `executor` is {executor}. Allowed are an instance of {JobExecutor} or '
-                f'one of None, "synchronous", "inline", "threads", "dask-integration" '
-                f'or "dask-make-default".'
-            )
 
     def close(self):
         self.executor.close()

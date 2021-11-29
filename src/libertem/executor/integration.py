@@ -10,6 +10,13 @@ from .inline import InlineJobExecutor
 
 
 def get_dask_integration_executor():
+    '''
+    Query the current Dask scheduler and return a :class:`~libertem.executor.base.JobExecutor`
+    that is compatible with it.
+
+    If a dask.distributed :code:`Client` is set as a scheduler, use it with a
+    :class:`~libertem.executor.dask.DaskJobExecutor`.
+    '''
     item = dask.delayed(1)
     dask_scheduler = dask.base.get_scheduler(collections=[item])
     # We first test for circumstances where we know how to return an adapted

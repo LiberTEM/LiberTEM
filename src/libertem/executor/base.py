@@ -174,7 +174,8 @@ class JobExecutor:
 
     def run_each_worker(self, fn, *args, **kwargs):
         """
-        Run `fn` on each worker process, and pass *args, **kwargs to it.
+        Run `fn` on each worker process, and pass :code:`*args`,
+        :code:`**kwargs` to it.
 
         Useful, for example, if you need to prepare the environment of
         each Python interpreter, warm up per-process caches etc.

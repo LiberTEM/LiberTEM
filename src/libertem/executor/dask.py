@@ -490,7 +490,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if client_kwargs is None:
             client_kwargs = {}
         if client_kwargs.get('set_as_default') is None:
-            client_kwargs['set_as_default']
+            client_kwargs['set_as_default'] = False
 
         if cluster_kwargs is None:
             cluster_kwargs = {}

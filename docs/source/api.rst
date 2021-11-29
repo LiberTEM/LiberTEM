@@ -33,25 +33,18 @@ Executors
 ---------
 
 .. versionadded:: 0.9.0
-    Previously, the executor API was mostly internal. Since influence on the executor
-    is important for integration with Dask and other frameworks,
-    the API is now documented to help with that. Nevertheless, this is still
-    experimental and may change between releases without notice.
+    The executor API is internal. Since choice and parameters of executors
+    are important for integration with Dask and other frameworks,
+    they are now documented. Only the names and creation methods for
+    executors are reasonably stable. The rest of the API is subject to
+    change without notice. For that reason it is documented in the developer
+    section and not in the API reference.
 
-All access to data and processing is done by an executor that implements the
-:class:`~libertem.executor.base.JobExecutor` interface to run functions and
-tasks. That allows to modify where and how processing is done, including running
-on a cluster or in a single thread, without changes in other parts of LiberTEM.
-
-The default executor is :class:`~libertem.executor.dask.DaskJobExecutor`, which
-uses a Dask.Distributed :code:`Client` to run functions as `Dask futures
-<https://docs.dask.org/en/stable/futures.html>`_. LiberTEM uses special resource
-tags on workers to support parallel CPU and GPU processing, and usually performs
-best with one process-based worker per physical CPU core without threading. That
-requires a highly customized Dask cluster setup. In order to guarantee the best
-results, it is therefore recommended to use the methods provided by LiberTEM to
-start a cluster. However, LiberTEM can also run on a "vanilla" Dask.distributed
-cluster.
+The default executor is :class:`~libertem.executor.dask.DaskJobExecutor` that
+uses the dask.distributed scheduler. To support all LiberTEM features and
+achieve optimal performance, the methods provided by LiberTEM to start a
+dask.distributed cluster should be used. However, LiberTEM can also run on a
+"vanilla" dask.distributed cluster.
 
 The :class:`~libertem.executor.inline.InlineJobExecutor` runs all tasks
 synchronously in the current thread. This is useful for debugging and for
@@ -60,8 +53,8 @@ efficiently or for other non-standard use that requires tasks to be executed
 sequentially and in order.
 
 The :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` runs all tasks
-using :mod:`python.concurrent.futures`. Currently only the
-:class:`python:concurrent.futures.ThreadPoolExecutor` is supported. This allows
+using :mod:`python.concurrent.futures`. Using the
+:class:`python:concurrent.futures.ThreadPoolExecutor` allows
 sharing large amounts of data as well as other resources between main thread
 and workers efficiently, but is severely slowed down by the Python
 `global interpreter lock <https://wiki.python.org/moin/GlobalInterpreterLock>`_
@@ -75,7 +68,8 @@ Common executor choices
 .......................
 
 :meth:`libertem.api.Context.make_with` provides a convenient shortcut to start a
-:class:`~libertem.api.Context` with common executor choices. See the API documentation
+:class:`~libertem.api.Context` with common executor choices. See the
+:meth:`API documentation <libertem.api.Context.make_with>`
 for available options!
 
 Connect to a cluster
@@ -139,7 +133,7 @@ Dask integration
 ................
 
 By default, LiberTEM keeps the default Dask scheduler as-is and only
-uses the :code:`Client` internally to make sure existing workflows keep running
+uses the Dask :code:`Client` internally to make sure existing workflows keep running
 as before. For a closer integration it can be beneficial to use the same scheduler
 for both LiberTEM and other Dask computations. There are several options for that:
 
@@ -212,6 +206,6 @@ with Dask arrays.
 
 For most UDFs, an equivalent implementation that is compatible with
 Dask arrays should be easy to implement. Inspect an UDF's implementation of
-:code:`merge()` and :code:`get_results()` to see how the final result is calculated.
+:code:`merge()` and/or :code:`get_results()` to see how the final result is calculated.
 For the default merging of :code:`kind="nav"` buffers, the equivalent method is just
 reshaping the resulting array into the correct shape.

@@ -162,8 +162,11 @@ For a full reference, please see :ref:`reference`.
 
 .. _daskarray:
 
-Create Dask arrays
-------------------
+Create Dask objects
+-------------------
+
+Load datasets
+.............
 
 The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 
@@ -183,3 +186,32 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
     result = ctx.executor.client.compute(
         dask_array.sum(axis=(-1, -2))
     ).result()
+
+Run UDFs
+........
+
+.. note::
+    The features described here are experimental and under development.
+
+Using a :class:`~libertem.executor.delayed.DelayedJobExecutor` with a
+:class:`~libertem.api.Context` lets :class:`~libertem.api.Context.run_udf`
+return a dask.delayed value for the result. The computation is only
+performed when the :code:`compute()` method is called on it. Please note
+that the dask.delayed values generated this way are not Dask arrays, but
+delayed NumPy arrays. In particular, they are not chunked.
+
+The :meth:`~libertem.contrib.daskadapter.task_results_array` function can
+generate chunked Dask arrays from intermediate UDF task results, i.e.
+before merging and results computation.
+
+Computing the final result of an UDF from this intermediate Dask array
+requires implementing a custom, equivalent merge and results computation
+routine since LiberTEM relies
+heavily on modification of buffer slices for this step. This is incompatible
+with Dask arrays.
+
+For most UDFs, an equivalent implementation that is compatible with
+Dask arrays should be easy to implement. Inspect an UDF's implementation of
+:code:`merge()` and :code:`get_results()` to see how the final result is calculated.
+For the default merging of :code:`kind="nav"` buffers, the equivalent method is just
+reshaping the resulting array into the correct shape.

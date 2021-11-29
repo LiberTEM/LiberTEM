@@ -1789,6 +1789,42 @@ class UDFRunner:
             pass
         return res
 
+    def results_for_dataset_sync(
+        self,
+        dataset: DataSet,
+        executor: JobExecutor,
+        roi: Optional[np.ndarray] = None,
+        progress: bool = False,
+        corrections: Optional[CorrectionSet] = None,
+        backends: Optional[BackendSpec] = None,
+        dry: bool = False,
+    ) -> Iterable[tuple]:
+        tasks, params = self._prepare_run_for_dataset(
+            dataset, executor, roi, corrections, backends, dry
+        )
+        cancel_id = str(uuid.uuid4())
+        self._debug_task_pickling(tasks)
+
+        executor = executor.ensure_sync()
+
+        try:
+            if progress:
+                from tqdm import tqdm
+                t = tqdm(total=len(tasks))
+            with executor.scatter(params) as params_handle:
+                if tasks:
+                    for res in executor.run_tasks(
+                        tasks,
+                        params_handle,
+                        cancel_id,
+                    ):
+                        if progress:
+                            t.update(1)
+                        yield res
+        finally:
+            if progress:
+                t.close()
+
     def run_for_dataset_sync(
         self,
         dataset: DataSet,
@@ -1800,56 +1836,44 @@ class UDFRunner:
         dry: bool = False,
         iterate: bool = True
     ) -> Generator["UDFResults", None, None]:
-        tasks, params = self._prepare_run_for_dataset(
-            dataset, executor, roi, corrections, backends, dry
-        )
-        cancel_id = str(uuid.uuid4())
-        self._debug_task_pickling(tasks)
-
         executor = executor.ensure_sync()
-
+        result_iter = self.results_for_dataset_sync(
+            dataset=dataset,
+            executor=executor,
+            roi=roi,
+            progress=progress,
+            corrections=corrections,
+            backends=backends,
+            dry=dry,
+        )
         damage = BufferWrapper(kind='nav', dtype=bool)
         damage.set_shape_ds(dataset.shape, roi)
         damage.allocate()
-        try:
-            if progress:
-                from tqdm import tqdm
-                t = tqdm(total=len(tasks))
-            with executor.scatter(params) as params_handle:
-                if tasks:
-                    result_iter = executor.run_tasks(
-                        tasks,
-                        params_handle,
-                        cancel_id,
-                    )
-                    for part_results, task in result_iter:
-                        if progress:
-                            t.update(1)
-                        res = executor.run_wrap(
-                            _apply_part_result,
-                            udfs=self._udfs,
-                            damage=damage,
-                            part_results=part_results,
-                            task=task
-                        )
-                        # Explicit indexing for compatibility with Dask.delayed
-                        self._udfs = res[0]
-                        damage = res[1]
-                        if iterate:
-                            yield executor.run_wrap(
-                                _make_udf_result,
-                                udfs=self._udfs,
-                                damage=damage
-                            )
-                if not tasks or not iterate:
-                    yield executor.run_wrap(
-                        _make_udf_result,
-                        udfs=self._udfs,
-                        damage=damage
-                    )
-        finally:
-            if progress:
-                t.close()
+        any_result = False
+        for part_results, task in result_iter:
+            any_result = True
+            res = executor.run_wrap(
+                _apply_part_result,
+                udfs=self._udfs,
+                damage=damage,
+                part_results=part_results,
+                task=task
+            )
+            # Explicit indexing for compatibility with Dask.delayed
+            self._udfs = res[0]
+            damage = res[1]
+            if iterate:
+                yield executor.run_wrap(
+                    _make_udf_result,
+                    udfs=self._udfs,
+                    damage=damage
+                )
+        if not any_result or not iterate:
+            yield executor.run_wrap(
+                _make_udf_result,
+                udfs=self._udfs,
+                damage=damage
+            )
 
     async def run_for_dataset_async(
         self,

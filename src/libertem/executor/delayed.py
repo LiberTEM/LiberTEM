@@ -9,7 +9,11 @@ from .scheduler import Worker, WorkerSet
 
 class DelayedJobExecutor(JobExecutor):
     """
-    JobExecutor that uses dask.delayed to execute tasks.
+    :class:`~libertem.executor.base.JobExecutor` that uses dask.delayed to execute tasks.
+
+    .. versionadded:: 0.9.0
+
+    Highly experimental at this time!
     """
     @contextlib.contextmanager
     def scatter(self, obj):

@@ -1,12 +1,15 @@
-from typing import Union, Dict, Iterable, Generator, Coroutine, AsyncGenerator
+from typing import Union, Dict, Iterable, Generator, Coroutine, AsyncGenerator, Optional
 import warnings
 
 import numpy as np
 from libertem.corrections import CorrectionSet
+from libertem.executor.concurrent import ConcurrentJobExecutor
+from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.integration import get_dask_integration_executor
 from libertem.executor.base import JobExecutor
 from libertem.masks import MaskFactoriesType
 from libertem.analysis.raw import PickFrameAnalysis
@@ -44,10 +47,36 @@ class Context:
     Parameters
     ----------
 
-    executor : ~libertem.executor.base.JobExecutor or None
-        If None, create a
-        :class:`~libertem.executor.dask.DaskJobExecutor` that uses all cores
-        on the local system.
+    executor : ~libertem.executor.base.JobExecutor, str, or None
+        If None, create a local dask.distributed cluster and client using
+        :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` with optimal configuration
+        for LiberTEM. It uses all cores and compatible GPUs
+        on the local system, but is not set as default Dask scheduler to not interfere
+        with other uses of Dask.
+
+        .. versionadded:: 0.9.0
+
+            Specify some common variants as string:
+            * "synchronous", "inline": Create a :class:`InlineJobExecutor`
+            * "threads": Create a :class:`ConcurrentJobExecutor`
+            * "dask-integration": Create a JobExecutor that is compatible with the
+              currently active Dask scheduler. If a
+              dask.distributed :code:`Client` is active, use that with a
+              :class:`DaskJobExecutor`. This can be used to integrate LiberTEM
+              in an existing Dask workflow. This may not achieve
+              optimal LiberTEM performance and will usually not allow GPU processing with LiberTEM,
+              but avoids potential compatibility issues from changing the Dask scheduler in
+              an existing workflow. In particular, it will use
+              a local threading executor if Dask is currently using local threading.
+              That supports workflows that rely on direct data sharing between main node and
+              workers.
+            * "dask-make-default": Create a local dask.distributed cluster and client
+              using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` like in the
+              :code:`None` case, but set it's Client as default Dask scheduler and
+              don't close this Client or Cluster when the LiberTEM Context closes. This is
+              recommended to start a dask.distributed Client for Dask workflows that are
+              compatible with the dask.distributed scheduler.
+
     plot_class : libertem.viz.base.Live2DPlot
         Default plot class for live plotting.
         Defaults to :class:`libertem.viz.mpl.MPLLive2DPlot`.
@@ -73,14 +102,8 @@ class Context:
     >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
     """
 
-    def __init__(self, executor: JobExecutor = None, plot_class=None):
-        if executor is None:
-            executor = self._create_local_executor()
-        if not isinstance(executor, JobExecutor):
-            raise ValueError(
-                f'Argument `executor` is not an instance of {JobExecutor}, '
-                f'got type "{type(executor)}" instead.'
-            )
+    def __init__(self, executor: Optional[Union[JobExecutor, str]] = None, plot_class=None):
+        executor = self._create_executor(executor)
         self.executor = executor
         self._plot_class = plot_class
 
@@ -1037,8 +1060,25 @@ class Context:
         )
         return results['result']
 
-    def _create_local_executor(self):
-        return DaskJobExecutor.make_local()
+    def _create_executor(self, executor: Optional[Union[JobExecutor, str]]):
+        if isinstance(executor, JobExecutor):
+            return executor
+        elif executor is None:
+            return DaskJobExecutor.make_local()
+        elif executor in ('synchronous', 'inline'):
+            return InlineJobExecutor()
+        elif executor == 'threads':
+            return ConcurrentJobExecutor.make_local()
+        elif executor == 'dask-integration':
+            return get_dask_integration_executor()
+        elif executor == 'dask-make-default':
+            return DaskJobExecutor.make_local(client_kwargs={"set_as_default": True})
+        else:
+            raise ValueError(
+                f'Argument `executor` is {executor}. Allowed are an instance of {JobExecutor} or '
+                f'one of None, "synchronous", "inline", "threads", "dask-integration" '
+                f'or "dask-make-default".'
+            )
 
     def close(self):
         self.executor.close()

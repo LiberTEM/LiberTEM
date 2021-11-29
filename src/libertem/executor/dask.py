@@ -429,20 +429,37 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if self.is_local:
             if self.client.cluster is not None:
                 self.client.cluster.close(timeout=30)
-        self.client.close()
+            self.client.close()
 
     @classmethod
-    def connect(cls, scheduler_uri, *args, **kwargs):
+    def connect(cls, scheduler_uri, *args, client_kwargs: Optional[dict] = None, **kwargs):
         """
-        Connect to a remote dask scheduler
+        Connect to a remote dask scheduler.
+
+        Parameters
+        ----------
+        scheduler_uri: str
+            Compatible with the :code:`address` parameter of :class:`distributed.Client`.
+        client_kwargs: dict or None
+            Passed as kwargs to :class:`distributed.Client`.
+            :code:`client_kwargs['set_as_default']` is set to :code:`False`
+            unless specified otherwise to avoid interference with Dask-based workflows.
+            Pass client_kwargs={'set_as_default': True} to set the Client as the
+            default Dask scheduler and keep it running when the Context closes.
+        *args, **kwargs: Passed to :class:`DaskJobExecutor`.
 
         Returns
         -------
         DaskJobExecutor
             the connected JobExecutor
         """
-        client = dd.Client(address=scheduler_uri, set_as_default=False)
-        return cls(client=client, is_local=False, *args, **kwargs)
+        if client_kwargs is None:
+            client_kwargs = {}
+        if client_kwargs.get('set_as_default') is None:
+            client_kwargs['set_as_default'] = False
+        is_local = not client_kwargs['set_as_default']
+        client = dd.Client(address=scheduler_uri, **client_kwargs)
+        return cls(client=client, is_local=is_local, *args, **kwargs)
 
     @classmethod
     def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None,
@@ -450,9 +467,11 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         """
         Spin up a local dask cluster
 
-        interesting cluster_kwargs:
-            threads_per_worker
-            n_workers
+        See http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
+        for info on a Dask cluster spec.
+
+        interesting client_kwargs
+            set_as_default
 
         Returns
         -------
@@ -471,7 +490,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         if client_kwargs is None:
             client_kwargs = {}
         if client_kwargs.get('set_as_default') is None:
-            client_kwargs['set_as_default'] = False
+            client_kwargs['set_as_default']
 
         if cluster_kwargs is None:
             cluster_kwargs = {}
@@ -483,7 +502,9 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             client = dd.Client(cluster, **(client_kwargs or {}))
             client.wait_for_workers(len(spec))
 
-        return cls(client=client, is_local=True, lt_resources=True)
+        is_local = not client_kwargs['set_as_default']
+
+        return cls(client=client, is_local=is_local, lt_resources=True)
 
     def __enter__(self):
         return self

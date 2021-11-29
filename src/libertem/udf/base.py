@@ -2,7 +2,7 @@ import time
 from collections import defaultdict
 from enum import Enum
 from typing import (
-    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, NamedTuple, Optional, List,
+    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
     Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
 )
 from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
@@ -15,7 +15,7 @@ import cloudpickle
 import numpy as np
 
 from libertem.io.dataset.base.tiling import DataTile
-from libertem.io.partitioner import AdaptivePartitioner, PartitionGenerator, TaskStats
+from libertem.io.partitioner import AdaptivePartitioner, PartTiming, PartitionGenerator, TaskStats
 
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
@@ -1541,7 +1541,10 @@ class UDFTask(Task):
         if roi is None:
             task_size = self.partition.shape.nav.size
         else:
-            task_size = int(np.count_nonzero(roi[self.partition.slice.get(nav_only=True)]))
+            roi_for_partition = roi.reshape((-1,))[
+                self.partition.slice.get(nav_only=True)
+            ]
+            task_size = np.count_nonzero(roi_for_partition)
         return task_size
 
     def __repr__(self):
@@ -1918,7 +1921,7 @@ class UDFRunner:
         if dry:
             tasks: TaskGenerator = EmptyTaskGenerator()
         else:
-            tasks = self._make_udf_tasks(dataset, roi, backends)
+            tasks = self._make_udf_tasks(dataset, roi, backends, executor, tiling_scheme)
         return (tasks, params)
 
     def run_for_dataset(
@@ -2020,9 +2023,10 @@ class UDFRunner:
             )
             t_merge_1 = time.perf_counter()
             task_size = task.get_size(roi)
+            assert task_size > 0
             tasks.add_merge_stats(task_size=task_size, merge_time=t_merge_1 - t_merge_0)
             tasks.add_task_stats(
-                TaskStats(task_size_nav=task_size, duration_seconds=part_results.timings)
+                TaskStats(task_size_nav=task_size, part_timing=part_results.timings)
             )
             if iterate:
                 yield self._make_udf_result(
@@ -2065,17 +2069,23 @@ class UDFRunner:
         self,
         dataset: DataSet,
         roi: Optional[np.ndarray],
-        backends: Optional[BackendSpec]
+        backends: Optional[BackendSpec],
+        executor: JobExecutor,
+        tiling_scheme: TilingScheme,
     ) -> "TaskGenerator":
+        constr = dataset.get_partition_constraints()
         partitioner = AdaptivePartitioner(
             dataset_shape=dataset.shape,
             roi=roi,
-            target_feedback_rate_hz=10,
+            num_workers=len(executor.get_available_workers()),
+            target_feedback_rate_hz=5,
+            partition_constraints=constr,
+            tiling_scheme=tiling_scheme,
         )
         partition_gen = PartitionGenerator(
             dataset=dataset,
             partitioner=partitioner,
-            part_constraints=dataset.get_partition_constraints(),
+            part_constraints=constr,
         )
         task_gen = TaskGenerator(
             backends=backends,
@@ -2170,13 +2180,6 @@ class UDFResults:
     def __init__(self, buffers: Iterable[UDFResultDict], damage: BufferWrapper):
         self.buffers = tuple(buffers)
         self.damage = damage
-
-
-class PartTiming(NamedTuple):
-    """
-    Timing per partition
-    """
-    total: float
 
 
 class UDFPartitionResult:

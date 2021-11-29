@@ -10,6 +10,7 @@ from libertem.common.math import prod
 from libertem.common.slice import Slice
 from libertem.io.dataset.base.dataset import DataSet, PartitioningConstraints
 from libertem.io.dataset.base.partition import Partition
+from libertem.io.dataset.base import TilingScheme
 
 log = logging.getLogger(__name__)
 
@@ -91,9 +92,16 @@ def fill_contiguous(
     return shape_left + containing_shape[first_non_one + 1:]
 
 
+class PartTiming(NamedTuple):
+    """
+    Timing per partition
+    """
+    total: float
+
+
 class TaskStats(NamedTuple):
     task_size_nav: int
-    duration_seconds: float
+    part_timing: PartTiming
 
 
 class Partitioner:
@@ -222,15 +230,70 @@ class ConstantPartitioner(Partitioner):
 
 
 class AdaptivePartitioner(Partitioner):
-    def __init__(self, target_feedback_rate_hz: int, *args, **kwargs):
+    """
+    Generate a target partition size by analyzing the performance of the past N
+    tasks, including the time used on the main node for merging.
+    """
+    def __init__(
+        self,
+        target_feedback_rate_hz: int,
+        num_workers: int,
+        partition_constraints: PartitioningConstraints,
+        tiling_scheme: TilingScheme,
+        *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self._target_rate = target_feedback_rate_hz
+        self._num_workers = num_workers
+        self._partition_constraints = partition_constraints
+        self._tiling_scheme = tiling_scheme
+
+    def get_mean_perf(self, last_n: int) -> float:
+        """
+        Get the mean performance (as nav items per second)
+        for the last `last_n` tasks.
+        """
+        items = self._stats[-last_n:-1]
+        # print(items)
+        perfs = [
+            item.task_size_nav / item.part_timing.total
+            for item in items
+        ]
+        mean = sum(perfs) / len(perfs)
+        return mean
+
+    def have_stats(self):
+        return len(self._stats) > 1
 
     def calc_partition_size(self) -> int:
         # - minimum _number_ (hard) of partitions should be
         #   `n_workers*2` in any case -> `max_size ~= ds_shape.nav.size / (n_workers*2)`
-        # - `min_size` constraint by merge time
-        return 42  # FIXME: implement this!
+        #    - what about the very sparse `roi` case? there, having more
+        #      partitions will slow things down instead
+        # - `min_size` constrained by merge time
+
+        # performance in nav items per second:
+        if self.have_stats():
+            mean_perf = self.get_mean_perf(last_n=32)
+        else:
+            bytes_per_nav = self._partition_constraints.bytes_per_nav
+            mean_perf = 64*1024*1024 / bytes_per_nav * self._target_rate
+
+        total_items = self._dataset_shape.nav.size
+        max_size = total_items / (2 * self._num_workers)
+
+        # FIXME: include merge timing here!
+        min_size = 2 * self._tiling_scheme.depth
+
+        # our per-partition budget in seconds:
+        target_time_per_part = 1 / self._target_rate
+
+        size = target_time_per_part * mean_perf
+        size = max(min_size, size)
+        size = min(max_size, size)
+        print(f"calc_partition_size -> {size} (mean_perf={mean_perf}, "
+              f"max_size={max_size}, min_size={min_size}, target_time={target_time_per_part})")
+        return int(math.ceil(size))
 
 
 class PartitionGenerator:

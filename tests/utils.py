@@ -1,10 +1,10 @@
 import datetime
 import time
 import os
+from typing import Optional
 
 import numpy as np
 import sparse
-
 
 from libertem.masks import to_dense
 from libertem.analysis.gridmatching import calc_coords
@@ -15,6 +15,8 @@ from libertem.udf.masks import ApplyMasksUDF
 from libertem.corrections import CorrectionSet
 from libertem.corrections.detector import correct
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
+from libertem.io.dataset.base.dataset import DataSet
+from libertem.api import Context
 
 
 def _naive_mask_apply(masks, data):
@@ -177,14 +179,22 @@ class ValidationUDF(UDF):
         )
 
 
-def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
+def dataset_correction_verification(
+    ds: DataSet,
+    roi: Optional[np.ndarray],
+    lt_ctx: Context,
+    exclude=None
+):
     """
     compare correct function w/ corrected pick
     """
     for i in range(1):
         shape = (-1, *tuple(ds.shape.sig))
         uncorr = CorrectionSet()
+        t0 = time.perf_counter()
         data = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, roi=roi, corrections=uncorr)
+        t1 = time.perf_counter()
+        print(f"first pick took {t1-t0}s")
 
         gain = np.random.random(ds.shape.sig) + 1
         dark = np.random.random(ds.shape.sig) - 0.5
@@ -198,8 +208,6 @@ def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
         exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
         corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
 
-        # This one uses native input data
-        pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
         corrected = correct(
             buffer=data['intensity'].raw_data.reshape(shape),
             dark_image=dark,
@@ -209,14 +217,33 @@ def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
         )
 
         print("Exclude: ", exclude)
-
-        print(pick_res['intensity'].raw_data.dtype)
         print(corrected.dtype)
 
-        assert np.allclose(
-            pick_res['intensity'].raw_data.reshape(shape),
-            corrected
+        lt_ctx.run_udf(
+            udf=ValidationUDF(reference=corrected, preferred_dtype=UDF.USE_NATIVE_DTYPE),
+            dataset=ds,
+            corrections=corrset,
+            roi=roi
         )
+
+        if False:
+            # This one uses native input data
+            t0 = time.perf_counter()
+            pick_res = lt_ctx.run_udf(udf=PickUDF(), dataset=ds, corrections=corrset, roi=roi)
+            t1 = time.perf_counter()
+            print(f"second pick took {t1-t0}s")
+            corrected = correct(
+                buffer=data['intensity'].raw_data.reshape(shape),
+                dark_image=dark,
+                gain_map=gain,
+                excluded_pixels=exclude,
+                inplace=False
+            )
+
+            assert np.allclose(
+                pick_res['intensity'].raw_data.reshape(shape),
+                corrected
+            )
 
 
 def dataset_correction_masks(ds, roi, lt_ctx, exclude=None):

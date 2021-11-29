@@ -106,7 +106,7 @@ class DataSet:
     def get_partition_constraints(self) -> PartitioningConstraints:
         return PartitioningConstraints(
             base_step_size=1,
-            bytes_per_nav=1,
+            bytes_per_nav=prod(self.shape.sig) * 4,
         )
 
     def get_slice_for_start_stop(

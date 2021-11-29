@@ -1,7 +1,7 @@
 import concurrent
 import functools
 import asyncio
-from typing import Callable, Optional, Any, Iterable, TYPE_CHECKING, TypeVar, Type
+from typing import Callable, Dict, List, Optional, Any, Iterable, TYPE_CHECKING, TypeVar, Type
 from typing_extensions import Protocol
 from contextlib import contextmanager
 
@@ -215,7 +215,7 @@ class JobExecutor:
         cleanup resources used by this executor, if any
         """
 
-    def get_available_workers(self):
+    def get_available_workers(self) -> List[Dict[str, str]]:
         """
         Returns a list of dicts with available workers
 
@@ -329,7 +329,7 @@ class AsyncJobExecutor:
         """
         pass
 
-    async def get_available_workers(self):
+    async def get_available_workers(self) -> List[Dict[str, str]]:
         raise NotImplementedError()
 
     async def get_resource_details(self):
@@ -448,7 +448,7 @@ class AsyncAdapter(AsyncJobExecutor):
             self._pool
         )
 
-    async def get_available_workers(self):
+    async def get_available_workers(self) -> List[Dict[str, str]]:
         return await sync_to_async(self._wrapped.get_available_workers)
 
     async def get_resource_details(self):

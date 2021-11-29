@@ -1,6 +1,10 @@
 import time
 import hashlib
 import logging
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from libertem.io.dataset.base.dataset import DataSet
 
 logger = logging.getLogger(__name__)
 
@@ -124,35 +128,28 @@ if dispatcher_registry is not None:
         target_registry["custom_cpu"] = MyCPU
 
 
-def prime_numba_cache(ds):
+def prime_numba_cache(ds: "DataSet"):
     dtypes = (np.float32, None)
     for dtype in dtypes:
-        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
-        roi[max(-ds._meta.sync_offset, 0)] = True
+        roi = np.zeros(ds.shape.nav.to_tuple(), dtype=bool).reshape((-1,))
+        roi[max(-ds.meta.sync_offset, 0)] = True
 
         from libertem.udf.sum import SumUDF
         from libertem.udf.raw import PickUDF
         from libertem.corrections.corrset import CorrectionSet
         from libertem.io.dataset.base import Negotiator
-        from libertem.io.partitioner import PartitionGenerator, AdaptivePartitioner
 
         # need to have at least one UDF; here we run for both sum and pick
         # to reduce the initial latency when switching to pick mode
         udfs = [SumUDF(), PickUDF()]
         neg = Negotiator()
-        partitioner = AdaptivePartitioner(
-            dataset_shape=ds.shape,
-            roi=roi,
-            target_feedback_rate_hz=10,
-        )
-        partition_gen = PartitionGenerator(
-            dataset=ds,
-            partitioner=partitioner,
-        )
+        partition_gen = ds.get_const_partitions(partition_size=16)
         for udf in udfs:
             for corr_dtype in (np.float32, None):
                 if corr_dtype is not None:
-                    corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
+                    corrections: Optional[CorrectionSet] = CorrectionSet(
+                        dark=np.zeros(ds.shape.sig, dtype=corr_dtype)
+                    )
                 else:
                     corrections = None
                 found_first_tile = False

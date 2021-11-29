@@ -221,7 +221,11 @@ Simple merge example
 
     ctx = lt.Context.make_with('inline')
 
-    dataset = ctx.load('memory', data=np.random.random((13, 14, 15, 16)))
+    dataset = ctx.load(
+        'memory',
+        data=np.random.random((13, 14, 15, 16)),
+        num_partitions=4,
+    )
 
 :class:`~libertem.udf.masks.ApplyMasksUDF` returns a single :code:`kind="nav"`
 buffer with default merge. The result from

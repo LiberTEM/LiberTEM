@@ -17,6 +17,18 @@ log = logging.getLogger(__name__)
 
 
 class ConcurrentJobExecutor(JobExecutor):
+    '''
+    :class:`JobExecutor` that uses :mod:`python.concurrent.futures`.
+
+    .. versionadded:: 0.9.0
+
+    Parameters
+    ----------
+
+    client : concurrent.futures.Executor
+    is_local : bool
+        Shut the client down when the executor closes.
+    '''
     def __init__(self, client: concurrent.futures.Executor, is_local=False):
         self.is_local = is_local
         self.client = client
@@ -119,7 +131,7 @@ class ConcurrentJobExecutor(JobExecutor):
     @classmethod
     def make_local(cls):
         """
-        Spin up a local Concurrent cluster
+        Spin up a local Concurrent thread pool
 
         Returns
         -------

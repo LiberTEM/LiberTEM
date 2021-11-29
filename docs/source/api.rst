@@ -21,8 +21,65 @@ For more details, please see :ref:`loading data`, :ref:`dataset api` and
 .. include:: /../../examples/basic.py
     :code:
 
+Custom processing routines
+--------------------------
+
+To go beyond the included capabilities of LiberTEM, you can implement your own
+using :ref:`user-defined functions`.
+
+.. _`executors`:
+
+Executors
+---------
+
+.. versionadded:: 0.9.0
+    Previously, the executor API was mostly internal. Since influence on the executor
+    is important for integration with Dask and other frameworks,
+    the API is now documented to help with that. Nevertheless, this is still
+    experimental and may change between releases without notice.
+
+All access to data and processing is done by an executor that implements the
+:class:`~libertem.executor.base.JobExecutor` interface to run functions and
+tasks. That allows to modify where and how processing is done, including running
+on a cluster or in a single thread, without changes in other parts of LiberTEM.
+
+The default executor is :class:`~libertem.executor.dask.DaskJobExecutor`, which
+uses a Dask.Distributed :code:`Client` to run functions as `Dask futures
+<https://docs.dask.org/en/stable/futures.html>`_. LiberTEM uses special resource
+tags on workers to support parallel CPU and GPU processing, and usually performs
+best with one process-based worker per physical CPU core without threading. That
+requires a highly customized Dask cluster setup. In order to guarantee the best
+results, it is therefore recommended to use the methods provided by LiberTEM to
+start a cluster. However, LiberTEM can also run on a "vanilla" Dask.distributed
+cluster.
+
+The :class:`~libertem.executor.inline.InlineJobExecutor` runs all tasks
+synchronously in the current thread. This is useful for debugging and for
+special applications such as running UDFs that perform their own multithreading
+efficiently or for other non-standard use that requires tasks to be executed
+sequentially and in order.
+
+The :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` runs all tasks
+using :mod:`python.concurrent.futures`. Currently only the
+:class:`python:concurrent.futures.ThreadPoolExecutor` is supported. This allows
+sharing large amounts of data as well as other resources between main thread
+and workers efficiently, but is severely slowed down by the Python
+`global interpreter lock <https://wiki.python.org/moin/GlobalInterpreterLock>`_
+under many circumstances.
+
+For special applications, the :class:`~libertem.executor.delayed.DelayedJobExecutor`
+can use `dask.delayed <https://docs.dask.org/en/stable/delayed.html>`_ to
+delay the processing. This is highly experimental.
+
+Common executor choices
+.......................
+
+:meth:`libertem.api.Context.make_with` provides a convenient shortcut to start a
+:class:`~libertem.api.Context` with common executor choices. See the API documentation
+for available options!
+
 Connect to a cluster
---------------------
+....................
 
 See :ref:`cluster` on how to start a scheduler and workers.
 
@@ -39,8 +96,10 @@ See :ref:`cluster` on how to start a scheduler and workers.
         ctx = api.Context(executor=executor)
         ...
 
+.. _`cluster spec`:
+
 Customize CPUs and CUDA devices
--------------------------------
+...............................
 
 To control how many CPUs and which CUDA devices are used, you can specify them as follows:
 
@@ -74,14 +133,37 @@ To control how many CPUs and which CUDA devices are used, you can specify them a
         ctx = api.Context(executor=executor)
         ...
 
-For a full API reference, please see :ref:`reference`.
+Please see :ref:`dask executor` for a reference of the Dask-based executor.
 
-To go beyond the included capabilities of LiberTEM, you can implement your own using :ref:`user-defined functions`.
+Dask integration
+................
+
+By default, LiberTEM keeps the default Dask scheduler as-is and only
+uses the :code:`Client` internally to make sure existing workflows keep running
+as before. For a closer integration it can be beneficial to use the same scheduler
+for both LiberTEM and other Dask computations. There are several options for that:
+
+:Set LiberTEM Dask cluster as default scheduler:
+    * Use :code:`Context.make_with('dask-make-default')`
+    * Pass :code:`client_kwargs={'set_as_default': True}` to
+      :meth:`~libertem.executor.dask.DaskJobExecutor.connect` or
+      :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`
+:Use existing Dask scheduler:
+    * Use :code:`Context.make_with('dask-integration')` to start an executor
+      that is compatible with the current Dask scheduler.
+:Use dask.delayed:
+    * Highly experimental! :class:`libertem.executor.delayed.DelayedJobExecutor` can
+      return UDF computations as dask.delayed objects.
+
+Reference
+---------
+
+For a full reference, please see :ref:`reference`.
 
 .. _daskarray:
 
-Integration with Dask arrays
-----------------------------
+Create Dask arrays
+------------------
 
 The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 

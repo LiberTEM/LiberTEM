@@ -1,6 +1,7 @@
 import os
 from glob import glob
 import concurrent.futures
+import multiprocessing.pool
 
 import pytest
 import distributed
@@ -24,26 +25,26 @@ from utils import get_testdata_path
         "concurrent",
     ]
 )
-def executor(request, dask_executor):
+def ctx(request, dask_executor):
     if request.param == 'inline':
-        yield 'inline'
+        yield Context.make_with('inline')
     elif request.param == "dask_executor":
-        yield dask_executor
-    # elif request.param == "delayed_default":
-    #     yield DelayedJobExecutor()
-    # elif request.param == "delayed_dist":
-    #     with distributed.Client(
-    #             n_workers=2,
-    #             threads_per_worker=4,
-    #             processes=True
-    #     ) as _:
-    #         yield DelayedJobExecutor()
+        yield Context(executor=dask_executor)
+    elif request.param == "delayed_default":
+        yield Context(executor=DelayedJobExecutor())
+    elif request.param == "delayed_dist":
+        with distributed.Client(
+                n_workers=2,
+                threads_per_worker=4,
+                processes=True
+        ) as _:
+            yield Context(executor=DelayedJobExecutor())
     elif request.param == "dask_make_default":
         try:
-            yield 'dask-make-default'
+            ctx = Context.make_with('dask-make-default')
+            yield ctx
         finally:
             # cleanup: Close cluster and client
-            ctx = Context(executor='dask-integration')
             # This is also tested below, here just to make
             # sure things behave as expected.
             assert isinstance(ctx.executor, DaskJobExecutor)
@@ -55,14 +56,9 @@ def executor(request, dask_executor):
                 threads_per_worker=4,
                 processes=False
         ) as _:
-            yield "dask-integration"
+            yield Context.make_with("dask-integration")
     elif request.param == "concurrent":
-        yield "threads"
-
-
-@pytest.fixture
-def ctx(executor):
-    return Context(executor=executor)
+        yield Context.make_with("threads")
 
 
 @pytest.fixture(scope='session')
@@ -209,9 +205,9 @@ def test_executors(ctx, load_kwargs, reference):
 @pytest.mark.slow
 def test_make_default():
     try:
-        ctx = Context(executor="dask-make-default")
+        ctx = Context.make_with("dask-make-default")
         # This queries Dask which scheduler it is using
-        ctx2 = Context(executor="dask-integration")
+        ctx2 = Context.make_with("dask-integration")
         # make sure the second uses the Client of the first
         assert ctx2.executor.client is ctx.executor.client
     finally:
@@ -232,7 +228,7 @@ def test_connect_default(local_cluster_url):
         )
         ctx = Context(executor=executor)
         # This queries Dask which scheduler it is using
-        ctx2 = Context(executor="dask-integration")
+        ctx2 = Context.make_with("dask-integration")
         # make sure the second uses the Client of the first
         assert ctx2.executor.client is ctx.executor.client
     finally:
@@ -248,7 +244,7 @@ def test_use_distributed():
     with distributed.Client(
         n_workers=1, threads_per_worker=1, processes=False
     ) as c:
-        ctx = Context(executor="dask-integration")
+        ctx = Context.make_with("dask-integration")
         assert isinstance(ctx.executor, DaskJobExecutor)
         assert ctx.executor.client is c
 
@@ -258,18 +254,24 @@ def test_no_dangling_client():
     # a dangling dask.distributed Client set as default Dask scheduler.
     # That means we confirm that we get a ConcurrentJobExecutor in the
     # default case.
-    ctx = Context(executor="dask-integration")
+    ctx = Context.make_with("dask-integration")
     assert isinstance(ctx.executor, ConcurrentJobExecutor)
 
 
 def test_use_threads():
     with dask.config.set(scheduler="threads"):
-        ctx = Context(executor="dask-integration")
+        ctx = Context.make_with("dask-integration")
         assert isinstance(ctx.executor, ConcurrentJobExecutor)
-        assert isinstance(ctx.executor.client, concurrent.futures.ThreadPoolExecutor)
+        assert isinstance(
+            ctx.executor.client,
+            (
+                concurrent.futures.ThreadPoolExecutor,
+                multiprocessing.pool.ThreadPool,
+            )
+        )
 
 
 def test_use_synchronous():
     with dask.config.set(scheduler="synchronous"):
-        ctx = Context(executor="dask-integration")
+        ctx = Context.make_with("dask-integration")
         assert isinstance(ctx.executor, InlineJobExecutor)

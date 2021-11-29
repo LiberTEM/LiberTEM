@@ -6,6 +6,7 @@ import signal
 from typing import Iterable, Any, Optional, Tuple
 
 from dask import distributed as dd
+import distributed
 
 from libertem.utils.threading import set_num_threads_env
 
@@ -35,8 +36,48 @@ def worker_setup(resource, device):
 
 
 def cluster_spec(
-        cpus, cudas, has_cupy, name='default', num_service=1, options=None,
+        cpus: Iterable[int], cudas: Iterable[int], has_cupy: bool,
+        name: str = 'default', num_service: int = 1, options: Optional[dict] = None,
         preload: Optional[Tuple[str]] = None):
+    '''
+    Create a spec for a LiberTEM Dask cluster
+
+    This creates a Dask cluster spec with special initializations and resource tags
+    for CPU + GPU processing in LiberTEM.
+    See :ref:`cluster spec` for an example.
+    See http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
+    for more info on cluster specs.
+
+    Parameters
+    ----------
+    cpus
+        IDs for CPU workers. Currently no pinning is used, i.e. this specifies the total
+        number and identification of workers, not the CPU cores that are used.
+    cudas
+        IDs for CUDA device workers. LiberTEM will use the IDs specified here. This
+        has to match CUDA device IDs on the system.
+    has_cupy
+        Specify if the cluster should signal that it supports GPU-based array programming using
+        CuPy
+    name
+        Prefix for the worker names
+    num_service
+        Number of additional workers that are reserved for service tasks. Computation tasks
+        will not be scheduled on these workers, which guarantees responsive behavior for file
+        browsing etc.
+    options
+        Options to pass through to every worker. See Dask documentation for details
+    preload
+        Items to preload on workers in addition to LiberTEM-internal preloads.
+        This can be used to load libraries before any other imports by LiberTEM
+        or UDFs, for example HDF5 filter plugins before h5py is loaded. See
+        https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
+        for more information.
+
+    See also
+    --------
+    :func:`libertem.utils.devices.detect`
+    '''
 
     if options is None:
         options = {}
@@ -251,7 +292,22 @@ class CommonDaskMixin:
 
 
 class DaskJobExecutor(CommonDaskMixin, JobExecutor):
-    def __init__(self, client, is_local=False, lt_resources=None):
+    '''
+    Default LiberTEM executor that uses `Dask futures
+    <https://docs.dask.org/en/stable/futures.html>`_.
+
+    Parameters
+    ----------
+
+    client : distributed.Client
+    is_local : bool
+        Close the Client and cluster when the executor is closed.
+    lt_resources : bool
+        Specify if the cluster has LiberTEM resource tags and environment
+        variables for GPU processing. Autodetected by default.
+    '''
+    def __init__(self, client: distributed.Client, is_local: bool = False,
+                lt_resources: bool = None):
         self.is_local = is_local
         self.client = client
         if lt_resources is None:
@@ -444,7 +500,7 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
             Passed as kwargs to :class:`distributed.Client`.
             :code:`client_kwargs['set_as_default']` is set to :code:`False`
             unless specified otherwise to avoid interference with Dask-based workflows.
-            Pass client_kwargs={'set_as_default': True} to set the Client as the
+            Pass :code:`client_kwargs={'set_as_default': True}` to set the Client as the
             default Dask scheduler and keep it running when the Context closes.
         *args, **kwargs: Passed to :class:`DaskJobExecutor`.
 
@@ -462,16 +518,24 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
         return cls(client=client, is_local=is_local, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None,
-            preload: Optional[Tuple[str]] = None):
+    def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
+            client_kwargs: Optional[dict] = None, preload: Optional[Tuple[str]] = None):
         """
         Spin up a local dask cluster
 
-        See http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
-        for info on a Dask cluster spec.
+        Parameters
+        ----------
+        spec
+            Dask cluster spec, see
+            http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
+            for more info.
+            :func:`libertem.utils.devices.detect` allows to detect devices that can be used
+            with LiberTEM, and :func:`cluster_spec` can be used to create a :code:`spec`
+            with customized parameters.
 
         interesting client_kwargs
-            set_as_default
+            Pass :code:`client_kwargs={'set_as_default': True}` to set the Client as the
+            default Dask scheduler.
 
         Returns
         -------

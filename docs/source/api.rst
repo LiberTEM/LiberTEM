@@ -154,13 +154,13 @@ Reference
 
 For a full reference, please see :ref:`reference`.
 
+.. note::
+    The features described below are experimental and under development.
+
 .. _daskarray:
 
-Create Dask objects
--------------------
-
-Load datasets
-.............
+Load datasets as Dask arrays
+----------------------------
 
 The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
 
@@ -181,11 +181,8 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
         dask_array.sum(axis=(-1, -2))
     ).result()
 
-Run UDFs
-........
-
-.. note::
-    The features described here are experimental and under development.
+Compute UDFs with dask.delayed
+------------------------------
 
 Using a :class:`~libertem.executor.delayed.DelayedJobExecutor` with a
 :class:`~libertem.api.Context` lets :class:`~libertem.api.Context.run_udf`
@@ -194,18 +191,136 @@ performed when the :code:`compute()` method is called on it. Please note
 that the dask.delayed values generated this way are not Dask arrays, but
 delayed NumPy arrays. In particular, they are not chunked.
 
+Generate chunked Dask arrays with UDFs
+--------------------------------------
+
 The :meth:`~libertem.contrib.daskadapter.task_results_array` function can
 generate chunked Dask arrays from intermediate UDF task results, i.e.
 before merging and results computation.
 
-Computing the final result of an UDF from this intermediate Dask array
-requires implementing a custom, equivalent merge and results computation
-routine since LiberTEM relies
-heavily on modification of buffer slices for this step. This is incompatible
-with Dask arrays.
+Computing the final result of an UDF from this intermediate Dask array requires
+implementing a custom, equivalent merge and results computation routine since
+LiberTEM relies heavily on modification of buffer slices for this step. This is
+incompatible with Dask arrays.
 
 For most UDFs, an equivalent implementation that is compatible with
 Dask arrays should be easy to implement. Inspect an UDF's implementation of
 :code:`merge()` and/or :code:`get_results()` to see how the final result is calculated.
 For the default merging of :code:`kind="nav"` buffers, the equivalent method is just
 reshaping the resulting array into the correct shape.
+
+Simple merge example
+....................
+
+.. testsetup:: daskarray
+
+    import numpy as np
+    from pprint import pprint
+
+    from libertem import api as lt
+
+    ctx = lt.Context.make_with('inline')
+
+    dataset = ctx.load('memory', data=np.random.random((13, 14, 15, 16)))
+
+:class:`~libertem.udf.masks.ApplyMasksUDF` returns a single :code:`kind="nav"`
+buffer with default merge. The result from
+:meth:`~libertem.contrib.daskadapter.task_results_array` is very similar to the
+UDF result, consequently.
+
+.. testcode:: daskarray
+
+    from libertem.udf.masks import ApplyMasksUDF
+    from libertem.contrib.daskadapter import task_results_array
+
+    udf = ApplyMasksUDF(
+        mask_factories=[lambda: np.ones(dataset.shape.sig)]
+    )
+
+    ref = ctx.run_udf(dataset=dataset, udf=udf)
+    pprint(ref)
+
+.. testoutput:: daskarray
+
+    {'intensity': <BufferWrapper kind=nav dtype=float64 extra_shape=(1,)>}
+
+.. testcode:: daskarray
+
+    res = task_results_array(dataset=dataset, udf=udf)
+    pprint(res)
+
+.. testoutput:: daskarray
+
+    {'intensity': dask.array<concatenate, shape=(182, 1), dtype=float64, chunksize=(45, 1), chunktype=numpy.ndarray>}
+
+.. testcode:: daskarray
+
+    # The merge function is trivial, just reshape
+    target_shape = (*dataset.shape.nav, 1)
+
+    print(np.allclose(
+        ref['intensity'].data,
+        res['intensity'].reshape(target_shape).compute()
+    ))
+
+.. testoutput:: daskarray
+
+    True
+
+Complex merge example
+.....................
+
+This example shows :class:`~ libertem.udf.stddev.StdDevUDF` which has a complex
+merge function. The results from running the UDF and
+:meth:`~libertem.contrib.daskadapter.task_results_array` are quite different.
+Implementing an equivalent merge would require a close look at
+the implementation of :class:`~ libertem.udf.stddev.StdDevUDF`.
+
+.. testcode:: daskarray
+
+    from libertem.udf.stddev import StdDevUDF
+    from libertem.contrib.daskadapter import task_results_array
+
+    ref = ctx.run_udf(dataset=dataset, udf=StdDevUDF())
+    pprint(ref)
+
+.. testoutput:: daskarray
+
+    {'mean': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
+     'num_frames': <BufferWrapper kind=single dtype=int32 extra_shape=()>,
+     'std': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
+     'sum': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
+     'var': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
+     'varsum': <BufferWrapper kind=sig dtype=float64 extra_shape=()>}
+
+.. testcode:: daskarray
+
+    res = task_results_array(dataset=dataset, udf=StdDevUDF())
+    # Note that several result buffers are missing here since they are
+    # only populated in get_results().
+    pprint(res)
+
+.. testoutput:: daskarray
+
+    {'num_frames': dask.array<stack, shape=(5, 1), dtype=int32, chunksize=(1, 1), chunktype=numpy.ndarray>,
+     'sum': dask.array<stack, shape=(5, 15, 16), dtype=float64, chunksize=(1, 15, 16), chunktype=numpy.ndarray>,
+     'varsum': dask.array<stack, shape=(5, 15, 16), dtype=float64, chunksize=(1, 15, 16), chunktype=numpy.ndarray>} 
+
+.. testcode:: daskarray
+
+    # The merge function for the sum is simple
+    print(np.allclose(ref['sum'].raw_data, res['sum'].sum(axis=0).compute()))
+
+.. testoutput:: daskarray
+
+    True
+
+.. testcode:: daskarray
+
+    # However, the merge function for the sum of the variance is not trivial.
+    # It would require a deep look into StdDevUDF to re-implement it.
+    print(np.allclose(ref['varsum'].raw_data, res['varsum'].sum(axis=0).compute()))
+
+.. testoutput:: daskarray
+
+    False

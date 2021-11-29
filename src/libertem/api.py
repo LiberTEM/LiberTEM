@@ -91,7 +91,7 @@ class Context:
 
     def __init__(self, executor: Optional[JobExecutor] = None, plot_class=None):
         if executor is None:
-            executor = DaskJobExecutor.make_local()
+            executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
 
@@ -1326,6 +1326,9 @@ class Context:
             backends=backends,
         )
         return results['result']
+
+    def _create_local_executor(self):
+        return DaskJobExecutor.make_local()
 
     def close(self):
         self.executor.close()

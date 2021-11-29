@@ -3,12 +3,10 @@ import numpy as np
 from unittest import mock
 import copy
 
-from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.base import MMapBackend
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF
-from libertem.api import Context
 
 
 def test_ctx_load(lt_ctx, default_raw):
@@ -19,12 +17,6 @@ def test_ctx_load(lt_ctx, default_raw):
         dtype="float32",
         sig_shape=(128, 128),
     )
-
-
-def test_context_arguments():
-    with pytest.raises(ValueError):
-        # refs https://github.com/LiberTEM/LiberTEM/issues/918
-        Context(executor=InlineJobExecutor)
 
 
 def test_run_udf_with_io_backend(lt_ctx, default_raw):

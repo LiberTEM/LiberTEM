@@ -1,8 +1,10 @@
 import os
 from glob import glob
+import concurrent.futures
 
 import pytest
 import distributed
+import dask
 import numpy as np
 
 from libertem.executor.delayed import DelayedJobExecutor
@@ -18,33 +20,44 @@ from utils import get_testdata_path
 
 @pytest.fixture(
     params=[
-        "inline_executor_fast", "dask_executor", "delayed_default",
-        "delayed_dist", "threaded_dask_executor", "concurrent"
+        "inline", "dask_executor", "dask_make_default", "dask_integration",
+        "concurrent",
     ]
 )
-def executor(request, inline_executor_fast, dask_executor):
-    if request.param == 'inline_executor_fast':
-        yield inline_executor_fast
+def executor(request, dask_executor):
+    if request.param == 'inline':
+        yield 'inline'
     elif request.param == "dask_executor":
         yield dask_executor
-    elif request.param == "delayed_default":
-        yield DelayedJobExecutor()
-    elif request.param == "delayed_dist":
-        with distributed.Client(
-                n_workers=2,
-                threads_per_worker=4,
-                processes=True
-        ) as _:
-            yield DelayedJobExecutor()
-    elif request.param == "threaded_dask_executor":
+    # elif request.param == "delayed_default":
+    #     yield DelayedJobExecutor()
+    # elif request.param == "delayed_dist":
+    #     with distributed.Client(
+    #             n_workers=2,
+    #             threads_per_worker=4,
+    #             processes=True
+    #     ) as _:
+    #         yield DelayedJobExecutor()
+    elif request.param == "dask_make_default":
+        try:
+            yield 'dask-make-default'
+        finally:
+            # cleanup: Close cluster and client
+            ctx = Context(executor='dask-integration')
+            # This is also tested below, here just to make
+            # sure things behave as expected.
+            assert isinstance(ctx.executor, DaskJobExecutor)
+            ctx.executor.is_local = True
+            ctx.close()
+    elif request.param == "dask_integration":
         with distributed.Client(
                 n_workers=2,
                 threads_per_worker=4,
                 processes=False
-        ) as c:
-            yield DaskJobExecutor(client=c)
+        ) as _:
+            yield "dask-integration"
     elif request.param == "concurrent":
-        yield ConcurrentJobExecutor.make_local()
+        yield "threads"
 
 
 @pytest.fixture
@@ -191,3 +204,72 @@ def test_executors(ctx, load_kwargs, reference):
                 print(np.min(np.abs(left)))
                 print(np.min(np.abs(right)))
                 assert np.allclose(left, right)
+
+
+@pytest.mark.slow
+def test_make_default():
+    try:
+        ctx = Context(executor="dask-make-default")
+        # This queries Dask which scheduler it is using
+        ctx2 = Context(executor="dask-integration")
+        # make sure the second uses the Client of the first
+        assert ctx2.executor.client is ctx.executor.client
+    finally:
+        # dask-make-default starts a Client that will persist
+        # and not be closed automatically. We have to make sure
+        # to close everything ourselves
+        if ctx.executor.client.cluster is not None:
+            ctx.executor.client.cluster.close(timeout=30)
+        ctx.executor.client.close()
+        ctx.close()
+
+
+def test_connect_default(local_cluster_url):
+    try:
+        executor = DaskJobExecutor.connect(
+            local_cluster_url,
+            client_kwargs={'set_as_default': True}
+        )
+        ctx = Context(executor=executor)
+        # This queries Dask which scheduler it is using
+        ctx2 = Context(executor="dask-integration")
+        # make sure the second uses the Client of the first
+        assert ctx2.executor.client is ctx.executor.client
+    finally:
+        # Only close the Client, keep the cluster running
+        # since that is test infrastructure
+        executor.client.close()
+        ctx.close()
+
+
+def test_use_distributed():
+    # This Client is pretty cheap to start
+    # since it only uses threads
+    with distributed.Client(
+        n_workers=1, threads_per_worker=1, processes=False
+    ) as c:
+        ctx = Context(executor="dask-integration")
+        assert isinstance(ctx.executor, DaskJobExecutor)
+        assert ctx.executor.client is c
+
+
+def test_no_dangling_client():
+    # Within the whole test suite and LiberTEM we should not have
+    # a dangling dask.distributed Client set as default Dask scheduler.
+    # That means we confirm that we get a ConcurrentJobExecutor in the
+    # default case.
+    ctx = Context(executor="dask-integration")
+    assert isinstance(ctx.executor, ConcurrentJobExecutor)
+
+
+def test_use_threads():
+    with dask.config.set(scheduler="threads"):
+        ctx = Context(executor="dask-integration")
+        assert isinstance(ctx.executor, ConcurrentJobExecutor)
+        assert isinstance(ctx.executor.client, concurrent.futures.ThreadPoolExecutor)
+
+
+def test_use_synchronous():
+    with dask.config.set(scheduler="synchronous"):
+        ctx = Context(executor="dask-integration")
+        assert isinstance(ctx.executor, InlineJobExecutor)

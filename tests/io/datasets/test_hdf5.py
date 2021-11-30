@@ -4,6 +4,7 @@ import pickle
 import threading
 import itertools
 from unittest import mock
+import sys
 
 import cloudpickle
 import numpy as np
@@ -661,3 +662,25 @@ def test_hdf5_macrotile_empty_roi(lt_ctx, hdf5_ds_1):
         m0,
         0,
     )
+
+
+def test_hdf5_filters(local_cluster_ctx, lt_ctx, tmpdir_factory):
+    # Make sure it is either preloaded already
+    # or not installed
+    if 'hdf5plugin' not in sys.modules:
+        with pytest.raises(ImportError):
+            import hdf5plugin
+    else:
+        import hdf5plugin
+        datadir = tmpdir_factory.mktemp('filtered')
+        filename = os.path.join(datadir, 'filtered.h5')
+        with h5py.File(filename, "w") as f:
+            f.create_dataset(
+                "data",
+                data=np.ones((16, 16, 16, 16)),
+                **hdf5plugin.LZ4()
+            )
+        for ctx in (local_cluster_ctx, lt_ctx):
+            ds = ctx.load('HDF5', path=filename)
+            res = ctx.run_udf(dataset=ds, udf=SumSigUDF())
+            assert np.allclose(res['intensity'].raw_data, np.prod(ds.shape.sig))

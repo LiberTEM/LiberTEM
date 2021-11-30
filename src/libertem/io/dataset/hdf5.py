@@ -199,7 +199,7 @@ class H5DataSet(DataSet):
     <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_
     for more information.
 
-    The the library `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_
+    The library `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_
     is preloaded automatically if it is installed. Other filter libraries
     may have to be specified for preloading by the user.
 

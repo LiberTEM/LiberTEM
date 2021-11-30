@@ -198,7 +198,7 @@ def xml_binned_map_maker(xy_map_sizes):
 
 def xml_map_index_selector(used_y):
     """
-    returns the the bad pixel maps  index with the largest column count
+    returns the bad pixel maps  index with the largest column count
 
     Parameters
     ----------

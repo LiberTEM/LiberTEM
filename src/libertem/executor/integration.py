@@ -14,6 +14,8 @@ def get_dask_integration_executor():
     Query the current Dask scheduler and return a :class:`~libertem.executor.base.JobExecutor`
     that is compatible with it.
 
+    .. versionadded:: 0.9.0
+
     If a dask.distributed :code:`Client` is set as a scheduler, use it with a
     :class:`~libertem.executor.dask.DaskJobExecutor`.
     '''

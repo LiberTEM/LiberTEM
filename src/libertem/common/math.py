@@ -14,7 +14,7 @@ ProdAccepted = Union[
 ]
 
 
-def prod(iterable: Iterable[ProdAccepted]):
+def prod(iterable_or_value: Union[Iterable[ProdAccepted], ProdAccepted]):
     '''
     Safe product for large integer size calculations.
 
@@ -24,7 +24,10 @@ def prod(iterable: Iterable[ProdAccepted]):
     '''
     result = 1
 
-    for item in iterable:
+    if not isinstance(iterable_or_value, Iterable):
+        return iterable_or_value
+
+    for item in iterable_or_value:
         if isinstance(item, _prod_accepted):
             result *= int(item)
         else:

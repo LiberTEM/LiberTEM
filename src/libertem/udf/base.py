@@ -368,13 +368,18 @@ class UDFData:
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray], lib=None) -> None:
+    def allocate_for_part(
+        self,
+        partition_slice: Slice,
+        roi: Optional[np.ndarray],
+        lib=None
+    ) -> None:
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
         """
         for k, buf in self._get_buffers():
-            buf.set_shape_partition(partition, roi)
+            buf.set_shape_partition(partition_slice, roi)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate(lib=lib)
 
@@ -388,18 +393,18 @@ class UDFData:
         for k, buf in self._get_buffers():
             self._views[k] = buf.get_view_for_dataset(dataset)
 
-    def set_view_for_partition(self, partition: Partition) -> None:
+    def set_view_for_partition(self, partition_slice: Slice) -> None:
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_partition(partition)
+            self._views[k] = buf.get_view_for_partition(partition_slice)
 
-    def set_view_for_tile(self, partition: Partition, tile: DataTile) -> None:
+    def set_view_for_tile(self, partition_slice: Slice, tile: DataTile) -> None:
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_tile(partition, tile)
+            self._views[k] = buf.get_view_for_tile(partition_slice, tile)
 
-    def set_contiguous_view_for_tile(self, partition: Partition, tile: DataTile) -> None:
+    def set_contiguous_view_for_tile(self, partition_slice: Slice, tile: DataTile) -> None:
         # .. versionadded:: 0.5.0
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_contiguous_view_for_tile(partition, tile)
+            self._views[k] = buf.get_contiguous_view_for_tile(partition_slice, tile)
 
     def flush(self, debug: bool = False) -> None:
         # .. versionadded:: 0.5.0
@@ -411,9 +416,9 @@ class UDFData:
         for k, buf in self._get_buffers():
             buf.export()
 
-    def set_view_for_frame(self, partition: Partition, tile: DataTile, frame_idx: int) -> None:
+    def set_view_for_frame(self, partition_slice: Slice, tile: DataTile, frame_idx: int) -> None:
         for k, buf in self._get_buffers():
-            self._views[k] = buf.get_view_for_frame(partition, tile, frame_idx)
+            self._views[k] = buf.get_view_for_frame(partition_slice, tile, frame_idx)
 
     def clear_views(self) -> None:
         self._views = {}
@@ -439,7 +444,7 @@ class UDFKwargsWrapper(UDFData):
 
     def new_for_partition(self, partition: Partition, roi: np.ndarray):
         for k, buf in self._get_buffers():
-            self._data[k] = buf.new_for_partition(partition, roi)
+            self._data[k] = buf.new_for_partition(partition.slice, roi)
 
 
 @runtime_checkable
@@ -595,9 +600,9 @@ class UDFBase:
     def get_result_buffers(self) -> Dict[str, BufferWrapper]:
         raise NotImplementedError()
 
-    def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray]) -> None:
+    def allocate_for_part(self, partition_slice: Slice, roi: Optional[np.ndarray]) -> None:
         for ns in [self.results]:
-            ns.allocate_for_part(partition, roi, lib=self.xp)
+            ns.allocate_for_part(partition_slice, roi, lib=self.xp)
 
     def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
         for ns in [self.params, self.results]:
@@ -607,27 +612,27 @@ class UDFBase:
         for ns in [self.params]:
             ns.set_view_for_dataset(dataset)
 
-    def set_views_for_partition(self, partition: Partition) -> None:
+    def set_views_for_partition(self, partition_slice: Slice) -> None:
         for ns in [self.params, self.results]:
-            ns.set_view_for_partition(partition)
+            ns.set_view_for_partition(partition_slice)
 
-    def set_views_for_tile(self, partition: Partition, tile: DataTile) -> None:
+    def set_views_for_tile(self, partition_slice: Slice, tile: DataTile) -> None:
         for ns in [self.params, self.results]:
-            ns.set_view_for_tile(partition, tile)
+            ns.set_view_for_tile(partition_slice, tile)
 
-    def set_contiguous_views_for_tile(self, partition: Partition, tile: DataTile) -> None:
+    def set_contiguous_views_for_tile(self, partition_slice: Slice, tile: DataTile) -> None:
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
-            ns.set_contiguous_view_for_tile(partition, tile)
+            ns.set_contiguous_view_for_tile(partition_slice, tile)
 
     def flush(self, debug: bool = False) -> None:
         # .. versionadded:: 0.5.0
         for ns in [self.params, self.results]:
             ns.flush(debug=debug)
 
-    def set_views_for_frame(self, partition: Partition, tile: DataTile, frame_idx: int):
+    def set_views_for_frame(self, partition_slice: Slice, tile: DataTile, frame_idx: int):
         for ns in [self.params, self.results]:
-            ns.set_view_for_frame(partition, tile, frame_idx)
+            ns.set_view_for_frame(partition_slice, tile, frame_idx)
 
     def clear_views(self) -> None:
         for ns in [self.params, self.results]:
@@ -1455,7 +1460,7 @@ class UDFRunner:
         corrections: Optional[CorrectionSet]
     ) -> "nt.DTypeLike":
         if corrections is not None and corrections.have_corrections():
-            tmp_dtype = np.result_type(np.float32, dtype)
+            tmp_dtype: np.dtype = np.result_type(np.float32, dtype)
         else:
             tmp_dtype = np.dtype(dtype)
         for udf in self._udfs:
@@ -1502,7 +1507,7 @@ class UDFRunner:
             udf.get_method()  # validate that one of the `process_*` methods is implemented
             udf.set_meta(meta)
             udf.init_result_buffers()
-            udf.allocate_for_part(partition, roi)
+            udf.allocate_for_part(partition.slice, roi)
             udf.init_task_data()
             # TODO: preprocess doesn't have access to the tiling scheme - is this ok?
             if isinstance(udf, UDFPreprocessMixin):
@@ -1532,9 +1537,10 @@ class UDFRunner:
         tile: DataTile,
         device_tile: DataTile
     ) -> None:
+        partition_slice = partition.slice
         for udf in udfs:
             if isinstance(udf, UDFTileMixin):
-                udf.set_contiguous_views_for_tile(partition, tile)
+                udf.set_contiguous_views_for_tile(partition_slice, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_tile(device_tile)
             elif isinstance(udf, UDFFrameMixin):
@@ -1546,10 +1552,10 @@ class UDFRunner:
                                     sig_dims=tile_slice.shape.sig.dims),
                     )
                     udf.set_slice(frame_slice)
-                    udf.set_views_for_frame(partition, tile, frame_idx)
+                    udf.set_views_for_frame(partition_slice, tile, frame_idx)
                     udf.process_frame(frame)
             elif isinstance(udf, UDFPartitionMixin):
-                udf.set_views_for_tile(partition, tile)
+                udf.set_views_for_tile(partition_slice, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_partition(device_tile)
 
@@ -1786,16 +1792,17 @@ class UDFRunner:
                         cancel_id,
                     )
                     for part_results, task in result_iter:
+                        partition_slice = task.partition.slice
                         if progress:
                             t.update(1)
                         for results, udf in zip(part_results, self._udfs):
-                            udf.set_views_for_partition(task.partition)
+                            udf.set_views_for_partition(partition_slice)
                             udf.merge(
                                 dest=udf.results.get_proxy(),
                                 src=results.get_proxy()
                             )
                             udf.clear_views()
-                        v = damage.get_view_for_partition(task.partition)
+                        v = damage.get_view_for_partition(partition_slice)
                         v[:] = True
                         yield UDFResults(
                             buffers=tuple(

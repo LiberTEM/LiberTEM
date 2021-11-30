@@ -229,7 +229,7 @@ class StdDevUDF(UDF):
                 kind='sig', dtype=dtype
             ),
             'num_frames': self.buffer(
-                kind='single', dtype='int'
+                kind='single', dtype='int64'
             ),
             'sum': self.buffer(
                 kind='sig', dtype=dtype

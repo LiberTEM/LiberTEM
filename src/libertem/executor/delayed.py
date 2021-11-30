@@ -15,6 +15,10 @@ class DelayedJobExecutor(JobExecutor):
 
     Highly experimental at this time!
     """
+    def __init__(self):
+        # Only import if actually instantiated, i.e. will likely be used
+        import libertem.preload  # noqa: 401
+
     @contextlib.contextmanager
     def scatter(self, obj):
         yield delayed(obj)

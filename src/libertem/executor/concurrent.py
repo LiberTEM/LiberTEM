@@ -30,6 +30,8 @@ class ConcurrentJobExecutor(JobExecutor):
         Shut the client down when the executor closes.
     '''
     def __init__(self, client: concurrent.futures.Executor, is_local=False):
+        # Only import if actually instantiated, i.e. will likely be used
+        import libertem.preload  # noqa: 401
         self.is_local = is_local
         self.client = client
         self._futures = {}

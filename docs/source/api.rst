@@ -301,7 +301,7 @@ the implementation of :class:`~ libertem.udf.stddev.StdDevUDF`.
 .. testoutput:: daskarray
 
     {'mean': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
-     'num_frames': <BufferWrapper kind=single dtype=int32 extra_shape=()>,
+     'num_frames': <BufferWrapper kind=single dtype=int64 extra_shape=()>,
      'std': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
      'sum': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
      'var': <BufferWrapper kind=sig dtype=float64 extra_shape=()>,
@@ -316,7 +316,7 @@ the implementation of :class:`~ libertem.udf.stddev.StdDevUDF`.
 
 .. testoutput:: daskarray
 
-    {'num_frames': dask.array<stack, shape=(5, 1), dtype=int32, chunksize=(1, 1), chunktype=numpy.ndarray>,
+    {'num_frames': dask.array<stack, shape=(5, 1), dtype=int64, chunksize=(1, 1), chunktype=numpy.ndarray>,
      'sum': dask.array<stack, shape=(5, 15, 16), dtype=float64, chunksize=(1, 15, 16), chunktype=numpy.ndarray>,
      'varsum': dask.array<stack, shape=(5, 15, 16), dtype=float64, chunksize=(1, 15, 16), chunktype=numpy.ndarray>} 
 

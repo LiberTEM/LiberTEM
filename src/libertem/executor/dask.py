@@ -69,9 +69,8 @@ def cluster_spec(
         Options to pass through to every worker. See Dask documentation for details
     preload
         Items to preload on workers in addition to LiberTEM-internal preloads.
-        This can be used to load libraries before any other imports by LiberTEM
-        or UDFs, for example HDF5 filter plugins before h5py is loaded. See
-        https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
+        This can be used to load libraries, for example HDF5 filter plugins before h5py is used.
+        See https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
         for more information.
 
     See also

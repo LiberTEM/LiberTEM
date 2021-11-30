@@ -52,6 +52,8 @@ special applications such as running UDFs that perform their own multithreading
 efficiently or for other non-standard use that requires tasks to be executed
 sequentially and in order.
 
+.. versionadded:: 0.9.0
+
 The :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` runs all tasks
 using :mod:`python.concurrent.futures`. Using the
 :class:`python:concurrent.futures.ThreadPoolExecutor` allows
@@ -66,6 +68,8 @@ delay the processing. This is highly experimental.
 
 Common executor choices
 .......................
+
+.. versionadded:: 0.9.0
 
 :meth:`libertem.api.Context.make_with` provides a convenient shortcut to start a
 :class:`~libertem.api.Context` with common executor choices. See the
@@ -132,6 +136,8 @@ Please see :ref:`dask executor` for a reference of the Dask-based executor.
 Dask integration
 ................
 
+.. versionadded:: 0.9.0
+
 By default, LiberTEM keeps the default Dask scheduler as-is and only
 uses the Dask :code:`Client` internally to make sure existing workflows keep running
 as before. For a closer integration it can be beneficial to use the same scheduler
@@ -184,6 +190,8 @@ The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate 
 Compute UDFs with dask.delayed
 ------------------------------
 
+.. versionadded:: 0.9.0
+
 Using a :class:`~libertem.executor.delayed.DelayedJobExecutor` with a
 :class:`~libertem.api.Context` lets :class:`~libertem.api.Context.run_udf`
 return a dask.delayed value for the result. The computation is only
@@ -193,6 +201,8 @@ delayed NumPy arrays. In particular, they are not chunked.
 
 Generate chunked Dask arrays with UDFs
 --------------------------------------
+
+.. versionadded:: 0.9.0
 
 The :meth:`~libertem.contrib.daskadapter.task_results_array` function can
 generate chunked Dask arrays from intermediate UDF task results, i.e.

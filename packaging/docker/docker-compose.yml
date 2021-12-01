@@ -4,18 +4,18 @@ services:
   scheduler:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
     ports:
       - "8786:8786"
-      - "8787:8787"
-    image: libertem/libertem-dev
+#      - "8787:8787"
+    image: libertem/libertem:continuous
     command: ["/venv/bin/dask-scheduler"]
   worker-1:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
     hostname: worker-1
-    image: libertem/libertem-dev
+    image: libertem/libertem:continuous
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
@@ -26,9 +26,9 @@ services:
   worker-2:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
     hostname: worker-2
-    image: libertem/libertem-dev
+    image: libertem/libertem:continuous
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind

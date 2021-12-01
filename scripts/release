@@ -15,6 +15,7 @@ from pkg_resources import parse_version
 from pkg_resources.extern.packaging.version import LegacyVersion
 import click
 import requests
+import natsort
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = os.path.normpath(join(HERE, '..'))
@@ -126,6 +127,14 @@ def get_current_tags():
     return subprocess.check_output(cmd, text="utf-8").strip().split("\n")
 
 
+def get_all_tags():
+    """
+    returns list of all tags in the repository
+    """
+    cmd = ["git", "tag"]
+    return subprocess.check_output(cmd, text="utf-8").strip().split("\n")
+
+
 def get_release_tag():
     """
     A commit can have more than one tag (but should only have one version tag).
@@ -152,6 +161,13 @@ def get_latest_tag():
         return subprocess.check_output(cmd, text="utf-8").strip()
     except subprocess.CalledProcessError:
         return ""
+
+
+def get_latest_stable_tag():
+    tags = get_all_tags()
+    stable_tags = [tag for tag in tags if STABLE_VERSION_PAT.match(tag)]
+    sorted_tags = natsort.natsorted(stable_tags)
+    return sorted_tags[-1]
 
 
 def tag_matches(tags):
@@ -560,30 +576,24 @@ def docker_tags():
     Prints the tags that should be used for any docker images that are built,
     separated by whitespace.
     """
-    kind = get_release_kind()
-    branch = env['branch']
-    is_master = branch == "master"
-    is_stable_branch = branch and STABLE_VERSION_PAT.match(branch) is not None
+    version = get_release_tag()
+    is_latest_stable = version and (version["full"] == get_latest_stable_tag())
     is_pull_request = env['is_pr']
 
     if is_pull_request:
         raise click.UsageError("refusing to tag pull request builds")
-
-    version = get_release_tag()
 
     tags = []
 
     if version is not None:
         tags.append(version["full"])
 
-    if is_stable_branch:
-        tags.append("stable")
-
-    if kind == "dev":
-        tags.append("continuous")
-
-    if is_master:
+    if is_latest_stable:
         tags.append("latest")
+
+    # "continuous" is handled differently now
+    # if get_release_kind() == "dev":
+    #     tags.append("continuous")
 
     print(" ".join(tags))
 

@@ -99,7 +99,7 @@ nbformat==5.1.3
     #   nbconvert
 ncempy==1.8.1
     # via libertem (../../setup.py)
-nest-asyncio==1.5.2
+nest-asyncio==1.5.4
     # via
     #   jupyter-client
     #   nbclient

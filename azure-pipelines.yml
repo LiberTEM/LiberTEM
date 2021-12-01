@@ -351,7 +351,7 @@ stages:
           docker pull libertem/libertem-dev || true
           docker build --cache-from=libertem/libertem-dev -t libertem/libertem-dev --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.dev
           # make this succeed even if the access token is not available:
-          (docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && docker push libertem/libertem-dev) || true
+          (docker login -u sk1p -p $DOCKER_ACCESS_TOKEN && docker push libertem/libertem-dev) || true
         displayName: 'Build docker container(s)'
         env:
           DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)
@@ -448,7 +448,7 @@ stages:
           ./update_reqs.sh
           docker pull libertem/libertem:continuous || true
           docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
-          ( docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && for TAG in $(python3 ../../scripts/release docker-tags)
+          ( docker login -u sk1p -p $DOCKER_ACCESS_TOKEN && for TAG in $(python3 ../../scripts/release docker-tags)
           do
             echo "tagging and pushing $TAG"
             docker tag libertem/libertem:continuous "libertem/libertem:$TAG"

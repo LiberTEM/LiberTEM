@@ -109,7 +109,7 @@ if __name__ == '__main__':
     from libertem.executor.delayed import DelayedJobExecutor
     from libertem.executor.inline import InlineJobExecutor
     from libertem.udf.sumsigudf import SumSigUDF
-    from libertem.udf.sum import SumUDF    
+    from libertem.udf.sum import SumUDF
     from libertem.common.shape import Shape
     import matplotlib.pyplot as plt
 

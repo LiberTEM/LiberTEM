@@ -1,6 +1,8 @@
+from collections import namedtuple
 import dask.array as da
 import numpy as np
 
+fake_np_flags = namedtuple('Flags', ['c_contiguous'])
 
 class DaskInplaceBufferWrapper:
     def __init__(self, dask_array):
@@ -8,17 +10,21 @@ class DaskInplaceBufferWrapper:
         self._slice = None
 
     @property
+    def flags(self):
+        return fake_np_flags(c_contiguous=True)
+
+    @property
     def data(self):
         return self._array
-        
+
     @property
     def dtype(self):
         return self.data.dtype
-        
+
     @property
     def shape(self):
         return self.data.shape
-        
+
     @property
     def size(self):
         return self.data.size

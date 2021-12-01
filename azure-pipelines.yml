@@ -446,10 +446,15 @@ stages:
       - script: |
           cd packaging/docker/
           ./update_reqs.sh
-          docker pull libertem/libertem || true
-          docker build --cache-from=libertem/libertem -t libertem/libertem --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
+          docker pull libertem/libertem:continuous || true
+          docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
+          ( docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && for TAG in $(python3 ../../scripts/release docker-tags)
+          do
+            echo "tagging and pushing $TAG"
+            docker tag libertem/libertem:continuous "libertem/libertem:$TAG"
+            docker push "libertem/libertem:$TAG"
           # make this succeed even if the access token is not available:
-          (docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN) && docker push libertem/libertem) || true
+          done ) || true
         displayName: 'Build docker container(s)'
         env:
           DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)

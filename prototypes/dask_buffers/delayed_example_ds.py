@@ -10,12 +10,13 @@ from libertem.common.slice import Slice
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.sum import SumUDF
 from libertem.executor.inline import InlineJobExecutor
+import libertem.io.dataset.raw
 
 from dask_inplace import DaskInplaceBufferWrapper
 
 global_ds_shape = None
-n_nav_chunks = -1
-n_sig_chunk = 1
+n_nav_chunks = -1  # number of nav chunks in 0th nav dimension == num_partitions
+n_sig_chunk = 1  # number of sig chunks in 0th sig dimension
 
 def get_chunks(dimension, n_chunks):
     """
@@ -30,6 +31,16 @@ def get_chunks(dimension, n_chunks):
         if div * n_chunks < dimension:
             chunks += (dimension % n_chunks,)
     return chunks
+
+
+def get_num_partitions(self):
+    """
+    Necessary as we don't have a num_partitions argument to RawFileDataset
+    """
+    return n_nav_chunks
+
+# do no evil
+libertem.io.dataset.raw.RawFileDataSet.get_num_partitions = get_num_partitions
 
 
 def dask_allocate(self, lib=None):
@@ -80,12 +91,12 @@ def dask_export(self):
 libertem.common.buffers.BufferWrapper.export = dask_export
 
 
-def build_increasing_ds(data, axis, mode='arange'):
+def build_increasing_ds(array, axis, mode='arange'):
     """
-    Applies either range(len(axis)) or linspace(0, 1) to axis of array data
+    Applies either range(len(axis)) or linspace(0, 1) to axis of array
     Used to make a dummy dataset more interesting than just np.ones!
     """
-    ds_shape = data.shape
+    ds_shape = array.shape
     multishape = tuple(v if idx == axis else 1 for idx, v in enumerate(ds_shape))
     if mode == 'arange':
         multi = np.arange(ds_shape[axis])
@@ -93,22 +104,32 @@ def build_increasing_ds(data, axis, mode='arange'):
         multi = np.linspace(0., 1., num=ds_shape[axis], endpoint=True)
     else:
         raise
-    return data * multi.reshape(multishape)
+    return array * multi.reshape(multishape)
 
 
 if __name__ == '__main__':
+    import pathlib
+    from libertem.executor.delayed import DelayedJobExecutor
+    import matplotlib.pyplot as plt
+
+    dtype = np.float32
     global_ds_shape = Shape((5, 10, 64, 64), sig_dims=2)
-    data = np.ones(tuple(global_ds_shape))
+    data = np.ones(tuple(global_ds_shape), dtype=dtype)
     for i, mode in enumerate(['arange'] * 2 + ['linspace'] * 2):
         data = build_increasing_ds(data, i, mode=mode)
+    data = data.astype(dtype)
 
-    executor = InlineJobExecutor()
+    # Write dataset to file so we can load via 'raw'
+    rawpath = pathlib.Path('.') / 'test.raw'
+    rawfile = rawpath.open(mode='wb').write(data.data)
+
+    executor = DelayedJobExecutor()
     ctx = lt.Context(executor=executor)
 
-    # Load ds and force partitioning only on nav[0]
+    # Load ds and force partitioning only on nav[0] via monkeypatched get_num_parititions
     n_nav_chunks = global_ds_shape.nav[0]  # used in BufferWrapper.allocate
     n_sig_chunk = 4  # this is a global used only in BufferWrapper.allocate
-    ds = ctx.load('memory', data=data, sig_dims=2, num_partitions=n_nav_chunks)
+    ds = ctx.load('raw', rawpath, nav_shape=global_ds_shape.nav, sig_shape=global_ds_shape.sig, dtype=dtype)
     sigsum_udf = SumSigUDF()
     navsum_udf = SumUDF()
 
@@ -116,10 +137,14 @@ if __name__ == '__main__':
     sigsum_intensity = res[0]['intensity'].data
     navsum_intensity = res[1]['intensity'].data
 
-    import matplotlib.pyplot as plt
     fig, axs = plt.subplots(1, 2)
     axs[0].imshow(sigsum_intensity.compute())
     axs[0].set_title('SigSum over Nav')
     axs[1].imshow(navsum_intensity.compute())
     axs[1].set_title('NavSum over Sig')
     plt.show()
+
+    try:
+        rawpath.unlink()
+    except OSError:
+        pass

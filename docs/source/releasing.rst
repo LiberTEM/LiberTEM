@@ -71,6 +71,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Install release candidate packages in a clean environment
           (for example:
           `python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
+    * [ ] Test the release candidate docker image
     * [ ] For the GUI-related items, open in an incognito window to start from a clean slate
     * [ ] Correct version info displayed in info dialogue?
     * [ ] Link check in version info dialogue
@@ -117,7 +118,8 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Confirm that all release packages are built and release notes are up-to-date
     * [ ] Install release package
     * [ ] Confirm correct version info
-    * [ ] confirm package upload to PyPI
+    * [ ] Confirm package upload to PyPI
+    * [ ] Confirm images and tags on https://hub.docker.com/r/libertem/libertem
     * [ ] Publish new version on zenodo.org
     * [ ] Update documentation with new links, if necessary
         * [ ] Add zenodo badge for the new release to Changelog page

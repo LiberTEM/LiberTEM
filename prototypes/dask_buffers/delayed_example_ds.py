@@ -2,15 +2,11 @@ import dask.array as da
 import numpy as np
 from functools import partial
 
-import libertem.api as lt
 import libertem.common.buffers
-from libertem.common.math import prod
-from libertem.common.shape import Shape
-from libertem.common.slice import Slice
-from libertem.udf.sumsigudf import SumSigUDF
-from libertem.udf.sum import SumUDF
-from libertem.executor.inline import InlineJobExecutor
 import libertem.io.dataset.raw
+from libertem.common.math import prod
+from libertem.common.slice import Slice
+
 
 from dask_inplace import DaskInplaceBufferWrapper
 
@@ -109,7 +105,12 @@ def build_increasing_ds(array, axis, mode='arange'):
 
 if __name__ == '__main__':
     import pathlib
+    import libertem.api as lt
     from libertem.executor.delayed import DelayedJobExecutor
+    from libertem.executor.inline import InlineJobExecutor
+    from libertem.udf.sumsigudf import SumSigUDF
+    from libertem.udf.sum import SumUDF    
+    from libertem.common.shape import Shape
     import matplotlib.pyplot as plt
 
     dtype = np.float32

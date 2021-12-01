@@ -470,7 +470,7 @@ stages:
               docker pull libertem/libertem:continuous || true
               docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
 
-              docker login -u uellue -p 172b47db-716d-40d5-a6e2-e33e69d1df84
+              docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN)
               for TAG in $TAGS
               do
                 echo "tagging and pushing $TAG"

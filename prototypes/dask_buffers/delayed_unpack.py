@@ -2,10 +2,12 @@ import numpy as np
 import dask.array as da
 
 _unpackable_types = (list, tuple, dict)
+merge_fns = {list: lambda lis, el, pos: lis.append(el),
+             dict: lambda dic, el, pos: dic.update({pos: el})}
+
 
 class IgnoreClass:
     pass
-
 
 
 class StructDescriptor:
@@ -60,10 +62,12 @@ def rebuild_nested(flat, flat_mapping):
     for el, coords in zip(flat, flat_mapping):
         if nest is None:
             nest_class = coords[0][0]
+            # Hack tuples to list to avoid immutability problems
             if nest_class == tuple:
                 nest_class = list
             nest = nest_class()
         nest = insert_at_pos(el, coords, nest)
+    # Convert hacked lists into tuples, from deepest to shallowest
     nest = list_to_tuple(nest, flat_mapping)
     return nest
 
@@ -78,11 +82,6 @@ def pairwise(iterable):
     yield prior_el, None
 
 
-merge_fns = {tuple: lambda lis, el, pos: lis.append(el),
-             list: lambda lis, el, pos: lis.append(el),
-             dict: lambda dic, el, pos: dic.update({pos: el})}
-
-
 def insert_at_pos(el, coords, nest):
     _nest = nest
     for current_coord, next_coord in pairwise(coords):
@@ -90,6 +89,7 @@ def insert_at_pos(el, coords, nest):
         next_cls, next_pos = None, None
         if next_coord is not None:
             next_cls, next_pos = next_coord
+        # Hack tuples to lists to avoid immutability problems
         if next_cls == tuple:
             next_cls = list
         if next_pos is None:

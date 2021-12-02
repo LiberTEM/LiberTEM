@@ -1,11 +1,15 @@
 import dask.array as da
+from dask import delayed
 import numpy as np
 from functools import partial
 
 import libertem.common.buffers
 import libertem.io.dataset.raw
+import libertem.udf.base
+import libertem.executor.delayed
 from libertem.common.math import prod
 from libertem.common.slice import Slice
+from libertem.executor.base import Environment
 
 
 from dask_inplace import DaskInplaceBufferWrapper

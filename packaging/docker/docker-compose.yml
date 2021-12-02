@@ -1,6 +1,11 @@
 version: "3.4"
 
 services:
+  baseimage:
+    build:
+      context: ../../
+      dockerfile: packaging/docker/Dockerfile.base
+    image: libertem/libertem-dev:base
   scheduler:
     build:
       context: ../../

@@ -18,6 +18,23 @@ global_ds_shape = None
 n_nav_chunks = -1  # number of nav chunks in 0th nav dimension == num_partitions
 n_sig_chunk = 1  # number of sig chunks in 0th sig dimension
 
+
+def build_increasing_ds(array, axis, mode='arange'):
+    """
+    Applies either range(len(axis)) or linspace(0, 1) to axis of array
+    Used to make a dummy dataset more interesting than just np.ones!
+    """
+    ds_shape = array.shape
+    multishape = tuple(v if idx == axis else 1 for idx, v in enumerate(ds_shape))
+    if mode == 'arange':
+        multi = np.arange(ds_shape[axis])
+    elif mode == 'linspace':
+        multi = np.linspace(0., 1., num=ds_shape[axis], endpoint=True)
+    else:
+        raise
+    return array * multi.reshape(multishape)
+
+
 def get_chunks(dimension, n_chunks):
     """
     Util function to split a dimension into n_chunks
@@ -92,6 +109,11 @@ libertem.common.buffers.BufferWrapper.export = dask_export
 
 
 def flat_udf_results(self, params, env):
+    """
+    Flatten the structure tuple(udf.results for udf in self._udfs)
+    where udf.results is an instance of UDFData(data={'name':BufferWrapper,...})
+    into a simple list [np.ndarray, np.ndarray, ...]
+    """
     udfs = [
         cls.new_for_partition(kwargs, self.partition, params.roi)
         for cls, kwargs in zip(self._udf_classes, params.kwargs)
@@ -105,23 +127,13 @@ def flat_udf_results(self, params, env):
 libertem.udf.base.UDFTask.__call__ = flat_udf_results
 
 
-def build_increasing_ds(array, axis, mode='arange'):
-    """
-    Applies either range(len(axis)) or linspace(0, 1) to axis of array
-    Used to make a dummy dataset more interesting than just np.ones!
-    """
-    ds_shape = array.shape
-    multishape = tuple(v if idx == axis else 1 for idx, v in enumerate(ds_shape))
-    if mode == 'arange':
-        multi = np.arange(ds_shape[axis])
-    elif mode == 'linspace':
-        multi = np.linspace(0., 1., num=ds_shape[axis], endpoint=True)
-    else:
-        raise
-    return array * multi.reshape(multishape)
-
-
 def structure_from_task(udfs, task):
+    """
+    Based on the instantiated whole dataset UDFs and the task
+    information, build a description of the expected UDF results
+    for the task's partition like:
+       ({'buffer_name': StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)
+    """
     structure = []
     partition_shape = task.partition.shape
     for udf in udfs:
@@ -147,6 +159,10 @@ def structure_from_task(udfs, task):
 
 
 def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition):
+    """
+    Take the iterable Delayed results object, and re-wrap each Delayed object
+    back into a BufferWrapper wrapping a dask.array of the correct shape and dtype
+    """
     wrapped_res = []
     for el, descriptor in zip(flat_delayed, flat_structure):
         buffer_kind = descriptor.kwargs.pop('kind')
@@ -170,6 +186,18 @@ def run_tasks(
     params_handle,
     cancel_id,
 ):
+    """
+    Intercept the call to
+
+        results = delayed(task)()
+
+    to infer the expected results structure, then re-build the normal
+
+        tuple(udf.results for udf in self._udfs)
+
+    return value from the Delayed result, but with each buffer
+    backed by Dask arrays instead of normal np.arrays
+    """
     global udfs
     env = Environment(threads_per_worker=1)
     for task in tasks:
@@ -183,8 +211,15 @@ def run_tasks(
         yield result, task
 
 libertem.executor.delayed.DelayedJobExecutor.run_tasks = run_tasks
+
+"""
+Currently run_wrap (delayed) is only used for merging and finalising results
+With the unpacking in run_tasks this is no longer necessary, so we can run
+the merge/finalise results as a regular function call without using delayed
+"""
 libertem.executor.delayed.DelayedJobExecutor.run_wrap =\
              libertem.executor.delayed.DelayedJobExecutor.run_function
+
 
 if __name__ == '__main__':
     import pathlib

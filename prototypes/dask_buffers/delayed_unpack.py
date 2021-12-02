@@ -31,9 +31,9 @@ def build_mapping(el, pos=None, unpackable_types=None, ignore_types=None):
     flat_mapping = []
     eltype = type(el)
     if unpackable_types is None:
-        unpackable_types = _unpackable_types    
+        unpackable_types = _unpackable_types
     if ignore_types is None:
-        ignore_types = (IgnoreClass,)    
+        ignore_types = (IgnoreClass,)
     if isinstance(el, unpackable_types) and not isinstance(el, ignore_types):
         iterable = el.items() if isinstance(el, dict) else enumerate(el)
         for _pos, _el in iterable:

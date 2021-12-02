@@ -18,12 +18,18 @@ You can then start the LiberTEM server by running:
 
     (libertem) $ libertem-server
 
+Alternatively, using the Docker image and Singularity:
+
+.. code-block:: shell
+
+    $ singularity run docker://libertem/libertem
+
 By default, this starts the server on http://localhost:9000, which you can verify by the
 log output::
 
     [2018-08-08 13:57:58,266] INFO [libertem.web.server.main:886] listening on localhost:9000
 
-It will then open your default web browser to this URL.
+It will then try to open your default web browser to this URL.
 
 There are a few command line options available:
 
@@ -95,6 +101,10 @@ For a cluster setup, you can run the scheduler on the appropriate network interf
 run workers on all cluster nodes to connect to the scheduler.
 
 You can then connect to the cluster's scheduler URL in the LiberTEM web GUI.
+
+For easier deployment of in container-based environments, a `Docker image with a
+LiberTEM installation
+<https://hub.docker.com/repository/docker/libertem/libertem>`_ is available.
 
 Opening data
 ------------

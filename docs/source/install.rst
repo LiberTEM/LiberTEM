@@ -216,6 +216,20 @@ Differences:
 
     (libertem) > conda install pip
 
+Docker and Singularity
+----------------------
+
+.. versionadded:: 0.9.0
+
+A `Docker image with a LiberTEM installation
+<https://hub.docker.com/repository/docker/libertem/libertem>`_ is available on
+Docker hub. For local data access as an unprivileged user, the easiest variant
+is running this image with `Singularity
+<https://sylabs.io/guides/3.0/user-guide/index.html>`_:
+
+.. code-block:: shell
+
+    $ singularity run docker://libertem/libertem
 
 Troubleshooting
 ---------------

@@ -1,4 +1,5 @@
 from collections import namedtuple
+import itertools
 
 fake_np_flags = namedtuple('Flags', ['c_contiguous'])
 

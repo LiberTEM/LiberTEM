@@ -1,6 +1,4 @@
 from collections import namedtuple
-import dask.array as da
-import numpy as np
 
 fake_np_flags = namedtuple('Flags', ['c_contiguous'])
 
@@ -53,6 +51,9 @@ class DaskInplaceBufferWrapper:
 
 
 if __name__ == '__main__':
+    import dask.array as da
+    import numpy as np
+    
     tt = da.ones((5, 5))
 
     dar = DaskInplaceBufferWrapper(tt)

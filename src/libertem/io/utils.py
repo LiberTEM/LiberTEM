@@ -6,7 +6,11 @@ try:
     import pwd
 
     def get_owner_name(full_path, stat):
-        return pwd.getpwuid(stat.st_uid).pw_name
+        try:
+            name = pwd.getpwuid(stat.st_uid).pw_name
+        except KeyError:
+            name = stat.st_uid
+        return name
 # Assume that we are on Windows
 # TODO do a proper abstraction layer if this simple solution doesn't work anymore
 except ModuleNotFoundError:

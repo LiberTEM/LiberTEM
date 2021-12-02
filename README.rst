@@ -79,6 +79,13 @@ The short version:
     # See also https://docs.cupy.dev/en/stable/install.html
     (libertem-venv) $ python -m pip install cupy
 
+Alternatively, to run the LiberTEM docker image on localhost using `Singularity
+<https://sylabs.io/guides/3.0/user-guide/index.html>`_:
+
+.. code-block:: shell
+
+    $ singularity run docker://libertem/libertem
+
 Please see `our documentation <https://libertem.github.io/LiberTEM/install.html>`_ for details!
 
 Deployment for offline data processing on a single-node system for a local user

@@ -348,6 +348,8 @@ stages:
       - script: |
           cd packaging/docker/
           ./update_reqs.sh
+          docker pull libertem/libertem-dev:base || true
+          docker build --cache-from=libertem/libertem-dev:base -t libertem/libertem-dev:base --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.base
           docker pull libertem/libertem:continuous || true
           docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
           docker pull libertem/libertem-dev || true
@@ -364,6 +366,7 @@ stages:
           then
             cd packaging/docker/
             docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN)
+            docker push libertem/libertem-dev:base
             docker push libertem/libertem-dev
             docker push libertem/libertem:continuous
           else

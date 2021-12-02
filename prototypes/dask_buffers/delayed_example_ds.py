@@ -78,6 +78,10 @@ def dask_allocate(self, lib=None):
             raise RuntimeError('Unrecognized buffer size relative to ds/chunk globals')
     elif self._kind == 'sig':
         _buf_chunking = (get_chunks(global_ds_shape.sig[0], n_sig_chunk), (global_ds_shape.sig[1],))
+    elif self._kind == 'single':
+        _buf_chunking = self._shape
+    else:
+        raise NotImplementedError('Unrecognized buffer kind')
     _z = partial(da.zeros, chunks=_buf_chunking)
     self._data = _z(self._shape, dtype=self._dtype)
 
@@ -143,6 +147,8 @@ def structure_from_task(udfs, task):
                 part_buf_shape = partition_shape.sig
             elif buffer.kind == 'nav':
                 part_buf_shape = partition_shape.nav
+            elif buffer.kind == 'single':
+                part_buf_shape = buffer.shape[:1]
             else:
                 raise NotImplementedError
             part_buf_dtype = buffer.dtype

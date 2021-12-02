@@ -1,11 +1,6 @@
 version: "3.4"
 
 services:
-  baseimage:
-    build:
-      context: ../../
-      dockerfile: packaging/docker/Dockerfile.base
-    image: libertem/libertem-dev:base
   scheduler:
     build:
       context: ../../
@@ -44,7 +39,9 @@ services:
   ipy-controller:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
+      args:
+        dev: 1
     hostname: ipy-controller
     image: libertem/libertem-dev
     command: ["/venv/bin/ipcontroller", "--ip='*'"]
@@ -53,7 +50,9 @@ services:
   ipy-worker-1:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
+      args:
+        dev: 1
     hostname: ipy-worker-1
     image: libertem/libertem-dev
     command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
@@ -67,7 +66,9 @@ services:
   ipy-worker-2:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
+      args:
+        dev: 1
     hostname: ipy-worker-2
     image: libertem/libertem-dev
     command: ["/venv/bin/ipengine", "/parallelconfig/profile_default/security/ipcontroller-client.json"]
@@ -81,7 +82,9 @@ services:
   tests:
     build:
       context: ../../
-      dockerfile: packaging/docker/Dockerfile.dev
+      dockerfile: packaging/docker/Dockerfile
+      args:
+        dev: 1
     hostname: tests
     image: libertem/libertem-dev
     working_dir: /code/

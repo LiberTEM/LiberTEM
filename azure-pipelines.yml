@@ -468,12 +468,16 @@ stages:
             # Any tag beyond continuous
             if [ -n "$TAGS" ]
             then
-              # Refresh the build, just in case
+              # Refresh the builds
+              docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN)
               ./update_reqs.sh
+              docker pull libertem/libertem-dev:base || true
+              docker build --cache-from=libertem/libertem-dev:base -t libertem/libertem-dev:base --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.base
+              docker push libertem/libertem-dev:base
+
               docker pull libertem/libertem:continuous || true
               docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
-
-              docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN)
+              docker push libertem/libertem:continuous
               for TAG in $TAGS
               do
                 echo "tagging and pushing $TAG"

@@ -1,14 +1,22 @@
-from collections import namedtuple
 import numpy as np
-import dask
 import dask.array as da
-from dask import delayed
-
 
 _unpackable_types = (list, tuple, dict)
 
 class IgnoreClass:
     pass
+
+
+
+class StructDescriptor:
+    def __init__(self, cls, *args, **kwargs):
+        self.cls = cls
+        self.args = args
+        self.kwargs = kwargs
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.cls}, {self.args}, {self.kwargs})'
+
 
 def flatten_nested(el, unpackable_types=None, ignore_types=None):
     if unpackable_types is None:
@@ -123,16 +131,6 @@ def list_to_tuple(nest, flat_mapping):
     return nest
 
 
-class StructDescriptor:
-    def __init__(self, cls, *args, **kwargs):
-        self.cls = cls
-        self.args = args
-        self.kwargs = kwargs
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}({self.cls}, {self.args}, {self.kwargs})'
-
-
 def get_res_structure():
     return {'arr': StructDescriptor(np.ndarray, shape=(55, 55), dtype=np.float32),
             'arr2': StructDescriptor(np.ndarray, shape=(100, 66, 2), dtype=np.complex128)}
@@ -156,6 +154,8 @@ def apply_structure(flat_delayed, flat_structure):
 
 
 if __name__ == '__main__':
+    from dask import delayed
+
     structure = get_res_structure()
 
     # structure = {'int': (StructDescriptor((int,)), StructDescriptor((float,))),

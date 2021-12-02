@@ -1,5 +1,7 @@
 #!/bin/env bash
-if [ -n "$DOCKER_ACCESS_TOKEN" ] && [ -n "$DOCKER_USER" ]
+if [ -n "$DOCKER_ACCESS_TOKEN" ] \
+    && [ "$DOCKER_ACCESS_TOKEN" != '$(DOCKER_ACCESS_TOKEN)' ] \
+    && [ -n "$DOCKER_USER" ] && [ "$DOCKER_USER" != '$(DOCKER_USER)' ]
 then
     cd packaging/docker/ || exit
     TAGS=$( python3 ../../scripts/release docker-tags )

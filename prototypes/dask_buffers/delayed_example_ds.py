@@ -11,7 +11,7 @@ from libertem.common.math import prod
 from libertem.common.slice import Slice
 from libertem.executor.base import Environment
 
-
+import delayed_unpack
 from dask_inplace import DaskInplaceBufferWrapper
 
 global_ds_shape = None
@@ -91,6 +91,20 @@ def dask_export(self):
 libertem.common.buffers.BufferWrapper.export = dask_export
 
 
+def flat_udf_results(self, params, env):
+    udfs = [
+        cls.new_for_partition(kwargs, self.partition, params.roi)
+        for cls, kwargs in zip(self._udf_classes, params.kwargs)
+    ]
+
+    res = libertem.udf.base.UDFRunner(udfs).run_for_partition(self.partition, params, env)
+    res = tuple(r._data for r in res)
+    flat_res = delayed_unpack.flatten_nested(res)
+    return [r._data for r in flat_res]
+
+libertem.udf.base.UDFTask.__call__ = flat_udf_results
+
+
 def build_increasing_ds(array, axis, mode='arange'):
     """
     Applies either range(len(axis)) or linspace(0, 1) to axis of array
@@ -106,6 +120,71 @@ def build_increasing_ds(array, axis, mode='arange'):
         raise
     return array * multi.reshape(multishape)
 
+
+def structure_from_task(udfs, task):
+    structure = []
+    partition_shape = task.partition.shape
+    for udf in udfs:
+        res_data = {}
+        for buffer_name, buffer in udf.results.items():
+            if buffer.kind == 'sig':
+                part_buf_shape = partition_shape.sig
+            elif buffer.kind == 'nav':
+                part_buf_shape = partition_shape.nav
+            else:
+                raise NotImplementedError
+            part_buf_dtype = buffer.dtype
+            part_buf_extra_shape = buffer.extra_shape
+            part_buf_shape = part_buf_shape + part_buf_extra_shape
+            res_data[buffer_name] = delayed_unpack.StructDescriptor(np.ndarray,
+                                                                    shape=part_buf_shape,
+                                                                    dtype=part_buf_dtype,
+                                                                    kind=buffer.kind,
+                                                                    extra_shape=part_buf_extra_shape)
+        results_container = res_data
+        structure.append(results_container)
+    return tuple(structure)
+
+
+def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition):
+    wrapped_res = []
+    for el, descriptor in zip(flat_delayed, flat_structure):
+        buffer_kind = descriptor.kwargs.pop('kind')
+        extra_shape = descriptor.kwargs.pop('extra_shape')
+        buffer_dask = da.from_delayed(el, *descriptor.args, **descriptor.kwargs)
+        buffer = libertem.common.buffers.BufferWrapper(buffer_kind,
+                                                       extra_shape=extra_shape,
+                                                       dtype=descriptor.kwargs['dtype'])
+        buffer.set_shape_partition(partition, roi=None)
+        buffer._data = buffer_dask
+        wrapped_res.append(buffer)
+    return wrapped_res
+
+
+udfs = None  # No choice but to global here to pass instantiated udfs to run_tasks
+
+
+def run_tasks(
+    self,
+    tasks,
+    params_handle,
+    cancel_id,
+):
+    global udfs
+    env = Environment(threads_per_worker=1)
+    for task in tasks:
+        structure = structure_from_task(udfs, task)
+        flat_structure = delayed_unpack.flatten_nested(structure)
+        flat_mapping = delayed_unpack.build_mapping(structure)
+        result = delayed(task, nout=len(flat_structure))(env=env, params=params_handle)
+        wrapped_res = delayed_to_buffer_wrappers(result, flat_structure, task.partition)
+        renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
+        result = tuple(libertem.udf.base.UDFData(data=res) for res in renested)
+        yield result, task
+
+libertem.executor.delayed.DelayedJobExecutor.run_tasks = run_tasks
+libertem.executor.delayed.DelayedJobExecutor.run_wrap =\
+             libertem.executor.delayed.DelayedJobExecutor.run_function
 
 if __name__ == '__main__':
     import pathlib

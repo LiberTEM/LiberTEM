@@ -37,7 +37,6 @@ class Context:
     executor and spins up a local Dask cluster unless the executor is
     passed to the constructor.
 
-
     .. versionchanged:: 0.7.0
         Removed deprecated methods :code:`create_mask_job`, :code:`create_pick_job`
 

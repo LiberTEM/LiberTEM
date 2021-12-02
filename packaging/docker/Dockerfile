@@ -27,15 +27,17 @@ COPY test_requirements.txt /test_requirements.txt
 RUN if [ -z "$dev" ] ; then echo Skipping test requirements ; else \
 /venv/bin/pip install --no-cache -r /test_requirements.txt && /venv/bin/pip install ipyparallel ; fi
 
-COPY . /code/
-RUN venv/bin/pip install --no-cache /code/
 
 # to share the "apt-get install" call between stages, we inherit from
 # "builder0" instead of the base image here:
 FROM builder0
 
 COPY --from=builder /venv/ /venv/
-COPY --from=builder /code/ /code/
+
+# Only here so we have only a small delta when the code changes,
+# not the entire venv
+COPY . /code/
+RUN venv/bin/pip install --no-cache /code/
 
 ENV PYTHONUNBUFFERED 1
 

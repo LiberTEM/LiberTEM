@@ -86,7 +86,7 @@ def combine_slices(slice1, slice2, length):
 
 
     returns a slice that is a combination of the two slices.
-    As in 
+    As in
       x[slice1][slice2]
     becomes
       combined_slice = slice_combine(slice1, slice2, len(x))
@@ -103,16 +103,16 @@ def combine_slices(slice1, slice2, length):
 
     # First get the step sizes of the two slices.
     slice1_step = (slice1.step if slice1.step is not None else 1)
-    
+
     # Use slice1.indices to get the actual indices returned from slicing with slice1
     slice1_indices = slice1.indices(length)
-    
+
     if isinstance(slice2, int):
         # Represents a single element from array[slice1]
         # calculation is slice1_start * slice2_ith_element * slice1_step
         return slice1_indices[0] + slice2 * slice1_indices[2]
 
-    #From this point we are combining two non-integer slices
+    # From this point we are combining two non-integer slices
     slice2_step = (slice2.step if slice2.step is not None else 1)
 
     # The final step size
@@ -136,7 +136,7 @@ def combine_slices(slice1, slice2, length):
     if not (slice2_indices[1] - slice2_indices[0]) * slice2_step > 0:
         return slice(0, 0, step)
 
-    # We shift slice2_indices by the starting index in slice1 and the 
+    # We shift slice2_indices by the starting index in slice1 and the
     # step size of slice1
     start = slice1_indices[0] + slice2_indices[0] * slice1_step
     stop = slice1_indices[0] + slice2_indices[1] * slice1_step
@@ -152,7 +152,7 @@ def combine_slices(slice1, slice2, length):
 if __name__ == '__main__':
     import dask.array as da
     import numpy as np
-    
+
     tt = da.ones((5, 5))
 
     dar = DaskInplaceBufferWrapper(tt)

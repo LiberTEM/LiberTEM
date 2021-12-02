@@ -140,6 +140,12 @@ if __name__ == '__main__':
     sigsum_intensity = res[0]['intensity'].data
     navsum_intensity = res[1]['intensity'].data
 
+    try:
+        sigsum_intensity.visualize('sigsum_direct.png')
+        navsum_intensity.visualize('navsum_direct.png')
+    except Exception:
+        print('Failed to create task graph PNGs')
+
     fig, axs = plt.subplots(1, 2)
     axs[0].imshow(sigsum_intensity.compute())
     axs[0].set_title('SigSum over Nav')

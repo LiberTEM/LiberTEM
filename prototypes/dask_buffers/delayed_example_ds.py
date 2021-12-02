@@ -212,7 +212,7 @@ if __name__ == '__main__':
 
     # Load ds and force partitioning only on nav[0] via monkeypatched get_num_parititions
     n_nav_chunks = global_ds_shape.nav[0]  # used in BufferWrapper.allocate
-    n_sig_chunk = 4  # this is a global used only in BufferWrapper.allocate
+    n_sig_chunk = -1  # this is a global used only in BufferWrapper.allocate
     ds = ctx.load('raw', rawpath, dtype=dtype,
                   nav_shape=global_ds_shape.nav,
                   sig_shape=global_ds_shape.sig)

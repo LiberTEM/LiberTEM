@@ -161,7 +161,7 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition):
     return wrapped_res
 
 
-udfs = None  # No choice but to global here to pass instantiated udfs to run_tasks
+udfs = None  # No choice but to global here to pass instantiated udfs to executor.run_tasks
 
 
 def run_tasks(

@@ -1,13 +1,20 @@
+from collections import namedtuple
 import numpy as np
 import dask
 import dask.array as da
 from dask import delayed
 
 
-unpackable_types = (list, tuple, dict)
+_unpackable_types = (list, tuple, dict)
 
+class IgnoreClass:
+    pass
 
 def flatten_nested(el, unpackable_types=None, ignore_types=None):
+    if unpackable_types is None:
+        unpackable_types = _unpackable_types
+    if ignore_types is None:
+        ignore_types = (IgnoreClass,)
     flattened = []
     if isinstance(el, unpackable_types) and not isinstance(el, ignore_types):
         iterable = el.values() if isinstance(el, dict) else el
@@ -42,7 +49,6 @@ def rebuild_nested(flat, flat_mapping):
         if nest is None:
             nest_class = coords[0][0]
             nest = nest_class()
-        # set_at_location(nest, coords, el)
         nest = insert_at_pos(el, coords, nest)
     nest = list_to_tuple(nest, flat_mapping)
     return nest
@@ -92,33 +98,6 @@ def find_tuples(flat_mapping):
             if _coord[0] == tuple]
 
 
-def set_at_location(nest, coord, value):
-    _, loc = coord[0]
-    if len(coord) > 1:
-        new_cls, _ = coord[1]
-        try:
-            set_at_location(nest[loc], coord[1:], value)
-        except KeyError:
-            nest[loc] = new_cls()
-            set_at_location(nest, coord, value)
-        except IndexError:
-            if isinstance(nest, tuple):
-                nest = nest + (new_cls(),)
-                set_at_location(nest, coord, value)
-            elif isinstance(nest, list):
-                nest.append(new_cls())
-                set_at_location(nest, coord, value)
-            else:
-                raise RuntimeError('Unexpected unpackable')
-    else:
-        try:
-            nest[loc] = value
-        except TypeError:
-            nest = nest + (value,)
-        except IndexError:
-            nest.append(value)
-
-
 def set_as_tuple(nest, indices):
     if (len(indices) > 1) and isinstance(nest[indices[0]], (dict, list)):
         set_as_tuple(nest[indices[0]], indices[1:])
@@ -135,30 +114,53 @@ def list_to_tuple(nest, flat_mapping):
     return nest
 
 
-class StructDescriptor(tuple):
-    pass
+class StructDescriptor:
+    def __init__(self, cls, *args, **kwargs):
+        self.cls = cls
+        self.args = args
+        self.kwargs = kwargs
+
+
+def get_res_structure():
+    return {'arr': StructDescriptor(np.ndarray, shape=(55, 55), dtype=np.float32),
+            'arr2': StructDescriptor(np.ndarray, shape=(100, 66, 2), dtype=np.complex128)}
 
 
 def get_res():
-    return {'int': 55, 'arr': np.ones((55, 55), dtype=np.float32)}
+    structure = get_res_structure()
+    # assuming a flat dict here, in real case we could know the structure better
+    res = {key: np.ones(**el.kwargs) for key, el in structure.items()}
+    return flatten_nested(res)
+
+
+def apply_structure(flat_delayed, flat_structure):
+    wrapped_res = []
+    for el, descriptor in zip(flat_delayed, flat_structure):
+        if descriptor.cls == np.ndarray:
+            wrapped_res.append(da.from_delayed(el, *descriptor.args, **descriptor.kwargs))
+        else:
+            raise NotImplementedError('Other unpack methods than ndarray not implemented')
+    return wrapped_res
 
 
 if __name__ == '__main__':
-    res = delayed(get_res)()
+    structure = get_res_structure()
 
-    structure = {'int': (StructDescriptor((int,)), StructDescriptor((float,))),
-                 'arr': StructDescriptor((np.ndarray, (55, 55), np.float32)),
-                 'test': [5, {'a': (55, 44), 'b': [4, 3, 32]}, 2, (66, 47, (28, 33))],
-                 'str': "stringhere"}
+    # structure = {'int': (StructDescriptor((int,)), StructDescriptor((float,))),
+    #              'arr': StructDescriptor((np.ndarray, (55, 55), np.float32)),
+    #              'test': [5, {'a': (55, 44), 'b': [4, 3, 32]}, 2, (66, 47, (28, 33))],
+    #              'str': "stringhere"}
 
     flat_structure = flatten_nested(structure,
-                                    unpackable_types=unpackable_types,
+                                    unpackable_types=_unpackable_types,
                                     ignore_types=(StructDescriptor,))
     flat_mapping = build_mapping(structure,
-                                 unpackable_types=unpackable_types,
+                                 unpackable_types=_unpackable_types,
                                  ignore_types=(StructDescriptor,))
 
-    renested = rebuild_nested(flat_structure, flat_mapping)
+    res = delayed(get_res, nout=len(flat_structure))()
+    wrapped_res = apply_structure(res, flat_structure)
+    renested = rebuild_nested(wrapped_res, flat_mapping)
 
     # unpacked = delayed(res_unpack, nout=len(structure))(res, structure)
     # unpacked_delayeds = {key: _delayed for key, _delayed in zip(structure.keys(), unpacked)}

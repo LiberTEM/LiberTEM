@@ -50,13 +50,31 @@ class DaskInplaceBufferWrapper:
 
 
 def combine_slices_multid(slices1, slices2, shape):
+    null_slice = slice(None, None, None)
+
     if not isinstance(slices1, tuple):
         slices1 = (slices1,)
     if not isinstance(slices2, tuple):
         slices2 = (slices2,)
+
+    # If slice1 contains integers we must pad slices2 for combining
+    s2_gen = iter(slices2)
+    _slices2 = []
+    for s1 in slices1:
+        if isinstance(s1, int):
+            _slices2.append(null_slice)
+        else:
+            _slices2.append(next(s2_gen))
+    try:
+        _ = next(s2_gen)
+        raise RuntimeError('non-matching slices length')
+    except StopIteration:
+        pass
+    slices2 = tuple(_slices2)
+
     combined_slices = []
-    null_slice = slice(None, None, None)
-    for _slice1, _slice2, _dimension in itertools.zip_longest(slices1, slices2, shape, fillvalue=null_slice):
+    for _slice1, _slice2, _dimension in itertools.zip_longest(slices1, slices2, shape,
+                                                              fillvalue=null_slice):
         combined_slice = combine_slices(_slice1, _slice2, _dimension)
         combined_slices.append(combined_slice)
     return tuple(combined_slices)
@@ -78,16 +96,27 @@ def combine_slices(slice1, slice2, length):
     :param slice2: The second slice
     :param length: The length of the first dimension of data being sliced. (eg len(x))
     """
+    if isinstance(slice1, int):
+        # by definition we can't slice further on this dimension
+        assert slice2 is None or slice2 == slice(None, None, None)
+        return slice1
 
     # First get the step sizes of the two slices.
     slice1_step = (slice1.step if slice1.step is not None else 1)
+    
+    # Use slice1.indices to get the actual indices returned from slicing with slice1
+    slice1_indices = slice1.indices(length)
+    
+    if isinstance(slice2, int):
+        # Represents a single element from array[slice1]
+        # calculation is slice1_start * slice2_ith_element * slice1_step
+        return slice1_indices[0] + slice2 * slice1_indices[2]
+
+    #From this point we are combining two non-integer slices
     slice2_step = (slice2.step if slice2.step is not None else 1)
 
     # The final step size
     step = slice1_step * slice2_step
-
-    # Use slice1.indices to get the actual indices returned from slicing with slice1
-    slice1_indices = slice1.indices(length)
 
     # We calculate the length of the first slice
     slice1_length = (abs(slice1_indices[1] - slice1_indices[0]) - 1) // abs(slice1_indices[2])
@@ -97,7 +126,7 @@ def combine_slices(slice1, slice2, length):
         slice1_length += 1
     else:
         # Otherwise, The slice is zero length.
-        return slice(0,0,step)
+        return slice(0, 0, step)
 
     # Use the length after the first slice to get the indices returned from a
     # second slice starting at 0.
@@ -105,7 +134,7 @@ def combine_slices(slice1, slice2, length):
 
     # if the final range length = 0, return
     if not (slice2_indices[1] - slice2_indices[0]) * slice2_step > 0:
-        return slice(0,0,step)
+        return slice(0, 0, step)
 
     # We shift slice2_indices by the starting index in slice1 and the 
     # step size of slice1
@@ -130,6 +159,7 @@ if __name__ == '__main__':
     dar.set_slice(np.s_[0, :])
     dar[:] += 5
     dar[:] *= 5
+    dar[3] += 10
     dar.set_slice(np.s_[:, 1])
     dar[:] += 5
     dar.clear_slice()

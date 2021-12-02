@@ -83,6 +83,8 @@ def combine_slices_multid(slices1, slices2, shape):
 def combine_slices(slice1, slice2, length):
     """
     https://stackoverflow.com/a/26783035
+    Modified to support slices which are just element selection
+    i.e. an integer for slice1 or slice2
 
 
     returns a slice that is a combination of the two slices.

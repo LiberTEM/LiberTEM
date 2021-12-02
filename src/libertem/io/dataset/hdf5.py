@@ -192,21 +192,32 @@ class H5DataSet(DataSet):
     Note
     ----
     If the HDF5 file to be loaded contains compressed data
-    using a custom compression filter (other than GZIP, LZF or SZIP)
-    the user must import the associated HDF5 filter library before
-    importing LiberTEM in their main script, for example the library
-    `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_.
+    using a custom compression filter (other than GZIP, LZF or SZIP),
+    the associated HDF5 filter library must be imported on the workers
+    before accessing the file. See the `h5py documentation
+    on filter pipelines
+    <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_
+    for more information.
 
-    For the web GUI or for running LiberTEM in a cluster with existing workers (e.g. by running
-    :code:`libertem-worker` or :code:`dask-worker` on nodes), it is recommended to add the
-    necessary imports as :code:`--preload` arguments to the launch command,
+    The library `hdf5plugin <https://github.com/silx-kit/hdf5plugin>`_
+    is preloaded automatically if it is installed. Other filter libraries
+    may have to be specified for preloading by the user.
+
+    Preloads for a local :class:`~libertem.executor.dask.DaskJobExecutor` can be
+    specified through the :code:`preload` argument of either
+    :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` or
+    :func:`libertem.executor.dask.cluster_spec`. For the
+    :class:`libertem.executor.inline.InlineJobExecutor`, the plugins
+    can simply be imported in the main script.
+
+    For the web GUI or for running LiberTEM in a cluster with existing workers
+    (e.g. by running
+    :code:`libertem-worker` or :code:`dask-worker` on nodes),
+    necessary imports can be specified as :code:`--preload` arguments to
+    the launch command,
     for example with :code:`libertem-server --preload hdf5plugin` resp.
     :code:`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`.
     :code:`--preload` can be specified multiple times.
-
-    See the `h5py documentation on filter pipelines
-    <https://docs.h5py.org/en/stable/high/dataset.html#filter-pipeline>`_ for
-    more information.
     """
     def __init__(self, path, ds_path=None, tileshape=None,
                  target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None):

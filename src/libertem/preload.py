@@ -17,3 +17,8 @@ except ImportError:
     pass
 
 import libertem
+
+try:
+    import hdf5plugin
+except ImportError:
+    pass

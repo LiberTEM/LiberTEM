@@ -79,17 +79,21 @@ def cluster_spec(
         cpu_spec['options']['preload'] = preload + (
             'from libertem.executor.dask import worker_setup; '
             + f'worker_setup(resource="CPU", device={cpu})',
+            'libertem.preload'
         )
         workers_spec[f'{name}-cpu-{cpu}'] = cpu_spec
 
     for service in range(num_service):
-        workers_spec[f'{name}-service-{service}'] = deepcopy(service_base_spec)
+        service_spec = deepcopy(service_base_spec)
+        service_spec['options']['preload'] = preload + ('libertem.preload',)
+        workers_spec[f'{name}-service-{service}'] = service_spec
 
     for cuda in cudas:
         cuda_spec = deepcopy(cuda_base_spec)
         cuda_spec['options']['preload'] = preload + (
             'from libertem.executor.dask import worker_setup; '
             + f'worker_setup(resource="CUDA", device={cuda})',
+            'libertem.preload'
         )
         workers_spec[f'{name}-cuda-{cuda}'] = cuda_spec
 

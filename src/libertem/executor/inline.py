@@ -22,6 +22,8 @@ class InlineJobExecutor(JobExecutor):
         allow one thread per CPU core
     """
     def __init__(self, debug=False, inline_threads=None, *args, **kwargs):
+        # Only import if actually instantiated, i.e. will likely be used
+        import libertem.preload  # noqa: 401
         self._debug = debug
         self._inline_threads = inline_threads
 

@@ -171,6 +171,7 @@ setup(
         'hdbscan': 'hdbscan',
         'cupy': 'cupy',
         'bqplot': ['bqplot', 'bqplot-image-gl', 'ipython'],
+        'hdf5plugin': 'hdf5plugin'
     },
     package_dir={"": "src"},
     packages=find_packages(where='src'),

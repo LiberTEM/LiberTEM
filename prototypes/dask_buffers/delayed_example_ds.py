@@ -135,8 +135,9 @@ if __name__ == '__main__':
                   sig_shape=global_ds_shape.sig)
     sigsum_udf = SumSigUDF()
     navsum_udf = SumUDF()
+    udfs = [sigsum_udf, navsum_udf]
 
-    res = ctx.run_udf(dataset=ds, udf=[sigsum_udf, navsum_udf])
+    res = ctx.run_udf(dataset=ds, udf=udfs)
     sigsum_intensity = res[0]['intensity'].data
     navsum_intensity = res[1]['intensity'].data
 

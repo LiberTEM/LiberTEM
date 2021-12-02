@@ -129,6 +129,9 @@ class StructDescriptor:
         self.args = args
         self.kwargs = kwargs
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.cls}, {self.args}, {self.kwargs})'
+
 
 def get_res_structure():
     return {'arr': StructDescriptor(np.ndarray, shape=(55, 55), dtype=np.float32),

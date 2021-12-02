@@ -11,7 +11,13 @@ COPY --from=builder /code/ /code/
 
 ENV PYTHONUNBUFFERED 1
 
+# LiberTEM server
 EXPOSE 9000
+# Dask.distributed scheduler
+EXPOSE 8786
+# Dask.distributed dashboard
+EXPOSE 8787
+
 
 CMD ["/venv/bin/libertem-server", "--host", "0.0.0.0", "--insecure", "--port", "9000"]
 

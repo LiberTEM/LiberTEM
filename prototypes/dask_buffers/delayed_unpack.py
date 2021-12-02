@@ -52,6 +52,8 @@ def rebuild_nested(flat, flat_mapping):
     for el, coords in zip(flat, flat_mapping):
         if nest is None:
             nest_class = coords[0][0]
+            if nest_class == tuple:
+                nest_class = list
             nest = nest_class()
         nest = insert_at_pos(el, coords, nest)
     nest = list_to_tuple(nest, flat_mapping)
@@ -114,7 +116,10 @@ def list_to_tuple(nest, flat_mapping):
     deepest_first = reversed(sorted(tuple_positions, key=lambda x: x[1]))
     for coord_i, depth_j in deepest_first:
         indices = [c[1] for c in flat_mapping[coord_i][:depth_j]]
-        set_as_tuple(nest, indices)
+        if len(indices) > 0:
+            set_as_tuple(nest, indices)
+        else:
+            nest = tuple(nest)
     return nest
 
 

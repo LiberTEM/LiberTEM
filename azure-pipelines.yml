@@ -342,18 +342,10 @@ stages:
         inputs:
           versionSpec: '3.9'
 
-      - bash: pip install -U tox 'virtualenv>19' pip-tools
+      - bash: pip install -U pip-tools
         displayName: 'install requirements'
 
-      - script: |
-          cd packaging/docker/
-          ./update_reqs.sh
-          docker pull libertem/libertem-dev:base || true
-          docker build --cache-from=libertem/libertem-dev:base -t libertem/libertem-dev:base --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.base
-          docker pull libertem/libertem:continuous || true
-          docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
-          docker pull libertem/libertem-dev || true
-          docker build --cache-from=libertem/libertem-dev -t libertem/libertem-dev --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.dev
+      - bash: bash packaging/docker/dist-build.sh
         displayName: 'Build docker container(s)'
 
       - script: |
@@ -361,20 +353,11 @@ stages:
           docker-compose run tests
         displayName: 'run tests'
 
-      - script: |
-          if [ -n "$(DOCKER_ACCESS_TOKEN)" ]
-          then
-            cd packaging/docker/
-            docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN)
-            docker push libertem/libertem-dev:base
-            docker push libertem/libertem-dev
-            docker push libertem/libertem:continuous
-          else
-            echo "not authenticated, skipping"
-          fi
+      - bash: bash packaging/docker/dist-push.sh
         displayName: 'Upload docker container(s)'
         env:
           DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)
+          DOCKER_USER: sk1p
 
   - stage: deploy
     jobs:
@@ -458,38 +441,10 @@ stages:
       - task: UsePythonVersion@0
         inputs:
           versionSpec: '3.9'
-      - bash: pip install -U tox 'virtualenv>19' pip-tools
+      - bash: pip install -U pip-tools
         displayName: 'install requirements'
-      - script: |
-          if [ -n "$(DOCKER_ACCESS_TOKEN)" ]
-          then
-            cd packaging/docker/
-            TAGS=$( python3 ../../scripts/release docker-tags )
-            # Any tag beyond continuous
-            if [ -n "$TAGS" ]
-            then
-              # Refresh the builds
-              docker login -u sk1p -p $(DOCKER_ACCESS_TOKEN)
-              ./update_reqs.sh
-              docker pull libertem/libertem-dev:base || true
-              docker build --cache-from=libertem/libertem-dev:base -t libertem/libertem-dev:base --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile.base
-              docker push libertem/libertem-dev:base
-
-              docker pull libertem/libertem:continuous || true
-              docker build --cache-from=libertem/libertem:continuous -t libertem/libertem:continuous --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
-              docker push libertem/libertem:continuous
-              for TAG in $TAGS
-              do
-                echo "tagging and pushing $TAG"
-                docker tag libertem/libertem:continuous "libertem/libertem:$TAG"
-                docker push libertem/libertem:$TAG
-              done
-            else
-              echo "Only continuous release, skipping"
-            fi
-          else
-            echo "not authenticated, skipping"
-          fi
+      - bash: bash packaging/docker/release.sh
         displayName: 'Build, tag and push docker container(s)'
         env:
           DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)
+          DOCKER_USER: sk1p

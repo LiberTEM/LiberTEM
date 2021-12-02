@@ -15,7 +15,6 @@ from pkg_resources import parse_version
 from pkg_resources.extern.packaging.version import LegacyVersion
 import click
 import requests
-import natsort
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 BASE_DIR = os.path.normpath(join(HERE, '..'))
@@ -165,9 +164,13 @@ def get_latest_tag():
 
 def get_latest_stable_tag():
     tags = get_all_tags()
-    stable_tags = [tag for tag in tags if STABLE_VERSION_PAT.match(tag)]
-    sorted_tags = natsort.natsorted(stable_tags)
-    return sorted_tags[-1]
+    sorted_stable_tags = list(
+        sorted(
+            filter(STABLE_VERSION_PAT.match, tags),
+            key=parse_version
+        )
+    )
+    return sorted_stable_tags[-1]
 
 
 def tag_matches(tags):
@@ -574,7 +577,11 @@ def do_build_appimage(ctx):
 def docker_tags():
     """
     Prints the tags that should be used for any docker images that are built,
-    separated by whitespace.
+    separated by whitespace. The tag "continuous" is left out here, because all
+    builds are tagged as such in the dist tests and pushed if on master.
+    The tags here are additional tags for releases and pre-releases
+    that will trigger an additional clean re-build, tagging and push in the
+    packaging phase.
     """
     version = get_release_tag()
     is_latest_stable = version and (version["full"] == get_latest_stable_tag())
@@ -591,6 +598,10 @@ def docker_tags():
     if is_latest_stable:
         tags.append("latest")
 
+    # Uncomment to make it emit an extra tag also for development builds
+    # tags.append("devtest")
+
+    # For posterity, in case the behavior should switch back again
     # "continuous" is handled differently now
     # if get_release_kind() == "dev":
     #     tags.append("continuous")

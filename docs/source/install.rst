@@ -231,6 +231,10 @@ is running this image with `Singularity
 
     $ singularity run docker://libertem/libertem
 
+LiberTEM is installed in a virtual environment in :code:`/venv/` in the Docker
+image. The executables :code:`libertem-server`, :code:`dask-scheduler` and
+:code:`libertem-worker` are in :code:`/venv/bin/`, consequently.
+
 Troubleshooting
 ---------------
 

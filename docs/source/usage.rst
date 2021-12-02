@@ -102,6 +102,8 @@ run workers on all cluster nodes to connect to the scheduler.
 
 You can then connect to the cluster's scheduler URL in the LiberTEM web GUI.
 
+.. versionadded:: 0.9.0
+
 For easier deployment of in container-based environments, a `Docker image with a
 LiberTEM installation
 <https://hub.docker.com/repository/docker/libertem/libertem>`_ is available.

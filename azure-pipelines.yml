@@ -358,6 +358,11 @@ stages:
         env:
           DOCKER_ACCESS_TOKEN: $(DOCKER_ACCESS_TOKEN)
           DOCKER_USER: sk1p
+        # Don't try for PR
+        # Run only on master since it updates the "continuous" image
+        condition: |
+          and(not(eq(variables['Build.Reason'], 'PullRequest')),
+              eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
   - stage: deploy
     jobs:
@@ -433,6 +438,8 @@ stages:
           LT_RELEASE_UPLOAD_ZENODO_PARENT: $(LT_RELEASE_UPLOAD_ZENODO_PARENT)
 
     - job: build_docker_image
+      # Do build for branches (service releases), but don't start for PRs
+      condition: not(eq(variables['Build.Reason'], 'PullRequest'))
       pool:
         vmImage: 'ubuntu-latest'
       variables:

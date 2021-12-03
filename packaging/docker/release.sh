@@ -13,7 +13,6 @@ then
         ./update_reqs.sh
         docker pull $CONT || true
         docker build --cache-from=$CONT -t $CONT --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
-        docker push $CONT
         for TAG in $TAGS
         do
             echo "tagging and pushing $TAG"

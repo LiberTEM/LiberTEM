@@ -57,7 +57,17 @@ def combine_slices_multid(slices1, slices2, shape):
     if not isinstance(slices2, tuple):
         slices2 = (slices2,)
 
+    if all([s == null_slice for s in slices2]):
+        return slices1
+
+    if all([s == null_slice for s in slices1]):
+        return slices2
+
     # If slice1 contains integers we must pad slices2 for combining
+    # This section of code is not complete/robust, there are cases
+    # where slices1 is all non-integer but slices2 is not of the same length!
+    # e.g. slices1 = (slice(0, 64), slice(0, 64)) and slices2 = (slice(0, 32),)
+    # need to have logic for slicing only the first dimension here
     s2_gen = iter(slices2)
     _slices2 = []
     for s1 in slices1:
@@ -65,11 +75,8 @@ def combine_slices_multid(slices1, slices2, shape):
             _slices2.append(null_slice)
         else:
             _slices2.append(next(s2_gen))
-    try:
-        _ = next(s2_gen)
-        raise RuntimeError('non-matching slices length')
-    except StopIteration:
-        pass
+    next_el = next(s2_gen, None)
+    assert next_el is None
     slices2 = tuple(_slices2)
 
     combined_slices = []

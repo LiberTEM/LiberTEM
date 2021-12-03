@@ -164,7 +164,7 @@ def structure_from_task(udfs, task):
     return tuple(structure)
 
 
-def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition):
+def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffer=True):
     """
     Take the iterable Delayed results object, and re-wrap each Delayed object
     back into a BufferWrapper wrapping a dask.array of the correct shape and dtype
@@ -174,12 +174,15 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition):
         buffer_kind = descriptor.kwargs.pop('kind')
         extra_shape = descriptor.kwargs.pop('extra_shape')
         buffer_dask = da.from_delayed(el, *descriptor.args, **descriptor.kwargs)
-        buffer = libertem.common.buffers.BufferWrapper(buffer_kind,
-                                                       extra_shape=extra_shape,
-                                                       dtype=descriptor.kwargs['dtype'])
-        buffer.set_shape_partition(partition, roi=None)
-        buffer._data = buffer_dask
-        wrapped_res.append(buffer)
+        if as_buffer:
+            buffer = libertem.common.buffers.BufferWrapper(buffer_kind,
+                                                        extra_shape=extra_shape,
+                                                        dtype=descriptor.kwargs['dtype'])
+            buffer.set_shape_partition(partition, roi=None)
+            buffer._data = buffer_dask
+            wrapped_res.append(buffer)
+        else:
+            wrapped_res.append(buffer_dask)
     return wrapped_res
 
 
@@ -226,6 +229,43 @@ the merge/finalise results as a regular function call without using delayed
 libertem.executor.delayed.DelayedJobExecutor.run_wrap =\
              libertem.executor.delayed.DelayedJobExecutor.run_function
 
+
+def merge_wrap(udf, dest_dict, src_dict):
+    dest = libertem.udf.base.MergeAttrMapping(dest_dict)
+    src = libertem.udf.base.MergeAttrMapping(src_dict)
+    udf.merge(
+        dest=dest,
+        src=src
+    )
+    return delayed_unpack.flatten_nested(dest._dict)
+
+
+# Not a method of UDFRunner to avoid potentially including self in dask.delayed
+def delayed_apply_part_result(udfs, damage, part_results, task):
+    for results, udf in zip(part_results, udfs):
+        udf.set_views_for_partition(task.partition)
+        dest = udf.results.get_proxy()
+        dest_dict = {k: v.unwrap_sliced() for k, v in dest._dict.items()}
+        src_dict = results.get_proxy()
+
+        structure = structure_from_task([udf], task)[0]
+        flat_structure = delayed_unpack.flatten_nested(structure)
+        flat_mapping = delayed_unpack.build_mapping(structure)
+        merged_del = delayed(merge_wrap, nout=len(flat_mapping))(udf=udf,
+                                                                 dest=dest_dict,
+                                                                 src=src_dict)
+        wrapped_res = delayed_to_buffer_wrappers(merged_del, flat_structure,
+                                                 task.partition, as_buffer=False)
+        renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
+
+        for (k, buf) in dest._dict.items():
+            buf[:] = renested[k]
+
+    v = damage.get_view_for_partition(task.partition)
+    v[:] = True
+    return (udfs, damage)
+
+libertem.udf.base._apply_part_result = delayed_apply_part_result
 
 if __name__ == '__main__':
     import pathlib

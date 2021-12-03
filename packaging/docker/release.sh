@@ -6,13 +6,14 @@ then
     cd packaging/docker/ || exit
     TAGS=$( python3 ../../scripts/release docker-tags )
     CONT=libertem/libertem:continuous
+    TRIAGE=libertem/libertem:triage
     if [ -n "$TAGS" ]
     then
         export DOCKER_BUILDKIT=1
         docker login -u "$DOCKER_USER" --password-stdin <<< "$DOCKER_ACCESS_TOKEN"
         ./update_reqs.sh
-        docker pull $CONT || true
-        docker build --cache-from=$CONT -t $CONT --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
+        docker pull $TRIAGE || true
+        docker build --cache-from=$TRIAGE -t $CONT --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
         for TAG in $TAGS
         do
             echo "tagging and pushing $TAG"

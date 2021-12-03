@@ -577,11 +577,7 @@ def do_build_appimage(ctx):
 def docker_tags():
     """
     Prints the tags that should be used for any docker images that are built,
-    separated by whitespace. The tag "continuous" is left out here, because all
-    builds are tagged as such in the dist tests and pushed if on master.
-    The tags here are additional tags for releases and pre-releases
-    that will trigger an additional clean re-build, tagging and push in the
-    packaging phase.
+    separated by whitespace.
     """
     version = get_release_tag()
     is_latest_stable = version and (version["full"] == get_latest_stable_tag())
@@ -598,13 +594,7 @@ def docker_tags():
     if is_latest_stable:
         tags.append("latest")
 
-    # Uncomment to make it emit an extra tag also for development builds
-    # tags.append("devtest")
-
-    # For posterity, in case the behavior should switch back again
-    # "continuous" is handled differently now
-    # if get_release_kind() == "dev":
-    #     tags.append("continuous")
+    tags.append("continuous")
 
     print(" ".join(tags))
 

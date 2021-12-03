@@ -1696,7 +1696,14 @@ class UDFRunner:
             input_dtype=self._get_dtype(dataset.dtype, corrections),
             corrections=corrections,
         )
+        for udf in self._udfs:
+            udf.set_meta(meta)
+            udf.init_result_buffers()
+            udf.allocate_for_full(dataset, roi)
 
+            if isinstance(udf, UDFPreprocessMixin):
+                udf.set_views_for_dataset(dataset)
+                udf.preprocess()
         neg = Negotiator()
         # FIXME take compute backend into consideration as well
         # Other boundary conditions when moving input data to device
@@ -1710,15 +1717,6 @@ class UDFRunner:
             roi=roi,
             corrections=corrections,
         )
-
-        for udf in self._udfs:
-            udf.set_meta(meta)
-            udf.init_result_buffers()
-            udf.allocate_for_full(dataset, roi)
-
-            if isinstance(udf, UDFPreprocessMixin):
-                udf.set_views_for_dataset(dataset)
-                udf.preprocess()
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,

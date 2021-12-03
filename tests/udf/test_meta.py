@@ -26,6 +26,16 @@ class PixelsumBaseUDF(UDF):
             ),
         }
 
+    def get_tiling_preferences(self):
+        # Example from SSB UDF: Target tile size depends on dataset shape
+        # Make sure we have self.meta available at this stage
+        result_size = np.prod(self.meta.dataset_shape.nav)
+        target_size = 1024*1024
+        return {
+            "depth": max(1, target_size // result_size),
+            "total_size": target_size,
+        }
+
     def merge(self, dest, src):
         dest.pixelsum_nav_raw[:] += src.pixelsum_nav_raw
         dest.pixelsum_sig_raw[:] += src.pixelsum_sig_raw

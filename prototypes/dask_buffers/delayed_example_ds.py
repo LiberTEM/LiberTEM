@@ -230,9 +230,16 @@ libertem.executor.delayed.DelayedJobExecutor.run_wrap =\
              libertem.executor.delayed.DelayedJobExecutor.run_function
 
 
+def do_copy(merge_mapping):
+    merge_mapping._dict = {k: v.copy() for k, v in merge_mapping._dict.items()}
+
+
 def merge_wrap(udf, dest_dict, src_dict):
     dest = libertem.udf.base.MergeAttrMapping(dest_dict)
+    do_copy(dest)
     src = libertem.udf.base.MergeAttrMapping(src_dict)
+    do_copy(src)
+
     udf.merge(
         dest=dest,
         src=src
@@ -244,22 +251,26 @@ def merge_wrap(udf, dest_dict, src_dict):
 def delayed_apply_part_result(udfs, damage, part_results, task):
     for results, udf in zip(part_results, udfs):
         udf.set_views_for_partition(task.partition)
+
         dest = udf.results.get_proxy()
+        src = results.get_proxy()
         dest_dict = {k: v.unwrap_sliced() for k, v in dest._dict.items()}
-        src_dict = results.get_proxy()
+        src_dict = {k: v for k, v in src._dict.items()}
 
         structure = structure_from_task([udf], task)[0]
         flat_structure = delayed_unpack.flatten_nested(structure)
         flat_mapping = delayed_unpack.build_mapping(structure)
-        merged_del = delayed(merge_wrap, nout=len(flat_mapping))(udf=udf,
-                                                                 dest=dest_dict,
-                                                                 src=src_dict)
+        merged_del = delayed(merge_wrap, nout=len(flat_mapping))(udf,
+                                                                 dest_dict,
+                                                                 src_dict)
         wrapped_res = delayed_to_buffer_wrappers(merged_del, flat_structure,
                                                  task.partition, as_buffer=False)
         renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
+        
+        src = libertem.udf.base.MergeAttrMapping(renested)
 
-        for (k, buf) in dest._dict.items():
-            buf[:] = renested[k]
+        for k in dest:
+            getattr(dest, k)[:] = getattr(src, k)
 
     v = damage.get_view_for_partition(task.partition)
     v[:] = True

@@ -34,6 +34,12 @@ class DaskInplaceBufferWrapper:
     def clear_slice(self):
         self._slice = None
 
+    def unwrap_sliced(self):
+        if self._slice is None:
+            return self._array
+        else:
+            return self._array[self._slice]
+
     def __getitem__(self, key):
         if self._slice is None:
             return self._array[key]

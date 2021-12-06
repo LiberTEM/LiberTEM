@@ -438,8 +438,6 @@ stages:
           LT_RELEASE_UPLOAD_ZENODO_PARENT: $(LT_RELEASE_UPLOAD_ZENODO_PARENT)
 
     - job: build_docker_image
-      # Do build for branches (service releases), but don't start for PRs
-      condition: not(eq(variables['Build.Reason'], 'PullRequest'))
       pool:
         vmImage: 'ubuntu-latest'
       variables:

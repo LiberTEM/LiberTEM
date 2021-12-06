@@ -7,3 +7,4 @@ docutils
 bibtexparser
 ghp-import
 wheel
+github

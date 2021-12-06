@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
+
+set -e
+BASE_DIR=$(dirname "$(readlink -f "${0}")")
+cd "$BASE_DIR"
+
 if [ -n "$DOCKER_ACCESS_TOKEN" ] \
     && [ "$DOCKER_ACCESS_TOKEN" != '$(DOCKER_ACCESS_TOKEN)' ] \
     && [ -n "$DOCKER_USER" ] && [ "$DOCKER_USER" != '$(DOCKER_USER)' ]
 then
-    cd packaging/docker/ || exit
     TAGS=$( python3 ../../scripts/release docker-tags )
     CONT=libertem/libertem:continuous
     TRIAGE=libertem/libertem:triage
@@ -21,7 +25,7 @@ then
             docker push "libertem/libertem:$TAG"
         done
     else
-        echo "Only continuous release, skipping"    
+        echo "No release tags, skipping"
     fi
 else
     echo "not authenticated, skipping"

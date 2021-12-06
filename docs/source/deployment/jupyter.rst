@@ -75,8 +75,8 @@ Usage
 When the installation is finished, you can find the LiberTEM GUI as an entry
 in the :code:`New` menu in JupyterHub:
 
-..  figure:: ./images/use/jupyter-hub.png
+..  figure:: ../images/use/jupyter-hub.png
 
 Or as a launcher icon in JupyterLab:
 
-..  figure:: ./images/use/jupyter-lab.png
+..  figure:: ../images/use/jupyter-lab.png

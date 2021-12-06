@@ -28,3 +28,5 @@ data
 .mypy_cache/
 .benchmarks
 junit.xml
+.vscode-server
+*.sif

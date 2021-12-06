@@ -311,6 +311,16 @@ def merge_wrap(udf, dest_dict, src_dict):
 # Not a method of UDFRunner to avoid potentially including self in dask.delayed
 def delayed_apply_part_result(udfs, damage, part_results, task):
     for results, udf in zip(part_results, udfs):
+        # Allow user to define an alternative merge strategy
+        # using dask-compatible functions. In the Delayed case we
+        # won't be getting partial results with damage anyway.
+        # Currently there is no interface to provide all of the results
+        # to udf.merge at once and in the correct order, so I am overloading
+        # dask_merge to do the accumulation, ordering and set the merged
+        # result buffers
+        if hasattr(udf, 'dask_merge'):
+            udf.dask_merge(results, task)
+            continue
         # In principle we can requrire that sig merges are done sequentially
         # by using dask.graph_manipulation.bind, this could improve thread
         # safety on the sig buffer. In the current implem it's not necessary as
@@ -374,6 +384,37 @@ def delayed_apply_part_result(udfs, damage, part_results, task):
 libertem.udf.base._apply_part_result = delayed_apply_part_result
 
 
+def _accumulate_part_results(self, part_results, task):
+    if not hasattr(self, '_part_results'):
+        self._part_results = {}
+    self._part_results[task.partition.slice] = part_results
+
+    # number of frames in dataset
+    target_coverage = prod(task.partition.meta.shape.nav)
+    # number of frames we have results for
+    current_coverage = sum([prod(k.shape.nav) for k in self._part_results.keys()])
+    if target_coverage == current_coverage:
+        ordered_results = sorted(self._part_results.items(), key=lambda kv: kv[0].origin[0])
+        self._part_results = {kv[0]: kv[1] for kv in ordered_results}
+        return True
+    return False
+
+libertem.udf.base.UDF._accumulate_part_results = _accumulate_part_results
+
+
+def dask_simple_nav_merge(self, part_results, task):
+    if self._accumulate_part_results(part_results, task):
+        intensity_chunks = [b.intensity for b in self._part_results.values()]
+        self.results['intensity']._data = da.concatenate(intensity_chunks)
+
+
+def dask_sig_sum_merge(self, part_results, task):
+    if self._accumulate_part_results(part_results, task):
+        intensity_chunks = [b.intensity for b in self._part_results.values()]
+        stacked_chunks = da.stack(intensity_chunks, axis=0)
+        self.results['intensity']._data = stacked_chunks.sum(axis=0)
+
+
 if __name__ == '__main__':
     import pathlib
     import libertem.api as lt
@@ -405,8 +446,11 @@ if __name__ == '__main__':
     ds = ctx.load('raw', rawpath, dtype=dtype,
                   nav_shape=global_ds_shape.nav,
                   sig_shape=global_ds_shape.sig)
+
+    SumSigUDF.dask_merge = dask_simple_nav_merge
     sigsum_udf = SumSigUDF()
     sigsum_udf._allocate_dask_buffers = True
+    SumUDF.dask_merge = dask_sig_sum_merge
     navsum_udf = SumUDF()
     navsum_udf._allocate_dask_buffers = True
     stddev_udf = StdDevUDF()

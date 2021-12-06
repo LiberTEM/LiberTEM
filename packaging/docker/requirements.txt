@@ -37,7 +37,7 @@ entrypoints==0.3
     # via
     #   jupyter-client
     #   nbconvert
-fonttools==4.28.2
+fonttools==4.28.3
     # via matplotlib
 fsspec==2021.11.1
     # via dask

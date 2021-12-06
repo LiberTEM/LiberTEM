@@ -4,18 +4,21 @@ set -e
 BASE_DIR=$(dirname "$(readlink -f "${0}")")
 cd "$BASE_DIR"
 
-if [ -n "$DOCKER_ACCESS_TOKEN" ] \
-    && [ "$DOCKER_ACCESS_TOKEN" != '$(DOCKER_ACCESS_TOKEN)' ] \
-    && [ -n "$DOCKER_USER" ] && [ "$DOCKER_USER" != '$(DOCKER_USER)' ]
+TAGS=$( python3 ../../scripts/release docker-tags )
+CONT=libertem/libertem:continuous
+TRIAGE=libertem/libertem:triage
+if [ -n "$TAGS" ]
 then
-    TAGS=$( python3 ../../scripts/release docker-tags )
-    CONT=libertem/libertem:continuous
-    TRIAGE=libertem/libertem:triage
-    if [ -n "$TAGS" ]
+    if [ -n "$DOCKER_ACCESS_TOKEN" ] \
+        && [ "$DOCKER_ACCESS_TOKEN" != '$(DOCKER_ACCESS_TOKEN)' ] \
+        && [ -n "$DOCKER_USER" ] && [ "$DOCKER_USER" != '$(DOCKER_USER)' ]
     then
         export DOCKER_BUILDKIT=1
         docker login -u "$DOCKER_USER" --password-stdin <<< "$DOCKER_ACCESS_TOKEN"
+
         ./update_reqs.sh
+
+        docker pull python:3.9-slim
         docker pull $TRIAGE || true
         docker build --cache-from=$TRIAGE -t $CONT --build-arg BUILDKIT_INLINE_CACHE=1 ../../ -f Dockerfile
         for TAG in $TAGS
@@ -25,8 +28,8 @@ then
             docker push "libertem/libertem:$TAG"
         done
     else
-        echo "No release tags, skipping"
+        echo "not authenticated, skipping"
     fi
 else
-    echo "not authenticated, skipping"
+    echo "No release tags, skipping"
 fi

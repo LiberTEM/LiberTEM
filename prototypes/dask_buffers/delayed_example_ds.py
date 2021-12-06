@@ -60,7 +60,26 @@ def get_num_partitions(self):
 libertem.io.dataset.raw.RawFileDataSet.get_num_partitions = get_num_partitions
 
 
-def dask_allocate(self, lib=None):
+def allocate_for_full(self, dataset, roi) -> None:
+    """
+    Read the monkeypatched attribute UDFData._allocate_as_dask
+    set in udf.init_result_buffers() to either create Dask-backed
+    buffers or normal numpy-backed buffers.
+
+    This should only create Dask buffers on the main node and never
+    on a worker node/UDFTask.
+    """
+    for k, buf in self._get_buffers():
+        buf.set_shape_ds(dataset.shape, roi)
+    for k, buf in self._get_buffers(filter_allocated=True):
+        if self._allocate_as_dask:
+            buf.allocate_dask()
+        else:
+            buf.allocate()
+
+libertem.udf.base.UDFData.allocate_for_full = allocate_for_full
+
+def allocate_dask(self, lib=None):
     """
     Special BufferWrapper allocate for dask array buffers
     The slightly ugly handling of nav/sig and chunking via
@@ -73,6 +92,8 @@ def dask_allocate(self, lib=None):
         if self._shape == (flat_nav_shape,):
             _buf_chunking = _full_chunking
         elif self._shape[0] in _full_chunking:
+            # This branch should never be taken if we are only allocating
+            # with dask on the main node and not inside UDFTasks
             _buf_chunking = self._shape
         else:
             raise RuntimeError('Unrecognized buffer size relative to ds/chunk globals')
@@ -86,7 +107,7 @@ def dask_allocate(self, lib=None):
     self._data = _z(self._shape, dtype=self._dtype)
 
 # see no evil
-libertem.common.buffers.BufferWrapper.allocate = dask_allocate
+libertem.common.buffers.BufferWrapper.allocate_dask = allocate_dask
 
 def dask_get_slice(self, slice: Slice):
     """

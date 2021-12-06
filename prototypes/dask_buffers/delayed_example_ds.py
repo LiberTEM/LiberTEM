@@ -336,6 +336,7 @@ if __name__ == '__main__':
     from libertem.executor.delayed import DelayedJobExecutor
     from libertem.executor.inline import InlineJobExecutor
     from libertem.udf.sumsigudf import SumSigUDF
+    from libertem.udf.stddev import StdDevUDF
     from libertem.udf.sum import SumUDF
     from libertem.common.shape import Shape
     import matplotlib.pyplot as plt
@@ -361,8 +362,12 @@ if __name__ == '__main__':
                   nav_shape=global_ds_shape.nav,
                   sig_shape=global_ds_shape.sig)
     sigsum_udf = SumSigUDF()
+    sigsum_udf._allocate_dask_buffers = True
     navsum_udf = SumUDF()
-    udfs = [sigsum_udf, navsum_udf]
+    navsum_udf._allocate_dask_buffers = True
+    stddev_udf = StdDevUDF()
+    stddev_udf._allocate_dask_buffers = True
+    udfs = [sigsum_udf, navsum_udf, stddev_udf]
 
     res = ctx.run_udf(dataset=ds, udf=udfs)
     sigsum_intensity = res[0]['intensity'].data

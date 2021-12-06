@@ -1,5 +1,8 @@
+import dask
+# dask.config.set(scheduler='synchronous')
 import dask.array as da
 from dask import delayed
+# from dask.graph_manipulation import bind as delayed_bind
 import numpy as np
 from functools import partial
 
@@ -411,20 +414,43 @@ if __name__ == '__main__':
     udfs = [sigsum_udf, navsum_udf, stddev_udf]
 
     res = ctx.run_udf(dataset=ds, udf=udfs)
-    sigsum_intensity = res[0]['intensity'].data
-    navsum_intensity = res[1]['intensity'].data
+
+    sigsum_dask = res[0]['intensity'].data
+    navsum_dask = res[1]['intensity'].data
+    stddev_dask = {k: v.data for k, v in res[2].items()}
+
+    sigsum_intensity, navsum_intensity, std_dev_results = dask.compute(sigsum_dask,
+                                                                       navsum_dask,
+                                                                       stddev_dask)
 
     try:
-        sigsum_intensity.visualize('sigsum_direct.png')
-        navsum_intensity.visualize('navsum_direct.png')
+        sigsum_dask.visualize('sigsum_direct.png')
+        navsum_dask.visualize('navsum_direct.png')
+        stddev_dask['var'].visualize('var_direct.png')
+        stddev_dask['std'].visualize('std_direct.png')
+        stddev_dask['varsum'].visualize('varsum_direct.png')
     except Exception:
         print('Failed to create task graph PNGs')
 
-    fig, axs = plt.subplots(1, 2)
-    axs[0].imshow(sigsum_intensity.compute())
-    axs[0].set_title('SigSum over Nav')
-    axs[1].imshow(navsum_intensity.compute())
-    axs[1].set_title('NavSum over Sig')
+    fig, axs = plt.subplots(2, 4)
+    _axs = axs[0, :]
+    _axs[0].imshow(sigsum_dask)
+    _axs[0].set_title('SigSum over Nav')
+    _axs[1].imshow(navsum_dask)
+    _axs[1].set_title('NavSum over Sig')
+    _axs[2].imshow(std_dev_results['std'])
+    _axs[2].set_title('Std')
+    _axs[3].imshow(std_dev_results['sum'])
+    _axs[3].set_title('Sum from StdDevUDF')
+    _axs = axs[1, :]
+    _axs[0].imshow(data.sum(axis=(2, 3)))
+    _axs[0].set_title('Numpy sigsum')
+    _axs[1].imshow(data.sum(axis=(0, 1)))
+    _axs[1].set_title('Numpy navsum')
+    _axs[2].imshow(np.std(data, axis=(0, 1)))
+    _axs[2].set_title('Numpy std')
+    _axs[3].imshow(np.std(data, axis=(0, 1)) / std_dev_results['std'])
+    _axs[3].set_title('np.std / StdDevUDF["std"] via dask')
     plt.show()
 
     try:

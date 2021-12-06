@@ -308,33 +308,68 @@ def merge_wrap(udf, dest_dict, src_dict):
 # Not a method of UDFRunner to avoid potentially including self in dask.delayed
 def delayed_apply_part_result(udfs, damage, part_results, task):
     for results, udf in zip(part_results, udfs):
-        udf.set_views_for_partition(task.partition)
-
-        dest = udf.results.get_proxy()
-        src = results.get_proxy()
-        dest_dict = {k: v.unwrap_sliced() for k, v in dest._dict.items()}
-        src_dict = {k: v for k, v in src._dict.items()}
+        # In principle we can requrire that sig merges are done sequentially
+        # by using dask.graph_manipulation.bind, this could improve thread
+        # safety on the sig buffer. In the current implem it's not necessary as
+        # we are calling delayed_apply_part_result sequentially on results
+        # and replacing all buffers with their partially merged versions
+        # on each call, so we are implicitly sequential when updating
+        # try:
+        #     bind_to = udf.prior_merge
+        # except AttributeError:
+        #     bind_to = None
 
         structure = structure_from_task([udf], task)[0]
         flat_structure = delayed_unpack.flatten_nested(structure)
         flat_mapping = delayed_unpack.build_mapping(structure)
-        merged_del = delayed(merge_wrap, nout=len(flat_mapping))(udf,
-                                                                 dest_dict,
-                                                                 src_dict)
-        wrapped_res = delayed_to_buffer_wrappers(merged_del, flat_structure,
+
+        src = results.get_proxy()
+        src_dict = {k: b for k, b in src._dict.items()}
+
+        dest_dict = {}
+        for k, b in udf.results.items():
+            view = b.get_view_for_partition(task.partition)
+            # Handle result-only buffers
+            if view is not None:
+                try:
+                    dest_dict[k] = view.unwrap_sliced()
+                except AttributeError:
+                    # Handle kind='single' buffers
+                    # Could handle sig buffers this way too if we assert no chunking
+                    dest_dict[k] = view
+
+        merged_del = delayed(merge_wrap, nout=len(flat_mapping))
+        merged_del_result = merged_del(udf, dest_dict, src_dict)
+
+        # The following is needed when binding sequential updates on sig buffers
+        # if bind_to is not None:
+        #     merged_del = delayed_bind([*merged_del_result],
+        #                               [*bind_to])
+        # if any([b.kind != 'nav' for _, b in udf.results.items()]):
+        #     # have sig result, gotta do a bind merge next time round
+        #     udf.prior_merge = merged_del_result
+
+        wrapped_res = delayed_to_buffer_wrappers(merged_del_result, flat_structure,
                                                  task.partition, as_buffer=False)
         renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
-        
-        src = libertem.udf.base.MergeAttrMapping(renested)
 
+        # Unpack results and replace buffers with the partially merged version
+        # This is OK because we are calling this part merge function sequentially
+        # so each new call gets the most recent version of the buffer in the
+        # dask task graph
+        udf.set_views_for_partition(task.partition)
+        dest = udf.results.get_proxy()
+        merged = libertem.udf.base.MergeAttrMapping(renested)
         for k in dest:
-            getattr(dest, k)[:] = getattr(src, k)
+            getattr(dest, k)[:] = getattr(merged, k)
 
     v = damage.get_view_for_partition(task.partition)
     v[:] = True
     return (udfs, damage)
 
+
 libertem.udf.base._apply_part_result = delayed_apply_part_result
+
 
 if __name__ == '__main__':
     import pathlib

@@ -53,7 +53,7 @@ async def test_wrong_token(base_url, path, method, http_client):
 async def test_token_for_ws_events(base_url, http_client, server_port):
     # fails without token:
     ws_url = f"ws://127.0.0.1:{server_port}/api/events/"
-    with pytest.raises(websockets.exceptions.InvalidStatusCode):
+    with pytest.raises(websockets.InvalidStatusCode):
         async with websockets.connect(ws_url):
             pass
 

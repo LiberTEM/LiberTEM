@@ -629,9 +629,9 @@ def common_server_startup(unused_tcp_port_factory, shared_state, token):
     port = unused_tcp_port_factory()
 
     print(f"starting server at port {port}")
-    thread = ServerThread(port, shared_state, token)
+    thread = ServerThread(port, shared_state, token, daemon=True)
     thread.start()
-    assert thread.start_event.wait(timeout=1), "server thread failed to start"
+    assert thread.start_event.wait(timeout=5), "server thread failed to start"
     yield port
     print(f"stopping server at port {port}")
     thread.stop_event.set()

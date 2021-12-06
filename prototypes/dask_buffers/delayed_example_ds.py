@@ -282,8 +282,11 @@ libertem.executor.delayed.DelayedJobExecutor.run_wrap =\
     libertem.executor.delayed.DelayedJobExecutor.run_function
 
 
-def do_copy(merge_mapping):
-    merge_mapping._dict = {k: v.copy() for k, v in merge_mapping._dict.items()}
+def make_copy(array_dict):
+    for k, v in array_dict.items():
+        if not v.flags['WRITEABLE']:
+            array_dict[k] = v.copy()
+    return array_dict
 
 
 def merge_wrap(udf, dest_dict, src_dict):

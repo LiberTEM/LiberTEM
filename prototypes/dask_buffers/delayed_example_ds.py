@@ -60,6 +60,26 @@ def get_num_partitions(self):
 libertem.io.dataset.raw.RawFileDataSet.get_num_partitions = get_num_partitions
 
 
+def init_result_buffers(self) -> None:
+    """
+    Use the monkeypatched attribute udf._allocate_dask_buffers to
+    flag udf.results (UDFData) to allocate with allocate_dask
+    and not the normal allocate function
+
+    This monkeypatched attribute is present on the main node
+    but not on children UDFs created on workers, so we only create
+    numpy buffers on worker processes, as normal.
+    """
+    self.results = libertem.udf.base.UDFData(self.get_result_buffers())
+    try:
+        if self._allocate_dask_buffers:
+            self.results._allocate_as_dask = True
+    except AttributeError:
+        self.results._allocate_as_dask = False
+
+libertem.udf.base.UDFBase.init_result_buffers = init_result_buffers
+
+
 def allocate_for_full(self, dataset, roi) -> None:
     """
     Read the monkeypatched attribute UDFData._allocate_as_dask

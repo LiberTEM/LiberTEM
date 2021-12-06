@@ -20,10 +20,19 @@ if typing.TYPE_CHECKING:
 
 
 class PartitioningConstraints(NamedTuple):
-    base_step_size: int  # constrain navitems per partition to multiples of this
-    bytes_per_nav: int  # how many bytes per nav item ("frame")
-    need_contiguous: bool = False  # need contiguous slices in the ND shape of the dataset
-    # FIXME: add hard constraints for non-uniform chunking?
+    # constrain navitems per partition to multiples of this:
+    base_step_size: int
+
+    # how many bytes per nav item ("frame"),
+    # used for guessing the initial partition size:
+    bytes_per_nav: int
+
+    # hard maximum "number of nav items" per partition,
+    # useful for example for testing (setting `num_partitions` for the memory dataset):
+    max_size: Optional[int] = None
+
+    # need contiguous slices in the ND shape of the dataset:
+    need_contiguous: bool = False
 
 
 class DataSet:

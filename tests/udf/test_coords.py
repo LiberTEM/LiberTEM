@@ -1,4 +1,5 @@
 import numpy as np
+from libertem.io.dataset.base.dataset import PartitioningConstraints
 
 from libertem.udf import UDF
 from libertem.io.dataset.memory import MemoryDataSet
@@ -157,6 +158,8 @@ class SimpleTestByTileWithROIUDF(UDF):
             expected_coords = [[7, 0], [7, 7]]
             print("meta:", self.meta.coordinates, "expected:", expected_coords)
             assert np.allclose(self.meta.coordinates, expected_coords)
+        else:
+            raise RuntimeError("unexpected origin")
 
 
 def test_tiles_with_roi(lt_ctx):
@@ -166,8 +169,12 @@ def test_tiles_with_roi(lt_ctx):
     roi[0, 7] = True
     roi[7, 0] = True
     roi[7, 7] = True
-    dataset = MemoryDataSet(data=data, tileshape=(4, 8, 8),
-                            num_partitions=2, sig_dims=2)
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(4, 8, 8),
+        sig_dims=2,
+        num_partitions=2,
+    )
 
     test = SimpleTestByTileWithROIUDF()
     lt_ctx.run_udf(dataset=dataset, udf=test, roi=roi)

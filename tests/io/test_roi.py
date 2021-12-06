@@ -9,8 +9,7 @@ from utils import _mk_random
 
 def test_partition3d_correct_slices():
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
-    dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16),
-                            num_partitions=2, sig_dims=2)
+    dataset = MemoryDataSet(data=data, tileshape=(3, 16, 16), sig_dims=2)
 
     tileshape = Shape(
         (3,) + tuple(dataset.shape.sig),

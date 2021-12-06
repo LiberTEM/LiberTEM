@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Iterable, List, NamedTuple, Optional, Tuple
+from typing import Callable, Iterable, List, NamedTuple, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 import numba
@@ -92,6 +92,89 @@ def fill_contiguous(
     return shape_left + containing_shape[first_non_one + 1:]
 
 
+T = TypeVar('T')
+
+
+def list_rindex(lst: Sequence[T], predicate: Callable[[T], bool]) -> int:
+    """
+    Get the rightmost `index` in `lst` for which `predicate(lst[index])` is `True`.
+    """
+    length = len(lst)
+    for idx, item in enumerate(reversed(lst)):
+        if predicate(item):
+            return length - idx - 1
+    raise ValueError("predicate was not True for any items in lst")
+
+
+def unravel_and_fit(
+    containing_shape: Tuple[int, ...],
+    start: int,
+    input_size: int,
+) -> Tuple[int, ...]:
+    """
+    Get the ND shape that fits `input_size` and `start`. This also makes sure that
+    the generated shape can survive a flatten->unravel->flatten roundtrip.
+
+    Parameters
+    ----------
+    containing_shape : Tuple[int, ...]
+        The containing ND shape
+    input_size : int
+        The target size that should be reached, if possible
+    start : int
+        The "current position" in flat navigation coords
+
+    Returns
+    -------
+    Tuple[int, ...]
+        The ND shape that fits `input_size` and `start`
+
+    Examples
+    --------
+    >>> unravel_and_fit((1, 5, 5), start=3, input_size=10)
+    (1, 1, 2)
+    >>> unravel_and_fit((5, 5), start=3, input_size=4)
+    (1, 2)
+    >>> unravel_and_fit((5, 5), start=0, input_size=4)
+    (1, 4)
+    >>> unravel_and_fit((5, 5), start=0, input_size=10)
+    (2, 5)
+    >>> unravel_and_fit((5, 5), start=5, input_size=4)
+
+    """
+    new_origin = tuple(np.hstack(np.unravel_index(
+        (start,),
+        containing_shape,
+    )))
+
+    # constraint: In dimensions `i` where `new_origin` is non-zero, the new shape
+    # cannot exceed `containing_shape[i] - new_origin[i]`
+    # especially, this should be true for the rightmost `i`. All dimensions
+    # left of this index should be 1 in the result.
+    if any(o != 0 for o in new_origin):
+        idx = list_rindex(new_origin, lambda o: o != 0)
+        rest = containing_shape[idx] - new_origin[idx]
+        max_size = rest * prod(containing_shape[idx + 1:])
+        if max_size < input_size:
+            # shortcut: the resulting shape is the maximum shape possible
+            return tuple(([1] * idx) + [rest] + list(containing_shape[idx + 1:]))
+        else:
+            # otherwise, we must fit `new_size` into the maximum shape
+            # (we grow the new shape to be contiguous)
+            new_shape = tuple(np.hstack(np.unravel_index(
+                (input_size - 1,),
+                containing_shape,
+            )) + 1)
+            return fill_contiguous(new_shape, containing_shape)
+    else:
+        assert start == 0, "start should be zero in this case"
+        new_shape = tuple(np.hstack(np.unravel_index(
+            (input_size - 1,),
+            containing_shape,
+        )) + 1)
+        return fill_contiguous(new_shape, containing_shape)
+
+
 class PartTiming(NamedTuple):
     """
     Timing per partition
@@ -181,6 +264,9 @@ class Partitioner:
             num_blocks = math.ceil(new_size / constraints.base_step_size)
             new_size = num_blocks * constraints.base_step_size
 
+        if constraints and constraints.max_size is not None:
+            new_size = min(constraints.max_size, new_size)
+
         # align such that (`start`, `new_size`) is a contiguous slice into `dataset_shape`:
         log.debug(f"before contig align: start={start}, new_size={new_size}")
         if constraints and constraints.need_contiguous:
@@ -188,13 +274,11 @@ class Partitioner:
             nd_shape = self._dataset_shape.nav
             new_size = min(new_size, prod(nd_shape) - start)
 
-            # now, make contiguous:
-            flat_nav_slice = Slice(
-                origin=(start,),
-                shape=Shape((new_size,), sig_dims=0),
+            contig = unravel_and_fit(
+                containing_shape=tuple(nd_shape),
+                input_size=new_size,
+                start=start,
             )
-            nav_slice = flat_nav_slice.unravel_nav(nd_shape)
-            contig = fill_contiguous(nav_slice.shape, tuple(nd_shape))
             new_size = prod(contig)
 
             # validate: result is compatible to the nd_shape:

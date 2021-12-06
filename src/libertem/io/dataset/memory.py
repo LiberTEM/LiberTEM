@@ -2,10 +2,10 @@ import time
 import logging
 from typing import Optional, Tuple
 
-import psutil
 import numpy as np
 
 from libertem.common.math import prod
+from libertem.io.dataset.base.dataset import PartitioningConstraints
 from libertem.web.messages import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
@@ -215,8 +215,6 @@ class MemoryDataSet(DataSet):
         if data is None:
             assert datashape is not None
             data = np.zeros(datashape, dtype=np.float32)
-        if num_partitions is None:
-            num_partitions = psutil.cpu_count(logical=False)
         # if tileshape is None:
         #     sig_shape = data.shape[-sig_dims:]
         #     target = 2**20
@@ -279,9 +277,6 @@ class MemoryDataSet(DataSet):
     def get_cache_key(self):
         return TypeError("memory data set is not cacheable yet")
 
-    def get_num_partitions(self):
-        return self.num_partitions
-
     def get_base_shape(self, roi):
         if self.tileshape is not None:
             return self.tileshape
@@ -316,6 +311,23 @@ class MemoryDataSet(DataSet):
                 check_cast=self._check_cast,
             )
         ])
+
+    def get_partition_constraints(self) -> PartitioningConstraints:
+        if self.num_partitions is not None:
+            # FIXME: num_partitions fails if `roi` is not None -> for example:
+            # max_size = 1
+            # roi[0] = True
+            # roi[1] = False
+            # roi[2] = True
+            # we actually get three partitions, because `max_size` is enforced
+            # independently from the `roi`...
+            return PartitioningConstraints(
+                base_step_size=1,
+                bytes_per_nav=prod(self.shape.sig) * 4,
+                max_size=self.shape.nav.size // self.num_partitions
+            )
+        else:
+            return super().get_partition_constraints()
 
     def get_partition_for_slice(self, start: int, stop: int) -> "MemPartition":
         fileset = self._get_fileset()

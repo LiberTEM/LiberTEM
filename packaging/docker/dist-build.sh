@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
-cd packaging/docker/ || exit
+set -e
+BASE_DIR=$(dirname "$(readlink -f "${0}")")
+cd "$BASE_DIR"
+
 export DOCKER_BUILDKIT=1
 
 DEV=libertem/libertem-dev

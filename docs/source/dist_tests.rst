@@ -18,8 +18,8 @@ run the following:
 
 .. code:: shell
 
-   $ docker-compose build
-   $ docker-compose up scheduler worker-1 worker-2 ipy-controller ipy-worker-1 ipy-worker-2
+   $ bash dist-build.sh
+   $ docker-compose down && docker-compose run tests ; docker-compose down
 
 Note that you need to run the above command as a user that can access the docker daemon,
 for example by being in the :code:`docker` group. The containers are running as long as

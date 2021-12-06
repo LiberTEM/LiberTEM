@@ -223,17 +223,7 @@ Docker and Singularity
 
 A `Docker image with a LiberTEM installation
 <https://hub.docker.com/repository/docker/libertem/libertem>`_ is available on
-Docker hub. For local data access as an unprivileged user, the easiest variant
-is running this image with `Singularity
-<https://sylabs.io/guides/3.0/user-guide/index.html>`_:
-
-.. code-block:: shell
-
-    $ singularity run docker://libertem/libertem
-
-LiberTEM is installed in a virtual environment in :code:`/venv/` in the Docker
-image. The executables :code:`libertem-server`, :code:`dask-scheduler` and
-:code:`libertem-worker` are in :code:`/venv/bin/`, consequently.
+Docker hub. See :ref:`containers` for more details.
 
 Troubleshooting
 ---------------
@@ -242,10 +232,11 @@ If you are having trouble with the installation, please let us know by
 either `filing an issue  <https://github.com/liberTEM/LiberTEM/issues>`_
 or by asking on `our Gitter channel <https://gitter.im/LiberTEM/Lobby>`_.
 
-Integration
------------
+Integration and deployment
+--------------------------
 
 .. toctree::
     :maxdepth: 2
 
-    jupyter
+    deployment/jupyter
+    deployment/clustercontainer

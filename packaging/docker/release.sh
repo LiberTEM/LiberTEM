@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 if [ -n "$DOCKER_ACCESS_TOKEN" ] \
     && [ "$DOCKER_ACCESS_TOKEN" != '$(DOCKER_ACCESS_TOKEN)' ] \
     && [ -n "$DOCKER_USER" ] && [ "$DOCKER_USER" != '$(DOCKER_USER)' ]

@@ -93,11 +93,21 @@ def dask_get_slice(self, slice: Slice):
     Insert a wrapper around the view of the buffer
     such that view[:] = array is done inplace
     even when self._data is a Dask array
+
+    If the buffer is not a dask array, just return the normal view
     """
-    real_slice = slice.get()
-    inplace_wrapper = DaskInplaceBufferWrapper(self._data)
-    inplace_wrapper.set_slice(real_slice)
-    return inplace_wrapper
+    if isinstance(self._data, da.Array):
+        real_slice = slice.get()
+        inplace_wrapper = DaskInplaceBufferWrapper(self._data)
+        inplace_wrapper.set_slice(real_slice)
+        return inplace_wrapper
+    else:
+        real_slice = slice.get()
+        result = self._data[real_slice]
+        # Defend against #1026 (internal bugs), allow deactivating in
+        # optimized builds for performance
+        assert result.shape == tuple(slice.shape) + self.extra_shape
+        return result
 
 # hear no evil
 libertem.common.buffers.BufferWrapper._get_slice = dask_get_slice

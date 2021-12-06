@@ -205,11 +205,12 @@ def structure_from_task(udfs, task):
             part_buf_dtype = buffer.dtype
             part_buf_extra_shape = buffer.extra_shape
             part_buf_shape = part_buf_shape + part_buf_extra_shape
-            res_data[buffer_name] = delayed_unpack.StructDescriptor(np.ndarray,
-                                                                    shape=part_buf_shape,
-                                                                    dtype=part_buf_dtype,
-                                                                    kind=buffer.kind,
-                                                                    extra_shape=part_buf_extra_shape)
+            res_data[buffer_name] = \
+                delayed_unpack.StructDescriptor(np.ndarray,
+                                                shape=part_buf_shape,
+                                                dtype=part_buf_dtype,
+                                                kind=buffer.kind,
+                                                extra_shape=part_buf_extra_shape)
         results_container = res_data
         structure.append(results_container)
     return tuple(structure)
@@ -227,8 +228,8 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffe
         buffer_dask = da.from_delayed(el, *descriptor.args, **descriptor.kwargs)
         if as_buffer:
             buffer = libertem.common.buffers.BufferWrapper(buffer_kind,
-                                                        extra_shape=extra_shape,
-                                                        dtype=descriptor.kwargs['dtype'])
+                                                           extra_shape=extra_shape,
+                                                           dtype=descriptor.kwargs['dtype'])
             buffer.set_shape_partition(partition, roi=None)
             buffer._data = buffer_dask
             wrapped_res.append(buffer)

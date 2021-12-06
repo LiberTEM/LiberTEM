@@ -290,15 +290,18 @@ def make_copy(array_dict):
 
 
 def merge_wrap(udf, dest_dict, src_dict):
-    dest = libertem.udf.base.MergeAttrMapping(dest_dict)
-    do_copy(dest)
-    src = libertem.udf.base.MergeAttrMapping(src_dict)
-    do_copy(src)
+    # Have to make a copy of dest buffers because Dask brings
+    # data into the delayed function as read-only np arrays
+    # I experimented with setting WRITEABLE to True but this
+    # resulted in errors in the final array
+    dest_dict = make_copy(dest_dict)
 
-    udf.merge(
-        dest=dest,
-        src=src
-    )
+    dest = libertem.udf.base.MergeAttrMapping(dest_dict)
+    src = libertem.udf.base.MergeAttrMapping(src_dict)
+
+    # In place merge into the copy of dest
+    udf.merge(dest=dest, src=src)
+    # Return flat list of results so they can be unpacked later
     return delayed_unpack.flatten_nested(dest._dict)
 
 

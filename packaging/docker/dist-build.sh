@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 
 cd packaging/docker/ || exit
 export DOCKER_BUILDKIT=1

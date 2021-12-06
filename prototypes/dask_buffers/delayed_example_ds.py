@@ -279,7 +279,7 @@ With the unpacking in run_tasks this is no longer necessary, so we can run
 the merge/finalise results as a regular function call without using delayed
 """
 libertem.executor.delayed.DelayedJobExecutor.run_wrap =\
-             libertem.executor.delayed.DelayedJobExecutor.run_function
+    libertem.executor.delayed.DelayedJobExecutor.run_function
 
 
 def do_copy(merge_mapping):

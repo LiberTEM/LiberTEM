@@ -175,7 +175,9 @@ class ApplyMasksUDF(UDF):
         flat_data = tile.reshape((tile.shape[0], -1))
         if self.task_data.use_torch:
             import torch
-            masks = self.task_data.masks.get_for_idx(self.meta.tiling_scheme, tile.scheme_idx, transpose=True)
+            masks = self.task_data.masks.get_for_idx(
+                self.meta.tiling_scheme, tile.scheme_idx, transpose=True
+            )
             # CuPy back-end disables torch in get_task_data
             # FIXME use GPU torch with CuPy array?
             result = torch.mm(
@@ -184,16 +186,22 @@ class ApplyMasksUDF(UDF):
             ).numpy()
         # Required due to https://github.com/cupy/cupy/issues/4072
         elif self.backend == 'cupy' and self.task_data.masks.use_sparse:
-            masks = self.task_data.masks.get_for_idx(self.meta.tiling_scheme, tile.scheme_idx, transpose=False)
+            masks = self.task_data.masks.get_for_idx(
+                self.meta.tiling_scheme, tile.scheme_idx, transpose=False
+            )
             result = masks.dot(flat_data.T).T
         # Required due to https://github.com/scipy/scipy/issues/13211
         elif (self.backend == 'numpy'
               and self.task_data.masks.use_sparse
               and 'scipy.sparse' in self.task_data.masks.use_sparse):
-            masks = self.task_data.masks.get_for_idx(self.meta.tiling_scheme, tile.scheme_idx, transpose=True)
+            masks = self.task_data.masks.get_for_idx(
+                self.meta.tiling_scheme, tile.scheme_idx, transpose=True
+            )
             result = rmatmul(flat_data, masks)
         else:
-            masks = self.task_data.masks.get_for_idx(self.meta.tiling_scheme, tile.scheme_idx, transpose=True)
+            masks = self.task_data.masks.get_for_idx(
+                self.meta.tiling_scheme, tile.scheme_idx, transpose=True
+            )
             result = flat_data @ masks
         # '+' is the correct merge for dot product
         self.results.intensity[:] += result

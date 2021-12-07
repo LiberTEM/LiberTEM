@@ -292,9 +292,9 @@ class MemoryDataSet(DataSet):
     def adjust_tileshape(
         self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray],
     ) -> Tuple[int, ...]:
-       if self.tileshape is not None:
-           return tuple(self.tileshape)
-       return super().adjust_tileshape(tileshape, roi)
+        if self.tileshape is not None:
+            return tuple(self.tileshape)
+        return super().adjust_tileshape(tileshape, roi)
 
     def need_decode(self, read_dtype, roi, corrections):
         if self._force_need_decode:

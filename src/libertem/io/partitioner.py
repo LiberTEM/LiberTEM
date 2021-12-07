@@ -187,6 +187,11 @@ class TaskStats(NamedTuple):
     part_timing: PartTiming
 
 
+class MergeStats(NamedTuple):
+    task_size_nav: int
+    timing: float
+
+
 class Partitioner:
     def __init__(
         self,
@@ -207,6 +212,7 @@ class Partitioner:
         # dynamic properties:
         # collected stats
         self._stats: List[TaskStats] = []
+        self._merge_stats: List[MergeStats] = []
 
         # current "position"
         # we generate partitions from the beginning to the end, this is the index
@@ -218,15 +224,19 @@ class Partitioner:
         return f"<Partitioner @ {self._seek_pos}>"
 
     def add_task_stats(self, stats: TaskStats) -> None:
-        print(stats)
+        # log.info(stats)
         self._stats.append(stats)
 
-    def add_merge_stats(self) -> None:
+    def add_merge_stats(self, stats: MergeStats) -> None:
         """
         If the merge function is limiting our performance, we
         want to lower the effective update rate.
         """
-        pass  # FIXME
+        # log.info(stats)
+        self._merge_stats.append(stats)
+
+    def get_stats(self) -> Tuple[List[TaskStats], List[MergeStats]]:
+        return (self._stats, self._merge_stats)
 
     def is_done(self) -> bool:
         done_pos = self._seek_pos >= self._total_size
@@ -264,6 +274,9 @@ class Partitioner:
             num_blocks = math.ceil(new_size / constraints.base_step_size)
             new_size = num_blocks * constraints.base_step_size
 
+        # apply the hard maximum limit here (mostly useful for testing)
+        # NOTE: if used in production, it might need changes to take the `roi`
+        # into account properly
         if constraints and constraints.max_size is not None:
             new_size = min(constraints.max_size, new_size)
 
@@ -332,12 +345,12 @@ class AdaptivePartitioner(Partitioner):
         self._partition_constraints = partition_constraints
         self._tiling_scheme = tiling_scheme
 
-    def get_mean_perf(self, last_n: int) -> float:
+    def get_mean_throughput(self, last_n: int) -> float:
         """
-        Get the mean performance (as nav items per second)
+        Get the mean troughput (as nav items per second)
         for the last `last_n` tasks.
         """
-        items = self._stats[-last_n:-1]
+        items = self._stats[-last_n:]
         # print(items)
         perfs = [
             item.task_size_nav / item.part_timing.total
@@ -358,10 +371,10 @@ class AdaptivePartitioner(Partitioner):
 
         # performance in nav items per second:
         if self.have_stats():
-            mean_perf = self.get_mean_perf(last_n=32)
+            mean_throughput = self.get_mean_throughput(last_n=32)
         else:
             bytes_per_nav = self._partition_constraints.bytes_per_nav
-            mean_perf = 64*1024*1024 / bytes_per_nav * self._target_rate
+            mean_throughput = 64*1024*1024 / bytes_per_nav * self._target_rate
 
         total_items = self._dataset_shape.nav.size
         max_size = total_items / (2 * self._num_workers)
@@ -372,11 +385,11 @@ class AdaptivePartitioner(Partitioner):
         # our per-partition budget in seconds:
         target_time_per_part = 1 / self._target_rate
 
-        size = target_time_per_part * mean_perf
+        size = target_time_per_part * mean_throughput
         size = max(min_size, size)
         size = min(max_size, size)
-        print(f"calc_partition_size -> {size} (mean_perf={mean_perf}, "
-              f"max_size={max_size}, min_size={min_size}, target_time={target_time_per_part})")
+        log.debug(f"calc_partition_size -> {size} (mean_throughput={mean_throughput}, "
+                  f"max_size={max_size}, min_size={min_size}, target_time={target_time_per_part})")
         return int(math.ceil(size))
 
 
@@ -411,3 +424,9 @@ class PartitionGenerator:
 
     def add_task_stats(self, stats: TaskStats) -> None:
         self.partitioner.add_task_stats(stats)
+
+    def add_merge_stats(self, stats: MergeStats) -> None:
+        self.partitioner.add_merge_stats(stats)
+
+    def get_stats(self) -> Tuple[List[TaskStats], List[MergeStats]]:
+        return self.partitioner.get_stats()

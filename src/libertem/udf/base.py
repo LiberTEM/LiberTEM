@@ -15,7 +15,8 @@ import cloudpickle
 import numpy as np
 
 from libertem.io.dataset.base.tiling import DataTile
-from libertem.io.partitioner import AdaptivePartitioner, PartTiming, PartitionGenerator, TaskStats
+from libertem.io.partitioner import AdaptivePartitioner, MergeStats, PartTiming, PartitionGenerator, TaskStats
+from libertem.utils.perf import Timing
 
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
@@ -1716,6 +1717,7 @@ class UDFRunner:
                 udf.set_slice(tile.tile_slice)
                 udf.set_tile_idx(tile.scheme_idx)
                 udf.process_tile(device_tile)
+                assert tile.tile_slice.sig in udf.meta.tiling_scheme._slices
             elif isinstance(udf, UDFFrameMixin):
                 tile_slice = tile.tile_slice
                 for frame_idx, frame in enumerate(device_tile):
@@ -1903,7 +1905,7 @@ class UDFRunner:
         # FIXME take compute backend into consideration as well
         # Other boundary conditions when moving input data to device
         # FIXME: better approximate partition shape here?
-        approx_partition_shape = (1024,) + dataset.shape.sig
+        approx_partition_shape = (128,) + dataset.shape.sig
         tiling_scheme = neg.get_scheme(
             udfs=self._udfs,
             approx_partition_shape=approx_partition_shape,
@@ -1912,6 +1914,9 @@ class UDFRunner:
             roi=roi,
             corrections=corrections,
         )
+
+        log.info("tiling scheme: %r", tiling_scheme)
+
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,
@@ -1975,11 +1980,12 @@ class UDFRunner:
                 t = tqdm(total=total)
             with executor.scatter(params) as params_handle:
                 if tasks:
-                    for part_results, task in executor.run_tasks(
+                    result_iter: Iterable[Tuple[UDFPartitionResult, UDFTask]] = executor.run_tasks(
                         tasks,
                         params_handle,
                         cancel_id,
-                    ):
+                    )
+                    for part_results, task in result_iter:
                         if progress:
                             t.update(task.get_task_size(roi))
                         yield part_results, task
@@ -2014,17 +2020,17 @@ class UDFRunner:
         any_result = False
         for part_results, task in result_iter:
             any_result = True
-            t_merge_0 = time.perf_counter()
-            self._apply_part_result(
-                udfs=self._udfs,
-                damage=damage,
-                part_results=part_results,
-                task=task
-            )
-            t_merge_1 = time.perf_counter()
+            with Timing() as t_merge:
+                self._apply_part_result(
+                    udfs=self._udfs,
+                    damage=damage,
+                    part_results=part_results,
+                    task=task
+                )
             task_size = task.get_size(roi)
             assert task_size > 0
-            tasks.add_merge_stats(task_size=task_size, merge_time=t_merge_1 - t_merge_0)
+            # TODO: make `tasks` available in this function
+            tasks.add_merge_stats(MergeStats(task_size_nav=task_size, timing=t_merge.delta))
             tasks.add_task_stats(
                 TaskStats(task_size_nav=task_size, part_timing=part_results.timings)
             )
@@ -2038,6 +2044,7 @@ class UDFRunner:
                 udfs=self._udfs,
                 damage=damage
             )
+        tasks.summarize_stats()
 
     async def run_for_dataset_async(
         self,
@@ -2119,9 +2126,7 @@ class TaskGenerator:
         self._backends = backends
 
     def __next__(self) -> UDFTask:
-        log.debug("TaskGenerator.__next__")
         partition = next(self._partition_gen)
-        log.debug(f"got a partition: {partition}")
         task = UDFTask(
             partition=partition, udf_classes=self._udf_classes,
             udf_backends=self._udf_backends,
@@ -2131,14 +2136,20 @@ class TaskGenerator:
         return task
 
     def __iter__(self) -> "TaskGenerator":
-        log.debug("TaskGenerator.__iter__")
         return self
 
     def add_task_stats(self, stats: TaskStats) -> None:
         self._partition_gen.add_task_stats(stats)
 
-    def add_merge_stats(self, task_size: int, merge_time: float):
-        pass  # FIXME: record merge time here!
+    def add_merge_stats(self, stats: MergeStats) -> None:
+        self._partition_gen.add_merge_stats(stats)
+
+    def get_stats(self) -> Tuple[List[TaskStats], List[MergeStats]]:
+        return self._partition_gen.get_stats()
+
+    def summarize_stats(self) -> None:
+        task_stats, merge_stats = self.get_stats()
+        pass
 
 
 class EmptyTaskGenerator(TaskGenerator):

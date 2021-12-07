@@ -78,8 +78,10 @@ class TestUseSharedExecutor:
 
         ds = ctx.load(filetype="mib", path=mib_hdr, io_backend=io_backend)
 
+        sig_shape = ds.shape.sig
+
         def mask():
-            return np.ones(ds.shape.sig, dtype=bool)
+            return np.ones(sig_shape, dtype=bool)
 
         udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
 

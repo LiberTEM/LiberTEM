@@ -55,29 +55,6 @@ class Partition:
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 
-    @classmethod
-    def make_slices(cls, shape, num_partitions, sync_offset=0):
-        """
-        partition a 3D dataset ("list of frames") along the first axis,
-        yielding the partition slice, and additionally start and stop frame
-        indices for each partition.
-        """
-        raise RuntimeError("don't call me please")
-        num_frames = shape.nav.size
-        f_per_part = max(1, num_frames // num_partitions)
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
-            if start >= num_frames:
-                break
-            stop = min(stop, num_frames)
-            part_slice = Slice(
-                origin=(start,) + tuple([0] * shape.sig.dims),
-                shape=Shape(((stop - start),) + tuple(shape.sig),
-                            sig_dims=shape.sig.dims)
-            )
-            yield part_slice, start + sync_offset, stop + sync_offset
-
     def set_io_backend(self, backend):
         raise NotImplementedError()
 

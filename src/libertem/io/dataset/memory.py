@@ -279,6 +279,7 @@ class MemoryDataSet(DataSet):
 
     def get_base_shape(self, roi):
         if self.tileshape is not None:
+            assert self._base_shape is None, "can only have either base_shape or tileshape"
             return self.tileshape
         if self._base_shape is not None:
             return self._base_shape

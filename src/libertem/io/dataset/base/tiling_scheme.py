@@ -276,7 +276,7 @@ class Negotiator:
         # above, and we need to be careful not to break corrections with this,
         # and also fulfill requests of per-frame reading
         log.debug("tileshape before adjustment: %r", (tileshape,))
-        tileshape = dataset.adjust_tileshape(tileshape, roi=roi)
+        tileshape = tuple(dataset.adjust_tileshape(tileshape, roi=roi))
         log.debug("tileshape after adjustment: %r", (tileshape,))
 
         # if the veto generated a tileshape that is smaller than the full base shape,

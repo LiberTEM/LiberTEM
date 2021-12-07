@@ -1,5 +1,6 @@
 import time
 import logging
+from typing import Optional, Tuple
 
 import psutil
 import numpy as np
@@ -282,10 +283,19 @@ class MemoryDataSet(DataSet):
         return self.num_partitions
 
     def get_base_shape(self, roi):
+        if self.tileshape is not None:
+            return self.tileshape
         if self._base_shape is not None:
             return self._base_shape
         return super().get_base_shape(roi)
 
+    def adjust_tileshape(
+        self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray],
+    ) -> Tuple[int, ...]:
+       if self.tileshape is not None:
+           return tuple(self.tileshape)
+       return super().adjust_tileshape(tileshape, roi)
+ 
     def need_decode(self, read_dtype, roi, corrections):
         if self._force_need_decode:
             return True

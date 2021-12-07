@@ -581,10 +581,6 @@ def docker_tags():
     """
     version = get_release_tag()
     is_latest_stable = version and (version["full"] == get_latest_stable_tag())
-    is_pull_request = env['is_pr']
-
-    if is_pull_request:
-        raise click.UsageError("refusing to tag pull request builds")
 
     tags = []
 

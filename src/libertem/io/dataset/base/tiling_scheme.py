@@ -185,7 +185,7 @@ class Negotiator:
             and preferred total input size and depth.
 
         dataset : DataSet
-            ... TODO
+            The DataSet instance we generate the scheme for.
 
         read_dtype
             The dtype in which the data will be fed into the UDF
@@ -269,14 +269,23 @@ class Negotiator:
             min_factors=min_factors,
         )
         tileshape = self._scale_base_shape(full_base_shape, factors)
+        tileshape_orig = tileshape
 
-        # the partition has a "veto" on the tileshape:
+        # the dataset has a "veto" on the tileshape:
         # FIXME: this veto may break if the base shape was adjusted
         # above, and we need to be careful not to break corrections with this,
         # and also fulfill requests of per-frame reading
         log.debug("tileshape before adjustment: %r", (tileshape,))
         tileshape = dataset.adjust_tileshape(tileshape, roi=roi)
         log.debug("tileshape after adjustment: %r", (tileshape,))
+
+        # if the veto generated a tileshape that is smaller than the full base shape,
+        # we need to re-adjust the full_base_shape
+        if tileshape_orig != tileshape:  # make sure we don't change too eagerly:
+            for bs, s in zip(full_base_shape, tileshape):
+                if s < bs:
+                    full_base_shape = tileshape
+                    break
 
         self.validate(
             tileshape, ds_sig_shape, size, io_max_size, itemsize, full_base_shape, corrections,

@@ -5,6 +5,7 @@ import sparse
 import scipy.sparse
 import numpy as np
 import cloudpickle
+from libertem.io.dataset.base.tiling_scheme import TilingScheme
 
 from libertem.masks import to_dense, to_sparse, is_sparse
 from libertem.common import Slice
@@ -125,18 +126,23 @@ class MaskContainer:
         else:
             return len(self.computed_masks)
 
+    def get_for_idx(self, scheme: TilingScheme, idx: int, *args, **kwargs):
+        slice_ = scheme[idx]
+        return self._get(slice_, *args, **kwargs)
+
     def get(self, key: Slice, dtype=None, sparse_backend=None, transpose=True, backend=None):
-        if isinstance(key, Slice):
-            slice_ = key
-        else:
+        if not isinstance(key, Slice):
             raise TypeError(
                 "MaskContainer.get() can only be called with "
                 "DataTile/Slice/Partition instances"
             )
+        return self._get(key.discard_nav(), dtype, sparse_backend, transpose, backend)
+
+    def _get(self, slice_: Slice, dtype=None, sparse_backend=None, transpose=True, backend=None):
         if backend is None:
             backend = self.backend
         return self.get_masks_for_slice(
-            slice_.discard_nav(),
+            slice_,
             dtype=dtype,
             sparse_backend=sparse_backend,
             transpose=transpose,

@@ -310,7 +310,7 @@ def merge_wrap(udf, dest_dict, src_dict):
 
 # Not a method of UDFRunner to avoid potentially including self in dask.delayed
 def delayed_apply_part_result(udfs, damage, part_results, task):
-    for results, udf in zip(part_results, udfs):
+    for part_results_udf, udf in zip(part_results, udfs):
         # Allow user to define an alternative merge strategy
         # using dask-compatible functions. In the Delayed case we
         # won't be getting partial results with damage anyway.
@@ -336,7 +336,7 @@ def delayed_apply_part_result(udfs, damage, part_results, task):
         flat_structure = delayed_unpack.flatten_nested(structure)
         flat_mapping = delayed_unpack.build_mapping(structure)
 
-        src = results.get_proxy()
+        src = part_results_udf.get_proxy()
         src_dict = {k: b for k, b in src._dict.items()}
 
         dest_dict = {}

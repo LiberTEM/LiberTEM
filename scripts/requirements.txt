@@ -7,4 +7,3 @@ docutils
 bibtexparser
 ghp-import
 wheel
-pygithub

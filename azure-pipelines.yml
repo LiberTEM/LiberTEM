@@ -446,7 +446,7 @@ stages:
       - task: UsePythonVersion@0
         inputs:
           versionSpec: '3.9'
-      - bash: pip install -U pip-tools
+      - bash: pip install -U pip-tools && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
       - bash: bash packaging/docker/release.sh
         displayName: 'Build, tag and push docker container(s)'

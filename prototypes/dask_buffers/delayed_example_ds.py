@@ -319,7 +319,8 @@ def delayed_apply_part_result(udfs, damage, part_results, task):
         # dask_merge to do the accumulation, ordering and set the merged
         # result buffers
         if hasattr(udf, 'dask_merge'):
-            udf.dask_merge(results, task)
+            if udf._accumulate_part_results(part_results_udf, task):
+                udf.dask_merge(udf._part_results)
             continue
         # In principle we can requrire that sig merges are done sequentially
         # by using dask.graph_manipulation.bind, this could improve thread
@@ -410,17 +411,15 @@ def _accumulate_part_results(self, part_results, task):
 libertem.udf.base.UDF._accumulate_part_results = _accumulate_part_results
 
 
-def dask_simple_nav_merge(self, part_results, task):
-    if self._accumulate_part_results(part_results, task):
-        intensity_chunks = [b.intensity for b in self._part_results.values()]
-        self.results['intensity']._data = da.concatenate(intensity_chunks)
+def dask_simple_nav_merge(self, ordered_results):
+    intensity = da.concatenate([b.intensity for b in ordered_results.values()])
+    self.results.get_buffer('intensity').set_data(intensity)
 
 
-def dask_sig_sum_merge(self, part_results, task):
-    if self._accumulate_part_results(part_results, task):
-        intensity_chunks = [b.intensity for b in self._part_results.values()]
-        stacked_chunks = da.stack(intensity_chunks, axis=0)
-        self.results['intensity']._data = stacked_chunks.sum(axis=0)
+def dask_sig_sum_merge(self, ordered_results):
+    intensity_chunks = [b.intensity for b in ordered_results.values()]
+    intensity_sum = da.stack(intensity_chunks, axis=0).sum(axis=0)
+    self.results.get_buffer('intensity').set_data(intensity_sum)
 
 
 if __name__ == '__main__':

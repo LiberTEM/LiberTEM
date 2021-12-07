@@ -461,6 +461,25 @@ def dask_stddev_merge(self, ordered_results):
     self.results.get_buffer('num_frames').set_data(total_frames)
 
 
+def get_results(self):
+    '''
+    From StdDevUDF
+
+    Corrects an int() conversion which causes
+    a double compute when result buffers are dask arrays
+    '''
+    # num_frames = int(self.results.num_frames[0])
+    num_frames = self.results.num_frames[0]
+
+    var = self.results.varsum / num_frames
+
+    return {
+        'var': var,
+        'std': np.sqrt(var),
+        'mean': self.results.sum / num_frames,
+    }
+
+
 if __name__ == '__main__':
     import pathlib
     import libertem.api as lt

@@ -384,6 +384,14 @@ def delayed_apply_part_result(udfs, damage, part_results, task):
 libertem.udf.base._apply_part_result = delayed_apply_part_result
 
 
+def set_data(self, data):
+    assert self._data.dtype == data.dtype
+    assert self._data.shape == data.shape
+    self._data = data
+
+libertem.common.buffers.BufferWrapper.set_data = set_data
+
+
 def _accumulate_part_results(self, part_results, task):
     if not hasattr(self, '_part_results'):
         self._part_results = {}

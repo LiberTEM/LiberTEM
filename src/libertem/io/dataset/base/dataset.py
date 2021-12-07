@@ -255,7 +255,9 @@ class DataSet:
     def get_base_shape(self, roi: Optional[np.ndarray]) -> Tuple[int, ...]:
         return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
 
-    def adjust_tileshape(self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray]):
+    def adjust_tileshape(
+        self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray]
+    ) -> Tuple[int, ...]:
         """
         Final veto of the DataSet in the tileshape negotiation process,
         make sure that corrections are taken into account!

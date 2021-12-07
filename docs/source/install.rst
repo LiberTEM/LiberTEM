@@ -222,7 +222,7 @@ Docker and Singularity
 .. versionadded:: 0.9.0
 
 A `Docker image with a LiberTEM installation
-<https://hub.docker.com/repository/docker/libertem/libertem>`_ is available on
+<https://hub.docker.com/r/libertem/libertem/tags>`_ is available on
 Docker hub. See :ref:`containers` for more details.
 
 Troubleshooting

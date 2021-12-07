@@ -92,6 +92,37 @@ class TestUseSharedExecutor:
             iterations=1,
         )
 
+    @pytest.mark.parametrize(
+        "prefix", PREFIXES
+    )
+    @pytest.mark.benchmark(
+        group="io"
+    )
+    def test_mask_repeated(self, benchmark, prefix, lt_ctx):
+        hdr = os.path.join(prefix, K2IS_FILE)
+        flist = filelist(hdr)
+
+        ctx = lt_ctx
+        ds = ctx.load(filetype="k2is", path=hdr)
+
+        sig_shape = ds.shape.sig
+
+        def mask():
+            return np.ones(sig_shape, dtype=bool)
+
+        udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
+
+        # warmup:
+        ctx.run_udf(udf=udf, dataset=ds)
+        warmup_cache(flist)
+
+        benchmark.pedantic(
+            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),
+            warmup_rounds=0,
+            rounds=3,
+            iterations=1,
+        )
+
 
 @pytest.mark.benchmark(
     group="io"

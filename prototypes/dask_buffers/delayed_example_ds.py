@@ -518,6 +518,8 @@ if __name__ == '__main__':
     SumUDF.dask_merge = dask_sig_sum_merge
     navsum_udf = SumUDF()
     navsum_udf._allocate_dask_buffers = True
+    StdDevUDF.get_results = get_results
+    StdDevUDF.dask_merge = dask_stddev_merge
     stddev_udf = StdDevUDF()
     stddev_udf._allocate_dask_buffers = True
     udfs = [sigsum_udf, navsum_udf, stddev_udf]

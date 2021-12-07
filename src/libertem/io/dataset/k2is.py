@@ -5,6 +5,7 @@ import math
 import typing
 import logging
 import itertools
+from numba.core.types.misc import Optional
 
 import numpy as np
 import numba
@@ -759,6 +760,7 @@ class K2ISDataSet(DataSet):
         self._native_sync_offset = 0
         self._user_sync_offset = sync_offset
         self._cached_user_sync_offset = None
+        self._fileset: Optional[K2FileSet] = None
 
     def _do_initialize(self):
         self._files = self._get_files()
@@ -1004,7 +1006,7 @@ class K2ISDataSet(DataSet):
     def get_base_shape(self, roi):
         return (1, 930, 16)
 
-    def _get_fileset(self):
+    def _get_fileset(self) -> K2FileSet:
         files = [
             K2ISFile(
                 path=path,
@@ -1018,9 +1020,14 @@ class K2ISDataSet(DataSet):
         ]
         return K2FileSet(files=files)
 
+    def _cached_fileset(self) -> K2FileSet:
+        if self._fileset is None:
+            self._fileset = self._get_fileset()
+        return self._fileset
+
     def get_partition_for_slice(self, start: int, stop: int) -> "K2ISPartition":
         assert self._meta is not None
-        fileset = self._get_fileset()
+        fileset = self._cached_fileset()
         part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
             self.shape, start, stop, self._sync_offset,
         )

@@ -8,6 +8,7 @@ import warnings
 
 from numba.typed import List as NumbaList
 import numba
+from numba.core.types.misc import Optional
 import numpy as np
 
 from libertem.common.math import prod
@@ -1040,8 +1041,8 @@ class MIBDataSet(DataSet):
             self._nav_shape = tuple(scan_size)
         if self._nav_shape is None and not path.lower().endswith(".hdr"):
             raise ValueError(
-                    "either nav_shape needs to be passed, or path needs to point to a .hdr file"
-                )
+                "either nav_shape needs to be passed, or path needs to point to a .hdr file"
+            )
         self._filename_cache = None
         self._files_sorted: Optional[Sequence[MIBHeaderReader]] = None
         # ._preread_headers() calls ._files() which passes the cached headers down to
@@ -1052,6 +1053,7 @@ class MIBDataSet(DataSet):
         self._total_filesize = None
         self._sequence_start = None
         self._disable_glob = disable_glob
+        self._fileset: Optional[FileSet] = None
 
     def _do_initialize(self):
         self._headers = self._preread_headers()
@@ -1227,9 +1229,14 @@ class MIBDataSet(DataSet):
         assert self.meta is not None and base_shape[-1] == self.meta.shape[-1]
         return base_shape
 
+    def _cached_fileset(self) -> FileSet:
+        if self._fileset is None:
+            self._fileset = self._get_fileset()
+        return self._fileset
+
     def get_partition_for_slice(self, start: int, stop: int) -> "MIBPartition":
         first_file = self._files_sorted[0]
-        fileset = self._get_fileset()
+        fileset = self._cached_fileset()
         part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(
             self.shape, start, stop, self._sync_offset,
         )

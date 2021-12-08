@@ -151,8 +151,12 @@ def unravel_and_fit(
     # cannot exceed `containing_shape[i] - new_origin[i]`
     # especially, this should be true for the rightmost `i`. All dimensions
     # left of this index should be 1 in the result.
+
+    def is_nonzero(x: object) -> bool:
+        return x != 0
+
     if any(o != 0 for o in new_origin):
-        idx = list_rindex(new_origin, lambda o: o != 0)
+        idx = list_rindex(new_origin, is_nonzero)
         rest = containing_shape[idx] - new_origin[idx]
         max_size = rest * prod(containing_shape[idx + 1:])
         if max_size < input_size:
@@ -222,6 +226,9 @@ class Partitioner:
 
     def __repr__(self) -> str:
         return f"<Partitioner @ {self._seek_pos}>"
+
+    def reset(self):
+        self._seek_pos = 0
 
     def add_task_stats(self, stats: TaskStats) -> None:
         # log.info(stats)
@@ -367,17 +374,20 @@ class AdaptivePartitioner(Partitioner):
         #   `n_workers*2` in any case -> `max_size ~= ds_shape.nav.size / (n_workers*2)`
         #    - what about the very sparse `roi` case? there, having more
         #      partitions will slow things down instead
-        # - `min_size` constrained by merge time
+        # - `min_size` constrained by merge time (and other per-task overheads!)
 
         # performance in nav items per second:
         if self.have_stats():
-            mean_throughput = self.get_mean_throughput(last_n=32)
+            mean_throughput = self.get_mean_throughput(last_n=2 * self._num_workers)
         else:
             bytes_per_nav = self._partition_constraints.bytes_per_nav
-            mean_throughput = 64*1024*1024 / bytes_per_nav * self._target_rate
+            mean_throughput = 128*1024*1024 / bytes_per_nav / self._target_rate
+            # mean_throughput *= random.randint(1, 10)
 
         total_items = self._dataset_shape.nav.size
-        max_size = total_items / (2 * self._num_workers)
+
+        # don't make partitions too large as to not have tasks for all workers:
+        max_size = total_items / self._num_workers
 
         # FIXME: include merge timing here!
         min_size = 2 * self._tiling_scheme.depth
@@ -388,8 +398,14 @@ class AdaptivePartitioner(Partitioner):
         size = target_time_per_part * mean_throughput
         size = max(min_size, size)
         size = min(max_size, size)
-        log.debug(f"calc_partition_size -> {size} (mean_throughput={mean_throughput}, "
-                  f"max_size={max_size}, min_size={min_size}, target_time={target_time_per_part})")
+
+        # frenzy mode! at the end, generate more tasks to make sure not to
+        # have a single normal-sized task that could be split to all workers:
+        rest = self._total_size - self._seek_pos
+        if rest <= max_size:
+            size = min(size, max_size / self._num_workers)
+            size = max(min_size, size)
+
         return int(math.ceil(size))
 
 

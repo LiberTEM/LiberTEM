@@ -106,7 +106,7 @@ class Scheduler:
         """
         pass
 
-    def effective_worker_count(self):
+    def effective_worker_count(self) -> int:
         '''
         Return the effective number of workers for partitioning
 

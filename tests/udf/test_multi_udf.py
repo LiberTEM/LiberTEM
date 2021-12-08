@@ -10,7 +10,7 @@ from utils import _mk_random
 
 
 def test_simple_multi_udf_run():
-    data = _mk_random(size=(32, 1860, 2048))
+    data = _mk_random(size=(3, 1860, 2048))
     dataset = MemoryDataSet(
         data=data,
         num_partitions=1,

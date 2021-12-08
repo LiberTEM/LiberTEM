@@ -165,7 +165,7 @@ class Negotiator:
     def get_scheme(
             self,
             udfs,
-            dataset,
+            dataset: "DataSet",
             read_dtype: "nt.DTypeLike",
             approx_partition_shape: Shape,
             roi: Optional[np.ndarray] = None,
@@ -305,7 +305,7 @@ class Negotiator:
             }
         )
 
-    def _get_io_max_size(self, dataset, approx_partition_shape, itemsize, need_decode):
+    def _get_io_max_size(self, dataset: "DataSet", approx_partition_shape, itemsize, need_decode):
         if need_decode:
             io_max_size = dataset.get_max_io_size()
             if io_max_size is None:

@@ -15,6 +15,7 @@ from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.integration import get_dask_integration_executor
 from libertem.executor.base import JobExecutor
+from libertem.io.partitioner import Partitioner
 from libertem.masks import MaskFactoriesType
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
@@ -25,7 +26,7 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
-from libertem.udf.base import UDFResultDict, UDF, UDFResults
+from libertem.udf.base import UDFResultDict, UDF, UDFResults, BackendSpec
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 
@@ -644,9 +645,10 @@ class Context:
         roi: Optional[np.ndarray] = None,
         corrections: Optional[CorrectionSet] = None,
         progress: bool = False,
-        backends=None,
+        backends: Optional[BackendSpec] = None,
         plots=None,
-        sync=True,
+        sync: bool = True,
+        partitioner: Optional[Partitioner] = None,
     ) -> Union[RunUDFResultType, RunUDFSyncL, RunUDFAsync, RunUDFAsyncL]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
@@ -754,6 +756,7 @@ class Context:
                 backends=backends,
                 plots=plots,
                 iterate=False,
+                partitioner=partitioner,
             )
         else:
             return self._run_async(
@@ -765,6 +768,7 @@ class Context:
                 backends=backends,
                 plots=plots,
                 iterate=False,
+                partitioner=partitioner,
             )
 
     def run_udf_iter(
@@ -776,7 +780,8 @@ class Context:
         progress: bool = False,
         backends=None,
         plots=None,
-        sync=True,
+        sync: bool = True,
+        partitioner: Optional[Partitioner] = None,
     ) -> Union[RunUDFGenType, RunUDFAGenType, RunUDFGenTypeL, RunUDFAGenTypeL]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
@@ -874,6 +879,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[False],
+        partitioner: Optional[Partitioner],
     ) -> UDFResultDict:
         ...
 
@@ -888,6 +894,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[True],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFGenType: ...
 
     @overload
@@ -901,6 +908,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[False],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFSyncL: ...
 
     @overload
@@ -914,6 +922,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[True],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFGenTypeL: ...
 
     @overload
@@ -927,6 +936,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[True],
+        partitioner: Optional[Partitioner],
     ) -> Union[RunUDFGenType, RunUDFGenTypeL]:
         ...
 
@@ -941,6 +951,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[False],
+        partitioner: Optional[Partitioner],
     ) -> Union[UDFResultDict, RunUDFSyncL]:
         ...
 
@@ -955,6 +966,7 @@ class Context:
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: bool,
+        partitioner: Optional[Partitioner],
     ) -> Union[UDFResultDict, RunUDFSyncL, RunUDFGenType, RunUDFGenTypeL]: ...
 
     def _run_sync(
@@ -964,9 +976,10 @@ class Context:
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
         progress: bool,
-        backends,
-        plots,
-        iterate: bool,
+        backends: Optional[BackendSpec] = None,
+        plots=None,
+        iterate: bool = False,
+        partitioner: Optional[Partitioner] = None,
     ):
         """
         Run the given UDF(s), either returning the final result (when
@@ -999,7 +1012,8 @@ class Context:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
-                iterate=iterate
+                iterate=iterate,
+                partitioner=partitioner,
             )
             for udf_results in result_iter:
                 yield udf_results
@@ -1030,6 +1044,7 @@ class Context:
         backends,
         plots,
         iterate: Literal[False],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFAsync: ...
 
     @overload
@@ -1043,6 +1058,7 @@ class Context:
         backends,
         plots,
         iterate: Literal[False],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFAsyncL: ...
 
     @overload
@@ -1056,6 +1072,7 @@ class Context:
         backends,
         plots,
         iterate: Literal[True],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFAGenType: ...
 
     @overload
@@ -1069,6 +1086,7 @@ class Context:
         backends,
         plots,
         iterate: Literal[True],
+        partitioner: Optional[Partitioner],
     ) -> RunUDFAGenTypeL: ...
 
     @overload
@@ -1082,6 +1100,7 @@ class Context:
         backends,
         plots,
         iterate: Literal[True],
+        partitioner: Optional[Partitioner],
     ) -> Union[RunUDFAGenTypeL, RunUDFAGenType]: ...
 
     @overload
@@ -1095,6 +1114,7 @@ class Context:
         backends,
         plots,
         iterate: Literal[False],
+        partitioner: Optional[Partitioner],
     ) -> Union[RunUDFAsync, RunUDFAsyncL]: ...
 
     @overload
@@ -1108,6 +1128,7 @@ class Context:
         backends,
         plots,
         iterate: bool,
+        partitioner: Optional[Partitioner],
     ) -> Union[RunUDFAsync, RunUDFAsyncL, RunUDFAGenType, RunUDFAGenTypeL]: ...
 
     def _run_async(
@@ -1120,6 +1141,7 @@ class Context:
         backends,
         plots,
         iterate: bool,
+        partitioner: Optional[Partitioner] = None,
     ):
         """
         Wraps :code:`_run_sync` into an asynchronous generator,
@@ -1134,6 +1156,7 @@ class Context:
             backends=backends,
             plots=plots,
             iterate=True,
+            partitioner=partitioner,
         )
         udfres_iter = async_generator(sync_generator)
 

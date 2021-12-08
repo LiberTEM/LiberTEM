@@ -4,6 +4,7 @@ import asyncio
 from typing import Callable, Dict, List, Optional, Any, Iterable, TYPE_CHECKING, TypeVar, Type
 from typing_extensions import Protocol
 from contextlib import contextmanager
+from libertem.executor.scheduler import Scheduler, WorkerSet
 
 from async_generator import asynccontextmanager
 import numpy as np
@@ -216,19 +217,21 @@ class JobExecutor:
         cleanup resources used by this executor, if any
         """
 
-    def get_available_workers(self) -> List[Dict[str, str]]:
+    def get_available_workers(self) -> WorkerSet:
         """
-        Returns a list of dicts with available workers
-
-        keys of the dictionary:
-            name : an identifying name of the worker
-            host : ip address or hostname where the worker is running
+        Returns a WorkerSet with available workers
 
         Each worker should correspond to a "worker process", so if the executor
         is using multiple processes or threads, each process/thread should be
         included in this list.
+
+        The WorkerSet includes workers with different resources (CPU, GPU)
+        and also includes service workers.
         """
         raise NotImplementedError()
+
+    def get_effective_worker_count(self) -> int:
+        return Scheduler(self.get_available_workers()).effective_worker_count()
 
     def get_resource_details(self):
         """

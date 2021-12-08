@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 
 from libertem.masks import _make_circular_mask
@@ -33,7 +34,13 @@ class CrystallinityUDF(UDF):
     >>> np.array(result["intensity"]).shape
     (16, 16)
     """
-    def __init__(self, rad_in, rad_out, real_center, real_rad):
+    def __init__(
+        self,
+        rad_in: float,
+        rad_out: float,
+        real_center: Optional[float] = None,
+        real_rad: Optional[float] = None
+    ):
         super().__init__(rad_in=rad_in, rad_out=rad_out,
                          real_center=real_center, real_rad=real_rad)
 

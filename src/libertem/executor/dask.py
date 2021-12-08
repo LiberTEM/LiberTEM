@@ -38,7 +38,7 @@ def worker_setup(resource, device):
 def cluster_spec(
         cpus: Iterable[int], cudas: Iterable[int], has_cupy: bool,
         name: str = 'default', num_service: int = 1, options: Optional[dict] = None,
-        preload: Optional[Tuple[str]] = None):
+        preload: Optional[Tuple[str, ...]] = None):
     '''
     Create a spec for a LiberTEM Dask cluster
 
@@ -247,7 +247,7 @@ class CommonDaskMixin:
             )
         )
 
-    def get_available_workers(self):
+    def get_available_workers(self) -> WorkerSet:
         info = self.client.scheduler_info()
         return WorkerSet([
             Worker(

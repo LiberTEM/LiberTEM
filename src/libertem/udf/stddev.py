@@ -55,7 +55,7 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
     return sumsum, varsum
 
 
-@numba.njit(nogil=True)
+@numba.njit(nogil=True, cache=True)
 def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum):
     """
     Given two sets of buffers, with sum of frames

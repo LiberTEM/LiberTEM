@@ -73,6 +73,9 @@ class UDFMeta:
 
     .. versionchanged:: 0.6.0
         Information on compute backend, corrections, coordinates and tiling scheme added
+
+    .. versionchanged:: 0.9.0
+        :code:`tiling_scheme_idx` and `sig_slice` added
     """
 
     def __init__(
@@ -144,6 +147,19 @@ class UDFMeta:
         .. versionadded:: 0.6.0
         """
         return self._tiling_scheme
+
+    @property
+    def tiling_scheme_idx(self) -> int:
+        return self._tiling_index
+
+    @tiling_scheme_idx.setter
+    def tiling_scheme_idx(self, new_idx: int) -> None:
+        self._tiling_index = new_idx
+
+    @property
+    def sig_slice(self) -> Slice:
+        assert self._tiling_scheme is not None
+        return self._tiling_scheme[self._tiling_index]
 
     @property
     def roi(self) -> Optional[np.ndarray]:
@@ -648,6 +664,9 @@ class UDFBase:
 
     def set_slice(self, slice_: Slice) -> None:
         self.meta.slice = slice_
+
+    def set_tile_idx(self, idx: int) -> None:
+        self.meta.tiling_scheme_idx = idx
 
     def set_backend(self, backend: Backend) -> None:
         assert backend in self.get_backends()
@@ -1483,7 +1502,7 @@ class UDFRunner:
             roi=roi,
             dataset_dtype=partition.dtype,
             input_dtype=dtype,
-            tiling_scheme=None,
+            tiling_scheme=tiling_scheme,
             corrections=corrections,
             device_class=device_class,
             threads_per_worker=env.threads_per_worker,
@@ -1509,18 +1528,6 @@ class UDFRunner:
                 udf.clear_views()
                 udf.preprocess()
 
-        # FIXME: don't fully re-create?
-        meta = UDFMeta(
-            partition_slice=partition.slice.adjust_for_roi(roi),
-            dataset_shape=partition.meta.shape,
-            roi=roi,
-            dataset_dtype=partition.dtype,
-            input_dtype=dtype,
-            tiling_scheme=tiling_scheme,
-            corrections=corrections,
-            device_class=device_class,
-            threads_per_worker=env.threads_per_worker,
-        )
         for udf in udfs:
             udf.set_meta(meta)
         return (meta, dtype)
@@ -1536,6 +1543,7 @@ class UDFRunner:
             if isinstance(udf, UDFTileMixin):
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
+                udf.set_tile_idx(tile.scheme_idx)
                 udf.process_tile(device_tile)
             elif isinstance(udf, UDFFrameMixin):
                 tile_slice = tile.tile_slice

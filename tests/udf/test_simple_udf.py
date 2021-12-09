@@ -7,7 +7,7 @@ from libertem.udf.base import UDF, UDFRunner, UDFParams
 from libertem.udf.base import UDFMeta
 from libertem.executor.base import Environment
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, DataTile
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
@@ -577,3 +577,46 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         set_use_cpu(0)
 
     assert np.all(res["sigbuf"].data == 1)
+
+
+class CheckSigSlice(UDF):
+    def get_result_buffers(self):
+        return {
+            "buf": self.buffer(kind="nav", dtype=int, where="device")
+        }
+
+    def process_tile(self, tile):
+        assert tile.shape[1:] == tuple(self.meta.sig_slice.shape)
+        assert self.meta.slice.sig == self.meta.sig_slice
+        assert self.meta.tiling_scheme[self.meta.tiling_scheme_idx] == self.meta.sig_slice
+        if isinstance(tile, DataTile):
+            # this is technically an internal interface, we test here
+            # as a sanity check:
+            assert tile.scheme_idx == self.meta.tiling_scheme_idx
+
+    def get_backends(self):
+        return ('numpy', 'cupy')
+
+
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_sig_slice(lt_ctx, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+
+    data = _mk_random(size=(30, 3, 7), dtype="float32")
+    dataset = MemoryDataSet(
+        data=data, tileshape=(3, 2, 2),
+        num_partitions=2, sig_dims=2
+    )
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        udf = CheckSigSlice()
+        lt_ctx.run_udf(udf=udf, dataset=dataset)
+    finally:
+        set_use_cpu(0)

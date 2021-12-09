@@ -66,7 +66,7 @@ class TilingScheme:
             debug=debug,
         )
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Slice:
         return self._slices[idx]
 
     def __len__(self):

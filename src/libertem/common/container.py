@@ -130,6 +130,12 @@ class MaskContainer:
         slice_ = scheme[idx]
         return self._get(slice_, *args, **kwargs)
 
+    def get_for_sig_slice(self, sig_slice: Slice, *args, **kwargs):
+        """
+        Same as `get`, but without calling `discard_nav()` on the slice
+        """
+        return self._get(sig_slice, *args, **kwargs)
+
     def get(self, key: Slice, dtype=None, sparse_backend=None, transpose=True, backend=None):
         if not isinstance(key, Slice):
             raise TypeError(

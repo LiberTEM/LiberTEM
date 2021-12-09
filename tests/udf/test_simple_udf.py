@@ -598,10 +598,56 @@ class CheckSigSlice(UDF):
         return ('numpy', 'cupy')
 
 
+class CheckSigSlicePartition(UDF):
+    def get_result_buffers(self):
+        return {
+            "buf": self.buffer(kind="nav", dtype=int, where="device")
+        }
+
+    def process_partition(self, tile):
+        assert tile.shape[1:] == tuple(self.meta.sig_slice.shape)
+        assert self.meta.slice.sig == self.meta.sig_slice
+        assert self.meta.tiling_scheme[self.meta.tiling_scheme_idx] == self.meta.sig_slice
+        if isinstance(tile, DataTile):
+            # this is technically an internal interface, we test here
+            # as a sanity check:
+            assert tile.scheme_idx == self.meta.tiling_scheme_idx
+
+    def get_backends(self):
+        return ('numpy', 'cupy')
+
+
+class CheckSigSliceFrame(UDF):
+    def get_result_buffers(self):
+        return {
+            "buf": self.buffer(kind="nav", dtype=int, where="device")
+        }
+
+    def process_frame(self, frame):
+        assert frame.shape == tuple(self.meta.sig_slice.shape)
+        assert self.meta.slice.sig == self.meta.sig_slice
+        assert self.meta.slice.sig.shape == self.meta.dataset_shape.sig
+        assert self.meta.tiling_scheme[self.meta.tiling_scheme_idx] == self.meta.sig_slice
+        if isinstance(frame, DataTile):
+            # this is technically an internal interface, we test here
+            # as a sanity check:
+            assert frame.scheme_idx == self.meta.tiling_scheme_idx
+
+    def get_backends(self):
+        return ('numpy', 'cupy')
+
+
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'udf_class,tileshape', [
+        (CheckSigSliceFrame, (3, 3, 7)),
+        (CheckSigSlicePartition, (3, 3, 7)),
+        (CheckSigSlice, (3, 2, 2)),
+    ],
 )
-def test_sig_slice(lt_ctx, backend):
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy'],
+)
+def test_sig_slice(lt_ctx, backend, udf_class, tileshape):
     if backend == 'cupy':
         d = detect()
         cudas = detect()['cudas']
@@ -610,13 +656,13 @@ def test_sig_slice(lt_ctx, backend):
 
     data = _mk_random(size=(30, 3, 7), dtype="float32")
     dataset = MemoryDataSet(
-        data=data, tileshape=(3, 2, 2),
+        data=data, tileshape=tileshape,
         num_partitions=2, sig_dims=2
     )
     try:
         if backend == 'cupy':
             set_use_cuda(cudas[0])
-        udf = CheckSigSlice()
+        udf = udf_class()
         lt_ctx.run_udf(udf=udf, dataset=dataset)
     finally:
         set_use_cpu(0)

@@ -78,3 +78,17 @@ class DaskBufferWrapper(BufferWrapper):
     def __repr__(self):
         return (f"<DaskBufferWrapper kind={self._kind}"
                 f"extra_shape={self._extra_shape} backing={self._data}>")
+
+    def result_buffer_type(self):
+        return self.new_as_prealloc
+
+    def new_as_prealloc(self, *args, **kwargs):
+        buffer = DaskPreallocBufferWrapper(*args, **kwargs)
+        buffer.add_partitions(self._ds_partitions)
+        return buffer
+
+
+class DaskPreallocBufferWrapper(DaskBufferWrapper):
+    def __init__(self, data, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = data

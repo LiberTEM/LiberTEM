@@ -274,7 +274,7 @@ def structure_from_task(udfs, task):
             if buffer.kind == 'sig':
                 part_buf_shape = partition_shape.sig
             elif buffer.kind == 'nav':
-                part_buf_shape = partition_shape.nav
+                part_buf_shape = (buffer._slice_for_partition(task.partition).shape[0],)
             elif buffer.kind == 'single':
                 part_buf_shape = buffer.shape[:1]
             else:

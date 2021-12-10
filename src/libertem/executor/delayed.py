@@ -307,6 +307,8 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffe
             buffer = BufferWrapper(buffer_kind,
                                    extra_shape=extra_shape,
                                    dtype=descriptor.kwargs['dtype'])
+            # Need to test whether roi=None here is a problem
+            buffer.set_shape_partition(partition, roi=None)
             buffer.set_buffer(buffer_dask)
             wrapped_res.append(buffer)
         else:

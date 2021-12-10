@@ -324,6 +324,13 @@ class UDFData:
         """
         return self._data[name]
 
+    def set_buffer(self, name: str, buffer: BufferWrapper) -> None:
+        """
+        Replace or set the `BufferWrapper` for buffer `name`
+        """
+        assert isinstance(buffer, BufferWrapper)
+        self._data[name] = buffer
+
     def get(
         self, k: str, default: Optional[T] = None
     ) -> Optional[Union[T, np.ndarray, BufferWrapper]]:

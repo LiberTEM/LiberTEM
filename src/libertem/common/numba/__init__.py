@@ -9,7 +9,7 @@ from .cache import prime_numba_cache, cached_njit  # NOQA: F401
 logger = logging.getLogger(__name__)
 
 
-@numba.njit(boundscheck=True)
+@numba.njit(boundscheck=True, nogil=True)
 def numba_ravel_multi_index_single(multi_index, dims):
     # only supports the "single index" case
     idxs = range(len(dims) - 1, -1, -1)
@@ -22,7 +22,7 @@ def numba_ravel_multi_index_single(multi_index, dims):
     return res
 
 
-@numba.njit(boundscheck=True)
+@numba.njit(boundscheck=True, nogil=True)
 def numba_ravel_multi_index_multi(multi_index, dims):
     # only supports the "multi index" case
     idxs = range(len(dims) - 1, -1, -1)
@@ -36,7 +36,7 @@ def numba_ravel_multi_index_multi(multi_index, dims):
     return res
 
 
-@numba.njit(boundscheck=True)
+@numba.njit(boundscheck=True, nogil=True)
 def numba_unravel_index_single(index, shape):
     sizes = np.zeros(len(shape), dtype=np.intp)
     result = np.zeros(len(shape), dtype=np.intp)
@@ -50,7 +50,7 @@ def numba_unravel_index_single(index, shape):
     return result
 
 
-@numba.njit(boundscheck=True)
+@numba.njit(boundscheck=True, nogil=True)
 def numba_unravel_index_multi(indices, shape):
     sizes = np.zeros(len(shape), dtype=np.intp)
     result = np.zeros((len(shape), len(indices)), dtype=np.intp)
@@ -127,7 +127,7 @@ def rmatmul(left_dense, right_sparse):
     return result_t.T.copy()
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def _rmatmul_csc(left_dense, right_data, right_indices, right_indptr, res_inout_t):
     left_rows = left_dense.shape[0]
     for right_column in range(len(right_indptr) - 1):
@@ -143,7 +143,7 @@ def _rmatmul_csc(left_dense, right_data, right_indices, right_indptr, res_inout_
                     res_inout_t[right_column, left_row] += tmp
 
 
-@numba.njit(fastmath=True, cache=True)
+@numba.njit(fastmath=True, cache=True, nogil=True)
 def _rmatmul_csr(left_dense, right_data, right_indices, right_indptr, res_inout_t):
     left_rows = left_dense.shape[0]
     rowbuf = np.empty(shape=(left_rows,), dtype=left_dense.dtype)

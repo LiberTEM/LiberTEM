@@ -331,7 +331,6 @@ def large_raw(large_raw_file):
         dtype=dtype,
         sig_shape=shape[2:],
     )
-    ds.set_num_cores(2)
     ds = ds.initialize(InlineJobExecutor())
     yield ds
 
@@ -369,7 +368,43 @@ def medium_raw(medium_raw_file):
         sig_shape=shape[2:],
         io_backend=MMapBackend()
     )
-    ds.set_num_cores(2)
+    ds = ds.initialize(InlineJobExecutor())
+    yield ds
+
+
+@pytest.fixture(scope='session')
+def medium_raw_file_float32(tmpdir_factory):
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-medium-sparse'
+    shape = (128, 128, 256, 256)
+    dtype = np.float32
+    size = np.prod(np.int64(shape)) * np.dtype(dtype).itemsize
+    if platform.system() == "Windows":
+        os.system(f'FSUtil File CreateNew "{filename}" 0x{size:X}')
+        os.system('FSUtil Sparse SetFlag "%s"' % filename)
+        os.system(f'FSUtil Sparse SetRange "{filename}" 0 0x{size:X}')
+    else:
+        with open(filename, 'wb') as f:
+            f.truncate(size)
+        stat = os.stat(filename)
+        if stat.st_blocks != 0:
+            warnings.warn(
+                f"Created file {filename} is not reported as "
+                f"sparse: {stat}, blocks {stat.st_blocks}"
+            )
+    yield filename, shape, dtype
+
+
+@pytest.fixture(scope='session')
+def medium_raw_float32(medium_raw_file_float32):
+    filename, shape, dtype = medium_raw_file_float32
+    ds = RawFileDataSet(
+        path=str(filename),
+        nav_shape=shape[:2],
+        dtype=dtype,
+        sig_shape=shape[2:],
+        io_backend=MMapBackend()
+    )
     ds = ds.initialize(InlineJobExecutor())
     yield ds
 

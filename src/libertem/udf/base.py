@@ -1789,7 +1789,7 @@ class UDFRunner:
             if isinstance(udf, UDFPreprocessMixin):
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
-        
+
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,

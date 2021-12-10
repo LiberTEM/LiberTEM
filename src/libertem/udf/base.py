@@ -402,8 +402,10 @@ class UDFData:
             buf.allocate(lib=lib)
 
     def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
+        ds_partitions = [*dataset.get_partitions()]
         for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset.shape, roi)
+            buf.add_partitions(ds_partitions)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 

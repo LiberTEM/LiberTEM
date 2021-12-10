@@ -24,7 +24,7 @@ def _make_mmap_reader_and_decoder(decode):
     """
     decode: from inp, in bytes, possibly interpreted as native_dtype, to out_decoded.dtype
     """
-    @cached_njit(boundscheck=False, cache=True)
+    @cached_njit(boundscheck=False, cache=True, nogil=True)
     def _mmap_tilereader_w_copy(outer_idx, mmaps, sig_dims, tile_read_ranges,
                            out_decoded, native_dtype, do_zero,
                            origin, shape, ds_shape):
@@ -52,7 +52,7 @@ def _make_mmap_reader_and_decoder(decode):
     return _mmap_tilereader_w_copy
 
 
-@numba.njit
+@numba.njit(nogil=True)
 def _get_prefetch_ranges(num_files, tile_ranges):
     res = np.zeros((num_files, 3), dtype=np.int64)
     for rr_idx in range(tile_ranges.shape[0]):

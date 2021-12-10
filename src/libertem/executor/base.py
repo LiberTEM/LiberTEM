@@ -239,6 +239,21 @@ class JobExecutor:
         """
         return AsyncAdapter(wrapped=self, pool=pool)
 
+    def modify_buffer_type(self, buf):
+        """
+        Allow the executor to modify result buffers if necessary
+
+        Currently only called for buffers on the main node
+        """
+        return buf
+
+    def register_master_udfs(self, udfs):
+        """
+        Give the executor a reference to the udfs instantiated
+        on the main node, for introspection purposes
+        """
+        self._udfs = udfs
+
 
 class AsyncJobExecutor:
     async def run_tasks(self, tasks, params_handle, cancel_id):

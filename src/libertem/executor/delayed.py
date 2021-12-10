@@ -1,11 +1,21 @@
+from functools import partial
 from typing import Any, Iterable
 import contextlib
 
+import numpy as np
 from dask import delayed
+import dask.array as da
 
 from .base import JobExecutor, Environment, TaskProtocol
 from .scheduler import Worker, WorkerSet
 
+from ..common.math import prod
+from ..common.buffers import BufferWrapper
+from ..udf.base import _apply_part_result, _make_udf_result
+from ..udf.base import UDFData, MergeAttrMapping
+
+from .utils.dask_buffer import DaskBufferWrapper
+from .utils import delayed_unpack
 
 class DelayedJobExecutor(JobExecutor):
     """
@@ -19,6 +29,8 @@ class DelayedJobExecutor(JobExecutor):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
 
+        self._part_results = {}
+
     @contextlib.contextmanager
     def scatter(self, obj):
         yield delayed(obj)
@@ -29,9 +41,35 @@ class DelayedJobExecutor(JobExecutor):
         params_handle: Any,
         cancel_id: Any,
     ):
+        """
+        Wraps the call task() such that it returns a flat list
+        of results, then unpacks the Delayed return value into
+        the normal
+
+            tuple(udf.results for udf in self._udfs)
+
+        where the buffers inside udf.results are dask arrays instead
+        of normal np.arrays
+
+        Needs a reference to the udfs on the master node so
+        that the results structure can be inferred. This reference is
+        found in self._udfs, which is set with the method:
+
+            executor.register_master_udfs(udfs)
+
+        called from UDFRunner.results_for_dataset_sync
+        """
         env = Environment(threads_per_worker=1)
         for task in tasks:
-            result = delayed(task, nout=len(task._udf_classes))(env=env, params=params_handle)
+            structure = structure_from_task(self._udfs, task)
+            flat_structure = delayed_unpack.flatten_nested(structure)
+            flat_mapping = delayed_unpack.build_mapping(structure)
+            flat_result_task = partial(task_wrap, task)
+            result = delayed(flat_result_task, nout=len(flat_structure))(env=env,
+                                                                         params=params_handle)
+            wrapped_res = delayed_to_buffer_wrappers(result, flat_structure, task.partition)
+            renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
+            result = tuple(UDFData(data=res) for res in renested)
             yield result, task
 
     def run_function(self, fn, *args, **kwargs):
@@ -39,8 +77,20 @@ class DelayedJobExecutor(JobExecutor):
         return result
 
     def run_wrap(self, fn, *args, **kwargs):
-        result = delayed(fn)(*args, **kwargs)
-        return result
+        """
+        Run a function as a dask.delayed with *args and **kwargs
+
+        In the case of merging and finalising UDF results,
+        intercept the call to run as a normal function, as we
+        are building a dask task graph which is already lazy
+        """
+        if fn is _apply_part_result:
+            return self.run_partial_merge(*args, **kwargs)
+        elif fn is _make_udf_result:
+            return self.run_function(fn, *args, **kwargs)
+        else:
+            result = delayed(fn)(*args, **kwargs)
+            return result
 
     def map(self, fn, iterable):
         return [fn(item)
@@ -58,3 +108,207 @@ class DelayedJobExecutor(JobExecutor):
         return WorkerSet([
             Worker(name='delayed', host='localhost', resources=resources)
         ])
+
+    def modify_buffer_type(self, buf):
+        return DaskBufferWrapper.from_buffer(buf)
+
+    def run_partial_merge(self, udfs, damage, part_results, task):
+        for part_results_udf, udf in zip(part_results, udfs):
+            # Allow user to define an alternative merge strategy
+            # using dask-compatible functions. In the Delayed case we
+            # won't be getting partial results with damage anyway.
+            # Currently there is no interface to provide all of the results
+            # to udf.merge at once and in the correct order, so I am accumulating
+            # results in self._part_results[udf] = {partition_slice: part_results, ...}
+            if hasattr(udf, 'dask_merge'):
+                if self._accumulate_part_results(udf, part_results_udf, task):
+                    udf.dask_merge(self._part_results[udf])
+                    self._part_results.pop(udf, None)
+                continue
+
+            # In principle we can requrire that sig merges are done sequentially
+            # by using dask.graph_manipulation.bind, this could improve thread
+            # safety on the sig buffer. In the current implem it's not necessary as
+            # we are calling delayed_apply_part_result sequentially on results
+            # and replacing all buffers with their partially merged versions
+            # on each call, so we are implicitly sequential when updating
+            # try:
+            #     bind_to = udf.prior_merge
+            # except AttributeError:
+            #     bind_to = None
+
+            structure = structure_from_task([udf], task)[0]
+            flat_structure = delayed_unpack.flatten_nested(structure)
+            flat_mapping = delayed_unpack.build_mapping(structure)
+
+            src = part_results_udf.get_proxy()
+            src_dict = {k: b for k, b in src._dict.items()}
+
+            dest_dict = {}
+            for k, b in udf.results.items():
+                view = b.get_view_for_partition(task.partition)
+                # Handle result-only buffers
+                if view is not None:
+                    try:
+                        dest_dict[k] = view.unwrap_sliced()
+                    except AttributeError:
+                        # Handle kind='single' buffers
+                        # Could handle sig buffers this way too if we assert no chunking
+                        dest_dict[k] = view
+
+            # Run the udf.merge function in a wrapper which flattens
+            # the results to a flat list which can be unpacked from the Delayed
+            # This step makes a copy of the buffer view inside the delayed
+            # call because this default Dask behaviour is to give a read-only
+            # view of the arguments to the delayed function
+            merged_del = delayed(merge_wrap, nout=len(flat_mapping))
+            merged_del_result = merged_del(udf, dest_dict, src_dict)
+
+            # The following is needed when binding sequential updates on sig buffers
+            # if bind_to is not None:
+            #     merged_del = delayed_bind([*merged_del_result],
+            #                               [*bind_to])
+            # if any([b.kind != 'nav' for _, b in udf.results.items()]):
+            #     # have sig result, gotta do a bind merge next time round
+            #     udf.prior_merge = merged_del_result
+
+            # We now build the result back into dask arrays and assign them
+            # into the appropriate slices of the full result buffers
+            wrapped_res = delayed_to_buffer_wrappers(merged_del_result, flat_structure,
+                                                     task.partition, as_buffer=False)
+            renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
+
+            # Assign into the result buffers with the partially merged version
+            # This is OK because we are calling this part merge function sequentially
+            # so each new call gets the most recent version of the buffer in the
+            # dask task graph
+            udf.set_views_for_partition(task.partition)
+            dest = udf.results.get_proxy()
+            merged = MergeAttrMapping(renested)
+            for k in dest:
+                getattr(dest, k)[:] = getattr(merged, k)
+
+        v = damage.get_view_for_partition(task.partition)
+        v[:] = True
+        return (udfs, damage)
+
+    def _accumulate_part_results(self, udf, part_results, task):
+        """
+        If the udf has a dask_merge method, this function is used
+        to accumulate dask array-backed partial results on the executor
+        so that the dask_merge can be called on all of them at once
+
+        Ensures that the results are correctly ordered and complete
+        before allowing dask_merge to be called
+        """
+        try:
+            self._part_results[udf][task.partition.slice] = part_results
+        except KeyError:
+            self._part_results[udf] = {}
+            return self._accumulate_part_results(udf, part_results, task)
+
+        # number of frames in dataset
+        target_coverage = prod(task.partition.meta.shape.nav)
+        # number of frames we have results for
+        current_coverage = sum([prod(k.shape.nav) for k in self._part_results[udf].keys()])
+        if target_coverage == current_coverage:
+            ordered_results = sorted(self._part_results[udf].items(),
+                                     key=lambda kv: kv[0].origin[0])
+            self._part_results[udf] = {kv[0]: kv[1] for kv in ordered_results}
+            return True
+        return False
+
+
+def make_copy(array_dict):
+    for k, v in array_dict.items():
+        if not v.flags['WRITEABLE']:
+            array_dict[k] = v.copy()
+    return array_dict
+
+
+def merge_wrap(udf, dest_dict, src_dict):
+    """
+    The function called as delayed, acting as a wrapper
+    to return a flat list of results rather than a structure
+    of UDFData or MergeAttrMapping
+    """
+    # Have to make a copy of dest buffers because Dask brings
+    # data into the delayed function as read-only np arrays
+    # I experimented with setting WRITEABLE to True but this
+    # resulted in errors in the final array
+    dest_dict = make_copy(dest_dict)
+
+    dest = MergeAttrMapping(dest_dict)
+    src = MergeAttrMapping(src_dict)
+
+    # In place merge into the copy of dest
+    udf.merge(dest=dest, src=src)
+    # Return flat list of results so they can be unpacked later
+    return delayed_unpack.flatten_nested(dest._dict)
+
+
+def task_wrap(task, *args, **kwargs):
+    """
+    Flatten the structure tuple(udf.results for udf in self._udfs)
+    where udf.results is an instance of UDFData(data={'name':BufferWrapper,...})
+    into a simple list [np.ndarray, np.ndarray, ...]
+    """
+    res = task(*args, **kwargs)
+    res = tuple(r._data for r in res)
+    flat_res = delayed_unpack.flatten_nested(res)
+    return [r._data for r in flat_res]
+
+
+def structure_from_task(udfs, task):
+    """
+    Based on the instantiated whole dataset UDFs and the task
+    information, build a description of the expected UDF results
+    for the task's partition like:
+       ({'buffer_name': StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)
+    """
+    structure = []
+    partition_shape = task.partition.shape
+    for udf in udfs:
+        res_data = {}
+        for buffer_name, buffer in udf.results.items():
+            if buffer.kind == 'sig':
+                part_buf_shape = partition_shape.sig
+            elif buffer.kind == 'nav':
+                part_buf_shape = partition_shape.nav
+            elif buffer.kind == 'single':
+                part_buf_shape = buffer.shape[:1]
+            else:
+                raise NotImplementedError
+            part_buf_dtype = buffer.dtype
+            part_buf_extra_shape = buffer.extra_shape
+            part_buf_shape = part_buf_shape + part_buf_extra_shape
+            res_data[buffer_name] = \
+                delayed_unpack.StructDescriptor(np.ndarray,
+                                                shape=part_buf_shape,
+                                                dtype=part_buf_dtype,
+                                                kind=buffer.kind,
+                                                extra_shape=part_buf_extra_shape)
+        results_container = res_data
+        structure.append(results_container)
+    return tuple(structure)
+
+
+def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffer=True):
+    """
+    Take the iterable Delayed results object, and re-wrap each Delayed object
+    back into a BufferWrapper wrapping a dask.array of the correct shape and dtype
+    """
+    wrapped_res = []
+    for el, descriptor in zip(flat_delayed, flat_structure):
+        buffer_kind = descriptor.kwargs.pop('kind')
+        extra_shape = descriptor.kwargs.pop('extra_shape')
+        buffer_dask = da.from_delayed(el, *descriptor.args, **descriptor.kwargs)
+        if as_buffer:
+            buffer = BufferWrapper(buffer_kind,
+                                   extra_shape=extra_shape,
+                                   dtype=descriptor.kwargs['dtype'])
+            buffer.set_buffer(buffer_dask)
+            wrapped_res.append(buffer)
+        else:
+            wrapped_res.append(buffer_dask)
+    return wrapped_res

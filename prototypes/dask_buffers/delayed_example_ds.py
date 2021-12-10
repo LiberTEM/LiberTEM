@@ -7,6 +7,15 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.sum import SumUDF
 
+import libertem.io.dataset.raw
+
+def get_num_partitions(self):
+    """
+    Necessary as we don't have a num_partitions argument to RawFileDataset
+    """
+    return self._meta.shape.nav[0]
+
+libertem.io.dataset.raw.RawFileDataSet.get_num_partitions = get_num_partitions
 
 def build_increasing_ds(array, axis, mode='arange'):
     """

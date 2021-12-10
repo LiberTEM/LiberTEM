@@ -55,6 +55,58 @@ class DaskBufferWrapper(BufferWrapper):
             raise NotImplementedError('Unrecognized buffer kind')
         self._data = da.zeros(self._shape, dtype=self._dtype, chunks=_buf_chunking)
 
+    @property
+    def data(self):
+        """
+        Get the buffer contents in shape that corresponds to the
+        original dataset shape, using a lazy Dask array.
+
+        Copied largely from BufferWrapper with modifications to ensure
+        Dask arrays are correctly unpacked into the result array.
+
+        #TODO consider if this needs to be cached to avoid creating
+        multiple copies in the task graph ?
+
+        If a ROI is set, embed the result into a new
+        array; unset values have NaN value for floating point types,
+        False for boolean, 0 for integer types and structs,
+        '' for string types and None for objects.
+        """
+        if isinstance(self._data, DaskInplaceBufferWrapper):
+            self._data = self._data.unwrap()
+        if self._contiguous_cache:
+            raise RuntimeError("Cache is not empty, has to be flushed")
+        if self._roi is None or self._kind != 'nav':
+            return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
+        shape = self._shape_for_kind(self._kind, self._ds_shape)
+        if shape == self._data.shape:
+            # preallocated and already wrapped
+            return self._data
+        # Integer types and "void" (structs and such)
+        if self.dtype.kind in ('i', 'u', 'V'):
+            fill = 0
+        # Bytes and Unicode strings
+        elif self.dtype.kind in ('S', 'U'):
+            fill = ''
+        else:
+            # 'b' (boolean): False
+            # 'f', 'c': NaN
+            # 'm', 'M' (datetime, timedelta): NaT
+            # 'O' (object): None
+            fill = None
+
+        if self._kind == 'nav':
+            flat_chunking = tuple(p.slice.shape[0] for p in self._ds_partitions)
+            flat_shape = self._ds_shape.flatten_nav()[0]
+            flat_wrapper = da.full(flat_shape, fill, dtype=self._dtype, chunks=flat_chunking)
+            flat_wrapper[self._roi] = self._data
+            wrapper = flat_wrapper.reshape(self._ds_shape.nav)
+        else:
+            chunking = ((-1,),) * len(shape)
+            wrapper = da.full(shape, fill, dtype=self._dtype, chunks=chunking)
+            wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
+        return wrapper
+
     def _get_slice(self, slice: Slice):
         """
         Get a view of the buffer which enable inplace assignment

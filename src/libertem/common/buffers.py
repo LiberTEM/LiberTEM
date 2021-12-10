@@ -575,6 +575,9 @@ class BufferWrapper:
             assert buf.shape == self._data.shape
         self._data = buf
 
+    def result_buffer_type(self):
+        return PreallocBufferWrapper
+
 
 class PlaceholderBufferWrapper(BufferWrapper):
     """

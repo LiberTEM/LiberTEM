@@ -569,6 +569,12 @@ class BufferWrapper:
             self._kind, self._dtype, self._extra_shape
         )
 
+    def reset_buffer(self, buf, force=False):
+        if self.has_data() and not force:
+            assert buf.dtype == self._data.dtype
+            assert buf.shape == self._data.shape
+        self._data = buf
+
 
 class PlaceholderBufferWrapper(BufferWrapper):
     """

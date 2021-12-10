@@ -227,6 +227,7 @@ class BufferWrapper:
         self._data_coords_global = False
         self._shape = None
         self._ds_shape = None
+        self._ds_partitions = None
         self._roi = None
         self._roi_is_zero = None
         self._contiguous_cache = dict()
@@ -236,6 +237,13 @@ class BufferWrapper:
         if roi is not None:
             roi = roi.reshape((-1,))
         self._roi = roi
+
+    def add_partitions(self, partitions):
+        """
+        Add a list of dataset partitions to the buffer such that
+        self.allocate() can make use of the structure
+        """
+        self._ds_partitions = partitions
 
     def set_shape_partition(self, partition, roi=None):
         self.set_roi(roi)

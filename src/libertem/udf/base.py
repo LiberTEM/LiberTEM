@@ -773,12 +773,17 @@ class UDFBase:
             if k not in results_tmp and v.use is None
         })
 
+        results_buffer_cls = {
+            k: self.results.get_buffer(k).result_buffer_type()
+            for k, v in results_tmp.items()
+        }
+
         # wrap numpy results into `ResultBuffer`s:
         results = {}
         for name, arr in results_tmp.items():
             self._check_results(decl, arr, name)
             buf_decl = decl[name]
-            buf = PreallocBufferWrapper(
+            buf = results_buffer_cls[name](
                 kind=buf_decl.kind, extra_shape=buf_decl.extra_shape,
                 dtype=buf_decl.dtype,
                 data=arr,

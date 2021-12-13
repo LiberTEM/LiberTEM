@@ -150,6 +150,7 @@ if __name__ == '__main__':
                                                                        navsum_dask,
                                                                        stddev_dask)
 
+    _ = [f.unlink() for f in rawpath.parent.iterdir() if f.suffix == '.png']
     try:
         sigsum_dask.visualize('sigsum_direct.png')
         navsum_dask.visualize('navsum_direct.png')
@@ -157,6 +158,8 @@ if __name__ == '__main__':
         stddev_dask['std'].visualize('std_direct.png')
         stddev_dask['varsum'].visualize('varsum_direct.png')
     except Exception:
+        import traceback
+        traceback.print_exc()
         print('Failed to create task graph PNGs')
 
     fig, axs = plt.subplots(2, 4)

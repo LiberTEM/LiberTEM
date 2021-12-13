@@ -1,10 +1,12 @@
 import re
 import os
 from glob import glob, escape
-import typing
 import logging
+from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
+from typing_extensions import Literal, TypedDict
 import warnings
 
+from numba.typed import List as NumbaList
 import numba
 import numpy as np
 
@@ -20,6 +22,9 @@ from .base import (
 )
 
 log = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    import numpy.typing as nt
 
 
 class MIBDatasetParams(MessageConverter):
@@ -95,7 +100,7 @@ def nav_shape_from_hdr(hdr):
     return nav_shape
 
 
-def _pattern(path):
+def _pattern(path: str) -> str:
     path, ext = os.path.splitext(path)
     ext = ext.lower()
     if ext == '.mib':
@@ -109,14 +114,18 @@ def _pattern(path):
     return pattern
 
 
-def get_filenames(path, disable_glob=False):
+def get_filenames(path: str, disable_glob=False) -> List[str]:
     if disable_glob:
         return [path]
     else:
         return glob(_pattern(path))
 
 
-def get_image_count_and_sig_shape(path):
+def _get_sequence(f: "MIBHeaderReader"):
+    return f.fields['sequence_first_image']
+
+
+def get_image_count_and_sig_shape(path: str):
     fns = get_filenames(path)
     count = 0
     files = []
@@ -125,7 +134,7 @@ def get_image_count_and_sig_shape(path):
         count += f.fields['num_images']
         files.append(f)
     try:
-        first_file = list(sorted(files, key=lambda f: f.fields['sequence_first_image']))[0]
+        first_file = list(sorted(files, key=_get_sequence))[0]
         sig_shape = first_file.fields['image_size']
         return count, sig_shape
     except IndexError:
@@ -133,33 +142,10 @@ def get_image_count_and_sig_shape(path):
 
 
 @numba.njit(inline='always', cache=True)
-def _mib_r_px_to_bytes(
-    bpp, frame_in_file_idx, slice_sig_size, sig_size, sig_origin,
-    frame_footer_bytes, frame_header_bytes, file_header_bytes,
-    file_idx, read_ranges,
-):
-    # NOTE: bpp is not used, instead we divide by 8 because we have 8 pixels per byte!
-
-    # we are reading a part of a single frame, so we first need to find
-    # the offset caused by headers and footers:
-    footer_offset = frame_footer_bytes * frame_in_file_idx
-    header_offset = frame_header_bytes * (frame_in_file_idx + 1)
-    byte_offset = footer_offset + header_offset
-
-    # now let's figure in the current frame index:
-    # (go down into the file by full frames; `sig_size`)
-    offset = file_header_bytes + byte_offset + frame_in_file_idx * sig_size // 8
-
-    # offset in px in the current frame:
-    sig_origin_bytes = sig_origin // 8
-
-    start = offset + sig_origin_bytes
-
-    # size of the sig part of the slice:
-    sig_size_bytes = slice_sig_size // 8
-
-    stop = start + sig_size_bytes
-    read_ranges.append((file_idx, start, stop))
+def _get_row_start_stop(offset_global, offset_local, stride, row_idx, row_length):
+    start = offset_global + offset_local + row_idx * stride
+    stop = start + row_length
+    return start, stop
 
 
 @numba.njit(inline='always', cache=True)
@@ -176,27 +162,303 @@ def _mib_r24_px_to_bytes(
 
     # now let's figure in the current frame index:
     # (go down into the file by full frames; `sig_size`)
-    offset = file_header_bytes + byte_offset + frame_in_file_idx * sig_size * bpp
+    offset = file_header_bytes + byte_offset + frame_in_file_idx * sig_size * bpp // 8
 
     # offset in px in the current frame:
-    sig_origin_bytes = sig_origin * bpp
+    sig_origin_bytes = sig_origin * bpp // 8
 
     start = offset + sig_origin_bytes
 
     # size of the sig part of the slice:
-    sig_size_bytes = slice_sig_size * bpp
+    sig_size_bytes = slice_sig_size * bpp // 8
 
     stop = start + sig_size_bytes
     read_ranges.append((file_idx, start, stop))
 
     # this is the addition for medipix 24bit raw:
     # we read the part from the "second 12bit frame"
-    second_frame_offset = sig_size * bpp
+    second_frame_offset = sig_size * bpp // 8
     read_ranges.append((file_idx, start + second_frame_offset, stop + second_frame_offset))
 
 
-mib_r_get_read_ranges = make_get_read_ranges(px_to_bytes=_mib_r_px_to_bytes)
 mib_r24_get_read_ranges = make_get_read_ranges(px_to_bytes=_mib_r24_px_to_bytes)
+
+
+@numba.njit(inline="always", cache=True)
+def _mib_2x2_tile_block(
+    slices_arr, fileset_arr, slice_sig_sizes, sig_origins,
+    inner_indices_start, inner_indices_stop, frame_indices, sig_size,
+    px_to_bytes, bpp, frame_header_bytes, frame_footer_bytes, file_idxs,
+    slice_offset, extra, sig_shape,
+):
+    """
+    Generate read ranges for 2x2 Merlin Quad raw data.
+
+    The arrangement means that reading a contiguous block of data from the file,
+    we get data from all four quadrants. The arrangement, and thus resulting
+    array, looks like this:
+
+    _________
+    | 1 | 2 |
+    ---------
+    | 3 | 4 |
+    ---------
+
+    with the original data layed out like this:
+
+    [4 | 3 | 2 | 1]
+
+    (note that quadrants 3 and 4 are also flipped in x and y direction in the
+    resulting array, compared to the original data)
+
+    So if we read one row of raw data, we first get the bottom-most rows from 4
+    and 3 first, then the top-most rows from 2 and 1.
+
+    This is similar to how FRMS6 works, and we generate the read ranges in a
+    similar way here. In addition to the cut-and-flip from FRMS6, we also have
+    the split in x direction in quadrants.
+    """
+    result = NumbaList()
+
+    # positions in the signal dimensions:
+    for slice_idx in range(slices_arr.shape[0]):
+        # (offset, size) arrays defining what data to read (in pixels)
+        # NOTE: assumes contiguous tiling scheme
+        # (i.e. a shape like (1, 1, ..., 1, X1, ..., XN))
+        # where X1 is <= the dataset shape at that index, and X2, ..., XN are
+        # equal to the dataset shape at that index
+        slice_origin = slices_arr[slice_idx][0]
+        slice_shape = slices_arr[slice_idx][1]
+
+        read_ranges = NumbaList()
+
+        x_shape = slice_shape[1]
+        x_size = x_shape * bpp // 8  # back in bytes
+        x_size_half = x_size // 2
+        stride = x_size_half * 4
+
+        sig_size_bytes = sig_size * bpp // 8
+
+        y_start = slice_origin[0]
+        y_stop = slice_origin[0] + slice_shape[0]
+
+        y_size_half = sig_shape[0] // 2
+        y_size = sig_shape[0]
+
+        # inner "depth" loop along the (flat) navigation axis of a tile:
+        for i, inner_frame_idx in enumerate(range(inner_indices_start, inner_indices_stop)):
+            inner_frame = frame_indices[inner_frame_idx]
+            file_idx = file_idxs[i]
+            f = fileset_arr[file_idx]
+            frame_in_file_idx = inner_frame - f[0]
+            file_header_bytes = f[3]
+
+            # we are reading a part of a single frame, so we first need to find
+            # the offset caused by headers:
+            header_offset = file_header_bytes + frame_header_bytes * (frame_in_file_idx + 1)
+
+            # now let's figure in the current frame index:
+            # (go down into the file by full frames; `sig_size`)
+            offset = header_offset + frame_in_file_idx * sig_size_bytes
+
+            # in total, we generate depth * 2 * (y_stop - y_start) read ranges per tile
+            for y in range(y_start, y_stop):
+                if y < y_size_half:
+
+                    # top: no y-flip, no x-flip
+                    flip = 0
+
+                    # quadrant 1, left part of the result: we have the three other blocks
+                    # in the original data in front of us
+                    start, stop = _get_row_start_stop(
+                        offset, 3 * x_size_half, stride, y, x_size_half
+                    )
+                    read_ranges.append((
+                        file_idx,
+                        start,
+                        stop,
+                        flip,
+                    ))
+                    # quadrant 2, right part of the result: we have the two other blocks
+                    # in the original data in front of us
+                    start, stop = _get_row_start_stop(
+                        offset, 2 * x_size_half, stride, y, x_size_half
+                    )
+                    read_ranges.append((
+                        file_idx,
+                        start,
+                        stop,
+                        flip,
+                    ))
+                else:
+                    # assert False
+                    # bottom: both x and y flip
+                    flip = 1
+                    y = y_size - y - 1
+                    # quadrant 3, left part of the result: we have the one other block
+                    # in the original data in front of us
+                    start, stop = _get_row_start_stop(
+                        offset, 1 * x_size_half, stride, y, x_size_half
+                    )
+                    read_ranges.append((
+                        file_idx,
+                        start,
+                        stop,
+                        flip,
+                    ))
+                    # quadrant 4, right part of the result: we have the no other blocks
+                    # in the original data in front of us
+                    start, stop = _get_row_start_stop(offset, 0, stride, y, x_size_half)
+                    read_ranges.append((
+                        file_idx,
+                        start,
+                        stop,
+                        flip,
+                    ))
+
+        # the indices are compressed to the selected frames
+        compressed_slice = np.array([
+            [slice_offset + inner_indices_start] + [i for i in slice_origin],
+            [inner_indices_stop - inner_indices_start] + [i for i in slice_shape],
+        ])
+        result.append((slice_idx, compressed_slice, read_ranges))
+
+    return result
+
+
+@numba.njit(inline='always', cache=True, boundscheck=True)
+def decode_r1_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 1bit format: each bit is actually saved as a single bit. 64 bits
+    need to be unpacked together. This is the quad variant.
+
+    Parameters
+    ==========
+    inp : np.ndarray
+
+    out : np.ndarray
+        The output buffer, with the signal dimensions flattened
+
+    idx : int
+        The index in the read ranges array
+
+    native_dtype : nt.DtypeLike
+        The "native" dtype (format-specific)
+
+    rr : np.ndarray
+        A single entry from the read ranges array
+
+    origin : np.ndarray
+        The 3D origin of the tile, for example :code:`np.array([2, 0, 0])`
+
+    shape : np.ndarray
+        The 3D tileshape, for example :code:`np.array([2, 512, 512])`
+
+    ds_shape : np.ndarray
+        The complete ND dataset shape, for example :code:`np.array([32, 32, 512, 512])`
+    """
+    # in case of 2x2 quad, the index into `out` is not straight `idx`, but
+    # we have `2 * shape[1]` read ranges generated for one depth.
+    num_rows_tile = shape[1]
+
+    out_3d = out.reshape(out.shape[0], -1, shape[-1])
+
+    # each line in the output array generates two entries in the
+    # read ranges. so `(idx // 2) % num_rows_tile` is the correct
+    # out_y:
+    out_y = (idx // 2) % num_rows_tile
+    out_x_start = (idx % 2) * (shape[-1] // 2)
+
+    depth = idx // (num_rows_tile * 2)
+    flip = rr[3]
+
+    if flip == 0:
+        for stripe in range(inp.shape[0] // 8):
+            for byte in range(8):
+                inp_byte = inp[(stripe + 1) * 8 - (byte + 1)]
+                for bitpos in range(8):
+                    out_x = 64 * stripe + 8 * byte + bitpos
+                    out_x += out_x_start
+                    out_3d[depth, out_y, out_x] = (inp_byte >> bitpos) & 1
+    else:
+        # flip in x direction:
+        x_shape = shape[2]
+        x_shape_half = x_shape // 2
+        for stripe in range(inp.shape[0] // 8):
+            for byte in range(8):
+                inp_byte = inp[(stripe + 1) * 8 - (byte + 1)]
+                for bitpos in range(8):
+                    out_x = out_x_start + x_shape_half - 1 - (64 * stripe + 8 * byte + bitpos)
+                    out_3d[depth, out_y, out_x] = (inp_byte >> bitpos) & 1
+
+
+@numba.njit(inline='always', cache=True, boundscheck=True)
+def decode_r6_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 1bit format: each bit is actually saved as a single bit. 64 bits
+    need to be unpacked together. This is the quad variant.
+
+    Parameters
+    ==========
+    inp : np.ndarray
+
+    out : np.ndarray
+        The output buffer, with the signal dimensions flattened
+
+    idx : int
+        The index in the read ranges array
+
+    native_dtype : nt.DtypeLike
+        The "native" dtype (format-specific)
+
+    rr : np.ndarray
+        A single entry from the read ranges array
+
+    origin : np.ndarray
+        The 3D origin of the tile, for example :code:`np.array([2, 0, 0])`
+
+    shape : np.ndarray
+        The 3D tileshape, for example :code:`np.array([2, 512, 512])`
+
+    ds_shape : np.ndarray
+        The complete ND dataset shape, for example :code:`np.array([32, 32, 512, 512])`
+    """
+    # in case of 2x2 quad, the index into `out` is not straight `idx`, but
+    # we have `2 * shape[1]` read ranges generated for one depth.
+    num_rows_tile = shape[1]
+
+    out_3d = out.reshape(out.shape[0], -1, shape[-1])
+
+    # each line in the output array generates two entries in the
+    # read ranges. so `(idx // 2) % num_rows_tile` is the correct
+    # out_y:
+    out_y = (idx // 2) % num_rows_tile
+    out_x_start = (idx % 2) * (shape[-1] // 2)
+
+    depth = idx // (num_rows_tile * 2)
+    flip = rr[3]
+
+    out_cut = out_3d[depth, out_y, out_x_start:out_x_start + out_3d.shape[2] // 2]
+
+    if flip == 0:
+        for i in range(out_cut.shape[0]):
+            col = i % 8
+            pos = i // 8
+            out_pos = (pos + 1) * 8 - col - 1
+            out_cut[out_pos] = inp[i]
+    else:
+        # flip in x direction:
+        for i in range(out_cut.shape[0]):
+            col = i % 8
+            pos = i // 8
+            out_pos = (pos + 1) * 8 - col - 1
+            # out_x = out_x_start + x_shape_half - 1 - (64 * stripe + 8 * byte + bitpos)
+            out_cut[out_cut.shape[0] - out_pos - 1] = inp[i]
+
+
+mib_2x2_get_read_ranges = make_get_read_ranges(
+    read_ranges_tile_block=_mib_2x2_tile_block
+)
 
 
 @numba.jit(inline='always', cache=True)
@@ -261,10 +523,11 @@ def decode_r24_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
 
 
 class MIBDecoder(Decoder):
-    def __init__(self, kind, dtype, bit_depth):
-        self._kind = kind
-        self._dtype = dtype
-        self._bit_depth = bit_depth
+    def __init__(self, header: "HeaderDict"):
+        self._kind = header['mib_kind']
+        self._dtype = header['dtype']
+        self._bit_depth = header['bits_per_pixel']
+        self._header = header
 
     def do_clear(self):
         """
@@ -278,11 +541,18 @@ class MIBDecoder(Decoder):
         return False
 
     def _get_decode_r(self):
-        # FIXME: R-mode files also mean we are constrained
-        # to tile sizes that are a multiple of 64px in the fastest
-        # dimension! need to take care of this in the negotiation
-        # -> if we make sure full "x-lines" are taken, we are fine
         bit_depth = self._bit_depth
+        layout = self._header['sensor_layout']
+        num_chips = self._header['num_chips']
+        if layout == (2, 2) and num_chips == 4:
+            if bit_depth == 1:
+                return decode_r1_swap_2x2
+            elif bit_depth == 6:
+                return decode_r6_swap_2x2
+            else:
+                raise NotImplementedError(
+                    f"bit depth {bit_depth} not implemented for layout {layout}"
+                )
         if bit_depth == 1:
             return decode_r1_swap
         elif bit_depth == 6:
@@ -317,19 +587,42 @@ class MIBDecoder(Decoder):
             return np.dtype("u1")
 
 
+MIBKind = Literal['u', 'r']
+
+
+class HeaderDict(TypedDict):
+    header_size_bytes: int
+    dtype: "nt.DTypeLike"
+    mib_dtype: str
+    mib_kind: MIBKind
+    bits_per_pixel: int
+    image_size: Tuple[int, int]
+    image_size_bytes: int
+    sequence_first_image: int
+    filesize: int
+    num_images: int
+    num_chips: int
+    sensor_layout: Tuple[int, int]
+
+
 class MIBHeaderReader:
-    def __init__(self, path, fields=None, sequence_start=None):
+    def __init__(
+        self,
+        path: str,
+        fields: Optional[HeaderDict] = None,
+        sequence_start: int = 0,
+    ):
         self.path = path
         if fields is None:
-            self._fields = {}
+            self._fields = None
         else:
             self._fields = fields
         self._sequence_start = sequence_start
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<MIBHeaderReader: %s>" % self.path
 
-    def _get_np_dtype(self, dtype, bit_depth):
+    def _get_np_dtype(self, dtype: str, bit_depth: int) -> "nt.DTypeLike":
         dtype = dtype.lower()
         num_bits = int(dtype[1:])
         if dtype[0] == "u":
@@ -344,8 +637,10 @@ class MIBHeaderReader:
                 return np.dtype("uint16")
             else:
                 raise NotImplementedError("unknown bit depth: %s" % bit_depth)
+        else:
+            raise NotImplementedError(f"unknown dtype: {dtype}")
 
-    def read_header(self):
+    def read_header(self) -> HeaderDict:
         # FIXME: do this read via the IO backend!
         with open(file=self.path, encoding="ascii", errors='ignore') as f:
             header = f.read(1024)
@@ -357,7 +652,14 @@ class MIBHeaderReader:
                 if '\x00' not in p]
         self._header_parts = parts
         dtype = parts[6].lower()
-        mib_kind = dtype[0]
+        mib_kind: Literal['u', 'r']
+        # To make mypy Literal check happy...
+        if dtype[0] == "r":
+            mib_kind = "r"
+        elif dtype[0] == "u":
+            mib_kind = "u"
+        else:
+            raise ValueError("unknown kind: %s" % dtype[0])
         image_size = (int(parts[5]), int(parts[4]))
         # FIXME: There can either be threshold values for all chips, or maybe also
         # none. For now, we just make use of the fact that the bit depth is
@@ -382,8 +684,42 @@ class MIBHeaderReader:
             num_images = filesize // (
                 image_size_bytes + header_size_bytes
             )
-        else:
-            raise ValueError("unknown kind: %s" % mib_kind)
+        num_chips = int(parts[3])
+
+        # 2x2, Nx1, 2x2G, Nx1G -> strip off the 'G' suffix for now:
+        # Assumption: layout is width x height
+
+        # We currently only support 1x1 and 2x2 layouts, and support for raw
+        # files with 2x2 layout is limited to 1 or 6 bits. Support for 12bit and 24bit TBD.
+        # We don't yet support general Nx1 layouts, or arbitrary "chip select"
+        # values (2x2 layout, but only a subset of them is enabled).
+        sensor_layout_str = parts[7].replace('G', '').split('x')
+        sensor_layout = (
+            int(sensor_layout_str[0]),
+            int(sensor_layout_str[1]),
+        )
+
+        if mib_kind == "r":
+            # in raw data, the layout information is not decoded yet - we just get
+            # rows from different sensors after one another. The image size is
+            # accordingly also different.
+
+            # NOTE: this is still a bit hacky - individual sensors in a layout
+            # can be enabled or disabled; because we only support 1x1 and 2x2
+            # layouts for now, we just do the "layout based reshaping" only
+            # in the 2x2 case:
+            if num_chips > 1:
+                px_length = image_size[0]
+                image_size_orig = image_size
+                image_size = (
+                    px_length * sensor_layout[1],
+                    px_length * sensor_layout[0],
+                )
+                if prod(image_size_orig) != prod(image_size):
+                    raise ValueError(
+                        f"invalid sensor layout {sensor_layout} "
+                        f"(original image size: {image_size_orig})"
+                    )
 
         self._fields = {
             'header_size_bytes': header_size_bytes,
@@ -396,21 +732,23 @@ class MIBHeaderReader:
             'sequence_first_image': int(parts[1]),
             'filesize': filesize,
             'num_images': num_images,
+            'num_chips': num_chips,
+            'sensor_layout': sensor_layout,
         }
         return self._fields
 
     @property
-    def num_frames(self):
+    def num_frames(self) -> int:
         return self.fields['num_images']
 
     @property
-    def start_idx(self):
+    def start_idx(self) -> int:
         return self.fields['sequence_first_image'] - self._sequence_start
 
     @property
-    def fields(self):
-        if not self._fields:
-            self.read_header()
+    def fields(self) -> HeaderDict:
+        if self._fields is None:
+            self._fields = self.read_header()
         return self._fields
 
 
@@ -432,25 +770,31 @@ class MIBFile(File):
 
 
 class MIBFileSet(FileSet):
-    def __init__(self, kind, dtype, bit_depth, *args, **kwargs):
-        self._kind = kind
-        self._mib_dtype = dtype
-        self._bit_depth = bit_depth
+    def __init__(
+        self,
+        header: HeaderDict,
+        *args, **kwargs
+    ):
+        self._header = header
         super().__init__(*args, **kwargs)
 
     def _clone(self, *args, **kwargs):
-        return self.__class__(
-            kind=self._kind, dtype=self._mib_dtype, bit_depth=self._bit_depth,
-            *args, **kwargs
-        )
+        return self.__class__(header=self._header, *args, **kwargs)
 
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
         dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
-        roi: typing.Union[np.ndarray, None] = None,
+        roi: Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
-        bit_depth = self._bit_depth
+        bit_depth = self._header['bits_per_pixel']
+        kind = self._header['mib_kind']
+        layout = self._header['sensor_layout']
+        if kind == "r" and bit_depth == 1:
+            # special case for bit-packed 1-bit format:
+            bpp = 1
+        else:
+            bpp = np.dtype(dtype).itemsize * 8
         kwargs = dict(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,
@@ -460,16 +804,24 @@ class MIBFileSet(FileSet):
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
             sync_offset=sync_offset,
-            bpp=np.dtype(dtype).itemsize,
+            bpp=bpp,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,
         )
-        if self._kind == "r" and bit_depth in (1,):
-            return mib_r_get_read_ranges(**kwargs)
-        elif self._kind == "r" and bit_depth in (24,):
-            return mib_r24_get_read_ranges(**kwargs)
+        if layout == (1, 1) or self._header['num_chips'] == 1:
+            if kind == "r" and bit_depth in (24,):
+                return mib_r24_get_read_ranges(**kwargs)
+            else:
+                return default_get_read_ranges(**kwargs)
+        elif layout == (2, 2):
+            if kind == "r":
+                return mib_2x2_get_read_ranges(**kwargs)
+            else:
+                return default_get_read_ranges(**kwargs)
         else:
-            return default_get_read_ranges(**kwargs)
+            raise NotImplementedError(
+                f"No support for layout {layout} yet - please contact us!"
+            )
 
 
 class MIBDataSet(DataSet):
@@ -483,8 +835,8 @@ class MIBDataSet(DataSet):
     are assumed to follow a naming pattern of some non-numerical prefix,
     and a sequential numerical suffix.
 
-    Note that if you are using a per-pixel trigger setup, LiberTEM won't
-    be able to deduce the x scanning dimension - in that case, you will
+    Note that if you are using a per-pixel or per-scan trigger setup, LiberTEM
+    won't be able to deduce the x scanning dimension - in that case, you will
     need to specify the `nav_shape` yourself.
 
     Examples
@@ -538,7 +890,7 @@ class MIBDataSet(DataSet):
                     "either nav_shape needs to be passed, or path needs to point to a .hdr file"
                 )
         self._filename_cache = None
-        self._files_sorted = None
+        self._files_sorted: Optional[Sequence[MIBHeaderReader]] = None
         # ._preread_headers() calls ._files() which passes the cached headers down to
         # MIBHeaderReader, if they exist. So we need to make sure to initialize self._headers
         # before calling _preread_headers!
@@ -591,10 +943,16 @@ class MIBDataSet(DataSet):
         return executor.run_function(self._do_initialize)
 
     def get_diagnostics(self):
+        assert self._files_sorted is not None
         first_file = self._files_sorted[0]
+        header = first_file.fields
         return [
-            {"name": "Data type",
-             "value": str(first_file.fields['mib_dtype'])},
+            {"name": "Bits per pixel",
+             "value": str(header['bits_per_pixel'])},
+            {"name": "Data kind",
+             "value": str(header['mib_kind'])},
+            {"name": "Layout",
+             "value": str(header['sensor_layout'])},
         ]
 
     @classmethod
@@ -648,7 +1006,7 @@ class MIBDataSet(DataSet):
         self._filename_cache = fns
         return fns
 
-    def _files(self):
+    def _files(self) -> Generator[MIBHeaderReader, None, None]:
         for path in self._filenames():
             f = MIBHeaderReader(path, fields=self._headers.get(path),
                         sequence_start=self._sequence_start)
@@ -682,21 +1040,16 @@ class MIBDataSet(DataSet):
         }
 
     def get_decoder(self) -> Decoder:
+        assert self._files_sorted is not None
         first_file = self._files_sorted[0]
-        kind = first_file.fields['mib_kind']
-        bit_depth = first_file.fields['bits_per_pixel']
+        assert self.meta is not None
         return MIBDecoder(
-            kind=kind,
-            dtype=self.meta.raw_dtype,
-            bit_depth=bit_depth,
+            header=first_file.fields,
         )
 
     def _get_fileset(self):
         assert self._sequence_start is not None
         first_file = self._files_sorted[0]
-        dtype = first_file.fields['dtype']
-        kind = first_file.fields['mib_kind']
-        bit_depth = first_file.fields['bits_per_pixel']
         header_size = first_file.fields['header_size_bytes']
         return MIBFileSet(files=[
             MIBFile(
@@ -710,7 +1063,14 @@ class MIBDataSet(DataSet):
                 header=f.fields,
             )
             for f in self._files_sorted
-        ], dtype=dtype, kind=kind, bit_depth=bit_depth, frame_header_bytes=header_size)
+        ], header=first_file.fields, frame_header_bytes=header_size)
+
+    def get_base_shape(self, roi: Optional[np.ndarray]) -> Tuple[int, ...]:
+        # With R-mode files, we are constrained to tile sizes that are a
+        # multiple of 64px in the fastest dimension!
+        # If we make sure full "x-lines" are taken, we are fine (this is the
+        # case by default)
+        return super().get_base_shape(roi)
 
     def get_partitions(self):
         first_file = self._files_sorted[0]

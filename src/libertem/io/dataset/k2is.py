@@ -697,7 +697,7 @@ class K2FileSet(FileSet):
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
             sync_offset=sync_offset,
-            bpp=np.dtype(dtype).itemsize,
+            bpp=np.dtype(dtype).itemsize * 8,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,
         )

@@ -304,9 +304,9 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffe
         extra_shape = descriptor.kwargs.pop('extra_shape')
         buffer_dask = da.from_delayed(el, *descriptor.args, **descriptor.kwargs)
         if as_buffer:
-            buffer = BufferWrapper(buffer_kind,
-                                   extra_shape=extra_shape,
-                                   dtype=descriptor.kwargs['dtype'])
+            buffer = DaskBufferWrapper(buffer_kind,
+                                       extra_shape=extra_shape,
+                                       dtype=descriptor.kwargs['dtype'])
             # Need to test whether roi=None here is a problem
             buffer.set_shape_partition(partition, roi=None)
             buffer.reset_buffer(buffer_dask)

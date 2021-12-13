@@ -67,7 +67,8 @@ class DelayedJobExecutor(JobExecutor):
             flat_result_task = partial(task_wrap, task)
             result = delayed(flat_result_task, nout=len(flat_structure))(env=env,
                                                                          params=params_handle)
-            wrapped_res = delayed_to_buffer_wrappers(result, flat_structure, task.partition)
+            wrapped_res = delayed_to_buffer_wrappers(result, flat_structure, task.partition,
+                                                     roi=self._udfs[0].meta.roi)
             renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
             result = tuple(UDFData(data=res) for res in renested)
             yield result, task

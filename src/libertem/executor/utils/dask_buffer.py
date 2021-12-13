@@ -1,5 +1,6 @@
 import dask.array as da
 
+from ...common.math import prod
 from ...common.slice import Slice
 from ...common.buffers import BufferWrapper
 from .dask_inplace import DaskInplaceBufferWrapper
@@ -20,6 +21,10 @@ class DaskBufferWrapper(BufferWrapper):
                    where=buffer.where,
                    use=buffer.use)
 
+    @property
+    def _extra_chunking(self):
+        return tuple((s,) for s in self._extra_shape)
+
     def allocate(self, lib=None):
         """
         Allocate a buffer as a dask array
@@ -28,19 +33,22 @@ class DaskBufferWrapper(BufferWrapper):
         in the flat nav dimension via the attribute self._ds_partitions
         sig buffers are currently unchunked as there is no mechanism
         to have partitions which cover part of the signal dimension
+
+        extra_shape dimensions are currently unchunked
         """
         # self._ds_partitions set in UDFData.allocate_for_full()
-        nav_chunking = tuple(self._slice_for_partition(p).shape[0]
-                             for p in self._ds_partitions)
+        nav_chunking = (tuple(self._slice_for_partition(p).shape[0]
+                              for p in self._ds_partitions),)
+        
         # At this time there is no interest in chunking the sig dimension
         # This could be modified in the future if partitions are more flexible
         sig_shape = self._ds_shape.sig
-        sig_chunking = (-1,) * len(sig_shape)
+        sig_chunking = (-1,) * len(sig_shape) + self._extra_chunking
 
         if self._kind == 'nav':
             flat_nav_shape = self._shape[0]
-            if self._shape == (flat_nav_shape,):
-                _buf_chunking = nav_chunking
+            if self._shape == (flat_nav_shape,) + self._extra_shape:
+                _buf_chunking = nav_chunking + self._extra_chunking
             elif self._shape[0] in nav_chunking:
                 # This branch should never be taken if we are only allocating
                 # with dask on the main node and not inside UDFTasks
@@ -97,14 +105,15 @@ class DaskBufferWrapper(BufferWrapper):
 
         if self._kind == 'nav':
             flat_chunking = tuple(p.slice.shape[0] for p in self._ds_partitions)
-            flat_shape = self._ds_shape.flatten_nav()[0]
+            flat_chunking = (flat_chunking,) + self._extra_chunking
+            flat_shape = (prod(self._ds_shape.nav),) + self._extra_shape
             flat_wrapper = da.full(flat_shape, fill, dtype=self._dtype, chunks=flat_chunking)
-            flat_wrapper[self._roi] = self._data
-            wrapper = flat_wrapper.reshape(self._ds_shape.nav)
+            flat_wrapper[self._roi, ...] = self._data
+            wrapper = flat_wrapper.reshape(self._ds_shape.nav + self._extra_shape)
         else:
             chunking = ((-1,),) * len(shape)
             wrapper = da.full(shape, fill, dtype=self._dtype, chunks=chunking)
-            wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
+            wrapper[self._roi.reshape(self._ds_shape.nav), ...] = self._data
         return wrapper
 
     def _get_slice(self, slice: Slice):

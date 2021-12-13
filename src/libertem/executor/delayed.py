@@ -120,7 +120,7 @@ class DelayedJobExecutor(JobExecutor):
             # won't be getting partial results with damage anyway.
             # Currently there is no interface to provide all of the results
             # to udf.merge at once and in the correct order, so I am accumulating
-            # results in self._part_results[udf] = {partition_slice: part_results, ...}
+            # results in self._part_results[udf] = {partition_slice_roi: part_results, ...}
             if hasattr(udf, 'dask_merge'):
                 if self._accumulate_part_results(udf, part_results_udf, task):
                     udf.dask_merge(self._part_results[udf])
@@ -203,13 +203,18 @@ class DelayedJobExecutor(JobExecutor):
         before allowing dask_merge to be called
         """
         try:
-            self._part_results[udf][task.partition.slice] = part_results
+            buf = next(iter(part_results.values()))  # get the first buffer
+            slice_with_roi = buf._slice_for_partition(task.partition)
+            self._part_results[udf][slice_with_roi] = part_results
         except KeyError:
             self._part_results[udf] = {}
             return self._accumulate_part_results(udf, part_results, task)
 
         # number of frames in dataset
-        target_coverage = prod(task.partition.meta.shape.nav)
+        if udf.meta.roi is not None:
+            target_coverage = np.count_nonzero(udf.meta.roi)
+        else:
+            target_coverage = prod(task.partition.meta.shape.nav)
         # number of frames we have results for
         current_coverage = sum([prod(k.shape.nav) for k in self._part_results[udf].keys()])
         if target_coverage == current_coverage:
@@ -217,6 +222,9 @@ class DelayedJobExecutor(JobExecutor):
                                      key=lambda kv: kv[0].origin[0])
             self._part_results[udf] = {kv[0]: kv[1] for kv in ordered_results}
             return True
+        elif current_coverage > target_coverage:
+            raise RuntimeError(('More frames accumulated than ROI specifies - '
+                                f'target {target_coverage} - processed {current_coverage}'))
         return False
 
 

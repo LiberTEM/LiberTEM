@@ -123,8 +123,10 @@ class DelayedJobExecutor(JobExecutor):
             # results in self._part_results[udf] = {partition_slice_roi: part_results, ...}
             if hasattr(udf, 'dask_merge'):
                 if self._accumulate_part_results(udf, part_results_udf, task):
-                    udf.dask_merge(self._part_results[udf])
-                    self._part_results.pop(udf, None)
+                    try:
+                        udf.dask_merge(self._part_results[udf])
+                    finally:
+                        self._part_results.pop(udf, None)
                 continue
 
             # In principle we can requrire that sig merges are done sequentially

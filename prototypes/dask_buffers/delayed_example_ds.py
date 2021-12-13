@@ -125,6 +125,10 @@ if __name__ == '__main__':
     rawpath = pathlib.Path('.') / 'test.raw'
     rawfile = rawpath.open(mode='wb').write(data.data)
 
+    rng = np.random.RandomState(42)
+    roi = rng.choice([True, False], global_ds_shape.nav)
+    roi[3, :] = False
+
     executor = DelayedJobExecutor()
     ctx = lt.Context(executor=executor)
     ds = ctx.load('raw', rawpath, dtype=dtype,
@@ -136,7 +140,7 @@ if __name__ == '__main__':
     stddev_udf = StdDevUDF()
     udfs = [sigsum_udf, navsum_udf, stddev_udf]
 
-    res = ctx.run_udf(dataset=ds, udf=udfs)
+    res = ctx.run_udf(dataset=ds, udf=udfs, roi=roi)
 
     sigsum_dask = res[0]['intensity'].data
     navsum_dask = res[1]['intensity'].data

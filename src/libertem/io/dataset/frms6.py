@@ -7,10 +7,10 @@ import logging
 import warnings
 import configparser
 
+import numba
 from numba.typed import List
 import scipy.io as sio
 import numpy as np
-import numba
 
 from libertem.common.math import prod
 from libertem.corrections import CorrectionSet
@@ -268,8 +268,8 @@ def _frms6_read_ranges_tile_block(
 
         read_ranges = List()
 
-        xs = slice_shape[1]
-        stride = 2 * xs
+        x_shape = slice_shape[1]
+        stride = 2 * x_shape
 
         binning = extra[0]
         num_rows = sig_shape[0]
@@ -288,18 +288,18 @@ def _frms6_read_ranges_tile_block(
 
             # now let's figure in the current frame index:
             # (go down into the file by full frames; `sig_size`)
-            offset = header_offset + frame_in_file_idx * (sig_size // binning) * bpp
+            offset = header_offset + frame_in_file_idx * (sig_size // binning) * bpp // 8
 
             y_start = slice_origin[0] // binning
             y_stop = (slice_origin[0] + slice_shape[0]) // binning
 
             for y in range(y_start, y_stop):
-                mapped_y, x_offset = _map_y(y, xs, binning, num_rows)
-                start = offset + (stride * mapped_y + x_offset) * bpp
+                mapped_y, x_offset = _map_y(y, x_shape, binning, num_rows)
+                start = offset + (stride * mapped_y + x_offset) * bpp // 8
                 read_ranges.append(
                     (
                         file_idx,
-                        start, start + xs * bpp
+                        start, start + x_shape * bpp // 8
                     )
                 )
 
@@ -393,7 +393,7 @@ class FRMS6FileSet(FileSet):
             fileset_arr=fileset_arr,
             sig_shape=tuple(tiling_scheme.dataset_shape.sig),
             sync_offset=sync_offset,
-            bpp=np.dtype(dtype).itemsize,
+            bpp=np.dtype(dtype).itemsize * 8,
             frame_header_bytes=self._frame_header_bytes,
             frame_footer_bytes=self._frame_footer_bytes,
             extra=(binning,),

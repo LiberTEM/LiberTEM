@@ -778,7 +778,7 @@ class UDFBase:
 
         results_buffer_cls = {
             k: self.results.get_buffer(k).result_buffer_type()
-            for k, v in results_tmp.items()
+            for k in results_tmp.keys()
         }
 
         # wrap numpy results into `ResultBuffer`s:

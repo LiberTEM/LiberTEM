@@ -1,5 +1,6 @@
 import os
 import io
+from typing import Type
 
 import numpy as np
 import numba
@@ -245,6 +246,7 @@ class BufferedBackendImpl(IOBackendImpl):
 
     @contextlib.contextmanager
     def open_files(self, fileset: FileSet):
+        cls: Type[BufferedFile]
         if self._direct_io:
             cls = DirectBufferedFile
         else:

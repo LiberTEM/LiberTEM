@@ -373,6 +373,9 @@ class UDFData:
     def keys(self):
         return self._data.keys()
 
+    def values(self):
+        return self._data.values()
+
     def as_dict(self) -> Dict[str, BufferWrapper]:
         return dict(self.items())
 

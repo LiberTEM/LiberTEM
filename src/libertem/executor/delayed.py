@@ -293,7 +293,7 @@ def structure_from_task(udfs, task):
     return tuple(structure)
 
 
-def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffer=True):
+def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, roi=None, as_buffer=True):
     """
     Take the iterable Delayed results object, and re-wrap each Delayed object
     back into a BufferWrapper wrapping a dask.array of the correct shape and dtype
@@ -308,7 +308,7 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, as_buffe
                                        extra_shape=extra_shape,
                                        dtype=descriptor.kwargs['dtype'])
             # Need to test whether roi=None here is a problem
-            buffer.set_shape_partition(partition, roi=None)
+            buffer.set_shape_partition(partition, roi=roi)
             buffer.reset_buffer(buffer_dask)
             wrapped_res.append(buffer)
         else:

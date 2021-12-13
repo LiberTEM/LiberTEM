@@ -29,15 +29,15 @@ def _default_px_to_bytes(
 
     # now let's figure in the current frame index:
     # (go down into the file by full frames; `sig_size`)
-    offset = byte_offset + frame_in_file_idx * sig_size * bpp
+    offset = byte_offset + frame_in_file_idx * sig_size * bpp // 8
 
     # offset in px in the current frame:
-    sig_origin_bytes = sig_origin * bpp
+    sig_origin_bytes = sig_origin * bpp // 8
 
     start = offset + sig_origin_bytes
 
     # size of the sig part of the slice:
-    sig_size_bytes = slice_sig_size * bpp
+    sig_size_bytes = slice_sig_size * bpp // 8
 
     stop = start + sig_size_bytes
 
@@ -106,6 +106,10 @@ def _default_read_ranges_tile_block(
             frame_in_file_idx = inner_frame - f[0]
             file_header_bytes = f[3]
 
+            # px_to_bytes is the format-specific translation of pixel
+            # coordinates (slice_sig_size, sig_size, sig_origin)
+            # to bytes, which are appended as tuples (file_idx, start, stop)
+            # to the `read_ranges` list.
             px_to_bytes(
                 bpp=bpp,
                 frame_in_file_idx=frame_in_file_idx,
@@ -157,6 +161,9 @@ def make_get_read_ranges(
 
     roi
         Region of interest (for the full dataset)
+
+    bpp : int
+        Bits per pixel, including padding
 
     Returns
     -------
@@ -297,7 +304,7 @@ class DataTile(np.ndarray):
         return np.asarray(self).view(np.ndarray).reshape(*args, **kwargs)
 
     @property
-    def flat_data(self):
+    def flat_data(self) -> np.ndarray:
         """
         Flatten the data.
 

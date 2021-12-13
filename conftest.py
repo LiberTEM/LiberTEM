@@ -20,6 +20,7 @@ import tornado.httpserver
 
 import libertem.api as lt
 from libertem.executor.inline import InlineJobExecutor
+from libertem.executor.delayed import DelayedJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
@@ -627,6 +628,11 @@ def inline_executor():
 
 
 @pytest.fixture
+def delayed_executor():
+    return DelayedJobExecutor()
+
+
+@pytest.fixture
 def lt_ctx(inline_executor):
     return lt.Context(executor=inline_executor, plot_class=Dummy2DPlot)
 
@@ -669,6 +675,11 @@ def concurrent_executor():
     executor = ConcurrentJobExecutor.make_local()
     yield executor
     executor.close()
+
+
+@pytest.fixture
+def delayed_ctx(delayed_executor):
+    return lt.Context(executor=delayed_executor, plot_class=Dummy2DPlot)
 
 
 @pytest.fixture

@@ -128,7 +128,7 @@ class DaskBufferWrapper(BufferWrapper):
         self._data = self._data
 
     def __repr__(self):
-        return (f"<DaskBufferWrapper kind={self._kind}"
+        return (f"<DaskBufferWrapper kind={self._kind} "
                 f"extra_shape={self._extra_shape} backing={self._data}>")
 
     def result_buffer_type(self):

@@ -1,12 +1,12 @@
 import numpy as np
-import pytest
+# import pytest
 
-from libertem.contrib.daskadapter import make_dask_array, task_results_array
+from libertem.contrib.daskadapter import make_dask_array  # , task_results_array
 from libertem.api import Context
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.udf.sum import SumUDF
-from libertem.udf.masks import ApplyMasksUDF
-from libertem.udf.raw import PickUDF
+# from libertem.udf.sum import SumUDF
+# from libertem.udf.masks import ApplyMasksUDF
+# from libertem.udf.raw import PickUDF
 
 from utils import _mk_random
 

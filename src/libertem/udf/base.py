@@ -17,7 +17,7 @@ from libertem.io.dataset.base.tiling import DataTile
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
 from libertem.common.buffers import (
-    BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper, PreallocBufferWrapper,
+    BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice

@@ -1769,7 +1769,7 @@ class UDFRunner:
         )
         for udf in self._udfs:
             udf.set_meta(meta)
-            udf.init_result_buffers()
+            udf.init_result_buffers(executor=executor)
             udf.allocate_for_full(dataset, roi)
 
             if isinstance(udf, UDFPreprocessMixin):
@@ -1788,16 +1788,6 @@ class UDFRunner:
             roi=roi,
             corrections=corrections,
         )
-
-        for udf in self._udfs:
-            udf.set_meta(meta)
-            udf.init_result_buffers(executor=executor)
-            udf.allocate_for_full(dataset, roi)
-
-            if isinstance(udf, UDFPreprocessMixin):
-                udf.set_views_for_dataset(dataset)
-                udf.preprocess()
-
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,

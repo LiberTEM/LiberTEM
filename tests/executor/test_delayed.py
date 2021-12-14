@@ -82,7 +82,7 @@ def test_inplace_wrapper():
     dask_wrapped[subslice] = 55.
     _data = data.copy()
     _data[sl][subslice] = 55.
-    assert np.allclose(dask_wrapped.data.compute(), _data)    
+    assert np.allclose(dask_wrapped.data.compute(), _data)
 
     dask_wrapped.clear_slice()
     assert np.allclose(dask_wrapped.data.compute(), _data)
@@ -382,6 +382,7 @@ def unpack_all(udf_results_dask):
     return tuple({k: v.data for k, v in udf_result.items()}
                  for udf_result in udf_results_dask)
 
+
 def alldask(udf_results_dask):
     for udf_result in udf_results_dask:
         for daskbuffer in udf_result.values():
@@ -419,11 +420,11 @@ def allclose_with_nan(array1, array2, tol=None):
 
 @pytest.mark.parametrize(
     "ds_config", ({'shape': (16, 8, 32, 64), 'tileshape': (8, 32, 64),
-                        'num_partitions': 2, 'sig_dims': 2},
+                   'num_partitions': 2, 'sig_dims': 2},
                   {'shape': (8, 16, 64, 64), 'tileshape': (8, 32, 64),
-                        'num_partitions': 7, 'sig_dims': 2},
+                   'num_partitions': 7, 'sig_dims': 2},
                   {'shape': (16, 16, 8, 64), 'tileshape': (8, 8, 64),
-                        'num_partitions': 1, 'sig_dims': 2}),
+                   'num_partitions': 1, 'sig_dims': 2}),
     ids=['2part', '8part', '1part']
 )
 @pytest.mark.parametrize(
@@ -443,7 +444,7 @@ def allclose_with_nan(array1, array2, tol=None):
         [
             {'factory': count, 'params': {}}],
         [
-            {'factory': string, 'params': {}}],                        
+            {'factory': string, 'params': {}}],
         [
             {'factory': mask, 'params': {'slices': [np.s_[:, :], np.s_[0:3, :]],
                                          'values': [1, 1.7]}}],
@@ -505,6 +506,7 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
 def test_run_wrap(delayed_ctx):
     wrapped_delayed = delayed_ctx.executor.run_wrap(lambda x: x**2, 4)
     assert wrapped_delayed.compute() == 16
+
 
 def test_map(delayed_ctx):
     iterable = range(5)

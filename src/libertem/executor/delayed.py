@@ -10,12 +10,12 @@ from .base import JobExecutor, Environment, TaskProtocol
 from .scheduler import Worker, WorkerSet
 
 from ..common.math import prod
-from ..common.buffers import BufferWrapper
 from ..udf.base import _apply_part_result, _make_udf_result
 from ..udf.base import UDFData, MergeAttrMapping
 
 from .utils.dask_buffer import DaskBufferWrapper
 from .utils import delayed_unpack
+
 
 class DelayedJobExecutor(JobExecutor):
     """
@@ -226,7 +226,7 @@ class DelayedJobExecutor(JobExecutor):
             return True
         elif current_coverage > target_coverage:
             raise RuntimeError('More frames accumulated than ROI specifies - '
-                                f'target {target_coverage} - processed {current_coverage}')
+                              f'target {target_coverage} - processed {current_coverage}')
         return False
 
 

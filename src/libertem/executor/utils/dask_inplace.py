@@ -83,7 +83,7 @@ def combine_slices_multid(slices1, slices2, shape):
         if isinstance(s1, int):
             _slices2.append(null_slice)
         else:
-            _slices2.append(next(s2_gen))
+            _slices2.append(next(s2_gen, null_slice))
     next_el = next(s2_gen, None)
     assert next_el is None
     slices2 = tuple(_slices2)

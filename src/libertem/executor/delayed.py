@@ -278,21 +278,13 @@ def structure_from_task(udfs, task):
        ({'buffer_name': StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)
     """
     structure = []
-    partition_shape = task.partition.shape
     for udf in udfs:
         res_data = {}
         for buffer_name, buffer in udf.results.items():
-            if buffer.kind == 'sig':
-                part_buf_shape = partition_shape.sig
-            elif buffer.kind == 'nav':
-                part_buf_shape = (buffer._slice_for_partition(task.partition).shape[0],)
-            elif buffer.kind == 'single':
-                part_buf_shape = buffer.shape[:1]
-            else:
-                raise NotImplementedError
-            part_buf_dtype = buffer.dtype
             part_buf_extra_shape = buffer.extra_shape
-            part_buf_shape = part_buf_shape + part_buf_extra_shape
+            buffer.set_shape_partition(task.partition, roi=buffer._roi)
+            part_buf_shape = buffer.shape
+            part_buf_dtype = buffer.dtype
             res_data[buffer_name] = \
                 delayed_unpack.StructDescriptor(np.ndarray,
                                                 shape=part_buf_shape,

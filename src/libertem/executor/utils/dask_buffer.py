@@ -39,7 +39,7 @@ class DaskBufferWrapper(BufferWrapper):
         # self._ds_partitions set in UDFData.allocate_for_full()
         nav_chunking = (tuple(self._slice_for_partition(p).shape[0]
                               for p in self._ds_partitions),)
-        
+
         # At this time there is no interest in chunking the sig dimension
         # This could be modified in the future if partitions are more flexible
         sig_shape = self._ds_shape.sig

@@ -218,15 +218,15 @@ class DelayedJobExecutor(JobExecutor):
         else:
             target_coverage = prod(task.partition.meta.shape.nav)
         # number of frames we have results for
-        current_coverage = sum([prod(k.shape.nav) for k in self._part_results[udf].keys()])
+        current_coverage = sum(prod(k.shape.nav) for k in self._part_results[udf].keys())
         if target_coverage == current_coverage:
             ordered_results = sorted(self._part_results[udf].items(),
                                      key=lambda kv: kv[0].origin[0])
             self._part_results[udf] = {kv[0]: kv[1] for kv in ordered_results}
             return True
         elif current_coverage > target_coverage:
-            raise RuntimeError(('More frames accumulated than ROI specifies - '
-                                f'target {target_coverage} - processed {current_coverage}'))
+            raise RuntimeError('More frames accumulated than ROI specifies - '
+                                f'target {target_coverage} - processed {current_coverage}')
         return False
 
 

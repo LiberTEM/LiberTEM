@@ -254,7 +254,7 @@ def _stddev(udf_class, udf_params, ds_dict):
     direct_results['std'] = np.std(flat_nav_data, axis=0)
     direct_results['mean'] = flat_nav_data.mean(axis=0)
 
-    return {'udf': udf, 'naive_result': direct_results, 'tolerance': 1e-4}
+    return {'udf': udf, 'naive_result': direct_results, 'tolerance': 1e-3}
 
 
 def stddev(udf_params, ds_dict):

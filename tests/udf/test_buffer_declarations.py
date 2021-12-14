@@ -45,7 +45,7 @@ def test_undeclared_buffer_error(lt_ctx, default_raw):
     1) All buffers are declared in `get_result_buffers`
     """
     udf = UndeclaredBufferUDF()
-    with pytest.raises(UDFException):
+    with pytest.raises(KeyError):
         lt_ctx.run_udf(dataset=default_raw, udf=udf)
 
 

@@ -103,17 +103,12 @@ class DaskBufferWrapper(BufferWrapper):
             # 'O' (object): None
             fill = None
 
-        if self._kind == 'nav':
-            flat_chunking = tuple(p.slice.shape[0] for p in self._ds_partitions)
-            flat_chunking = (flat_chunking,) + self._extra_chunking
-            flat_shape = (prod(self._ds_shape.nav),) + self._extra_shape
-            flat_wrapper = da.full(flat_shape, fill, dtype=self._dtype, chunks=flat_chunking)
-            flat_wrapper[self._roi, ...] = self._data
-            wrapper = flat_wrapper.reshape(self._ds_shape.nav + self._extra_shape)
-        else:
-            chunking = ((-1,),) * len(shape)
-            wrapper = da.full(shape, fill, dtype=self._dtype, chunks=chunking)
-            wrapper[self._roi.reshape(self._ds_shape.nav), ...] = self._data
+        flat_chunking = tuple(p.slice.shape[0] for p in self._ds_partitions)
+        flat_chunking = (flat_chunking,) + self._extra_chunking
+        flat_shape = (prod(self._ds_shape.nav),) + self._extra_shape
+        flat_wrapper = da.full(flat_shape, fill, dtype=self._dtype, chunks=flat_chunking)
+        flat_wrapper[self._roi, ...] = self._data
+        wrapper = flat_wrapper.reshape(self._ds_shape.nav + self._extra_shape)
         return wrapper
 
     def _get_slice(self, slice: Slice):

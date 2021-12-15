@@ -192,9 +192,9 @@ def _stddev(udf_class, udf_params, ds_dict):
     direct_results['sum'] = flat_nav_data.sum(axis=0)
     direct_results['varsum'] = None
     direct_results['num_frames'] = flat_nav_data.shape[0]
-    direct_results['var'] = np.var(flat_nav_data, axis=0)
-    direct_results['std'] = np.std(flat_nav_data, axis=0)
-    direct_results['mean'] = flat_nav_data.mean(axis=0)
+    direct_results['var'] = np.var(flat_nav_data, axis=0, dtype=np.float64)
+    direct_results['std'] = np.std(flat_nav_data, axis=0, dtype=np.float64)
+    direct_results['mean'] = flat_nav_data.mean(axis=0, dtype=np.float64)
 
     return {'udf': udf, 'naive_result': direct_results, 'tolerance': 1e-3}
 

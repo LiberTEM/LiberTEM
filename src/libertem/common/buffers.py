@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import collections
 
 import numpy as np
+import numpy.typing as nt
 
 from libertem.common.math import prod
 from libertem.common.slice import Slice
@@ -569,11 +570,19 @@ class BufferWrapper:
             self._kind, self._dtype, self._extra_shape
         )
 
-    def reset_buffer(self, buf, force=False):
+    def update_data(self, data: nt.ArrayLike, force: bool = False) -> None:
+        """
+        Set the data backing the BufferWrapper even if the BufferWrapper
+        already has self._data allocated
+
+        data should be any array-like object
+
+        Will perform checking for shape and dtype unless force is set True
+        """
         if self.has_data() and not force:
-            assert buf.dtype == self._data.dtype
-            assert buf.shape == self._data.shape
-        self._data = buf
+            assert data.dtype == self._data.dtype
+            assert data.shape == self._data.shape
+        self._data = data
 
     def result_buffer_type(self):
         """

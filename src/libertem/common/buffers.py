@@ -6,7 +6,6 @@ from contextlib import contextmanager
 import collections
 
 import numpy as np
-import numpy.typing as nt
 
 from libertem.common.math import prod
 from libertem.common.slice import Slice
@@ -570,7 +569,7 @@ class BufferWrapper:
             self._kind, self._dtype, self._extra_shape
         )
 
-    def update_data(self, data: nt.ArrayLike, force: bool = False) -> None:
+    def update_data(self, data: "nt.ArrayLike", force: bool = False) -> None:
         """
         Set the data backing the BufferWrapper even if the BufferWrapper
         already has self._data allocated

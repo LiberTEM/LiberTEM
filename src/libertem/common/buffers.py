@@ -576,6 +576,11 @@ class BufferWrapper:
         self._data = buf
 
     def result_buffer_type(self):
+        """
+        Define the type of Buffer used to return final UDF results
+
+        More specialised buffers can override this
+        """
         return PreallocBufferWrapper
 
 

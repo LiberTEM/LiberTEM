@@ -3,7 +3,7 @@ import dask.array as da
 from ...common.math import prod
 from ...common.slice import Slice
 from ...common.buffers import BufferWrapper
-from .dask_inplace import DaskInplaceBufferWrapper
+from .dask_inplace import DaskInplaceWrapper
 
 
 class DaskBufferWrapper(BufferWrapper):
@@ -80,7 +80,7 @@ class DaskBufferWrapper(BufferWrapper):
         False for boolean, 0 for integer types and structs,
         '' for string types and None for objects.
         """
-        if isinstance(self._data, DaskInplaceBufferWrapper):
+        if isinstance(self._data, DaskInplaceWrapper):
             self._data = self._data.unwrap()
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
@@ -120,7 +120,7 @@ class DaskBufferWrapper(BufferWrapper):
         buffer such as changing its shape
         """
         real_slice = slice.get()
-        inplace_wrapper = DaskInplaceBufferWrapper(self._data)
+        inplace_wrapper = DaskInplaceWrapper(self._data)
         inplace_wrapper.set_slice(real_slice)
         return inplace_wrapper
 

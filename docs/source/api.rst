@@ -236,7 +236,7 @@ following semantics:
 .. code-block:: python
     def dask_merge(self, ordered_results):
         intensity = da.concatenate([b.intensity for b in ordered_results.values()])
-        self.results.get_buffer('intensity').reset_buffer(intensity)
+        self.results.get_buffer('intensity').update_data(intensity)
 
 where :code:`ordered_results` is a dictionary of all partial results for that UDF
 indexed by the slice for the corresponding dataset partition. The order of the

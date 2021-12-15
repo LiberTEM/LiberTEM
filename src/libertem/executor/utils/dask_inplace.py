@@ -1,6 +1,9 @@
 from collections import namedtuple
 import itertools
 
+import dask
+
+
 fake_np_flags = namedtuple('Flags', ['c_contiguous'])
 
 
@@ -75,11 +78,17 @@ class DaskInplaceWrapper:
             return self._array[combined_slice]
 
     def __setitem__(self, key, value):
-        if self._slice is None:
-            self._array[key] = value
-        else:
-            combined_slice = combine_slices_multid(self._slice, key, self._array.shape)
-            self._array[combined_slice] = value
+        try:
+            if self._slice is None:
+                self._array[key] = value
+            else:
+                combined_slice = combine_slices_multid(self._slice, key, self._array.shape)
+                self._array[combined_slice] = value
+        except NotImplementedError:
+            raise NotImplementedError(
+                "Assignment into Dask array failed. This feature requires "
+                f"Dask version >= 2021.4.1. Installed is {dask.__version__}."
+            )
 
 
 def combine_slices_multid(slices1, slices2, shape):

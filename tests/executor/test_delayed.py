@@ -1,5 +1,6 @@
 import pytest
 from functools import partial
+import sys
 
 import dask
 import dask.array as da
@@ -20,72 +21,79 @@ from utils import _mk_random
 
 
 def test_inplace_wrapper():
-    shape = (16, 8, 32, 64)
-    dtype = np.float32
-    data = _mk_random(shape, dtype=dtype)
-    data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceWrapper(data_dask)
+    def do_test():
+        shape = (16, 8, 32, 64)
+        dtype = np.float32
+        data = _mk_random(shape, dtype=dtype)
+        data_dask = da.from_array(data)
+        dask_wrapped = DaskInplaceWrapper(data_dask)
 
-    assert dask_wrapped.flags.c_contiguous
-    assert np.allclose(dask_wrapped.data.compute(), data)
-    assert np.allclose(dask_wrapped.unwrap_sliced().compute(), data)
-    assert dask_wrapped.shape == data.shape
-    assert dask_wrapped.dtype == dtype
-    assert dask_wrapped.size == data.size
+        assert dask_wrapped.flags.c_contiguous
+        assert np.allclose(dask_wrapped.data.compute(), data)
+        assert np.allclose(dask_wrapped.unwrap_sliced().compute(), data)
+        assert dask_wrapped.shape == data.shape
+        assert dask_wrapped.dtype == dtype
+        assert dask_wrapped.size == data.size
 
-    sl = np.s_[4, :, :, :]
+        sl = np.s_[4, :, :, :]
 
-    assert np.allclose(dask_wrapped[sl].compute(), data[sl])
-    dask_wrapped[sl] = 55.
-    _data = data.copy()
-    _data[sl] = 55.
-    assert np.allclose(dask_wrapped.data.compute(), _data)
+        assert np.allclose(dask_wrapped[sl].compute(), data[sl])
+        dask_wrapped[sl] = 55.
+        _data = data.copy()
+        _data[sl] = 55.
+        assert np.allclose(dask_wrapped.data.compute(), _data)
 
-    data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceWrapper(data_dask)
-    dask_wrapped.set_slice(sl)
+        data_dask = da.from_array(data)
+        dask_wrapped = DaskInplaceWrapper(data_dask)
+        dask_wrapped.set_slice(sl)
 
-    subslice = np.s_[5, 0, 4]
-    assert dask_wrapped[subslice].compute() == data[sl][subslice]
-    assert np.allclose(dask_wrapped.unwrap_sliced()[0, ...].compute(), data[sl][0, ...])
+        subslice = np.s_[5, 0, 4]
+        assert dask_wrapped[subslice].compute() == data[sl][subslice]
+        assert np.allclose(dask_wrapped.unwrap_sliced()[0, ...].compute(), data[sl][0, ...])
 
-    dask_wrapped[subslice] = 55.
-    _data = data.copy()
-    _data[sl][subslice] = 55.
-    assert np.allclose(dask_wrapped.data.compute(), _data)
+        dask_wrapped[subslice] = 55.
+        _data = data.copy()
+        _data[sl][subslice] = 55.
+        assert np.allclose(dask_wrapped.data.compute(), _data)
 
-    data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceWrapper(data_dask)
-    dask_wrapped.set_slice(sl)
-    dask_wrapped[:] = 55.
-    _data = data.copy()
-    _data[sl][:] = 55.
-    assert np.allclose(dask_wrapped.data.compute(), _data)
+        data_dask = da.from_array(data)
+        dask_wrapped = DaskInplaceWrapper(data_dask)
+        dask_wrapped.set_slice(sl)
+        dask_wrapped[:] = 55.
+        _data = data.copy()
+        _data[sl][:] = 55.
+        assert np.allclose(dask_wrapped.data.compute(), _data)
 
-    sl = np.s_[4:7, :, :, :]
-    data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceWrapper(data_dask)
-    dask_wrapped.set_slice(sl)
+        sl = np.s_[4:7, :, :, :]
+        data_dask = da.from_array(data)
+        dask_wrapped = DaskInplaceWrapper(data_dask)
+        dask_wrapped.set_slice(sl)
 
-    subslice = np.s_[3:6, 10:22, :]
-    dask_wrapped[subslice] = 55.
-    _data = data.copy()
-    _data[sl][subslice] = 55.
-    assert np.allclose(dask_wrapped.data.compute(), _data)
+        subslice = np.s_[3:6, 10:22, :]
+        dask_wrapped[subslice] = 55.
+        _data = data.copy()
+        _data[sl][subslice] = 55.
+        assert np.allclose(dask_wrapped.data.compute(), _data)
 
-    sl = np.s_[:]
-    data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceWrapper(data_dask)
-    dask_wrapped.set_slice(sl)
+        sl = np.s_[:]
+        data_dask = da.from_array(data)
+        dask_wrapped = DaskInplaceWrapper(data_dask)
+        dask_wrapped.set_slice(sl)
 
-    subslice = np.s_[3:6, 10:22, :]
-    dask_wrapped[subslice] = 55.
-    _data = data.copy()
-    _data[sl][subslice] = 55.
-    assert np.allclose(dask_wrapped.data.compute(), _data)
+        subslice = np.s_[3:6, 10:22, :]
+        dask_wrapped[subslice] = 55.
+        _data = data.copy()
+        _data[sl][subslice] = 55.
+        assert np.allclose(dask_wrapped.data.compute(), _data)
 
-    dask_wrapped.clear_slice()
-    assert np.allclose(dask_wrapped.data.compute(), _data)
+        dask_wrapped.clear_slice()
+        assert np.allclose(dask_wrapped.data.compute(), _data)
+
+    if sys.version_info < (3, 7):
+        with pytest.raises(NotImplementedError):
+            do_test()
+    else:
+        do_test()
 
 
 class CountUDF(UDF):
@@ -475,6 +483,7 @@ def allclose_with_nan(array1, array2, tol=None):
     "use_roi", (True, False),
     ids=['w/ ROI', 'no ROI']
 )
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
     ds_dict = get_dataset(delayed_ctx, **ds_config, use_roi=use_roi)
     udf_dict = build_udf_dict(udf_config, ds_dict)

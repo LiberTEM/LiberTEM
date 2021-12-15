@@ -108,13 +108,13 @@ class SumUDFDask(SumUDF):
     def dask_merge(self, ordered_results):
         intensity_chunks = [b.intensity for b in ordered_results.values()]
         intensity_sum = da.stack(intensity_chunks, axis=0).sum(axis=0)
-        self.results.get_buffer('intensity').reset_buffer(intensity_sum)
+        self.results.get_buffer('intensity').update_data(intensity_sum)
 
 
 class SumSigUDFDask(SumSigUDF):
     def dask_merge(self, ordered_results):
         intensity = da.concatenate([b.intensity for b in ordered_results.values()])
-        self.results.get_buffer('intensity').reset_buffer(intensity)
+        self.results.get_buffer('intensity').update_data(intensity)
 
 
 class StdDevUDFDask(StdDevUDF):
@@ -152,9 +152,9 @@ class StdDevUDFDask(StdDevUDF):
         varsum_cumulative = da.cumsum(varsum, axis=0)
         varsum_total = varsum_cumulative[-1, ...]
 
-        self.results.get_buffer('sum').reset_buffer(sumsum)
-        self.results.get_buffer('varsum').reset_buffer(varsum_total)
-        self.results.get_buffer('num_frames').reset_buffer(total_frames)
+        self.results.get_buffer('sum').update_data(sumsum)
+        self.results.get_buffer('varsum').update_data(varsum_total)
+        self.results.get_buffer('num_frames').update_data(total_frames)
 
 
 def get_dataset(ctx, shape, tileshape, num_partitions, sig_dims, use_roi=False):

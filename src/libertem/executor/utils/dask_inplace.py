@@ -41,13 +41,27 @@ class DaskInplaceWrapper:
     def size(self):
         return self.data.size
 
+    @property
+    def ndim(self):
+        return self.data.ndim
+
+    def check_valid_slices(self, slices):
+        if not isinstance(slices, tuple):
+            slices = (slices,)
+        assert all(isinstance(s, (slice, int)) or s in (Ellipsis, None) for s in slices)
+        assert len(slices) <= self.ndim
+
     def set_slice(self, slices):
+        self.check_valid_slices(slices)
         self._slice = slices
 
     def clear_slice(self):
         self._slice = None
 
     def unwrap_sliced(self):
+        """
+        Unwrap the array as a sliced view, if self._slice is set
+        """
         if self._slice is None:
             return self._array
         else:

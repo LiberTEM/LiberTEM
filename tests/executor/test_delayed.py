@@ -15,8 +15,19 @@ from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.raw import PickUDF
 
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.executor.utils.dask_inplace import DaskInplaceWrapper
 
 from utils import _mk_random
+
+
+def test_inplace_python36():
+    data = _mk_random((55, 55), dtype=np.float32)
+    dask_wrapped = DaskInplaceWrapper(da.from_array(data.copy()))
+
+    dask_wrapped.set_slice(np.s_[2, :])
+    if sys.version_info < (3, 7):
+        with pytest.raises(NotImplementedError):
+            dask_wrapped[np.s_[3]] = 55.
 
 
 class CountUDF(UDF):

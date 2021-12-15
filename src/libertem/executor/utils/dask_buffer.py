@@ -81,7 +81,7 @@ class DaskBufferWrapper(BufferWrapper):
         '' for string types and None for objects.
         """
         if isinstance(self._data, DaskInplaceWrapper):
-            self._data = self._data.unwrap()
+            self._data = self._data.data
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         if self._roi is None or self._kind != 'nav':

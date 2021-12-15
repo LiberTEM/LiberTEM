@@ -94,6 +94,22 @@ def test_inplace_set_with_ints2(shape):
 
 
 @pytest.mark.parametrize(
+    "shape", ((16, 16),))
+def test_inplace_set_with_neg_ints(shape):
+    dtype = np.float32
+    data, dask_wrapped = get_wrapped_data(shape, dtype)
+
+    sl = np.s_[-3]
+    subslice = np.s_[-7]
+
+    dask_wrapped.set_slice(sl)
+    dask_wrapped[subslice] = 55.
+    data[sl][subslice] = 55.
+
+    assert np.allclose(dask_wrapped.data.compute(), data)
+
+
+@pytest.mark.parametrize(
     "shape", ((16, 8, 32, 64),))
 def test_inplace_set_with_colon(shape):
     dtype = np.float32
@@ -138,6 +154,50 @@ def test_inplace_set_with_ranges2(shape):
     data[sl][subslice] = 55.
 
     assert np.allclose(dask_wrapped.data.compute(), data)
+
+
+@pytest.mark.parametrize(
+    "shape", ((16, 8, 32, 64),))
+def test_inplace_set_with_ellipsis(shape):
+    dtype = np.float32
+    data, dask_wrapped = get_wrapped_data(shape, dtype)
+
+    sl = np.s_[4:7, ...]
+    subslice = np.s_[3:6, 10:22, :]
+
+    dask_wrapped.set_slice(sl)
+    dask_wrapped[subslice] = 55.
+    data[sl][subslice] = 55.
+
+    assert np.allclose(dask_wrapped.data.compute(), data)
+
+
+@pytest.mark.parametrize(
+    "shape", ((16, 8, 32, 64),))
+def test_inplace_set_with_ellipsis2(shape):
+    dtype = np.float32
+    data, dask_wrapped = get_wrapped_data(shape, dtype)
+
+    sl = np.s_[4:7, ...]
+    subslice = np.s_[3:6, ...]
+
+    dask_wrapped.set_slice(sl)
+    dask_wrapped[subslice] = 55.
+    data[sl][subslice] = 55.
+
+    assert np.allclose(dask_wrapped.data.compute(), data)
+
+
+def test_inplace_set_with_ellipsis3():
+    _, dask_wrapped = get_wrapped_data((16, 8, 32, 64), np.float32)
+
+    sl = np.s_[4:7, ...]
+    # No support for this yet !
+    subslice = np.s_[..., 3:6]
+
+    dask_wrapped.set_slice(sl)
+    with pytest.raises(NotImplementedError):
+        dask_wrapped[subslice] = 55.
 
 
 @pytest.mark.parametrize(

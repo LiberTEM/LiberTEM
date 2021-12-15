@@ -105,6 +105,27 @@ def combine_slices_multid(slices1, slices2, shape):
     if all([s == null_slice for s in slices1]):
         return slices2
 
+    # Handle the Ellipsis case for slice1
+    # can handle Ellipsis leading, central and training
+    # in slices 1 because it is the primary slice
+    # This will pad slice1 to be the same size as shape
+    if Ellipsis in slices1:
+        assert sum(e is Ellipsis for e in slices1) == 1
+        el_idx = slices1.index(Ellipsis)
+        before = slices1[:el_idx]
+        after = slices1[el_idx + 1:]
+        to_add = len(shape) - (len(before) + (len(after)))
+        _null = (null_slice,) * to_add
+        slices1 = before + _null + after
+
+    # Handle the Ellipsis case for slice2
+    # need to work on this to handle leading or central Ellipsis
+    # trailing ellipsis is supported as the padding is implemented after
+    if Ellipsis in slices2:
+        if Ellipsis != slices2[-1] or sum(e is Ellipsis for e in slices1) > 1:
+            raise NotImplementedError("No support for Ellipsis in subslice except at end")
+        slices2 = slices2[:-1]
+
     # Must pad slices1 to length of array itself so that
     # we can use it as a reference for padding slices2
     while len(slices1) < len(shape):

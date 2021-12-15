@@ -105,6 +105,11 @@ def combine_slices_multid(slices1, slices2, shape):
     if all([s == null_slice for s in slices1]):
         return slices2
 
+    # Must pad slices1 to length of array itself so that
+    # we can use it as a reference for padding slices2
+    while len(slices1) < len(shape):
+        slices1 = slices1 + (null_slice,)
+
     # If slice1 contains integers we must pad slices2 for combining
     # This section of code is not complete/robust, there are cases
     # where slices1 is all non-integer but slices2 is not of the same length!

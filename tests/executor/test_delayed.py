@@ -6,7 +6,6 @@ import dask
 import dask.array as da
 import numpy as np
 
-from libertem.executor.utils.dask_inplace import DaskInplaceWrapper
 from libertem.udf.base import UDF
 from libertem.udf.logsum import LogsumUDF
 from libertem.udf.sum import SumUDF
@@ -18,82 +17,6 @@ from libertem.udf.raw import PickUDF
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
-
-
-def test_inplace_wrapper():
-    def do_test():
-        shape = (16, 8, 32, 64)
-        dtype = np.float32
-        data = _mk_random(shape, dtype=dtype)
-        data_dask = da.from_array(data)
-        dask_wrapped = DaskInplaceWrapper(data_dask)
-
-        assert dask_wrapped.flags.c_contiguous
-        assert np.allclose(dask_wrapped.data.compute(), data)
-        assert np.allclose(dask_wrapped.unwrap_sliced().compute(), data)
-        assert dask_wrapped.shape == data.shape
-        assert dask_wrapped.dtype == dtype
-        assert dask_wrapped.size == data.size
-
-        sl = np.s_[4, :, :, :]
-
-        assert np.allclose(dask_wrapped[sl].compute(), data[sl])
-        dask_wrapped[sl] = 55.
-        _data = data.copy()
-        _data[sl] = 55.
-        assert np.allclose(dask_wrapped.data.compute(), _data)
-
-        data_dask = da.from_array(data)
-        dask_wrapped = DaskInplaceWrapper(data_dask)
-        dask_wrapped.set_slice(sl)
-
-        subslice = np.s_[5, 0, 4]
-        assert dask_wrapped[subslice].compute() == data[sl][subslice]
-        assert np.allclose(dask_wrapped.unwrap_sliced()[0, ...].compute(), data[sl][0, ...])
-
-        dask_wrapped[subslice] = 55.
-        _data = data.copy()
-        _data[sl][subslice] = 55.
-        assert np.allclose(dask_wrapped.data.compute(), _data)
-
-        data_dask = da.from_array(data)
-        dask_wrapped = DaskInplaceWrapper(data_dask)
-        dask_wrapped.set_slice(sl)
-        dask_wrapped[:] = 55.
-        _data = data.copy()
-        _data[sl][:] = 55.
-        assert np.allclose(dask_wrapped.data.compute(), _data)
-
-        sl = np.s_[4:7, :, :, :]
-        data_dask = da.from_array(data)
-        dask_wrapped = DaskInplaceWrapper(data_dask)
-        dask_wrapped.set_slice(sl)
-
-        subslice = np.s_[3:6, 10:22, :]
-        dask_wrapped[subslice] = 55.
-        _data = data.copy()
-        _data[sl][subslice] = 55.
-        assert np.allclose(dask_wrapped.data.compute(), _data)
-
-        sl = np.s_[:]
-        data_dask = da.from_array(data)
-        dask_wrapped = DaskInplaceWrapper(data_dask)
-        dask_wrapped.set_slice(sl)
-
-        subslice = np.s_[3:6, 10:22, :]
-        dask_wrapped[subslice] = 55.
-        _data = data.copy()
-        _data[sl][subslice] = 55.
-        assert np.allclose(dask_wrapped.data.compute(), _data)
-
-        dask_wrapped.clear_slice()
-        assert np.allclose(dask_wrapped.data.compute(), _data)
-
-    if sys.version_info < (3, 7):
-        with pytest.raises(NotImplementedError):
-            do_test()
-    else:
-        do_test()
 
 
 class CountUDF(UDF):

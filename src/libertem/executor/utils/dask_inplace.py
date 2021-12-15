@@ -4,7 +4,7 @@ import itertools
 fake_np_flags = namedtuple('Flags', ['c_contiguous'])
 
 
-class DaskInplaceBufferWrapper:
+class DaskInplaceWrapper:
     def __init__(self, dask_array):
         self._array = dask_array
         self._slice = None

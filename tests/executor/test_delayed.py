@@ -5,7 +5,7 @@ import dask
 import dask.array as da
 import numpy as np
 
-from libertem.executor.utils.dask_inplace import DaskInplaceBufferWrapper
+from libertem.executor.utils.dask_inplace import DaskInplaceWrapper
 from libertem.udf.base import UDF
 from libertem.udf.logsum import LogsumUDF
 from libertem.udf.sum import SumUDF
@@ -24,7 +24,7 @@ def test_inplace_wrapper():
     dtype = np.float32
     data = _mk_random(shape, dtype=dtype)
     data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceBufferWrapper(data_dask)
+    dask_wrapped = DaskInplaceWrapper(data_dask)
 
     assert dask_wrapped.flags.c_contiguous
     assert np.allclose(dask_wrapped.data.compute(), data)
@@ -42,7 +42,7 @@ def test_inplace_wrapper():
     assert np.allclose(dask_wrapped.data.compute(), _data)
 
     data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceBufferWrapper(data_dask)
+    dask_wrapped = DaskInplaceWrapper(data_dask)
     dask_wrapped.set_slice(sl)
 
     subslice = np.s_[5, 0, 4]
@@ -55,7 +55,7 @@ def test_inplace_wrapper():
     assert np.allclose(dask_wrapped.data.compute(), _data)
 
     data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceBufferWrapper(data_dask)
+    dask_wrapped = DaskInplaceWrapper(data_dask)
     dask_wrapped.set_slice(sl)
     dask_wrapped[:] = 55.
     _data = data.copy()
@@ -64,7 +64,7 @@ def test_inplace_wrapper():
 
     sl = np.s_[4:7, :, :, :]
     data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceBufferWrapper(data_dask)
+    dask_wrapped = DaskInplaceWrapper(data_dask)
     dask_wrapped.set_slice(sl)
 
     subslice = np.s_[3:6, 10:22, :]
@@ -75,7 +75,7 @@ def test_inplace_wrapper():
 
     sl = np.s_[:]
     data_dask = da.from_array(data)
-    dask_wrapped = DaskInplaceBufferWrapper(data_dask)
+    dask_wrapped = DaskInplaceWrapper(data_dask)
     dask_wrapped.set_slice(sl)
 
     subslice = np.s_[3:6, 10:22, :]

@@ -7,6 +7,7 @@ from libertem.io.dataset.base import MMapBackend
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF
+from libertem.api import Context
 
 
 def test_ctx_load(lt_ctx, default_raw):
@@ -211,3 +212,18 @@ def test_roi_dtype(lt_ctx, default_raw, dtype):
     ref = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=ref_roi)
 
     assert np.all(res['intensity'].raw_data == ref['intensity'].raw_data)
+
+
+def test_make_with_inline(inline_executor):
+    ctx = Context.make_with('inline')
+    assert isinstance(ctx.executor, inline_executor.__class__)
+
+
+def test_make_with_threads(concurrent_executor):
+    ctx = Context.make_with('threads')
+    assert isinstance(ctx.executor, concurrent_executor.__class__)
+
+
+def test_make_with_unrecognized():
+    with pytest.raises(ValueError):
+        Context.make_with('not_an_executor')

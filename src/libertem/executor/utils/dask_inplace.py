@@ -6,6 +6,18 @@ fake_np_flags = namedtuple('Flags', ['c_contiguous'])
 
 class DaskInplaceWrapper:
     def __init__(self, dask_array):
+        """
+        Wraps a dask array providing methods such that array
+        slicing can be done inplace even when slicing into a slice
+        of the array. Works for simple slicing cases, i.e. slicing
+        with slice(), integers, : and ...
+
+        The first slice is set using DaskInplaceWrapper.set_slice(slice)
+        while secondary slices are done using normal array[slice] syntax
+
+        In the current usage, this wrapper is created and configured
+        from DaskBufferWrapper._get_slice
+        """
         self._array = dask_array
         self._slice = None
 

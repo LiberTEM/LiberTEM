@@ -11,8 +11,8 @@ from .scheduler import Worker, WorkerSet
 
 from ..common.buffers import BufferWrapper
 from ..common.math import prod
-from ..udf.base import _apply_part_result, _make_udf_result
-from ..udf.base import UDFData, MergeAttrMapping
+from ..udf.base import _apply_part_result, _make_udf_result, get_resources_for_backends
+from ..udf.base import UDF, UDFData, MergeAttrMapping
 
 from .utils.dask_buffer import DaskBufferWrapper, DaskPreallocBufferWrapper
 from .utils import delayed_unpack
@@ -29,7 +29,7 @@ class DelayedJobExecutor(JobExecutor):
     def __init__(self):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
-
+        self._udfs = None
         self._part_results = {}
 
     @contextlib.contextmanager
@@ -113,6 +113,28 @@ class DelayedJobExecutor(JobExecutor):
 
     def modify_buffer_type(self, buf):
         return DaskBufferWrapper.from_buffer(buf)
+
+    @property
+    def resources_if_available(self):
+        """
+        Returns the resources required by the UDFs last passed to
+        the executor in a call to Context.run_udfs
+        """
+        if self._udfs is not None:
+            return self.get_resources_from_udfs(self._udfs)
+
+    @classmethod
+    def get_resources_from_udfs(cls, udfs, user_backends=None):
+        """
+        Returns the resources required by the udfs passed as
+        argument, excluding those not in the tuple user_backends
+        """
+        if user_backends is None:
+            user_backends = tuple()
+        if isinstance(udfs, UDF):
+            udfs = [udfs]
+        backends = [udf.get_backends() for udf in udfs]
+        return get_resources_for_backends(backends, user_backends)
 
     def run_partial_merge(self, udfs, damage, part_results, task):
         for part_results_udf, udf in zip(part_results, udfs):

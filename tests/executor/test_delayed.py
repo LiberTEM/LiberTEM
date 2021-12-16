@@ -454,6 +454,7 @@ def test_map(delayed_ctx):
     assert np.allclose(wrapped_delayed, np.asarray(iterable)**2)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 def test_bare_compute(delayed_ctx):
     ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
     dataset = ds_dict['dataset']

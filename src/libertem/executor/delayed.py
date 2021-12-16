@@ -3,6 +3,7 @@ from typing import Any, Iterable
 import contextlib
 
 import numpy as np
+import dask
 from dask import delayed
 import dask.array as da
 
@@ -113,6 +114,33 @@ class DelayedJobExecutor(JobExecutor):
 
     def modify_buffer_type(self, buf):
         return DaskBufferWrapper.from_buffer(buf)
+
+    def compute(self, *args, udfs=None, user_backends=None, traverse=True, **kwargs):
+        """
+        Acts as dask.compute(*args, **kwargs) but with knowledge
+        of Libertem data structures and compute resources
+        """
+        if kwargs.get('resources', None) is not None:
+            if udfs is not None:
+                raise ValueError('Cannot specify both udfs for resources and resources to use')
+            resources = kwargs.get('resources')
+        elif udfs is not None:
+            resources = self.get_resources(udfs, user_backends=user_backends)
+        elif self._udfs is not None:
+            resources = self.resources_if_available
+        else:
+            resources = None
+        kwargs['resources'] = resources
+
+        to_unpack = tuple(a for a in args)
+        unwrapped_args = tuple(self.unwrap_results(a) for a in to_unpack)
+        results = dask.compute(*unwrapped_args, traverse=traverse, **kwargs)
+        if len(args) == 1:
+            if len(results) > 1:
+                raise RuntimeWarning(f'Unexpected number of results {len(results)} '
+                                     'from dask.compute, dropping extras')
+            results = results[0]
+        return results
 
     @property
     def resources_if_available(self):

@@ -196,7 +196,7 @@ def test_inplace_set_with_ellipsis3():
     subslice = np.s_[..., 3:6]
 
     dask_wrapped.set_slice(sl)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(IndexError):
         dask_wrapped[subslice] = 55.
 
 
@@ -216,4 +216,106 @@ def test_inplace_set_with_array(shape):
     dask_wrapped[subslice] = set_values
     data[sl][subslice] = set_values
 
+    assert np.allclose(dask_wrapped.data.compute(), data)
+
+
+def int_for_dim(dim):
+    return np.random.randint(-dim, dim)
+
+
+def slice_range_for_dim(dim):
+    start = int_for_dim(dim)
+    stop = np.random.randint(start, dim)
+    possible_steps = [None, 1]
+    if stop - start > 1:
+        # This avoids a bug in Dask where if step > (stop - start)
+        # it is computed to be a zero-length slice, raising a ValueError
+        # whereas numpy does a no-op
+        possible_steps += [2]
+    step = np.random.choice(possible_steps)
+    return slice(start, stop, step)
+
+
+def null_slice(dim=None):
+    return slice(None, None, None)
+
+
+def ellipsis(dim=None):
+    return Ellipsis
+
+
+def random_slice(shape, final_ellipsis=False):
+    slices = tuple()
+    has_ellipsis = False
+    for dim in shape:
+        if np.random.choice([True, False], p=[0.2, 0.8]):
+            break
+        choices = [null_slice]
+        if dim > 1:
+            choices += [int_for_dim, slice_range_for_dim]
+        if not has_ellipsis:
+            choices += [ellipsis]
+        slicetype = np.random.choice(choices)
+        slices = slices + (slicetype(dim),)
+        # Handle double Ellipsis case
+        if slices[-1] is Ellipsis:
+            has_ellipsis = True
+            if final_ellipsis:
+                break
+    if len(slices) == 0:
+        slices = null_slice()
+    return slices
+
+
+@pytest.mark.parametrize(
+    "repeat_number", range(20))
+@pytest.mark.parametrize(
+    "shape", ((16, 8, 32, 64),
+              (16, 16, 8),
+              (16, 16),
+              (16,),))
+def test_random_set_with_array(repeat_number, shape):
+    dtype = np.float32
+    data, dask_wrapped = get_wrapped_data(shape, dtype)
+
+    sl = random_slice(shape)
+
+    # Encountered a rare bug where my generated slice would
+    # be invalid for numpy slicing for an unknown reason
+    # as an out of range integer for dimension
+    try:
+        slice_into = data[sl]
+    except IndexError:
+        print(f'Skipping due to invalid primary slice {sl} on shape {shape}')
+        return
+    if np.isscalar(slice_into):
+        subslice = None
+    else:
+        subslice = random_slice(slice_into.shape, final_ellipsis=True)
+
+    # Idem
+    try:
+        target_shape = data[sl][subslice].shape
+    except IndexError:
+        print(f'Skipping due to invalid secondary slice {subslice} '
+              f'on shape {shape} with sl {sl}')
+        return
+
+    set_values = np.random.random(size=target_shape)
+    dask_wrapped.set_slice(sl)
+
+    # Assignment to an empty slice sometimes raises a ValueError in Dask
+    # but is a no-op in Numpy. The 'sometimes' refers to specific combinations
+    # of zero-length, [:] or Ellipsis subslices not raising an error
+    try:
+        dask_wrapped[subslice] = set_values
+    except ValueError:
+        assert 0 in target_shape
+
+    # Strange-ish case of Dask supporting an assignment but Numpy raises!
+    if np.isscalar(slice_into):
+        # Would raise TypeError if using subslice even if None
+        data[sl] = set_values
+    else:
+        data[sl][subslice] = set_values
     assert np.allclose(dask_wrapped.data.compute(), data)

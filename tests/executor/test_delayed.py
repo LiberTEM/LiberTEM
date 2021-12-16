@@ -326,6 +326,8 @@ def unpack_all(udf_results_dask):
 
 
 def alldask(udf_results_dask):
+    if not isinstance(udf_results_dask, tuple):
+        udf_results_dask = (udf_results_dask,)
     for udf_result in udf_results_dask:
         for daskbuffer in udf_result.values():
             assert isinstance(daskbuffer.raw_data, da.Array)
@@ -431,13 +433,8 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
         assert roi_array is None
     result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf, roi=roi_array)
 
-    if not isinstance(result_dask, tuple):
-        result_dask = (result_dask,)
-
     alldask(result_dask)
-    unpacked_results = unpack_all(result_dask)
-    computed_results = dask.compute(unpacked_results, traverse=True)
-    computed_results = computed_results[0]
+    computed_results = delayed_ctx.executor.compute(result_dask)
     for udf_computed_results, naive_results in zip(computed_results, udf_dict['naive_result']):
         for k, result in udf_computed_results.items():
             direct_result = naive_results[k]
@@ -455,3 +452,16 @@ def test_map(delayed_ctx):
     iterable = range(5)
     wrapped_delayed = delayed_ctx.executor.map(lambda x: x**2, iterable)
     assert np.allclose(wrapped_delayed, np.asarray(iterable)**2)
+
+
+def test_bare_compute(delayed_ctx):
+    ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
+    dataset = ds_dict['dataset']
+    udf = SumSigUDF()
+    result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf)
+    dask_res = result_dask['intensity'].data
+    # Check one chunk per partition
+    assert len(dask_res.chunks[0]) == 4
+    res = dask.compute(dask_res)
+    res = res[0]
+    assert np.allclose(res, ds_dict['data'].sum(axis=(2, 3)))

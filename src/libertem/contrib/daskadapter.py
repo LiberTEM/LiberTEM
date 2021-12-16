@@ -120,13 +120,7 @@ def task_results_array(
             for key, resultbuffer in resultbuffers[udf_index].items():
                 buf = result_decl[key]
                 buf.set_shape_partition(task.partition, roi=roi)
-                resultbuffer.append(
-                    dask.array.from_delayed(
-                        getattr(result[udf_index], key),
-                        shape=buf.shape,
-                        dtype=buf.dtype
-                    )
-                )
+                resultbuffer.append(getattr(result[udf_index], key))
 
     # Combine the individual chunks
     for udf_index in range(len(udfs)):

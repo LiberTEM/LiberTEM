@@ -1,4 +1,7 @@
-_unpackable_types = (list, tuple, dict)
+# _unpackable_types = (list, tuple, dict)
+_unpackable_types = {list: lambda x: enumerate(x),
+                     tuple: lambda x: enumerate(x),
+                     dict: lambda x: x.items()}
 merge_fns = {list: lambda lis, el, pos: lis.append(el),
              dict: lambda dic, el, pos: dic.update({pos: el})}
 
@@ -18,14 +21,15 @@ class StructDescriptor:
 
 
 def flatten_nested(el, unpackable_types=None, ignore_types=None):
+    eltype = type(el)
     if unpackable_types is None:
         unpackable_types = _unpackable_types
     if ignore_types is None:
         ignore_types = (IgnoreClass,)
     flattened = []
-    if isinstance(el, unpackable_types) and not isinstance(el, ignore_types):
-        iterable = el.values() if isinstance(el, dict) else el
-        for _el in iterable:
+    if eltype in unpackable_types.keys() and not isinstance(el, ignore_types):
+        iterable = unpackable_types[eltype](el)
+        for _, _el in iterable:
             flattened.extend(flatten_nested(_el,
                                             unpackable_types=unpackable_types,
                                             ignore_types=ignore_types))
@@ -41,8 +45,8 @@ def build_mapping(el, pos=None, unpackable_types=None, ignore_types=None):
         unpackable_types = _unpackable_types
     if ignore_types is None:
         ignore_types = (IgnoreClass,)
-    if isinstance(el, unpackable_types) and not isinstance(el, ignore_types):
-        iterable = el.items() if isinstance(el, dict) else enumerate(el)
+    if eltype in unpackable_types.keys() and not isinstance(el, ignore_types):
+        iterable = unpackable_types[eltype](el)
         for _pos, _el in iterable:
             if pos is None:
                 pos = []

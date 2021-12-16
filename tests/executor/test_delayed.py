@@ -465,3 +465,17 @@ def test_bare_compute(delayed_ctx):
     res = dask.compute(dask_res)
     res = res[0]
     assert np.allclose(res, ds_dict['data'].sum(axis=(2, 3)))
+
+
+def test_unwrap_null_case(delayed_ctx):
+    nest = {'a': [5, 6, 7], 'b': (1, 2, {'x': 6, 'y': 'string'})}
+    unwrapped = delayed_ctx.executor.unwrap_results(nest)
+    for k, v in nest.items():
+        assert isinstance(v, type(unwrapped[k]))
+        for _i, _v in enumerate(v):
+            assert isinstance(_v, type(unwrapped[k][_i]))
+            if isinstance(_v, dict):
+                for __k, __v in _v.items():
+                    assert unwrapped[k][_i][__k] == __v
+            else:
+                assert unwrapped[k][_i] == _v

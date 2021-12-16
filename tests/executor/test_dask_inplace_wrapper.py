@@ -310,7 +310,7 @@ def test_random_set_with_array(repeat_number, shape):
     try:
         dask_wrapped[subslice] = set_values
     except ValueError:
-        assert 0 in target_shape
+        assert 0 in target_shape or 1 in target_shape
 
     # Strange-ish case of Dask supporting an assignment but Numpy raises!
     if np.isscalar(slice_into):

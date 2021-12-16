@@ -186,8 +186,7 @@ def combine_slices(slice1, slice2, length):
 
     if isinstance(slice2, int):
         # Represents a single element from array[slice1]
-        # calculation is slice1_start * slice2_ith_element * slice1_step
-        return slice1_indices[0] + slice2 * slice1_indices[2]
+        return range(*slice1_indices)[slice2]
 
     # From this point we are combining two non-integer slices
     slice2_step = (slice2.step if slice2.step is not None else 1)

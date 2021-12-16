@@ -9,11 +9,12 @@ import dask.array as da
 from .base import JobExecutor, Environment, TaskProtocol
 from .scheduler import Worker, WorkerSet
 
+from ..common.buffers import BufferWrapper
 from ..common.math import prod
 from ..udf.base import _apply_part_result, _make_udf_result
 from ..udf.base import UDFData, MergeAttrMapping
 
-from .utils.dask_buffer import DaskBufferWrapper
+from .utils.dask_buffer import DaskBufferWrapper, DaskPreallocBufferWrapper
 from .utils import delayed_unpack
 
 
@@ -228,6 +229,20 @@ class DelayedJobExecutor(JobExecutor):
             raise RuntimeError('More frames accumulated than ROI specifies - '
                               f'target {target_coverage} - processed {current_coverage}')
         return False
+
+    @staticmethod
+    def unwrap_results(results):
+        unpackable = {**delayed_unpack._unpackable_types,
+                      UDFData: lambda x: x._data.items(),
+                      DaskPreallocBufferWrapper: lambda x: [(0, x.data)],
+                      DaskBufferWrapper: lambda x: [(0, x.data)],
+                      }
+
+        res_unpack = delayed_unpack.flatten_nested(results, unpackable_types=unpackable)
+        flat_mapping = delayed_unpack.build_mapping(results, unpackable_types=unpackable)
+        flat_mapping_reduced = [el[:-1] if issubclass(el[-1][0], BufferWrapper) else el
+                                for el in flat_mapping]
+        return delayed_unpack.rebuild_nested(res_unpack, flat_mapping_reduced)
 
 
 def make_copy(array_dict):

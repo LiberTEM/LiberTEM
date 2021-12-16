@@ -90,7 +90,7 @@ def insert_at_pos(el, coords, nest):
         if next_cls == tuple:
             next_cls = list
         if next_pos is None:
-            merge_fns[current_cls](_nest, el, current_pos)
+            merge_fns[type(_nest)](_nest, el, current_pos)
         else:
             try:
                 _nest = _nest[current_pos]

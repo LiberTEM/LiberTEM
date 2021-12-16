@@ -79,9 +79,18 @@ class DelayedJobExecutor(JobExecutor):
         result = fn(*args, **kwargs)
         return result
 
+    def run_delayed(self, fn, *args, _delayed_kwargs=None, **kwargs):
+        if _delayed_kwargs is None:
+            _delayed_kwargs = {}
+        result = delayed(fn, **_delayed_kwargs)(*args, **kwargs)
+        return result
+
     def run_wrap(self, fn, *args, **kwargs):
         """
         Run a function as a dask.delayed with *args and **kwargs
+
+        One kwarg name is reserved, "_delayed_kwargs" which can be
+        a dict passed onto the call to dask.delayed(fn, **_delayed_kwargs)
 
         In the case of merging and finalising UDF results,
         intercept the call to run as a normal function, as we
@@ -92,8 +101,8 @@ class DelayedJobExecutor(JobExecutor):
         elif fn is _make_udf_result:
             return self.run_function(fn, *args, **kwargs)
         else:
-            result = delayed(fn)(*args, **kwargs)
-            return result
+            _delayed_kwargs = kwargs.pop('_delayed_kwargs', None)
+            return self.run_delayed(fn, *args, _delayed_kwargs=_delayed_kwargs, **kwargs)
 
     def map(self, fn, iterable):
         return [fn(item)

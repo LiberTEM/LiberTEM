@@ -123,7 +123,7 @@ def combine_slices_multid(slices1, slices2, shape):
     # trailing ellipsis is supported as the padding is implemented after
     if Ellipsis in slices2:
         if Ellipsis != slices2[-1] or sum(e is Ellipsis for e in slices1) > 1:
-            raise NotImplementedError("No support for Ellipsis in subslice except at end")
+            raise IndexError("No support for Ellipsis in subslice except at end")
         slices2 = slices2[:-1]
 
     # Must pad slices1 to length of array itself so that

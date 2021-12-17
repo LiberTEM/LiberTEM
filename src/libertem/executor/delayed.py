@@ -121,6 +121,13 @@ class DelayedJobExecutor(JobExecutor):
             Worker(name='delayed', host='localhost', resources=resources)
         ])
 
+    @classmethod
+    def get_resources(cls, udfs, user_backends=tuple()):
+        if isinstance(udfs, UDF):
+            udfs = [udfs]
+        backends = [udf.get_backends() for udf in udfs]
+        return get_resources_for_backends(backends, user_backends)
+
     def modify_buffer_type(self, buf):
         return DaskBufferWrapper.from_buffer(buf)
 

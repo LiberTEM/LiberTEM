@@ -1,6 +1,7 @@
 from functools import partial
-from typing import Any, Iterable
+from typing import Any, Iterable, List, Type
 import contextlib
+from collections import defaultdict
 
 import numpy as np
 import dask
@@ -12,168 +13,20 @@ from .scheduler import Worker, WorkerSet
 
 from ..common.buffers import BufferWrapper
 from ..common.math import prod
-from ..udf.base import _apply_part_result, _make_udf_result, get_resources_for_backends
-from ..udf.base import UDF, UDFData, MergeAttrMapping
+from ..udf.base import (
+    UDFRunner, UDF, UDFData, MergeAttrMapping, get_resources_for_backends
+)
 
 from .utils.dask_buffer import DaskBufferWrapper, DaskPreallocBufferWrapper
 from .utils import delayed_unpack
 
 
-class DelayedJobExecutor(JobExecutor):
-    """
-    :class:`~libertem.executor.base.JobExecutor` that uses dask.delayed to execute tasks.
+class DelayedUDFRunner(UDFRunner):
+    def __init__(self, udfs: List[UDF], debug: bool = False):
+        self._part_results = defaultdict(lambda: {})
+        super().__init__(udfs, debug=debug)
 
-    .. versionadded:: 0.9.0
-
-    Highly experimental at this time!
-    """
-    def __init__(self):
-        # Only import if actually instantiated, i.e. will likely be used
-        import libertem.preload  # noqa: 401
-        self._udfs = None
-        self._part_results = {}
-
-    @contextlib.contextmanager
-    def scatter(self, obj):
-        yield delayed(obj)
-
-    def run_tasks(
-        self,
-        tasks: Iterable[TaskProtocol],
-        params_handle: Any,
-        cancel_id: Any,
-    ):
-        """
-        Wraps the call task() such that it returns a flat list
-        of results, then unpacks the Delayed return value into
-        the normal
-
-            tuple(udf.results for udf in self._udfs)
-
-        where the buffers inside udf.results are dask arrays instead
-        of normal np.arrays
-
-        Needs a reference to the udfs on the master node so
-        that the results structure can be inferred. This reference is
-        found in self._udfs, which is set with the method:
-
-            executor.register_master_udfs(udfs)
-
-        called from UDFRunner.results_for_dataset_sync
-        """
-        env = Environment(threads_per_worker=1)
-        for task in tasks:
-            structure = structure_from_task(self._udfs, task)
-            flat_structure = delayed_unpack.flatten_nested(structure)
-            flat_mapping = delayed_unpack.build_mapping(structure)
-            flat_result_task = partial(task_wrap, task)
-            result = delayed(flat_result_task, nout=len(flat_structure))(env=env,
-                                                                         params=params_handle)
-            wrapped_res = delayed_to_buffer_wrappers(result, flat_structure, task.partition,
-                                                     roi=self._udfs[0].meta.roi)
-            renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
-            result = tuple(UDFData(data=res) for res in renested)
-            yield result, task
-
-    def run_function(self, fn, *args, **kwargs):
-        result = fn(*args, **kwargs)
-        return result
-
-    def run_delayed(self, fn, *args, _delayed_kwargs=None, **kwargs):
-        if _delayed_kwargs is None:
-            _delayed_kwargs = {}
-        result = delayed(fn, **_delayed_kwargs)(*args, **kwargs)
-        return result
-
-    def run_wrap(self, fn, *args, **kwargs):
-        """
-        Run a function as a dask.delayed with *args and **kwargs
-
-        One kwarg name is reserved, "_delayed_kwargs" which can be
-        a dict passed onto the call to dask.delayed(fn, **_delayed_kwargs)
-
-        In the case of merging and finalising UDF results,
-        intercept the call to run as a normal function, as we
-        are building a dask task graph which is already lazy
-        """
-        if fn is _apply_part_result:
-            return self.run_partial_merge(*args, **kwargs)
-        elif fn is _make_udf_result:
-            return self.run_function(fn, *args, **kwargs)
-        else:
-            _delayed_kwargs = kwargs.pop('_delayed_kwargs', None)
-            return self.run_delayed(fn, *args, _delayed_kwargs=_delayed_kwargs, **kwargs)
-
-    def map(self, fn, iterable):
-        return [fn(item)
-                for item in iterable]
-
-    def run_each_host(self, fn, *args, **kwargs):
-        return {"localhost": fn(*args, **kwargs)}
-
-    def run_each_worker(self, fn, *args, **kwargs):
-        return {"delayed": fn(*args, **kwargs)}
-
-    def get_available_workers(self):
-        resources = {"compute": 1, "CPU": 1}
-
-        return WorkerSet([
-            Worker(name='delayed', host='localhost', resources=resources)
-        ])
-
-    def modify_buffer_type(self, buf):
-        return DaskBufferWrapper.from_buffer(buf)
-
-    def compute(self, *args, udfs=None, user_backends=None, traverse=True, **kwargs):
-        """
-        Acts as dask.compute(*args, **kwargs) but with knowledge
-        of Libertem data structures and compute resources
-        """
-        if kwargs.get('resources', None) is not None:
-            if udfs is not None:
-                raise ValueError('Cannot specify both udfs for resources and resources to use')
-            resources = kwargs.get('resources')
-        elif udfs is not None:
-            resources = self.get_resources(udfs, user_backends=user_backends)
-        elif self._udfs is not None:
-            resources = self.resources_if_available
-        else:
-            resources = None
-        kwargs['resources'] = resources
-
-        to_unpack = tuple(a for a in args)
-        unwrapped_args = tuple(self.unwrap_results(a) for a in to_unpack)
-        results = dask.compute(*unwrapped_args, traverse=traverse, **kwargs)
-        if len(args) == 1:
-            if len(results) > 1:
-                raise RuntimeWarning(f'Unexpected number of results {len(results)} '
-                                     'from dask.compute, dropping extras')
-            results = results[0]
-        return results
-
-    @property
-    def resources_if_available(self):
-        """
-        Returns the resources required by the UDFs last passed to
-        the executor in a call to Context.run_udfs
-        """
-        if self._udfs is not None:
-            return self.get_resources_from_udfs(self._udfs)
-
-    @classmethod
-    def get_resources_from_udfs(cls, udfs, user_backends=None):
-        """
-        Returns the resources required by the udfs passed as
-        argument, excluding those not in the tuple user_backends
-        """
-        if user_backends is None:
-            user_backends = tuple()
-        if isinstance(udfs, UDF):
-            udfs = [udfs]
-        backends = [udf.get_backends() for udf in udfs]
-        return get_resources_for_backends(backends, user_backends)
-
-    def run_partial_merge(self, udfs, damage, part_results, task):
+    def _apply_part_result(self, udfs, damage, part_results, task):
         for part_results_udf, udf in zip(part_results, udfs):
             # Allow user to define an alternative merge strategy
             # using dask-compatible functions. In the Delayed case we
@@ -264,13 +117,9 @@ class DelayedJobExecutor(JobExecutor):
         Ensures that the results are correctly ordered and complete
         before allowing dask_merge to be called
         """
-        try:
-            buf = next(iter(part_results.values()))  # get the first buffer
-            slice_with_roi = buf._slice_for_partition(task.partition)
-            self._part_results[udf][slice_with_roi] = part_results
-        except KeyError:
-            self._part_results[udf] = {}
-            return self._accumulate_part_results(udf, part_results, task)
+        buf = next(iter(part_results.values()))  # get the first buffer
+        slice_with_roi = buf._slice_for_partition(task.partition)
+        self._part_results[udf][slice_with_roi] = part_results
 
         # number of frames in dataset
         if udf.meta.roi is not None:
@@ -289,6 +138,141 @@ class DelayedJobExecutor(JobExecutor):
                               f'target {target_coverage} - processed {current_coverage}')
         return False
 
+
+class DelayedJobExecutor(JobExecutor):
+    """
+    :class:`~libertem.executor.base.JobExecutor` that uses dask.delayed to execute tasks.
+
+    .. versionadded:: 0.9.0
+
+    Highly experimental at this time!
+    """
+    def __init__(self):
+        # Only import if actually instantiated, i.e. will likely be used
+        import libertem.preload  # noqa: 401
+        self._udfs = None
+
+    @contextlib.contextmanager
+    def scatter(self, obj):
+        yield delayed(obj)
+
+    def run_tasks(
+        self,
+        tasks: Iterable[TaskProtocol],
+        params_handle: Any,
+        cancel_id: Any,
+    ):
+        """
+        Wraps the call task() such that it returns a flat list
+        of results, then unpacks the Delayed return value into
+        the normal
+
+            tuple(udf.results for udf in self._udfs)
+
+        where the buffers inside udf.results are dask arrays instead
+        of normal np.arrays
+
+        Needs a reference to the udfs on the master node so
+        that the results structure can be inferred. This reference is
+        found in self._udfs, which is set with the method:
+
+            executor.register_master_udfs(udfs)
+
+        called from UDFRunner.results_for_dataset_sync
+        """
+        env = Environment(threads_per_worker=1)
+        for task in tasks:
+            structure = structure_from_task(self._udfs, task)
+            flat_structure = delayed_unpack.flatten_nested(structure)
+            flat_mapping = delayed_unpack.build_mapping(structure)
+            flat_result_task = partial(task_wrap, task)
+            result = delayed(flat_result_task, nout=len(flat_structure))(env=env,
+                                                                         params=params_handle)
+            wrapped_res = delayed_to_buffer_wrappers(result, flat_structure, task.partition,
+                                                     roi=self._udfs[0].meta.roi)
+            renested = delayed_unpack.rebuild_nested(wrapped_res, flat_mapping)
+            result = tuple(UDFData(data=res) for res in renested)
+            yield result, task
+
+    def run_function(self, fn, *args, **kwargs):
+        result = fn(*args, **kwargs)
+        return result
+
+    def run_delayed(self, fn, *args, _delayed_kwargs=None, **kwargs):
+        if _delayed_kwargs is None:
+            _delayed_kwargs = {}
+        result = delayed(fn, **_delayed_kwargs)(*args, **kwargs)
+        return result
+
+    def map(self, fn, iterable):
+        return [fn(item)
+                for item in iterable]
+
+    def run_each_host(self, fn, *args, **kwargs):
+        return {"localhost": fn(*args, **kwargs)}
+
+    def run_each_worker(self, fn, *args, **kwargs):
+        return {"delayed": fn(*args, **kwargs)}
+
+    def get_available_workers(self):
+        resources = {"compute": 1, "CPU": 1}
+
+        return WorkerSet([
+            Worker(name='delayed', host='localhost', resources=resources)
+        ])
+
+    def modify_buffer_type(self, buf):
+        return DaskBufferWrapper.from_buffer(buf)
+
+    def compute(self, *args, udfs=None, user_backends=None, traverse=True, **kwargs):
+        """
+        Acts as dask.compute(*args, **kwargs) but with knowledge
+        of Libertem data structures and compute resources
+        """
+        if kwargs.get('resources', None) is not None:
+            if udfs is not None:
+                raise ValueError('Cannot specify both udfs for resources and resources to use')
+            resources = kwargs.get('resources')
+        elif udfs is not None:
+            resources = self.get_resources(udfs, user_backends=user_backends)
+        elif self._udfs is not None:
+            resources = self.resources_if_available
+        else:
+            resources = None
+        kwargs['resources'] = resources
+
+        to_unpack = tuple(a for a in args)
+        unwrapped_args = tuple(self.unwrap_results(a) for a in to_unpack)
+        results = dask.compute(*unwrapped_args, traverse=traverse, **kwargs)
+        if len(args) == 1:
+            if len(results) > 1:
+                raise RuntimeWarning(f'Unexpected number of results {len(results)} '
+                                     'from dask.compute, dropping extras')
+            results = results[0]
+        return results
+
+    @property
+    def resources_if_available(self):
+        """
+        Returns the resources required by the UDFs last passed to
+        the executor in a call to Context.run_udfs
+        """
+        if self._udfs is not None:
+            return self.get_resources_from_udfs(self._udfs)
+
+    @classmethod
+    def get_resources_from_udfs(cls, udfs, user_backends=None):
+        """
+        Returns the resources required by the udfs passed as
+        argument, excluding those not in the tuple user_backends
+        """
+        if user_backends is None:
+            user_backends = tuple()
+        if isinstance(udfs, UDF):
+            udfs = [udfs]
+        backends = [udf.get_backends() for udf in udfs]
+        return get_resources_for_backends(backends, user_backends)
+
     @staticmethod
     def unwrap_results(results):
         unpackable = {**delayed_unpack._unpackable_types,
@@ -302,6 +286,9 @@ class DelayedJobExecutor(JobExecutor):
         flat_mapping_reduced = [el[:-1] if issubclass(el[-1][0], BufferWrapper) else el
                                 for el in flat_mapping]
         return delayed_unpack.rebuild_nested(res_unpack, flat_mapping_reduced)
+
+    def get_udf_runner(self) -> Type['UDFRunner']:
+        return DelayedUDFRunner
 
 
 def make_copy(array_dict):

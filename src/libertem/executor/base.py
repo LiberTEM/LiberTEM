@@ -1,7 +1,7 @@
 import concurrent
 import functools
 import asyncio
-from typing import Optional, Any, Iterable, TYPE_CHECKING
+from typing import Optional, Any, Iterable, TYPE_CHECKING, Type
 from typing_extensions import Protocol
 from contextlib import contextmanager
 from async_generator import asynccontextmanager
@@ -12,7 +12,7 @@ from libertem.utils.async_utils import (
 )
 
 if TYPE_CHECKING:
-    from libertem.udf.base import UDFParams
+    from libertem.udf.base import UDFParams, UDFRunner
 
 
 class ExecutorError(Exception):
@@ -69,14 +69,6 @@ class JobExecutor:
         run a callable `fn` on any worker
         """
         raise NotImplementedError()
-
-    def run_wrap(self, fn, *args, **kwargs):
-        """
-        Run a callable `fn` locally or remotely at the discretion of the executor.
-        This is used to merge UDF partial results and compute final UDF results.
-        By defult it runs locally.
-        """
-        return fn(*args, **kwargs)
 
     @contextmanager
     def scatter(self, obj):
@@ -247,6 +239,10 @@ class JobExecutor:
         """
         return buf
 
+    def get_udf_runner(self) -> Type['UDFRunner']:
+        from libertem.udf.base import UDFRunner
+        return UDFRunner
+
     def register_master_udfs(self, udfs):
         """
         Give the executor a reference to the udfs instantiated
@@ -267,14 +263,6 @@ class AsyncJobExecutor:
         Run a callable `fn` on any worker
         """
         raise NotImplementedError()
-
-    async def run_wrap(self, fn, *args, **kwargs):
-        """
-        Run a callable `fn` locally or remotely at the discretion of the executor.
-        This is used to merge UDF partial results and compute final UDF results.
-        By defult it runs locally.
-        """
-        return fn(*args, **kwargs)
 
     async def run_each_partition(self, partitions, fn, all_nodes=False):
         raise NotImplementedError()
@@ -343,6 +331,10 @@ class AsyncJobExecutor:
         """
         return self
 
+    def get_udf_runner(self) -> Type['UDFRunner']:
+        from libertem.udf.base import UDFRunner
+        return UDFRunner
+
 
 class AsyncAdapter(AsyncJobExecutor):
     """
@@ -391,13 +383,6 @@ class AsyncAdapter(AsyncJobExecutor):
         run a callable `fn` on an arbitrary worker node
         """
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
-        return await sync_to_async(fn_with_args, self._pool)
-
-    async def run_wrap(self, fn, *args, **kwargs):
-        """
-        Run a callable `fn` locally or remotely at the discretion of the executor.
-        """
-        fn_with_args = functools.partial(self._wrapped.run_wrap, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
 
     async def run_each_partition(self, partitions, fn, all_nodes=False):

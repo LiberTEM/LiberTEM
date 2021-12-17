@@ -443,11 +443,6 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
             allclose_with_nan(result, direct_result, tol=udf_dict.get('tolerance', None))
 
 
-def test_run_wrap(delayed_ctx):
-    wrapped_delayed = delayed_ctx.executor.run_wrap(lambda x: x**2, 4)
-    assert wrapped_delayed.compute() == 16
-
-
 def test_map(delayed_ctx):
     iterable = range(5)
     wrapped_delayed = delayed_ctx.executor.map(lambda x: x**2, iterable)

@@ -1,6 +1,6 @@
 from typing import (
     TYPE_CHECKING, Any, List, Optional, Union, Iterable, Generator, Coroutine,
-    AsyncGenerator, overload, Dict
+    AsyncGenerator, overload
 )
 from typing_extensions import Literal
 import warnings
@@ -25,7 +25,7 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
-from libertem.udf.base import UDFResultDict, UDFRunner, UDF, UDFResults
+from libertem.udf.base import UDFResultDict, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.utils.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 
@@ -985,7 +985,8 @@ class Context:
             roi = roi.astype(bool)
 
         def _run_sync_wrap() -> Generator[UDFResults, None, None]:
-            result_iter = UDFRunner(udfs).run_for_dataset_sync(
+            runner_cls = self.executor.get_udf_runner()
+            result_iter = runner_cls(udfs).run_for_dataset_sync(
                 dataset=dataset,
                 executor=self.executor,
                 roi=roi,
@@ -1154,7 +1155,8 @@ class Context:
         ]
 
     def _prepare_plots(self, udfs, dataset, roi, plots):
-        dry_results = UDFRunner.dry_run(udfs, dataset, roi)
+        runner_cls = self.executor.get_udf_runner()
+        dry_results = runner_cls.dry_run(udfs, dataset, roi)
 
         # cases to consider:
         # 1) plots is `True`: default plots of all eligible channels
@@ -1269,10 +1271,10 @@ class Context:
                     </tbody>
                 </table>
                 """
-
+        runner_cls = self.executor.get_udf_runner()
         return _UDFInfo(
             title=udf.__class__.__name__,
-            buffers=UDFRunner.inspect_udf(udf, dataset, roi),
+            buffers=runner_cls.inspect_udf(udf, dataset, roi),
         )
 
     def map(self, dataset: DataSet, f, roi: np.ndarray = None,

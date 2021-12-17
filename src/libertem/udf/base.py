@@ -1405,6 +1405,7 @@ class UDFTask(Task):
         udf_classes: List[Type[UDF]],
         udf_backends: List[BackendSpec],
         backends: Optional[BackendSpec],
+        runner_cls: Type['UDFRunner'],
     ):
         """
         A computation for a single partition. The parameters that stay the same
@@ -1426,13 +1427,14 @@ class UDFTask(Task):
         self._backends = backends
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
+        self._runner_cls = runner_cls
 
     def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:
         udfs = [
             cls.new_for_partition(kwargs, self.partition, params.roi)
             for cls, kwargs in zip(self._udf_classes, params.kwargs)
         ]
-        return UDFRunner(udfs).run_for_partition(
+        return self._runner_cls(udfs).run_for_partition(
             self.partition, params, env,
         )
 
@@ -1448,34 +1450,32 @@ class UDFTask(Task):
         return f"<UDFTask {self._udf_classes!r}>"
 
 
-# Not a method of UDFRunner to avoid potentially including self in dask.delayed
-def _apply_part_result(udfs, damage, part_results, task):
-    for results, udf in zip(part_results, udfs):
-        udf.set_views_for_partition(task.partition)
-        udf.merge(
-            dest=udf.results.get_proxy(),
-            src=results.get_proxy()
-        )
-    v = damage.get_view_for_partition(task.partition)
-    v[:] = True
-    return (udfs, damage)
-
-
-# Not a method of UDFRunner to avoid potentially including self in dask.delayed
-def _make_udf_result(udfs, damage):
-    for udf in udfs:
-        udf.clear_views()
-    return UDFResults(
-        buffers=tuple(
-            # Explicit indexing for compatibility with Dask.delayed
-            udf._do_get_results()
-            for udf in udfs
-        ),
-        damage=damage
-    )
-
-
 class UDFRunner:
+    @staticmethod
+    def _apply_part_result(udfs, damage, part_results, task):
+        for results, udf in zip(part_results, udfs):
+            udf.set_views_for_partition(task.partition)
+            udf.merge(
+                dest=udf.results.get_proxy(),
+                src=results.get_proxy()
+            )
+        v = damage.get_view_for_partition(task.partition)
+        v[:] = True
+        return (udfs, damage)
+
+    @staticmethod
+    def _make_udf_result(udfs, damage):
+        for udf in udfs:
+            udf.clear_views()
+        return UDFResults(
+            buffers=tuple(
+                # Explicit indexing for compatibility with Dask.delayed
+                udf._do_get_results()
+                for udf in udfs
+            ),
+            damage=damage
+        )
+
     def __init__(self, udfs: List[UDF], debug: bool = False):
         self._udfs = udfs
         self._debug = debug
@@ -1491,7 +1491,7 @@ class UDFRunner:
         """
         Return result buffer declarations for a given UDF/DataSet/roi combination
         """
-        runner = UDFRunner([udf])
+        runner = cls([udf])
         meta = UDFMeta(
             partition_slice=None,
             dataset_shape=dataset.shape,
@@ -1521,7 +1521,7 @@ class UDFRunner:
         This can be used to create an empty result to initialize live plots
         before running an UDF.
         """
-        runner = UDFRunner(udfs)
+        runner = cls(udfs)
         executor = InlineJobExecutor()
         res = runner.run_for_dataset(
             dataset=dataset,
@@ -1907,8 +1907,7 @@ class UDFRunner:
         any_result = False
         for part_results, task in result_iter:
             any_result = True
-            res = executor.run_wrap(
-                _apply_part_result,
+            res = self._apply_part_result(
                 udfs=self._udfs,
                 damage=damage,
                 part_results=part_results,
@@ -1918,14 +1917,12 @@ class UDFRunner:
             self._udfs = res[0]
             damage = res[1]
             if iterate:
-                yield executor.run_wrap(
-                    _make_udf_result,
+                yield self._make_udf_result(
                     udfs=self._udfs,
                     damage=damage
                 )
         if not any_result or not iterate:
-            yield executor.run_wrap(
-                _make_udf_result,
+            yield self._make_udf_result(
                 udfs=self._udfs,
                 damage=damage
             )
@@ -1983,6 +1980,7 @@ class UDFRunner:
                 partition=partition, idx=idx, udf_classes=udf_classes,
                 udf_backends=udf_backends,
                 backends=backends,
+                runner_cls=self.__class__,
             )
             yield tasks
 

@@ -46,8 +46,7 @@ class MyStdDevMergeUDF(MyStdDevUDF):
         partial_delta = mean_1 - mean
         varsum = pixel_varsums + (n_frames * delta * partial_delta)
         varsum[0, ...] = pixel_varsums[0, ...]
-        varsum_cumulative = np.cumsum(varsum, axis=0)
-        varsum_total = varsum_cumulative[-1, ...]
+        varsum_total = np.sum(varsum, axis=0)
 
         self.results.get_buffer('sum').update_data(sumsum)
         self.results.get_buffer('varsum').update_data(varsum_total)

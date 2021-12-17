@@ -20,9 +20,9 @@ class MyStdDevMergeUDF(MyStdDevUDF):
     # Copied and adapted from tests/executor/test_delayed
     # FIXME import instead?
     def dask_merge(self, ordered_results):
-        n_frames = np.concatenate([[b.num_frames[0] for b in ordered_results.values()]])
-        pixel_sums = np.concatenate([[b.sum for b in ordered_results.values()]])
-        pixel_varsums = np.concatenate([[b.varsum for b in ordered_results.values()]])
+        n_frames = np.stack([b.num_frames[0] for b in ordered_results.values()])
+        pixel_sums = np.stack([b.sum for b in ordered_results.values()])
+        pixel_varsums = np.stack([b.varsum for b in ordered_results.values()])
 
         # Expand n_frames to be broadcastable
         extra_dims = pixel_sums.ndim - n_frames.ndim
@@ -135,7 +135,7 @@ class Test:
         def doit():
             result = ctx.run_udf(dataset=ds, udf=udf)
             # Make sure we run on the same number of workers
-            return result['intensity'].raw_data.compute(resources=resources)
+            return result['std'].raw_data.compute(resources=resources)
 
         benchmark(doit)
 
@@ -150,7 +150,7 @@ class Test:
 
         def doit():
             result = ctx.run_udf(dataset=ds, udf=udf)
-            return result['intensity'].raw_data.compute(resources=resources)
+            return result['std'].raw_data.compute(resources=resources)
 
         benchmark(doit)
 
@@ -242,9 +242,9 @@ class Test:
         benchmark(doit)
 
     @pytest.mark.benchmark(
-        group="echo",
+        group="large",
     )
-    def test_echo_baseline(self, shared_dist_ctx_globaldask, medium_raw_float32, benchmark):
+    def test_large_baseline(self, shared_dist_ctx_globaldask, medium_raw_float32, benchmark):
         ctx = shared_dist_ctx_globaldask
         ds = medium_raw_float32
         udf = EchoUDF()
@@ -256,9 +256,9 @@ class Test:
         benchmark(doit)
 
     @pytest.mark.benchmark(
-        group="echo",
+        group="large",
     )
-    def test_echo_delayed(self, shared_dist_ctx_globaldask, medium_raw_float32, benchmark):
+    def test_large_delayed(self, shared_dist_ctx_globaldask, medium_raw_float32, benchmark):
         ctx = Context(executor=DelayedJobExecutor())
         ds = medium_raw_float32
         udf = EchoUDF()
@@ -271,9 +271,9 @@ class Test:
         benchmark(doit)
 
     @pytest.mark.benchmark(
-        group="echo",
+        group="large",
     )
-    def test_echo_delayed_merge(self, shared_dist_ctx_globaldask, medium_raw_float32, benchmark):
+    def test_large_delayed_merge(self, shared_dist_ctx_globaldask, medium_raw_float32, benchmark):
         ctx = Context(executor=DelayedJobExecutor())
         ds = medium_raw_float32
         udf = EchoMergeUDF()

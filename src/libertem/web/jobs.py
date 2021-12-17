@@ -4,6 +4,8 @@ import logging
 import tornado.web
 
 from libertem.analysis.base import Analysis
+from libertem.io.dataset.base.dataset import DataSet
+from libertem.web.models import AnalysisDetails
 from .base import CORSMixin, log_message, ResultHandlerMixin
 from .state import SharedState
 from .messages import Message
@@ -77,7 +79,15 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
             self.event_registry.broadcast_event(msg)
             self.write(msg)
 
-    async def run_udf(self, job_id, dataset, dataset_id, analysis, analysis_id, details):
+    async def run_udf(
+        self,
+        job_id: str,
+        dataset: DataSet,
+        dataset_id: str,
+        analysis: Analysis,
+        analysis_id: str,
+        details: AnalysisDetails,
+    ):
         udf = analysis.get_udf()
         roi = analysis.get_roi()
 
@@ -90,7 +100,7 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
         self.finish()
         self.event_registry.broadcast_event(msg)
 
-        if hasattr(analysis, 'controller'):
+        try:
             return await analysis.controller(
                 cancel_id=job_id, executor=executor,
                 job_is_cancelled=lambda: self.state.job_state.is_cancelled(job_id),
@@ -99,6 +109,8 @@ class JobDetailHandler(CORSMixin, ResultHandlerMixin, tornado.web.RequestHandler
                     details=details, analysis_id=analysis_id,
                 )
             )
+        except NotImplementedError:
+            pass
 
         # short circuit if the parameters only change the visualization
         # (as determined by the analysis via `Analysis.need_rerun`):

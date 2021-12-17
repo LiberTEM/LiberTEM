@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import (
-    Any, AsyncGenerator, Dict, Generator, Iterator, Optional, List,
+    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
     Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
 )
 from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
@@ -733,7 +733,10 @@ class UDFBase:
                 )
             )
 
-    def _do_get_results(self):
+    def get_results(self) -> Dict[str, np.ndarray]:
+        raise NotImplementedError()
+
+    def _do_get_results(self) -> Mapping[str, BufferWrapper]:
         results_tmp = self.get_results()
         decl = self.get_result_buffers()
 
@@ -927,7 +930,7 @@ class UDF(UDFBase):
             check_cast(getattr(dest, k), getattr(src, k))
             getattr(dest, k)[:] = getattr(src, k)
 
-    def get_results(self):
+    def get_results(self) -> Dict[str, np.ndarray]:
         """
         Get results, allowing a postprocessing step on the main node after
         a result has been merged. See also: :class:`UDFPostprocessMixin`.
@@ -1879,6 +1882,9 @@ class UDFRunner:
             yield tasks
 
 
+UDFResultDict = Mapping[str, BufferWrapper]
+
+
 class UDFResults:
     '''
     Container class to combine UDF results with additional information.
@@ -1895,13 +1901,13 @@ class UDFResults:
     Parameters
     ----------
 
-    buffers : Iterable[dict]
+    buffers
         Iterable containing the result buffer dictionaries for each of the UDFs being executed
 
     damage : BufferWrapper
         :class:`libertem.common.buffers.BufferWrapper` of :code:`kind='nav'`, :code:`dtype=bool`.
         It is set to :code:`True` for all positions in nav space that have been processed already.
     '''
-    def __init__(self, buffers: Iterable[Dict], damage: BufferWrapper):
-        self.buffers = buffers
+    def __init__(self, buffers: Iterable[UDFResultDict], damage: BufferWrapper):
+        self.buffers = list(buffers)
         self.damage = damage

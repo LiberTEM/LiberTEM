@@ -3,9 +3,16 @@ import queue
 import asyncio
 import threading
 import functools
+from typing import AsyncGenerator, Callable, Generator, Optional, TypeVar
+from concurrent.futures import ThreadPoolExecutor
 
 
-async def sync_to_async(fn, pool=None, *args, **kwargs):
+T = TypeVar('T')
+
+
+async def sync_to_async(
+    fn: Callable[..., T], pool: Optional[ThreadPoolExecutor] = None, *args, **kwargs
+) -> T:
     """
     Run blocking function with `*args`, `**kwargs` in a thread pool.
 
@@ -25,7 +32,9 @@ async def sync_to_async(fn, pool=None, *args, **kwargs):
     return await loop.run_in_executor(pool, fn)
 
 
-async def async_generator(gen, pool=None):
+async def async_generator(
+    gen: Generator[T, None, None], pool: Optional[ThreadPoolExecutor] = None
+) -> AsyncGenerator[T, None]:
     def inner_next(gen):
         try:
             return next(gen)
@@ -39,6 +48,30 @@ async def async_generator(gen, pool=None):
             yield item
         except MyStopIteration:
             break
+
+
+async def run_agen_get_last(gen: AsyncGenerator[T, None]) -> T:
+    result = None
+    try:
+        while True:
+            result = await gen.__anext__()
+    except StopAsyncIteration:
+        pass
+    if result is None:
+        raise RuntimeError("run_gen_get_last called with empty generator")
+    return result
+
+
+def run_gen_get_last(gen: Generator[T, None, None]) -> T:
+    result = None
+    try:
+        while True:
+            result = gen.__next__()
+    except StopIteration:
+        pass
+    if result is None:
+        raise RuntimeError("run_gen_get_last called with empty generator")
+    return result
 
 
 class AsyncGenToQueueThread(threading.Thread):

@@ -1,8 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Checkbox, Dropdown, DropdownProps, Form, Header, Icon, Input, List, Modal, Popup } from "semantic-ui-react";
+import { Button, Checkbox, Dropdown, DropdownProps, Form, Header, Icon, Input, List, Modal, Popup } from "semantic-ui-react";
 import { defaultDebounce, getEnumValues } from "../../helpers";
+import { getApiBasePath } from "../../helpers/apiHelpers";
 import ResultList from "../../job/components/ResultList";
 import { AnalysisTypes, CenterOfMassParams } from "../../messages";
 import { RootReducer } from "../../store";
@@ -42,6 +43,20 @@ interface MaskShapeSelectorProps {
     selectedShape: CoMMaskShapes,
     handleChange: (e: React.SyntheticEvent, data: DropdownProps) => void,
 }
+
+type GuessResponse = {
+    status: "error";
+    message: string;
+} | {
+    status: "ok";
+    guess: {
+        cx: number;
+        cy: number;
+        scan_rotation: number;
+        flip_y: boolean;
+    }
+}
+
 
 const MaskShapeSelector: React.FC<MaskShapeSelectorProps> = ({ selectedShape, handleChange }) => (
         <>
@@ -181,8 +196,6 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         }
     }, [flip_y, scan_rotation]);
 
-    const toolbar = <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} />
-
     const updateFlipY = (e: React.ChangeEvent<HTMLInputElement>, { checked }: { checked: boolean }) => {
         setFlipY(checked);
     };
@@ -193,6 +206,40 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         }
         setScanRotation(value);
     };
+
+    const guessParameters = (ev: React.MouseEvent) => {
+        const basePath = getApiBasePath();
+        const url = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/rpc/guess_parameters/`;
+        fetch(url, {
+            method: 'PUT',
+            credentials: "same-origin",
+        }).then(req => req.json()).then((json) => {
+            const response = json as GuessResponse;
+            // eslint-disable-next-line no-console
+            console.log(response);
+            if(response.status === "ok") {
+                setFlipY(response.guess.flip_y);
+                setCx(response.guess.cx);
+                setCy(response.guess.cy);
+                setScanRotation(response.guess.scan_rotation.toString());
+            } else {
+                // eslint-disable-next-line no-console
+                console.error(response.message);
+            }
+        // eslint-disable-next-line no-console
+        }).catch(e => console.error(e));
+        ev.preventDefault();
+    }
+
+    const toolbar = (
+        <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} extra={
+            <Button icon onClick={guessParameters}>
+                <Icon name="question" />
+                Guess parameters
+            </Button>
+        }/>
+    );
+
 
     // TODO: debounce parameters
     const comParams = (

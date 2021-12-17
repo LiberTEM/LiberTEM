@@ -1,14 +1,18 @@
 import logging
 import inspect
-from collections import namedtuple
+from typing import Dict, NamedTuple, Optional, Tuple, Type, Union, TYPE_CHECKING
 
 import numpy as np
 
 from libertem import masks
+from libertem.web.rpc import ProcedureProtocol
 from .base import AnalysisResult, AnalysisResultSet
 from .masks import BaseMasksAnalysis
 from libertem.corrections import coordinates
 from .helper import GeneratorHelper
+
+if TYPE_CHECKING:
+    from libertem.web.rpc import RPCContext
 
 log = logging.getLogger(__name__)
 
@@ -221,10 +225,18 @@ def coordinate_check(y_centers, x_centers, roi=None):
     return (straight, flipped)
 
 
-GuessResult = namedtuple('GuessResult', ('scan_rotation', 'flip_y', 'cy', 'cx'))
+class GuessResult(NamedTuple):
+    scan_rotation: int
+    flip_y: bool
+    cy: float
+    cx: float
 
 
-def guess_corrections(y_centers, x_centers, roi=None):
+def guess_corrections(
+    y_centers: np.ndarray,
+    x_centers: np.ndarray,
+    roi: Optional[Union[np.ndarray, Tuple[slice, ...]]] = None,
+) -> GuessResult:
     '''
     Guess corrections for center shift, :code:`scan_rotation` and :code:`flip_y` from CoM data
 
@@ -291,7 +303,7 @@ def guess_corrections(y_centers, x_centers, roi=None):
     if angle > 180:
         angle -= 360
     return GuessResult(
-        scan_rotation=angle,
+        scan_rotation=int(angle),
         flip_y=flip_y,
         cy=np.mean(y_centers[roi]),
         cx=np.mean(x_centers[roi])
@@ -344,6 +356,53 @@ class COMResultSet(AnalysisResultSet):
         Imaginary part of y component of the center of mass shift (complex dataset only)
     """
     pass
+
+
+class ParameterGuessProc:
+    def __call__(self, rpc_context: "RPCContext") -> Dict:
+        comp_ana = rpc_context.get_compound_analysis()
+        analyses = comp_ana["details"]["analyses"]
+        if len(analyses) != 2:
+            return {
+                "status": "error",
+                "message": "no analyses found, there should be 2",
+            }
+        analysis_details = [
+            rpc_context.get_analysis_details(a)
+            for a in analyses
+        ]
+        try:
+            com_analysis = [
+                a
+                for a in analysis_details
+                if a["details"]["analysisType"] == "CENTER_OF_MASS"
+            ][0]
+        except IndexError:
+            return {
+                "status": "error",
+                "message": "no CoM analysis found",
+            }
+        com_analysis_id = com_analysis["analysis"]
+        if not rpc_context.have_analysis_results(com_analysis_id):
+            # run with the current analysis parameters as set in the GUI:
+            rpc_context.run_analysis(com_analysis_id)
+        result_info = rpc_context.get_analysis_results(com_analysis_id)
+        res = result_info.results
+        old_params = result_info.details["parameters"]
+        guess = guess_corrections(res.y.raw_data, res.x.raw_data)
+        # NOTE: convert guess results to absolute values to make sure we don't
+        # run into any nasty synchronization issues, for example, if state goes
+        # stale after the guess button was clicked.
+        flip_y = bool(old_params["flip_y"]) != bool(guess.flip_y)
+        return {
+            'status': 'ok',
+            'guess': {
+                'cx': guess.cx + old_params["cx"],
+                'cy': guess.cy + old_params["cy"],
+                'scan_rotation': guess.scan_rotation + old_params["scan_rotation"],
+                'flip_y': flip_y,
+            },
+        }
 
 
 class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
@@ -471,7 +530,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                 r=self.parameters['r'],
             )
 
-    def get_parameters(self, parameters):
+    def get_parameters(self, parameters: Dict) -> Dict:
         (detector_y, detector_x) = self.dataset.shape.sig
 
         cx = parameters.get('cx', detector_x / 2)
@@ -495,10 +554,16 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
         }
 
     @classmethod
-    def get_template_helper(cls):
+    def get_template_helper(cls) -> Type[GeneratorHelper]:
         return ComTemplate
 
-    def need_rerun(self, old_params, new_params):
+    @classmethod
+    def get_rpc_definitions(cls) -> Dict[str, Type[ProcedureProtocol]]:
+        return {
+            "guess_parameters": ParameterGuessProc,
+        }
+
+    def need_rerun(self, old_params: Dict, new_params: Dict) -> bool:
         """
         Don't need to re-run UDF if only `flip_y` or `scan_rotation`
         have changed.

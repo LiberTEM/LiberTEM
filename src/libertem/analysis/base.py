@@ -1,6 +1,19 @@
-import typing
+from io import BytesIO
+from typing import (
+    Callable, Dict, List, Optional, Type, Union, TYPE_CHECKING
+)
+from typing_extensions import Literal
 
 import numpy as np
+
+from libertem.common.buffers import BufferWrapper
+from libertem.io.dataset.base import DataSet
+from libertem.udf.base import UDF
+
+if TYPE_CHECKING:
+    from libertem.analysis.helper import GeneratorHelper
+    from libertem.web.rpc import ProcedureProtocol
+    import numpy.typing as nt
 
 
 class AnalysisResult:
@@ -22,7 +35,15 @@ class AnalysisResult:
     key : str
         Key to identify the result in an :class:`AnalysisResultSet`
     """
-    def __init__(self, raw_data, visualized, title, desc, key, include_in_download=True):
+    def __init__(
+        self,
+        raw_data: np.ndarray,
+        visualized: np.ndarray,
+        title: str,
+        desc: str,
+        key: str,
+        include_in_download: bool = True,
+    ):
         self.include_in_download = include_in_download
         self.raw_data = raw_data
         self._visualized = visualized
@@ -42,7 +63,7 @@ class AnalysisResult:
     def __array__(self):
         return np.array(self.raw_data)
 
-    def get_image(self, save_kwargs=None):
+    def get_image(self, save_kwargs: Optional[Dict] = None) -> BytesIO:
         from libertem.viz import encode_image
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 
@@ -51,6 +72,9 @@ class AnalysisResult:
         if callable(self._visualized):
             self._visualized = self._visualized()
         return self._visualized
+
+
+_ResultsType = Union[List[AnalysisResult], Callable[[], List[AnalysisResult]]]
 
 
 class AnalysisResultSet:
@@ -108,7 +132,7 @@ class AnalysisResultSet:
     >>> print(result['mask_1'].title)
     mask 1
     """
-    def __init__(self, results: typing.List[AnalysisResult], raw_results=None):
+    def __init__(self, results: _ResultsType, raw_results=None):
         self._results = results
         self.raw_results = raw_results
 
@@ -161,11 +185,11 @@ class Analysis:
     .. versionchanged:: 0.7.0
         Removed deprecated methods :code:`get_results` and :code:`get_job`
     """
-    # TODO: once we require Py3.8, we can use Literal here:
-    # https://www.python.org/dev/peps/pep-0586/
-    TYPE: typing.Optional[str] = None
+    TYPE: Literal["UDF"] = "UDF"
+    registry: Dict[str, "Type[Analysis]"] = {}
 
-    registry: typing.Dict = {}
+    def __init__(self, dataset: DataSet):
+        self.dataset = dataset
 
     def __init_subclass__(cls, id_=None, **kwargs):
 
@@ -178,17 +202,31 @@ class Analysis:
             cls.registry[id_] = cls
 
     @classmethod
-    def get_analysis_by_type(cls, id_):
+    def get_analysis_by_type(cls, id_: str) -> Type["Analysis"]:
         return cls.registry[id_]
 
-    def get_udf_results(self, udf_results, roi):
+    @classmethod
+    def get_template_helper(cls) -> Type["GeneratorHelper"]:
+        raise NotImplementedError()
+
+    @classmethod
+    def get_rpc_definitions(cls) -> Dict[str, Type["ProcedureProtocol"]]:
+        raise NotImplementedError()
+
+    async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
+        raise NotImplementedError()
+
+    def get_udf_results(
+        self, udf_results: Dict[str, BufferWrapper], roi: Optional[np.ndarray],
+        damage: "nt.ArrayLike",
+    ) -> AnalysisResultSet:
         """
-        Convert UDF results to a list of :code:`AnalysisResult`\\ s,
+        Convert UDF results to a :code:`AnalysisResultSet`,
         including visualizations.
 
         Parameters
         ----------
-        udf_results : dics
+        udf_results
             raw results from the UDF
         roi : numpy.ndarray or None
             Boolean array of the navigation dimension
@@ -200,14 +238,14 @@ class Analysis:
         """
         raise NotImplementedError()
 
-    def get_udf(self):
+    def get_udf(self) -> UDF:
         """
         Set TYPE='UDF' on the class and implement this method to run a UDF
         from this analysis
         """
         raise NotImplementedError()
 
-    def get_roi(self):
+    def get_roi(self) -> Optional[np.ndarray]:
         """
         Get the region of interest the UDF should be run on. For example,
         the parameters could describe some geometry, which this method should
@@ -223,13 +261,13 @@ class Analysis:
     def get_complex_results(self, job_result, key_prefix, title, desc, damage, default_lin=True):
         raise NotImplementedError()
 
-    def get_parameters(self, parameters):
+    def get_parameters(self, parameters: Dict) -> Dict:
         """
         Get analysis parameters. Override to set defaults
         """
         raise NotImplementedError()
 
-    def need_rerun(self, old_params, new_params):
+    def need_rerun(self, old_params: Dict, new_params: Dict) -> bool:
         """
         Determine if the analysis needs to be re-run on the data. If not,
         we can just call `get_udf_results` again, for example if the parameters
@@ -249,10 +287,8 @@ class Analysis:
 
 
 class BaseAnalysis(Analysis):
-    TYPE = 'UDF'
-
     def __init__(self, dataset, parameters):
-        self.dataset = dataset
+        super().__init__(dataset)
         self.parameters = self.get_parameters(parameters)
         self.parameters.update(parameters)
 
@@ -318,7 +354,7 @@ class BaseAnalysis(Analysis):
             ),
         ]
 
-    def get_parameters(self, parameters):
+    def get_parameters(self, parameters: Dict):
         """
         Get analysis parameters. Override to set defaults
         """

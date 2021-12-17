@@ -26,7 +26,10 @@ from .browse import LocalFSBrowseHandler
 from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
-from .analysis import AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler
+from .analysis import (
+    AnalysisDetailHandler, DownloadDetailHandler, CompoundAnalysisHandler,
+    AnalysisRPCHandler,
+)
 from .generator import DownloadScriptHandler, CopyScriptHandler
 
 log = logging.getLogger(__name__)
@@ -102,6 +105,7 @@ def make_app(event_registry, shared_state, token=None):
             DownloadDetailHandler,
             common_kwargs
         ),
+        (r"/api/compoundAnalyses/([^/]+)/rpc/([^/]+)/", AnalysisRPCHandler, common_kwargs),
         (r"/api/compoundAnalyses/([^/]+)/copy/notebook/", CopyScriptHandler, common_kwargs),
         (r"/api/compoundAnalyses/([^/]+)/download/notebook/", DownloadScriptHandler, common_kwargs),
         (r"/api/compoundAnalyses/([^/]+)/", CompoundAnalysisHandler, common_kwargs),

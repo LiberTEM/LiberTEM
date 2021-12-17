@@ -2,16 +2,20 @@ import os
 import copy
 import typing
 import itertools
-from collections import defaultdict
 
 import psutil
 
 import libertem
 from libertem.analysis.base import AnalysisResultSet
-from libertem.io.dataset.base import DataSetException
+from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.io.writers.results import formats  # NOQA
+from libertem.udf.base import UDFResults
 from libertem.utils import devices
+from .models import (
+    AnalysisDetails, AnalysisInfo, AnalysisResultInfo, CompoundAnalysisInfo, AnalysisParameters,
+    DatasetInfo, JobInfo, SerializedJobInfo,
+)
 
 
 class ExecutorState:
@@ -38,16 +42,15 @@ class ExecutorState:
         return self.cluster_params
 
 
-AnalysisParameters = typing.Dict
-
-
 class AnalysisState:
     def __init__(self, executor_state: ExecutorState, job_state: 'JobState'):
-        self.analyses: typing.Dict[str, AnalysisParameters] = {}
-        self.results: typing.Dict[str, typing.Tuple[AnalysisResultSet, AnalysisParameters]] = {}
+        self.analyses: typing.Dict[str, AnalysisInfo] = {}
+        self.results: typing.Dict[str, AnalysisResultInfo] = {}
         self.job_state = job_state
 
-    def create(self, uuid, dataset_uuid, analysis_type, parameters):
+    def create(
+        self, uuid: str, dataset_uuid: str, analysis_type: str, parameters: AnalysisParameters
+    ) -> None:
         assert uuid not in self.analyses
         self.analyses[uuid] = {
             "dataset": dataset_uuid,
@@ -59,25 +62,27 @@ class AnalysisState:
             },
         }
 
-    def add_job(self, analysis_id, job_id):
+    def add_job(self, analysis_id: str, job_id: str) -> None:
         jobs = self.analyses[analysis_id]["jobs"]
         jobs.append(job_id)
 
-    def update(self, uuid, analysis_type, parameters):
+    def update(self, uuid: str, analysis_type: str, parameters: AnalysisParameters) -> None:
         self.analyses[uuid]["details"]["parameters"] = parameters
         self.analyses[uuid]["details"]["analysisType"] = analysis_type
 
-    def get(self, uuid, default=None):
+    def get(
+        self, uuid: str, default: typing.Optional[AnalysisInfo] = None
+    ) -> typing.Optional[AnalysisInfo]:
         return self.analyses.get(uuid, default)
 
-    def filter(self, predicate):
+    def filter(self, predicate: typing.Callable[[AnalysisInfo], bool]) -> typing.List[AnalysisInfo]:
         return [
             analysis
             for analysis in self.analyses.values()
             if predicate(analysis)
         ]
 
-    async def remove(self, uuid):
+    async def remove(self, uuid: str) -> bool:
         if uuid not in self.analyses:
             return False
         if uuid in self.results:
@@ -86,34 +91,43 @@ class AnalysisState:
         del self.analyses[uuid]
         return True
 
-    async def remove_jobs(self, uuid):
+    async def remove_jobs(self, uuid: str) -> None:
         jobs = copy.copy(self.job_state.get_for_analysis_id(uuid))
         for job_id in jobs:
             await self.job_state.remove(job_id)
 
-    def remove_results(self, uuid):
+    def remove_results(self, uuid: str) -> None:
         del self.results[uuid]
 
-    def set_results(self, uuid, details, results, job_id, udf_results):
+    def set_results(
+        self,
+        analysis_id: str,
+        details: AnalysisDetails,
+        results: AnalysisResultSet,
+        job_id: str,
+        udf_results: typing.Optional[UDFResults],
+    ) -> None:
         """
         set results: create or update
         """
-        self.results[uuid] = (copy.deepcopy(details), results, job_id, udf_results)
+        self.results[analysis_id] = AnalysisResultInfo(
+            copy.deepcopy(details), results, job_id, udf_results
+        )
 
-    def have_results(self, uuid):
-        return uuid in self.results
+    def have_results(self, analysis_id: str) -> bool:
+        return analysis_id in self.results
 
-    def get_results(self, uuid):
-        return self.results[uuid]
+    def get_results(self, analysis_id: str) -> AnalysisResultInfo:
+        return self.results[analysis_id]
 
-    def get_all_results(self):
+    def get_all_results(self) -> typing.ItemsView[str, AnalysisResultInfo]:
         return self.results.items()
 
-    def __getitem__(self, uuid):
-        return self.analyses[uuid]
+    def __getitem__(self, analysis_id: str) -> AnalysisInfo:
+        return self.analyses[analysis_id]
 
-    def serialize(self, uuid):
-        result = copy.copy(self[uuid])
+    def serialize(self, analysis_id: str) -> AnalysisInfo:
+        result = copy.copy(self[analysis_id])
         result["jobs"] = [
             job_id
             for job_id in result["jobs"]
@@ -121,19 +135,21 @@ class AnalysisState:
         ]
         return result
 
-    def serialize_all(self):
+    def serialize_all(self) -> typing.List[AnalysisInfo]:
         return [
-            self.serialize(uuid)
-            for uuid in self.analyses
+            self.serialize(analysis_id)
+            for analysis_id in self.analyses
         ]
 
 
 class CompoundAnalysisState:
     def __init__(self, analysis_state: AnalysisState):
         self.analysis_state = analysis_state
-        self.analyses = {}
+        self.analyses: typing.Dict[str, CompoundAnalysisInfo] = {}
 
-    def create_or_update(self, uuid, main_type, dataset_id, analyses):
+    def create_or_update(
+        self, uuid: str, main_type: str, dataset_id: str, analyses: typing.List[str]
+    ) -> bool:
         created = uuid not in self.analyses
         self.analyses[uuid] = {
             "dataset": dataset_id,
@@ -145,23 +161,25 @@ class CompoundAnalysisState:
         }
         return created
 
-    def remove(self, uuid):
+    def remove(self, uuid: str) -> None:
         del self.analyses[uuid]
 
-    def __getitem__(self, uuid):
+    def __getitem__(self, uuid: str) -> CompoundAnalysisInfo:
         return self.analyses[uuid]
 
-    def filter(self, predicate):
+    def filter(
+        self, predicate: typing.Callable[[CompoundAnalysisInfo], bool]
+    ) -> typing.List[CompoundAnalysisInfo]:
         return [
             ca
             for ca in self.analyses.values()
             if predicate(ca)
         ]
 
-    def serialize(self, uuid):
+    def serialize(self, uuid: str) -> CompoundAnalysisInfo:
         return self[uuid]
 
-    def serialize_all(self):
+    def serialize_all(self) -> typing.List[CompoundAnalysisInfo]:
         return [
             self.serialize(uuid)
             for uuid in self.analyses
@@ -171,13 +189,15 @@ class CompoundAnalysisState:
 class DatasetState:
     def __init__(self, executor_state: ExecutorState, analysis_state: AnalysisState,
                  compound_analysis_state: CompoundAnalysisState):
-        self.datasets = {}
-        self.dataset_to_id = {}
+        self.datasets: typing.Dict[str, DatasetInfo] = {}
+        self.dataset_to_id: typing.Dict[DataSet, str] = {}
         self.executor_state = executor_state
         self.analysis_state = analysis_state
         self.compound_analysis_state = compound_analysis_state
 
-    def register(self, uuid, dataset, params, converted):
+    def register(
+        self, uuid: str, dataset: DataSet, params: typing.Dict, converted: typing.Dict
+    ):
         assert uuid not in self.datasets
         self.datasets[uuid] = {
             "dataset": dataset,
@@ -241,12 +261,12 @@ class DatasetState:
 
 class JobState:
     def __init__(self, executor_state: ExecutorState):
-        self.jobs = {}
+        self.jobs: typing.Dict[str, JobInfo] = {}
         self.executor_state = executor_state
-        self.jobs_for_dataset = defaultdict(lambda: set())
-        self.jobs_for_analyses = defaultdict(lambda: set())
+        self.jobs_for_dataset = typing.DefaultDict[str, typing.Set[str]](lambda: set())
+        self.jobs_for_analyses = typing.DefaultDict[str, typing.Set[str]](lambda: set())
 
-    def register(self, job_id, analysis_id, dataset_id):
+    def register(self, job_id: str, analysis_id, dataset_id):
         assert job_id not in self.jobs
         self.jobs[job_id] = {
             "id": job_id,
@@ -257,7 +277,7 @@ class JobState:
         self.jobs_for_analyses[analysis_id].add(job_id)
         return self
 
-    async def remove(self, uuid):
+    async def remove(self, uuid: str) -> bool:
         try:
             executor = self.executor_state.get_executor()
             await executor.cancel(uuid)
@@ -270,26 +290,26 @@ class JobState:
         except KeyError:
             return False
 
-    def get_for_dataset_id(self, dataset_id):
+    def get_for_dataset_id(self, dataset_id: str) -> typing.Set[str]:
         return self.jobs_for_dataset[dataset_id]
 
-    def get_for_analysis_id(self, analysis_id):
+    def get_for_analysis_id(self, analysis_id: str) -> typing.Set[str]:
         return self.jobs_for_analyses[analysis_id]
 
-    def __getitem__(self, uuid):
+    def __getitem__(self, uuid: str) -> JobInfo:
         return self.jobs[uuid]
 
-    def is_cancelled(self, uuid):
+    def is_cancelled(self, uuid: str) -> bool:
         return uuid not in self.jobs
 
-    def serialize(self, job_id):
+    def serialize(self, job_id: str) -> SerializedJobInfo:
         job = self[job_id]
         return {
             "id": job["id"],
             "analysis": job["analysis"],
         }
 
-    def serialize_all(self):
+    def serialize_all(self) -> typing.List[SerializedJobInfo]:
         return [
             self.serialize(job_id)
             for job_id in self.jobs.keys()
@@ -307,25 +327,23 @@ class SharedState:
             analysis_state=self.analysis_state,
             compound_analysis_state=self.compound_analysis_state,
         )
-
-        self.dataset_for_job = {}
         self.local_directory = "dask-worker-space"
-        self.preload = ()
+        self.preload: typing.Tuple[str, ...] = ()
 
-    def get_local_cores(self, default=2):
-        cores = psutil.cpu_count(logical=False)
+    def get_local_cores(self, default: int = 2) -> int:
+        cores: typing.Optional[int] = psutil.cpu_count(logical=False)
         if cores is None:
             cores = default
         return cores
 
-    def set_local_directory(self, local_directory):
+    def set_local_directory(self, local_directory: str) -> None:
         if local_directory is not None:
             self.local_directory = local_directory
 
     def get_local_directory(self):
         return self.local_directory
 
-    def get_ds_type_info(self, ds_type_id):
+    def get_ds_type_info(self, ds_type_id: str):
         from libertem.io.dataset import get_dataset_cls
         cls = get_dataset_cls(ds_type_id)
         ConverterCls = cls.get_msg_converter()
@@ -360,8 +378,8 @@ class SharedState:
             "separator": '/'
         }
 
-    def set_preload(self, preload: typing.Tuple[str]):
+    def set_preload(self, preload: typing.Tuple[str, ...]) -> None:
         self.preload = preload
 
-    def get_preload(self) -> typing.Tuple[str]:
+    def get_preload(self) -> typing.Tuple[str, ...]:
         return self.preload

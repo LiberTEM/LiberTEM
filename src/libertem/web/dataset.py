@@ -1,6 +1,7 @@
 import time
 import logging
 import functools
+from typing import Dict
 
 import tornado.web
 
@@ -54,7 +55,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         log.info("warmup done, took %.3fs", (t1 - t0))
 
     async def put(self, uuid):
-        request_data = tornado.escape.json_decode(self.request.body)
+        request_data: Dict = tornado.escape.json_decode(self.request.body)
         params = request_data['dataset']['params']
         params["type"] = ds_type = params["type"].upper()
         cls = get_dataset_cls(ds_type)

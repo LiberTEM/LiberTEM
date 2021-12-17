@@ -1,6 +1,7 @@
 import logging
 from io import BytesIO
 import time
+from typing import Dict, Optional
 
 import numpy as np
 from matplotlib import colors, cm
@@ -33,7 +34,7 @@ def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=No
     return norm_cls(vmin=vmin, vmax=vmax)
 
 
-def encode_image(result, save_kwargs=None):
+def encode_image(result, save_kwargs: Optional[Dict] = None) -> BytesIO:
     """
     Save the RGBA data in ``result`` to an image with parameters ``save_kwargs``
     passed to ``PIL.Image.save``.
@@ -41,7 +42,7 @@ def encode_image(result, save_kwargs=None):
     Parameters
     ----------
     result : numpy.ndarray
-        2d array of intensity values
+        Array of RGB values; shape (height, width, 3)
 
     save_kwargs : dict or None
         dict of kwargs passed to Pillow when saving the image, can be used to set

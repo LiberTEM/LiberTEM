@@ -1,7 +1,8 @@
 import typing
 import importlib
+from typing_extensions import Literal
 
-from libertem.io.dataset.base import DataSetException
+from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.utils.async_utils import sync_to_async
 from libertem.executor.scheduler import Scheduler
 
@@ -23,21 +24,67 @@ filetypes = {
 }
 
 
-def _auto_load(path, *args, executor, **kwargs):
+@typing.overload
+def _auto_load(
+    path: str, enable_async: Literal[True], *args, executor, **kwargs,
+) -> typing.Awaitable[DataSet]:
+    ...
+
+
+@typing.overload
+def _auto_load(
+    path: str, enable_async: Literal[False], *args, executor, **kwargs,
+) -> DataSet:
+    ...
+
+
+@typing.overload
+def _auto_load(
+    path: str, enable_async: bool, *args, executor, **kwargs,
+) -> typing.Union[DataSet, typing.Awaitable[DataSet]]:
+    ...
+
+
+def _auto_load(path,  *args, executor, **kwargs):
     if path is None:
         raise DataSetException(
             "please specify the `path` argument to allow auto detection"
         )
     detected_params = detect(path, executor=executor)
-    filetype_detected = detected_params.get('type', None)
+    filetype_detected: typing.Optional[str] = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
             "could not determine DataSet type for file '%s'" % path,
         )
-    return load(filetype_detected, path, *args, executor=executor, **kwargs)
+    return load(
+        filetype_detected, path, *args, executor=executor, **kwargs
+    )
 
 
-def load(filetype, *args, enable_async=False, executor, **kwargs):
+@typing.overload
+def load(
+    filetype: str, *args, enable_async: Literal[True], executor, **kwargs,
+) -> typing.Awaitable[DataSet]:
+    ...
+
+
+@typing.overload
+def load(
+    filetype: str, *args, enable_async: Literal[False], executor, **kwargs,
+) -> DataSet:
+    ...
+
+
+@typing.overload
+def load(
+    filetype: str, *args, enable_async: bool, executor, **kwargs,
+) -> typing.Union[DataSet, typing.Awaitable[DataSet]]:
+    ...
+
+
+def load(
+    filetype: str, *args, enable_async: bool = False, executor, **kwargs,
+):
     """
     Low-level method to load a dataset. Usually you will want
     to use Context.load instead!
@@ -85,15 +132,15 @@ def load(filetype, *args, enable_async=False, executor, **kwargs):
         return ds
 
 
-def register_dataset_cls(filetype, cls):
+def register_dataset_cls(filetype: str, cls: str) -> None:
     filetypes[filetype] = cls
 
 
-def unregister_dataset_cls(filetype):
+def unregister_dataset_cls(filetype: str) -> None:
     del filetypes[filetype]
 
 
-def get_dataset_cls(filetype):
+def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
     if not isinstance(filetype, str):
         return filetype
     try:
@@ -103,17 +150,17 @@ def get_dataset_cls(filetype):
     if not isinstance(ft, str):
         return ft
     parts = ft.split(".")
-    module = ".".join(parts[:-1])
-    cls = parts[-1]
+    module_name = ".".join(parts[:-1])
+    cls_name = parts[-1]
     try:
-        module = importlib.import_module(module)
+        module = importlib.import_module(module_name)
     except ImportError as e:
         raise DataSetException("could not load dataset: %s" % str(e))
-    cls = getattr(module, cls)
+    cls: typing.Type[DataSet] = getattr(module, cls_name)
     return cls
 
 
-def detect(path, executor):
+def detect(path: str, executor):
     """
     Returns dataset's detected type, parameters and
     additional info.
@@ -137,7 +184,7 @@ def get_extensions() -> typing.Set[str]:
 
     Plain extensions only, no pattern!
     """
-    types = set()
+    types: typing.Set[str] = set()
     for filetype in filetypes.keys():
         cls = get_dataset_cls(filetype)
         types = types.union({ext.lower() for ext in cls.get_supported_extensions()})

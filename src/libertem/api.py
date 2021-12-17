@@ -1,4 +1,8 @@
-from typing import Union, Dict, Iterable, Generator, Coroutine, AsyncGenerator
+from typing import (
+    TYPE_CHECKING, Any, List, Optional, Union, Iterable, Generator, Coroutine,
+    AsyncGenerator, overload,
+)
+from typing_extensions import Literal
 import warnings
 
 import numpy as np
@@ -18,15 +22,22 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
-from libertem.udf.base import UDFRunner, UDF, UDFResults
+from libertem.udf.base import UDFResultDict, UDFRunner, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
-from libertem.utils.async_utils import async_generator
+from libertem.utils.async_utils import async_generator, run_agen_get_last, run_gen_get_last
+
+if TYPE_CHECKING:
+    import numpy.typing as nt
 
 
-RunUDFResultType = Dict[str, BufferWrapper]
-RunUDFAsync = Coroutine[RunUDFResultType, None, None]
+RunUDFResultType = UDFResultDict
+RunUDFSyncL = List[UDFResultDict]
+RunUDFAsync = Coroutine[None, None, UDFResultDict]
+RunUDFAsyncL = Coroutine[None, None, List[UDFResultDict]]
 RunUDFGenType = Generator[UDFResults, None, None]
+RunUDFGenTypeL = Generator[UDFResults, None, None]
 RunUDFAGenType = AsyncGenerator[UDFResults, None]
+RunUDFAGenTypeL = AsyncGenerator[UDFResults, None]
 
 
 class Context:
@@ -148,9 +159,19 @@ class Context:
         >>> ds = ctx.load("auto", path="...", io_backend=io_backend)  # doctest: +SKIP
         """
         # delegate to libertem.io.dataset.load:
-        return load(filetype, *args, io_backend=io_backend, executor=self.executor, **kwargs)
+        return load(
+            filetype,
+            *args,
+            io_backend=io_backend,
+            executor=self.executor,
+            enable_async=False,
+            **kwargs,
+        )
 
-    load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
+    # If people run with -OO, which strips docstrings, we must not
+    # try to treat load.__doc__ as `str`:
+    if load.__doc__ is not None:
+        load.__doc__ = load.__doc__ % {"types": ", ".join(filetypes.keys())}
 
     def create_mask_analysis(self, factories: MaskFactoriesType, dataset: DataSet,
             use_sparse: bool = None, mask_count: int = None, mask_dtype: np.dtype = None,
@@ -494,9 +515,9 @@ class Context:
 
     def run(
         self, job: Analysis,
-        roi: np.ndarray = None,
+        roi: Optional[np.ndarray] = None,
         progress: bool = False,
-        corrections: CorrectionSet = None,
+        corrections: Optional[CorrectionSet] = None,
     ) -> Union[np.ndarray, AnalysisResultSet]:
         """
         Run the given :class:`~libertem.analysis.base.Analysis`
@@ -533,14 +554,15 @@ class Context:
         analysis = job  # keep the old kwarg name for backward-compat.
         if roi is None:
             roi = analysis.get_roi()
-        udf_results = self.run_udf(
+        udf_results: UDFResultDict = self.run_udf(  # type:ignore[assignment]
             dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
-            progress=progress, corrections=corrections,
+            corrections=corrections, progress=progress,
         )
         # Here we plot only after the computation is completed, meaning the damage should be
         # the ROI or the entire nav dimension.
         # TODO live plotting following libertem.web.jobs.JobDetailHandler.run_udf
         # Current Analysis interface possibly made obsolete by #1013, so deferred
+        damage: "nt.ArrayLike"
         if roi is None:
             damage = True
         else:
@@ -548,16 +570,16 @@ class Context:
         return analysis.get_udf_results(udf_results, roi, damage=damage)
 
     def run_udf(
-            self,
-            dataset: DataSet,
-            udf: Union[UDF, Iterable[UDF]],
-            roi: np.ndarray = None,
-            corrections: CorrectionSet = None,
-            progress: bool = False,
-            backends=None,
-            plots=None,
-            sync=True,
-    ) -> Union[RunUDFResultType, RunUDFAsync]:
+        self,
+        dataset: DataSet,
+        udf: Union[UDF, Iterable[UDF]],
+        roi: Optional[np.ndarray] = None,
+        corrections: Optional[CorrectionSet] = None,
+        progress: bool = False,
+        backends=None,
+        plots=None,
+        sync=True,
+    ) -> Union[RunUDFResultType, RunUDFSyncL, RunUDFAsync, RunUDFAsyncL]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -647,33 +669,47 @@ class Context:
         >>> result["intensity"].raw_data.shape
         (1,)
         """
-
-        fn = self._run_async
+        # TODO: add a more narrow type signature - instead of a Union[...], we should
+        # have overloads depending on both the type of `udf` and the `Literal[...]` value
+        # of `iterate`. This was not yet added because of
+        # https://github.com/python/mypy/issues/6580
+        # In short, we can't have an overload `run_udf(..., plots=None, sync: Literal[True])`
+        # because either we have a non-default argument after a default argument, or we have
+        # `Literal[True] = ...` which overlaps with `Literal[False] = ...``
         if sync:
-            fn = self._run_sync
-
-        return fn(
-            dataset=dataset,
-            udf=udf,
-            roi=roi,
-            corrections=corrections,
-            progress=progress,
-            backends=backends,
-            plots=plots,
-            iterate=False,
-        )
+            return self._run_sync(
+                dataset=dataset,
+                udf=udf,
+                roi=roi,
+                corrections=corrections,
+                progress=progress,
+                backends=backends,
+                plots=plots,
+                iterate=False,
+            )
+        else:
+            return self._run_async(
+                dataset=dataset,
+                udf=udf,
+                roi=roi,
+                corrections=corrections,
+                progress=progress,
+                backends=backends,
+                plots=plots,
+                iterate=False,
+            )
 
     def run_udf_iter(
-            self,
-            dataset: DataSet,
-            udf: Union[UDF, Iterable[UDF]],
-            roi: np.ndarray = None,
-            corrections: CorrectionSet = None,
-            progress: bool = False,
-            backends=None,
-            plots=None,
-            sync=True,
-    ) -> Union[RunUDFGenType, RunUDFAGenType]:
+        self,
+        dataset: DataSet,
+        udf: Union[UDF, Iterable[UDF]],
+        roi: np.ndarray = None,
+        corrections: CorrectionSet = None,
+        progress: bool = False,
+        backends=None,
+        plots=None,
+        sync=True,
+    ) -> Union[RunUDFGenType, RunUDFAGenType, RunUDFGenTypeL, RunUDFAGenTypeL]:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
         Yields partial results after each merge operation.
@@ -736,31 +772,133 @@ class Context:
         (32, 32)
         >>> # intensity is the name of the result buffer, defined in the SumUDF
         """
-        fn = self._run_async
         if sync:
-            fn = self._run_sync
+            return self._run_sync(
+                dataset=dataset,
+                udf=udf,
+                roi=roi,
+                corrections=corrections,
+                progress=progress,
+                backends=backends,
+                plots=plots,
+                iterate=True,
+            )
+        else:
+            return self._run_async(
+                dataset=dataset,
+                udf=udf,
+                roi=roi,
+                corrections=corrections,
+                progress=progress,
+                backends=backends,
+                plots=plots,
+                iterate=True,
+            )
 
-        return fn(
-            dataset=dataset,
-            udf=udf,
-            roi=roi,
-            corrections=corrections,
-            progress=progress,
-            backends=backends,
-            plots=plots,
-            iterate=True,
-        )
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: UDF,
+        roi: np.ndarray,
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: Literal[False],
+    ) -> UDFResultDict:
+        ...
+
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: UDF,
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: Literal[True],
+    ) -> RunUDFGenType: ...
+
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: Iterable[UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: Literal[False],
+    ) -> RunUDFSyncL: ...
+
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: Iterable[UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: Literal[True],
+    ) -> RunUDFGenTypeL: ...
+
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: Union[Iterable[UDF], UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: Literal[True],
+    ) -> Union[RunUDFGenType, RunUDFGenTypeL]:
+        ...
+
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: Union[Iterable[UDF], UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: Literal[False],
+    ) -> Union[UDFResultDict, RunUDFSyncL]:
+        ...
+
+    @overload
+    def _run_sync(
+        self,
+        dataset: DataSet,
+        udf: Union[Iterable[UDF], UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends: Optional[Any],
+        plots: Optional[Any],
+        iterate: bool,
+    ) -> Union[UDFResultDict, RunUDFSyncL, RunUDFGenType, RunUDFGenTypeL]: ...
 
     def _run_sync(
-            self,
-            dataset: DataSet,
-            udf: UDF,
-            roi: np.ndarray = None,
-            corrections: CorrectionSet = None,
-            progress: bool = False,
-            backends=None,
-            plots=None,
-            iterate=False,
+        self,
+        dataset: DataSet,
+        udf: Union[UDF, Iterable[UDF]],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: bool,
     ):
         """
         Run the given UDF(s), either returning the final result (when
@@ -768,8 +906,8 @@ class Context:
         """
         enable_plotting = bool(plots)
 
-        udf_is_list = isinstance(udf, (tuple, list))
-        if not udf_is_list:
+        udf_is_list = isinstance(udf, Iterable)
+        if not isinstance(udf, Iterable):
             udfs = [udf]
         else:
             udfs = list(udf)
@@ -784,7 +922,7 @@ class Context:
             warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
             roi = roi.astype(bool)
 
-        def _run_sync_wrap():
+        def _run_sync_wrap() -> Generator[UDFResults, None, None]:
             result_iter = UDFRunner(udfs).run_for_dataset_sync(
                 dataset=dataset,
                 executor=self.executor,
@@ -805,23 +943,113 @@ class Context:
         if iterate:
             return _run_sync_wrap()
         else:
-            for udf_results in _run_sync_wrap():
-                pass
+            udf_results = run_gen_get_last(_run_sync_wrap())
             if udf_is_list:
                 return udf_results.buffers
             else:
                 return udf_results.buffers[0]
 
+    @overload
     def _run_async(
-            self,
-            dataset: DataSet,
-            udf: UDF,
-            roi: np.ndarray = None,
-            corrections: CorrectionSet = None,
-            progress: bool = False,
-            backends=None,
-            plots=None,
-            iterate=False,
+        self,
+        dataset: DataSet,
+        udf: UDF,
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: Literal[False],
+    ) -> RunUDFAsync: ...
+
+    @overload
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: Iterable[UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: Literal[False],
+    ) -> RunUDFAsyncL: ...
+
+    @overload
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: UDF,
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: Literal[True],
+    ) -> RunUDFAGenType: ...
+
+    @overload
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: Iterable[UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: Literal[True],
+    ) -> RunUDFAGenTypeL: ...
+
+    @overload
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: Union[UDF, Iterable[UDF]],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: Literal[True],
+    ) -> Union[RunUDFAGenTypeL, RunUDFAGenType]: ...
+
+    @overload
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: Union[UDF, Iterable[UDF]],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: Literal[False],
+    ) -> Union[RunUDFAsync, RunUDFAsyncL]: ...
+
+    @overload
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: Union[Iterable[UDF], UDF],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: bool,
+    ) -> Union[RunUDFAsync, RunUDFAsyncL, RunUDFAGenType, RunUDFAGenTypeL]: ...
+
+    def _run_async(
+        self,
+        dataset: DataSet,
+        udf: Union[UDF, Iterable[UDF]],
+        roi: Optional[np.ndarray],
+        corrections: Optional[CorrectionSet],
+        progress: bool,
+        backends,
+        plots,
+        iterate: bool,
     ):
         """
         Wraps :code:`_run_sync` into an asynchronous generator,
@@ -839,20 +1067,21 @@ class Context:
         )
         udfres_iter = async_generator(sync_generator)
 
-        udf_is_list = isinstance(udf, (tuple, list))
+        async def _run_async_wrap() -> UDFResultDict:
+            udf_results = await run_agen_get_last(udfres_iter)
+            return udf_results.buffers[0]
 
-        async def _run_async_wrap():
-            async for udf_results in udfres_iter:
-                pass
-            if udf_is_list:
-                return udf_results.buffers
-            else:
-                return udf_results.buffers[0]
+        async def _run_async_wrap_l() -> List[UDFResultDict]:
+            udf_results = await run_agen_get_last(udfres_iter)
+            return udf_results.buffers
 
         if iterate:
             return udfres_iter
         else:
-            return _run_async_wrap()
+            if isinstance(udf, Iterable):
+                return _run_async_wrap_l()
+            else:
+                return _run_async_wrap()
 
     def _get_default_plot_chans(self, buffers):
         from libertem.viz import get_plottable_2D_channels
@@ -1025,7 +1254,7 @@ class Context:
             Shape and dtype is inferred automatically from :code:`f`.
         '''
         udf = AutoUDF(f=f)
-        results = self.run_udf(
+        results: UDFResultDict = self.run_udf(  # type:ignore[assignment]
             dataset=dataset,
             udf=udf,
             roi=roi,

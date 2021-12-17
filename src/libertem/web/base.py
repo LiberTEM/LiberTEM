@@ -1,10 +1,18 @@
 import logging
 import asyncio
+from typing import Optional, TYPE_CHECKING
+from typing_extensions import Protocol
+from libertem.udf.base import UDFResults
 
 from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.analysis.base import AnalysisResultSet
+from libertem.web.models import AnalysisDetails
 from .messages import Message
+
+if TYPE_CHECKING:
+    from libertem.web.state import SharedState
+    from libertem.web.events import EventRegistry
 
 log = logging.getLogger(__name__)
 
@@ -49,9 +57,24 @@ class CORSMixin:
 #        self.finish()
 
 
+class ResultHandlerBase(Protocol):
+    """
+    The interface that any class using `ResultHandlerMixin` must implement.
+    """
+    state: "SharedState"
+    event_registry: "EventRegistry"
+
+
 class ResultHandlerMixin:
-    async def send_results(self, results: AnalysisResultSet, job_id, analysis_id,
-                           details, finished=False, udf_results=None):
+    async def send_results(
+        self: ResultHandlerBase,
+        results: AnalysisResultSet,
+        job_id: str,
+        analysis_id: str,
+        details: AnalysisDetails,
+        finished=False,
+        udf_results: Optional[UDFResults] = None
+    ) -> None:
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
         images = await result_images(results)

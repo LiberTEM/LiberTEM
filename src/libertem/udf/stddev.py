@@ -326,7 +326,7 @@ class StdDevUDF(UDF):
             :code:`'sum', 'varsum', 'num_frames', 'var', 'std', and 'mean'`
             as :code:`BufferWrapper`
         '''
-        num_frames = int(self.results.num_frames[0])
+        num_frames = self.results.num_frames[0]
 
         var = self.results.varsum / num_frames
 

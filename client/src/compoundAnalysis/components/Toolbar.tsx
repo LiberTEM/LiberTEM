@@ -10,13 +10,14 @@ import Download from "./Download";
 interface ToolbarProps {
     compoundAnalysis: CompoundAnalysisState,
     busyIdxs: number[],
+    extra?: React.ReactNode,
     onApply: () => void,
 }
 
 
 type MergedProps = ToolbarProps;
 
-const Toolbar: React.FC<MergedProps> = ({ busyIdxs, onApply, compoundAnalysis }) => {
+const Toolbar: React.FC<MergedProps> = ({ busyIdxs, onApply, compoundAnalysis, extra }) => {
     const dispatch = useDispatch();
     const handleRemove = () => dispatch(analysisActions.Actions.remove(compoundAnalysis.compoundAnalysis));
     const analyses = useSelector((state: RootReducer) => state.analyses);
@@ -40,6 +41,7 @@ const Toolbar: React.FC<MergedProps> = ({ busyIdxs, onApply, compoundAnalysis })
                     <Icon name='remove' />
                     Remove
                 </Button>
+                {extra}
             </Button.Group>
         </Segment>
     );

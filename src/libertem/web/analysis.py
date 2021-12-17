@@ -1,6 +1,9 @@
 import io
 
 import tornado.web
+from libertem.analysis.base import Analysis
+
+from libertem.web.rpc import RPCContext
 
 from .base import CORSMixin, log_message
 from .messages import Message
@@ -145,3 +148,30 @@ class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
+
+
+class AnalysisRPCHandler(CORSMixin, tornado.web.RequestHandler):
+    def initialize(self, state: SharedState, event_registry):
+        self.state = state
+        self.event_registry = event_registry
+
+    async def put(self, compound_analysis_id: str, proc_name: str):
+        rpc_context = RPCContext(
+            state=self.state,
+            compound_analysis_id=compound_analysis_id,
+        )
+        comp_ana = rpc_context.get_compound_analysis()
+        ana_type = comp_ana['details']['mainType']
+        analysis_cls = Analysis.get_analysis_by_type(ana_type)
+        rpc_def = analysis_cls.get_rpc_definitions()
+        try:
+            ProcCls = rpc_def[proc_name]
+        except KeyError:
+            raise  # TODO: log error etc.
+
+        # the actual procedure needs to be run in a thread, to not block
+        # this async context, and to allow future plugins to write
+        # non-async code. TODO: shouls they be able to opt-in to async?
+        # opt in could be by type? or `inspect.iscoroutinefunction`
+        result = ProcCls()(rpc_context)
+        self.write(result)

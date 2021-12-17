@@ -535,34 +535,12 @@ def shared_dist_ctx_globaldask():
     # Sets default dask.distributed client
     # for integration testing
     print("start shared Context()")
-    devices = detect()
-    spec = cluster_spec(
-        # Only use at most 2 CPUs and 1 GPU
-        cpus=devices['cpus'],
-        cudas=devices['cudas'],
-        has_cupy=devices['has_cupy']
-    )
-
-    cluster_kwargs = {
-        'silence_logs': logging.WARN,
-        'scheduler': {
-            'cls': Scheduler,
-        },
-    }
-
-    with set_num_threads_env(1, set_numba=False):
-        cluster = dd.SpecCluster(
-            workers=spec,
-            **(cluster_kwargs or {})
-        )
-        client = dd.Client(cluster, set_as_default=True)
-        client.wait_for_workers(len(spec))
-    ctx = lt.Context(executor=DaskJobExecutor(client))
+    ctx = lt.Context.make_with('dask-make-default')
     yield ctx
     print("stop shared Context()")
+    # Make sure everything is shut down
+    ctx.executor.is_local = True
     ctx.close()
-    client.close()
-    cluster.close()
 
 
 @pytest.fixture(autouse=True)

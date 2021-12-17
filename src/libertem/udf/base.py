@@ -1571,11 +1571,20 @@ class UDFRunner:
             threads_per_worker=env.threads_per_worker,
         )
         for udf in numpy_udfs:
+            backends = udf.get_backends()
             if device_class == 'cuda':
-                udf.set_backend('cuda')
+                # Warnings etc handled in _udf_lists()
+                if 'cuda' in backends:
+                    udf.set_backend('cuda')
+                elif 'numpy' in backends:  # fallback
+                    udf.set_backend('numpy')
+                else:
+                    # Should be covered in _udf_lists(), but just to be sure.
+                    raise ValueError("Can't run {udf} with backends {backends} on a CUDA worker.")
             else:
                 udf.set_backend('numpy')
         if device_class == 'cpu':
+            # Should be covered in _udf_lists(), but just to be sure.
             assert not cupy_udfs
         for udf in cupy_udfs:
             udf.set_backend('cupy')
@@ -1690,11 +1699,22 @@ class UDFRunner:
                     numpy_udfs.append(udf)
                 elif 'cupy' in backends:
                     cupy_udfs.append(udf)
+                elif 'numpy' in backends:
+                    warnings.warn(f"UDF {udf} backends are {backends}, recommended on CUDA are "
+                            "'cuda' and 'cupy'.", RuntimeWarning)
+                    numpy_udfs.append(udf)
                 else:
-                    raise ValueError(f"UDF backends are {backends}, supported on CUDA are "
-                            "'cuda' and 'cupy'")
+                    raise RuntimeError(
+                        f"UDF {udf} backends are {backends}, supported on CUDA are "
+                        "'cuda' and 'cupy', as well as 'numpy' as a compatibility fallback."
+                    )
         elif device_class == 'cpu':
-            assert all('numpy' in udf.get_backends() for udf in self._udfs)
+            for udf in self._udfs:
+                backends = udf.get_backends()
+                if 'numpy' not in backends:
+                    raise RuntimeError(
+                        f"UDF {udf} backends are {backends}, supported on CPU is 'numpy'."
+                    )
             numpy_udfs = self._udfs
         else:
             raise ValueError(f"Unknown device class {device_class}, "

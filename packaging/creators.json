@@ -16,6 +16,14 @@
         "orcid": "0000-0001-6635-9567"
     },
     {
+        "displayname": "Matthew Bryan",
+        "authorname": "Bryan, Matthew",
+        "affiliation": "CEA-Leti",
+        "github": "matbryan52",
+        "orcid": "0000-0001-9134-384X",
+        "contribution": "Dask integration, discussions, documentation, bug fixes, prototypes"
+    },
+    {
         "displayname": "Karina Ruzaeva",
         "authorname": "Ruzaeva, Karina",
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre" ,
@@ -46,14 +54,6 @@
         "github": "twentyse7en",
         "contribution": "Notebook download for analyses, bug fixes, documentation",
         "orcid": "0000-0001-5045-5650"
-    },
-    {
-        "displayname": "Matthew Bryan",
-        "authorname": "Bryan, Matthew",
-        "affiliation": "CEA-Leti",
-        "github": "matbryan52",
-        "orcid": "0000-0001-9134-384X",
-        "contribution": "Discussions, documentation, bug fixes, prototypes"
     },
     {
         "displayname": "Jan Caron",

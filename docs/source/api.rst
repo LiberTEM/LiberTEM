@@ -27,6 +27,11 @@ Custom processing routines
 To go beyond the included capabilities of LiberTEM, you can implement your own
 using :ref:`user-defined functions`.
 
+Reference
+---------
+
+For a full reference, please see :ref:`reference`.
+
 .. _`executors`:
 
 Executors
@@ -64,7 +69,7 @@ under many circumstances.
 
 For special applications, the :class:`~libertem.executor.delayed.DelayedJobExecutor`
 can use `dask.delayed <https://docs.dask.org/en/stable/delayed.html>`_ to
-delay the processing. This is highly experimental.
+delay the processing. This is experimental, see :ref:`dask` for more details.
 
 Common executor choices
 .......................
@@ -132,136 +137,3 @@ To control how many CPUs and which CUDA devices are used, you can specify them a
         ...
 
 Please see :ref:`dask executor` for a reference of the Dask-based executor.
-
-Dask integration
-................
-
-.. versionadded:: 0.9.0
-
-By default, LiberTEM keeps the default Dask scheduler as-is and only
-uses the Dask :code:`Client` internally to make sure existing workflows keep running
-as before. For a closer integration it can be beneficial to use the same scheduler
-for both LiberTEM and other Dask computations. There are several options for that:
-
-:Set LiberTEM Dask cluster as default scheduler:
-    * Use :code:`Context.make_with('dask-make-default')`
-    * Pass :code:`client_kwargs={'set_as_default': True}` to
-      :meth:`~libertem.executor.dask.DaskJobExecutor.connect` or
-      :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`
-:Use existing Dask scheduler:
-    * Use :code:`Context.make_with('dask-integration')` to start an executor
-      that is compatible with the current Dask scheduler.
-:Use dask.delayed:
-    * Highly experimental! :class:`libertem.executor.delayed.DelayedJobExecutor` can
-      return UDF computations as dask.delayed objects.
-
-Reference
----------
-
-For a full reference, please see :ref:`reference`.
-
-.. note::
-    The features described below are experimental and under development.
-
-.. _daskarray:
-
-Load datasets as Dask arrays
-----------------------------
-
-The :meth:`~libertem.contrib.daskadapter.make_dask_array` function can generate a `distributed Dask array <https://docs.dask.org/en/latest/array.html>`_ from a :class:`~libertem.io.dataset.base.DataSet` using its partitions as blocks. The typical LiberTEM partition size is close to the optimum size for Dask array blocks under most circumstances. The dask array is accompanied with a map of optimal workers. This map should be passed to the :meth:`compute` method in order to construct the blocks on the workers that have them in local storage.
-
-.. NOTE: keep in sync with tests/io/test_dask_array.py::test_dask_array_2
-.. code-block:: python
-
-    from libertem.contrib.daskadapter import make_dask_array
-
-    # Construct a Dask array from the dataset
-    # The second return value contains information
-    # on workers that hold parts of a dataset in local
-    # storage to ensure optimal data locality
-    dask_array, workers = make_dask_array(dataset)
-
-    # Use the Dask.distributed client of LiberTEM, since it may not be
-    # the default client:
-    result = ctx.executor.client.compute(
-        dask_array.sum(axis=(-1, -2))
-    ).result()
-
-In addition, Dask arrays can be interpreted as LiberTEM datasets under certain conditions
-through use of the :meth:`~libertem.io.datasets.dask.DaskDataSet` wrapper class. This is
-only likely to lead to good performance when the Dask array chunks are created through
-lazy I/O or functions, via dask.delayed or similar routes. See :ref:`daskds` for details.
-
-
-Run UDFs
-========
-
-.. note::
-    The features described here are experimental and under development.
-
-Compute UDFs with dask.delayed
-------------------------------
-
-.. versionadded:: 0.9.0
-
-Using a :class:`~libertem.executor.delayed.DelayedJobExecutor` with a
-:class:`~libertem.api.Context` lets :class:`~libertem.api.Context.run_udf`
-return a dask.array results. The computation is only performed when the
-:code:`compute()` method is called on a given result.
-
-For calls to :class:`~libertem.api.Context.run_udf` which run multiple UDFs
-or have with UDFs which return multiple results, it is strongly recommended
-to compute results using `dask.compute(all_udf_results)`, in order to re-use
-computation over the dataset. By default, Dask does not cache intermediate
-results from prior runs, so individual calls to :code:`compute()` require
-a complete re-run of the UDFs that were passed to :code:`run_udf`.
-
-Merging when using DelayedJobExecutor
-.....................................
-
-.. versionadded:: 0.9.0
-
-By default, :class:`~libertem.executor.delayed.DelayedJobExecutor` will use
-the already existing :code:`udf.merge()` function to assemble the final results,
-in the same way it is used to assemble partial results in each partition. This
-is carried out by wrapping the :code:`udf.merge()` in :code:`dask.delayed` call.
-
-However, the user can specify a :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all()`
-method on their UDF. This allows the :class:`~libertem.executor.delayed.DelayedJobExecutor`
-to  can use this
-to allow Dask greater scope to parellise the merge step and reduce data transfers.
-
- with the following semantics:
-
-.. testsetup:: merge_all
-    
-    from libertem.udf.sum import SumUDF
-
-.. testcode:: merge_all
-    def merge_all(self, ordered_results):
-        # List and not generator for NumPy dispatch to work
-        chunks = [b.intensity for b in ordered_results.values()]
-        # NumPy will dispatch the stacking to the appropriate method
-        # for the chunks.
-        # See also https://numpy.org/doc/stable/user/basics.dispatch.html
-        stack = np.stack(chunks)
-        # Perform equivalent 
-        intensity = stack.sum(axis=0)
-        
-        # Return a dictionary mapping buffer name to new content
-        return {'intensity': intensity}
-
-.. testcleanup:: merge_all
-    
-    class MyUDF(SumUDF):
-        def merge_all(self, ordered_results):
-            return merge_all(self, ordered_results)
-    
-    ctx.run_udf(dataset=dataset, udf=MyUDF())
-
-
-where :code:`ordered_results` is a dictionary of all partial results for that UDF
-indexed by the slice for the corresponding dataset partition. The order of the
-partial results is such that the slices are increasing through the dataset navigation
-dimension, so the merge method can safely concatenate the results in the case
-of `'nav'`-shaped results.

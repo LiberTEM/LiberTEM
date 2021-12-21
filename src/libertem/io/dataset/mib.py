@@ -329,7 +329,7 @@ def _mib_2x2_tile_block(
 @numba.njit(inline='always', cache=True, boundscheck=True)
 def decode_r1_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
-    RAW 1bit format: each bit is actually saved as a single bit. 64 bits
+    RAW 1bit format: each pixel is actually saved as a single bit. 64 bits
     need to be unpacked together. This is the quad variant.
 
     Parameters
@@ -395,8 +395,8 @@ def decode_r1_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape)
 @numba.njit(inline='always', cache=True, boundscheck=True)
 def decode_r6_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
-    RAW 1bit format: each bit is actually saved as a single bit. 64 bits
-    need to be unpacked together. This is the quad variant.
+    RAW 6bit format: the pixels need to be re-ordered in groups of 8. `inp`
+    should have dtype uint8. This is the quad variant.
 
     Parameters
     ==========
@@ -452,8 +452,78 @@ def decode_r6_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape)
             col = i % 8
             pos = i // 8
             out_pos = (pos + 1) * 8 - col - 1
-            # out_x = out_x_start + x_shape_half - 1 - (64 * stripe + 8 * byte + bitpos)
             out_cut[out_cut.shape[0] - out_pos - 1] = inp[i]
+
+
+@numba.njit(inline='always', cache=True, boundscheck=True)
+def decode_r12_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
+    """
+    RAW 12bit format: the pixels need to be re-ordered in groups of 4. `inp`
+    should be an uint8 view on padded big endian 12bit data (">u2").
+    This is the quad variant.
+
+    Parameters
+    ==========
+    inp : np.ndarray
+
+    out : np.ndarray
+        The output buffer, with the signal dimensions flattened
+
+    idx : int
+        The index in the read ranges array
+
+    native_dtype : nt.DtypeLike
+        The "native" dtype (format-specific)
+
+    rr : np.ndarray
+        A single entry from the read ranges array
+
+    origin : np.ndarray
+        The 3D origin of the tile, for example :code:`np.array([2, 0, 0])`
+
+    shape : np.ndarray
+        The 3D tileshape, for example :code:`np.array([2, 512, 512])`
+
+    ds_shape : np.ndarray
+        The complete ND dataset shape, for example :code:`np.array([32, 32, 512, 512])`
+    """
+    # in case of 2x2 quad, the index into `out` is not straight `idx`, but
+    # we have `2 * shape[1]` read ranges generated for one depth.
+    num_rows_tile = shape[1]
+
+    out_3d = out.reshape(out.shape[0], -1, shape[-1])
+
+    # each line in the output array generates two entries in the
+    # read ranges. so `(idx // 2) % num_rows_tile` is the correct
+    # out_y:
+    out_y = (idx // 2) % num_rows_tile
+    out_x_start = (idx % 2) * (shape[-1] // 2)
+
+    depth = idx // (num_rows_tile * 2)
+    flip = rr[3]
+
+    out_cut = out_3d[depth, out_y, out_x_start:out_x_start + out_3d.shape[2] // 2]
+
+    if flip == 0:
+        for i in range(out_cut.shape[0]):
+            col = i % 4
+            pos = i // 4
+            out_pos = (pos + 1) * 4 - col - 1
+            out_cut[out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+    else:
+        # flip in x direction:
+        for i in range(out_cut.shape[0]):
+            col = i % 4
+            pos = i // 4
+            out_pos = (pos + 1) * 4 - col - 1
+            out_cut[out_cut.shape[0] - out_pos - 1] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+
+    # reference non-quad impl:
+    # for i in range(out.shape[1]):
+    #     col = i % 4
+    #     pos = i // 4
+    #     out_pos = (pos + 1) * 4 - col - 1
+    #     out[idx, out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
 
 
 mib_2x2_get_read_ranges = make_get_read_ranges(
@@ -464,7 +534,7 @@ mib_2x2_get_read_ranges = make_get_read_ranges(
 @numba.jit(inline='always', cache=True)
 def decode_r1_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
-    RAW 1bit format: each bit is actually saved as a single bit. 64 bits
+    RAW 1bit format: each pixel is actually saved as a single bit. 64 bits
     need to be unpacked together.
     """
     for stripe in range(inp.shape[0] // 8):
@@ -549,6 +619,8 @@ class MIBDecoder(Decoder):
                 return decode_r1_swap_2x2
             elif bit_depth == 6:
                 return decode_r6_swap_2x2
+            elif bit_depth == 12:
+                return decode_r12_swap_2x2
             else:
                 raise NotImplementedError(
                     f"bit depth {bit_depth} not implemented for layout {layout}"
@@ -1070,7 +1142,9 @@ class MIBDataSet(DataSet):
         # multiple of 64px in the fastest dimension!
         # If we make sure full "x-lines" are taken, we are fine (this is the
         # case by default)
-        return super().get_base_shape(roi)
+        base_shape = super().get_base_shape(roi)
+        assert self.meta is not None and base_shape[-1] == self.meta.shape[-1]
+        return base_shape
 
     def get_partitions(self):
         first_file = self._files_sorted[0]

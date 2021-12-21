@@ -60,3 +60,9 @@ class PickUDF(UDF):
         # contributes at least one frame and rely on the rest being filled
         # with zeros correctly.
         dest.intensity[:] += src.intensity
+
+    def merge_all(self, ordered_results):
+        ''
+        intensity_chunks = [b.intensity for b in ordered_results.values()]
+        intensity_sum = np.stack(intensity_chunks, axis=0).sum(axis=0)
+        return {'intensity': intensity_sum}

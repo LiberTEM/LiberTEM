@@ -32,6 +32,12 @@ class LogsumUDF(UDF):
         ""
         dest.logsum[:] += src.logsum[:]
 
+    def merge_all(self, ordered_results):
+        ''
+        chunks = [b.logsum for b in ordered_results.values()]
+        logsum = np.stack(chunks, axis=0).sum(axis=0)
+        return {'logsum': logsum}
+
     def process_frame(self, frame):
         ""
         self.results.logsum[:] += np.log(frame - np.min(frame) + 1)

@@ -2,10 +2,13 @@ import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
+from libertem.io.dataset.base.decode import decode_swap_2, default_decode
 from libertem.io.dataset.mib import (
     encode_r1,
     encode_r6,
     encode_r12,
+    encode_u1,
+    encode_u2,
     decode_r1_swap,
     decode_r6_swap,
     decode_r12_swap,
@@ -40,6 +43,8 @@ def encode_roundtrip(encode, decode, bits_per_pixel, shape=(512, 512)):
         (encode_r1, decode_r1_swap, 1),
         (encode_r6, decode_r6_swap, 8),
         (encode_r12, decode_r12_swap, 16),
+        (encode_u1,  default_decode, 8),
+        (encode_u2,  decode_swap_2, 16),
     ],
 )
 def test_encode_roundtrip(encode, decode, bits_per_pixel):

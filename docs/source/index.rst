@@ -25,6 +25,7 @@ Documentation
    sample_datasets
    api
    udf
+   dask
    changelog
    citing
    acknowledgments

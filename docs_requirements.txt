@@ -10,3 +10,4 @@ nbsphinx!=0.8.8
 nbsphinx_link
 ipython
 libertem_blobfinder
+graphviz

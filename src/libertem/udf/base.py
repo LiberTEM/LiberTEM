@@ -33,6 +33,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.base import Environment, JobExecutor
 
 if TYPE_CHECKING:
+    from typing import OrderedDict
     from numpy import typing as nt
 
 log = logging.getLogger(__name__)
@@ -611,7 +612,7 @@ class UDFPostprocessMixin(Protocol):
 
 @runtime_checkable
 class UDFMergeAllMixin(Protocol):
-    def merge_all(self, ordered_results: OrderedDict[Slice, MergeAttrMapping]):
+    def merge_all(self, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'):
         """
         Combine stack of ordered partial results `ordered_results` to form complete result.
 
@@ -627,8 +628,8 @@ class UDFMergeAllMixin(Protocol):
 
         - `self.params` - the parameters of this UDF
 
-        The default implementation is equivalent to the default merge for UDFs with only
-        :code:`kind='nav'` result buffers.
+        For UDFs with only :code:`kind='nav'` result buffers a default implementation
+        is used automatically.
 
         Parameters
         ----------
@@ -647,23 +648,27 @@ class UDFMergeAllMixin(Protocol):
         This function is running on the main node, which means `self.results`
         and `self.task_data` are not available.
         """
-        if self.requires_custom_merge:
-            raise NotImplementedError(
-                "Default merging only works for kind='nav' buffers. "
-                "Please implement a suitable custom merge_all function."
-            )
-        result_chunks = defaultdict(lambda: [])
-        for b in ordered_results.values():
-            for key in b:
-                result_chunks[key].append(getattr(b, key))
+        raise NotImplementedError()
 
-        result = {
-            # checking above assures that we only have kind='nav'
-            # where concatenation is the correct method.
-            k: np.concatenate(val)
-            for k, val in result_chunks.items()
-        }
-        return result
+
+def _default_merge_all(udf, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'):
+    if udf.requires_custom_merge:
+        raise NotImplementedError(
+            "Default merging only works for kind='nav' buffers. "
+            "Please implement a suitable custom merge_all function."
+        )
+    result_chunks = defaultdict(lambda: [])
+    for b in ordered_results.values():
+        for key in b:
+            result_chunks[key].append(getattr(b, key))
+
+    result = {
+        # checking above assures that we only have kind='nav'
+        # where concatenation is the correct method.
+        k: np.concatenate(val)
+        for k, val in result_chunks.items()
+    }
+    return result
 
 
 class UDFBase:
@@ -825,11 +830,13 @@ class UDFBase:
 
     _default_merge_all = UDFMergeAllMixin.merge_all
 
-    def _do_merge_all(self, ordered_results: OrderedDict[Slice, MergeAttrMapping]):
+    def _do_merge_all(self, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'):
         if isinstance(self, UDFMergeAllMixin):
             results_tmp = self.merge_all(ordered_results)
         else:
-            results_tmp = self._default_merge_all(ordered_results)
+            # This will raise NotImplemementedError if preconditions for default merge
+            # are not met
+            results_tmp = _default_merge_all(self, ordered_results)
 
         for key, value in results_tmp.items():
             # This SHOULD throw errors if sth doesn't match up about

@@ -254,7 +254,6 @@ class StdDevUDF(UDF):
         self.results.num_frames[:] = _validate_n(self.task_data.num_frames)
 
     def merge(self, dest, src):
-        print("merge")
         """
         Given destination and source buffers that contain sum of variances, sum of frames,
         and the number of frames used in each of the buffers, merge the source
@@ -284,7 +283,6 @@ class StdDevUDF(UDF):
         dest.num_frames[:] = n
 
     def merge_all(self, ordered_results):
-        print("merge all")
         n_frames = np.stack([b.num_frames[0] for b in ordered_results.values()])
         pixel_sums = np.stack([b.sum for b in ordered_results.values()])
         pixel_varsums = np.stack([b.varsum for b in ordered_results.values()])

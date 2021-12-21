@@ -194,7 +194,7 @@ lazy I/O or functions, via dask.delayed or similar routes. See :ref:`daskds` for
 
 
 Run UDFs
---------
+========
 
 .. note::
     The features described here are experimental and under development.
@@ -217,7 +217,7 @@ results from prior runs, so individual calls to :code:`compute()` require
 a complete re-run of the UDFs that were passed to :code:`run_udf`.
 
 Merging when using DelayedJobExecutor
--------------------------------------
+.....................................
 
 .. versionadded:: 0.9.0
 
@@ -226,18 +226,39 @@ the already existing :code:`udf.merge()` function to assemble the final results,
 in the same way it is used to assemble partial results in each partition. This
 is carried out by wrapping the :code:`udf.merge()` in :code:`dask.delayed` call.
 
-However, if it is possible to write a dask.array-compatible function to merge
-the results, the :class:`~libertem.executor.delayed.DelayedJobExecutor` can use this
-to allow Dask greater scope to parellise the merge step on the main node.
+However, the user can specify a :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all()`
+method on their UDF. This allows the :class:`~libertem.executor.delayed.DelayedJobExecutor`
+to  can use this
+to allow Dask greater scope to parellise the merge step and reduce data transfers.
 
-The user can specify a :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all()`
-method on their UDF with the following semantics:
+ with the following semantics:
 
-.. code-block:: python
+.. testsetup:: merge_all
+    
+    from libertem.udf.sum import SumUDF
+
+.. testcode:: merge_all
     def merge_all(self, ordered_results):
-        # FIXME test, FIXME API
-        intensity = da.concatenate([b.intensity for b in ordered_results.values()])
+        # List and not generator for NumPy dispatch to work
+        chunks = [b.intensity for b in ordered_results.values()]
+        # NumPy will dispatch the stacking to the appropriate method
+        # for the chunks.
+        # See also https://numpy.org/doc/stable/user/basics.dispatch.html
+        stack = np.stack(chunks)
+        # Perform equivalent 
+        intensity = stack.sum(axis=0)
+        
+        # Return a dictionary mapping buffer name to new content
         return {'intensity': intensity}
+
+.. testcleanup:: merge_all
+    
+    class MyUDF(SumUDF):
+        def merge_all(self, ordered_results):
+            return merge_all(self, ordered_results)
+    
+    ctx.run_udf(dataset=dataset, udf=MyUDF())
+
 
 where :code:`ordered_results` is a dictionary of all partial results for that UDF
 indexed by the slice for the corresponding dataset partition. The order of the

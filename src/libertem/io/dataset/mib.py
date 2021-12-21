@@ -973,6 +973,12 @@ class MIBDataSet(DataSet):
     won't be able to deduce the x scanning dimension - in that case, you will
     need to specify the `nav_shape` yourself.
 
+    Currently, we support all integer formats, and most RAW formats. Especially,
+    the following configurations are not yet supported for RAW files:
+
+     * Non-2x2 layouts with more than one chip
+     * 24bit with more than one chip
+
     Examples
     --------
 
@@ -1005,7 +1011,7 @@ class MIBDataSet(DataSet):
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
         self._sync_offset = sync_offset
-        # handle backwards-compatability:
+        # handle backwards-compatibility:
         if tileshape is not None:
             warnings.warn(
                 "tileshape argument is ignored and will be removed after 0.6.0",

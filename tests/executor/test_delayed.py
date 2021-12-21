@@ -1,18 +1,14 @@
-import pytest
 from functools import partial
 import sys
 
+import numba
+import pytest
 import dask
 import dask.array as da
 import numpy as np
 
 from libertem.udf.base import UDF
-from libertem.udf.logsum import LogsumUDF
-from libertem.udf.sum import SumUDF
-from libertem.udf.sumsigudf import SumSigUDF
-from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.udf.raw import PickUDF
 
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.executor.utils.dask_inplace import DaskInplaceWrapper
@@ -46,58 +42,79 @@ class StrUDF(UDF):
         return {'str': self.buffer(kind='nav', dtype=np.dtype('S1'))}
 
 
-class SumUDFDask(SumUDF):
-    def merge_all(self, ordered_results):
-        intensity_chunks = [b.intensity for b in ordered_results.values()]
-        intensity_sum = np.stack(intensity_chunks, axis=0).sum(axis=0)
-        return {'intensity': intensity_sum}
-
-
-class SumSigUDFDask(SumSigUDF):
-    def merge_all(self, ordered_results):
-        intensity = da.concatenate([b.intensity for b in ordered_results.values()])
-        return {'intensity': intensity}
-
-
-class StdDevUDFDask(StdDevUDF):
-    def merge_all(self, ordered_results):
-        n_frames = da.concatenate([[b.num_frames[0] for b in ordered_results.values()]])
-        pixel_sums = da.concatenate([[b.sum for b in ordered_results.values()]])
-        pixel_varsums = da.concatenate([[b.varsum for b in ordered_results.values()]])
-
-        n_frames = da.rechunk(n_frames, (-1,) * n_frames.ndim)
-        pixel_sums = da.rechunk(pixel_sums, (-1,) * pixel_sums.ndim)
-        pixel_varsums = da.rechunk(pixel_varsums, (-1,) * pixel_varsums.ndim)
-
-        # Expand n_frames to be broadcastable
-        extra_dims = pixel_sums.ndim - n_frames.ndim
-        n_frames = n_frames.reshape(n_frames.shape + (1,) * extra_dims)
-
-        cumulative_frames = da.cumsum(n_frames, axis=0)
-        cumulative_sum = da.cumsum(pixel_sums, axis=0)
-        sumsum = cumulative_sum[-1, ...]
-        total_frames = cumulative_frames[-1, 0]
-
-        mean_0 = cumulative_sum / cumulative_frames
-        # Handle the fact that mean_0 is indexed to results from
-        # up-to the partition before. We shift everything one to
-        # the right, and we don't care about result 0 because it
-        # is by definiition replaced with varsum[0, ...]
-        mean_0 = da.roll(mean_0, 1, axis=0)
-
-        mean_1 = pixel_sums / n_frames
-        delta = mean_1 - mean_0
-        mean = mean_0 + (n_frames * delta) / cumulative_frames
-        partial_delta = mean_1 - mean
-        varsum = pixel_varsums + (n_frames * delta * partial_delta)
-        varsum[0, ...] = pixel_varsums[0, ...]
-        varsum_cumulative = da.cumsum(varsum, axis=0)
-        varsum_total = varsum_cumulative[-1, ...]
-
+class MySumUDF(UDF):
+    def get_result_buffers(self):
         return {
-            'sum': sumsum,
-            'varsum': varsum_total,
-            'num_frames': total_frames
+            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype)
+        }
+
+    def process_tile(self, tile):
+        self.results.intensity[:] += np.sum(tile, axis=0)
+
+    def merge(self, dest, src):
+        dest.intensity[:] += src.intensity
+
+
+class MySumMergeUDF(MySumUDF):
+    def merge_all(self, ordered_results):
+        intensity = np.stack([b.intensity for b in ordered_results.values()]).sum(axis=0)
+        return {
+            'intensity': intensity
+        }
+
+
+@numba.njit()
+def _process_tile(dest, tile):
+    dest += np.sum(tile, axis=0)
+
+
+@numba.njit()
+def _merge(dest, src):
+    dest += src
+
+
+class NumbaSumUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype)
+        }
+
+    def process_tile(self, tile):
+        _process_tile(self.results.intensity[:], tile)
+
+    def merge(self, dest, src):
+        _merge(dest.intensity[:], src.intensity)
+
+
+class NumbaSumMergeUDF(MySumUDF):
+    def merge_all(self, ordered_results):
+        intensity = np.stack([b.intensity for b in ordered_results.values()]).sum(axis=0)
+        return {
+            'intensity': intensity
+        }
+
+
+class MySumSigUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'intensity': self.buffer(
+                kind="nav", dtype=self.meta.input_dtype
+            ),
+        }
+
+    # Make sure we don't have default merge so that there is no default merge_all
+    def merge(self, dest, src):
+        return super().merge(dest, src)
+
+    def process_tile(self, tile):
+        self.results.intensity[:] += np.sum(tile, axis=tuple(range(1, len(tile.shape))))
+
+
+class MySumSigMergeUDF(MySumSigUDF):
+    def merge_all(self, ordered_results):
+        intensity = np.concatenate([b.intensity for b in ordered_results.values()])
+        return {
+            'intensity': intensity
         }
 
 
@@ -119,22 +136,6 @@ def ds_dims(dataset):
     nav_dims = tuple(range(ds_shape.dims - n_sig_dims))
     sig_dims = tuple(range(ds_shape.nav.dims, ds_shape.dims))
     return ds_shape, nav_dims, sig_dims
-
-
-def logsum(udf_params, ds_dict):
-    data = ds_dict['data']
-    dataset = ds_dict['dataset']
-    roi = ds_dict.get('roi', None)
-    ds_shape, nav_dims, sig_dims = ds_dims(dataset)
-
-    flat_nav_data, flat_sig_dims = flatten_with_roi(data, roi, ds_shape)
-
-    udf = LogsumUDF(**udf_params)
-    minima = np.min(flat_nav_data, axis=flat_sig_dims)
-    for _ in sig_dims:
-        minima = np.expand_dims(minima, -1)
-    naive_result = np.log(flat_nav_data - minima + 1).sum(axis=0)
-    return {'udf': udf, 'naive_result': {'logsum': naive_result}}
 
 
 def count(udf_params, ds_dict):
@@ -165,50 +166,6 @@ def string(udf_params, ds_dict):
     return {'udf': udf, 'naive_result': {'str': naive_result}}
 
 
-def pick(udf_params, ds_dict):
-    data = ds_dict['data']
-    dataset = ds_dict['dataset']
-    ds_shape, nav_dims, sig_dims = ds_dims(dataset)
-
-    roi = np.zeros(tuple(ds_shape.nav), dtype=bool)
-    roi[-1, -1] = True
-
-    flat_nav_data, flat_sig_dims = flatten_with_roi(data, roi, ds_shape)
-
-    udf = PickUDF(**udf_params)
-    naive_result = flat_nav_data
-    return {'udf': udf, 'naive_result': {'intensity': naive_result}, 'roi': roi}
-
-
-def _stddev(udf_class, udf_params, ds_dict):
-    data = ds_dict['data']
-    dataset = ds_dict['dataset']
-    roi = ds_dict.get('roi', None)
-    ds_shape, nav_dims, sig_dims = ds_dims(dataset)
-
-    flat_nav_data, flat_sig_dims = flatten_with_roi(data, roi, ds_shape)
-
-    udf = udf_class(**udf_params)
-
-    direct_results = {}
-    direct_results['sum'] = flat_nav_data.sum(axis=0)
-    direct_results['varsum'] = None
-    direct_results['num_frames'] = flat_nav_data.shape[0]
-    direct_results['var'] = np.var(flat_nav_data, axis=0, dtype=np.float64)
-    direct_results['std'] = np.std(flat_nav_data, axis=0, dtype=np.float64)
-    direct_results['mean'] = flat_nav_data.mean(axis=0, dtype=np.float64)
-
-    return {'udf': udf, 'naive_result': direct_results, 'tolerance': 1e-3}
-
-
-def stddev(udf_params, ds_dict):
-    return _stddev(StdDevUDF, udf_params, ds_dict)
-
-
-def stddevdask(udf_params, ds_dict):
-    return _stddev(StdDevUDFDask, udf_params, ds_dict)
-
-
 def _navsum(udf_class, udf_params, ds_dict):
     data = ds_dict['data']
     dataset = ds_dict['dataset']
@@ -223,11 +180,19 @@ def _navsum(udf_class, udf_params, ds_dict):
 
 
 def navsum(udf_params, ds_dict):
-    return _navsum(SumUDF, udf_params, ds_dict)
+    return _navsum(MySumUDF, udf_params, ds_dict)
 
 
 def navsumdask(udf_params, ds_dict):
-    return _navsum(SumUDFDask, udf_params, ds_dict)
+    return _navsum(MySumMergeUDF, udf_params, ds_dict)
+
+
+def numba_navsum(udf_params, ds_dict):
+    return _navsum(NumbaSumUDF, udf_params, ds_dict)
+
+
+def numba_navsumdask(udf_params, ds_dict):
+    return _navsum(NumbaSumMergeUDF, udf_params, ds_dict)
 
 
 def _sigsum(udf_class, udf_params, ds_dict):
@@ -246,11 +211,11 @@ def _sigsum(udf_class, udf_params, ds_dict):
 
 
 def sigsum(udf_params, ds_dict):
-    return _sigsum(SumSigUDF, udf_params, ds_dict)
+    return _sigsum(MySumSigUDF, udf_params, ds_dict)
 
 
 def sigsumdask(udf_params, ds_dict):
-    return _sigsum(SumSigUDFDask, udf_params, ds_dict)
+    return _sigsum(MySumSigMergeUDF, udf_params, ds_dict)
 
 
 def _mask_fac(mask_slice, mask_value, ds_shape):
@@ -376,15 +341,11 @@ def allclose_with_nan(array1, array2, tol=None):
 @pytest.mark.parametrize(
     "udf_config", (
         [
-            {'factory': logsum, 'params': {}}],
-        [
             {'factory': sigsum, 'params': {}}],
         [
             {'factory': navsum, 'params': {}}],
         [
-            {'factory': stddev, 'params': {}}],
-        [
-            {'factory': pick, 'params': {}}],
+            {'factory': numba_navsum, 'params': {}}],
         [
             {'factory': mask, 'params': {}}],
         [
@@ -399,23 +360,24 @@ def allclose_with_nan(array1, array2, tol=None):
         [
             {'factory': navsumdask, 'params': {}}],
         [
-            {'factory': stddevdask, 'params': {}}],
+            {'factory': numba_navsumdask, 'params': {}}],
         [
             {'factory': navsum, 'params': {}},
             {'factory': sigsum, 'params': {}}],
         [
             {'factory': sigsum, 'params': {}},
-            {'factory': navsumdask, 'params': {}}],
+            {'factory': navsumdask, 'params': {}},
+            {'factory': numba_navsum, 'params': {}}],
         [
             {'factory': sigsumdask, 'params': {}},
             {'factory': navsum, 'params': {}},
-            {'factory': stddevdask, 'params': {}}],
+            {'factory': numba_navsumdask, 'params': {}}],
                    ),
-    ids=['logsum', 'sigsum', 'navsum', 'stddev', 'pick', 'mask',
+    ids=['sigsum', 'navsum', 'numba_navsum', 'mask',
          'count', 'string', 'dualmask',
-         'sigsumdask', 'navsumdask', 'stddevdask',
-         'navsum+sigsum', 'sigsum+navsumdask',
-         'sigsumdask+navsum+stddevdask']
+         'sigsumdask', 'navsumdask', 'numba_navsumdask',
+         'navsum+sigsum', 'sigsum+navsumdask+numba_navsum',
+         'sigsumdask+navsum+numba_navsumdask']
 )
 @pytest.mark.parametrize(
     "use_roi", (True, False),
@@ -446,7 +408,7 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
 
 
 def test_iterate(delayed_ctx, default_raw):
-    udf = SumUDF()
+    udf = MySumUDF()
     with pytest.raises(NotImplementedError):
         for res in delayed_ctx.run_udf_iter(dataset=default_raw, udf=udf):
             print(res)
@@ -454,7 +416,7 @@ def test_iterate(delayed_ctx, default_raw):
 
 @pytest.mark.asyncio
 async def test_async(delayed_ctx, default_raw):
-    udf = SumUDF()
+    udf = MySumUDF()
     with pytest.raises(NotImplementedError):
         await delayed_ctx.run_udf(dataset=default_raw, udf=udf, sync=False)
 
@@ -469,7 +431,7 @@ def test_map(delayed_ctx):
 def test_bare_compute(delayed_ctx):
     ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
     dataset = ds_dict['dataset']
-    udf = SumSigUDF()
+    udf = MySumSigUDF()
     result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf)
     dask_res = result_dask['intensity'].data
     # Check one chunk per partition

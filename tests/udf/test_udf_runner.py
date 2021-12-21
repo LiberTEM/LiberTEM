@@ -41,6 +41,32 @@ async def test_async_run_for_dset(async_executor):
     assert "udf_results" in locals(), "must yield at least one result"
 
 
+@pytest.mark.asyncio
+async def test_async_run_for_dset_no_iterate(async_executor):
+    data = _mk_random(size=(16 * 16, 16, 16), dtype="float32")
+    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16),
+                            num_partitions=2, sig_dims=2)
+
+    pixelsum = PixelsumUDF()
+    roi = np.zeros((256,), dtype=bool)
+    runner = UDFRunner([pixelsum])
+
+    results_noiter = await runner.run_for_dataset_async(
+        dataset, async_executor, roi=roi, cancel_id="42", iterate=False
+    )
+
+    udf_iter = runner.run_for_dataset_async(
+        dataset, async_executor, roi=roi, cancel_id="42"
+    )
+
+    async for udf_results in udf_iter:
+        udf_results.buffers
+
+    assert np.allclose(
+        udf_results['pixelsum'], results_noiter['pixelsum']
+    )
+
+
 class UDF1(UDF):
     def get_result_buffers(self):
         return {}

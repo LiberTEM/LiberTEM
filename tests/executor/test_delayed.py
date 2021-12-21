@@ -63,6 +63,22 @@ class MySumMergeUDF(MySumUDF):
         }
 
 
+class OnlyDaskSumUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype)
+        }
+
+    def process_tile(self, tile):
+        self.results.intensity[:] += np.sum(tile, axis=0)
+
+    def merge_all(self, ordered_results):
+        intensity = np.stack([b.intensity for b in ordered_results.values()]).sum(axis=0)
+        return {
+            'intensity': intensity
+        }
+
+
 @numba.njit()
 def _process_tile(dest, tile):
     dest += np.sum(tile, axis=0)
@@ -453,3 +469,17 @@ def test_unwrap_null_case(delayed_ctx):
                     assert unwrapped[k][_i][__k] == __v
             else:
                 assert unwrapped[k][_i] == _v
+
+
+def test_only_dask(lt_ctx, delayed_ctx):
+    ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
+    dataset = ds_dict['dataset']
+    udf = OnlyDaskSumUDF()
+    result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf)
+    dask_res = result_dask['intensity'].data
+    res = dask.compute(dask_res)
+    res = res[0]
+    assert np.allclose(res, ds_dict['data'].sum(axis=(0, 1)))
+
+    with pytest.raises(NotImplementedError):
+        lt_ctx.run_udf(dataset=dataset, udf=udf)

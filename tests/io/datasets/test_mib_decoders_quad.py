@@ -111,16 +111,21 @@ class MMapBackendImplInMem(MMapBackendImpl):
     FILE_CLS = InMemoryFile
 
 
-def encode_roundtrip_quad(encode, bits_per_pixel, input_data=None):
-    # make some read ranges:
-    dataset_shape = Shape((4, 4, 512, 512), sig_dims=2)
+def encode_roundtrip_quad(
+    encode, bits_per_pixel, input_data=None, dataset_shape=None, tileshape=None,
+    start_at_frame=2, stop_before_frame=6
+):
+    if dataset_shape is None:
+        # make some read ranges:
+        dataset_shape = (6, 512, 512)
+    dataset_shape = Shape(dataset_shape, sig_dims=2)
+    if tileshape is None:
+        tileshape = (2, 128, 512)
     tiling_scheme = TilingScheme.make_for_shape(
         dataset_shape=dataset_shape,
-        tileshape=Shape((2, 32, 512), sig_dims=2),
+        tileshape=Shape(tileshape, sig_dims=2),
     )
     sync_offset = 0
-    start_at_frame = 2
-    stop_before_frame = 6
     roi = None
 
     frame_header_bytes = 768
@@ -228,6 +233,26 @@ def encode_roundtrip_quad(encode, bits_per_pixel, input_data=None):
     ],
 )
 def test_encode_roundtrip_quad(encode, bits_per_pixel):
+    data, decoded = encode_roundtrip_quad(
+        encode, bits_per_pixel, dataset_shape=(1, 512, 512), tileshape=(1, 512, 512),
+        start_at_frame=0, stop_before_frame=1,
+    )
+    assert_allclose(data, decoded)
+
+
+@pytest.mark.parametrize(
+    'encode,bits_per_pixel', [
+        (encode_r1, 1),
+        (encode_r6, 8),
+        (encode_r12, 16),
+    ],
+)
+def test_encode_roundtrip_quad_slow(encode, bits_per_pixel):
+    """
+    This version is built to be a bit more thorough by taking in larger amounts
+    of data and making sure it is still decoded properly. This is not marked `with_numba`
+    as the non-numba code runs really slow.
+    """
     data, decoded = encode_roundtrip_quad(encode, bits_per_pixel)
     assert_allclose(data, decoded)
 
@@ -324,28 +349,28 @@ def test_readranges_quad(bits_per_pixel):
     assert tuple(rr_ranges[0, 0]) == (
         0,  # file index
         frame_2_start + q1_offset + 0 * stride,
-        frame_2_start + q1_offset + 0 * stride + 256 * bits_per_pixel // 8,
+        frame_2_start + q1_offset + 0 * stride + row_size,
         0,   # don't flip
     )
     # 0, 1 is rr for the first row of Q2
     assert tuple(rr_ranges[0, 1]) == (
         0,  # file index
         frame_2_start + q2_offset + 0 * stride,
-        frame_2_start + q2_offset + 0 * stride + 256 * bits_per_pixel // 8,
+        frame_2_start + q2_offset + 0 * stride + row_size,
         0,   # don't flip
     )
     # 0, 2 is rr for the second row of Q1
     assert tuple(rr_ranges[0, 2]) == (
         0,  # file index
         frame_2_start + q1_offset + 1 * stride,
-        frame_2_start + q1_offset + 1 * stride + 256 * bits_per_pixel // 8,
+        frame_2_start + q1_offset + 1 * stride + row_size,
         0,   # don't flip
     )
     # 0, 3 is rr for the second row of Q2
     assert tuple(rr_ranges[0, 3]) == (
         0,  # file index
         frame_2_start + q2_offset + 1 * stride,
-        frame_2_start + q2_offset + 1 * stride + 256 * bits_per_pixel // 8,
+        frame_2_start + q2_offset + 1 * stride + row_size,
         0,   # don't flip
     )
 
@@ -361,20 +386,25 @@ def test_readranges_quad(bits_per_pixel):
     assert tuple(rr_slices[last_tile_idx, 0]) == (2, 480, 0)
     assert tuple(rr_slices[last_tile_idx, 1]) == (2, 32, 512)
 
-    return  # XXX
+    # we have in total a tile depth of 2, which translates to 128
+    # read ranges (depth 2, 32 rows per tile, two input rows per output row)
+    assert rr_ranges[last_tile_idx].shape == (128, 4)
 
-    # X, X is rr for the first *input* row of Q3
-    assert tuple(rr_ranges[last_tile_idx, -2]) == (
+    # so this means the first input row of Q3 appears at the end of the
+    # first half of the read ranges for the full tile.
+
+    # 15, 62 is rr for the first *input* row of Q3, in depth=0 of the tile
+    assert tuple(rr_ranges[last_tile_idx, 62]) == (
         0,  # file index
         frame_2_start + q3_offset + 0 * stride,
-        frame_2_start + q3_offset + 0 * stride + 256 * bits_per_pixel // 8,
+        frame_2_start + q3_offset + 0 * stride + row_size,
         1,   # flip
     )
-    # X, X is rr for the first *input* row of Q4
-    assert tuple(rr_ranges[last_tile_idx, -1]) == (
+    # 15, 63 is rr for the first *input* row of Q4, in depth=0 of the tile
+    assert tuple(rr_ranges[last_tile_idx, 63]) == (
         0,  # file index
         frame_2_start + q4_offset + 0 * stride,
-        frame_2_start + q4_offset + 0 * stride + 256 * bits_per_pixel // 8,
+        frame_2_start + q4_offset + 0 * stride + row_size,
         1,   # flip
     )
 

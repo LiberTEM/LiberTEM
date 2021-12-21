@@ -353,7 +353,6 @@ def _mib_2x2_tile_block(
                         flip,
                     ))
                 else:
-                    # assert False
                     # bottom: both x and y flip
                     flip = 1
                     y = y_size - y - 1

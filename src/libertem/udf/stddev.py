@@ -254,6 +254,7 @@ class StdDevUDF(UDF):
         self.results.num_frames[:] = _validate_n(self.task_data.num_frames)
 
     def merge(self, dest, src):
+        print("merge")
         """
         Given destination and source buffers that contain sum of variances, sum of frames,
         and the number of frames used in each of the buffers, merge the source
@@ -281,6 +282,42 @@ class StdDevUDF(UDF):
             src_varsum=reshaped_view(src.varsum, (-1,)),
         )
         dest.num_frames[:] = n
+
+    def merge_all(self, ordered_results):
+        print("merge all")
+        n_frames = np.stack([b.num_frames[0] for b in ordered_results.values()])
+        pixel_sums = np.stack([b.sum for b in ordered_results.values()])
+        pixel_varsums = np.stack([b.varsum for b in ordered_results.values()])
+
+        # Expand n_frames to be broadcastable
+        extra_dims = pixel_sums.ndim - n_frames.ndim
+        n_frames = n_frames.reshape(n_frames.shape + (1,) * extra_dims)
+
+        cumulative_frames = np.cumsum(n_frames, axis=0)
+        cumulative_sum = np.cumsum(pixel_sums, axis=0)
+        sumsum = cumulative_sum[-1, ...]
+        total_frames = cumulative_frames[-1, 0]
+
+        mean_0 = cumulative_sum / cumulative_frames
+        # Handle the fact that mean_0 is indexed to results from
+        # up-to the partition before. We shift everything one to
+        # the right, and we don't care about result 0 because it
+        # is by definiition replaced with varsum[0, ...]
+        mean_0 = np.roll(mean_0, 1, axis=0)
+
+        mean_1 = pixel_sums / n_frames
+        delta = mean_1 - mean_0
+        mean = mean_0 + (n_frames * delta) / cumulative_frames
+        partial_delta = mean_1 - mean
+        varsum = pixel_varsums + (n_frames * delta * partial_delta)
+        varsum[0, ...] = pixel_varsums[0, ...]
+        varsum_total = np.sum(varsum, axis=0)
+
+        return {
+            'sum': sumsum,
+            'varsum': varsum_total,
+            'num_frames': total_frames
+        }
 
     def process_tile(self, tile):
         """

@@ -569,18 +569,26 @@ class BufferWrapper:
             self._kind, self._dtype, self._extra_shape
         )
 
-    def update_data(self, data: "nt.ArrayLike", force: bool = False) -> None:
+    def replace_array(self, data: "nt.ArrayLike") -> None:
         """
         Set the data backing the BufferWrapper even if the BufferWrapper
         already has self._data allocated
 
         data should be any array-like object
 
-        Will perform checking for shape and dtype unless force is set True
+        Will perform checking for shape and dtype.
         """
-        if self.has_data() and not force:
-            assert data.dtype == self._data.dtype
-            assert data.shape == self._data.shape
+        if self._data is None:
+            shape = self._shape
+            dtype = self._dtype
+        else:
+            shape = self._data.shape
+            dtype = self._data.dtype
+        if data.dtype != dtype:
+            raise ValueError(f"dtype mismatch: buffer is {dtype}, data is {data.dtype}.")
+        if data.shape != shape:
+            raise ValueError(f"Shape mismatch: buffer is {shape}, data is {data.shape}.")
+        self._contiguous_cache = dict()
         self._data = data
 
     def result_buffer_type(self):

@@ -230,13 +230,14 @@ However, if it is possible to write a dask.array-compatible function to merge
 the results, the :class:`~libertem.executor.delayed.DelayedJobExecutor` can use this
 to allow Dask greater scope to parellise the merge step on the main node.
 
-The user can specify a :code:`udf.dask_merge()` method on their UDF with the
-following semantics:
+The user can specify a :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all()`
+method on their UDF with the following semantics:
 
 .. code-block:: python
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
+        # FIXME test, FIXME API
         intensity = da.concatenate([b.intensity for b in ordered_results.values()])
-        self.results.get_buffer('intensity').update_data(intensity)
+        return {'intensity': intensity}
 
 where :code:`ordered_results` is a dictionary of all partial results for that UDF
 indexed by the slice for the corresponding dataset partition. The order of the

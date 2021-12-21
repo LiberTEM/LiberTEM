@@ -23,14 +23,14 @@ class MyStdDevUDF(StdDevUDF):
 
 
 # FIXME check if renamed?
-if hasattr(MyStdDevUDF, 'dask_merge'):
-    delattr(MyStdDevUDF, 'dask_merge')
+if hasattr(MyStdDevUDF, 'merge_all'):
+    delattr(MyStdDevUDF, 'merge_all')
 
 
 class MyStdDevMergeUDF(MyStdDevUDF):
     # Copied and adapted from tests/executor/test_delayed
     # FIXME import instead?
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         n_frames = np.stack([b.num_frames[0] for b in ordered_results.values()])
         pixel_sums = np.stack([b.sum for b in ordered_results.values()])
         pixel_varsums = np.stack([b.varsum for b in ordered_results.values()])
@@ -59,9 +59,11 @@ class MyStdDevMergeUDF(MyStdDevUDF):
         varsum[0, ...] = pixel_varsums[0, ...]
         varsum_total = np.sum(varsum, axis=0)
 
-        self.results.get_buffer('sum').update_data(sumsum)
-        self.results.get_buffer('varsum').update_data(varsum_total)
-        self.results.get_buffer('num_frames').update_data(total_frames)
+        return {
+            'sum': sumsum,
+            'varsum': varsum_total,
+            'num_frames': total_frames
+        }
 
 
 class MySumUDF(UDF):
@@ -78,9 +80,11 @@ class MySumUDF(UDF):
 
 
 class MySumMergeUDF(MySumUDF):
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         intensity = np.stack([b.intensity for b in ordered_results.values()]).sum(axis=0)
-        self.results.get_buffer('intensity').update_data(intensity)
+        return {
+            'intensity': intensity
+        }
 
 
 class MySumSigUDF(UDF):
@@ -91,7 +95,7 @@ class MySumSigUDF(UDF):
             ),
         }
 
-    # Make sure we don't have default merge so that there is no default dask_merge
+    # Make sure we don't have default merge so that there is no default merge_all
     def merge(self, dest, src):
         return super().merge(dest, src)
 
@@ -100,9 +104,11 @@ class MySumSigUDF(UDF):
 
 
 class MySumSigMergeUDF(MySumSigUDF):
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         intensity = np.concatenate([b.intensity for b in ordered_results.values()])
-        self.results.get_buffer('intensity').update_data(intensity)
+        return {
+            'intensity': intensity
+        }
 
 
 class EchoUDF(UDF):
@@ -117,15 +123,17 @@ class EchoUDF(UDF):
         sl = (..., *self.meta.sig_slice.get())
         self.results.intensity[sl] = tile
 
-    # Make sure we don't have default merge so that there is nod efault dask_merge
+    # Make sure we don't have default merge so that there is nod efault merge_all
     def merge(self, dest, src):
         return super().merge(dest, src)
 
 
 class EchoMergeUDF(EchoUDF):
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         intensity = np.concatenate([b.intensity for b in ordered_results.values()])
-        self.results.get_buffer('intensity').update_data(intensity)
+        return {
+            'intensity': intensity
+        }
 
 
 class Test:

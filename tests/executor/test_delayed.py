@@ -47,20 +47,20 @@ class StrUDF(UDF):
 
 
 class SumUDFDask(SumUDF):
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         intensity_chunks = [b.intensity for b in ordered_results.values()]
-        intensity_sum = da.stack(intensity_chunks, axis=0).sum(axis=0)
-        self.results.get_buffer('intensity').update_data(intensity_sum)
+        intensity_sum = np.stack(intensity_chunks, axis=0).sum(axis=0)
+        return {'intensity': intensity_sum}
 
 
 class SumSigUDFDask(SumSigUDF):
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         intensity = da.concatenate([b.intensity for b in ordered_results.values()])
-        self.results.get_buffer('intensity').update_data(intensity)
+        return {'intensity': intensity}
 
 
 class StdDevUDFDask(StdDevUDF):
-    def dask_merge(self, ordered_results):
+    def merge_all(self, ordered_results):
         n_frames = da.concatenate([[b.num_frames[0] for b in ordered_results.values()]])
         pixel_sums = da.concatenate([[b.sum for b in ordered_results.values()]])
         pixel_varsums = da.concatenate([[b.varsum for b in ordered_results.values()]])
@@ -94,9 +94,11 @@ class StdDevUDFDask(StdDevUDF):
         varsum_cumulative = da.cumsum(varsum, axis=0)
         varsum_total = varsum_cumulative[-1, ...]
 
-        self.results.get_buffer('sum').update_data(sumsum)
-        self.results.get_buffer('varsum').update_data(varsum_total)
-        self.results.get_buffer('num_frames').update_data(total_frames)
+        return {
+            'sum': sumsum,
+            'varsum': varsum_total,
+            'num_frames': total_frames
+        }
 
 
 def get_dataset(ctx, shape, tileshape, num_partitions, sig_dims, use_roi=False):
@@ -441,6 +443,20 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
             if direct_result is None:
                 continue
             allclose_with_nan(result, direct_result, tol=udf_dict.get('tolerance', None))
+
+
+def test_iterate(delayed_ctx, default_raw):
+    udf = SumUDF()
+    with pytest.raises(NotImplementedError):
+        for res in delayed_ctx.run_udf_iter(dataset=default_raw, udf=udf):
+            print(res)
+
+
+@pytest.mark.asyncio
+async def test_async(delayed_ctx, default_raw):
+    udf = SumUDF()
+    with pytest.raises(NotImplementedError):
+        await delayed_ctx.run_udf(dataset=default_raw, udf=udf, sync=False)
 
 
 def test_map(delayed_ctx):

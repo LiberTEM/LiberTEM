@@ -308,7 +308,6 @@ class StdDevUDF(UDF):
         mean = mean_0 + (n_frames * delta) / cumulative_frames
         partial_delta = mean_1 - mean
         varsum = pixel_varsums + (n_frames * delta * partial_delta)
-        varsum[0, ...] = pixel_varsums[0, ...]
         varsum_total = np.sum(varsum, axis=0)
 
         return {

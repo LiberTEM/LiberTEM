@@ -243,13 +243,6 @@ class JobExecutor:
         from libertem.udf.base import UDFRunner
         return UDFRunner
 
-    def register_master_udfs(self, udfs):
-        """
-        Give the executor a reference to the udfs instantiated
-        on the main node, for introspection purposes
-        """
-        self._udfs = udfs
-
 
 class AsyncJobExecutor:
     async def run_tasks(self, tasks, params_handle, cancel_id):

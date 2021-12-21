@@ -147,6 +147,18 @@ class DelayedUDFRunner(UDFRunner):
                               f'target {target_coverage} - processed {current_coverage}')
         return False
 
+    def results_for_dataset_sync(self, dataset: DataSet, executor: 'DelayedJobExecutor',
+            roi: Optional[np.ndarray] = None, progress: bool = False,
+            corrections: Optional[CorrectionSet] = None, backends: Optional[BackendSpec] = None,
+            dry: bool = False) -> Iterable[tuple]:
+
+        executor.register_master_udfs(self._udfs)
+
+        return super().results_for_dataset_sync(
+            dataset, executor, roi=roi, progress=progress,
+            corrections=corrections, backends=backends, dry=dry
+        )
+
     def run_for_dataset_sync(self, dataset: DataSet, executor: JobExecutor,
             roi: Optional[np.ndarray] = None,
             progress: bool = False, corrections: Optional[CorrectionSet] = None,
@@ -207,7 +219,7 @@ class DelayedJobExecutor(JobExecutor):
 
             executor.register_master_udfs(udfs)
 
-        called from UDFRunner.results_for_dataset_sync
+        called from :meth:`DelayedUDFRunner.results_for_dataset_sync`
         """
         env = Environment(threads_per_worker=1)
         for task in tasks:
@@ -253,12 +265,19 @@ class DelayedJobExecutor(JobExecutor):
     def modify_buffer_type(self, buf):
         return DaskBufferWrapper.from_buffer(buf)
 
+    def register_master_udfs(self, udfs):
+        """
+        Give the executor a reference to the udfs instantiated
+        on the main node, for introspection purposes
+        """
+        self._udfs = udfs
+
     def compute(self, *args, udfs=None, user_backends=None, traverse=True, **kwargs):
         """
         Acts as dask.compute(*args, **kwargs) but with knowledge
         of Libertem data structures and compute resources
         """
-        if kwargs.get('resources', None) is not None:
+        if 'resources' in kwargs:
             if udfs is not None:
                 raise ValueError('Cannot specify both udfs for resources and resources to use')
             resources = kwargs.get('resources')

@@ -1,12 +1,15 @@
 from functools import partial
-from typing import Any, Iterable, List, Type
+from typing import Any, Iterable, List, Type, Optional, Generator
 import contextlib
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 import numpy as np
 import dask
 from dask import delayed
 import dask.array as da
+
+from libertem.corrections import CorrectionSet
+from libertem.io.dataset.base import DataSet
 
 from .base import JobExecutor, Environment, TaskProtocol
 from .scheduler import Worker, WorkerSet
@@ -14,7 +17,8 @@ from .scheduler import Worker, WorkerSet
 from ..common.buffers import BufferWrapper
 from ..common.math import prod
 from ..udf.base import (
-    UDFRunner, UDF, UDFData, MergeAttrMapping, get_resources_for_backends
+    UDFMergeAllMixin, UDFRunner, UDF, UDFData, MergeAttrMapping,
+    get_resources_for_backends, UDFResults, BackendSpec
 )
 
 from .utils.dask_buffer import DaskBufferWrapper, DaskPreallocBufferWrapper
@@ -26,7 +30,7 @@ class DelayedUDFRunner(UDFRunner):
         self._part_results = defaultdict(lambda: {})
         super().__init__(udfs, debug=debug)
 
-    def _apply_part_result(self, udfs, damage, part_results, task):
+    def _apply_part_result(self, udfs: Iterable[UDF], damage, part_results, task):
         for part_results_udf, udf in zip(part_results, udfs):
             # Allow user to define an alternative merge strategy
             # using dask-compatible functions. In the Delayed case we
@@ -34,10 +38,15 @@ class DelayedUDFRunner(UDFRunner):
             # Currently there is no interface to provide all of the results
             # to udf.merge at once and in the correct order, so I am accumulating
             # results in self._part_results[udf] = {partition_slice_roi: part_results, ...}
-            if hasattr(udf, 'dask_merge'):
+            if (isinstance(udf, UDFMergeAllMixin)
+                    or type(udf).merge is UDF.merge and not udf.requires_custom_merge):
                 if self._accumulate_part_results(udf, part_results_udf, task):
                     try:
-                        udf.dask_merge(self._part_results[udf])
+                        parts = {
+                            key: value.get_proxy()
+                            for key, value in self._part_results[udf].items()
+                        }
+                        udf._do_merge_all(parts)
                     finally:
                         self._part_results.pop(udf, None)
                 continue
@@ -110,12 +119,12 @@ class DelayedUDFRunner(UDFRunner):
 
     def _accumulate_part_results(self, udf, part_results, task):
         """
-        If the udf has a dask_merge method, this function is used
+        If the udf has a merge_all method, this function is used
         to accumulate dask array-backed partial results on the executor
-        so that the dask_merge can be called on all of them at once
+        so that the merge_all can be called on all of them at once
 
         Ensures that the results are correctly ordered and complete
-        before allowing dask_merge to be called
+        before allowing merge_all to be called
         """
         buf = next(iter(part_results.values()))  # get the first buffer
         slice_with_roi = buf._slice_for_partition(task.partition)
@@ -131,12 +140,32 @@ class DelayedUDFRunner(UDFRunner):
         if target_coverage == current_coverage:
             ordered_results = sorted(self._part_results[udf].items(),
                                      key=lambda kv: kv[0].origin[0])
-            self._part_results[udf] = {kv[0]: kv[1] for kv in ordered_results}
+            self._part_results[udf] = OrderedDict(ordered_results)
             return True
         elif current_coverage > target_coverage:
             raise RuntimeError('More frames accumulated than ROI specifies - '
                               f'target {target_coverage} - processed {current_coverage}')
         return False
+
+    def run_for_dataset_sync(self, dataset: DataSet, executor: JobExecutor,
+            roi: Optional[np.ndarray] = None,
+            progress: bool = False, corrections: Optional[CorrectionSet] = None,
+            backends: Optional[BackendSpec] = None, dry: bool = False,
+            iterate: bool = True) -> Generator["UDFResults", None, None]:
+        if iterate:
+            raise NotImplementedError(
+                "Iterating over partial results is currently not supported "
+                "with the DelayedJobExecutor."
+            )
+        return super().run_for_dataset_sync(
+            dataset, executor, roi=roi, progress=progress,
+            corrections=corrections, backends=backends, dry=dry, iterate=iterate
+        )
+
+    def run_for_dataset_async(self, *args, **kwargs):
+        raise NotImplementedError(
+            "Async execution is currently not supported with the DelayedJobExecutor."
+        )
 
 
 class DelayedJobExecutor(JobExecutor):
@@ -373,7 +402,7 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, roi=None
                                        dtype=descriptor.kwargs['dtype'])
             # Need to test whether roi=None here is a problem
             buffer.set_shape_partition(partition, roi=roi)
-            buffer.update_data(buffer_dask)
+            buffer.replace_array(buffer_dask)
             wrapped_res.append(buffer)
         else:
             wrapped_res.append(buffer_dask)

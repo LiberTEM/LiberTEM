@@ -1,7 +1,8 @@
+from collections import defaultdict
 from enum import Enum
 from typing import (
     Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
-    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
+    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING, OrderedDict
 )
 from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
 import warnings
@@ -608,6 +609,63 @@ class UDFPostprocessMixin(Protocol):
         raise NotImplementedError()
 
 
+@runtime_checkable
+class UDFMergeAllMixin(Protocol):
+    def merge_all(self, ordered_results: OrderedDict[Slice, MergeAttrMapping]):
+        """
+        Combine stack of ordered partial results `ordered_results` to form complete result.
+
+        Combining can be more efficient than direct merging into a result buffer
+        for cases where the results are not NumPy arrays.
+        Currently this is only applicable for the
+        :class:`libertem.executor.delayed.DelayedJobExecutor`
+        where it provides an efficient pathway to construct Dask arrays from delayed UDF results.
+
+        The input and the returned arrays are in flattened navigation dimension with ROI applied.
+
+        Data available in this method:
+
+        - `self.params` - the parameters of this UDF
+
+        The default implementation is equivalent to the default merge for UDFs with only
+        :code:`kind='nav'` result buffers.
+
+        Parameters
+        ----------
+
+        ordered_results
+            Ordered dict mapping partition slice to UDF partial result
+
+        Returns
+        -------
+
+        dict[buffername] -> array_like
+            Dictionary mapping result buffer name to buffer content
+
+        Note
+        ----
+        This function is running on the main node, which means `self.results`
+        and `self.task_data` are not available.
+        """
+        if self.requires_custom_merge:
+            raise NotImplementedError(
+                "Default merging only works for kind='nav' buffers. "
+                "Please implement a suitable custom merge_all function."
+            )
+        result_chunks = defaultdict(lambda: [])
+        for b in ordered_results.values():
+            for key in b:
+                result_chunks[key].append(getattr(b, key))
+
+        result = {
+            # checking above assures that we only have kind='nav'
+            # where concatenation is the correct method.
+            k: np.concatenate(val)
+            for k, val in result_chunks.items()
+        }
+        return result
+
+
 class UDFBase:
     '''
     Base class for UDFs with helper functions.
@@ -764,6 +822,19 @@ class UDFBase:
 
     def get_results(self) -> Dict[str, np.ndarray]:
         raise NotImplementedError()
+
+    _default_merge_all = UDFMergeAllMixin.merge_all
+
+    def _do_merge_all(self, ordered_results: OrderedDict[Slice, MergeAttrMapping]):
+        if isinstance(self, UDFMergeAllMixin):
+            results_tmp = self.merge_all(ordered_results)
+        else:
+            results_tmp = self._default_merge_all(ordered_results)
+
+        for key, value in results_tmp.items():
+            # This SHOULD throw errors if sth doesn't match up about
+            # buffer name, shape or dtype
+            self.results.get_buffer(key).replace_array(value)
 
     def _do_get_results(self) -> Mapping[str, BufferWrapper]:
         results_tmp = self.get_results()

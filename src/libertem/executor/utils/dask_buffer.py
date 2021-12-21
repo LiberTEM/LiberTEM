@@ -15,11 +15,17 @@ class DaskBufferWrapper(BufferWrapper):
         """
         if buffer.has_data():
             RuntimeWarning('Buffer is already allocated, not copying current contents or view')
-        return cls(buffer.kind,
+        result = cls(buffer.kind,
                    extra_shape=buffer.extra_shape,
                    dtype=buffer.dtype,
                    where=buffer.where,
                    use=buffer.use)
+        result._shape = buffer._shape
+        result._ds_shape = buffer._ds_shape
+        result._ds_partitions = buffer._ds_partitions
+        result._roi = buffer._roi
+        result._roi_is_zero = buffer._roi_is_zero
+        return result
 
     @property
     def _extra_chunking(self):

@@ -4,7 +4,6 @@ import contextlib
 from collections import defaultdict, OrderedDict
 
 import numpy as np
-import dask
 from dask import delayed
 import dask.array as da
 
@@ -272,44 +271,8 @@ class DelayedJobExecutor(JobExecutor):
         """
         self._udfs = udfs
 
-    def compute(self, *args, udfs=None, user_backends=None, traverse=True, **kwargs):
-        """
-        Acts as dask.compute(*args, **kwargs) but with knowledge
-        of Libertem data structures and compute resources
-        """
-        if 'resources' in kwargs:
-            if udfs is not None:
-                raise ValueError('Cannot specify both udfs for resources and resources to use')
-            resources = kwargs.get('resources')
-        elif udfs is not None:
-            resources = self.get_resources(udfs, user_backends=user_backends)
-        elif self._udfs is not None:
-            resources = self.resources_if_available
-        else:
-            resources = None
-        kwargs['resources'] = resources
-
-        to_unpack = tuple(a for a in args)
-        unwrapped_args = tuple(self.unwrap_results(a) for a in to_unpack)
-        results = dask.compute(*unwrapped_args, traverse=traverse, **kwargs)
-        if len(args) == 1:
-            if len(results) > 1:
-                raise RuntimeWarning(f'Unexpected number of results {len(results)} '
-                                     'from dask.compute, dropping extras')
-            results = results[0]
-        return results
-
-    @property
-    def resources_if_available(self):
-        """
-        Returns the resources required by the UDFs last passed to
-        the executor in a call to Context.run_udfs
-        """
-        if self._udfs is not None:
-            return self.get_resources_from_udfs(self._udfs)
-
-    @classmethod
-    def get_resources_from_udfs(cls, udfs, user_backends=None):
+    @staticmethod
+    def get_resources_from_udfs(udfs, user_backends=None):
         """
         Returns the resources required by the udfs passed as
         argument, excluding those not in the tuple user_backends

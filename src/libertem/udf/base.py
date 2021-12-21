@@ -1938,7 +1938,6 @@ class UDFRunner:
         self._debug_task_pickling(tasks)
 
         executor = executor.ensure_sync()
-        executor.register_master_udfs(self._udfs)
 
         try:
             if progress:

@@ -338,7 +338,7 @@ We are starting to introduce type annotations and checking them in CI with
 Adding type annotations improves developer experience, especially by improving
 auto completion and type information on hover in IDEs. Type checking is
 currently quite lax and opt-in. See the file
-:code:`.mypy-checked` for the list of Python files that opt in.
+:code:`.mypy-checked` for the list of Python files that currently opt in.
 When adding new code, please consider adding new modules to this list.
 
 The checks are run with pre-commit on changed files that opt in.
@@ -350,9 +350,13 @@ You can run mypy locally on all files that opt in with:
 
 Please note that in many cases the type for classes is specified with a string
 instead of the class itself. That allows to import classes for typing only if
-type checking is performed. See also
-https://www.python.org/dev/peps/pep-0484/#forward-references for more
+type checking is performed. See `the section on forward references in PEP484
+<https://www.python.org/dev/peps/pep-0484/#forward-references>`_ for more
 information.
+
+For general information on type annotations in Python, including best
+practices, please also see `Static Typing with Python
+<https://typing.readthedocs.io/en/latest/>`_.
 
 Docstrings
 ~~~~~~~~~~

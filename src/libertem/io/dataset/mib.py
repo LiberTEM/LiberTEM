@@ -141,6 +141,68 @@ def get_image_count_and_sig_shape(path: str):
         raise DataSetException("no files found")
 
 
+# These encoders takes 2D input/output data - this means we can use
+# strides to do slicing and reversing. 2D input data means one output
+# row (of bytes) corresponds to one input row (of pixels).
+
+
+@numba.njit(cache=True)
+def encode_u1(inp, out):
+    for y in range(out.shape[0]):
+        out[y] = inp[y]
+
+
+@numba.jit(cache=True)
+def encode_u2(inp, out):
+    for y in range(out.shape[0]):
+        row_out = out[y]
+        row_in = inp[y]
+        for i in range(row_in.shape[0]):
+            in_value = row_in[i]
+            row_out[i * 2] = (0xFF00 & in_value) >> 8
+            row_out[i * 2 + 1] = 0xFF & in_value
+
+
+@numba.njit(cache=True)
+def encode_r1(inp, out):
+    for y in range(out.shape[0]):
+        row_out = out[y]
+        row_in = inp[y]
+        for stripe in range(row_out.shape[0] // 8):
+            for byte in range(8):
+                out_byte = 0
+                for bitpos in range(8):
+                    value = row_in[64 * stripe + 8 * byte + bitpos] & 1
+                    out_byte |= (value << bitpos)
+                row_out[(stripe + 1) * 8 - (byte + 1)] = out_byte
+
+
+@numba.njit(cache=True)
+def encode_r6(inp, out):
+    for y in range(out.shape[0]):
+        row_out = out[y]
+        row_in = inp[y]
+        for i in range(row_out.shape[0]):
+            col = i % 8
+            pos = i // 8
+            in_pos = (pos + 1) * 8 - col - 1
+            row_out[i] = row_in[in_pos]
+
+
+@numba.njit(cache=True)
+def encode_r12(inp, out):
+    for y in range(out.shape[0]):
+        row_out = out[y]
+        row_in = inp[y]
+        for i in range(row_in.shape[0]):
+            col = i % 4
+            pos = i // 4
+            in_pos = (pos + 1) * 4 - col - 1
+            in_value = row_in[in_pos]
+            row_out[i * 2] = (0xFF00 & in_value) >> 8
+            row_out[i * 2 + 1] = 0xFF & in_value
+
+
 @numba.njit(inline='always', cache=True)
 def _get_row_start_stop(offset_global, offset_local, stride, row_idx, row_length):
     start = offset_global + offset_local + row_idx * stride

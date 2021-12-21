@@ -8,7 +8,7 @@
   accessible to users.
 * Allow using an existing Dask Client as well as setting the LiberTEM Client as default
   Dask scheduler for integration purposes.
-* Add :meth:`libertem.contrib.daskadapter.task_results_array` to create
-  chunked Dask arrays from intermediate UDF task results.
+* Add :meth:`libertem.udf.base.UDFMergeAllMixin.merge_all` API to combine intermediate
+  UDF task results to chunked Dask arrays efficiently.
 * Restructure and extend documentation of executors.
 * :pr:`1158`, :issue:`1146,922`

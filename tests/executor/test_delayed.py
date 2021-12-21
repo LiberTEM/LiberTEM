@@ -471,6 +471,7 @@ def test_unwrap_null_case(delayed_ctx):
                 assert unwrapped[k][_i] == _v
 
 
+# Also tests with Python 3.6 since no assignment into Dask array required
 def test_only_dask(lt_ctx, delayed_ctx):
     ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
     dataset = ds_dict['dataset']

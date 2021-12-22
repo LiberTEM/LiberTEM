@@ -1393,7 +1393,7 @@ class UDFTask(Task):
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
 
-    def __call__(self, params: UDFParams, env: Environment):
+    def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:
         udfs = [
             cls.new_for_partition(kwargs, self.partition, params.roi)
             for cls, kwargs in zip(self._udf_classes, params.kwargs)

@@ -188,7 +188,7 @@ class Analysis:
     TYPE: Literal["UDF"] = "UDF"
     registry: Dict[str, "Type[Analysis]"] = {}
 
-    def __init__(self, dataset: DataSet):
+    def __init__(self, dataset: DataSet, parameters: Dict):
         self.dataset = dataset
 
     def __init_subclass__(cls, id_=None, **kwargs):
@@ -211,7 +211,7 @@ class Analysis:
 
     @classmethod
     def get_rpc_definitions(cls) -> Dict[str, Type["ProcedureProtocol"]]:
-        raise NotImplementedError()
+        return {}
 
     async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
         raise NotImplementedError()
@@ -288,7 +288,7 @@ class Analysis:
 
 class BaseAnalysis(Analysis):
     def __init__(self, dataset, parameters):
-        super().__init__(dataset)
+        super().__init__(dataset, parameters)
         self.parameters = self.get_parameters(parameters)
         self.parameters.update(parameters)
 

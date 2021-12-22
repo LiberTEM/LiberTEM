@@ -1,15 +1,21 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, TypeVar, Union
 
+import uuid
 import typing_extensions
+
+from libertem.analysis.base import AnalysisResultSet
 
 from .models import AnalysisInfo, AnalysisResultInfo, CompoundAnalysisInfo
 
 if TYPE_CHECKING:
     from .state import SharedState
+    from .engine import JobEngine
 
 
 log = logging.getLogger(__name__)
+
+T = TypeVar('T')
 
 
 class RPCContext:
@@ -23,9 +29,12 @@ class RPCContext:
     server-side state of the web API, and allows access to information
     about analyses, and allows to run an analysis.
     """
-    def __init__(self, state: "SharedState", compound_analysis_id: str) -> None:
+    def __init__(
+        self, state: "SharedState", compound_analysis_id: str, engine: "JobEngine"
+    ) -> None:
         self.state = state
         self.compound_analysis_id = compound_analysis_id
+        self.engine = engine
 
     def get_compound_analysis(self) -> CompoundAnalysisInfo:
         """
@@ -50,11 +59,19 @@ class RPCContext:
         results = self.state.analysis_state.get_results(analysis_id)
         return results
 
-    def run_analysis(self, analysis_id: str) -> None:
-        raise NotImplementedError()
+    async def run_analysis(self, analysis_id: str) -> AnalysisResultSet:
+        job_id = str(uuid.uuid4())
+        return await self.engine.run_analysis(analysis_id, job_id)
+
+    async def run_sync(self, fn: Callable[..., T], *args, **kwargs) -> T:
+        """
+        To run a blocking, more compute-intensive function as part of
+        a RPC, please wrap the call with this function!
+        """
+        return await self.engine.run_sync(fn, *args, **kwargs)
 
 
-class ProcedureProtocol(typing_extensions.Protocol):
+class SyncProcedureProtocol(typing_extensions.Protocol):
     def __call__(self, rpc_context: RPCContext):
         """
         The server-side interface that each procedure needs to implement
@@ -66,3 +83,20 @@ class ProcedureProtocol(typing_extensions.Protocol):
             instance of :code:`RPCContext`, including methods to run analyses.
         """
         ...
+
+
+class AsyncProcedureProtocol(typing_extensions.Protocol):
+    async def __call__(self, rpc_context: RPCContext):
+        """
+        The server-side interface that each procedure needs to implement (async version)
+
+        Parameters
+        ----------
+        rpc_context : RPCContext
+            Information about the related compound analysis is contained in this
+            instance of :code:`RPCContext`, including methods to run analyses.
+        """
+        ...
+
+
+ProcedureProtocol = Union[AsyncProcedureProtocol, SyncProcedureProtocol]

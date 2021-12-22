@@ -22,7 +22,7 @@ from utils import get_testdata_path
 @pytest.fixture(
     params=[
         "inline", "dask_executor", "dask_make_default", "dask_integration",
-        "concurrent",
+        "concurrent", "delayed"
     ]
 )
 def ctx(request, dask_executor):
@@ -59,6 +59,8 @@ def ctx(request, dask_executor):
             yield Context.make_with("dask-integration")
     elif request.param == "concurrent":
         yield Context.make_with("threads")
+    elif request.param == "delayed":
+        yield Context(executor=DelayedJobExecutor())
 
 
 @pytest.fixture(scope='session')
@@ -186,8 +188,6 @@ def test_executors(ctx, load_kwargs, reference):
     results = _calculate(ctx, load_kwargs)
     for key, res in results.items():
         print(f"filetype: {key}")
-        if isinstance(ctx.executor, DelayedJobExecutor):
-            res = res.compute()
 
         assert len(res) == len(reference[key])
         for i, item in enumerate(reference[key]):
@@ -195,10 +195,12 @@ def test_executors(ctx, load_kwargs, reference):
             for buf_key in item.keys():
                 print(f"buffer {buf_key}")
                 left = item[buf_key].raw_data
-                right = res[i][buf_key].raw_data
+                right = np.array(res[i][buf_key].raw_data)
                 print(np.max(np.abs(left - right)))
                 print(np.min(np.abs(left)))
                 print(np.min(np.abs(right)))
+                # To see what type we actually test
+                print("is allclose", np.allclose(left, right))
                 assert np.allclose(left, right)
 
 

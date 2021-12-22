@@ -1,11 +1,11 @@
 import * as React from "react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Checkbox, Dropdown, DropdownProps, Form, Header, Icon, Input, List, Modal, Popup } from "semantic-ui-react";
+import { Button, Checkbox, Dropdown, DropdownProps, Form, Header, Icon, IconProps, Input, List, Modal, Popup } from "semantic-ui-react";
 import { defaultDebounce, getEnumValues } from "../../helpers";
 import { getApiBasePath } from "../../helpers/apiHelpers";
 import ResultList from "../../job/components/ResultList";
-import { AnalysisTypes, CenterOfMassParams } from "../../messages";
+import { AnalysisDetails, AnalysisTypes, CenterOfMassParams } from "../../messages";
 import { RootReducer } from "../../store";
 import { composeHandles } from "../../widgets/compose";
 import { cbToRadius, inRectConstraint, keepOnCY, riConstraint, roConstraints } from "../../widgets/constraints";
@@ -79,6 +79,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
     const [scan_rotation, setScanRotation] = useState("0.0");
     const [ri, setRI] = useState(minLength / 8);
     const [maskShape, setMaskShape] = useState(CoMMaskShapes.DISK)
+    const [guessing, setGuessing] = useState(false);
 
     const dispatch = useDispatch();
 
@@ -160,7 +161,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         parsedScanRotation = 0.0;
     }
 
-    const runAnalysis = () => {
+    const getDetails: (() => AnalysisDetails) = () => {
         const parameters: CenterOfMassParams = {
             shape: "com",
             cx,
@@ -172,11 +173,21 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
         if (maskShape === CoMMaskShapes.RING) {
             parameters.ri = ri;
         }
-        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, {
+        return {
             analysisType: AnalysisTypes.CENTER_OF_MASS,
             parameters,
-        }));
+        };
+    }
+
+    const runAnalysis = () => {
+        dispatch(compoundAnalysisActions.Actions.run(compoundAnalysis.compoundAnalysis, 1, getDetails()));
     };
+
+    React.useEffect(() => {
+        dispatch(compoundAnalysisActions.Actions.setParams(
+            compoundAnalysis, 1, getDetails()
+        ));
+    }, [cx, cy, flip_y, scan_rotation, r, ri, maskShape]);
 
     const analyses = useSelector((state: RootReducer) => state.analyses)
     const jobs = useSelector((state: RootReducer) => state.jobs)
@@ -208,15 +219,16 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
     };
 
     const guessParameters = (ev: React.MouseEvent) => {
+        setGuessing(true);
         const basePath = getApiBasePath();
         const url = `${basePath}compoundAnalyses/${compoundAnalysis.compoundAnalysis}/rpc/guess_parameters/`;
+
         fetch(url, {
             method: 'PUT',
             credentials: "same-origin",
         }).then(req => req.json()).then((json) => {
+            setGuessing(false);
             const response = json as GuessResponse;
-            // eslint-disable-next-line no-console
-            console.log(response);
             if(response.status === "ok") {
                 setFlipY(response.guess.flip_y);
                 setCx(response.guess.cx);
@@ -226,15 +238,20 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
                 // eslint-disable-next-line no-console
                 console.error(response.message);
             }
-        // eslint-disable-next-line no-console
-        }).catch(e => console.error(e));
+        }).catch(e => {
+            setGuessing(false);
+            // eslint-disable-next-line no-console
+            console.error(e)
+        });
         ev.preventDefault();
     }
 
+    const guessIconProps: IconProps = guessing ? { name: 'cog', loading: true } : { name: 'question' }
+
     const toolbar = (
         <Toolbar compoundAnalysis={compoundAnalysis} onApply={runAnalysis} busyIdxs={[1]} extra={
-            <Button icon onClick={guessParameters}>
-                <Icon name="question" />
+            <Button icon onClick={guessParameters} disabled={guessing}>
+                <Icon {...guessIconProps} />
                 Guess parameters
             </Button>
         }/>
@@ -318,10 +335,6 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
             </Form>
         </>
     );
-
-    if(false) {
-        setMaskShape(CoMMaskShapes.DISK);
-    }
 
     return (
         <AnalysisLayoutTwoCol

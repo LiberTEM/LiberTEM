@@ -117,70 +117,71 @@ class LargeResultUDF(UDF):
         dest.result += src.result
 
 
-@pytest.mark.benchmark(
-    group="udf parameters"
-)
-@pytest.mark.parametrize(
-    'method', ('preshared_file', 'file', 'executor')
-)
-def test_param(shared_dist_ctx, benchmark, tmp_path, method):
-    data = np.zeros(1024*1024, dtype=np.float32)
-
-    ds = shared_dist_ctx.load(
-        'memory',
-        data=np.zeros((1024, 2)),
-        sig_dims=1,
-        num_partitions=32
+# class to share dist ctx
+class Test:
+    @pytest.mark.benchmark(
+        group="udf parameters"
     )
+    @pytest.mark.parametrize(
+        'method', ('preshared_file', 'file', 'executor')
+    )
+    def test_param(shared_dist_ctx, benchmark, tmp_path, method):
+        data = np.zeros(1024*1024, dtype=np.float32)
 
-    if method == 'preshared_file':
-        A = str(tmp_path / 'A.npy')
-        np.save(A, data)
+        ds = shared_dist_ctx.load(
+            'memory',
+            data=np.zeros((1024, 2)),
+            sig_dims=1,
+            num_partitions=32
+        )
 
-        def benchfun():
-            shared_dist_ctx.run_udf(dataset=ds, udf=LargeParamUDF(A=A))
-
-    elif method == 'file':
-        def benchfun():
+        if method == 'preshared_file':
             A = str(tmp_path / 'A.npy')
             np.save(A, data)
-            shared_dist_ctx.run_udf(dataset=ds, udf=LargeParamUDF(A=A))
 
-    else:
-        A = data
+            def benchfun():
+                shared_dist_ctx.run_udf(dataset=ds, udf=LargeParamUDF(A=A))
 
-        def benchfun():
-            shared_dist_ctx.run_udf(dataset=ds, udf=LargeParamUDF(A=A))
+        elif method == 'file':
+            def benchfun():
+                A = str(tmp_path / 'A.npy')
+                np.save(A, data)
+                shared_dist_ctx.run_udf(dataset=ds, udf=LargeParamUDF(A=A))
 
-    benchmark(benchfun)
+        else:
+            A = data
 
+            def benchfun():
+                shared_dist_ctx.run_udf(dataset=ds, udf=LargeParamUDF(A=A))
 
-@pytest.mark.benchmark(
-    group="udf results"
-)
-@pytest.mark.parametrize(
-    'method', ('file', 'executor')
-)
-def test_result(shared_dist_ctx, benchmark, tmp_path, method):
-    if method == 'file':
-        udf = CheatResultUDF(str(tmp_path))
-    else:
-        udf = LargeResultUDF()
+        benchmark(benchfun)
 
-    ds = shared_dist_ctx.load(
-        'memory',
-        data=np.zeros((1024, 2)),
-        sig_dims=1,
-        num_partitions=32
+    @pytest.mark.benchmark(
+        group="udf results"
     )
-
-    benchmark(
-        shared_dist_ctx.run_udf,
-        dataset=ds,
-        udf=udf
+    @pytest.mark.parametrize(
+        'method', ('file', 'executor')
     )
-    if hasattr(udf, '_cheat_result'):
-        udf._cheat_result[:] = 0
-    # Validate that it actually did the job
-    res = shared_dist_ctx.run_udf(dataset=ds, udf=udf)
-    assert np.allclose(res['result'].raw_data, 1024)
+    def test_result(shared_dist_ctx, benchmark, tmp_path, method):
+        if method == 'file':
+            udf = CheatResultUDF(str(tmp_path))
+        else:
+            udf = LargeResultUDF()
+
+        ds = shared_dist_ctx.load(
+            'memory',
+            data=np.zeros((1024, 2)),
+            sig_dims=1,
+            num_partitions=32
+        )
+
+        benchmark(
+            shared_dist_ctx.run_udf,
+            dataset=ds,
+            udf=udf
+        )
+        if hasattr(udf, '_cheat_result'):
+            udf._cheat_result[:] = 0
+        # Validate that it actually did the job
+        res = shared_dist_ctx.run_udf(dataset=ds, udf=udf)
+        assert np.allclose(res['result'].raw_data, 1024)

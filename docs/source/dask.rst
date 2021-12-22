@@ -142,7 +142,7 @@ a complete re-run of the UDFs that were passed to :code:`run_udf`.
 
 .. testoutput:: to_dask
    
-   dask.array<reshape, shape=(16, 16), dtype=float32, chunksize=(1, 16), chunktype=numpy.ndarray>
+   dask.array<reshape, shape=(16, 16), dtype=float32, chunksize=(..., ...), chunktype=numpy.ndarray>
 
 Merge function for Dask arary results
 -------------------------------------

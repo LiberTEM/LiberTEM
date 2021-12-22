@@ -5,7 +5,7 @@ import websockets
 
 from utils import assert_msg
 from aio_utils import (
-    create_connection, consume_task_results, create_default_dataset, create_analysis,
+    call_ca_rpc, create_connection, consume_task_results, create_default_dataset, create_analysis,
     create_update_compound_analysis, create_job_for_analysis, update_analysis,
 )
 
@@ -482,3 +482,169 @@ async def test_rerun_com_analysis(
         )
 
         await consume_task_results(ws, job_uuid)
+
+
+@pytest.mark.asyncio
+async def test_com_guess_rpc(
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
+
+    # connect to ws endpoint:
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
+    async with websockets.connect(ws_url) as ws:
+        print("checkpoint 2")
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+
+        ds_uuid, ds_url = await create_default_dataset(
+            default_raw, ws, http_client, base_url, token=default_token,
+        )
+
+        # compound analysis is first created without any analyses:
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid, details=None, token=default_token,
+        )
+
+        print("checkpoint 2.1")
+
+        result = await call_ca_rpc(
+            http_client, base_url, ca_uuid, "guess_parameters", token=default_token
+        )
+        assert result['status'] == "error"  # we don't have an analysis yet!
+
+        print("checkpoint 2.5")
+
+        analysis_uuid, analysis_url = await create_analysis(
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
+            details={
+                "analysisType": "CENTER_OF_MASS",
+                "parameters": {
+                    "shape": "com",
+                    "cx": 128,
+                    "cy": 128,
+                    "r": 64,
+                    "flip_y": False,
+                    "scan_rotation": 0,
+                }
+            },
+        )
+
+        print("checkpoint 3")
+
+        result = await call_ca_rpc(
+            http_client, base_url, ca_uuid, "guess_parameters", token=default_token
+        )
+        assert result['status'] == "error"  # analysis is not added to the CA
+
+        # compound analysis is updated with the newly created analysis:
+        _, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid, details={
+                "mainType": "CENTER_OF_MASS",
+                "analyses": [analysis_uuid]
+            }, ca_uuid=ca_uuid, token=default_token,
+        )
+
+        print("checkpoint 4")
+
+        job_uuid, job_url = await create_job_for_analysis(
+            ws, http_client, base_url, analysis_uuid, token=default_token,
+        )
+
+        print("checkpoint 4.5")
+
+        await consume_task_results(ws, job_uuid)
+
+        print("checkpoint 5")
+
+        result = await call_ca_rpc(
+            http_client, base_url, ca_uuid, "guess_parameters", token=default_token
+        )
+        # we don't currently care about what the results are, just that they are here:
+        # (unit tests for the guessing take care of that detail)
+        assert result['status'] == "ok"
+        assert "guess" in result
+        assert "cx" in result["guess"]
+        assert "cy" in result["guess"]
+        assert "scan_rotation" in result["guess"]
+        assert "flip_y" in result["guess"]
+
+
+@pytest.mark.asyncio
+async def test_com_guess_rpc_need_to_run_job(
+    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+):
+    await create_connection(
+        base_url, http_client, scheduler_url=local_cluster_url, token=default_token,
+    )
+
+    # connect to ws endpoint:
+    ws_url = f"ws://127.0.0.1:{server_port}/api/events/?token={default_token}"
+    async with websockets.connect(ws_url) as ws:
+        print("checkpoint 2")
+        initial_msg = json.loads(await ws.recv())
+        assert_msg(initial_msg, 'INITIAL_STATE')
+
+        ds_uuid, ds_url = await create_default_dataset(
+            default_raw, ws, http_client, base_url, token=default_token,
+        )
+
+        # compound analysis is first created without any analyses:
+        ca_uuid, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid, details=None, token=default_token,
+        )
+
+        print("checkpoint 2.1")
+
+        result = await call_ca_rpc(
+            http_client, base_url, ca_uuid, "guess_parameters", token=default_token
+        )
+        assert result['status'] == "error"  # we don't have an analysis yet!
+
+        print("checkpoint 2.5")
+
+        analysis_uuid, analysis_url = await create_analysis(
+            ws, http_client, base_url, ds_uuid, ca_uuid, token=default_token,
+            details={
+                "analysisType": "CENTER_OF_MASS",
+                "parameters": {
+                    "shape": "com",
+                    "cx": 128,
+                    "cy": 128,
+                    "r": 64,
+                    "flip_y": False,
+                    "scan_rotation": 0,
+                }
+            },
+        )
+
+        print("checkpoint 3")
+
+        result = await call_ca_rpc(
+            http_client, base_url, ca_uuid, "guess_parameters", token=default_token
+        )
+        assert result['status'] == "error"  # analysis is not added to the CA
+
+        # compound analysis is updated with the newly created analysis:
+        _, ca_url = await create_update_compound_analysis(
+            ws, http_client, base_url, ds_uuid, details={
+                "mainType": "CENTER_OF_MASS",
+                "analyses": [analysis_uuid]
+            }, ca_uuid=ca_uuid, token=default_token,
+        )
+
+        print("checkpoint 4")
+
+        result = await call_ca_rpc(
+            http_client, base_url, ca_uuid, "guess_parameters", token=default_token
+        )
+        # we don't currently care about what the results are, just that they are here:
+        # (unit tests for the guessing take care of that detail)
+        assert result['status'] == "ok"
+        assert "guess" in result
+        assert "cx" in result["guess"]
+        assert "cy" in result["guess"]
+        assert "scan_rotation" in result["guess"]
+        assert "flip_y" in result["guess"]

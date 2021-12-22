@@ -127,11 +127,13 @@ async def create_analysis(ws, http_client, base_url, ds_uuid, ca_uuid, details=N
         "dataset": ds_uuid,
         "details": details,
     }
+    print("before PUT")
     async with http_client.put(analysis_url, json=analysis_data) as resp:
         print(await resp.text())
         assert resp.status == 200
         resp_json = await resp.json()
         assert resp_json['status'] == "ok"
+    print("after PUT")
 
     msg = json.loads(await ws.recv())
     assert_msg(msg, 'ANALYSIS_CREATED')
@@ -236,3 +238,16 @@ async def create_job_for_analysis(ws, http_client, base_url, analysis_uuid, toke
     assert msg['details']['id'] == job_uuid
 
     return job_uuid, job_url
+
+
+async def call_ca_rpc(http_client, base_url, ca_uuid, rpc_name, token=None):
+    rpc_url = f"{base_url}/api/compoundAnalyses/{ca_uuid}/rpc/{rpc_name}/"
+    rpc_url = add_token(rpc_url, token)
+
+    print(f"call CA before PUT {rpc_url}")
+
+    async with http_client.put(rpc_url) as resp:
+        print("call CA getting the text response:")
+        print(await resp.text())
+        resp_json = await resp.json()
+        return resp_json

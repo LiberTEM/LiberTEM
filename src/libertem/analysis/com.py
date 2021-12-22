@@ -359,14 +359,9 @@ class COMResultSet(AnalysisResultSet):
 
 
 class ParameterGuessProc:
-    def __call__(self, rpc_context: "RPCContext") -> Dict:
+    async def __call__(self, rpc_context: "RPCContext") -> Dict:
         comp_ana = rpc_context.get_compound_analysis()
         analyses = comp_ana["details"]["analyses"]
-        if len(analyses) != 2:
-            return {
-                "status": "error",
-                "message": "no analyses found, there should be 2",
-            }
         analysis_details = [
             rpc_context.get_analysis_details(a)
             for a in analyses
@@ -385,11 +380,11 @@ class ParameterGuessProc:
         com_analysis_id = com_analysis["analysis"]
         if not rpc_context.have_analysis_results(com_analysis_id):
             # run with the current analysis parameters as set in the GUI:
-            rpc_context.run_analysis(com_analysis_id)
+            await rpc_context.run_analysis(com_analysis_id)
         result_info = rpc_context.get_analysis_results(com_analysis_id)
         res = result_info.results
         old_params = result_info.details["parameters"]
-        guess = guess_corrections(res.y.raw_data, res.x.raw_data)
+        guess = await rpc_context.run_sync(guess_corrections, res.y.raw_data, res.x.raw_data)
         # NOTE: convert guess results to absolute values to make sure we don't
         # run into any nasty synchronization issues, for example, if state goes
         # stale after the guess button was clicked.

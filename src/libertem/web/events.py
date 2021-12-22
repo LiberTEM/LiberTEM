@@ -2,7 +2,9 @@ import asyncio
 
 import tornado.websocket
 
-from .base import log_message, ResultHandlerMixin
+from libertem.web.engine import JobEngine
+
+from .base import log_message
 from .messages import Message
 from .state import SharedState
 
@@ -38,10 +40,11 @@ class EventRegistry:
         return asyncio.gather(*futures)
 
 
-class ResultEventHandler(ResultHandlerMixin, tornado.websocket.WebSocketHandler):
+class ResultEventHandler(tornado.websocket.WebSocketHandler):
     def initialize(self, state: SharedState, event_registry: EventRegistry):
         self.event_registry = event_registry
         self.state = state
+        self.engine = JobEngine(state, event_registry)
 
     def check_origin(self, origin):
         # FIXME: implement this when we want to support CORS later
@@ -60,7 +63,7 @@ class ResultEventHandler(ResultHandlerMixin, tornado.websocket.WebSocketHandler)
             log_message(msg)
             # FIXME: don't broadcast, only send to the new connection
             self.event_registry.broadcast_event(msg)
-            await self.send_existing_job_results()
+            await self.engine.send_existing_job_results()
 
     def on_close(self):
         self.event_registry.remove_handler(self)

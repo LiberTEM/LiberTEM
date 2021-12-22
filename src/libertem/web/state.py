@@ -299,6 +299,9 @@ class JobState:
     def __getitem__(self, uuid: str) -> JobInfo:
         return self.jobs[uuid]
 
+    def __contains__(self, uuid: str) -> bool:
+        return uuid in self.jobs
+
     def is_cancelled(self, uuid: str) -> bool:
         return uuid not in self.jobs
 

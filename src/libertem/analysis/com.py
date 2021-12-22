@@ -253,7 +253,7 @@ def guess_corrections(
     If any corrections were applied when generating the input data, please note that the corrections
     should be applied relative to these previous value. In particular, the
     center corrections returned by this function have to be back-transformed to the uncorrected
-    coordinate system, for example with :code:`apply_corrections(..., forward=False)
+    coordinate system, for example with :code:`apply_correction(..., forward=False)
 
     Parameters
     ----------
@@ -394,11 +394,18 @@ class ParameterGuessProc:
         # run into any nasty synchronization issues, for example, if state goes
         # stale after the guess button was clicked.
         flip_y = bool(old_params["flip_y"]) != bool(guess.flip_y)
+        backtransformed = apply_correction(
+            y_centers=np.array((guess.cy, )),
+            x_centers=np.array((guess.cx, )),
+            scan_rotation=old_params["scan_rotation"],
+            flip_y=old_params["flip_y"],
+            forward=False,
+        )
         return {
             'status': 'ok',
             'guess': {
-                'cx': guess.cx + old_params["cx"],
-                'cy': guess.cy + old_params["cy"],
+                'cx': backtransformed[1][0] + old_params["cx"],
+                'cy': backtransformed[0][0] + old_params["cy"],
                 'scan_rotation': guess.scan_rotation + old_params["scan_rotation"],
                 'flip_y': flip_y,
             },

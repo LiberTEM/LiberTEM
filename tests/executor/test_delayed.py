@@ -414,7 +414,7 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
     result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf, roi=roi_array)
 
     alldask(result_dask)
-    computed_results = delayed_ctx.executor.compute(result_dask)
+    computed_results = delayed_ctx.executor._compute(result_dask)
     for udf_computed_results, naive_results in zip(computed_results, udf_dict['naive_result']):
         for k, result in udf_computed_results.items():
             direct_result = naive_results[k]

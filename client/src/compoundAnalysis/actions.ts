@@ -6,6 +6,7 @@ import { CompoundAnalysis } from "./types";
 export enum ActionTypes {
     CREATE = 'COMPOUND_ANALYSIS_CREATE',
     CREATED = 'COMPOUND_ANALYSIS_CREATED',
+    SET_PARAMS = 'COMPOUND_ANALYSIS_SET_PARAMS',
     UPDATED = 'COMPOUND_ANALYSIS_UPDATED',
     RUN = 'COMPOUND_ANALYSIS_RUN',
     RUNNING = 'COMPOUND_ANALYSIS_RUNNING',
@@ -20,6 +21,10 @@ export const Actions = {
     created: (
         compoundAnalysis: CompoundAnalysis, autoStart: boolean
     ) => createAction(ActionTypes.CREATED, { compoundAnalysis, autoStart }),
+    setParams: (
+        compoundAnalysis: CompoundAnalysis,
+        analysisIndex: number, details: AnalysisDetails, analysisId?: string,
+    ) => createAction(ActionTypes.SET_PARAMS, { compoundAnalysis, analysisId, analysisIndex, details }),
     enableAutoStart: (
         compoundAnalysisId: string
     ) => createAction(ActionTypes.ENABLE_AUTOSTART, { compoundAnalysisId }),

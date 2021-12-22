@@ -129,11 +129,34 @@ export function* createOrUpdate(
     }
 }
 
+export function* updateParams(compoundAnalysisId: string, analysisIndex: number, details: AnalysisDetails) {
+    const compoundAnalysis = (yield select(selectCompoundAnalysis, compoundAnalysisId)) as CompoundAnalysisState;
+    const existingAnalysisId = compoundAnalysis.details.analyses[analysisIndex];
+    return (yield call(createOrUpdate, compoundAnalysis, existingAnalysisId, analysisIndex, details)) as string;
+}
+
+export function* setParamsSaga(action: compoundAnalysisActions.ActionParts["setParams"]) {
+    const { compoundAnalysis, analysisIndex, details } = action.payload;
+    yield call(updateParams, compoundAnalysis.compoundAnalysis, analysisIndex, details);
+}
+
+export function* paramsSyncSidecar() {
+    const runOrParamsChannel = (yield actionChannel(compoundAnalysisActions.ActionTypes.SET_PARAMS, buffers.sliding(2))) as TakeableChannel<compoundAnalysisActions.ActionTypes.SET_PARAMS>;
+
+    while (true) {
+        const action = (yield take(runOrParamsChannel)) as compoundAnalysisActions.ActionParts["setParams"];
+
+        yield call(setParamsSaga, action);
+    }
+}
+
 export function* analysisSidecar(compoundAnalysisId: string /* , options: { doAutoStart: boolean } */) {
     // channel for incoming actions:
     // all actions that arrive while we block in `call` will be buffered here.
     // because the buffer is sliding of size 2, we only keep the latest two actions!
-    const runOrParamsChannel = (yield actionChannel(compoundAnalysisActions.ActionTypes.RUN, buffers.sliding(2))) as TakeableChannel<unknown>;
+    const runOrParamsChannel = (yield actionChannel(compoundAnalysisActions.ActionTypes.RUN, buffers.sliding(2))) as TakeableChannel<
+        compoundAnalysisActions.ActionTypes.RUN
+    >;
 
     while (true) {
         try {
@@ -148,8 +171,8 @@ export function* analysisSidecar(compoundAnalysisId: string /* , options: { doAu
             const compoundAnalysis = (yield select(selectCompoundAnalysis, compoundAnalysisId)) as CompoundAnalysisState;
             const { analysisIndex, details } = action.payload;
 
-            const existingAnalysisId = compoundAnalysis.details.analyses[analysisIndex];
-            const analysisId = (yield call(createOrUpdate, compoundAnalysis, existingAnalysisId, analysisIndex, details)) as string;
+            // update parameters on the server and in redux:
+            const analysisId = (yield call(updateParams, compoundAnalysis.compoundAnalysis, analysisIndex, details)) as string;
 
             // prepare running the job:
             const jobId = uuid();
@@ -201,4 +224,6 @@ export function* analysisRootSaga() {
     yield takeEvery(compoundAnalysisActions.ActionTypes.CREATE, createCompoundAnalysisSaga);
     yield takeEvery(compoundAnalysisActions.ActionTypes.REMOVE, doRemoveAnalysisSaga);
     yield takeEvery(channelActions.ActionTypes.INITIAL_STATE, createFromServerState);
+
+    (yield fork(paramsSyncSidecar)) as Task;
 }

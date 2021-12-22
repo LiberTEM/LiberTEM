@@ -142,6 +142,8 @@ stages:
         displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
+      - bash: sudo apt install -y pandoc graphviz
+        displayName: install required debian packages
 
       - task: Cache@2
         inputs:
@@ -158,8 +160,7 @@ stages:
           path: $(tox_dir)
         displayName: 'cache tox environment'
 
-      - bash: sudo apt install -y pandoc
-        displayName: install required debian packages
+
       - bash: pip install -U tox
         displayName: 'install requirements'
       - bash: tox
@@ -374,7 +375,7 @@ stages:
         displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
-      - bash: sudo apt install -y pandoc
+      - bash: sudo apt install -y pandoc graphviz
         displayName: 'install required debian packages'
 
       - task: Cache@2

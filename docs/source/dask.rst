@@ -23,6 +23,12 @@ Since version 0.9, LiberTEM supports seamless integration with workflows that
 are based on Dask arrays. That means Dask arrays can serve as input for LiberTEM, and
 UDF computations can produce Dask arrays.
 
+This can be used to combine features from Hyperspy and LiberTEM in a single analysis workflow:
+
+.. toctree::
+
+   hyperspy-integration
+
 Scheduler
 ---------
 

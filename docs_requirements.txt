@@ -1,3 +1,5 @@
+# need current hdbscan master to work around compatibility issues w/ building against the wrong numpy version:
+git+https://github.com/scikit-learn-contrib/hdbscan@b0e0bd5ffd0262b16c7860c38bef582bf973682a#egg=hdbscan
 sphinx>=3.5.1
 sphinx-autobuild
 sphinxcontrib-bibtex>=2

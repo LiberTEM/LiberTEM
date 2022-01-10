@@ -1028,8 +1028,7 @@ class UDF(UDFBase):
             An iterable containing possible values :code:`numpy` (default), :code:`'cuda'` and
             :code:`cupy`
         '''
-        # mypy error here fixed in master: https://github.com/python/mypy/pull/11236
-        return ('numpy', )  # type: ignore
+        return ('numpy', )
 
     def cleanup(self) -> None:  # FIXME: name? implement cleanup as context manager somehow?
         pass

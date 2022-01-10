@@ -108,7 +108,7 @@ numba==0.54.1
     # via
     #   libertem (../../setup.py)
     #   sparse
-numpy==1.20.3
+numpy==1.21.0
     # via
     #   empyre
     #   h5py

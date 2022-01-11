@@ -3,7 +3,8 @@ git+https://github.com/scikit-learn-contrib/hdbscan@b0e0bd5ffd0262b16c7860c38bef
 sphinx>=3.5.1
 sphinx-autobuild
 sphinxcontrib-bibtex>=2
-sphinx-issues
+# https://github.com/sloria/sphinx-issues/issues/125
+sphinx-issues!=3.0.0
 sphinx-rtd-theme
 nbsphinx!=0.8.8
 nbsphinx_link

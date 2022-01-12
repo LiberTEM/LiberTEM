@@ -20,6 +20,7 @@ filetypes = {
     "dm": "libertem.io.dataset.dm.DMDataSet",
     "seq": "libertem.io.dataset.seq.SEQDataSet",
     "mrc": "libertem.io.dataset.mrc.MRCDataSet",
+    "tvips": "libertem.io.dataset.tvips.TVIPSDataSet",
     "dask": "libertem.io.dataset.dask.DaskDataSet",
 }
 

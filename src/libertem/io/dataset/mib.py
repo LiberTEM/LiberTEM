@@ -125,7 +125,7 @@ def _get_sequence(f: "MIBHeaderReader"):
     return f.fields['sequence_first_image']
 
 
-def get_image_count_and_sig_shape(path: str):
+def get_image_count_and_sig_shape(path: str) -> Tuple[int, Tuple[int, int]]:
     fns = get_filenames(path)
     count = 0
     files = []

@@ -11,7 +11,8 @@ Prerequisites
 
 In addition to a Python installation, there are a few system dependencies needed when contributing:
 
-* `pandoc <https://pandoc.org/installing.html>`_ is needed to build the documentation
+* `pandoc <https://pandoc.org/installing.html>`_ and `graphviz <https://graphviz.org/download/>`_
+  are needed to build and test the documentation.
 * Node.js is needed for rebuilding the LiberTEM GUI. On Linux, we recommend
   to `install via package manager
   <https://nodejs.org/en/download/package-manager/>`_, on Windows `the installer

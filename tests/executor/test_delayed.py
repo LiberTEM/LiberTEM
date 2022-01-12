@@ -79,12 +79,12 @@ class OnlyDaskSumUDF(UDF):
         }
 
 
-@numba.njit()
+@numba.njit(cache=True)
 def _process_tile(dest, tile):
     dest += np.sum(tile, axis=0)
 
 
-@numba.njit()
+@numba.njit(cache=True)
 def _merge(dest, src):
     dest += src
 

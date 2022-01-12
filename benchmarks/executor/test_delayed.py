@@ -74,7 +74,7 @@ class EchoUDF(UDF):
         sl = (..., *self.meta.sig_slice.get())
         self.results.intensity[sl] = tile
 
-    # Make sure we don't have default merge so that there is nod efault merge_all
+    # Make sure we don't have default merge so that there is no default merge_all
     def merge(self, dest, src):
         return super().merge(dest, src)
 

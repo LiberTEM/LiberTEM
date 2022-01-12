@@ -2,7 +2,7 @@ from collections import defaultdict
 from enum import Enum
 from typing import (
     Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
-    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING, OrderedDict
+    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
 )
 from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
 import warnings
@@ -30,7 +30,7 @@ from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.utils.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
-from libertem.executor.base import Environment, JobExecutor
+from libertem.executor.base import Environment, JobExecutor, TaskProtocol
 
 if TYPE_CHECKING:
     from typing import OrderedDict
@@ -612,7 +612,9 @@ class UDFPostprocessMixin(Protocol):
 
 @runtime_checkable
 class UDFMergeAllMixin(Protocol):
-    def merge_all(self, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'):
+    def merge_all(
+                self, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'
+            ) -> Mapping[str, 'nt.ArrayLike']:
         """
         Combine stack of ordered partial results `ordered_results` to form complete result.
 
@@ -1539,7 +1541,6 @@ class UDFRunner:
             )
         v = damage.get_view_for_partition(task.partition)
         v[:] = True
-        return (udfs, damage)
 
     @staticmethod
     def _make_udf_result(udfs, damage):
@@ -1547,7 +1548,6 @@ class UDFRunner:
             udf.clear_views()
         return UDFResults(
             buffers=tuple(
-                # Explicit indexing for compatibility with Dask.delayed
                 udf._do_get_results()
                 for udf in udfs
             ),
@@ -1930,7 +1930,7 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
-    ) -> Iterable[tuple]:
+    ) -> Iterable[Tuple[Tuple[UDFData, ...], TaskProtocol]]:
         tasks, params = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends, dry
         )
@@ -1984,15 +1984,12 @@ class UDFRunner:
         any_result = False
         for part_results, task in result_iter:
             any_result = True
-            res = self._apply_part_result(
+            self._apply_part_result(
                 udfs=self._udfs,
                 damage=damage,
                 part_results=part_results,
                 task=task
             )
-            # Explicit indexing for compatibility with Dask.delayed
-            self._udfs = res[0]
-            damage = res[1]
             if iterate:
                 yield self._make_udf_result(
                     udfs=self._udfs,

@@ -161,7 +161,6 @@ def _calculate(ctx, load_kwargs):
     for kwargs in load_kwargs:
         ds = ctx.load(**kwargs)
         udfs = _make_udfs(ds)
-        roi = None
         roi = np.zeros(
             np.prod(ds.shape.nav, dtype=np.int64),
             dtype=bool

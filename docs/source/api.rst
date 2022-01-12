@@ -60,7 +60,7 @@ sequentially and in order.
 .. versionadded:: 0.9.0
 
 The :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` runs all tasks
-using :mod:`python.concurrent.futures`. Using the
+using :mod:`python:concurrent.futures`. Using the
 :class:`python:concurrent.futures.ThreadPoolExecutor` allows
 sharing large amounts of data as well as other resources between main thread
 and workers efficiently, but is severely slowed down by the Python

@@ -115,7 +115,6 @@ class DelayedUDFRunner(UDFRunner):
 
         v = damage.get_view_for_partition(task.partition)
         v[:] = True
-        return (udfs, damage)
 
     def _accumulate_part_results(self, udf, part_results, task):
         """

@@ -41,6 +41,12 @@ RunUDFGenType = Generator[UDFResults, None, None]
 RunUDFGenTypeL = Generator[UDFResults, None, None]
 RunUDFAGenType = AsyncGenerator[UDFResults, None]
 RunUDFAGenTypeL = AsyncGenerator[UDFResults, None]
+ExecutorSpecType = Union[
+    Literal['synchronous'], Literal['inline'],
+    Literal['threads'],
+    Literal['dask-integration'],
+    Literal['dask-make-default']
+]
 
 
 class Context:
@@ -96,7 +102,7 @@ class Context:
         self._plot_class = plot_class
 
     @classmethod
-    def make_with(cls, executor_spec: str, *args, **kwargs):
+    def make_with(cls, executor_spec: ExecutorSpecType, *args, **kwargs) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
 

@@ -1,7 +1,7 @@
 import concurrent
 import functools
 import asyncio
-from typing import Optional, Any, Iterable, TYPE_CHECKING, Type
+from typing import Callable, Optional, Any, Iterable, TYPE_CHECKING, TypeVar, Type
 from typing_extensions import Protocol
 from contextlib import contextmanager
 from async_generator import asynccontextmanager
@@ -27,7 +27,7 @@ class JobCancelledError(Exception):
 
 
 class Environment:
-    def __init__(self, threads_per_worker, threaded_executor: bool):
+    def __init__(self, threads_per_worker: Optional[int], threaded_executor: bool):
         self._threads_per_worker = threads_per_worker
         self._threaded_executor = threaded_executor
 
@@ -72,8 +72,11 @@ class TaskProtocol(Protocol):
         pass
 
 
+T = TypeVar('T')
+
+
 class JobExecutor:
-    def run_function(self, fn, *args, **kwargs):
+    def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable `fn` on any worker
         """
@@ -260,7 +263,7 @@ class AsyncJobExecutor:
         """
         raise NotImplementedError()
 
-    async def run_function(self, fn, *args, **kwargs):
+    async def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         Run a callable `fn` on any worker
         """
@@ -380,7 +383,7 @@ class AsyncAdapter(AsyncJobExecutor):
         async for i in agen:
             yield i
 
-    async def run_function(self, fn, *args, **kwargs):
+    async def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable `fn` on an arbitrary worker node
         """

@@ -1909,5 +1909,5 @@ class UDFResults:
         It is set to :code:`True` for all positions in nav space that have been processed already.
     '''
     def __init__(self, buffers: Iterable[UDFResultDict], damage: BufferWrapper):
-        self.buffers = list(buffers)
+        self.buffers = tuple(buffers)
         self.damage = damage

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Callable, Optional, TypeVar
 
 from libertem.analysis.base import Analysis, AnalysisResultSet
 from libertem.executor.base import JobCancelledError
-from libertem.udf.base import UDFResults, UDFRunner
+from libertem.udf.base import UDFResults
 from libertem.io.dataset.base.dataset import DataSet
 from libertem.web.models import AnalysisDetails
 from .messages import Message
@@ -141,7 +141,8 @@ class JobEngine:
         window = 0.3
         # FIXME: allow to set correction data for a dataset via upload and local loading
         corrections = dataset.get_correction_data()
-        result_iter = UDFRunner([udf]).run_for_dataset_async(
+        runner_cls = executor.get_udf_runner()
+        result_iter = runner_cls([udf]).run_for_dataset_async(
             dataset, executor, roi=roi, cancel_id=job_id, corrections=corrections,
         )
         async for udf_results in result_iter:

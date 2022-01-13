@@ -49,7 +49,7 @@ class TVIPSDatasetParams(MessageConverter):
     def convert_to_python(self, raw_data):
         data = {
             k: raw_data[k]
-            for k in ["path", "dtype"]
+            for k in ["path"]
         }
         for k in ["nav_shape", "sig_shape", "sync_offset"]:
             if k in raw_data:
@@ -313,6 +313,23 @@ class TVIPSDataSet(DataSet):
                 "native_sig_shape": sig_shape,
             }
         }
+
+    def get_diagnostics(self):
+        header = self._series_header
+        return [
+            {"name": "Bits per pixel",
+             "value": str(header.bpp)},
+            {"name": "High tension (kV)",
+             "value": str(header.high_tension_kv)},
+            {"name": "Pixel size (nm)",
+             "value": str(header.pixel_size_nm)},
+            {"name": "Binning (x)",
+             "value": str(header.xbin)},
+            {"name": "Binning (y)",
+             "value": str(header.ybin)},
+            {"name": "File Format Version",
+             "value": str(header.version)},
+        ]
 
     def _get_fileset(self):
         filenames = get_filenames(self._path)

@@ -122,6 +122,7 @@ export enum DatasetTypes {
     EMPAD = "EMPAD",
     SEQ = "SEQ",
     MRC = "MRC",
+    TVIPS = "TVIPS",
 }
 
 export interface DatasetParamsCommon {
@@ -241,9 +242,19 @@ export type DatasetInfoMRC = {
     type: DatasetTypes.MRC,
 } & DatasetInfoCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ | DatasetParamsMRC
 
-export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ | DatasetInfoMRC
+export type DatasetParamsTVIPS = {
+    type: DatasetTypes.TVIPS,
+    path: string,
+} & DatasetParamsCommon
+
+export type DatasetInfoTVIPS = {
+    type: DatasetTypes.TVIPS,
+} & DatasetInfoCommon
+
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ | DatasetParamsMRC | DatasetParamsTVIPS
+
+export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ | DatasetInfoMRC | DatasetInfoTVIPS
 
 export interface DatasetCreateParams {
     id: string,

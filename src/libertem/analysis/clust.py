@@ -8,7 +8,6 @@ from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from libertem.utils.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.udf.base import UDFRunner
 from libertem.udf.stddev import StdDevUDF, consolidate_result
 from .getroi import get_roi
 from libertem.masks import _make_circular_mask
@@ -130,7 +129,8 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         ])
 
     async def run_sd_udf(self, roi, stddev_udf, executor, cancel_id, job_is_cancelled):
-        result_iter = UDFRunner([stddev_udf]).run_for_dataset_async(
+        udf_runner_cls = executor.get_udf_runner()
+        result_iter = udf_runner_cls([stddev_udf]).run_for_dataset_async(
             self.dataset, executor, roi=roi, cancel_id=cancel_id
         )
         async for sd_udf_results in result_iter:
@@ -180,11 +180,11 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         return udf
 
     async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
-
         roi, sd_udf_results = await self.get_sd_results(executor, cancel_id, job_is_cancelled)
         udf = self.get_cluster_udf(sd_udf_results)
 
-        result_iter = UDFRunner([udf]).run_for_dataset_async(
+        udf_runner_cls = executor.get_udf_runner()
+        result_iter = udf_runner_cls([udf]).run_for_dataset_async(
             self.dataset, executor, cancel_id=cancel_id
         )
         async for udf_results in result_iter:

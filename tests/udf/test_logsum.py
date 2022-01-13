@@ -20,4 +20,4 @@ def test_logsum(lt_ctx, delayed_ctx):
     naive_result = np.log(data - minima[..., np.newaxis, np.newaxis] + 1).sum(axis=(0, 1))
 
     assert np.allclose(logsum_result['logsum'].data, naive_result)
-    assert np.allclose(logsum_delayed['logsum'].data.compute(), naive_result)
+    assert np.allclose(logsum_delayed['logsum'].data, naive_result)

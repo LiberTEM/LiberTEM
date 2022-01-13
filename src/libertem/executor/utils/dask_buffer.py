@@ -1,4 +1,5 @@
 import dask.array as da
+import numpy as np
 
 from ...common.math import prod
 from ...common.slice import Slice
@@ -15,7 +16,7 @@ class DaskBufferWrapper(BufferWrapper):
         """
         if buffer.has_data():
             RuntimeWarning('Buffer is already allocated, not copying current contents or view')
-        result = cls(buffer.kind,
+        result = cls(kind=buffer.kind,
                    extra_shape=buffer.extra_shape,
                    dtype=buffer.dtype,
                    where=buffer.where,
@@ -138,7 +139,7 @@ class DaskBufferWrapper(BufferWrapper):
         self._data = self._data
 
     def __repr__(self):
-        return (f"<DaskBufferWrapper kind={self._kind} "
+        return (f"<{self.__class__.__name__} kind={self._kind} "
                 f"extra_shape={self._extra_shape} backing={self._data}>")
 
     def result_buffer_type(self):
@@ -154,3 +155,57 @@ class DaskPreallocBufferWrapper(DaskBufferWrapper):
     def __init__(self, data, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._data = data
+
+
+class DaskResultBufferWrapper(DaskPreallocBufferWrapper):
+    """
+    A DaskBufferWrapper that is meant to be used for results.
+
+    In the LiberTEM internals, we need to make sure everything is still lazy/delayed.
+
+    Once we leave LiberTEM internals, the external interface is used, where
+    both :meth:`data` and :meth:`raw_data` eagerly return numpy array-like
+    objects.
+    """
+    @classmethod
+    def from_buffer_wrapper(cls, buffer: BufferWrapper):
+        assert buffer.has_data()
+        result = cls(
+            data=buffer._data,
+            kind=buffer.kind,
+            extra_shape=buffer.extra_shape,
+            dtype=buffer.dtype,
+            where=buffer.where,
+            use=buffer.use
+        )
+        result._shape = buffer._shape
+        result._ds_shape = buffer._ds_shape
+        result._ds_partitions = buffer._ds_partitions
+        result._roi = buffer._roi
+        result._roi_is_zero = buffer._roi_is_zero
+        return result
+
+    def __array__(self):
+        return super().__array__()
+
+    @property
+    def raw_data(self):
+        """
+        Eager version of :meth:`delayed_raw_data`
+        """
+        return np.array(super().raw_data)
+
+    @property
+    def delayed_raw_data(self):
+        return super().raw_data
+
+    @property
+    def data(self):
+        """
+        Eager version of :meth:`delayed_data`
+        """
+        return np.array(super().data)
+
+    @property
+    def delayed_data(self):
+        return super().data

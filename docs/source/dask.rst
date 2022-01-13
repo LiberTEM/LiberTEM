@@ -134,6 +134,11 @@ computation over the dataset. By default, Dask does not cache intermediate
 results from prior runs, so individual calls to :code:`compute()` require
 a complete re-run of the UDFs that were passed to :code:`run_udf`.
 
+In addition to the usual :code:`data` and :code:`raw_data` properties, which
+provide results as numpy arrays eagerly, when using the 
+:class:`~libertem.executor.delayed.DelayedJobExecutor`, the results are made available
+as dask arrays using the attributes :code:`delayed_data` and :code:`delayed_raw_data`.
+
 .. testcode:: to_dask
 
     from libertem.api import Context
@@ -144,7 +149,7 @@ a complete re-run of the UDFs that were passed to :code:`run_udf`.
     ctx = Context(executor=DelayedJobExecutor())
     res = ctx.run_udf(dataset=dataset, udf=SumSigUDF())
 
-    print(res['intensity'].data)
+    print(res['intensity'].delayed_data)
 
 .. testoutput:: to_dask
    
@@ -199,7 +204,7 @@ variant was twice as fast as the built-in wrapper.
     ctx = Context(executor=DelayedJobExecutor())
     result = ctx.run_udf(udf=MySumUDF(), dataset=dataset)
 
-    result['intensity'].data.visualize()
+    result['intensity'].delayed_data.visualize()
 
 .. image:: ./images/tree-default-merge.png
     :width: 300px
@@ -225,7 +230,7 @@ variant was twice as fast as the built-in wrapper.
     
     result2 = ctx.run_udf(udf=MySumMergeUDF(), dataset=dataset)
 
-    result2['intensity'].data.visualize()
+    result2['intensity'].delayed_data.visualize()
 
 .. image:: ./images/tree-merge-all.png
     :width: 300px
@@ -234,8 +239,8 @@ variant was twice as fast as the built-in wrapper.
 .. testcleanup:: merge_all
     
     assert np.allclose(
-        result['intensity'].raw_data.compute(),
-        result2['intensity'].raw_data.compute()
+        result['intensity'].raw_data,
+        result2['intensity'].raw_data,
     )
 
 The argument :code:`ordered_results` is an ordered dictionary of all partial

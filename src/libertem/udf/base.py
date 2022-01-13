@@ -1543,7 +1543,7 @@ class UDFRunner:
         v[:] = True
 
     @staticmethod
-    def _make_udf_result(udfs, damage):
+    def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
         for udf in udfs:
             udf.clear_views()
         return UDFResults(

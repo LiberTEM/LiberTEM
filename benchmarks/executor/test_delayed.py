@@ -111,7 +111,7 @@ class Test:
         def doit():
             result = ctx.run_udf(dataset=my_ds, udf=udf)
             # Make sure we run on the same number of workers
-            return result['intensity'].raw_data.compute(resources=resources)
+            return result['intensity'].delayed_raw_data.compute(resources=resources)
 
         benchmark(doit)
 
@@ -125,7 +125,7 @@ class Test:
 
         def doit():
             result = ctx.run_udf(dataset=my_ds, udf=udf)
-            return result['intensity'].raw_data.compute(resources=resources)
+            return result['intensity'].delayed_raw_data.compute(resources=resources)
 
         benchmark(doit)
 
@@ -151,7 +151,7 @@ class Test:
 
         def doit():
             result = ctx.run_udf(dataset=my_ds, udf=udf)
-            return result['intensity'].raw_data.compute(resources=resources)
+            return result['intensity'].delayed_raw_data.compute(resources=resources)
 
         benchmark(doit)
 
@@ -165,7 +165,7 @@ class Test:
 
         def doit():
             result = ctx.run_udf(dataset=my_ds, udf=udf)
-            return result['intensity'].raw_data.compute(resources=resources)
+            return result['intensity'].delayed_raw_data.compute(resources=resources)
 
         benchmark(doit)
 
@@ -192,7 +192,7 @@ class Test:
 
         def doit():
             result = ctx.run_udf(dataset=my_ds, udf=udf)
-            return result['intensity'].raw_data.sum(axis=0).compute(resources=resources)
+            return result['intensity'].delayed_raw_data.sum(axis=0).compute(resources=resources)
 
         benchmark(doit)
 
@@ -206,7 +206,7 @@ class Test:
 
         def doit():
             result = ctx.run_udf(dataset=my_ds, udf=udf)
-            return result['intensity'].raw_data.sum(axis=0).compute(resources=resources)
+            return result['intensity'].delayed_raw_data.sum(axis=0).compute(resources=resources)
 
         benchmark(doit)
 

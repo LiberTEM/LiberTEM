@@ -6,7 +6,9 @@ import itertools
 import psutil
 
 import libertem
+from libertem.api import Context
 from libertem.analysis.base import AnalysisResultSet
+from libertem.executor.base import JobExecutor
 from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.io.writers.results import formats  # NOQA
@@ -22,6 +24,7 @@ class ExecutorState:
     def __init__(self):
         self.executor = None
         self.cluster_params = {}
+        self.context: typing.Optional[Context] = None
 
     def get_executor(self):
         if self.executor is None:
@@ -32,11 +35,17 @@ class ExecutorState:
     def have_executor(self):
         return self.executor is not None
 
-    async def set_executor(self, executor, params):
+    def get_context(self) -> Context:
+        if self.context is None:
+            raise RuntimeError("cannot get context, please call `set_executor` before")
+        return self.context
+
+    async def set_executor(self, executor: JobExecutor, params):
         if self.executor is not None:
             await self.executor.close()
         self.executor = executor
         self.cluster_params = params
+        self.context = Context(executor=executor.ensure_sync())
 
     def get_cluster_params(self):
         return self.cluster_params

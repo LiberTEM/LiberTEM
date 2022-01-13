@@ -3,9 +3,11 @@ import sys
 import pickle
 import random
 from pathlib import Path
+import glob
 
 import numpy as np
 import pytest
+from PIL import Image
 
 from libertem.io.dataset.tvips import TVIPSDataSet, get_filenames
 from libertem.udf.raw import PickUDF
@@ -14,13 +16,56 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.base import (
     TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 )
+from libertem.common.buffers import reshaped_view
 
-from utils import dataset_correction_verification, get_testdata_path
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
 
 TVIPS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'TVIPS', 'rec_20200623_080237_000.tvips')
 HAVE_TVIPS_TESTDATA = os.path.exists(TVIPS_TESTDATA_PATH)
 
+TVIPS_REFERENCE_DATA_PATTERN = os.path.join(
+    get_testdata_path(), 'TVIPS', 'rec_20200623_080237_*.tif'
+)
+
 needsdata = pytest.mark.skipif(not HAVE_TVIPS_TESTDATA, reason="need .tvips testdata")  # NOQA
+
+
+def get_reference_files():
+    files = glob.glob(TVIPS_REFERENCE_DATA_PATTERN)
+    return list(sorted(files, key=lambda fn: int(fn[-6:-4])))
+
+
+def get_reference_array():
+    files = get_reference_files()
+    arrs = [
+        np.asarray(Image.open(fn))
+        for fn in files
+    ]
+    return np.stack(arrs)
+
+
+@pytest.fixture(scope='module')
+def default_tvips_raw():
+    return get_reference_array()
+
+
+@needsdata
+def test_comparison(default_tvips, default_tvips_raw, lt_ctx_fast):
+    udf = ValidationUDF(
+        reference=reshaped_view(default_tvips_raw, (-1, *tuple(default_tvips.shape.sig)))
+    )
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_tvips)
+
+
+@needsdata
+def test_comparison_roi(default_tvips, default_tvips_raw, lt_ctx_fast):
+    roi = np.random.choice(
+        [True, False],
+        size=tuple(default_tvips.shape.nav),
+        p=[0.1, 0.9]
+    )
+    udf = ValidationUDF(reference=default_tvips_raw[roi])
+    lt_ctx_fast.run_udf(udf=udf, dataset=default_tvips, roi=roi)
 
 
 @pytest.fixture

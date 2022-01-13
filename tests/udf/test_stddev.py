@@ -42,24 +42,24 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi):
 
     N = np.count_nonzero(roi)
     assert res['num_frames'] == N  # check the total number of frames
-    assert res_delayed['num_frames'].compute() == N
+    assert res_delayed['num_frames'] == N
 
     print(res['sum'])
     print(np.sum(data[roi], axis=0))
     print(res['sum'] - np.sum(data[roi], axis=0))
     assert np.allclose(res['sum'], np.sum(data[roi], axis=0))  # check sum of frames
-    assert np.allclose(res_delayed['sum'].compute(), np.sum(data[roi], axis=0))
+    assert np.allclose(res_delayed['sum'], np.sum(data[roi], axis=0))
 
     assert np.allclose(res['mean'], np.mean(data[roi], axis=0))  # check mean
-    assert np.allclose(res_delayed['mean'].compute(), np.mean(data[roi], axis=0))
+    assert np.allclose(res_delayed['mean'], np.mean(data[roi], axis=0))
 
     var = np.var(data[roi], axis=0)
     assert np.allclose(var, res['var'])  # check variance
-    assert np.allclose(var, res_delayed['var'].compute())
+    assert np.allclose(var, res_delayed['var'])
 
     std = np.std(data[roi], axis=0)
     assert np.allclose(std, res['std'])  # check standard deviation
-    assert np.allclose(std, res_delayed['std'].compute())
+    assert np.allclose(std, res_delayed['std'])
 
 
 @numba.njit(boundscheck=True, cache=True)

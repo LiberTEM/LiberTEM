@@ -313,8 +313,11 @@ def alldask(udf_results_dask):
         udf_results_dask = (udf_results_dask,)
     for udf_result in udf_results_dask:
         for daskbuffer in udf_result.values():
-            assert isinstance(daskbuffer.raw_data, da.Array)
-            assert isinstance(daskbuffer.data, da.Array)
+            assert isinstance(daskbuffer.delayed_raw_data, da.Array)
+            assert isinstance(daskbuffer.delayed_data, da.Array)
+            # all dask, but these two:
+            assert isinstance(daskbuffer.raw_data, np.ndarray)
+            assert isinstance(daskbuffer.data, np.ndarray)
 
 
 def try_convert_py(obj):
@@ -420,7 +423,7 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
             direct_result = naive_results[k]
             if direct_result is None:
                 continue
-            allclose_with_nan(result, direct_result, tol=udf_dict.get('tolerance', None))
+            allclose_with_nan(result.data, direct_result, tol=udf_dict.get('tolerance', None))
 
 
 def test_iterate(delayed_ctx, default_raw):
@@ -449,7 +452,7 @@ def test_bare_compute(delayed_ctx):
     dataset = ds_dict['dataset']
     udf = MySumSigUDF()
     result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf)
-    dask_res = result_dask['intensity'].data
+    dask_res = result_dask['intensity'].delayed_data
     # Check one chunk per partition
     assert len(dask_res.chunks[0]) == 4
     res = dask.compute(dask_res)
@@ -477,7 +480,7 @@ def test_only_dask(lt_ctx, delayed_ctx):
     dataset = ds_dict['dataset']
     udf = OnlyDaskSumUDF()
     result_dask = delayed_ctx.run_udf(dataset=dataset, udf=udf)
-    dask_res = result_dask['intensity'].data
+    dask_res = result_dask['intensity'].delayed_data
     res = dask.compute(dask_res)
     res = res[0]
     assert np.allclose(res, ds_dict['data'].sum(axis=(0, 1)))

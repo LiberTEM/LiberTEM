@@ -20,7 +20,7 @@ def test_pick(lt_ctx, delayed_ctx):
     res_delayed = delayed_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
     assert np.allclose(data[roi], res['intensity'].data)
-    assert np.allclose(data[roi], res_delayed['intensity'].data.compute())
+    assert np.allclose(data[roi], res_delayed['intensity'].data)
 
     assert data.dtype == res['intensity'].data.dtype
     assert data.dtype == res_delayed['intensity'].data.dtype
@@ -37,7 +37,7 @@ def test_pick_empty_roi(lt_ctx, delayed_ctx):
     res_delayed = delayed_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
 
     assert np.allclose(data[roi], res['intensity'].data)
-    assert np.allclose(data[roi], res_delayed['intensity'].data.compute())
+    assert np.allclose(data[roi], res_delayed['intensity'].data)
 
     assert data[roi].shape == res['intensity'].data.shape
     assert data[roi].shape == res_delayed['intensity'].data.shape

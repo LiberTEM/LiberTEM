@@ -21,7 +21,7 @@ from ..udf.base import (
     get_resources_for_backends, UDFResults, BackendSpec
 )
 
-from .utils.dask_buffer import DaskBufferWrapper, DaskPreallocBufferWrapper
+from .utils.dask_buffer import DaskBufferWrapper, DaskPreallocBufferWrapper, DaskResultBufferWrapper
 from .utils import delayed_unpack
 
 
@@ -29,6 +29,23 @@ class DelayedUDFRunner(UDFRunner):
     def __init__(self, udfs: List[UDF], debug: bool = False):
         self._part_results = defaultdict(lambda: {})
         super().__init__(udfs, debug=debug)
+
+    @staticmethod
+    def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
+        udf_results = UDFRunner._make_udf_result(udfs, damage)
+        buffers = udf_results.buffers
+        damage = udf_results.damage
+        new_buffers = tuple(
+            {
+                k: DaskResultBufferWrapper.from_buffer_wrapper(v)
+                for k, v in bufs.items()
+            }
+            for bufs in buffers
+        )
+        return UDFResults(
+            buffers=new_buffers,
+            damage=damage,
+        )
 
     def _apply_part_result(self, udfs: Iterable[UDF], damage, part_results, task):
         for part_results_udf, udf in zip(part_results, udfs):

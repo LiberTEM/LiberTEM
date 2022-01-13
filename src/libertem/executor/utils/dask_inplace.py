@@ -21,6 +21,7 @@ class DaskInplaceWrapper:
         In the current usage, this wrapper is created and configured
         from DaskBufferWrapper._get_slice
         """
+        assert isinstance(dask_array, dask.array.Array)
         self._array = dask_array
         self._slice = None
 

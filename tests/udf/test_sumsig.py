@@ -19,4 +19,4 @@ def test_sum(lt_ctx, delayed_ctx):
     naive_result = data.sum(axis=(2, 3))
 
     assert np.allclose(sum_result['intensity'].data, naive_result)
-    assert np.allclose(sum_delayed['intensity'].data.compute(), naive_result)
+    assert np.allclose(sum_delayed['intensity'].data, naive_result)

@@ -6,6 +6,7 @@ import pytest
 import dask
 import dask.array as da
 import numpy as np
+from libertem.executor.delayed import DelayedUDFRunner
 
 from libertem.udf.base import UDF
 from libertem.udf.masks import ApplyMasksUDF
@@ -428,16 +429,26 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
 
 def test_iterate(delayed_ctx, default_raw):
     udf = MySumUDF()
-    with pytest.raises(NotImplementedError):
-        for res in delayed_ctx.run_udf_iter(dataset=default_raw, udf=udf):
-            print(res)
+    res_noiter = delayed_ctx.run_udf(dataset=default_raw, udf=udf)
+    for res in delayed_ctx.run_udf_iter(dataset=default_raw, udf=udf):
+        print(res)
+    # the end result is the same:
+    assert np.allclose(res_noiter['intensity'], res.buffers[0]['intensity'])
 
 
 @pytest.mark.asyncio
 async def test_async(delayed_ctx, default_raw):
     udf = MySumUDF()
-    with pytest.raises(NotImplementedError):
-        await delayed_ctx.run_udf(dataset=default_raw, udf=udf, sync=False)
+    res_async = await delayed_ctx.run_udf(dataset=default_raw, udf=udf, sync=False)
+    res_sync = delayed_ctx.run_udf(dataset=default_raw, udf=udf, sync=True)
+    assert np.allclose(res_async['intensity'], res_sync['intensity'])
+
+    async for res in DelayedUDFRunner([udf]).run_for_dataset_async(
+        default_raw, delayed_ctx.executor, roi=None, cancel_id="cancel"
+    ):
+        print(res)
+
+    assert np.allclose(res_sync['intensity'], res.buffers[0]['intensity'])
 
 
 def test_map(delayed_ctx):

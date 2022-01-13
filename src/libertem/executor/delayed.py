@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Iterable, List, Type, Optional, Generator
+from typing import Any, Iterable, List, Type, Optional
 import contextlib
 from collections import defaultdict, OrderedDict
 
@@ -175,26 +175,6 @@ class DelayedUDFRunner(UDFRunner):
             corrections=corrections, backends=backends, dry=dry
         )
 
-    def run_for_dataset_sync(self, dataset: DataSet, executor: JobExecutor,
-            roi: Optional[np.ndarray] = None,
-            progress: bool = False, corrections: Optional[CorrectionSet] = None,
-            backends: Optional[BackendSpec] = None, dry: bool = False,
-            iterate: bool = True) -> Generator["UDFResults", None, None]:
-        if iterate:
-            raise NotImplementedError(
-                "Iterating over partial results is currently not supported "
-                "with the DelayedJobExecutor."
-            )
-        return super().run_for_dataset_sync(
-            dataset, executor, roi=roi, progress=progress,
-            corrections=corrections, backends=backends, dry=dry, iterate=iterate
-        )
-
-    def run_for_dataset_async(self, *args, **kwargs):
-        raise NotImplementedError(
-            "Async execution is currently not supported with the DelayedJobExecutor."
-        )
-
 
 class DelayedJobExecutor(JobExecutor):
     """
@@ -212,6 +192,9 @@ class DelayedJobExecutor(JobExecutor):
     @contextlib.contextmanager
     def scatter(self, obj):
         yield delayed(obj)
+
+    def cancel(self, cancel_id: Any):
+        pass
 
     def run_tasks(
         self,

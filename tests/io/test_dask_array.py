@@ -41,3 +41,37 @@ def test_dask_array_2(dask_executor):
     ctx.executor.client.compute(
         dask_array.sum(axis=(-1, -2))
     ).result()
+
+
+def test_dask_array_with_roi_1():
+    data = _mk_random(size=(16, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(16, 16, 16),
+        num_partitions=2,
+    )
+    roi = np.zeros(dataset.shape.nav, dtype=bool)
+    roi[0, 0] = True
+    (da, workers) = make_dask_array(dataset, roi=roi)
+    assert np.allclose(
+        da.compute(workers=workers, scheduler='single-threaded'),
+        data[0, 0]
+    )
+    assert da.shape == (1, 16, 16)
+
+
+def test_dask_array_with_roi_2():
+    data = _mk_random(size=(16, 16, 16, 16))
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(16, 16, 16),
+        num_partitions=2,
+    )
+
+    sparse_roi = np.random.choice([True, False], size=dataset.shape.nav, p=[0.1, 0.9])
+    (da, workers) = make_dask_array(dataset, roi=sparse_roi)
+    assert np.allclose(
+        da.compute(workers=workers, scheduler='single-threaded'),
+        data[sparse_roi]
+    )
+    assert da.shape == (np.count_nonzero(sparse_roi), 16, 16)

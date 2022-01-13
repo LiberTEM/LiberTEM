@@ -176,7 +176,11 @@ class TVIPSDataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("tvips", path="./path/to/file_000.tvips", nav_shape=(16, 16))
+    >>> ds = ctx.load(
+    ...     "tvips",
+    ...     path="./path/to/file_000.tvips",
+    ...     nav_shape=(16, 16)
+    ... )  # doctest: +SKIP
 
     Parameters
     ----------

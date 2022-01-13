@@ -91,6 +91,13 @@ MRC
 
 .. autoclass:: libertem.io.dataset.mrc.MRCDataSet
 
+.. _`tvips`:
+
+TVIPS
+~~~~~
+
+.. autoclass:: libertem.io.dataset.tvips.TVIPSDataSet
+
 .. _`memory`:
 
 Memory data set

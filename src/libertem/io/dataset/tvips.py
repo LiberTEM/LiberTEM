@@ -171,7 +171,8 @@ def get_filenames(path: str) -> List[str]:
 class TVIPSDataSet(DataSet):
     """
     Read data from one or more .tvips files. You can specify the path to any
-    file that is part of a set - the whole data set will be loaded.
+    file that is part of a set - the whole data set will be loaded. The `nav_shape`
+    needs to be specified if you are loading ND data.
 
     Examples
     --------

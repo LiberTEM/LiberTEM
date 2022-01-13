@@ -164,6 +164,7 @@ information!
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - MRC (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as Hyperspy files, NeXus and EMD
+- TVIPS binary files
 - Please contact us if you are interested in support for an additional format!
 
 Detectors (experimental)

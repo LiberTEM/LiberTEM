@@ -96,6 +96,7 @@ LiberTEM supports the following file formats out of the box, see links for detai
 * :ref:`hdf5`
 * :ref:`seq`
 * :ref:`mrc`
+* :ref:`tvips`
 
 Furthermore, two alternative mechanisms exist for interfacing LiberTEM with data loaded
 elsewhere in Python via other libraries:

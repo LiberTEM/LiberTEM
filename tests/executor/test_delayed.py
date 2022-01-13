@@ -427,6 +427,7 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
             allclose_with_nan(result.data, direct_result, tol=udf_dict.get('tolerance', None))
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 def test_iterate(delayed_ctx, default_raw):
     udf = MySumUDF()
     res_noiter = delayed_ctx.run_udf(dataset=default_raw, udf=udf)
@@ -436,6 +437,7 @@ def test_iterate(delayed_ctx, default_raw):
     assert np.allclose(res_noiter['intensity'], res.buffers[0]['intensity'])
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 @pytest.mark.asyncio
 async def test_async(delayed_ctx, default_raw):
     udf = MySumUDF()

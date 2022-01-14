@@ -144,6 +144,9 @@ def rebuild_nested(flat: list[Any],
     for el, coords in zip(flat, flat_mapping):
         # Build the outer iterable of the structure
         if nest is None:
+            # Case of a non-unpackable initial element
+            if coords is None:
+                return el
             nest_class = coords[0][0]
             # Hack tuples to list to avoid immutability problems
             if nest_class == tuple:

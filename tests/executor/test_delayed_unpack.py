@@ -63,3 +63,19 @@ def test_empty_elements():
     assert len(rebuilt) == len(nest)
     for el_rebuilt, el_original in zip(rebuilt, nest):
         assert el_rebuilt == el_original
+
+
+def test_not_unpackable():
+    nest = 5
+    flat = [5]
+    mapping = [None]
+
+    flattened = delayed_unpack.flatten_nested(nest)
+    assert len(flattened) == len(flat)
+    assert all(a == b for a, b in zip(flat, flattened))
+
+    built_map = delayed_unpack.build_mapping(nest)
+    assert built_map == mapping
+
+    rebuilt = delayed_unpack.rebuild_nested(flat, mapping)
+    assert rebuilt == nest

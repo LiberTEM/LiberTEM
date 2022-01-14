@@ -1,7 +1,7 @@
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Dict, Tuple, List
 
 
-def default_unpackable() -> dict[type, Callable[[Iterable], Iterable[tuple[Any, Any]]]]:
+def default_unpackable() -> Dict[type, Callable[[Iterable], Iterable[Tuple[Any, Any]]]]:
     """
     Defaults for types which can be unpacked by the
     functions in this file, providing a mapping from
@@ -14,7 +14,7 @@ def default_unpackable() -> dict[type, Callable[[Iterable], Iterable[tuple[Any, 
     return _unpackable_types
 
 
-def default_merge_fns() -> dict[type, Callable[[Iterable, Any, Any], None]]:
+def default_merge_fns() -> Dict[type, Callable[[Iterable, Any, Any], None]]:
     """
     Default merge functions for rebuilding structures
 
@@ -53,9 +53,9 @@ class StructDescriptor:
 
 
 def flatten_nested(el: Any,
-                   unpackable_types: dict[type, Callable[[Iterable],
-                                                         Iterable[tuple[Any, Any]]]] = None,
-                   ignore_types: tuple[type] = None) -> list[Any]:
+                   unpackable_types: Dict[type, Callable[[Iterable],
+                                                         Iterable[Tuple[Any, Any]]]] = None,
+                   ignore_types: Tuple[type] = None) -> List[Any]:
     """
     Recursively unpack the structure el while the type of el is in
     the mapping unpackable_types, which maps between the types that
@@ -91,10 +91,10 @@ def flatten_nested(el: Any,
 
 
 def build_mapping(el: Any,
-                  unpackable_types: dict[type, Callable[[Iterable],
-                                                        Iterable[tuple[Any, Any]]]] = None,
-                  ignore_types: tuple[type] = None,
-                  _pos: list[tuple[type, Any]] = None) -> list[list[tuple[type, Any]]]:
+                  unpackable_types: Dict[type, Callable[[Iterable],
+                                                        Iterable[Tuple[Any, Any]]]] = None,
+                  ignore_types: Tuple[type] = None,
+                  _pos: List[Tuple[type, Any]] = None) -> List[List[Tuple[type, Any]]]:
     """
     Recursively unpack the structure el and build a flat descriptor of its
     structure, such that it can be re-built
@@ -130,8 +130,8 @@ def build_mapping(el: Any,
     return flat_mapping
 
 
-def rebuild_nested(flat: list[Any],
-                   flat_mapping: list[list[tuple[type, Any]]],
+def rebuild_nested(flat: List[Any],
+                   flat_mapping: List[List[Tuple[type, Any]]],
                    merge_functions=None):
     """
     Using the flattened version of a structure built by flatten_nested
@@ -172,7 +172,7 @@ def rebuild_nested(flat: list[Any],
     return nest
 
 
-def pairwise(iterable: Iterable[Any]) -> tuple[Any, Any]:
+def pairwise(iterable: Iterable[Any]) -> Tuple[Any, Any]:
     """
     Yield elements of iterable as tuples of overlapping pairs
     finally yielding (last_element, None)
@@ -187,9 +187,9 @@ def pairwise(iterable: Iterable[Any]) -> tuple[Any, Any]:
 
 
 def insert_at_pos(el: Any,
-                  coords: list[tuple[type, Any]],
+                  coords: List[Tuple[type, Any]],
                   nest: Iterable,
-                  merge_fns: dict[type, Callable[[Iterable, Any, Any], None]]):
+                  merge_fns: Dict[type, Callable[[Iterable, Any, Any], None]]):
     """
     For the partially completed nested structure nest, insert the
     element el at the position given by coords
@@ -232,7 +232,7 @@ def insert_at_pos(el: Any,
     return nest
 
 
-def find_tuples(flat_mapping: list[list[tuple[type, Any]]]) -> list[tuple[int, int]]:
+def find_tuples(flat_mapping: List[List[Tuple[type, Any]]]) -> List[Tuple[int, int]]:
     """
     Get the indexes in flat_mapping and depth in the coordinate
     where the coordinate specify the structure is of class tuple
@@ -242,7 +242,7 @@ def find_tuples(flat_mapping: list[list[tuple[type, Any]]]) -> list[tuple[int, i
             if _coord[0] == tuple]
 
 
-def set_as_tuple(nest, indices: list[Any]):
+def set_as_tuple(nest, indices: List[Any]):
     """
     For a given sequence of indices to index into the completed
     nest, convert the structure at the final index in the sequence
@@ -254,7 +254,7 @@ def set_as_tuple(nest, indices: list[Any]):
         nest[indices[0]] = tuple(nest[indices[0]])
 
 
-def list_to_tuple(nest, flat_mapping: list[list[tuple[type, Any]]]):
+def list_to_tuple(nest, flat_mapping: List[List[Tuple[type, Any]]]):
     """
     Convert any elements which are marked as tuples in flat_mapping
     but were constructed in nest as lists, back into tuples

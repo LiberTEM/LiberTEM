@@ -1,7 +1,7 @@
 from typing import Any, Callable, Iterable
 
 
-def default_unpackable():
+def default_unpackable() -> dict[type, Callable[[Iterable], Iterable[tuple[Any, Any]]]]:
     """
     Defaults for types which can be unpacked by the
     functions in this file, providing a mapping from
@@ -14,7 +14,7 @@ def default_unpackable():
     return _unpackable_types
 
 
-def default_merge_fns():
+def default_merge_fns() -> dict[type, Callable[[Iterable, Any, Any], None]]:
     """
     Default merge functions for rebuilding structures
     """
@@ -24,11 +24,14 @@ def default_merge_fns():
 
 
 class IgnoreClass:
+    """
+    A Null type used as a signal when None or False have meaning
+    """
     pass
 
 
 class StructDescriptor:
-    def __init__(self, cls, *args, **kwargs):
+    def __init__(self, cls: type, *args: tuple, **kwargs: dict):
         """
         Container to hold a reference to a type and both the
         args and kwargs necessary to initialise it
@@ -83,9 +86,10 @@ def flatten_nested(el: Any,
     return flattened
 
 
-def build_mapping(el,
-                  unpackable_types=None,
-                  ignore_types=None,
+def build_mapping(el: Any,
+                  unpackable_types: dict[type, Callable[[Iterable],
+                                                        Iterable[tuple[Any, Any]]]] = None,
+                  ignore_types: tuple[type] = None,
                   _pos: list[tuple[type, Any]] = None) -> list[list[tuple[type, Any]]]:
     """
     Recursively unpack the structure el and build a flat descriptor of its
@@ -172,7 +176,10 @@ def pairwise(iterable: Iterable[Any]) -> tuple[Any, Any]:
     yield prior_el, None
 
 
-def insert_at_pos(el, coords: list[tuple[type, Any]], nest, merge_fns):
+def insert_at_pos(el: Any,
+                  coords: list[tuple[type, Any]],
+                  nest: Iterable,
+                  merge_fns: dict[type, Callable[[Iterable, Any, Any], None]]):
     """
     For the partially completed nested structure nest, insert the
     element el at the position given by coords
@@ -215,7 +222,7 @@ def insert_at_pos(el, coords: list[tuple[type, Any]], nest, merge_fns):
     return nest
 
 
-def find_tuples(flat_mapping) -> list[tuple[int, int]]:
+def find_tuples(flat_mapping: list[list[tuple[type, Any]]]) -> list[tuple[int, int]]:
     """
     Get the indexes in flat_mapping and depth in the coordinate
     where the coordinate specify the structure is of class tuple
@@ -237,10 +244,10 @@ def set_as_tuple(nest, indices: list[Any]):
         nest[indices[0]] = tuple(nest[indices[0]])
 
 
-def list_to_tuple(nest, flat_mapping):
+def list_to_tuple(nest, flat_mapping: list[list[tuple[type, Any]]]):
     """
-    Convert any elements which are tuples in flat_mapping
-    but were constructed in nest as lists, back to tuples
+    Convert any elements which are marked as tuples in flat_mapping
+    but were constructed in nest as lists, back into tuples
     """
     tuple_positions = find_tuples(flat_mapping)
     deepest_first = reversed(sorted(tuple_positions, key=lambda x: x[1]))

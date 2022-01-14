@@ -1,20 +1,26 @@
 from typing import Any, Callable, Iterable
 
 
-"""
-Defaults for types which can be unpacked by the
-functions in this file, providing a mapping from
-type to a fn(instance) giving an iterable yielding
-(index, element) within the unpackable.
-"""
-_unpackable_types = {list: lambda x: enumerate(x),
-                     tuple: lambda x: enumerate(x),
-                     dict: lambda x: x.items()}
-"""
-Default merge functions for rebuilding structures
-"""
-merge_fns = {list: lambda lis, el, pos: lis.append(el),
-             dict: lambda dic, el, pos: dic.update({pos: el})}
+def default_unpackable():
+    """
+    Defaults for types which can be unpacked by the
+    functions in this file, providing a mapping from
+    type to a fn(instance) giving an iterable yielding
+    (index, element) within the unpackable.
+    """
+    _unpackable_types = {list: lambda x: enumerate(x),
+                        tuple: lambda x: enumerate(x),
+                        dict: lambda x: x.items()}
+    return _unpackable_types
+
+
+def default_merge_fns():
+    """
+    Default merge functions for rebuilding structures
+    """
+    merge_fns = {list: lambda lis, el, pos: lis.append(el),
+                dict: lambda dic, el, pos: dic.update({pos: el})}
+    return merge_fns
 
 
 class IgnoreClass:
@@ -58,7 +64,7 @@ def flatten_nested(el: Any,
     """
     eltype = type(el)
     if unpackable_types is None:
-        unpackable_types = _unpackable_types
+        unpackable_types = default_unpackable()
     if ignore_types is None:
         ignore_types = (IgnoreClass,)
     flattened = []
@@ -92,7 +98,7 @@ def build_mapping(el,
     flat_mapping = []
     eltype = type(el)
     if unpackable_types is None:
-        unpackable_types = _unpackable_types
+        unpackable_types = default_unpackable()
     if ignore_types is None:
         ignore_types = (IgnoreClass,)
     if eltype in unpackable_types.keys() and not isinstance(el, ignore_types):
@@ -108,16 +114,24 @@ def build_mapping(el,
     return flat_mapping
 
 
-def rebuild_nested(flat: list[Any], flat_mapping: list[list[tuple[type, Any]]]):
+def rebuild_nested(flat: list[Any],
+                   flat_mapping: list[list[tuple[type, Any]]],
+                   merge_functions=None):
     """
     Using the flattened version of a structure built by flatten_nested
     and the coordinates created by build_mapping, reconstruct the original
     nested structure
 
+    merge_functions is a mapping from type: fn() with signature:
+        fn(_nest, el, position)
+    which inserts el into the structure _nest at position
+
     This function works left-to-right in the list flat.
     Could perhaps be done better by building from deepest
     to shallowest across the set of elements in flat.
     """
+    if merge_functions is None:
+        merge_functions = default_merge_fns()
     nest = None
     for el, coords in zip(flat, flat_mapping):
         # Build the outer iterable of the structure
@@ -127,7 +141,7 @@ def rebuild_nested(flat: list[Any], flat_mapping: list[list[tuple[type, Any]]]):
             if nest_class == tuple:
                 nest_class = list
             nest = nest_class()
-        nest = insert_at_pos(el, coords, nest)
+        nest = insert_at_pos(el, coords, nest, merge_functions)
     # Convert hacked lists into tuples, from deepest to shallowest
     nest = list_to_tuple(nest, flat_mapping)
     return nest
@@ -147,7 +161,7 @@ def pairwise(iterable: Iterable[Any]) -> tuple[Any, Any]:
     yield prior_el, None
 
 
-def insert_at_pos(el, coords: list[tuple[type, Any]], nest):
+def insert_at_pos(el, coords: list[tuple[type, Any]], nest, merge_fns):
     """
     For the partially completed nested structure nest, insert the
     element el at the position given by coords

@@ -311,7 +311,7 @@ class DelayedJobExecutor(JobExecutor):
 
     @staticmethod
     def unwrap_results(results):
-        unpackable = {**delayed_unpack._unpackable_types,
+        unpackable = {**delayed_unpack.default_unpackable(),
                       UDFData: lambda x: x._data.items(),
                       DaskPreallocBufferWrapper: lambda x: [(0, x.data)],
                       DaskBufferWrapper: lambda x: [(0, x.data)],

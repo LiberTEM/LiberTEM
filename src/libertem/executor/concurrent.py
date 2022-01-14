@@ -108,10 +108,15 @@ class ConcurrentJobExecutor(JobExecutor):
         resources = {"compute": 1, "CPU": 1}
         if get_use_cuda() is not None:
             resources["CUDA"] = 1
-
-        return WorkerSet([
-            Worker(name='concurrent', host='localhost', resources=resources)
-        ])
+            return WorkerSet([
+                Worker(name='concurrent', host='localhost', resources=resources)
+            ])
+        else:
+            devices = detect()
+            return WorkerSet([
+                Worker(name=f'concurrent-{i}', host='localhost', resources=resources)
+                for i in range(len(devices['cpus']))
+            ])
 
     def run_each_host(self, fn, *args, **kwargs):
         """

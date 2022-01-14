@@ -138,6 +138,12 @@ def rebuild_nested(flat: list[Any],
         fn(_nest, el, position)
     which inserts el into the structure _nest at position
 
+    By default this function only knows how to rebuild a nest
+    consisting of [list, dict, tuple], and in the tuple case actually
+    reconstructs as list before casting to tuple at the end (to avoid
+    immutability of tuples). In principle, by supplying extra merge_functions
+    this function should be able to reconstruct other mutable iterables.
+
     This function works left-to-right in the list flat.
     Could perhaps be done better by building from deepest
     to shallowest across the set of elements in flat.

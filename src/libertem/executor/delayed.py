@@ -372,7 +372,8 @@ def structure_from_task(udfs, task):
     Based on the instantiated whole dataset UDFs and the task
     information, build a description of the expected UDF results
     for the task's partition like:
-       ({'buffer_name': StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)
+
+    :code:`({'buffer_name': StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)`
     """
     structure = []
     for udf in udfs:

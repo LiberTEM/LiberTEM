@@ -21,7 +21,8 @@ Dask integration
 
 Since version 0.9, LiberTEM supports seamless integration with workflows that
 are based on Dask arrays. That means Dask arrays can serve as input for LiberTEM, and
-UDF computations can produce Dask arrays.
+UDF computations can produce Dask arrays. Additionally,
+:meth:`~libertem.contrib.daskadapter.make_dask_array` can create Dask arrays from LiberTEM datasets.
 
 This can be used to combine features from Hyperspy and LiberTEM in a single analysis workflow:
 
@@ -32,12 +33,13 @@ This can be used to combine features from Hyperspy and LiberTEM in a single anal
 Scheduler
 ---------
 
-By default, LiberTEM keeps the default Dask scheduler as-is and only
+LiberTEM uses Dask.distributed as the default method to execute tasks.
+Unless instructed otherwise, LiberTEM keeps the default Dask scheduler as-is and only
 uses the Dask :code:`Client` internally to make sure existing workflows keep running
-as before. For a closer integration it can be beneficial to use the same scheduler
+as before. However, for a closer integration it can be beneficial to use the same scheduler
 for both LiberTEM and other Dask computations. There are several options for that:
 
-:Set LiberTEM Dask cluster as default scheduler:
+:Set LiberTEM Dask cluster as default Dask scheduler:
     * Use :code:`Context.make_with('dask-make-default')`
     * Pass :code:`client_kwargs={'set_as_default': True}` to
       :meth:`~libertem.executor.dask.DaskJobExecutor.connect` or
@@ -114,30 +116,17 @@ both Dask and LiberTEM.
 Create Dask arrays with UDFs
 ----------------------------
 
-.. versionadded:: 0.9.0
-
 Using a :class:`~libertem.executor.delayed.DelayedJobExecutor` with a
 :class:`~libertem.api.Context` lets :class:`~libertem.api.Context.run_udf`
-return results as Dask arrays. The computation is only performed when the
-:code:`compute()` method is called on a given result.
-
-This method allows to create large intermediate results of :code:`kind='nav'`
-efficiently in the form of Dask arrays. The partial results can stay as as
-ephemeral array chunks on the workers only while they are needed for downstream
-calculations instead of transporting them through the cluster and instantiating
-the full result on the main node.
-
-For calls to :class:`~libertem.api.Context.run_udf` which run multiple UDFs
-or have with UDFs which return multiple results, it is strongly recommended
-to compute results with a single call to :code:`compute()`, in order to re-use
-computation over the dataset. By default, Dask does not cache intermediate
-results from prior runs, so individual calls to :code:`compute()` require
-a complete re-run of the UDFs that were passed to :code:`run_udf`.
-
-In addition to the usual :code:`data` and :code:`raw_data` properties, which
-provide results as numpy arrays eagerly, when using the 
-:class:`~libertem.executor.delayed.DelayedJobExecutor`, the results are made available
-as dask arrays using the attributes :code:`delayed_data` and :code:`delayed_raw_data`.
+return results as Dask arrays.
+In addition to the usual :attr:`~libertem.common.buffers.BufferWrapper.data`
+and :attr:`~libertem.common.buffers.BufferWrapper.raw_data` properties, which
+provide results as numpy arrays eagerly, the results are made available
+as dask arrays using the attributes
+:attr:`~libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.delayed_data`
+and :attr:`~libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.delayed_raw_data`.
+The computation is only performed when the
+:code:`compute()` method is called on a Dask array result.
 
 .. testcode:: to_dask
 
@@ -155,10 +144,22 @@ as dask arrays using the attributes :code:`delayed_data` and :code:`delayed_raw_
    
    dask.array<reshape, shape=(16, 16), dtype=float32, chunksize=(..., ...), chunktype=numpy.ndarray>
 
-Merge function for Dask arary results
--------------------------------------
+This method allows to create large intermediate results of :code:`kind='nav'`
+efficiently in the form of Dask arrays. The partial results can stay as
+ephemeral array chunks on the workers only while they are needed for downstream
+calculations instead of transporting them through the cluster and instantiating
+the full result on the main node.
 
-.. versionadded:: 0.9.0
+For calls to :class:`~libertem.api.Context.run_udf` which run multiple UDFs
+or have with UDFs which return multiple results, it is strongly recommended
+to compute results with a single call to :code:`compute()`, in order to re-use
+computation over the dataset. By default, Dask does not cache intermediate
+results from prior runs, so individual calls to :code:`compute()` require
+a complete re-run of the UDFs that were passed to :code:`run_udf`.
+
+
+Merge function for Dask array results
+-------------------------------------
 
 LiberTEM already uses an efficient default merging method to create Dask arrays
 for UDFs that only use :code:`kind='nav'` buffers and don't specify their own
@@ -168,14 +169,14 @@ For all UDFs that define their own :code:`merge()`,
 :class:`~libertem.executor.delayed.DelayedJobExecutor` will use this
 existing :code:`udf.merge()` function to assemble the final results, in the same
 way it is used to assemble partial results in each partition. This is carried
-out by wrapping the :code:`udf.merge()` in :code:`dask.delayed` call.
+out by wrapping the :code:`udf.merge()` in :code:`dask.delayed` calls.
 
 However, the user can also specify a
 :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all()` method on their UDF that
 combines all partial results from the workers to the complete result in a single
 step. This allows the :class:`~libertem.executor.delayed.DelayedJobExecutor` to
 produce a streamlined task tree, which then gives Dask greater scope to
-parellise the merge step and reduce data transfers.
+parallelise the merge step and reduce data transfers.
 
 This example shows the task tree first with the built-in wrapper for :code:`udf.merge()`
 and then the stramlined one after defining :code:`merge_all()`. In tests the streamlined

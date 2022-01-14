@@ -38,3 +38,28 @@ def test_rebuild_1():
     assert len(rebuilt) == len(nest)
     for el_rebuilt, el_original in zip(rebuilt, nest):
         assert el_rebuilt == el_original
+
+
+def test_empty_elements():
+    ic = delayed_unpack.IgnoreClass
+    nest = [(2, 4), {}, (4, []), 5]
+    flat = [2, 4, ic, 4, ic, 5]
+    mapping = [[(list, 0), (tuple, 0)],
+               [(list, 0), (tuple, 1)],
+               [(list, 1), (dict, ic)],
+               [(list, 2), (tuple, 0)],
+               [(list, 2), (tuple, 1), (list, ic)],
+               [(list, 3)]]
+    flattened = delayed_unpack.flatten_nested(nest)
+    assert len(flattened) == len(flat)
+    assert all(a == b for a, b in zip(flat, flattened))
+
+    built_map = delayed_unpack.build_mapping(nest)
+    assert len(built_map) == len(mapping)
+    for built, true in zip(built_map, mapping):
+        assert all(a == b for a, b in zip(built, true))
+
+    rebuilt = delayed_unpack.rebuild_nested(flat, mapping)
+    assert len(rebuilt) == len(nest)
+    for el_rebuilt, el_original in zip(rebuilt, nest):
+        assert el_rebuilt == el_original

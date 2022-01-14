@@ -69,6 +69,10 @@ def flatten_nested(el: Any,
         ignore_types = (IgnoreClass,)
     flattened = []
     if eltype in unpackable_types.keys() and not isinstance(el, ignore_types):
+        # If el is unpackable but empty
+        if not el:
+            flattened.append(IgnoreClass)
+            return flattened
         iterable = unpackable_types[eltype](el)
         for _, _el in iterable:
             flattened.extend(flatten_nested(_el,
@@ -102,6 +106,10 @@ def build_mapping(el,
     if ignore_types is None:
         ignore_types = (IgnoreClass,)
     if eltype in unpackable_types.keys() and not isinstance(el, ignore_types):
+        # If el is unpackable but empty
+        if not el:
+            flat_mapping.append(_pos + [(eltype, IgnoreClass)])
+            return flat_mapping
         iterable = unpackable_types[eltype](el)
         for __pos, _el in iterable:
             if _pos is None:
@@ -181,6 +189,12 @@ def insert_at_pos(el, coords: list[tuple[type, Any]], nest, merge_fns):
         next_cls, next_pos = None, None
         if next_coord is not None:
             next_cls, next_pos = next_coord
+        # Handle empty structures, these are marked with a special
+        # coordinate (cls, IgnoreClass) and by definition are the
+        # end of insertions for this set of coords
+        if next_pos is IgnoreClass:
+            merge_fns[type(_nest)](_nest, next_cls(), current_pos)
+            return nest
         # Hack tuples to lists to avoid immutability problems
         if next_cls == tuple:
             next_cls = list

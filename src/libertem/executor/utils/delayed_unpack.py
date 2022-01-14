@@ -23,6 +23,14 @@ class IgnoreClass:
 
 class StructDescriptor:
     def __init__(self, cls, *args, **kwargs):
+        """
+        Container to hold a reference to a type and both the
+        args and kwargs necessary to initialise it
+
+        Could be replaced with a simple dict, namedtuple etc but being
+        able to *args, **kwargs for variable numbers of parameters
+        is quite useful
+        """
         self.cls = cls
         self.args = args
         self.kwargs = kwargs

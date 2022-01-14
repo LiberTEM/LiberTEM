@@ -17,6 +17,10 @@ def default_unpackable() -> dict[type, Callable[[Iterable], Iterable[tuple[Any, 
 def default_merge_fns() -> dict[type, Callable[[Iterable, Any, Any], None]]:
     """
     Default merge functions for rebuilding structures
+
+    Returns a mapping from {type: callable} with callable signature:
+        fn(structure, el, position)
+    which inserts el into the structure at position
     """
     merge_fns = {list: lambda lis, el, pos: lis.append(el),
                 dict: lambda dic, el, pos: dic.update({pos: el})}

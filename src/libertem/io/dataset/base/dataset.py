@@ -23,7 +23,7 @@ class DataSet:
 
     def __init__(self, io_backend: Optional["IOBackend"] = None):
         self._cores = 1
-        self._sync_offset = 0
+        self._sync_offset: Optional[int] = 0
         self._sync_offset_info = None
         self._image_count = 0
         self._nav_shape_product = 0

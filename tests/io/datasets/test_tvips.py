@@ -132,6 +132,7 @@ def test_detect(lt_ctx):
         "path": TVIPS_TESTDATA_PATH,
         "nav_shape": (10,),
         "sig_shape": (512, 512),
+        "sync_offset": 0,
     }
 
 

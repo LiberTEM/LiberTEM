@@ -2,7 +2,7 @@ from io import SEEK_SET
 import math
 import os
 import re
-from typing import IO, TYPE_CHECKING, NamedTuple, List, Optional, Tuple
+from typing import IO, TYPE_CHECKING, Dict, NamedTuple, List, Optional, Tuple
 import numpy as np
 from glob import glob, escape
 
@@ -327,11 +327,25 @@ class TVIPSDataSet(DataSet):
         self._sync_offset = sync_offset
         self._path = path
         self._filesize = None
+        self._files: Optional[List[str]] = None
+        self._frame_counts: Dict[str, int] = {}
         self._series_header: Optional[SeriesHeader] = None
 
     def initialize(self, executor: JobExecutor):
         self._filesize = executor.run_function(self._get_filesize)
         files = executor.run_function(get_filenames, self._path)
+
+        # The series header is contained in the first file:
+        self._series_header = executor.run_function(read_series_header, files[0])
+
+        for fname in files:
+            self._frame_counts[fname] = executor.run_function(
+                frames_in_file,
+                fname,
+                self._series_header
+            )
+
+        self._files = files
 
         try:
             sync_offset_detected, nav_shape_detected = executor.run_function(
@@ -344,9 +358,6 @@ class TVIPSDataSet(DataSet):
             nav_shape_detected = None
             if self._sync_offset is None:
                 self._sync_offset = 0
-
-        # The series header is contained in the first file:
-        self._series_header = executor.run_function(read_series_header, files[0])
 
         # The total number of frames is not contained in a header, so we need
         # to calculate it from the file sizes:
@@ -466,12 +477,12 @@ class TVIPSDataSet(DataSet):
         ]
 
     def _get_fileset(self):
-        filenames = get_filenames(self._path)
+        filenames = self._files
         series_header = self._series_header
         start_idx = 0
         files = []
         for fname in filenames:
-            num_frames = frames_in_file(fname, series_header)
+            num_frames = self._frame_counts[fname]
             files.append(
                 File(
                     path=fname,

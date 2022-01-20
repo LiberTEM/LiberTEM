@@ -354,7 +354,7 @@ def test_tvips_dist(dist_ctx):
     ds = ds.initialize(dist_ctx.executor)
     analysis = dist_ctx.create_sum_analysis(dataset=ds)
     results = dist_ctx.run(analysis)
-    assert results[0].raw_data.shape == (256, 256)
+    assert results[0].raw_data.shape == (512, 512)
 
 
 @needsdata

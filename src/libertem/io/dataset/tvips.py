@@ -1,6 +1,8 @@
+from io import SEEK_SET
+import math
 import os
 import re
-from typing import TYPE_CHECKING, NamedTuple, List, Optional, Tuple
+from typing import IO, TYPE_CHECKING, NamedTuple, List, Optional, Tuple
 import numpy as np
 from glob import glob, escape
 
@@ -57,6 +59,8 @@ class TVIPSDatasetParams(MessageConverter):
         return data
 
 
+SERIES_HEADER_SIZE = 256
+
 series_header_dtype = [
     ('ISize', 'i4'),            # The size of the series header (always 256)
     ('IVersion', 'i4'),         # The version of the file (1 or 2)
@@ -72,6 +76,37 @@ series_header_dtype = [
     ('IMagTotal', 'i4'),        # The total magnification including MagPost and MagCor factors
     ('IImgHeaderBytes', 'i4'),  # The size in bytes of the image headers (version 2 only)
     # 204 unused bytes follow
+]
+
+
+image_header_v2_dtype = [
+    ('ICounter', 'u4'),                 # image counter, continues through all files
+    ('ITime', 'u4'),                    # unix time stamp
+    ('IMS', 'u4'),                      # timestamp milliseconds
+    ('LUT_Index', 'u4'),                # LUT index (?)
+    ('Faraday', 'float32'),             # faraday cup value (unit?)
+    ('TEM_Mag', 'u4'),                  # magnification (unit?)
+    ('TEM_Mag_mode', 'u4'),             # magnification mode (1=imaging, 2=diffraction)
+    ('TEM_Stage_x', 'float32'),         # stage X in nm
+    ('TEM_Stage_y', 'float32'),         # stage Y in nm
+    ('TEM_Stage_z', 'float32'),         # stage Z in nm
+    ('TEM_Stage_alpha', 'float32'),     # in degree
+    ('TEM_Stage_beta', 'float32'),      # in degree
+    ('Index_of_rotator', 'u4'),         # ?
+    ('DENS_T_measure', 'float32'),
+    ('DENS_T_setpoint', 'float32'),
+    ('DENS_Power', 'float32'),
+    ('TEM_Obj_current', 'float32'),     # unit?
+    ('Scan_x', 'float32'),
+    ('Scan_y', 'float32'),
+    ('DENS_Bias_U_setpoint', 'float32'),
+    ('DENS_Bias_U_value', 'float32'),
+    ('DENS_Bias_I_setpoint', 'float32'),
+    ('DENS_Bias_I_value', 'float32'),
+    ('DENS_Bias_E_setpoint', 'float32'),
+    ('DENS_Bias_R', 'float32'),
+    ('DENS_Bias_limit_U', 'float32'),  # compliance limit
+    ('DENS_Bias_limit_I', 'float32'),  # compliance limit
 ]
 
 
@@ -95,7 +130,7 @@ def read_series_header(path: str) -> SeriesHeader:
     if version not in [1, 2]:
         raise DataSetException(f"Unknown TVIPS header version: {version}")
     size = int(arr['ISize'])
-    if size != 256:
+    if size != SERIES_HEADER_SIZE:
         raise DataSetException(
             f"Invalid header size {size}, should be 256. Maybe not a TVIPS file?"
         )
@@ -125,7 +160,7 @@ def frames_in_file(path: str, series_header: SeriesHeader) -> int:
     filesize = os.stat(path).st_size
     file_header = 0
     if _get_suffix(path) == 0:
-        file_header = 256
+        file_header = SERIES_HEADER_SIZE
     filesize -= file_header
     total_size_per_frame = series_header.frame_header_bytes + (
         series_header.bpp // 8 * series_header.xdim * series_header.ydim
@@ -155,6 +190,81 @@ def get_image_count_and_sig_shape(path: str) -> Tuple[int, Tuple[int, int]]:
         count += frames_in_file(path, series_header)
     sig_shape = (series_header.ydim, series_header.xdim)
     return count, sig_shape
+
+
+MAX_SCAN_IDX = 4096  # we only check until this index for the beginning of the scan
+
+
+def _image_header_for_idx(f: IO[bytes], series_header: SeriesHeader, idx: int) -> np.ndarray:
+    image_size_bytes = series_header.bpp // 8 * series_header.xdim * series_header.ydim
+    skip_size = series_header.frame_header_bytes + image_size_bytes
+    offset = SERIES_HEADER_SIZE + idx * skip_size
+    f.seek(offset, SEEK_SET)
+    return np.fromfile(f, dtype=image_header_v2_dtype, count=1)  # type:ignore
+
+
+def _scan_for_idx(f: IO[bytes], series_header: SeriesHeader, idx: int) -> Tuple[int, int]:
+    arr = _image_header_for_idx(f, series_header, idx)
+    # this assumes integer scan coordinates:
+    scan_y = int(arr['Scan_y'])
+    scan_x = int(arr['Scan_x'])
+    scan = (scan_y, scan_x)
+    return scan
+
+
+class DetectionError(Exception):
+    pass
+
+
+def detect_shape(path: str) -> Tuple[int, Tuple[int, ...]]:
+    series_header = read_series_header(path)
+
+    if series_header.version != 2:
+        raise DetectionError(
+            "unknown series header version, can only detect shape from v2"
+        )
+
+    count, _ = get_image_count_and_sig_shape(path)
+    filenames = get_filenames(path)
+    first_file = filenames[0]
+    sync_offset = 0
+
+    with open(first_file, "rb") as f:
+        idx = 0
+        last_was_zero = False
+        found_offset = False
+        while idx < MAX_SCAN_IDX and idx < count:
+            scan = _scan_for_idx(f, series_header, idx)
+            if last_was_zero and scan == (0, 1):
+                sync_offset = idx - 1
+                found_offset = True
+                break
+            if scan == (0, 0):
+                last_was_zero = True
+            idx += 1
+
+        if not found_offset:
+            raise DetectionError("Could not auto-detect sync_offset")
+
+        # continue where we left off and search for max(scan_x):
+        max_x = 0  # scan positions start at 0, so our shape is (y, max_x + 1)
+        found_shape = False
+        while idx < MAX_SCAN_IDX and idx < count:
+            scan = _scan_for_idx(f, series_header, idx)
+            # assume monotonously increasing values
+            max_x = max(max_x, scan[1])
+            if scan[1] < max_x:
+                found_shape = True
+                break
+            idx += 1
+
+    shape: Tuple[int, ...]
+    if found_shape:
+        shape = (int(math.floor((count - sync_offset) / (max_x + 1))), max_x + 1)
+    else:
+        shape = (count,)
+
+    return sync_offset, shape
 
 
 def _get_suffix(path: str) -> int:
@@ -200,13 +310,15 @@ class TVIPSDataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+        If not given, we try to automatically determine the sync_offset from
+        the scan metadata in the image headers.
     """
     def __init__(
         self,
         path,
         nav_shape: Optional[Tuple[int, ...]] = None,
         sig_shape: Optional[Tuple[int, ...]] = None,
-        sync_offset: int = 0,
+        sync_offset: Optional[int] = None,
         io_backend: Optional[IOBackend] = None,
     ):
         super().__init__(io_backend=io_backend)
@@ -220,6 +332,18 @@ class TVIPSDataSet(DataSet):
     def initialize(self, executor: JobExecutor):
         self._filesize = executor.run_function(self._get_filesize)
         files = executor.run_function(get_filenames, self._path)
+
+        try:
+            sync_offset_detected, nav_shape_detected = executor.run_function(
+                detect_shape, self._path
+            )
+            if self._sync_offset is None:
+                self._sync_offset = sync_offset_detected
+        except DetectionError:
+            sync_offset_detected = None
+            nav_shape_detected = None
+            if self._sync_offset is None:
+                self._sync_offset = 0
 
         # The series header is contained in the first file:
         self._series_header = executor.run_function(read_series_header, files[0])
@@ -238,10 +362,14 @@ class TVIPSDataSet(DataSet):
             raw_dtype = np.uint16
 
         nav_shape: Tuple[int, ...]
-        if self._nav_shape is None:
+        if self._nav_shape is None and nav_shape_detected is not None:
+            nav_shape = nav_shape_detected
+        elif self._nav_shape is None and nav_shape_detected is None:
             nav_shape = (image_count,)
-        else:
+        elif self._nav_shape is not None:
             nav_shape = self._nav_shape
+        else:
+            raise RuntimeError("should not happen")  # logic and all that good stuff...
 
         self._image_count = image_count
         self._nav_shape_product = prod(nav_shape)
@@ -300,14 +428,19 @@ class TVIPSDataSet(DataSet):
         pathlow = path.lower()
         if pathlow.endswith(".tvips"):
             image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)
-            nav_shape = tuple((image_count,))
+            try:
+                sync_offset, nav_shape = executor.run_function(detect_shape, path)
+            except DetectionError:
+                sync_offset = 0
+                nav_shape = tuple((image_count,))
         else:
             return False
         return {
             "parameters": {
                 "path": path,
                 "nav_shape": nav_shape,
-                "sig_shape": sig_shape
+                "sig_shape": sig_shape,
+                "sync_offset": sync_offset,
             },
             "info": {
                 "image_count": image_count,
@@ -342,7 +475,7 @@ class TVIPSDataSet(DataSet):
             files.append(
                 File(
                     path=fname,
-                    file_header=256 if _get_suffix(fname) == 0 else 0,
+                    file_header=SERIES_HEADER_SIZE if _get_suffix(fname) == 0 else 0,
                     start_idx=start_idx,
                     end_idx=start_idx + num_frames,
                     sig_shape=self.shape.sig,

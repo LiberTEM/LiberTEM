@@ -550,17 +550,28 @@ def fixup_event_loop():
     adjust_event_loop_policy()
 
 
-@pytest.hookimpl(trylast=True)
-def pytest_fixture_post_finalizer(fixturedef, request):
-    """Called after fixture teardown"""
-    if fixturedef.argname == "event_loop":
-        # Work around: pytest-asyncio sets an empty event loop policy here,
-        # which breaks on windows, where we have to supply a specific
-        # event loop policy. Until this is fixed in pytest-asyncio, manually re-set
-        # the event policy here.
-        # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
-        asyncio.set_event_loop_policy(None)
-        adjust_event_loop_policy()
+@pytest.fixture(scope="session")
+def event_loop():
+    """
+    We need to use a session-scoped event loop, otherwise we get
+    errors like `RuntimeError: Cannot close a running event loop`.
+    """
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    print("event loop teardown")
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    loop.run_until_complete(loop.shutdown_default_executor())
+    loop.close()
+
+    # Work around: pytest-asyncio sets an empty event loop policy here,
+    # which breaks on windows, where we have to supply a specific
+    # event loop policy. Until this is fixed in pytest-asyncio, manually re-set
+    # the event policy here.
+    # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
+    # (this is probably fixed in the current version of pytest-asyncio,
+    # but we can't use that one on Python 3.6, which we still support)
+    asyncio.set_event_loop_policy(None)
+    adjust_event_loop_policy()
 
 
 @pytest.fixture(autouse=True)

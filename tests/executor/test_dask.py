@@ -25,16 +25,16 @@ def test_task_affinity_1():
     cdm = CommonDaskMixin()
 
     ws1 = WorkerSet([
-        Worker(host='127.0.0.1', name='w1', resources={}),
-        Worker(host='127.0.0.1', name='w2', resources={}),
-        Worker(host='127.0.0.1', name='w3', resources={}),
-        Worker(host='127.0.0.1', name='w4', resources={}),
+        Worker(host='127.0.0.1', name='w1', resources={}, nthreads=1),
+        Worker(host='127.0.0.1', name='w2', resources={}, nthreads=1),
+        Worker(host='127.0.0.1', name='w3', resources={}, nthreads=1),
+        Worker(host='127.0.0.1', name='w4', resources={}, nthreads=1),
     ])
     ws2 = WorkerSet([
-        Worker(host='127.0.0.2', name='w5', resources={}),
-        Worker(host='127.0.0.2', name='w6', resources={}),
-        Worker(host='127.0.0.2', name='w7', resources={}),
-        Worker(host='127.0.0.2', name='w8', resources={}),
+        Worker(host='127.0.0.2', name='w5', resources={}, nthreads=1),
+        Worker(host='127.0.0.2', name='w6', resources={}, nthreads=1),
+        Worker(host='127.0.0.2', name='w7', resources={}, nthreads=1),
+        Worker(host='127.0.0.2', name='w8', resources={}, nthreads=1),
     ])
     workers = ws1.extend(ws2)
 

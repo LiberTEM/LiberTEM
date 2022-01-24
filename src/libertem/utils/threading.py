@@ -214,15 +214,15 @@ def set_num_threads(n):
                 try:
                     with lock:
                         if __threadpool_counter == 0:
+                            # The limit is set upon calling ThreadpoolController.limit()
                             __threadpool_limiter = __threadpool_wrapper(n)
-                            __threadpool_limiter.__enter__()
                         __threadpool_counter += 1
                     yield
                 finally:
                     with lock:
                         __threadpool_counter -= 1
                         if __threadpool_counter == 0 and __threadpool_limiter is not None:
-                            __threadpool_limiter.__exit__(None, None, None)
+                            __threadpool_limiter.restore_original_limits()
                             __threadpool_limiter = None
 
 

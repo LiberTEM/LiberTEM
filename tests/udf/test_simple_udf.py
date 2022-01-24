@@ -570,7 +570,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         UDFRunner([p_udf], debug=True).run_for_partition(
             partition=partition,
             params=params,
-            env=Environment(threads_per_worker=1),
+            env=Environment(threads_per_worker=1, threaded_executor=False),
         )
 
     finally:

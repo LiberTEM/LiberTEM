@@ -40,7 +40,7 @@ class InlineJobExecutor(JobExecutor):
         threads = self._inline_threads
         if threads is None:
             threads = psutil.cpu_count(logical=False)
-        env = Environment(threads_per_worker=threads)
+        env = Environment(threads_per_worker=threads, threaded_executor=False)
         for task in tasks:
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(task))
@@ -75,5 +75,5 @@ class InlineJobExecutor(JobExecutor):
             resources["CUDA"] = 1
 
         return WorkerSet([
-            Worker(name='inline', host='localhost', resources=resources)
+            Worker(name='inline', host='localhost', resources=resources, nthreads=1)
         ])

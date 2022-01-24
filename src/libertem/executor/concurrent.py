@@ -42,7 +42,8 @@ class ConcurrentJobExecutor(JobExecutor):
 
     def _get_future(self, wrapped_task, idx, params_handle):
         return self.client.submit(
-            _run_task, task=wrapped_task, params=params_handle, task_id=idx
+            _run_task,
+            task=wrapped_task, params=params_handle, task_id=idx, threaded_executor=True
         )
 
     def run_tasks(
@@ -109,13 +110,16 @@ class ConcurrentJobExecutor(JobExecutor):
         if get_use_cuda() is not None:
             resources["CUDA"] = 1
             return WorkerSet([
-                Worker(name='concurrent', host='localhost', resources=resources)
+                Worker(name='concurrent', host='localhost', resources=resources, nthreads=1)
             ])
         else:
             devices = detect()
             return WorkerSet([
-                Worker(name=f'concurrent-{i}', host='localhost', resources=resources)
-                for i in range(len(devices['cpus']))
+                Worker(
+                    name='concurrent', host='localhost',
+                    resources=resources,
+                    nthreads=len(devices['cpus']),
+                )
             ])
 
     def run_each_host(self, fn, *args, **kwargs):

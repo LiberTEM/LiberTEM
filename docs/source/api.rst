@@ -49,7 +49,9 @@ The default executor is :class:`~libertem.executor.dask.DaskJobExecutor` that
 uses the dask.distributed scheduler. To support all LiberTEM features and
 achieve optimal performance, the methods provided by LiberTEM to start a
 dask.distributed cluster should be used. However, LiberTEM can also run on a
-"vanilla" dask.distributed cluster.
+"vanilla" dask.distributed cluster. Please note that dask.distributed clusters
+that are not created by LiberTEM might use threading or a mixture of threads and
+processes.
 
 The :class:`~libertem.executor.inline.InlineJobExecutor` runs all tasks
 synchronously in the current thread. This is useful for debugging and for
@@ -57,19 +59,24 @@ special applications such as running UDFs that perform their own multithreading
 efficiently or for other non-standard use that requires tasks to be executed
 sequentially and in order.
 
+See also :ref:`threading` for more information on multithreading in UDFs.
+
 .. versionadded:: 0.9.0
 
 The :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` runs all tasks
 using :mod:`python:concurrent.futures`. Using the
-:class:`python:concurrent.futures.ThreadPoolExecutor` allows
-sharing large amounts of data as well as other resources between main thread
-and workers efficiently, but is severely slowed down by the Python
-`global interpreter lock <https://wiki.python.org/moin/GlobalInterpreterLock>`_
-under many circumstances.
+:class:`python:concurrent.futures.ThreadPoolExecutor` allows sharing large
+amounts of data as well as other resources between main thread and workers
+efficiently, but is severely slowed down by the Python `global interpreter lock
+<https://wiki.python.org/moin/GlobalInterpreterLock>`_ under many circumstances.
+Furthermore, it can create thread safety issues such as
+https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35.
 
-For special applications, the :class:`~libertem.executor.delayed.DelayedJobExecutor`
-can use `dask.delayed <https://docs.dask.org/en/stable/delayed.html>`_ to
-delay the processing. This is experimental, see :ref:`dask` for more details.
+For special applications, the
+:class:`~libertem.executor.delayed.DelayedJobExecutor` can use `dask.delayed
+<https://docs.dask.org/en/stable/delayed.html>`_ to delay the processing. This
+is experimental, see :ref:`dask` for more details. It might use threading as
+well, depending on the Dask scheduler that is used by :code:`compute()`.
 
 Common executor choices
 .......................

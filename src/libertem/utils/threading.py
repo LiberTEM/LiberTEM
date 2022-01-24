@@ -2,6 +2,7 @@ import logging
 from contextlib import contextmanager
 import os
 import warnings
+import threading
 
 # NOTE: most imports are performed locally in the functions, to
 # make sure these functions are usable as early as possible in the
@@ -11,86 +12,152 @@ import warnings
 
 
 log = logging.getLogger(__name__)
-
+lock = threading.Lock()
 
 __has_pyfftw = None
+__has_pyfftw_threads = None
 __has_pytorch = None
+
+__pyfftw_counter = 0
+__pyfftw_threads = None
+
+__mitigation_counter = 0
+__pyfftw_cached = None
+
+__numba_counter = 0
+__numba_threads = None
+
+__pytorch_counter = 0
+__pytorch_threads = None
+
+# Make sure we don't load threadpoolctl when importing,
+# just to be sure no C library gets loaded!
+__threadpool_counter = 0
+__threadpool_limiter = None
+__threadpool_wrapper = None
+
+
+def detect_pyfftw():
+    global __has_pyfftw
+    global __has_pyfftw_threads
+    with lock:
+        if __has_pyfftw is None:
+            try:
+                import pyfftw
+                __has_pyfftw = True
+                try:
+                    pyfftw_threads = pyfftw.config.NUM_THREADS
+                    pyfftw.config.NUM_THREADS = 2
+                    data = pyfftw.empty_aligned((4, 4))
+                    pyfftw.interfaces.numpy_fft.fft2(data)
+                    __has_pyfftw_threads = True
+                except ValueError:
+                    __has_pyfftw_threads = False
+                finally:
+                    pyfftw.config.NUM_THREADS = pyfftw_threads
+            except ImportError:
+                __has_pyfftw = False
 
 
 @contextmanager
 def set_fftw_threads(n):
     global __has_pyfftw
-    if __has_pyfftw is None:
-        try:
-            import pyfftw
-            __has_pyfftw = True
-        except ImportError:
-            __has_pyfftw = False
-            yield
-            return
+    global __has_pyfftw_threads
+    global __pyfftw_counter
+    global __pyfftw_threads
 
-    if __has_pyfftw:
-        import pyfftw  # noqa:F811
-        pyfftw_threads = pyfftw.config.NUM_THREADS
-        try:
-            pyfftw.config.NUM_THREADS = n
-            yield
-        finally:
-            pyfftw.config.NUM_THREADS = pyfftw_threads
-    else:
+    detect_pyfftw()
+
+    try:
+        with lock:
+            if __has_pyfftw and __has_pyfftw_threads and __pyfftw_counter == 0:
+                import pyfftw  # noqa:F811
+                __pyfftw_threads = pyfftw.config.NUM_THREADS
+                pyfftw.config.NUM_THREADS = n
+            __pyfftw_counter += 1
         yield
+    finally:
+        with lock:
+            __pyfftw_counter -= 1
+            if (__has_pyfftw and __has_pyfftw_threads and __pyfftw_counter == 0
+                    and __pyfftw_threads is not None):
+                import pyfftw  # noqa:F811
+                pyfftw.config.NUM_THREADS = __pyfftw_threads
+                __pyfftw_threads = None
+
+
+def detect_pytorch():
+    global __has_pytorch
+
+    with lock:
+        if __has_pytorch is None:
+            try:
+                import torch  # noqa:F811,F401
+                __has_pytorch = True
+            except ImportError:
+                __has_pytorch = False
 
 
 @contextmanager
 def set_torch_threads(n):
     global __has_pytorch
-    if __has_pytorch is None:
-        try:
-            import torch
-            __has_pytorch = True
-        except ImportError:
-            __has_pytorch = False
-            yield
-            return
+    global __pytorch_counter
+    global __pytorch_threads
 
-    if __has_pytorch:
-        import torch  # noqa:F811
-        torch_threads = torch.get_num_threads()
-        # See also https://pytorch.org/docs/stable/torch.html#parallelism
-        # At the time of writing the difference between threads and interop threads
-        # wasn't clear from the documentation. However, changing the
-        # interop_threads on runtime
-        # caused errors, so it is commented out here.
-        # torch_interop_threads = torch.get_num_interop_threads()
-        try:
-            torch.set_num_threads(n)
-            # torch.set_num_interop_threads(n)
-            yield
-        finally:
-            torch.set_num_threads(torch_threads)
-            # torch.set_num_interop_threads(torch_interop_threads)
-    else:
+    detect_pytorch()
+
+    try:
+        with lock:
+            if __has_pytorch and __pytorch_counter == 0:
+                import torch  # noqa:F811
+                __pytorch_threads = torch.get_num_threads()
+                # See also https://pytorch.org/docs/stable/torch.html#parallelism
+                # At the time of writing the difference between threads and interop threads
+                # wasn't clear from the documentation. However, changing the
+                # interop_threads on runtime
+                # caused errors, so it is commented out here.
+                # torch_interop_threads = torch.get_num_interop_threads()
+                torch.set_num_threads(n)
+                # torch.set_num_interop_threads(n)
+            __pytorch_counter += 1
         yield
+    finally:
+        with lock:
+            __pytorch_counter -= 1
+            if __has_pytorch and __pytorch_counter == 0 and __pytorch_threads is not None:
+                import torch
+                torch.set_num_threads(__pytorch_threads)
+                # torch.set_num_interop_threads(torch_interop_threads)
+                __pytorch_threads = None
 
 
 @contextmanager
 def set_numba_threads(n):
+    global __numba_counter
+    global __numba_threads
     import numba
     from numba.core.config import NUMBA_NUM_THREADS
-    numba_threads = numba.get_num_threads()
-    try:
-        if n > NUMBA_NUM_THREADS:
-            warnings.warn(
-                f"Attempting to set threads to {n}, which is larger than "
-                f"NUMBA_NUM_THREADS={NUMBA_NUM_THREADS}. "
-                f"Setting to allowed maximum NUMBA_NUM_THREADS instead."
-            )
-        n = min(n, NUMBA_NUM_THREADS)
 
-        numba.set_num_threads(n)
+    try:
+        with lock:
+            if __numba_counter == 0:
+                __numba_threads = numba.get_num_threads()
+                if n > NUMBA_NUM_THREADS:
+                    warnings.warn(
+                        f"Attempting to set threads to {n}, which is larger than "
+                        f"NUMBA_NUM_THREADS={NUMBA_NUM_THREADS}. "
+                        f"Setting to allowed maximum NUMBA_NUM_THREADS instead."
+                    )
+                n = min(n, NUMBA_NUM_THREADS)
+                numba.set_num_threads(n)
+            __numba_counter += 1
         yield
     finally:
-        numba.set_num_threads(numba_threads)
+        with lock:
+            __numba_counter -= 1
+            if __numba_counter == 0 and __numba_threads is not None:
+                numba.set_num_threads(__numba_threads)
+                __numba_threads = None
 
 
 class ThreadpoolWrapper:
@@ -121,11 +188,6 @@ class ThreadpoolWrapper:
         return self._controller.limit(limits=limits)
 
 
-# Make sure we don't load threadpoolctl when importing,
-# just to be sure no C library gets loaded!
-__threadpool_wrapper = None
-
-
 # Currently not used due to executor overhead
 # def reset_module_cache():
 #     if __threadpool_wrapper is not None:
@@ -138,15 +200,30 @@ def set_num_threads(n):
     import scipy  # noqa: F401
     import numpy as np  # noqa: F401
     global __threadpool_wrapper
-    if __threadpool_wrapper is None:
-        __threadpool_wrapper = ThreadpoolWrapper()
+    global __threadpool_counter
+    global __threadpool_limiter
+
+    with lock:
+        if __threadpool_wrapper is None:
+            __threadpool_wrapper = ThreadpoolWrapper()
     # We use __threadpool_wrapper last so that it can cover
     # libraries that the other ones load
     with set_fftw_threads(n):
         with set_torch_threads(n):
             with set_numba_threads(n):
-                with __threadpool_wrapper(n):
+                try:
+                    with lock:
+                        if __threadpool_counter == 0:
+                            __threadpool_limiter = __threadpool_wrapper(n)
+                            __threadpool_limiter.__enter__()
+                        __threadpool_counter += 1
                     yield
+                finally:
+                    with lock:
+                        __threadpool_counter -= 1
+                        if __threadpool_counter == 0 and __threadpool_limiter is not None:
+                            __threadpool_limiter.__exit__(None, None, None)
+                            __threadpool_limiter = None
 
 
 @contextmanager
@@ -194,3 +271,40 @@ def set_num_threads_env(n=1, set_numba=None):
         for key in env_keys:
             if key not in old_env:
                 del os.environ[key]
+
+
+@contextmanager
+def mitigations():
+    '''
+    Enable known work-arounds to run in a threaded executor.
+
+    * Disable pyFFTW interface cache:
+      https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35
+    '''
+    global __has_pyfftw
+    global __has_pyfftw_threads
+    global __mitigation_counter
+    global __pyfftw_cached
+
+    detect_pyfftw()
+
+    try:
+        with lock:
+            if __mitigation_counter == 0:
+                if __has_pyfftw:
+                    import pyfftw  # noqa:F811
+                    __pyfftw_cached = pyfftw.interfaces.cache.is_enabled()
+                    pyfftw.interfaces.cache.disable()
+            __mitigation_counter += 1
+        yield
+    finally:
+        with lock:
+            __mitigation_counter -= 1
+            if __mitigation_counter == 0:
+                if __has_pyfftw and __pyfftw_cached is not None:
+                    import pyfftw  # noqa:F811
+                    if __pyfftw_cached:
+                        pyfftw.interfaces.cache.enable()
+                    else:
+                        pyfftw.interfaces.cache.disable()
+                    __pyfftw_cached = None

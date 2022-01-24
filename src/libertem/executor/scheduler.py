@@ -40,6 +40,12 @@ class WorkerSet:
     def has_cuda(self):
         return self.filter(lambda worker: bool(worker.resources.get('CUDA', False)))
 
+    def has_threaded_workers(self):
+        return any(w.nthreads != 1 for w in self.workers)
+
+    def concurrency(self):
+        return sum(w.nthreads for w in self.workers)
+
     def hosts(self):
         return {worker.host for worker in self.workers}
 
@@ -68,16 +74,17 @@ class Worker:
     """
     A reference to a worker process identified by `name` running on `host`.
     """
-    def __init__(self, name, host, resources):
+    def __init__(self, name, host, resources, nthreads):
         self.name = name
         self.host = host
         self.resources = resources
+        self.nthreads = nthreads
 
     def __str__(self):
         return self.name
 
     def __repr__(self):
-        return f"<Worker {self.name} on {self.host} with {self.resources}>"
+        return f"<Worker {self.name} on {self.host} with {self.resources}, {self.nthreads} threads>"
 
     def __eq__(self, other):
         return self.name == other.name and self.host == other.host
@@ -111,10 +118,11 @@ class Scheduler:
         # Mixed case: return only CPU workers or GPU workers, whichever is
         # larger, to not have residual partitions in CPU-only or GPU-only
         # processing. Plus, a GPU worker will spin a CPU at 100 % while running.
+
         if cpu_workers:
-            return max(len(cpu_workers), len(gpu_workers))
+            return max(cpu_workers.concurrency(), gpu_workers.concurrency())
         # GPU-only
         elif gpu_workers:
-            return len(gpu_workers)
+            return gpu_workers.concurrency()
         else:
-            return len(self.workers)
+            return self.workers.concurrency()

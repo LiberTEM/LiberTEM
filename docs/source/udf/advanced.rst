@@ -573,6 +573,47 @@ The :meth:`~libertem.api.Context.run_udf` method allows setting the
 restrict execution to CPU-only or CUDA-only on a hybrid cluster. This is mostly
 useful for testing.
 
+.. _`threading`:
+
+Threading
+---------
+
+By default, LiberTEM uses multiprocessing with one process per CPU core for
+offline processing. In that scenario, UDFs should only use a single thread to
+avoid oversubscription.
+
+However, when running with a single-process single-thread executor like
+:class:`~libertem.executor.inline.InlineJobExecutor`, multiple threads can be
+used. This is particularly relevant to optimize performance for live processing
+in `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_ since that may
+only be using a single process. The thread count for many common numerics
+libraries is set automatically, see
+:attr:`~libertem.udf.base.UDFMeta.threads_per_worker`. For other cases the
+thread count on a worker should be set by the user according to
+:code:`self.meta.threads_per_worker`.
+
+Multithreaded executors are introduced with release 0.9, see :ref:`executors`.
+They run UDF functions in parallel threads within the same process. This can
+introduce issues with thread safety, for example shared objects being changed
+concurrently by multiple threads. The LiberTEM internals and core UDFs are
+tested to work with these executors, but user code may break unexpectedly.
+`PyFFTW interface caching is a known issue of this category
+<https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35>`_. For that reason,
+the threaded executors should be considererd experimental for the time being.
+Furthermore, setting and re-setting any global variable, for example the thread
+count of an external library, should be protected with a reentrant locking
+mechanism.
+
+The pyFFTW cache is disabled with threaded executors because of this known bug.
+That can have a negative impact on performance. For performance optimization
+with pyFFTW, users could use the `builder interface of PyFFTW
+<https://pyfftw.readthedocs.io/en/latest/source/pyfftw/builders/builders.html>`_
+or `use the native FFTW object interface
+<https://pyfftw.readthedocs.io/en/latest/source/pyfftw/pyfftw.html#pyfftw.FFTW>`_.
+
+Running multiple LiberTEM :class:`~libertem.api.Context` objects resp. executors
+in parallel threads is not tested and can lead to unexpected interactions.
+
 .. _auto UDF:
 
 Auto UDF

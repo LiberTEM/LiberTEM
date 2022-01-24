@@ -6,7 +6,7 @@ from typing_extensions import Protocol
 from contextlib import contextmanager
 from async_generator import asynccontextmanager
 
-from libertem.utils.threading import set_num_threads
+from libertem.utils.threading import set_num_threads, mitigations
 from libertem.utils.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager
 )
@@ -27,8 +27,9 @@ class JobCancelledError(Exception):
 
 
 class Environment:
-    def __init__(self, threads_per_worker):
+    def __init__(self, threads_per_worker, threaded_executor: bool):
         self._threads_per_worker = threads_per_worker
+        self._threaded_executor = threaded_executor
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -46,6 +47,10 @@ class Environment:
         """
         return self._threads_per_worker
 
+    @property
+    def threaded_executor(self):
+        return self._threaded_executor
+
     @contextmanager
     def enter(self):
         """
@@ -55,7 +60,11 @@ class Environment:
         contextmanagers that may come later.
         """
         with set_num_threads(self._threads_per_worker):
-            yield self
+            if self.threaded_executor:
+                with mitigations():
+                    yield self
+            else:
+                yield self
 
 
 class TaskProtocol(Protocol):

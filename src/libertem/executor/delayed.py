@@ -10,6 +10,7 @@ import dask.array as da
 
 from libertem.corrections import CorrectionSet
 from libertem.io.dataset.base import DataSet
+from libertem.utils.devices import detect
 
 from .base import JobExecutor, Environment, TaskProtocol
 from .scheduler import Worker, WorkerSet
@@ -220,7 +221,7 @@ class DelayedJobExecutor(JobExecutor):
 
         called from :meth:`DelayedUDFRunner.results_for_dataset_sync`
         """
-        env = Environment(threads_per_worker=1)
+        env = Environment(threads_per_worker=1, threaded_executor=True)
         for task in tasks:
             structure = structure_from_task(self._udfs, task)
             flat_structure = delayed_unpack.flatten_nested(structure)
@@ -256,9 +257,15 @@ class DelayedJobExecutor(JobExecutor):
 
     def get_available_workers(self):
         resources = {"compute": 1, "CPU": 1}
-
+        # We don't know at this time,
+        # but assume one worker per CPU
+        devices = detect()
         return WorkerSet([
-            Worker(name='delayed', host='localhost', resources=resources)
+            Worker(
+                name='delayed', host='localhost',
+                resources=resources,
+                nthreads=len(devices['cpus']),
+            )
         ])
 
     def modify_buffer_type(self, buf):

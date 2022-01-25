@@ -62,7 +62,7 @@ def worker_memory(client):
 def test_executor_memleak(local_cluster_ctx, lt_ctx_fast, default_raw, ctx_select):
     if ctx_select == 'dask':
         ctx = local_cluster_ctx
-        rounds = 3
+        rounds = 5
 
         def get_worker_mem(ctx):
             return worker_memory(ctx.executor.client)
@@ -91,8 +91,9 @@ def test_executor_memleak(local_cluster_ctx, lt_ctx_fast, default_raw, ctx_selec
     )
 
     # warm-up
-    for _ in ctx.run_udf_iter(dataset=default_raw, udf=udf):
-        pass
+    for _ in range(2):
+        for _ in ctx.run_udf_iter(dataset=default_raw, udf=udf):
+            pass
 
     cumulative_worker_delta = 0
     cumulative_executor_delta = 0

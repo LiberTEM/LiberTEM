@@ -70,6 +70,8 @@ class DaskDataSet(DataSet):
     _default_min_size = 128 * (2**20)  # MB
 
     """
+    .. versionadded:: 0.9.0
+
     Wraps a Dask.array.array such that it can be processed by LiberTEM.
     Partitions are created to be aligned with the array chunking. When
     the array chunking is not compatible with LiberTEM the wrapper
@@ -114,7 +116,6 @@ class DaskDataSet(DataSet):
         If False, allow optimization of the dask_arry chunking by
         re-ordering the nav_shape to put the most chunked dimensions first.
         This can help when more than one nav dimension is chunked.
-        # TODO add mechanism to re-order the dimensions of results automatically
 
     min_size: float, optional
         The minimum partition size in bytes if the array chunking allows
@@ -134,6 +135,8 @@ class DaskDataSet(DataSet):
 
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """
+    # TODO add mechanism to re-order the dimensions of results automatically
+    # if preserve_dimensions is set to False
     def __init__(self, dask_array, *, sig_dims, preserve_dimensions=True,
                  min_size=None, io_backend=None):
         super().__init__(io_backend=io_backend)

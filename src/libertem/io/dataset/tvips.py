@@ -281,8 +281,12 @@ def get_filenames(path: str) -> List[str]:
 class TVIPSDataSet(DataSet):
     """
     Read data from one or more .tvips files. You can specify the path to any
-    file that is part of a set - the whole data set will be loaded. The `nav_shape`
-    needs to be specified if you are loading ND data.
+    file that is part of a set - the whole data set will be loaded. We will try
+    to guess :code:`nav_shape` and :code:`sync_offset` from the image headers
+    for 4D STEM data, but you may need to specify these parameters in case the
+    guessing logic fails.
+
+    .. versionadded:: 0.9.0
 
     Examples
     --------

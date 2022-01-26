@@ -12,12 +12,21 @@ from .inline import InlineJobExecutor
 def get_dask_integration_executor():
     '''
     Query the current Dask scheduler and return a :class:`~libertem.executor.base.JobExecutor`
-    that is compatible with it.
+    that is compatible with it. See https://docs.dask.org/en/stable/scheduling.html
+    for the meaning of the different scheduler types.
 
     .. versionadded:: 0.9.0
 
-    If a dask.distributed :code:`Client` is set as a scheduler, use it with a
-    :class:`~libertem.executor.dask.DaskJobExecutor`.
+    If a :code:`dask.distributed.Client` is set as the scheduler, return a
+    :class:`~libertem.executor.dask.DaskJobExecutor` using this :code:`Client`.
+
+    If the Dask scheduler is :code:`'threads'`, return a
+    :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` backed
+    by the same thread pool as used by Dask.
+
+    If the Dask scheduler is :code:`'synchronous'`, return an
+    :class:`~libertem.executor.inline.InlineJobExecutor`
+    which mimics the single-process, single-thread behaviour of Dask.
     '''
     item = dask.delayed(1)
     dask_scheduler = dask.base.get_scheduler(collections=[item])

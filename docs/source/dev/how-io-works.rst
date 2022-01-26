@@ -84,7 +84,7 @@ tile blocks. This is done by passing in njit-ed functions to :code:`make_get_rea
 :code:`make_get_read_ranges` should only be called on module-level to enable
 caching of the numba compilation.
 
-Read ranges are generated as an array with the following shape::
+Read ranges are generated as an array with the following shape:
 
     :code:`(number_of_tiles, rr_per_tile, rr_num_entries)`
 

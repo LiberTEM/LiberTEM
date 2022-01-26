@@ -67,6 +67,8 @@ class DaskBackendImpl(MMapBackendImpl):
 
 
 class DaskDataSet(DataSet):
+    _default_min_size = 128 * (2**20)  # MB
+
     """
     Wraps a Dask.array.array such that it can be processed by LiberTEM.
     Partitions are created to be aligned with the array chunking. When
@@ -147,7 +149,7 @@ class DaskDataSet(DataSet):
         self._min_size = min_size
         if self._min_size is None:
             # TODO add a method to determine a sensible partition byte-size
-            self._min_size = 128 * (2**20)  # MB
+            self._min_size = self._default_min_size
 
     @property
     def array(self):

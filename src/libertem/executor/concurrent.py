@@ -125,9 +125,8 @@ class ConcurrentJobExecutor(JobExecutor):
     def run_each_host(self, fn, *args, **kwargs):
         """
         Run a callable `fn` once on each host, gathering all results into a dict host -> result
-
-        TODO: any cancellation/errors to handle?
         """
+        # TODO: any cancellation/errors to handle?
         future = self.client.submit(fn, *args, **kwargs)
         return {"localhost": future.result()}
 
@@ -142,7 +141,8 @@ class ConcurrentJobExecutor(JobExecutor):
     @classmethod
     def make_local(cls):
         """
-        Spin up a local Concurrent thread pool
+        Create a local ConcurrentJobExecutor backed by
+        a :class:`python:concurrent.futures.ThreadPoolExecutor`
 
         Returns
         -------

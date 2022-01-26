@@ -15,6 +15,11 @@ def get_dask_integration_executor():
     that is compatible with it. See https://docs.dask.org/en/stable/scheduling.html
     for the meaning of the different scheduler types.
 
+    This can be used to integrate LiberTEM in an existing Dask workflow. This
+    may not achieve optimal LiberTEM performance and will usually not allow GPU
+    processing with LiberTEM, but avoids potential compatibility issues from
+    changing or duplicating the Dask scheduler in an existing workflow.
+
     .. versionadded:: 0.9.0
 
     If a :code:`dask.distributed.Client` is set as the scheduler, return a

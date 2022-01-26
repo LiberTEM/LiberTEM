@@ -125,8 +125,11 @@ def _get_sequence(f: "MIBHeaderReader"):
     return f.fields['sequence_first_image']
 
 
-def get_image_count_and_sig_shape(path: str) -> Tuple[int, Tuple[int, int]]:
-    fns = get_filenames(path)
+def get_image_count_and_sig_shape(
+    path: str,
+    disable_glob: bool = False,
+) -> Tuple[int, Tuple[int, int]]:
+    fns = get_filenames(path, disable_glob=disable_glob)
     count = 0
     files = []
     for path in fns:
@@ -978,6 +981,9 @@ class MIBDataSet(DataSet):
      * Non-2x2 layouts with more than one chip
      * 24bit with more than one chip
 
+    .. versionadded:: 0.9.0
+        Support for the raw quad format was added
+
     Examples
     --------
 
@@ -1001,6 +1007,14 @@ class MIBDataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+
+    disable_glob : bool, default False
+        Usually, MIB data sets are stored as a series of .mib files, and we can reliably
+        guess the whole set from a single path. If you instead save your data set into
+        a single .mib file, and have multiple of these in a single directory with the same prefix
+        (for example, a.mib, a1.mib and a2.mib), loading a.mib would include a1.mib and a2.mib
+        in the data set. Setting :code:`disable_glob` to :code:`True` will only load the single
+        .mib file specified as :code:`path`.
     """
     def __init__(self, path, tileshape=None, scan_size=None, disable_glob=False,
                  nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
@@ -1135,7 +1149,7 @@ class MIBDataSet(DataSet):
     def _filenames(self):
         if self._filename_cache is not None:
             return self._filename_cache
-        fns = get_filenames(self._path)
+        fns = get_filenames(self._path, disable_glob=self._disable_glob)
         if len(fns) > 16384:
             warnings.warn(
                 "Saving data in many small files (here: %d) is not efficient, please increase "

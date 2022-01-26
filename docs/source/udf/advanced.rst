@@ -579,20 +579,20 @@ Threading
 ---------
 
 By default, LiberTEM uses multiprocessing with one process per CPU core for
-offline processing. In that scenario, UDFs should only use a single thread to
-avoid oversubscription.
+offline processing :class:`~libertem.executor.dask.DaskJobExecutor`. In that
+scenario, UDFs should only use a single thread to avoid oversubscription.
 
 However, when running with a single-process single-thread executor like
 :class:`~libertem.executor.inline.InlineJobExecutor`, multiple threads can be
 used. This is particularly relevant to optimize performance for live processing
 in `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_ since that may
 only be using a single process. The thread count for many common numerics
-libraries is set automatically, see
+libraries is set automatically by LiberTEM, see
 :attr:`~libertem.udf.base.UDFMeta.threads_per_worker`. For other cases the
 thread count on a worker should be set by the user according to
 :code:`self.meta.threads_per_worker`.
 
-Multithreaded executors are introduced with release 0.9, see :ref:`executors`.
+Multithreaded executors are introduced with release 0.9.0, see :ref:`executors`.
 They run UDF functions in parallel threads within the same process. This can
 introduce issues with thread safety, for example shared objects being changed
 concurrently by multiple threads. The LiberTEM internals and core UDFs are
@@ -611,7 +611,7 @@ with pyFFTW, users could use the `builder interface of PyFFTW
 or `use the native FFTW object interface
 <https://pyfftw.readthedocs.io/en/latest/source/pyfftw/pyfftw.html#pyfftw.FFTW>`_.
 
-Running multiple LiberTEM :class:`~libertem.api.Context` objects resp. executors
+Running multiple LiberTEM :class:`~libertem.api.Context` objects or executors
 in parallel threads is not tested and can lead to unexpected interactions.
 
 .. _auto UDF:

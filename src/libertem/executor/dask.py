@@ -40,7 +40,9 @@ def cluster_spec(
         name: str = 'default', num_service: int = 1, options: Optional[dict] = None,
         preload: Optional[Tuple[str]] = None):
     '''
-    Create a spec for a LiberTEM Dask cluster
+    Create a worker specification dictionary for a LiberTEM Dask cluster
+
+    The return from this function can be passed to :code:`DaskJobExecutor.make_local(spec=spec)`.
 
     This creates a Dask cluster spec with special initializations and resource tags
     for CPU + GPU processing in LiberTEM.
@@ -446,9 +448,8 @@ class DaskJobExecutor(CommonDaskMixin, JobExecutor):
     def run_each_host(self, fn, *args, **kwargs):
         """
         Run a callable `fn` once on each host, gathering all results into a dict host -> result
-
-        TODO: any cancellation/errors to handle?
         """
+        # TODO: any cancellation/errors to handle?
         available_workers = self.get_available_workers()
 
         future_map = {}

@@ -170,8 +170,13 @@ results from prior runs, so individual calls to :code:`compute()` require
 a complete re-run of the UDFs that were passed to :code:`run_udf`.
 
 
+.. _dask merge_all:
+
 Merge function for Dask array results
 -------------------------------------
+
+.. note::
+    See :ref:`udf merge_all` for more information.
 
 LiberTEM already uses an efficient default merging method to create Dask arrays
 for UDFs that only use :code:`kind='nav'` buffers and don't specify their own

@@ -107,8 +107,8 @@ Memory data set
 
 .. _`daskds`:
 
-Dask data set
-~~~~~~~~~~~~~~~
+Dask
+~~~~
 
 .. autoclass:: libertem.io.dataset.dask.DaskDataSet
 

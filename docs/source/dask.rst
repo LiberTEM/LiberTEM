@@ -44,19 +44,24 @@ uses the Dask :code:`Client` internally to make sure existing workflows keep run
 as before. However, for a closer integration it can be beneficial to use the same scheduler
 for both LiberTEM and other Dask computations. There are several options for that:
 
-:Set LiberTEM Dask cluster as default Dask scheduler:
-    * Use :code:`Context.make_with('dask-make-default')`
-    * Pass :code:`client_kwargs={'set_as_default': True}` to
-      :meth:`~libertem.executor.dask.DaskJobExecutor.connect` or
-      :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`
-:Use existing Dask scheduler:
-    * Use :code:`Context.make_with('dask-integration')` to start an executor
-      that is compatible with the current Dask scheduler.
-:Use dask.delayed:
-    * :class:`libertem.executor.delayed.DelayedJobExecutor` can
-      return UDF computations as Dask arrays. The scheduler will only be
-      determined when :code:`compute()` is called downstream using the normal
-      mechanisms of Dask.
+* Set the LiberTEM Dask cluster as default Dask scheduler:
+
+    * Use :code:`Context.make_with('dask-make-default')` (:meth:`~libertem.api.Context.make_with`)
+    * Pass :code:`client_kwargs={'set_as_default': True}` 
+      to :meth:`~libertem.executor.dask.DaskJobExecutor.connect` 
+      or :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`
+
+* Use an existing Dask scheduler:
+
+    * Use :code:`Context.make_with('dask-integration')` to start 
+      an executor that is compatible with the current Dask scheduler.
+
+* Use dask.delayed:
+
+    * :class:`libertem.executor.delayed.DelayedJobExecutor` can 
+      return UDF computations as Dask arrays. The scheduler will only be  
+      determined when :code:`compute()` is called downstream using the 
+      normal mechanisms of Dask.
 
 .. _daskarray:
 
@@ -87,11 +92,11 @@ Load Dask arrays as datasets
 ----------------------------
 
 LiberTEM datasets can be created from Dask arrays by using
-:meth:`libertem.api.context.load` with filetype :code:`'dask'`. See
+:meth:`libertem.api.Context.load` with filetype :code:`'dask'`. See
 :ref:`daskds` for details. The performance can vary and depends on chunking,
 executor, I/O method and Dask array creation method. Please `contact us
 <https://gitter.im/LiberTEM/Lobby>`_ or `create an Issue
-<https://github.com/LiberTEM/LiberTEM/issues/new>` for questions, bug reports
+<https://github.com/LiberTEM/LiberTEM/issues/new>`_ for questions, bug reports
 and other feedback!
 
 This basic example shows running a UDF on a Dask array:

@@ -840,6 +840,11 @@ class UDFBase:
             # are not met
             results_tmp = _default_merge_all(self, ordered_results)
 
+        if results_tmp.keys() != self.results.keys():
+            raise ValueError(f'Returned result names from merge_all ({[*results_tmp.keys()]}) '
+                             'do not match declared result buffer names '
+                             f'({[*self.results.keys()]})')
+
         for key, value in results_tmp.items():
             # This SHOULD throw errors if sth doesn't match up about
             # buffer name, shape or dtype

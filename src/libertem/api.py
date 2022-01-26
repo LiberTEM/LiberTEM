@@ -13,6 +13,7 @@ from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.integration import get_dask_integration_executor
 from libertem.executor.base import JobExecutor
 from libertem.masks import MaskFactoriesType
@@ -45,7 +46,8 @@ ExecutorSpecType = Union[
     Literal['synchronous'], Literal['inline'],
     Literal['threads'],
     Literal['dask-integration'],
-    Literal['dask-make-default']
+    Literal['dask-make-default'],
+    Literal['delayed'],
 ]
 
 
@@ -118,9 +120,10 @@ class Context:
             A string identifier for executor variants:
 
             "synchronous", "inline":
-                Use a single-process, single-threaded :class:`InlineJobExecutor`
+                Use a single-process, single-threaded
+                :class:`~libertem.executor.inline.InlineJobExecutor`
             "threads":
-                Use a multi-threaded :class:`ConcurrentJobExecutor`
+                Use a multi-threaded :class:`~libertem.executor.concurrent.ConcurrentJobExecutor`
             "dask-integration":
                 Use a JobExecutor that is compatible with the currently active Dask scheduler.
                 See :func:`~libertem.executor.integration.get_dask_integration_executor` for
@@ -132,6 +135,10 @@ class Context:
                 However, the Client will be set as the default Dask scheduler and will
                 persist after the LiberTEM Context closes, which is suitable for downstream
                 computation using :code:`dask.distributed`.
+            "delayed":
+                Create a :class:`~libertem.executor.delayed.DelayedJobExecutor` which performs
+                computation using `dask.delayed <https://docs.dask.org/en/stable/delayed.html>`_.
+                This functionality is highly experimental at this time.
         *args, **kwargs
             Passed to :class:`Context`.
 
@@ -147,6 +154,8 @@ class Context:
             executor = get_dask_integration_executor()
         elif executor_spec == 'dask-make-default':
             executor = DaskJobExecutor.make_local(client_kwargs={"set_as_default": True})
+        elif executor_spec == 'delayed':
+            executor = DelayedJobExecutor()
         else:
             raise ValueError(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '

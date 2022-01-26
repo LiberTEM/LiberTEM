@@ -115,31 +115,23 @@ class Context:
         ----------
 
         executor_spec:
-            Specify some common variants as string:
+            A string identifier for executor variants:
 
-            :"synchronous", "inline":
-                Use a :class:`InlineJobExecutor`
-            :"threads":
-                Use a :class:`ConcurrentJobExecutor`
-            :"dask-integration":
-                Use a JobExecutor that is compatible with the
-                currently active Dask scheduler. If a
-                dask.distributed :code:`Client` is active, use that with a
-                :class:`DaskJobExecutor`. This can be used to integrate LiberTEM
-                in an existing Dask workflow. This may not achieve
-                optimal LiberTEM performance and will usually not allow GPU processing with
-                LiberTEM, but avoids potential compatibility issues from changing the Dask
-                scheduler in an existing workflow. In particular, it will use
-                a local threading executor if Dask is currently using local threading.
-                That supports workflows that rely on direct data sharing between main node and
-                workers.
-            :"dask-make-default":
-                Use a local dask.distributed cluster and client
-                using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` like in the
-                :code:`None` case, but set it's Client as default Dask scheduler and
-                don't close this Client or Cluster when the LiberTEM Context closes. This is
-                recommended to start a dask.distributed Client for Dask workflows that are
-                compatible with the dask.distributed scheduler.
+            "synchronous", "inline":
+                Use a single-process, single-threaded :class:`InlineJobExecutor`
+            "threads":
+                Use a multi-threaded :class:`ConcurrentJobExecutor`
+            "dask-integration":
+                Use a JobExecutor that is compatible with the currently active Dask scheduler.
+                See :func:`~libertem.executor.integration.get_dask_integration_executor` for
+                more information.
+            "dask-make-default":
+                Create a local :code:`dask.distributed` cluster and client
+                using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`, similar to
+                the default behaviour of :code:`Context()` called with no arguments.
+                However, the Client will be set as the default Dask scheduler and will
+                persist after the LiberTEM Context closes, which is suitable for downstream
+                computation using :code:`dask.distributed`.
         *args, **kwargs
             Passed to :class:`Context`.
 

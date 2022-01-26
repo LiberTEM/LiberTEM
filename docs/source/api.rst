@@ -7,6 +7,26 @@ The Python API is a concise API for using LiberTEM from Python code. It is suita
 for interactive scripting, for example from Jupyter notebooks, and for usage
 from within a Python application or script.
 
+.. _`context`:
+
+Context
+-------
+
+The :class:`libertem.api.Context` object is the entry-point for most interaction
+and processing with LiberTEM. It is used to load datasets, specify and run analyses.
+The following snippet initializes a :class:`~libertem.api.Context` ready-for-use
+with default parameters and backing.
+
+.. code-block:: python
+
+    import libertem.api as lt
+
+    ctx = lt.Context()
+
+See the :class:`API documentation <libertem.api.Context>` for the full capabilities
+exposed by the :class:`~libertem.api.Context`.
+
+
 Basic example
 -------------
 
@@ -46,12 +66,13 @@ Executors
     section and not in the API reference.
 
 The default executor is :class:`~libertem.executor.dask.DaskJobExecutor` that
-uses the dask.distributed scheduler. To support all LiberTEM features and
+uses the :code:`dask.distributed` scheduler. To support all LiberTEM features and
 achieve optimal performance, the methods provided by LiberTEM to start a
-dask.distributed cluster should be used. However, LiberTEM can also run on a
-"vanilla" dask.distributed cluster. Please note that dask.distributed clusters
-that are not created by LiberTEM might use threading or a mixture of threads and
-processes.
+:code:`dask.distributed` cluster should be used. However, LiberTEM can also run on a
+"vanilla" :code:`dask.distributed` cluster. Please note that :code:`dask.distributed`
+clusters that are not created by LiberTEM might use threading or a mixture of threads
+and processes, and therefore might behave or perform differently to a
+LiberTEM-instantiated cluster.
 
 The :class:`~libertem.executor.inline.InlineJobExecutor` runs all tasks
 synchronously in the current thread. This is useful for debugging and for
@@ -64,13 +85,18 @@ See also :ref:`threading` for more information on multithreading in UDFs.
 .. versionadded:: 0.9.0
 
 The :class:`~libertem.executor.concurrent.ConcurrentJobExecutor` runs all tasks
-using :mod:`python:concurrent.futures`. Using the
-:class:`python:concurrent.futures.ThreadPoolExecutor` allows sharing large
-amounts of data as well as other resources between main thread and workers
-efficiently, but is severely slowed down by the Python `global interpreter lock
-<https://wiki.python.org/moin/GlobalInterpreterLock>`_ under many circumstances.
-Furthermore, it can create thread safety issues such as
+using :mod:`python:concurrent.futures`. Using a
+:class:`python:concurrent.futures.ThreadPoolExecutor`, which is the deafult behaviour,
+allows sharing large amounts of data as well as other resources between the
+main thread and workers efficiently, but is severely slowed down by the
+Python `global interpreter lock <https://wiki.python.org/moin/GlobalInterpreterLock>`_
+under many circumstances. Furthermore, it can create thread safety issues such as
 https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35.
+
+It is also in principle possible to use a :class:`python:concurrent.futures.ProcessPoolExecutor`
+as backing for the :class:`~libertem.executor.concurrent.ConcurrentJobExecutor`,
+though this is untested and is likely to lead to worse performance than the
+LiberTEM default :class:`~libertem.executor.dask.DaskJobExecutor`.
 
 For special applications, the
 :class:`~libertem.executor.delayed.DelayedJobExecutor` can use `dask.delayed

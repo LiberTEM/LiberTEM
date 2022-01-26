@@ -1,4 +1,7 @@
-|gitter|_ |azure|_ |github|_ |codeclimate|_ |precommit|_ |joss|_ |zenodo|_
+|docs|_ |gitter|_ |azure|_ |github|_ |codeclimate|_ |precommit|_ |joss|_ |zenodo|_
+
+.. |docs| image:: https://img.shields.io/badge/%F0%9F%95%AE-docs-green.svg
+.. _docs: https://libertem.github.io/LiberTEM/
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby

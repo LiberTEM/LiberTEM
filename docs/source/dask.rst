@@ -24,9 +24,14 @@ are based on Dask arrays. That means Dask arrays can serve as input for LiberTEM
 UDF computations can produce Dask arrays. Additionally,
 :meth:`~libertem.contrib.daskadapter.make_dask_array` can create Dask arrays from LiberTEM datasets.
 
-This can be used to combine features from Hyperspy and LiberTEM in a single analysis workflow:
+Linking with Hyperspy Lazy Signals
+----------------------------------
+
+LiberTEM's Dask integration features can be used to combine features from
+Hyperspy and LiberTEM in a single analysis workflow:
 
 .. toctree::
+   :maxdepth: 2
 
    hyperspy-integration
 

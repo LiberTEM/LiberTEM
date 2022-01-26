@@ -500,3 +500,20 @@ def test_only_dask(lt_ctx, delayed_ctx):
 
     with pytest.raises(NotImplementedError):
         lt_ctx.run_udf(dataset=dataset, udf=udf)
+
+
+class BadSumMergeAllUDF(OnlyDaskSumUDF):
+    def merge_all(self, ordered_results):
+        intensity = np.stack([b.intensity for b in ordered_results.values()]).sum(axis=0)
+        return {
+            'intensity': intensity,
+            'notaresult': intensity
+        }
+
+
+def test_bad_merge_all(delayed_ctx):
+    ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
+    dataset = ds_dict['dataset']
+    udf = BadSumMergeAllUDF()
+    with pytest.raises(ValueError):
+        delayed_ctx.run_udf(dataset=dataset, udf=udf)

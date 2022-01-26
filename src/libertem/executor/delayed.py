@@ -269,12 +269,21 @@ class DelayedJobExecutor(JobExecutor):
         ])
 
     def modify_buffer_type(self, buf):
+        """
+        Convert existing buffers from BufferWrapper to DaskBufferWrapper
+
+        A refactoring of the UDF backend would remove the need for this method.
+
+        :meta private:
+        """
         return DaskBufferWrapper.from_buffer(buf)
 
     def register_master_udfs(self, udfs):
         """
         Give the executor a reference to the udfs instantiated
         on the main node, for introspection purposes
+
+        :meta private:
         """
         self._udfs = udfs
 
@@ -346,6 +355,8 @@ def merge_wrap(udf, dest_dict, src_dict):
     The function called as delayed, acting as a wrapper
     to return a flat list of results rather than a structure
     of UDFData or MergeAttrMapping
+
+    :meta private:
     """
     # Have to make a copy of dest buffers because Dask brings
     # data into the delayed function as read-only np arrays
@@ -367,6 +378,8 @@ def task_wrap(task, *args, **kwargs):
     Flatten the structure tuple(udf.results for udf in self._udfs)
     where udf.results is an instance of UDFData(data={'name':BufferWrapper,...})
     into a simple list [np.ndarray, np.ndarray, ...]
+
+    :meta private:
     """
     res = task(*args, **kwargs)
     res = tuple(r._data for r in res)
@@ -381,6 +394,8 @@ def structure_from_task(udfs, task):
     for the task's partition like:
 
     :code:`({'buffer_name': StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)`
+
+    :meta private:
     """
     structure = []
     for udf in udfs:
@@ -405,6 +420,8 @@ def delayed_to_buffer_wrappers(flat_delayed, flat_structure, partition, roi=None
     """
     Take the iterable Delayed results object, and re-wrap each Delayed object
     back into a BufferWrapper wrapping a dask.array of the correct shape and dtype
+
+    :meta private:
     """
     wrapped_res = []
     for el, descriptor in zip(flat_delayed, flat_structure):

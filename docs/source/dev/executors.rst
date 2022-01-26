@@ -45,5 +45,8 @@ Concurrent
 Dask.delayed
 ............
 
+See :ref:`delayed_udfs` for more information about 
+:class:`~libertem.executor.delayed.DelayedJobExecutor`.
+
 .. automodule:: libertem.executor.delayed
     :members:

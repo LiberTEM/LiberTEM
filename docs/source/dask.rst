@@ -123,6 +123,8 @@ This basic example shows running a UDF on a Dask array:
 See also :ref:`executors` on how to set up compatible schedulers for
 both Dask and LiberTEM.
 
+.. _`delayed_udfs`:
+
 Create Dask arrays with UDFs
 ----------------------------
 

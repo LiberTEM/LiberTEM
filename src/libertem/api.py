@@ -138,7 +138,8 @@ class Context:
             "delayed":
                 Create a :class:`~libertem.executor.delayed.DelayedJobExecutor` which performs
                 computation using `dask.delayed <https://docs.dask.org/en/stable/delayed.html>`_.
-                This functionality is highly experimental at this time.
+                This functionality is highly experimental at this time, see
+                :ref:`delayed_udfs` for more information.
         *args, **kwargs
             Passed to :class:`Context`.
 

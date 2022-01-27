@@ -268,8 +268,13 @@ Each partial result is itself a dictionary with a key for each result declared i
 :code:`udf.get_result_buffers()`. The :code:`ordered_results` dictionary is created
 such that the :code:`merge_all` method can safely concatenate the elements in the case
 of :code:`'nav'`-shaped results. Any applied ROI is automatically taken into account
-after the call to :code:`merge_all`. The return value from the function must be a
-dictionary of merged result arrays with the same keys as the declared result buffers.
+after the call to :code:`merge_all`. 
+
+The return value from the function must be a dictionary of merged result arrays
+with the keys matching the declared result buffers. There is, however, no requirement
+to return merged results for all existing buffers, though any that are missing will not
+contain results from the computation and are likely to be filled with zeros.
+
 
 CUDA and scheduling
 -------------------

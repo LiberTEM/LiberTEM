@@ -734,3 +734,8 @@ after :code:`merge_all` has been called.
     `Dask Array API <https://docs.dask.org/en/latest/array-api.html>`_ when
     building `merge_all` functions. The same advice applies to any
     post-processing applied after merging (:ref:`udf final post processing`).
+
+The return value from :code:`merge_all` must be a dictionary of merged result arrays
+with the keys matching the declared result buffers. There is, however, no requirement
+to return merged results for all existing buffers, though any that are missing will not
+contain results from the computation and are likely to be filled with zeros.

@@ -282,3 +282,10 @@ will require passing the appropriate tags as :code:`resources` argument to :code
 
 :meth:`libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs` returns
 the appropriate resources for a given set of UDFs based on their capabilities.
+
+.. note::
+    At this time the combination of CUDA-requiring UDFs and
+    :class:`~libertem.executor.delayed.DelayedJobExecutor` is not well-tested.
+    At a minimum, the merge process carried out on the main node
+    will not take place with GPU-backed Dask arrays, though this is
+    under consideration for the future.

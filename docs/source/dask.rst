@@ -261,14 +261,15 @@ variant was twice as fast as the built-in wrapper.
         result2['intensity'].raw_data,
     )
 
-The argument :code:`ordered_results` is an dictionary of lists for all declared
-results for that UDF. Each list contains results for the partitions, ordered by 
-by slice for the corresponding dataset in the flattened navigation dimension. 
-The order of the partial results is such that the slices are increasing through
-the dataset so the merge method can safely concatenate the results in
-the case of :code:`'nav'`-shaped results. Any applied ROI is automatically taken
-into account. The return value from the function must be a dictionary of 
-merged result arrays with the same keys as the argument.
+The argument :code:`ordered_results` is a dictionary of partial results
+results for that UDF. The dictionary is keyed by :class:`~libertem.common.slice.Slice`
+objects, one for each partition processed, and is ordered in the flat navigation dimension.
+Each partial result is itself a dictionary with a key for each result declared in
+:code:`udf.get_result_buffers()`. The :code:`ordered_results` dictionary is created
+such that the :code:`merge_all` method can safely concatenate the elements in the case
+of :code:`'nav'`-shaped results. Any applied ROI is automatically taken into account
+after the call to :code:`merge_all`. The return value from the function must be a
+dictionary of merged result arrays with the same keys as the declared result buffers.
 
 CUDA and scheduling
 -------------------

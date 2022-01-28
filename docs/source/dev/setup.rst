@@ -154,4 +154,4 @@ your new libertem-3.7 environment:
     @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
 
 See also:
-https://tox.readthedocs.io/en/latest/developers.html#multiple-python-versions-on-windows
+https://tox.wiki/en/latest/developers.html#multiple-python-versions-on-windows

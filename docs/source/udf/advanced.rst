@@ -662,7 +662,7 @@ Example: Calculate sum over the last signal axis.
 .. _udf merge_all:
 
 One-step merge (`merge_all`)
---------------------------
+----------------------------
 
 .. versionadded:: 0.9.0
 

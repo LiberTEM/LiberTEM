@@ -28,6 +28,12 @@ Base UDF class
 .. autoclass:: libertem.udf.base.UDF
     :members:
 
+Alternative merging for Dask arrays
+###################################
+
+.. autoclass:: libertem.udf.base.UDFMergeAllMixin
+    :members:
+
 Meta information
 ################
 

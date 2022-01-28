@@ -11,17 +11,117 @@ Changelog
 
 .. _continuous:
 
-0.9.0.dev0
-##########
-
 .. toctree::
   :glob:
 
   changelog/*/*
 
-.. _`v0-8-0`:
-
+.. _`v0-9-0`:
 .. _latest:
+
+0.9.0 / in preparation
+######################
+
+We are most happy to announce **full Dask array integration** with this release!
+Many thanks to Matthew Bryan who implemented major parts of this non-trivial
+feature. Most notably, HyperSpy lazy signals and LiberTEM can now be combined
+seamlessly. See :ref:`dask` for details and an example!
+
+This enables the following applications:
+
+* Use HyperSpy file readers and other readers that create Dask arrays for
+  LiberTEM.
+* Create an ad-hoc file reader for LiberTEM by just building a Dask array. This
+  is often simpler than implementing a native LiberTEM dataset, at the expense
+  of performance.
+* Use LiberTEM file readers for HyperSpy and other software that works with
+  Dask arrays.
+* Use the same implementation of an algorithm for live processing with LiberTEM,
+  offline processing with LiberTEM, and offline processing with Hyperspy.
+* Simplify implementation of complex processing routines on Dask arrays. That
+  includes, for example, routines that are not purely implemented with NumPy
+  array operations and produce complex output or are not compatible with all
+  Dask array chunking schemes. Here, LiberTEM UDFs offer a more powerful and
+  versatile interface than Dask's native `map_blocks()
+  <https://docs.dask.org/en/latest/generated/dask.array.map_blocks.html>`_
+  interface.
+* Chain processing steps together using Dask arrays for intermediate results,
+  including using the output of one UDF as input for another UDF. Dask arrays
+  allow working with large intermediate results efficiently since they can
+  remain on the workers.
+
+Specifically, the Dask integration encompasses the following features:
+
+* Create LiberTEM datasets from Dask arrays via the :ref:`daskds` (:pr:`1137`).
+* Create Dask arrays from LiberTEM UDF results using the
+  :class:`~libertem.executor.delayed.DelayedJobExecutor`. A UDF can define a
+  :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all` method in addition to
+  the usual :meth:`~libertem.udf.base.UDF.merge` to improve performance. See
+  :ref:`merge_all` for details  (:pr:`1170`)!
+* Create Dask arrays directly from LiberTEM datasets using
+  :func:`libertem.contrib.daskadapter.make_dask_array`, which is already
+  possible since release 0.2.
+* Executor options to improve integration, see :ref:`scheduler` and
+  :ref:`executors` (:pr:`1170`, :issue:`1146,922`).
+
+Please note that these features are still experimental and cover a large space
+of possible uses and parameters. Expect the unexpected! Tests, feedback and
+improvements are highly appreciated.
+
+Other changes in this release:
+
+New features
+------------
+
+* Experimental helper function :meth:`libertem.analysis.com.guess_corrections`
+  to guess parameters for Center of Mass analysis (:pr:`1111`).
+* GUI interface for the COM analysis to call :meth:`libertem.analysis.com.guess_corrections`
+  and update the GUI parameters from the result (:pr:`1172`).
+* Support for some RAW MIB Quad formats. For now, we support :code:`1x1` and
+  :code:`2x2` layouts, with 1bit and 6bit counter depth. Support for other
+  layouts and bit depths can be added on demand (:pr:`1169`, :issue:`1135`).
+* New attributes :code:`UDFMeta.sig_slice` and
+  :code:`UDFMeta.tiling_scheme_idx`. These attributes can be used for performant
+  access to the current signal slice - mostly important for throughput-limited
+  analysis (:pr:`1167`, :issue:`1166`).
+* New :code:`--preload` option to :code:`libertem-server` and :code:`libertem-worker`.
+  That makes it work as documented in :ref:`hdf5`, following
+  `Dask worker preloading
+  <https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts>`_
+  (:pr:`1151`).
+* Allow selection of I/O backend in GUI and Python API (:issue:`753`, :pr:`896,1129`).
+* Re-add support for direct I/O. It was previously only supported as a special
+  case for raw files on Linux. Now it is supported for all native dataset
+  formats we support on Linux and Windows. Notable exceptions are the OS X
+  platform or HDF5, MRC, and SER formats (:pr:`1129`, :issue:`753`).
+* Support for reading TVIPS binary files, i.e. :code:`*_NNN.tvips` files (:pr:`1179`).
+
+Bugfixes
+--------
+
+* Allow running CoM analysis on a linescan dataset by only returning divergence
+  and curl if they are defined (:issue:`1138`, :pr:`1139`).
+* :code:`make_dask_array` now works correctly when a :code:`roi` is specified
+  (:issue:`933`).
+
+Documentation
+-------------
+
+* Information on multithreading added to UDF docs in :ref:`threading` (:pr:`1170`).
+
+Miscellaneous
+-------------
+
+* A `Docker image with a LiberTEM installation
+  <https://hub.docker.com/r/libertem/libertem/tags>`_ is available on DockerHub
+  now. See :ref:`containers` for details (:pr:`1144`, :issue:`484`).
+* Improve performance with large UDF parameters (:pr:`1143`).
+* Start using :mod:`libertem.preload` again and import :code:`hdf5plugin` if
+  present so that users don't have to specify this common selection of HDF5
+  filters as preload themselves (:pr:`1160`).
+
+
+.. _`v0-8-0`:
 
 0.8.0 / 2021-10-04
 ##################

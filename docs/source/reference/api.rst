@@ -19,7 +19,7 @@ Analysis API
    :members: MasksResultSet, SingleMaskResultSet
 
 .. automodule:: libertem.analysis.com
-   :members: COMResultSet
+   :members: COMResultSet, guess_corrections, GuessResult
 
 .. automodule:: libertem.analysis.sum
    :members: SumResultSet

@@ -47,10 +47,10 @@ UI <https://semantic-ui.com/>`_
 Not dependencies, but notable related projects or useful tools: `Hyperspy
 <https://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache
 Spark <https://spark.apache.org/>`_, `Hadoop file system
-<http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_,
+<https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_,
 `Godbolt compiler explorer <https://godbolt.org/>`_, `FIO
 <https://github.com/axboe/fio>`_, `pyXem
-<https://pyxem.github.io/pyxem-website/>`_, `Nion Swift <https://nionswift.readthedocs.io/>`_,
+<https://pyxem.readthedocs.io/>`_, `Nion Swift <https://nionswift.readthedocs.io/>`_,
 `Alpaka <http://alpaka-group.github.io/alpaka/>`_
 
 Code licensing
@@ -213,7 +213,7 @@ moreSTEM
 
 We gratefully acknowledge funding from the `Initiative and Networking Fund of
 the Helmholtz Association
-<https://www.helmholtz.de/en/about-us/the-association/initiating-and-networking/>`_
+<https://www.helmholtz.de/en/about-us/structure-and-governance/initiating-and-networking/>`_
 within the `Helmholtz Young Investigator Group moreSTEM
 <https://morestem.fz-juelich.de/>`_ under Contract No. VH-NG-1317 at
 Forschungszentrum Jülich in Germany.
@@ -230,7 +230,7 @@ Ptychography 4.0
 
 We gratefully acknowledge funding from the `Information & Data Science Pilot
 Project
-<https://www.helmholtz.de/en/research/information-data-science/information-data-science-pilot-projects/pilot-projects-2/>`_
+<https://www.helmholtz.de/forschung/challenges/information-data-science/information-data-science-pilot-projekte/pilotprojekte-2/>`_
 "Ptychography 4.0" of the Helmholtz Association.
 |itemend|
 

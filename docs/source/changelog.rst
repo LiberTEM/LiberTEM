@@ -882,7 +882,7 @@ Point release to fix a bug in the Zenodo upload for production releases.
 This release constitutes a major update after almost a year of development.
 Systematic change management starts with this release.
 
-This is the `release message <https://groups.google.com/d/msg/libertem/p7MVoVqXOs0/vP_tu6K7CwAJ>`_: 
+This is the `release message <https://groups.google.com/g/libertem/c/p7MVoVqXOs0/m/vP_tu6K7CwAJ>`_:
 
 User-defined functions
 ----------------------

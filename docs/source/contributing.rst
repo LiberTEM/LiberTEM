@@ -38,7 +38,7 @@ Code contributions
 ------------------
 
 We are using `pull requests
-<https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>`_
+<https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>`_
 to accept contributions. Each pull request should focus on a single issue, to
 keep the number of changes small and reviewable. To keep your changes organized
 and to prevent unrelated changes from disturbing your pull request, create a new
@@ -110,7 +110,7 @@ using the following comment on the PR:
 If everything is good to go, your changes will be merged and you can
 delete the branch you created for the pull request.
 
-.. seealso:: `Guide on understanding the GitHub flow <https://guides.github.com/introduction/flow/>`_
+.. seealso:: `Guide on understanding the GitHub flow <https://docs.github.com/en/get-started/quickstart/github-flow>`_
 
 .. seealso:: `How to make a simple GitHub PR (video) <https://www.youtube.com/watch?v=cysuuUtbC6E>`_
 
@@ -126,7 +126,7 @@ different Python versions and interpreter implementations.
 This makes sure that you can run the tests locally the same way as they are run
 in continuous integration.
 
-After `installing tox <https://tox.readthedocs.io/en/latest/install.html>`_, you
+After `installing tox <https://tox.wiki/en/latest/install.html>`_, you
 can run the tests on all Python versions by simply running tox:
 
 .. code-block:: shell
@@ -203,7 +203,7 @@ output saved in the notebooks is compared to the output of re-running the
 notebook. When writing an example notebook, this sometimes requires some work,
 because certain things will change from run to run. Please check `the nbval
 documentation
-<https://nbviewer.jupyter.org/github/computationalmodelling/nbval/blob/master/docs/source/index.ipynb>`_
+<https://nbviewer.org/github/computationalmodelling/nbval/blob/master/docs/source/index.ipynb>`_
 to understand how to ignore such values. See also the :code:`nbval_sanitize.cfg`
 file for our currently ignored patterns.
 

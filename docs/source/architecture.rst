@@ -32,7 +32,7 @@ The scheduler executes Tasks on the available worker nodes. For fast execution
 on each node, the Task reads the data in small Tiles (~1MB).
 
 For distributing the workload, we are using `dask.distributed
-<https://distributed.readthedocs.io/>`_. The `Future` API allows us to control
+<https://distributed.dask.org>`_. The `Future` API allows us to control
 our computation in a flexible way, with little overhead. With dask Futures, we
 can assure that computation on a partition of the dataset is scheduled on the
 node(s) that hold the partition on their local storage.

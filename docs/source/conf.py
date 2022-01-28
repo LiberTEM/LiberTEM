@@ -217,8 +217,6 @@ intersphinx_mapping = {
 linkcheck_ignore = [
     # Local URLs:
     r'^http://localhost.*',
-    # Some kind of user agent filtering
-    r'^https://pydata.org.*',
     # Freezes the link checker for unknown reasons within CI, hard to reproduce
     r'http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf',  # NOQA: E501
     # Apparently only for project members

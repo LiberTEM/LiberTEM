@@ -100,7 +100,7 @@
         "authorname": "Gaida, John",
         "affiliation": "Göttingen University",
         "github": "jhgee",
-        "contribution": "Help with Norpix SEQ support #153 #767"
+        "contribution": "Help with Norpix SEQ support #153 #767, testing for TVIPS format #1179"
     },
     {
         "displayname": "Wojtek James Goscinski",
@@ -132,6 +132,12 @@
         "authorname": "Houben, Lothar",
         "affiliation": "Weizmann",
         "contribution": "Discussions"
+    },
+    {
+        "displayname": "Huang Chen",
+        "authorname": "Huang, Chen",
+        "affiliation": "Rosalind Franklin Institute",
+        "contribution": "Help with quad QD Merlin support"
     },
     {
         "displayname": "Martin Huth",
@@ -181,6 +187,12 @@
         "authorname": "Lesnichaia, Anastasiia",
         "affiliation": "FZ J\u00fclich",
         "contribution": "Prototyping for scalable implementation of Single Side Band ptychography, WIP"
+    },
+    {
+        "displayname": "Emanuela Liberti",
+        "authorname": "Liberti, Emanuela",
+        "affiliation": "Rosalind Franklin Institute",
+        "contribution": "Help with quad QD Merlin support"
     },
     {
         "displayname": "Penghan Lu",
@@ -251,6 +263,12 @@
         "contribution": "Support, discussions, sample files, funding applications"
     },
     {
+        "displayname": "Marco Oster",
+        "authorname": "Oster, Marco",
+        "affiliation": "TVIPS",
+        "contribution": "Help with implementing the TVIPS reader"
+    },
+    {
         "displayname": "Ana Pakzad",
         "authorname": "Pakzad, Ana",
         "affiliation": "Gatan",
@@ -311,6 +329,12 @@
         "authorname": "Simson, Martin",
         "affiliation": "PNDetector",
         "contribution": "Discussions, sample files, documentation for implementing FRMS6 support"
+    },
+    {
+        "displayname": "Peter Sparlinek",
+        "authorname": "Sparlinek, Peter",
+        "affiliation": "TVIPS",
+        "contribution": "Help with implementing the TVIPS reader"
     },
     {
         "displayname": "Andy Stewart",

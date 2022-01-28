@@ -35,6 +35,8 @@ Hyperspy and LiberTEM in a single analysis workflow:
 
    hyperspy-integration
 
+.. _`scheduler`:
+
 Scheduler
 ---------
 
@@ -169,6 +171,7 @@ computation over the dataset. By default, Dask does not cache intermediate
 results from prior runs, so individual calls to :code:`compute()` require
 a complete re-run of the UDFs that were passed to :code:`run_udf`.
 
+.. _`merge_all`:
 
 .. _dask merge_all:
 

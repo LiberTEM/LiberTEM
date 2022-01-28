@@ -253,7 +253,7 @@ def guess_corrections(
     If any corrections were applied when generating the input data, please note that the corrections
     should be applied relative to these previous value. In particular, the
     center corrections returned by this function have to be back-transformed to the uncorrected
-    coordinate system, for example with :code:`apply_correction(..., forward=False)
+    coordinate system, for example with :code:`apply_correction(..., forward=False)`
 
     Parameters
     ----------

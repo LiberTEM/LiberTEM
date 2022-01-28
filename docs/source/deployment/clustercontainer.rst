@@ -52,7 +52,7 @@ To use the Docker image and Singularity to start :code:`libertem-server`:
 
 .. code-block:: shell
 
-    $ singularity run docker://libertem/libertem -- /venv/bin/libertem-server
+    $ singularity exec docker://libertem/libertem /venv/bin/libertem-server
 
 Available versions
 ..................
@@ -128,5 +128,5 @@ of the local user with Singularity.
 
 .. code-block:: shell
 
-    $ singularity run docker://libertem/libertem -- /venv/bin/dask-scheduler --host localhost
-    $ singularity run docker://libertem/libertem -- /venv/bin/libertem-worker tcp://localhost:8786
+    $ singularity exec docker://libertem/libertem /venv/bin/dask-scheduler --host localhost
+    $ singularity exec docker://libertem/libertem /venv/bin/libertem-worker tcp://localhost:8786

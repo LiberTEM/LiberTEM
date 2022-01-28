@@ -96,7 +96,7 @@ or
 
 .. code-block:: shell
 
-    $ singularity run docker://libertem/libertem -- /venv/bin/libertem-server
+    $ singularity exec docker://libertem/libertem /venv/bin/libertem-server
 
 Deployment for offline data processing on a single-node system for a local user
 is thoroughly tested and can be considered stable. Deployment on a cluster is

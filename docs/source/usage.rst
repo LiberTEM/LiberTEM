@@ -36,7 +36,7 @@ There are a few command line options available:
     :code:`-l, --log-level` was added.
 .. versionadded:: 0.8.0
     :code:`-t, --token-path` was added and :code:`-h, --host` was re-enabled.
-.. versionadded:: 0.9.0.dev0
+.. versionadded:: 0.9.0
     :code:`--preload` and :code:`--insecure` were added.
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`

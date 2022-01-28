@@ -104,7 +104,7 @@ There are a few command line options available:
     :literal:
 
 .. versionadded:: 0.6.0
-.. versionadded:: 0.9.0.dev0
+.. versionadded:: 0.9.0
     :code:`--preload` was added.
 
 For a cluster setup, you can run the scheduler on the appropriate network interface and

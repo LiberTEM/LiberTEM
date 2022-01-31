@@ -67,8 +67,6 @@ class DaskBackendImpl(MMapBackendImpl):
 
 
 class DaskDataSet(DataSet):
-    _default_min_size = 128 * (2**20)  # MB
-
     """
     .. versionadded:: 0.9.0
 
@@ -187,6 +185,13 @@ class DaskDataSet(DataSet):
     @classmethod
     def get_msg_converter(cls):
         return DaskDatasetParams
+
+    @property
+    def _default_min_size(self):
+        """
+        Default minimum chunk size if not supplied at init
+        """
+        return 128 * (2**20)  # MB
 
     def _chunk_slices(self, array):
         chunks = array.chunks

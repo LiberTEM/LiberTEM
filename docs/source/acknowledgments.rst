@@ -44,7 +44,7 @@ Notable upstream projects
 <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic
 UI <https://semantic-ui.com/>`_
 
-Not dependencies, but notable related projects or useful tools: `Hyperspy
+Not dependencies, but notable related projects or useful tools: `HyperSpy
 <https://hyperspy.org/>`_, `NeXus <https://www.nexusformat.org/>`_, `Apache
 Spark <https://spark.apache.org/>`_, `Hadoop file system
 <https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html>`_,

@@ -138,7 +138,7 @@ applications, including live data streams. `Contact us
 LiberTEM is evolving rapidly and prioritizes features following user demand and
 contributions. Currently we are working on `live data processing
 <https://github.com/LiberTEM/LiberTEM-live>`_, `integration with Dask arrays and
-Hyperspy <https://github.com/LiberTEM/LiberTEM/issues/922>`_, support for sparse
+HyperSpy <https://github.com/LiberTEM/LiberTEM/issues/922>`_, support for sparse
 data, and implementing analysis methods for various applications of pixelated
 STEM and other large-scale detector data. If you like to influence the direction
 this project is taking, or if you'd like to `contribute
@@ -166,7 +166,7 @@ information!
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - MRC (via `openNCEM <https://github.com/ercius/openNCEM>`_)
-- HDF5-based formats such as Hyperspy files, NeXus and EMD
+- HDF5-based formats such as HyperSpy files, NeXus and EMD
 - TVIPS binary files
 - Please contact us if you are interested in support for an additional format!
 

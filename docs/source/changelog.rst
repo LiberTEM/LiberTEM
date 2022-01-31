@@ -78,7 +78,7 @@ New features
 * GUI interface for the COM analysis to call :meth:`libertem.analysis.com.guess_corrections`
   and update the GUI parameters from the result (:pr:`1172`).
 * Support for some RAW MIB Quad formats. For now, we support :code:`1x1` and
-  :code:`2x2` layouts, with 1bit and 6bit counter depth. Support for other
+  :code:`2x2` layouts, with 1 bit, 6 bit, and 12 bit counter depth. Support for other
   layouts and bit depths can be added on demand (:pr:`1169`, :issue:`1135`).
 * New attributes :code:`UDFMeta.sig_slice` and
   :code:`UDFMeta.tiling_scheme_idx`. These attributes can be used for performant

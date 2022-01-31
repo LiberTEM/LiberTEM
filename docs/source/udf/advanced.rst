@@ -579,8 +579,8 @@ Threading
 ---------
 
 By default, LiberTEM uses multiprocessing with one process per CPU core for
-offline processing :class:`~libertem.executor.dask.DaskJobExecutor`. In that
-scenario, UDFs should only use a single thread to avoid oversubscription.
+offline processing, using the class :class:`~libertem.executor.dask.DaskJobExecutor`. 
+In that scenario, UDFs should only use a single thread to avoid oversubscription.
 
 However, when running with a single-process single-thread executor like
 :class:`~libertem.executor.inline.InlineJobExecutor`, multiple threads can be

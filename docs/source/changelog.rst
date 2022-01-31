@@ -37,7 +37,7 @@ This enables the following applications:
 * Use LiberTEM file readers for HyperSpy and other software that works with
   Dask arrays.
 * Use the same implementation of an algorithm for live processing with LiberTEM,
-  offline processing with LiberTEM, and offline processing with Hyperspy.
+  offline processing with LiberTEM, and offline processing with HyperSpy.
 * Simplify implementation of complex processing routines on Dask arrays. That
   includes, for example, routines that are not purely implemented with NumPy
   array operations and produce complex output or are not compatible with all
@@ -57,7 +57,7 @@ Specifically, the Dask integration encompasses the following features:
   :class:`~libertem.executor.delayed.DelayedJobExecutor`. A UDF can define a
   :meth:`~libertem.udf.base.UDFMergeAllMixin.merge_all` method in addition to
   the usual :meth:`~libertem.udf.base.UDF.merge` to improve performance. See
-  :ref:`merge_all` for details  (:pr:`1170`)!
+  :ref:`merge_all` for details (:pr:`1170`)!
 * Create Dask arrays directly from LiberTEM datasets using
   :func:`libertem.contrib.daskadapter.make_dask_array`, which is already
   possible since release 0.2.

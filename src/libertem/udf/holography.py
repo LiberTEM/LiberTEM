@@ -1,4 +1,4 @@
-# Functions freq_array, aperture_function, are adopted from Hyperspy
+# Functions freq_array, aperture_function, are adopted from HyperSpy
 # and are subject of following copyright:
 #
 #  Copyright 2007-2016 The HyperSpy developers

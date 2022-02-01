@@ -255,7 +255,7 @@ class Partitioner:
         constraints: Optional[PartitioningConstraints] = None
     ) -> Tuple[int, int]:
         """
-        Get next partition size.
+        Get next partition slice as tuple (start, stop)
 
         The generated (start, stop) tuples are guaranteed to span
         the dataset from the first index to at least the last index

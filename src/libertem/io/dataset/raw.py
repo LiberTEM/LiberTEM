@@ -227,6 +227,7 @@ class RawFileDataSet(DataSet):
         }
 
     def get_partition_for_slice(self, start: int, stop: int) -> "RawPartition":
+        assert self._sync_offset is not None
         assert self._meta is not None
         fileset = self._get_fileset()
         part_slice, idx_start, idx_stop = self.get_slice_for_start_stop(

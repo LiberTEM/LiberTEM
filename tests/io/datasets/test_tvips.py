@@ -148,7 +148,7 @@ def test_positive_sync_offset(default_tvips, lt_ctx):
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=128))
     assert p0._start_frame == 2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -164,7 +164,7 @@ def test_positive_sync_offset(default_tvips, lt_ctx):
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=5):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -194,7 +194,7 @@ def test_negative_sync_offset(default_tvips, lt_ctx):
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
-    p0 = next(ds_with_offset.get_partitions())
+    p0 = next(ds_with_offset.get_const_partitions(partition_size=5))
     assert p0._start_frame == -2
     assert p0.slice.origin == (0, 0, 0)
 
@@ -210,7 +210,7 @@ def test_negative_sync_offset(default_tvips, lt_ctx):
     t0 = next(p0.get_tiles(tiling_scheme))
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
 
-    for p in ds_with_offset.get_partitions():
+    for p in ds_with_offset.get_const_partitions(partition_size=5):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
@@ -263,7 +263,7 @@ def test_offset_greater_than_nav_shape(lt_ctx):
 @needsdata
 @pytest.mark.with_numba
 def test_read(default_tvips):
-    partitions = default_tvips.get_partitions()
+    partitions = default_tvips.get_const_partitions(partition_size=128)
     p = next(partitions)
     assert len(p.shape) == 3
     assert tuple(p.shape[1:]) == (512, 512)
@@ -284,7 +284,7 @@ def test_read(default_tvips):
 
 @needsdata
 def test_scheme_too_large(default_tvips):
-    partitions = default_tvips.get_partitions()
+    partitions = default_tvips.get_const_partitions(partition_size=128)
     p = next(partitions)
     depth = p.shape[0]
 

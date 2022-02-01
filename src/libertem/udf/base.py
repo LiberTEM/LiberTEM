@@ -36,7 +36,7 @@ from libertem.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.utils.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
-from libertem.executor.base import Environment, JobExecutor, TaskProtocol
+from libertem.executor.base import Environment, JobExecutor
 
 if TYPE_CHECKING:
     from typing import OrderedDict
@@ -413,10 +413,11 @@ class UDFData:
             buf.allocate(lib=lib)
 
     def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
-        ds_partitions = [*dataset.get_partitions()]
+        # FIXME!
+        # ds_partitions = [*dataset.get_partitions()]
         for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset.shape, roi)
-            buf.add_partitions(ds_partitions)
+            # buf.add_partitions(ds_partitions)
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate()
 
@@ -1511,7 +1512,7 @@ class UDFTask(Task):
         self._udf_backends = udf_backends
         self._runner_cls = runner_cls
 
-    def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:
+    def __call__(self, params: UDFParams, env: Environment) -> "UDFPartitionResult":
         udfs = [
             cls.new_for_partition(kwargs, self.partition, params.roi)
             for cls, kwargs in zip(self._udf_classes, params.kwargs)
@@ -1542,13 +1543,14 @@ class UDFTask(Task):
         int
             The number of navigation items in this task
         """
+        task_size: int
         if roi is None:
             task_size = self.partition.shape.nav.size
         else:
             roi_for_partition = roi.reshape((-1,))[
                 self.partition.slice.get(nav_only=True)
             ]
-            task_size = np.count_nonzero(roi_for_partition)
+            task_size = int(np.count_nonzero(roi_for_partition))
         return task_size
 
     def __repr__(self):
@@ -1639,6 +1641,7 @@ class UDFRunner:
         dtype: "nt.DTypeLike",
         corrections: Optional[CorrectionSet]
     ) -> "nt.DTypeLike":
+        tmp_dtype: np.dtype
         if corrections is not None and corrections.have_corrections():
             tmp_dtype = np.result_type(np.float32, dtype)
         else:
@@ -1969,12 +1972,12 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
-    ) -> Iterable[Tuple[Tuple[UDFData, ...], TaskProtocol]]:
+        partitioner: Optional[Partitioner] = None,
+    ) -> Iterable[Tuple["UDFPartitionResult", UDFTask]]:
         tasks, params = self._prepare_run_for_dataset(
-            dataset, executor, roi, corrections, backends, dry
+            dataset, executor, roi, corrections, backends, dry, partitioner,
         )
         cancel_id = str(uuid.uuid4())
-        self._debug_task_pickling(tasks)
 
         executor = executor.ensure_sync()
 
@@ -2016,7 +2019,6 @@ class UDFRunner:
         tasks, params = self._prepare_run_for_dataset(
             dataset, executor, roi, corrections, backends, dry, partitioner,
         )
-        cancel_id = str(uuid.uuid4())
 
         executor = executor.ensure_sync()
         result_iter = self.results_for_dataset_sync(
@@ -2027,6 +2029,7 @@ class UDFRunner:
             corrections=corrections,
             backends=backends,
             dry=dry,
+            partitioner=partitioner,
         )
         damage = BufferWrapper(kind='nav', dtype=bool)
         damage.set_shape_ds(dataset.shape, roi)
@@ -2038,7 +2041,7 @@ class UDFRunner:
                 self._apply_part_result(
                     udfs=self._udfs,
                     damage=damage,
-                    part_results=part_results,
+                    part_results=part_results.results,
                     task=task
                 )
             task_size = task.get_size(roi)
@@ -2115,6 +2118,7 @@ class UDFRunner:
             backends=backends,
             partition_gen=partition_gen,
             udfs=self._udfs,
+            runner_cls=self.__class__,
         )
         return task_gen
 
@@ -2128,7 +2132,8 @@ class TaskGenerator:
         self,
         partition_gen: PartitionGenerator,
         udfs: List[UDF],
-        backends: Optional[BackendSpec]
+        backends: Optional[BackendSpec],
+        runner_cls: Type[UDFRunner],
     ):
         self._partition_gen = partition_gen
         self._udfs = udfs
@@ -2141,6 +2146,7 @@ class TaskGenerator:
             for udf in self._udfs
         ]
         self._backends = backends
+        self._runner_cls = runner_cls
 
     def __next__(self) -> UDFTask:
         partition = next(self._partition_gen)
@@ -2148,7 +2154,7 @@ class TaskGenerator:
             partition=partition, udf_classes=self._udf_classes,
             udf_backends=self._udf_backends,
             backends=self._backends,
-            runner_cls=None,  # FIXME: pass the runner class down here!
+            runner_cls=self._runner_cls,
         )
         return task
 
@@ -2189,6 +2195,9 @@ class EmptyTaskGenerator(TaskGenerator):
 
     def __next__(self) -> UDFTask:
         raise StopIteration
+
+    def get_stats(self) -> Tuple[List[TaskStats], List[MergeStats]]:
+        return ([], [])
 
 
 UDFResultDict = Mapping[str, BufferWrapper]

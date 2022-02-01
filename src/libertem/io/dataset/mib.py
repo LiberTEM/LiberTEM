@@ -8,7 +8,6 @@ import warnings
 
 from numba.typed import List as NumbaList
 import numba
-from numba.core.types.misc import Optional
 import numpy as np
 
 from libertem.common.math import prod

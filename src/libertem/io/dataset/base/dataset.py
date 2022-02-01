@@ -155,6 +155,15 @@ class DataSet:
         """
         Get a PartitionGenerator for constant-size partitions, meaning
         they are not adapted to dynamic parameters (like task run times etc.)
+
+        Parameters
+        ----------
+
+        partition_size
+            Partition size in number of nav items
+
+        roi
+            The roi with shape of the navigation
         """
         from libertem.io.partitioner import ConstantPartitioner, PartitionGenerator
         cp = ConstantPartitioner(

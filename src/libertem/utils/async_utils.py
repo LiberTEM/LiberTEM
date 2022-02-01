@@ -2,7 +2,6 @@ import sys
 import queue
 import asyncio
 import threading
-import functools
 from typing import AsyncGenerator, Callable, Generator, Optional, TypeVar
 from concurrent.futures import ThreadPoolExecutor
 
@@ -10,11 +9,30 @@ from concurrent.futures import ThreadPoolExecutor
 T = TypeVar('T')
 
 
+class MyStopIteration(Exception):
+    """
+    TypeError: StopIteration interacts badly with generators
+    and cannot be raised into a Future
+    """
+    pass
+
+
+def _wrap_f(f, args, kwargs):
+    def _wrapped():
+        try:
+            return f(*args, **kwargs)
+        except StopIteration as e:
+            raise MyStopIteration() from e
+    return _wrapped
+
+
 async def sync_to_async(
     fn: Callable[..., T], pool: Optional[ThreadPoolExecutor] = None, *args, **kwargs
 ) -> T:
     """
     Run blocking function with `*args`, `**kwargs` in a thread pool.
+
+    Raises `MyStopIteration` in case `fn` raises a `StopIteration`.
 
     Parameters
     ----------
@@ -28,7 +46,11 @@ async def sync_to_async(
         Passed on to `fn`
     """
     loop = asyncio.get_event_loop()
-    fn = functools.partial(fn, *args, **kwargs)
+    # As `fn` may throw a `StopIteration` for whatever reason, which doesn't
+    # work inside of futures, we have to wrap it in a custom exception type.
+    # Without this, it's possible that things hang instead of propagating
+    # errors properly:
+    fn = _wrap_f(fn, args, kwargs)
     return await loop.run_in_executor(pool, fn)
 
 
@@ -231,14 +253,6 @@ async def async_generator_eager(gen, pool=None):
         # in case our thread raises an exception, we may need to stop the `SyncGenToQueueThread`:
         t.stop()
         t.join()
-
-
-class MyStopIteration(Exception):
-    """
-    TypeError: StopIteration interacts badly with generators
-    and cannot be raised into a Future
-    """
-    pass
 
 
 def adjust_event_loop_policy():

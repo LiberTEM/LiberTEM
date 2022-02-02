@@ -1,35 +1,59 @@
 import * as pathfind from 'path';
 import { FormikErrors, FormikValues, withFormik } from 'formik';
-import { DatasetTypes } from "../messages";
+import { DatasetTypes, ShapeLengths } from "../messages";
 import { OpenFormProps } from "./types";
 import { validateOpen } from "./validate";
 
-export const parseNumList = (nums: string): number[] => nums.split(",").filter(part => part.trim() !== "").map(part => +part)
+export const parseShapeInCommaSeparatedString = (shape: string): number[] => shape.split(",").filter(dim => dim.trim() !== "").map(dim => parseInt(dim, 10))
 
-export const parseNumListWithPadding = (nums: string, minLength: number, maxLength: number): string[] => {
-    let initialList = new Array<string>(minLength).fill("");
-    if (nums) {
-        let value = nums.split(",");
-        if (minLength > value.length) {
-            initialList = [...value, ...Array<string>(minLength - value.length).fill("")];
+export const parseShapeInStringArray = (shape: string[]): number[] => shape.filter(dim => dim.trim() !== "").map(dim => parseInt(dim, 10))
+
+export const adjustShapeWithBounds = (shape: string, shapeType: "nav"|"sig"): string => {
+    let minLength;
+    let maxLength;
+
+    if (shapeType === "nav") {
+        minLength = ShapeLengths.NAV_SHAPE_MIN_LENGTH;
+        maxLength = ShapeLengths.NAV_SHAPE_MAX_LENGTH;
+    } else {
+        minLength = ShapeLengths.SIG_SHAPE_MIN_LENGTH;
+        maxLength = ShapeLengths.SIG_SHAPE_MAX_LENGTH;
+    }
+
+    let adjustedShape = new Array<string>(minLength).fill("");
+
+    if (shape) {
+        const parsedShape = shape.split(",");
+
+        if (parsedShape.length === minLength) {
+            adjustedShape = [...parsedShape];
+        } else if (parsedShape.length < minLength) {
+            adjustedShape = [...parsedShape, ...Array<string>(minLength - parsedShape.length).fill("1")];
         } else {
-            value = value.slice(0, maxLength);
-            initialList = [...value];
+            if (parsedShape.length <= maxLength) {
+                adjustedShape = [...parsedShape];
+            } else {
+                adjustedShape = new Array<string>(maxLength).fill("");
+                adjustedShape = [...parsedShape.slice(0, maxLength - 1), productOfShapeInStringArray(parsedShape.slice(maxLength - 1)).toString()];
+            }
         }
     }
-    return initialList;
+
+    return adjustedShape.toString();
 }
 
-export const parseNumListProduct = (nums: string): number => parseNumList(nums).reduce((a,b) => a * b, 1)
+export const productOfShapeInCommaSeparatedString = (shape: string): number => parseShapeInCommaSeparatedString(shape).reduce((a, b) => a * b, 1)
 
-export const frameCalcForOffset = (syncOffset: number, navShapeProduct: number, imageCount: number) => ({
+export const productOfShapeInStringArray = (shape: string[]): number => parseShapeInStringArray(shape).reduce((a, b) => a * b, 1)
+
+export const framesInfoAfterOffsetCorrection = (syncOffset: number, navShapeProduct: number, imageCount: number) => ({
     framesSkippedStart: Math.max(0, syncOffset),
     framesIgnoredEnd: Math.max(0, imageCount - navShapeProduct - syncOffset),
     framesInsertedStart: Math.abs(Math.min(0, syncOffset)),
     framesInsertedEnd: Math.max(0, navShapeProduct - imageCount + syncOffset),
 })
 
-export const isSigShapeValid = (sigShape: string, nativeSigShape: string): boolean => parseNumListProduct(sigShape) === parseNumListProduct(nativeSigShape)
+export const isSigShapeValid = (sigShape: string, nativeSigShape: string): boolean => productOfShapeInCommaSeparatedString(sigShape) === productOfShapeInCommaSeparatedString(nativeSigShape)
 
 export const isSyncOffsetValid = (syncOffset: number, imageCount: number): boolean => -imageCount < syncOffset && syncOffset < imageCount
 
@@ -41,7 +65,7 @@ export const validateSyncOffsetAndSigShape = (
 ): FormikErrors<FormikValues> => {
     const res: FormikErrors<FormikValues> = {};
     if (nativeSigShape && !isSigShapeValid(sigShape, nativeSigShape.toString())) {
-        res.sig_shape = `must be of size: ${parseNumListProduct(nativeSigShape.toString())}`;
+        res.sig_shape = `must be of size: ${productOfShapeInCommaSeparatedString(nativeSigShape.toString())}`;
     }
     if(imageCount && !isSyncOffsetValid(syncOffset, imageCount)) {
         res.sync_offset = `must be in (-${imageCount}, ${imageCount})`;

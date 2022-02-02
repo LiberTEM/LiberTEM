@@ -22,7 +22,7 @@ const TupleInputPart: React.FC<TupleInputPartProps> = ({ name, id, tupleKey, tup
      }
    }
 
-   return <input type="number" name={name} id={id} key={tupleKey} onChange={onPartChange} value={value} onKeyDown={onCommaPress} ref={tupleRef} />;
+   return <input type="number" name={name} id={id} key={tupleKey} onChange={onPartChange} value={value || ""} onKeyDown={onCommaPress} ref={tupleRef} />;
 }
 
 export default TupleInputPart;

@@ -8,7 +8,7 @@ export const parseShapeInCommaSeparatedString = (shape: string): number[] => sha
 
 export const parseShapeInStringArray = (shape: string[]): number[] => shape.filter(dim => dim.trim() !== "").map(dim => parseInt(dim, 10))
 
-export const getMinAndMaxLength = (shapeType: "nav"|"sig"): {minLength: number, maxLength: number} => {
+export const getMinAndMaxShapeLength = (shapeType: "nav"|"sig"): {minLength: number, maxLength: number} => {
     if (shapeType === "nav") {
         return { minLength: ShapeLengths.NAV_SHAPE_MIN_LENGTH, maxLength: ShapeLengths.NAV_SHAPE_MAX_LENGTH };
     } else {
@@ -17,7 +17,7 @@ export const getMinAndMaxLength = (shapeType: "nav"|"sig"): {minLength: number, 
 }
 
 export const adjustShapeWithBounds = (shape: string, shapeType: "nav"|"sig"): string => {
-    const { minLength, maxLength } = getMinAndMaxLength(shapeType);
+    const { minLength, maxLength } = getMinAndMaxShapeLength(shapeType);
 
     let adjustedShape = new Array<string>(minLength).fill("");
 

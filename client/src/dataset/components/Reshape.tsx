@@ -1,7 +1,8 @@
 import { ErrorMessage } from "formik";
 import * as React from "react";
 import { Form, Input } from "semantic-ui-react";
-import { frameCalcForOffset, parseNumListProduct } from "../helpers";
+import { framesInfoAfterOffsetCorrection, productOfShapeInCommaSeparatedString } from "../helpers";
+import { ShapeLengths } from "../../messages";
 import TupleInput from "./TupleInput";
 
 interface ReshapeProps {
@@ -14,19 +15,10 @@ interface ReshapeProps {
 }
 
 const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, imageCount=0, hideInfo=false, setFieldValue }) => {
+    const navShapeProduct = productOfShapeInCommaSeparatedString(navShape);
 
-    const reshapedNavShape = navShape !== undefined ? navShape : "0";
-    const reshapedSigShape = sigShape !== undefined ? sigShape : "0";
-
-    const navShapeProduct = parseNumListProduct(navShape);
     const [offsetValue, setOffset] = React.useState(syncOffset.toString());
-    const offsetVal = parseInt(offsetValue, 10);
-
-    React.useEffect(() => {
-        setOffset(syncOffset.toString());
-      }, [syncOffset]);
-
-    const { framesSkippedStart, framesIgnoredEnd, framesInsertedStart, framesInsertedEnd } = frameCalcForOffset(offsetVal, navShapeProduct, imageCount);
+    const { framesSkippedStart, framesIgnoredEnd, framesInsertedStart, framesInsertedEnd } = framesInfoAfterOffsetCorrection(parseInt(offsetValue, 10), navShapeProduct, imageCount);
     
     const handleOffsetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -39,10 +31,10 @@ const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, image
             <Form.Field>
                 <label htmlFor="id_nav_shape_0">Navigation shape (H, W):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="nav_shape" /></div>
-                <TupleInput value={reshapedNavShape} minLen={2} maxLen={2} fieldName="nav_shape" setFieldValue={setFieldValue} />
+                <TupleInput value={navShape} minLen={ShapeLengths.NAV_SHAPE_MIN_LENGTH} maxLen={ShapeLengths.NAV_SHAPE_MAX_LENGTH} fieldName="nav_shape" setFieldValue={setFieldValue} />
                 <label htmlFor="id_sig_shape_0">Signal shape (H, W):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="sig_shape" /></div>
-                <TupleInput value={reshapedSigShape} minLen={2} maxLen={2} fieldName="sig_shape" setFieldValue={setFieldValue} />
+                <TupleInput value={sigShape} minLen={ShapeLengths.SIG_SHAPE_MIN_LENGTH} maxLen={ShapeLengths.SIG_SHAPE_MAX_LENGTH} fieldName="sig_shape" setFieldValue={setFieldValue} />
             </Form.Field>
             <Form.Field width={4}>
                 <label htmlFor="id_sync_offset">Sync Offset (frames):</label>
@@ -57,7 +49,6 @@ const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, image
             </Form.Field>
         </div>
     );
-
 }
 
 export default Reshape;

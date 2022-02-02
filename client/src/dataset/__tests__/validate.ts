@@ -1,5 +1,5 @@
 import { ErrorObject } from "ajv";
-import { frameCalcForOffset, parseNumListProduct } from "../helpers";
+import { framesInfoAfterOffsetCorrection, productOfShapeInCommaSeparatedString } from "../helpers";
 import { convertErrors } from "../validate";
 
 describe('convertErrors', () => {
@@ -35,11 +35,11 @@ describe('convertErrors', () => {
 describe('check frames with offset', () => {
     it('properly handles positive offset', () => {
 
-        const navShapeProduct = parseNumListProduct("8,8");
+        const navShapeProduct = productOfShapeInCommaSeparatedString("8,8");
         const imageCount = 64;
         const offsetVal = 8;
 
-        const res = frameCalcForOffset(offsetVal, navShapeProduct, imageCount);
+        const res = framesInfoAfterOffsetCorrection(offsetVal, navShapeProduct, imageCount);
     
         expect(res).toEqual({
             framesSkippedStart: 8,
@@ -51,11 +51,11 @@ describe('check frames with offset', () => {
 
     it('properly handles negative offset', () => {
 
-        const navShapeProduct = parseNumListProduct("8,8");
+        const navShapeProduct = productOfShapeInCommaSeparatedString("8,8");
         const imageCount = 64;
         const offsetVal = -8;
 
-        const res = frameCalcForOffset(offsetVal, navShapeProduct, imageCount);
+        const res = framesInfoAfterOffsetCorrection(offsetVal, navShapeProduct, imageCount);
     
         expect(res).toEqual({
             framesSkippedStart: 0,
@@ -67,11 +67,11 @@ describe('check frames with offset', () => {
 
     it('properly handles missing frames', () => {
 
-        const navShapeProduct = parseNumListProduct("10,8");
+        const navShapeProduct = productOfShapeInCommaSeparatedString("10,8");
         const imageCount = 64;
         const offsetVal = 0;
 
-        const res = frameCalcForOffset(offsetVal, navShapeProduct, imageCount);
+        const res = framesInfoAfterOffsetCorrection(offsetVal, navShapeProduct, imageCount);
     
         expect(res).toEqual({
             framesSkippedStart: 0,

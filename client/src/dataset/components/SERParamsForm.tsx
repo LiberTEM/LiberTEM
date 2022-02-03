@@ -27,6 +27,7 @@ const SERParamsForm: React.FC<MergedProps> = ({
     handleReset,
     onCancel,
     setFieldValue,
+    setFieldTouched,
 }) => (
     <Form onSubmit={handleSubmit}>
         <Form.Field>
@@ -34,7 +35,7 @@ const SERParamsForm: React.FC<MergedProps> = ({
             <ErrorMessage name="name" />
             <Field name="name" id="id_name" />
         </Form.Field>
-        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
+        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} setFieldTouched={setFieldTouched} />
         <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
         <Button type="button" onClick={onCancel}>Cancel</Button>
         <Button type="button" onClick={handleReset}>Reset</Button>

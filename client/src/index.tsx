@@ -1,10 +1,4 @@
 /* eslint-disable no-underscore-dangle */
-// tslint:disable:ordered-imports
-import "core-js/fn/symbol/iterator.js";
-import "core-js/es6/symbol.js";
-import 'react-app-polyfill/ie11';
-// tslint:enable:ordered-imports
-
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { applyMiddleware, compose, createStore } from 'redux';

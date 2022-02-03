@@ -60,7 +60,7 @@ export const validateSyncOffsetAndSigShape = (
     nativeSigShape: number[] | undefined,
     sigShape: string,
     syncOffset: number,
-    imageCount: number | undefined
+    imageCount: number | undefined,
 ): FormikErrors<FormikValues> => {
     const res: FormikErrors<FormikValues> = {};
     if (nativeSigShape && !isSigShapeValid(sigShape, nativeSigShape.toString())) {

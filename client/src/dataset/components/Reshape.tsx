@@ -12,9 +12,12 @@ interface ReshapeProps {
     imageCount?: number,
     hideInfo?: boolean,
     setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void,
+    setFieldTouched: (field: string, shouldValidate?: boolean) => void,
 }
 
-const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, imageCount=0, hideInfo=false, setFieldValue }) => {
+const Reshape: React.FC<ReshapeProps> = ({
+    navShape, sigShape, syncOffset, imageCount=0, hideInfo=false, setFieldValue, setFieldTouched,
+}) => {
     const navShapeProduct = productOfShapeInCommaSeparatedString(navShape);
 
     const [offsetValue, setOffset] = React.useState(syncOffset.toString());
@@ -31,10 +34,10 @@ const Reshape: React.FC<ReshapeProps> = ({ navShape, sigShape, syncOffset, image
             <Form.Field>
                 <label htmlFor="id_nav_shape_0">Navigation shape (H, W):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="nav_shape" /></div>
-                <TupleInput value={navShape} minLen={ShapeLengths.NAV_SHAPE_MIN_LENGTH} maxLen={ShapeLengths.NAV_SHAPE_MAX_LENGTH} fieldName="nav_shape" setFieldValue={setFieldValue} />
+                <TupleInput value={navShape} minLen={ShapeLengths.NAV_SHAPE_MIN_LENGTH} maxLen={ShapeLengths.NAV_SHAPE_MAX_LENGTH} fieldName="nav_shape" setFieldValue={setFieldValue} setFieldTouched={setFieldTouched} />
                 <label htmlFor="id_sig_shape_0">Signal shape (H, W):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="sig_shape" /></div>
-                <TupleInput value={sigShape} minLen={ShapeLengths.SIG_SHAPE_MIN_LENGTH} maxLen={ShapeLengths.SIG_SHAPE_MAX_LENGTH} fieldName="sig_shape" setFieldValue={setFieldValue} />
+                <TupleInput value={sigShape} minLen={ShapeLengths.SIG_SHAPE_MIN_LENGTH} maxLen={ShapeLengths.SIG_SHAPE_MAX_LENGTH} fieldName="sig_shape" setFieldValue={setFieldValue} setFieldTouched={setFieldTouched} />
             </Form.Field>
             <Form.Field width={4}>
                 <label htmlFor="id_sync_offset">Sync Offset (frames):</label>

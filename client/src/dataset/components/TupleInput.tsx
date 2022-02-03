@@ -8,9 +8,12 @@ interface TupleInputProps {
   maxLen: number,
   fieldName: string,
   setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void,
+  setFieldTouched: (field: string, shouldValidate?: boolean) => void,
 }
 
-const TupleInput: React.FC<TupleInputProps> = ({ value, minLen, maxLen, fieldName, setFieldValue }) => {
+const TupleInput: React.FC<TupleInputProps> = ({
+    value, minLen, maxLen, fieldName, setFieldValue, setFieldTouched,
+}) => {
   const tupleInputValue = value.split(",");
 
   const tupleInputRefsArray = React.useRef<HTMLInputElement[]>([]);
@@ -19,6 +22,10 @@ const TupleInput: React.FC<TupleInputProps> = ({ value, minLen, maxLen, fieldNam
     const newTupleInputValue = [...tupleInputValue];
     newTupleInputValue[idx] = val;
     setFieldValue(fieldName, newTupleInputValue.toString());
+  };
+
+  const handleBlur = () => {
+      setFieldTouched(fieldName, true);
   };
 
   const commaPressHandle = (idx: number) => {
@@ -69,6 +76,7 @@ const TupleInput: React.FC<TupleInputProps> = ({ value, minLen, maxLen, fieldNam
                 value={parseInt(val, 10)}
                 tupleRef={tupleRef}
                 tupleInputChangeHandle={tupleInputChangeHandle}
+                onBlur={handleBlur}
                 commaPressHandle={commaPressHandle} />
             </Form.Field>
           );

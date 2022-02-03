@@ -31,6 +31,7 @@ const TVIPSFileParamsForm: React.FC<MergedProps> = ({
     isValidating,
     onCancel,
     setFieldValue,
+    setFieldTouched,
     datasetTypeInfo,
 }) => (
     <Form onSubmit={handleSubmit}>
@@ -47,7 +48,7 @@ const TVIPSFileParamsForm: React.FC<MergedProps> = ({
                 datasetTypeInfo={datasetTypeInfo}
                 setFieldValue={setFieldValue} />
         </Form.Field>
-        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} />
+        <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} setFieldTouched={setFieldTouched} />
         <Button primary type="submit" disabled={isSubmitting || isValidating}>Load Dataset</Button>
         <Button type="button" onClick={onCancel}>Cancel</Button>
         <Button type="button" onClick={handleReset}>Reset</Button>

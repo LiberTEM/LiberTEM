@@ -1,6 +1,7 @@
 import numpy as np
 
 from libertem.udf import UDF
+from libertem.masks import to_dense
 
 
 class SumUDF(UDF):
@@ -35,7 +36,7 @@ class SumUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        self.results.intensity[:] += np.sum(tile, axis=0)
+        self.results.intensity[:] += to_dense(np.sum(tile, axis=0))
 
     def merge(self, dest, src):
         ''

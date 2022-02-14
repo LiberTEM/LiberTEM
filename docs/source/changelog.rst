@@ -82,8 +82,8 @@ New features
   :code:`1x1` and :code:`2x2` layouts using 1 bit, 6 bit, and 12 bit counter
   depth are supported as well. Support for raw MIB data in other layouts and bit
   depths can be added on demand (:pr:`1169`, :issue:`1135`).
-* New attributes :code:`UDFMeta.sig_slice` and
-  :code:`UDFMeta.tiling_scheme_idx`. These attributes can be used for performant
+* New attributes :attr:`libertem.udf.base.UDFMeta.sig_slice` and
+  :attr:`libertem.udf.base.UDFMeta.tiling_scheme_idx`. These attributes can be used for performant
   access to the current signal slice - mostly important for throughput-limited
   analysis (:pr:`1167`, :issue:`1166`).
 * New :code:`--preload` option to :code:`libertem-server` and :code:`libertem-worker`.

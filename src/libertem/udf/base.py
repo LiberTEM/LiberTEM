@@ -125,6 +125,14 @@ class UDFMeta:
         self._slice = new_slice
 
     @property
+    def partition_slice(self) -> Optional[Slice]:
+        """
+        Slice : The slice of the partition this UDF currently works on
+                within the dataset, with navigation dimension flattened and reduced to the ROI.
+        """
+        return self._partition_slice
+
+    @property
     def partition_shape(self) -> Shape:
         """
         Shape : The shape of the partition this UDF currently works on.

@@ -86,6 +86,9 @@ New features
   :attr:`libertem.udf.base.UDFMeta.tiling_scheme_idx`. These attributes can be used for performant
   access to the current signal slice - mostly important for throughput-limited
   analysis (:pr:`1167`, :issue:`1166`).
+* New attribute :attr:`libertem.udf.base.UDFMeta.partition_slice`. This information
+  allows to calculate the position of the current tile within the partition, for
+  example for using a temporary partition-shaped buffer.
 * New :code:`--preload` option to :code:`libertem-server` and :code:`libertem-worker`.
   That makes it work as documented in :ref:`hdf5`, following
   `Dask worker preloading

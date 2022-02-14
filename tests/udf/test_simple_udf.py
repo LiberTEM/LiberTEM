@@ -608,6 +608,7 @@ class CheckSigSlicePartition(UDF):
         assert tile.shape[1:] == tuple(self.meta.sig_slice.shape)
         assert self.meta.slice.sig == self.meta.sig_slice
         assert self.meta.tiling_scheme[self.meta.tiling_scheme_idx] == self.meta.sig_slice
+        assert self.meta.partition_slice == self.meta.slice
         if isinstance(tile, DataTile):
             # this is technically an internal interface, we test here
             # as a sanity check:

@@ -242,7 +242,7 @@ stages:
         displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
-      - bash: sudo apt install -y pandoc graphviz
+      - bash: apt install -y pandoc graphviz
         displayName: install required debian packages
 
       - task: Cache@2
@@ -305,7 +305,7 @@ stages:
         displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
-      - bash: sudo apt install -y pandoc graphviz
+      - bash: apt install -y pandoc graphviz
         displayName: 'install required debian packages'
 
       - task: Cache@2

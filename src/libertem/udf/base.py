@@ -152,6 +152,9 @@ class UDFMeta:
 
     @property
     def tiling_scheme_idx(self) -> int:
+        '''
+        Index of the current tile in :attr:`tiling_scheme`.
+        '''
         return self._tiling_index
 
     @tiling_scheme_idx.setter
@@ -160,6 +163,13 @@ class UDFMeta:
 
     @property
     def sig_slice(self) -> Slice:
+        '''
+        Signal slice of the current tile.
+
+        Since all tiles follow the same tiling scheme, this avoids repeatedly
+        calculating the signal part of :attr:`slice`. Instead, the
+        appropriate slice from the tiling scheme can be re-used.
+        '''
         assert self._tiling_scheme is not None
         return self._tiling_scheme[self._tiling_index]
 

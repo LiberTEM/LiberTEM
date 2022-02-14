@@ -999,7 +999,7 @@ class Context:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
-                iterate=iterate
+                iterate=(iterate or enable_plotting)
             )
             for udf_results in result_iter:
                 yield udf_results

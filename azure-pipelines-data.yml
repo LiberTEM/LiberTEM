@@ -327,11 +327,17 @@ stages:
         inputs:
           secureFile: deploy_key
         displayName: 'Get the deploy key'
+        condition: |
+            and(not(eq(variables['Build.Reason'], 'PullRequest')),
+                eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
       - script: |
           mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
           chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+        condition: |
+            and(not(eq(variables['Build.Reason'], 'PullRequest')),
+                eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
       - bash: ./scripts/deploy_docs docs/build/html/
         displayName: 'deploy docs'

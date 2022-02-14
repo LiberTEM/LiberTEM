@@ -41,14 +41,14 @@ stages:
         inputs:
           versionSpec: '3.9'
 
-      - task: Cache@2
-        inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
-          restoreKeys: |
-            python | "$(Agent.OS)"
-            python
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
+#      - task: Cache@2
+#        inputs:
+#          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+#          restoreKeys: |
+#            python | "$(Agent.OS)"
+#            python
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
 
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
@@ -103,14 +103,14 @@ stages:
         inputs:
           versionSpec: '$(python.version)'
 
-      - task: Cache@2
-        inputs:
-          key: 'python | "$(Agent.OS)" | test_requirements.txt'
-          restoreKeys: |
-            python | "$(Agent.OS)"
-            python
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
+#      - task: Cache@2
+#        inputs:
+#          key: 'python | "$(Agent.OS)" | test_requirements.txt'
+#          restoreKeys: |
+#            python | "$(Agent.OS)"
+#            python
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
 
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
@@ -159,15 +159,15 @@ stages:
         inputs:
           versionSpec: '$(python.version)'
 
-      - task: Cache@2
-        inputs:
-          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
-          restoreKeys: |
-            python | "$(Agent.OS)" | "$(python.version)"
-            python | "$(Agent.OS)"
-            python
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
+#      - task: Cache@2
+#        inputs:
+#          key: 'python | "$(Agent.OS)" | "$(python.version)" | setup.py | test_requirements.txt'
+#          restoreKeys: |
+#            python | "$(Agent.OS)" | "$(python.version)"
+#            python | "$(Agent.OS)"
+#            python
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
 
       - bash: pip install -U tox
         displayName: 'install requirements'
@@ -198,21 +198,21 @@ stages:
         inputs:
           versionSpec: '3.9'
 
-      - task: Cache@2
-        inputs:
-          key: 'python | "$(Agent.OS)" | "3.9" | setup.py | test_requirements.txt'
-          restoreKeys: |
-            python | "$(Agent.OS)" | "3.9"
-            python | "$(Agent.OS)"
-            python
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
+#      - task: Cache@2
+#        inputs:
+#          key: 'python | "$(Agent.OS)" | "3.9" | setup.py | test_requirements.txt'
+#          restoreKeys: |
+#            python | "$(Agent.OS)" | "3.9"
+#            python | "$(Agent.OS)"
+#            python
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
 
-      - task: Cache@2
-        inputs:
-          key: 'tox_numba_coverage | "$(Agent.OS)" | test_requirements.txt | setup.py'
-          path: $(tox_dir)
-        displayName: 'cache tox environment'
+#      - task: Cache@2
+#        inputs:
+#          key: 'tox_numba_coverage | "$(Agent.OS)" | test_requirements.txt | setup.py'
+#          path: $(tox_dir)
+#        displayName: 'cache tox environment'
 
       - bash: pip install -U tox
         displayName: 'install requirements'
@@ -245,20 +245,20 @@ stages:
       - bash: apt install -y pandoc graphviz
         displayName: install required debian packages
 
-      - task: Cache@2
-        inputs:
-          key: 'lint | "$(Agent.OS)"'
-          restoreKeys: |
-            lint | "$(Agent.OS)"
-            lint
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
-
-      - task: Cache@2
-        inputs:
-          key: 'tox_lint | "$(Agent.OS)" | docs_requirements.txt | test_requirements.txt | setup.py | "$(TOXENV)"'
-          path: $(tox_dir)
-        displayName: 'cache tox environment'
+#      - task: Cache@2
+#        inputs:
+#          key: 'lint | "$(Agent.OS)"'
+#          restoreKeys: |
+#            lint | "$(Agent.OS)"
+#            lint
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
+#
+#      - task: Cache@2
+#        inputs:
+#          key: 'tox_lint | "$(Agent.OS)" | docs_requirements.txt | test_requirements.txt | setup.py | "$(TOXENV)"'
+#          path: $(tox_dir)
+#        displayName: 'cache tox environment'
 
 
       - bash: pip install -U tox
@@ -273,13 +273,13 @@ stages:
         inputs:
           versionSpec: '12'
 
-      - task: Cache@2
-        inputs:
-          key: 'npm | "$(Agent.OS)" | client/package-lock.json'
-          restoreKeys: |
-            npm | "$(Agent.OS)"
-          path: $(npm_config_cache)
-        displayName: Cache npm
+#      - task: Cache@2
+#        inputs:
+#          key: 'npm | "$(Agent.OS)" | client/package-lock.json'
+#          restoreKeys: |
+#            npm | "$(Agent.OS)"
+#          path: $(npm_config_cache)
+#        displayName: Cache npm
 
       - bash: (cd client && npm install)
         displayName: 'install npm dependencies'
@@ -308,14 +308,14 @@ stages:
       - bash: apt install -y pandoc graphviz
         displayName: 'install required debian packages'
 
-      - task: Cache@2
-        inputs:
-          key: 'deploy_docs | "$(Agent.OS)" | setup.py | docs_requirements.txt'
-          restoreKeys: |
-            deploy_docs | "$(Agent.OS)"
-            deploy_docs
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
+#      - task: Cache@2
+#        inputs:
+#          key: 'deploy_docs | "$(Agent.OS)" | setup.py | docs_requirements.txt'
+#          restoreKeys: |
+#            deploy_docs | "$(Agent.OS)"
+#            deploy_docs
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
 
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
@@ -346,14 +346,14 @@ stages:
         displayName: 'Use Python 3.9'
         inputs:
           versionSpec: '3.9'
-      - task: Cache@2
-        inputs:
-          key: 'deploy | "$(Agent.OS)" | scripts/requirements.txt'
-          restoreKeys: |
-            deploy | "$(Agent.OS)"
-            deploy
-          path: $(PIP_CACHE_DIR)
-        displayName: 'cache pip packages'
+#      - task: Cache@2
+#        inputs:
+#          key: 'deploy | "$(Agent.OS)" | scripts/requirements.txt'
+#          restoreKeys: |
+#            deploy | "$(Agent.OS)"
+#            deploy
+#          path: $(PIP_CACHE_DIR)
+#        displayName: 'cache pip packages'
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
       - bash: python scripts/release --verbose upload --no-dry-run
@@ -366,4 +366,3 @@ stages:
           LT_RELEASE_UPLOAD_ZENODO_TOKEN: $(LT_RELEASE_UPLOAD_ZENODO_TOKEN)
           LT_RELEASE_UPLOAD_ZENODO_SANDBOX_PARENT: $(LT_RELEASE_UPLOAD_ZENODO_SANDBOX_PARENT)
           LT_RELEASE_UPLOAD_ZENODO_PARENT: $(LT_RELEASE_UPLOAD_ZENODO_PARENT)
-

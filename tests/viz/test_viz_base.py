@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from unittest.mock import Mock
 
 from libertem import viz
 from libertem.viz.base import Dummy2DPlot
@@ -57,6 +58,21 @@ def test_live_nochannels(default_raw):
     udf = NoOpUDF()
     with pytest.raises(ValueError):
         Dummy2DPlot(dataset=default_raw, udf=udf)
+
+
+def test_live_plotupdate(lt_ctx, default_raw):
+    udf = SumUDF()
+    m = Mock()
+    m.get_udf.return_value = udf
+    plots = [m]
+    lt_ctx.run_udf(dataset=default_raw, udf=udf, plots=plots)
+    n_part = default_raw.get_num_partitions()
+    print("Num partitions", n_part)
+    print("Mock calls", m.new_data.mock_calls)
+    # Otherwise test is meaningless, no intermediate updates
+    assert n_part > 1
+    # Partition updates plus final update
+    assert len(m.new_data.mock_calls) == n_part + 1
 
 
 @pytest.mark.parametrize('udf_cls', (SumUDF, SumSigUDF))

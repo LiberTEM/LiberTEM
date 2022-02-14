@@ -4,6 +4,11 @@ trigger:
 variables:
   - name: PIP_CACHE_DIR
     value: $(Pipeline.Workspace)/.pip
+  - group: Packaging
+  - name: npm_config_cache
+    value: $(Pipeline.Workspace)/.npm
+  - name: tox_dir
+    value: $(Build.Repository.LocalPath)/.tox
 
 parameters:
   # by default, the tox environment is kept around, so we need this parameter

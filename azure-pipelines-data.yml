@@ -345,6 +345,12 @@ stages:
             and(not(eq(variables['Build.Reason'], 'PullRequest')),
                 eq(variables['Build.SourceBranch'], 'refs/heads/master'))
 
+      - script: |
+          rm -f ~/.ssh/id_rsa
+        condition: |
+            and(not(eq(variables['Build.Reason'], 'PullRequest')),
+                eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
     - job: make_upload_packages
       pool: DataAccess
       steps:

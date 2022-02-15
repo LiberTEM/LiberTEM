@@ -1718,10 +1718,14 @@ class UDFRunner:
                         shape=Shape((1,) + tuple(tile_slice.shape)[1:],
                                     sig_dims=tile_slice.shape.sig.dims),
                     )
+                    # Internal checks for dataset consistency
+                    assert frame.shape == tuple(partition.shape.sig)
                     udf.set_slice(frame_slice)
                     udf.set_views_for_frame(partition, tile, frame_idx)
                     udf.process_frame(frame)
             elif isinstance(udf, UDFPartitionMixin):
+                # Internal checks for dataset consistency
+                assert partition.slice == tile.tile_slice
                 udf.set_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_partition(device_tile)

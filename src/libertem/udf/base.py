@@ -1702,7 +1702,8 @@ class UDFRunner:
         udfs: List[UDF],
         partition: Partition,
         tile: DataTile,
-        device_tile: DataTile
+        device_tile: DataTile,
+        roi: Optional[np.ndarray],
     ) -> None:
         for udf in udfs:
             if isinstance(udf, UDFTileMixin):
@@ -1725,7 +1726,7 @@ class UDFRunner:
                     udf.process_frame(frame)
             elif isinstance(udf, UDFPartitionMixin):
                 # Internal checks for dataset consistency
-                assert partition.slice == tile.tile_slice
+                assert partition.slice.adjust_for_roi(roi) == tile.tile_slice
                 udf.set_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_partition(device_tile)
@@ -1751,11 +1752,11 @@ class UDFRunner:
             xp = cupy_udfs[0].xp
 
         for tile in tiles:
-            self._run_tile(numpy_udfs, partition, tile, tile)
+            self._run_tile(numpy_udfs, partition, tile, tile, roi=roi)
             if cupy_udfs:
                 # Work-around, should come from dataset later
                 device_tile = xp.asanyarray(tile)
-                self._run_tile(cupy_udfs, partition, tile, device_tile)
+                self._run_tile(cupy_udfs, partition, tile, device_tile, roi=roi)
 
     def _wrapup_udfs(
         self,

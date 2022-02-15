@@ -170,12 +170,25 @@ class PartitionNavUDF(BaseNavUDF):
 
 
 @pytest.mark.parametrize(
-    'tileshape', [None, (7, 16, 16), (7, 7, 7), (16, 8, 16)]
+    'tileshape,udf_clss', (
+        [
+            None, (
+                FrameSigUDF, TileSigUDF, PartitionSigUDF, FrameNavUDF,
+                TileNavUDF, PartitionNavUDF
+            )
+        ],
+        [(7, 16, 16), (FrameSigUDF, TileSigUDF, FrameNavUDF, TileNavUDF)],
+        [(7, 7, 7), (TileSigUDF, TileNavUDF)],
+        [(16, 8, 16), (TileSigUDF, TileNavUDF)],
+        [
+            (8*16, 16, 16), (
+                FrameSigUDF, TileSigUDF, PartitionSigUDF, FrameNavUDF,
+                TileNavUDF, PartitionNavUDF
+            )
+        ],
+    )
 )
-@pytest.mark.parametrize(
-    'udf_cls', (FrameSigUDF, TileSigUDF, PartitionSigUDF, FrameNavUDF, TileNavUDF, PartitionNavUDF)
-)
-def test_buffer_slices(lt_ctx, tileshape, udf_cls):
+def test_buffer_slices(lt_ctx, tileshape, udf_clss):
     data = _mk_random(size=(16, 16, 16, 16))
     bad_ds = BadMemoryDS(
         data=data,
@@ -190,7 +203,8 @@ def test_buffer_slices(lt_ctx, tileshape, udf_cls):
         sig_dims=2
     )
 
-    _ = lt_ctx.run_udf(dataset=ds, udf=udf_cls())
-    with pytest.raises(Exception) as exc_info:
-        _ = lt_ctx.run_udf(dataset=bad_ds, udf=udf_cls())
-    assert exc_info.errisinstance((AssertionError, IndexError))
+    for udf_cls in udf_clss:
+        _ = lt_ctx.run_udf(dataset=ds, udf=udf_cls())
+        with pytest.raises(Exception) as exc_info:
+            _ = lt_ctx.run_udf(dataset=bad_ds, udf=udf_cls())
+        assert exc_info.errisinstance((AssertionError, IndexError))

@@ -582,7 +582,7 @@ def test_noncontiguous_tiles(lt_ctx, backend):
 class CheckSigSlice(UDF):
     def get_result_buffers(self):
         return {
-            "buf": self.buffer(kind="nav", dtype=int, where="device")
+            "checksum": self.buffer(kind="nav", dtype=float, where="device")
         }
 
     def process_tile(self, tile):
@@ -593,6 +593,7 @@ class CheckSigSlice(UDF):
             # this is technically an internal interface, we test here
             # as a sanity check:
             assert tile.scheme_idx == self.meta.tiling_scheme_idx
+        self.results.checksum[:] += tile.sum(axis=(-1, -2))
 
     def get_backends(self):
         return ('numpy', 'cupy')
@@ -601,17 +602,20 @@ class CheckSigSlice(UDF):
 class CheckSigSlicePartition(UDF):
     def get_result_buffers(self):
         return {
-            "buf": self.buffer(kind="nav", dtype=int, where="device")
+            "checksum": self.buffer(kind="nav", dtype=float, where="device")
         }
 
     def process_partition(self, tile):
         assert tile.shape[1:] == tuple(self.meta.sig_slice.shape)
         assert self.meta.slice.sig == self.meta.sig_slice
         assert self.meta.tiling_scheme[self.meta.tiling_scheme_idx] == self.meta.sig_slice
+        assert self.meta.slice.shape == self.meta.partition_shape
+        assert self.meta.slice == self.meta._partition_slice
         if isinstance(tile, DataTile):
             # this is technically an internal interface, we test here
             # as a sanity check:
             assert tile.scheme_idx == self.meta.tiling_scheme_idx
+        self.results.checksum[:] += tile.sum(axis=(-1, -2))
 
     def get_backends(self):
         return ('numpy', 'cupy')
@@ -620,10 +624,11 @@ class CheckSigSlicePartition(UDF):
 class CheckSigSliceFrame(UDF):
     def get_result_buffers(self):
         return {
-            "buf": self.buffer(kind="nav", dtype=int, where="device")
+            "checksum": self.buffer(kind="nav", dtype=float, where="device")
         }
 
     def process_frame(self, frame):
+        print(frame.shape)
         assert frame.shape == tuple(self.meta.sig_slice.shape)
         assert self.meta.slice.sig == self.meta.sig_slice
         assert self.meta.slice.sig.shape == self.meta.dataset_shape.sig
@@ -632,22 +637,25 @@ class CheckSigSliceFrame(UDF):
             # this is technically an internal interface, we test here
             # as a sanity check:
             assert frame.scheme_idx == self.meta.tiling_scheme_idx
+        self.results.checksum[:] += frame.sum(axis=(-1, -2))
 
     def get_backends(self):
         return ('numpy', 'cupy')
 
 
 @pytest.mark.parametrize(
-    'udf_class,tileshape', [
-        (CheckSigSliceFrame, (3, 3, 7)),
-        (CheckSigSlicePartition, (3, 3, 7)),
-        (CheckSigSlice, (3, 2, 2)),
+    'udf_class,tileshape,success', [
+        (CheckSigSliceFrame, (3, 3, 5), False),
+        (CheckSigSliceFrame, (3, 3, 7), True),
+        (CheckSigSlicePartition, (3, 3, 7), False),
+        (CheckSigSlicePartition, (15, 3, 7), True),
+        (CheckSigSlice, (3, 2, 2), True),
     ],
 )
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy'],
 )
-def test_sig_slice(lt_ctx, backend, udf_class, tileshape):
+def test_sig_slice(lt_ctx, backend, udf_class, tileshape, success):
     if backend == 'cupy':
         d = detect()
         cudas = detect()['cudas']
@@ -655,6 +663,7 @@ def test_sig_slice(lt_ctx, backend, udf_class, tileshape):
             pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
 
     data = _mk_random(size=(30, 3, 7), dtype="float32")
+    ref_res = data.sum(axis=(-1, -2))
     dataset = MemoryDataSet(
         data=data, tileshape=tileshape,
         num_partitions=2, sig_dims=2
@@ -663,6 +672,11 @@ def test_sig_slice(lt_ctx, backend, udf_class, tileshape):
         if backend == 'cupy':
             set_use_cuda(cudas[0])
         udf = udf_class()
-        lt_ctx.run_udf(udf=udf, dataset=dataset)
+        if success:
+            res = lt_ctx.run_udf(udf=udf, dataset=dataset)
+            assert np.allclose(res['checksum'].raw_data, ref_res)
+        else:
+            with pytest.raises(Exception):
+                lt_ctx.run_udf(udf=udf, dataset=dataset)
     finally:
         set_use_cpu(0)

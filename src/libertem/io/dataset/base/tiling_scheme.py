@@ -1,7 +1,8 @@
 import math
 import logging
 import warnings
-from typing import List, TYPE_CHECKING, Optional, Tuple
+from typing import List, TYPE_CHECKING, Optional, Tuple, Union
+from typing_extensions import Literal
 
 import numpy as np
 
@@ -16,10 +17,14 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 
+TilingIntent = Union[Literal["partition"], Literal["frame"], Literal["tile"]]
+
 
 class TilingScheme:
-    def __init__(self, slices: List[Slice],
-                 tileshape: Shape, dataset_shape: Shape, intent: Optional[str] = None, debug=None):
+    def __init__(
+        self, slices: List[Slice],
+        tileshape: Shape, dataset_shape: Shape, intent: Optional[TilingIntent] = None, debug=None
+    ):
         self._slices = slices
         self._tileshape = tileshape
         self._dataset_shape = dataset_shape
@@ -31,7 +36,11 @@ class TilingScheme:
 
     @classmethod
     def make_for_shape(
-            cls, tileshape: Shape, dataset_shape: Shape, intent=None, debug=None,
+        cls,
+        tileshape: Shape,
+        dataset_shape: Shape,
+        intent: Optional[TilingIntent] = None,
+        debug=None,
     ) -> "TilingScheme":
         """
         Make a TilingScheme from `tileshape` and `dataset_shape`.
@@ -51,6 +60,10 @@ class TilingScheme:
 
         dataset_shape
             Shape of the whole data set. Only the signal part is used.
+
+        intent
+            The intent of this scheme (whole partitions, frames or tiles)
+            Needs to be set for correct per-partition tiling!
         """
         # FIXME: validate navigation part of the tileshape to be contiguous
         # (i.e. a shape like (1, 1, ..., 1, X1, ..., XN))
@@ -70,7 +83,7 @@ class TilingScheme:
             intent=intent,
         )
 
-    def __getitem__(self, idx) -> Slice:
+    def __getitem__(self, idx: int) -> Slice:
         return self._slices[idx]
 
     def __len__(self):
@@ -83,7 +96,7 @@ class TilingScheme:
         )
 
     @property
-    def intent(self) -> Optional[str]:
+    def intent(self) -> Optional[TilingIntent]:
         return self._intent
 
     @property
@@ -379,8 +392,8 @@ class Negotiator:
             size = self._get_default_size()
         return size
 
-    def _get_intent(self, udfs):
-        intent = None
+    def _get_intent(self, udfs) -> TilingIntent:
+        intent: Optional[TilingIntent] = None
         if any(
             udf.get_method() == "tile"
             for udf in udfs

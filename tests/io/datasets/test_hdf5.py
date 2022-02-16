@@ -612,7 +612,7 @@ def test_scheme_too_large(hdf5_ds_1):
     # is overridden:
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
-    assert t.tile_slice.shape[0] <= hdf5_ds_1.shape[0] * hdf5_ds_1.shape[1]
+    assert t.tile_slice.shape[0] <= hdf5_ds_1.shape[0]
 
 
 def test_hdf5_macrotile(lt_ctx, tmpdir_factory):

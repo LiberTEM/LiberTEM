@@ -8,6 +8,7 @@ from ncempy.io.ser import fileSER
 
 from libertem.common.math import prod
 from libertem.common import Shape, Slice
+from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.web.messages import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
@@ -276,10 +277,10 @@ class SERPartition(BasePartition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
-    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
         sync_offset = self.meta.sync_offset
         shape = Shape((1,) + tuple(self.shape.sig), sig_dims=self.shape.sig.dims)
-
+        tiling_scheme = tiling_scheme.adjust_for_partition(self)
         self.validate_tiling_scheme(tiling_scheme)
 
         start = self._start_frame

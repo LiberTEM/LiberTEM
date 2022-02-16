@@ -1,7 +1,6 @@
 pytest>=6,<7
 pytest-cov
-# See https://github.com/LiberTEM/LiberTEM/issues/1187
-pytest-asyncio>0.11,<0.17
+pytest-asyncio>0.11
 nest-asyncio
 pytest-xdist
 pytest-env

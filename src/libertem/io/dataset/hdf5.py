@@ -680,7 +680,8 @@ class H5Partition(Partition):
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
 
-    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
+        tiling_scheme = tiling_scheme.adjust_for_partition(self)
         if roi is not None:
             yield from self._get_tiles_with_roi(roi, dest_dtype, tiling_scheme)
         else:

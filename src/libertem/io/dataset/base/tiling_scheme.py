@@ -13,7 +13,7 @@ from libertem.common.math import prod
 if TYPE_CHECKING:
     from numpy import typing as nt
     from libertem.udf.base import UDF
-    from libertem.io.dataset.base import DataSet
+    from libertem.io.dataset.base import DataSet, Partition
 
 log = logging.getLogger(__name__)
 
@@ -33,6 +33,38 @@ class TilingScheme:
 
         if tileshape.nav.dims > 1:
             raise ValueError("tileshape should have flat navigation dimensions")
+
+    def adjust_for_partition(self, partition: "Partition") -> "TilingScheme":
+        """
+        If the intent is per-partition processing, the tiling scheme must match the
+        partition shape exactly. If there is a mismatch, this method returns a
+        new scheme that matches the partition.
+
+        Parameters
+        ----------
+        partition
+            The Partition we want to adjust the tiling scheme to.
+
+        Returns
+        -------
+        TilingScheme
+            The adjusted tiling scheme, or this one, if it matches exactly
+        """
+        partition_size = partition.slice.shape.nav.size
+        if partition_size != self.depth and self.intent == "partition":
+            # adjust depth to match partition size exactly:
+            new_shape = Shape(
+                (partition_size,) + tuple(self._tileshape.sig),
+                sig_dims=self._tileshape.sig.dims
+            )
+            return TilingScheme(
+                slices=self._slices,
+                tileshape=new_shape,
+                dataset_shape=self._dataset_shape,
+                intent=self._intent,
+                debug=self._debug,
+            )
+        return self
 
     @classmethod
     def make_for_shape(

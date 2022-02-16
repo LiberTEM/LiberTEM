@@ -221,7 +221,7 @@ class BasePartition(Partition):
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
 
-    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
         """
         Return a generator over all DataTiles contained in this Partition.
 
@@ -249,12 +249,13 @@ class BasePartition(Partition):
         """
         if self._start_frame < self.meta.image_count:
             dest_dtype = np.dtype(dest_dtype)
-            self.validate_tiling_scheme(tiling_scheme)
-            read_ranges = self._get_read_ranges(tiling_scheme, roi)
+            tiling_scheme_adj = tiling_scheme.adjust_for_partition(self)
+            self.validate_tiling_scheme(tiling_scheme_adj)
+            read_ranges = self._get_read_ranges(tiling_scheme_adj, roi)
             io_backend = self.get_io_backend().get_impl()
 
             yield from io_backend.get_tiles(
-                tiling_scheme=tiling_scheme, fileset=self._fileset,
+                tiling_scheme=tiling_scheme_adj, fileset=self._fileset,
                 read_ranges=read_ranges, roi=roi,
                 native_dtype=self.meta.raw_dtype,
                 read_dtype=dest_dtype,

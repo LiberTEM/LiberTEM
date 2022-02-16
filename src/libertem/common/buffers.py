@@ -492,11 +492,7 @@ class BufferWrapper:
             # optimized builds for performance
             assert result_start < len(self._data)
             assert result_stop <= len(self._data)
-            # shape: (1,) + self._extra_shape
-            if len(self._extra_shape) + tile_slice.shape[0] > 1:
-                return self._data[result_start:result_stop]
-            else:
-                return self._data[result_start:result_stop, np.newaxis]
+            return self._data[result_start:result_stop]
         elif self._kind == "single":
             return self._data
 

@@ -354,6 +354,9 @@ stages:
     - job: make_upload_packages
       pool: DataAccess
       steps:
+      - script: |  # need to get rid of old build stuff, packages etc.
+          rm -rf ./build/
+          rm -rf ./dist/
       - task: UsePythonVersion@0
         displayName: 'Use Python 3.9'
         inputs:

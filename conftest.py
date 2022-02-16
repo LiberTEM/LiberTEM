@@ -560,7 +560,8 @@ def event_loop():
     yield loop
     print("event loop teardown")
     loop.run_until_complete(loop.shutdown_asyncgens())
-    loop.run_until_complete(loop.shutdown_default_executor())
+    if hasattr(loop, 'shutdown_default_executor'):
+        loop.run_until_complete(loop.shutdown_default_executor())
     loop.close()
 
     # Work around: pytest-asyncio sets an empty event loop policy here,

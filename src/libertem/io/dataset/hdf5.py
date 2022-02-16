@@ -150,54 +150,10 @@ def _tileshape_for_chunking(chunks, ds_shape):
 
 
 def _get_tileshape_nd(partition_slice, tiling_scheme):
-    #
-    # containing shape: (5, 5)
-    # mapping flat -> nd
-    # 25 -> (5, 5)
-    # 15 -> (3, 5)
-    # 10 -> (2, 5)
-    # 5  -> (1, 5)
-    # 3  -> (1, 3)
-    # 7  -> error (larger than 5, not divisible by 5)
-    #
-    # containing shape: (5, 5, 5)
-    # mapping flat -> nd
-    # 25 -> (1, 5, 5)
-    # 15 -> (1, 3, 5)
-    # 10 -> (1, 2, 5)
-    # 5  -> (1, 1, 5)
-    # 3  -> (1, 1, 3)
-    # 7  -> error (larger than 5, not divisible by 5)
-    # 50 -> (2, 5, 5)
-    #
-    new_nav = []
-    rest = tiling_scheme.shape.nav.size
-    # in case of a tiling scheme that is larger than the partition (which
-    # happens at border cases, for example, when processing a smaller "rest"
-    # partition), the result needs to be constrained to whichever is smaller:
-    partition_size = partition_slice.shape.nav.size
-    if rest > partition_size:
-        rest = partition_size
-
-    # if the partition shape is not divisible by the tiling scheme, we
-    # fall back to the previous behavior, which is only keeping the
-    # rightmost nav dimension, and setting the others to 1.
-    if partition_size % rest != 0 or True:
-        extra_nav_dims = partition_slice.shape.nav.dims - tiling_scheme.shape.nav.dims
-        # keep shape of the rightmost dimension:
-        nav_item = min(tiling_scheme.shape[0], partition_slice.shape.nav[-1])
-        return extra_nav_dims * (1,) + (nav_item,) + tuple(tiling_scheme.shape.sig)
-
-    for s in reversed(partition_slice.shape.nav):
-        assert rest >= 1
-        if rest >= s:
-            new_nav.append(s)
-        else:
-            new_nav.append(rest)
-        rest = rest // s
-    assert rest == 1, f"rest is {rest} ({partition_slice}, {tiling_scheme})"
-
-    return tuple(reversed(new_nav)) + tuple(tiling_scheme.shape.sig)
+    extra_nav_dims = partition_slice.shape.nav.dims - tiling_scheme.shape.nav.dims
+    # keep shape of the rightmost dimension:
+    nav_item = min(tiling_scheme.shape[0], partition_slice.shape.nav[-1])
+    return extra_nav_dims * (1,) + (nav_item,) + tuple(tiling_scheme.shape.sig)
 
 
 class H5Reader:

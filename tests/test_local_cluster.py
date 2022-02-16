@@ -13,6 +13,11 @@ from libertem.utils.devices import detect, has_cupy
 from utils import DebugDeviceUDF
 
 
+def test_stuff(hdf5_ds_1, lt_ctx):
+    ctx = lt_ctx
+    _ = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
+
+
 @pytest.mark.functional
 def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))

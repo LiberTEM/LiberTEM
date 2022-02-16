@@ -19,17 +19,20 @@ log = logging.getLogger(__name__)
 
 class TilingScheme:
     def __init__(self, slices: List[Slice],
-                 tileshape: Shape, dataset_shape: Shape, debug=None):
+                 tileshape: Shape, dataset_shape: Shape, intent: Optional[str] = None, debug=None):
         self._slices = slices
         self._tileshape = tileshape
         self._dataset_shape = dataset_shape
         self._debug = debug
+        self._intent = intent
 
         if tileshape.nav.dims > 1:
             raise ValueError("tileshape should have flat navigation dimensions")
 
     @classmethod
-    def make_for_shape(cls, tileshape: Shape, dataset_shape: Shape, debug=None) -> "TilingScheme":
+    def make_for_shape(
+            cls, tileshape: Shape, dataset_shape: Shape, intent=None, debug=None,
+    ) -> "TilingScheme":
         """
         Make a TilingScheme from `tileshape` and `dataset_shape`.
 
@@ -64,6 +67,7 @@ class TilingScheme:
             tileshape=tileshape,
             dataset_shape=dataset_shape,
             debug=debug,
+            intent=intent,
         )
 
     def __getitem__(self, idx) -> Slice:
@@ -77,6 +81,10 @@ class TilingScheme:
         return "<TilingScheme (depth=%d) shapes=%r len=%d>" % (
             self.depth, unique_shapes, len(self._slices),
         )
+
+    @property
+    def intent(self) -> Optional[str]:
+        return self._intent
 
     @property
     def slices(self):
@@ -219,16 +227,15 @@ class Negotiator:
         depth = max(depths)  # take the largest min-depth
         base_shape = self._get_base_shape(udfs, dataset, approx_partition_shape, roi)
 
+        intent = self._get_intent(udfs)
+
         sizes = [
             self._get_size(
                 io_max_size, udf, itemsize, approx_partition_shape, base_shape,
             )
             for udf in udfs
         ]
-        if any(
-            udf.get_method() == "partition"
-            for udf in udfs
-        ):
+        if intent == "partition":
             size = max(sizes)  # by partition wants to be big, ...
         else:
             size = min(sizes)
@@ -293,6 +300,7 @@ class Negotiator:
         return TilingScheme.make_for_shape(
             tileshape=Shape(tileshape, sig_dims=ds_sig_shape.dims),
             dataset_shape=dataset.shape,
+            intent=intent,
             debug={
                 "min_factors": min_factors,
                 "factors": factors,
@@ -370,6 +378,26 @@ class Negotiator:
         if size is UDF.TILE_SIZE_BEST_FIT:
             size = self._get_default_size()
         return size
+
+    def _get_intent(self, udfs):
+        intent = None
+        if any(
+            udf.get_method() == "tile"
+            for udf in udfs
+        ):
+            intent = "tile"
+        if any(
+            udf.get_method() == "frame"
+            for udf in udfs
+        ):
+            intent = "frame"
+        if any(
+            udf.get_method() == "partition"
+            for udf in udfs
+        ):
+            intent = "partition"
+        assert intent is not None
+        return intent
 
     def _get_size(self, io_max_size, udf, itemsize, approx_partition_shape: Shape, base_shape):
         """

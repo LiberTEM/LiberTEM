@@ -12,12 +12,12 @@ from numpy.testing import assert_allclose
 import pytest
 import h5py
 
-from libertem.io.dataset.hdf5 import H5DataSet, _get_tileshape_nd
+from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.analysis.sum import SumAnalysis
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.auto import AutoUDF
 from libertem.io.dataset.base import TilingScheme, DataSetException
-from libertem.common import Shape, Slice
+from libertem.common import Shape
 from libertem.io.dataset.base import Negotiator
 from libertem.udf import UDF
 
@@ -684,68 +684,3 @@ def test_hdf5_filters(local_cluster_ctx, lt_ctx, tmpdir_factory):
             ds = ctx.load('HDF5', path=filename)
             res = ctx.run_udf(dataset=ds, udf=SumSigUDF())
             assert np.allclose(res['intensity'].raw_data, np.prod(ds.shape.sig))
-
-
-@pytest.mark.xfail
-def test_get_tileshape_nd():
-    pslice = Slice(origin=(0, 0, 0, 0), shape=Shape((5, 5, 16, 16), sig_dims=2))
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=pslice.shape.flatten_nav(),
-        dataset_shape=pslice.shape
-    )
-    nd = _get_tileshape_nd(pslice, tiling_scheme)
-    assert nd == (5, 5, 16, 16)
-
-    pslice = Slice(origin=(0, 0, 0, 0), shape=Shape((1, 5, 16, 16), sig_dims=2))
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=pslice.shape.flatten_nav(),
-        dataset_shape=pslice.shape
-    )
-    nd = _get_tileshape_nd(pslice, tiling_scheme)
-    assert nd == (1, 5, 16, 16)
-
-
-@pytest.mark.xfail
-@pytest.mark.parametrize('result_shape', [
-    (5, 5),
-    (3, 5),
-    (2, 5),
-    (1, 5),
-    (1, 3),
-    (1, 1),
-])
-def test_get_tileshape_nd_2(result_shape):
-    pshape = result_shape + (16, 16)
-    pslice = Slice(origin=(0, 0, 0, 0), shape=Shape(pshape, sig_dims=2))
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=pslice.shape.flatten_nav(),
-        dataset_shape=pslice.shape
-    )
-    nd = _get_tileshape_nd(pslice, tiling_scheme)
-    assert nd == pshape
-
-
-@pytest.mark.xfail
-def test_get_tileshape_nd_larger_tiling_scheme():
-    result_shape = (2, 5)
-    pshape = result_shape + (16, 16)
-    pslice = Slice(origin=(0, 0, 0, 0), shape=Shape(pshape, sig_dims=2))
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=Shape((30, 16, 16), sig_dims=2),
-        dataset_shape=pslice.shape
-    )
-    nd = _get_tileshape_nd(pslice, tiling_scheme)
-    assert nd == pshape
-
-
-@pytest.mark.xfail
-def test_get_tileshape_nd_non_divisible():
-    result_shape = (5, 5)
-    pshape = result_shape + (16, 16)
-    pslice = Slice(origin=(0, 0, 0, 0), shape=Shape(pshape, sig_dims=2))
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=Shape((16, 16, 16), sig_dims=2),
-        dataset_shape=pslice.shape
-    )
-    nd = _get_tileshape_nd(pslice, tiling_scheme)
-    assert nd == (1, 5, 16, 16)  # fallback to old tileshape behavior

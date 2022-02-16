@@ -52,10 +52,18 @@ class EchoTiledUDF(UDF):
         }
 
     def process_tile(self, tile):
-        print("process_tile", self.params.aux.shape)
+        print(
+            "process_tile",
+            self.params.aux.shape,
+            tile.shape,
+            self.results.echo.shape,
+            self.results.weighted.shape
+        )
         self.results.echo[:] = self.params.aux
+        assert len(self.params.aux2.shape) == 1
+        assert len(self.results.weighted.shape) == 1
         w = np.sum(tile, axis=(-1, -2)) * self.params.aux[..., 0]
-        self.results.weighted[:] = w
+        self.results.weighted[:] += w
 
 
 def test_aux_1(lt_ctx):
@@ -199,16 +207,23 @@ def test_aux_constructor(lt_ctx):
     )
 
 
-def test_aux_tiled(lt_ctx):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+@pytest.mark.parametrize(
+    'tileshape', [(2, 16, 16), (1, 16, 16), (1, 9, 16)]
+)
+def test_aux_tiled(lt_ctx, tileshape):
+    data = _mk_random(size=(1, 5, 16, 16), dtype="float32")
     aux_data = EchoTiledUDF.aux_data(
-        data=_mk_random(size=(16, 16, 2), dtype="float32"),
+        data=_mk_random(size=(1, 5, 2), dtype="float32"),
         kind="nav", dtype="float32", extra_shape=(2,)
     )
-    dataset = MemoryDataSet(data=data, tileshape=(7, 16, 16),
+    aux_data_2 = EchoTiledUDF.aux_data(
+        data=_mk_random(size=(1, 5), dtype="float32"),
+        kind="nav", dtype="float32"
+    )
+    dataset = MemoryDataSet(data=data, tileshape=tileshape,
                             num_partitions=2, sig_dims=2)
 
-    echo_udf = EchoTiledUDF(aux=aux_data)
+    echo_udf = EchoTiledUDF(aux=aux_data, aux2=aux_data_2)
     res = lt_ctx.run_udf(dataset=dataset, udf=echo_udf)
     assert 'weighted' in res
     print(data.shape, res['weighted'].data.shape)

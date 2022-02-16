@@ -105,6 +105,9 @@ Bugfixes
   and curl if they are defined (:issue:`1138`, :pr:`1139`).
 * :code:`make_dask_array` now works correctly when a :code:`roi` is specified
   (:issue:`933`).
+* Correct shape of buffer views in :meth:`~libertem.udf.base.UDFTileMixin.process_tile`
+  when the tile has depth 1 (:pr:`1215`).
+
 
 Documentation
 -------------

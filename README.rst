@@ -6,8 +6,8 @@
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
 
-.. |azure| image:: https://dev.azure.com/LiberTEM/LiberTEM/_apis/build/status/LiberTEM.LiberTEM?branchName=master
-.. _azure: https://dev.azure.com/LiberTEM/LiberTEM/_build/latest?definitionId=3&branchName=master
+.. |azure| image:: https://dev.azure.com/LiberTEM/LiberTEM/_apis/build/status/LiberTEM.LiberTEM-data?branchName=master
+.. _azure: https://dev.azure.com/LiberTEM/LiberTEM/_build/latest?definitionId=4&branchName=master
 
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1477847.svg
 .. _zenodo: https://doi.org/10.5281/zenodo.1477847

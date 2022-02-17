@@ -11,6 +11,9 @@ Changelog
 
 .. _continuous:
 
+0.10.0.dev0
+###########
+
 .. toctree::
   :glob:
 
@@ -19,8 +22,11 @@ Changelog
 .. _`v0-9-0`:
 .. _latest:
 
-0.9.0 / in preparation
-######################
+0.9.0 / 2022-02-17
+##################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6125247.svg
+   :target: https://doi.org/10.5281/zenodo.6125247
 
 We are most happy to announce **full Dask array integration** with this release!
 Many thanks to Matthew Bryan who implemented major parts of this non-trivial

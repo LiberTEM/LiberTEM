@@ -1,5 +1,10 @@
 comment:
-  after_n_builds: 11
+  # check_example_notebooks
+  # data_tests * 3
+  # linux_tests * 4
+  # numba_coverage
+  # node_tests
+  after_n_builds: 10
 coverage:
   status:
     project:

@@ -64,7 +64,7 @@ stages:
         - bash: ./venv/bin/tox -e notebooks -- examples/*.ipynb -v
           displayName: 'Run nbval tests $(Agent.OS)'
 
-      - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
+      - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
 
       - task: PublishTestResults@2
@@ -126,7 +126,7 @@ stages:
         - bash: ./venv/bin/tox
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
-      - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
+      - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
 
       - task: PublishTestResults@2
@@ -179,7 +179,7 @@ stages:
         - bash: tox -- -m slow --cov-append tests/
           displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
-      - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
+      - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
 
       - task: PublishTestResults@2
@@ -220,7 +220,7 @@ stages:
       - bash: tox
         displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
-      - bash: bash <(curl -s https://codecov.io/bash) -f coverage.xml
+      - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
 
       - task: PublishTestResults@2
@@ -293,7 +293,7 @@ stages:
       - bash: (cd client && npm run lint)
         displayName: 'run client linter'
 
-      - bash: bash <(curl -s https://codecov.io/bash) -f client/coverage/coverage-final.json
+      - bash: ./scripts/codecov.sh -f client/coverage/coverage-final.json
         displayName: 'Submit coverage to codecov.io'
 
   - stage: deploy

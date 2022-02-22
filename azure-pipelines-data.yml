@@ -1,5 +1,8 @@
 trigger:
-- master
+  branches:
+    include:
+      - master
+      - 'v*'
 
 variables:
   - name: PIP_CACHE_DIR

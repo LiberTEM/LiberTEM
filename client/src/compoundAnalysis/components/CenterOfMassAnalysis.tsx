@@ -225,6 +225,7 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
 
         fetch(url, {
             method: 'PUT',
+            body: JSON.stringify({}),
             credentials: "same-origin",
         }).then(req => req.json()).then((json) => {
             setGuessing(false);

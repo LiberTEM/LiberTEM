@@ -1,3 +1,4 @@
+import sys
 import itertools
 import pathlib
 import contextlib
@@ -108,6 +109,8 @@ def get_dataset(tmpdir_factory, lt_ctx,
 def test_w_copy(tmpdir_factory, lt_ctx,
                 file_header, frame_header, frame_footer,
                 frames_per_file, backend_cls, dtype):
+    if sys.platform.startswith('darwin') and backend_cls.__name__ == 'DirectBackend':
+        pytest.skip('No DirectBackend on MacOSX')
     with get_dataset(tmpdir_factory, lt_ctx,
                      frames_per_file=frames_per_file,
                      file_header=file_header,

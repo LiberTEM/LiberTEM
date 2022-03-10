@@ -9,6 +9,20 @@ from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 from libertem.io.dataset.base import MMapBackend
 
 
+class RawFileGroupSet(RawFileSet):
+    def __getitem__(self, idx):
+        """
+        Slices into fileset return a sub-fileset with same parameters
+        Indexing into fileset returns the file
+        """
+        _files = super().__getitem__(idx)
+        if isinstance(_files, list):
+            _files = RawFileGroupSet(_files,
+                                     frame_header_bytes=self._frame_header_bytes,
+                                     frame_footer_bytes=self._frame_footer_bytes)
+        return _files
+
+
 class RawFileGroupDataSet(RawFileDataSet):
     def __init__(self, paths, *args, file_header=0, frame_header=0, frame_footer=0, **kwargs):
         super().__init__(paths[0], *args, **kwargs)
@@ -45,14 +59,14 @@ class RawFileGroupDataSet(RawFileDataSet):
     def _get_fileset(self):
         end_idxs = tuple(itertools.accumulate(self._image_counts))
         start_idxs = (0,) + end_idxs[:-1]
-        return RawFileSet([RawFile(path=p,
-                                   start_idx=s,
-                                   end_idx=e,
-                                   sig_shape=self.shape.sig,
-                                   native_dtype=self._meta.raw_dtype,
-                                   frame_footer=self._frame_footer,
-                                   frame_header=self._frame_header,
-                                   file_header=self._file_header)
+        return RawFileGroupSet([RawFile(path=p,
+                                        start_idx=s,
+                                        end_idx=e,
+                                        sig_shape=self.shape.sig,
+                                        native_dtype=self._meta.raw_dtype,
+                                        frame_footer=self._frame_footer,
+                                        frame_header=self._frame_header,
+                                        file_header=self._file_header)
                            for p, s, e in zip(self._paths, start_idxs, end_idxs)],
                         frame_header_bytes=self._frame_header,
                         frame_footer_bytes=self._frame_footer)
@@ -76,10 +90,13 @@ class RawFileGroupDataSet(RawFileDataSet):
         return tuple(self._frames_per_file(p) for p in self._paths)
 
     def check_valid(self):
+        MAX_OPEN = 1000
         try:
-            fileset = self._get_fileset()
             backend = self.get_io_backend().get_impl()
-            with backend.open_files(fileset):
-                return True
+            fileset = self._get_fileset()
+            for start in range(0, len(fileset), MAX_OPEN):
+                with backend.open_files(fileset[start:start + MAX_OPEN]):
+                    pass
+            return True
         except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)

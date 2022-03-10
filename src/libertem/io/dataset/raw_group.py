@@ -94,7 +94,8 @@ class RawFileGroupDataSet(RawFileDataSet):
         chunked_paths = [self._paths[start:start + chunk_size]
                          for start in range(0, len(self._paths), chunk_size)]
         _filesizes_list = executor.map(self._get_filesizes, chunked_paths)
-        _filesizes: Dict[Union[str, pathlib.Path], int] = dict(*_filesizes_list)
+        _filesizes = dict(itertools.chain.from_iterable(d.items() for d in _filesizes_list))
+        _filesizes: Dict[Union[str, pathlib.Path], int]
         self._filesize = sum(_filesizes.values())
         self._image_counts = tuple(self._frames_per_file(path, filesize=filesize)
                                    for path, filesize in _filesizes.items())

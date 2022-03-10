@@ -1,4 +1,3 @@
-import math
 import itertools
 import pathlib
 import contextlib
@@ -6,6 +5,7 @@ import numpy as np
 import pytest
 
 from libertem.common.shape import Shape
+from libertem.common.math import prod
 from libertem.udf.raw import PickUDF
 from libertem.udf.sum import SumUDF
 from libertem.io.dataset.raw_group import RawFileGroupDataSet, RawFile, RawFileGroupSet
@@ -40,12 +40,12 @@ def raw_group_ds(tmpdir_factory,
                  dtype=np.float32):
     if isinstance(frames_per_file, int):
         if frames_per_file == -1:
-            frames_per_file = math.prod(nav_shape)
+            frames_per_file = prod(nav_shape)
         frames_per_file = (frames_per_file,)
     frames_per_file = itertools.cycle(frames_per_file)
 
     datadir = pathlib.Path(tmpdir_factory.mktemp('data'))
-    raw_data = _mk_random(size=(math.prod(nav_shape),) + sig_shape, dtype=dtype)
+    raw_data = _mk_random(size=(prod(nav_shape),) + sig_shape, dtype=dtype)
 
     paths = []
     frame_iterator = iter(raw_data)

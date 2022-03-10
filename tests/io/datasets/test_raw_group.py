@@ -225,3 +225,15 @@ def test_fileset(tmpdir_factory, lt_ctx, frames_per_file,
         assert len(subset) == ds_slice.stop - ds_slice.start
         assert subset._frame_footer_bytes == frame_footer
         assert subset._frame_header_bytes == frame_header
+
+
+@pytest.mark.parametrize("frame_header", (4,))
+@pytest.mark.parametrize("frame_footer", (8,))
+@pytest.mark.parametrize("frames_per_file", (1,))
+def test_check_valid(tmpdir_factory, lt_ctx, frames_per_file,
+                     frame_header, frame_footer):
+    with get_dataset(tmpdir_factory, lt_ctx,
+                     frames_per_file=frames_per_file,
+                     frame_header=frame_header,
+                     frame_footer=frame_footer) as (ds, _):
+        assert ds.check_valid()

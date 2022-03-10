@@ -2,7 +2,7 @@ import os
 import pathlib
 import itertools
 import numpy as np
-from typing import Union, TYPE_CHECKING, Tuple, List
+from typing import Union, TYPE_CHECKING, Tuple, List, Dict, Optional
 
 from libertem.common.math import prod
 from libertem.common import Shape
@@ -85,9 +85,11 @@ class RawFileGroupDataSet(RawFileDataSet):
         self._frame_header = frame_header
         self._frame_footer = frame_footer
 
-    def initialize(self, executor):
-        self._filesize = executor.run_function(self._get_total_filesize)
-        self._image_counts = executor.run_function(self._get_image_counts)
+    def initialize(self, executor) -> 'RawFileGroupDataSet':
+        _filesizes = executor.run_function(self._get_filesizes)
+        self._filesize = sum(_filesizes.values())
+        self._image_counts = tuple(self._frames_per_file(path, filesize=filesize)
+                                   for path, filesize in _filesizes.items())
         self._image_count = sum(self._image_counts)
         self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
@@ -108,7 +110,7 @@ class RawFileGroupDataSet(RawFileDataSet):
 
         return self
 
-    def _get_fileset(self):
+    def _get_fileset(self) -> RawFileGroupSet:
         """
         Return RawFile descriptors for each file in self._paths
         """
@@ -126,19 +128,27 @@ class RawFileGroupDataSet(RawFileDataSet):
                         frame_header_bytes=self._frame_header,
                         frame_footer_bytes=self._frame_footer)
 
-    def _get_filesize(self, path):
+    def _get_filesize(self, path: Union[str, pathlib.Path]) -> int:
         """
         Get the file size of a single file
         """
         return os.stat(path).st_size
 
-    def _get_total_filesize(self):
+    def _get_filesizes(self) -> Dict[Union[str, pathlib.Path], int]:
         """
-        Get the sum of all filesizes in supplied paths
-        """
-        return sum(self._get_filesize(p) for p in self._paths)
+        Compute the filesize of each file in self._paths
 
-    def _frames_per_file(self, path):
+        This should be the only time os.stat is called on each path
+        during initialization
+
+        In a network filesystem context this can be quite slow, might be
+        with running this method in a threaded or async way
+        """
+        return {p: self._get_filesize(p) for p in self._paths}
+
+    def _frames_per_file(self,
+                         path: Union[str, pathlib.Path],
+                         filesize: Optional[int] = None) -> int:
         """
         Calculate the number of frames in each file based on its filesize
 
@@ -147,18 +157,14 @@ class RawFileGroupDataSet(RawFileDataSet):
         frame_size = (self._frame_header
                       + np.dtype(self._dtype).itemsize * prod(self._sig_shape)
                       + self._frame_footer)
-        nframes = (self._get_filesize(path) - self._file_header) / frame_size
+        if filesize is None:
+            filesize = self._get_filesize(path)
+        nframes = (filesize - self._file_header) / frame_size
         if nframes % 1 != 0:
             raise DataSetException(f"File {path} has size inconsistent with supplied parameters")
         return int(nframes)
 
-    def _get_image_counts(self):
-        """
-        Get the number of frames in each file in self._paths
-        """
-        return tuple(self._frames_per_file(p) for p in self._paths)
-
-    def check_valid(self):
+    def check_valid(self) -> bool:
         """
         Check the fileset for validity in groups of MAX_OPEN files
 

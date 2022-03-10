@@ -79,14 +79,15 @@ class RawFileGroupDataSet(RawFileDataSet):
                          nav_shape=nav_shape, sig_shape=sig_shape,
                          **kwargs)
         self._path = None
-        self._paths = paths
+        self._paths: List[Union[str, pathlib.Path]] = paths
 
         self._file_header = file_header
         self._frame_header = frame_header
         self._frame_footer = frame_footer
 
     def initialize(self, executor) -> 'RawFileGroupDataSet':
-        _filesizes = executor.run_function(self._get_filesizes)
+        _filesizes_list: List[int] = executor.map(self._get_filesize, self._paths)
+        _filesizes = {p: f for p, f in zip(self._paths, _filesizes_list)}
         self._filesize = sum(_filesizes.values())
         self._image_counts = tuple(self._frames_per_file(path, filesize=filesize)
                                    for path, filesize in _filesizes.items())

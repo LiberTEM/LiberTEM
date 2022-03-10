@@ -2,7 +2,7 @@ import os
 import pathlib
 import itertools
 import numpy as np
-from typing import Union, TYPE_CHECKING, Tuple, List, Optional
+from typing import Union, TYPE_CHECKING, Tuple, List, Optional, Dict
 
 from libertem.common.math import prod
 from libertem.common import Shape
@@ -86,8 +86,15 @@ class RawFileGroupDataSet(RawFileDataSet):
         self._frame_footer = frame_footer
 
     def initialize(self, executor) -> 'RawFileGroupDataSet':
-        _filesizes_list: List[int] = executor.map(self._get_filesize, self._paths)
-        _filesizes = {p: f for p, f in zip(self._paths, _filesizes_list)}
+        # Stat files in groups up to size chunk_size
+        # If we are running in a threaded/distributed executor each chunk of stat
+        # calls will be hopefully be parallelised, should not be different from
+        # a straight loop when running inline
+        chunk_size = 500
+        chunked_paths = [self._paths[start:start + chunk_size]
+                         for start in range(0, len(self._paths), chunk_size)]
+        _filesizes_list = executor.map(self._get_filesizes, chunked_paths)
+        _filesizes: Dict[Union[str, pathlib.Path], int] = dict(*_filesizes_list)
         self._filesize = sum(_filesizes.values())
         self._image_counts = tuple(self._frames_per_file(path, filesize=filesize)
                                    for path, filesize in _filesizes.items())
@@ -134,6 +141,13 @@ class RawFileGroupDataSet(RawFileDataSet):
         Get the file size of a single file
         """
         return os.stat(path).st_size
+
+    def _get_filesizes(self, paths: Union[str, pathlib.Path]) -> Dict[Union[str, pathlib.Path],
+                                                                      int]:
+        """
+        Compute the filesizes for a list of paths
+        """
+        return {p: self._get_filesize(p) for p in paths}
 
     def _frames_per_file(self,
                          path: Union[str, pathlib.Path],

@@ -2,7 +2,7 @@ import os
 import pathlib
 import itertools
 import numpy as np
-from typing import Union, TYPE_CHECKING, Tuple, List, Dict, Optional
+from typing import Union, TYPE_CHECKING, Tuple, List, Optional
 
 from libertem.common.math import prod
 from libertem.common import Shape
@@ -134,18 +134,6 @@ class RawFileGroupDataSet(RawFileDataSet):
         Get the file size of a single file
         """
         return os.stat(path).st_size
-
-    def _get_filesizes(self) -> Dict[Union[str, pathlib.Path], int]:
-        """
-        Compute the filesize of each file in self._paths
-
-        This should be the only time os.stat is called on each path
-        during initialization
-
-        In a network filesystem context this can be quite slow, might be
-        with running this method in a threaded or async way
-        """
-        return {p: self._get_filesize(p) for p in self._paths}
 
     def _frames_per_file(self,
                          path: Union[str, pathlib.Path],

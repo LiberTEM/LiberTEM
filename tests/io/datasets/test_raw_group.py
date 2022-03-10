@@ -8,7 +8,7 @@ import pytest
 from libertem.common.shape import Shape
 from libertem.udf.raw import PickUDF
 from libertem.udf.sum import SumUDF
-from libertem.io.dataset.raw_group import RawFileGroupDataSet
+from libertem.io.dataset.raw_group import RawFileGroupDataSet, RawFile, RawFileGroupSet
 from libertem.io.dataset.base import BufferedBackend, MMapBackend, DirectBackend
 from libertem.io.dataset.base import Negotiator, DataSetException
 
@@ -206,3 +206,22 @@ def test_buffered_nonitemsize(tmpdir_factory, lt_ctx,
         result = lt_ctx.run_udf(dataset=ds, udf=udf)
         sum_frame = result['intensity'].data
         assert np.allclose(sum_frame, raw_data.sum(axis=(0, 1)))
+
+
+@pytest.mark.parametrize("frame_header", (4,))
+@pytest.mark.parametrize("frame_footer", (8,))
+@pytest.mark.parametrize("frames_per_file", (1,))
+def test_fileset(tmpdir_factory, lt_ctx, frames_per_file,
+                 frame_header, frame_footer):
+    with get_dataset(tmpdir_factory, lt_ctx,
+                     frames_per_file=frames_per_file,
+                     frame_header=frame_header,
+                     frame_footer=frame_footer) as (ds, _):
+        fileset = ds._get_fileset()
+        assert isinstance(fileset[5], RawFile)
+        ds_slice = slice(10, 20)
+        subset = fileset[ds_slice.start:ds_slice.stop]
+        assert isinstance(subset, RawFileGroupSet)
+        assert len(subset) == ds_slice.stop - ds_slice.start
+        assert subset._frame_footer_bytes == frame_footer
+        assert subset._frame_header_bytes == frame_header

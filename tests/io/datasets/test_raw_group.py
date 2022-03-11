@@ -240,3 +240,17 @@ def test_check_valid(tmpdir_factory, lt_ctx, frames_per_file,
                      frame_header=frame_header,
                      frame_footer=frame_footer) as (ds, _):
         assert ds.check_valid()
+
+
+def test_many_file_dataset(tmpdir_factory, lt_ctx):
+    # Generates a 40 MB dataset with > 2500 files
+    # Used to test that the optimizations related to many-file
+    # reading do not crash and we don't get an OSError for too
+    # many open files
+    with get_dataset(tmpdir_factory, lt_ctx,
+                     frames_per_file=1,
+                     nav_shape=(16, 160)) as (ds, raw_data):
+        udf = SumUDF()
+        result = lt_ctx.run_udf(dataset=ds, udf=udf)
+        sum_frame = result['intensity'].data
+        assert np.allclose(sum_frame, raw_data.sum(axis=(0, 1)))

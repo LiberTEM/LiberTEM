@@ -9,6 +9,7 @@ from libertem.common import Shape
 from .base import DataSetMeta, DataSetException
 from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 from libertem.io.dataset.base import MMapBackend
+from libertem.io.dataset.base.partition import BasePartition
 
 if TYPE_CHECKING:
     import numpy.typing as nt
@@ -29,6 +30,10 @@ class RawFileGroupSet(RawFileSet):
 
 
 class RawFileGroupDataSet(RawFileDataSet):
+    # Maximum number of files to open at one time
+    # or to allow in a single partition
+    MAX_OPEN_FILES = 256
+
     def __init__(self,
                  paths: List[Union[str, pathlib.Path]],
                  *,
@@ -90,7 +95,7 @@ class RawFileGroupDataSet(RawFileDataSet):
         # If we are running in a threaded/distributed executor each chunk of stat
         # calls will be hopefully be parallelised, should not be different from
         # a straight loop when running inline
-        chunk_size = 500
+        chunk_size = self.MAX_OPEN_FILES
         chunked_paths = [self._paths[start:start + chunk_size]
                          for start in range(0, len(self._paths), chunk_size)]
         _filesizes_list = executor.map(self._get_filesizes, chunked_paths)
@@ -170,20 +175,87 @@ class RawFileGroupDataSet(RawFileDataSet):
 
     def check_valid(self) -> bool:
         """
-        Check the fileset for validity in groups of MAX_OPEN files
+        Check the fileset for validity in groups of MAX_OPEN_FILES
 
         Necessary to avoid a 'too many open files' error when
         opening very large datasets
 
         :meta private:
         """
-        MAX_OPEN = 1000
         try:
             backend = self.get_io_backend().get_impl()
             fileset = self._get_fileset()
-            for start in range(0, len(fileset), MAX_OPEN):
-                with backend.open_files(fileset[start:start + MAX_OPEN]):
+            for start in range(0, len(fileset), self.MAX_OPEN_FILES):
+                with backend.open_files(fileset[start:start + self.MAX_OPEN_FILES]):
                     pass
             return True
         except (OSError, ValueError) as e:
             raise DataSetException("invalid dataset: %s" % e)
+
+    def get_num_partitions(self) -> int:
+        """
+        Get the number of partitions for the dataset in a way
+        which respects MAX_OPEN_FILES to avoid an OSError
+
+        Will likely still fail if using a threaded executor
+        as I think the OS-level max open files is for the whole process
+
+        This can probably be cached or pre-computed once the dataset
+        is initialized.
+
+        Returns
+        -------
+        int
+            Number of partitions to split the dataset into
+        """
+        num_part = super().get_num_partitions()
+        frames_cumulative = np.cumsum(self._image_counts)
+        files_per_part = self._nfiles_for_partitions(num_part, frames_cumulative)
+        while any(nf > self.MAX_OPEN_FILES for nf in files_per_part):
+            num_part += 1
+            files_per_part = self._nfiles_for_partitions(num_part, frames_cumulative)
+        return num_part
+
+    def _nfiles_for_partitions(self, num_part: int, frames_cumulative: np.ndarray) -> List[int]:
+        """
+        Get the number of files corresponding to each partition
+
+        Parameters
+        ----------
+        num_part : int
+            The number of partitions to split the files into
+        frames_cumulative : np.ndarray
+            The cumulative number of frames given by the ordered list of paths
+
+        Returns
+        -------
+        List[int]
+            The number of files that map to each partition
+        """
+        nfiles = []
+        for _, start, stop in BasePartition.make_slices(self.meta.shape, num_part):
+            nfiles.append(self._files_in_partition(start, stop, frames_cumulative))
+        return nfiles
+
+    def _files_in_partition(self, start: int, stop: int, frames_cumulative: np.ndarray) -> int:
+        """
+        Get the number of files corresponding to a single partition
+
+        Parameters
+        ----------
+        start : int
+            Start flat navigation index for the partition
+        stop : int
+            End flat navigation index for the partition
+        frames_cumulative : np.ndarray
+            The cumulative number of frames given by the ordered list of paths
+
+        Returns
+        -------
+        int
+            The number of files in the partition
+        """
+        start_idx, end_idx = np.searchsorted(frames_cumulative, [start, stop])
+        # possible off-by-one but it's not critical
+        end_idx = max(end_idx, start_idx + 1)
+        return end_idx - start_idx

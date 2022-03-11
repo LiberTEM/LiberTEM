@@ -35,6 +35,8 @@ class RawFileGroupSet(RawFileSet):
 class RawFileGroupDataSet(RawFileDataSet):
     # Maximum number of files to open at one time
     # or to allow in a single partition
+    # This is a conservative value, seems like Windows it is around
+    # 512, and I've seen Linux referenced at 1024
     MAX_OPEN_FILES = 256
 
     def __init__(self,

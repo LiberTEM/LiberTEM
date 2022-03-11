@@ -256,17 +256,35 @@ def test_check_valid(tmpdir_factory, lt_ctx, frames_per_file,
 
 
 def test_many_file_dataset(tmpdir_factory, lt_ctx):
-    # Generates a 40 MB dataset with > 2500 files
+    # Generates a dataset with many files by repeating
+    # access to the same small set of files
     # Used to test that the optimizations related to many-file
     # reading do not crash and we don't get an OSError for too
     # many open files
+    # This should also log a warning that we are reading
+    # duplicated file paths but that is tested elsewhere
+    upscaling_factor = 20
     with get_dataset(tmpdir_factory, lt_ctx,
-                     frames_per_file=1,
-                     nav_shape=(16, 160)) as (ds, raw_data):
+                     frames_per_file=1) as (ds, raw_data):
+        nav_shape = ds.meta.shape.nav
+        new_nav_shape = (nav_shape[0] * upscaling_factor,) + nav_shape[1:]
+        new_ds = RawFileGroupDataSet(paths=upscaling_factor * ds._paths,
+                                     nav_shape=new_nav_shape,
+                                     sig_shape=ds.meta.shape.sig,
+                                     dtype=raw_data.dtype)
+        new_ds.initialize(lt_ctx.executor)
+
+        assert len(new_ds._paths) > 2000
+
+        num_part = new_ds.get_num_partitions()
+        frames_cumulative = np.cumsum(new_ds._image_counts)
+        files_per_partition = new_ds._nfiles_for_partitions(num_part, frames_cumulative)
+        assert all(nf <= new_ds.MAX_OPEN_FILES for nf in files_per_partition)
+
         udf = SumUDF()
-        result = lt_ctx.run_udf(dataset=ds, udf=udf)
+        result = lt_ctx.run_udf(dataset=new_ds, udf=udf)
         sum_frame = result['intensity'].data
-        assert np.allclose(sum_frame, raw_data.sum(axis=(0, 1)))
+        assert np.allclose(sum_frame, upscaling_factor * raw_data.sum(axis=(0, 1)))
 
 
 def test_string_paths(tmpdir_factory, lt_ctx):

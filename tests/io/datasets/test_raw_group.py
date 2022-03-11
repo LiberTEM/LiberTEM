@@ -38,7 +38,8 @@ def raw_group_ds(tmpdir_factory,
                  frame_header, frame_footer,
                  nav_shape=(16, 16),
                  sig_shape=(64, 64),
-                 dtype=np.float32):
+                 dtype=np.float32,
+                 as_pathlib=True):
     if isinstance(frames_per_file, int):
         if frames_per_file == -1:
             frames_per_file = prod(nav_shape)
@@ -64,6 +65,9 @@ def raw_group_ds(tmpdir_factory,
             fp.write(fbytes)
         paths.append(filename)
 
+    if not as_pathlib:
+        paths = [str(path) for path in paths]
+
     return raw_data.reshape(nav_shape + sig_shape), paths
 
 
@@ -76,6 +80,7 @@ def get_dataset(tmpdir_factory, lt_ctx,
                 nav_shape=(16, 16),
                 sig_shape=(64, 64),
                 dtype=np.float32,
+                as_pathlib=True,
                 backend=None):
     # Files per frame -1 corresponds to one raw file containing all frames
     raw_data, paths = raw_group_ds(tmpdir_factory,
@@ -85,7 +90,8 @@ def get_dataset(tmpdir_factory, lt_ctx,
                                    frame_footer=frame_footer,
                                    dtype=dtype,
                                    nav_shape=nav_shape,
-                                   sig_shape=sig_shape)
+                                   sig_shape=sig_shape,
+                                   as_pathlib=as_pathlib)
     shape = Shape(raw_data.shape, 2)
     ds = RawFileGroupDataSet(paths=paths,
                              nav_shape=shape.nav,
@@ -97,7 +103,11 @@ def get_dataset(tmpdir_factory, lt_ctx,
                              io_backend=backend)
     ds.initialize(lt_ctx.executor)
     yield ds, raw_data
-    _ = [f.unlink() for f in paths]
+    for f in paths:
+        try:
+            pathlib.Path(f).unlink()
+        except (OSError, FileNotFoundError):
+            pass
 
 
 @pytest.mark.parametrize("file_header", (0, 4))
@@ -250,6 +260,16 @@ def test_many_file_dataset(tmpdir_factory, lt_ctx):
     with get_dataset(tmpdir_factory, lt_ctx,
                      frames_per_file=1,
                      nav_shape=(16, 160)) as (ds, raw_data):
+        udf = SumUDF()
+        result = lt_ctx.run_udf(dataset=ds, udf=udf)
+        sum_frame = result['intensity'].data
+        assert np.allclose(sum_frame, raw_data.sum(axis=(0, 1)))
+
+
+def test_string_paths(tmpdir_factory, lt_ctx):
+    with get_dataset(tmpdir_factory, lt_ctx,
+                     frames_per_file=1,
+                     as_pathlib=False) as (ds, raw_data):
         udf = SumUDF()
         result = lt_ctx.run_udf(dataset=ds, udf=udf)
         sum_frame = result['intensity'].data

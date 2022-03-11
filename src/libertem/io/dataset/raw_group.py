@@ -1,5 +1,6 @@
 import os
 import pathlib
+import logging
 import itertools
 import numpy as np
 from typing import Union, TYPE_CHECKING, Tuple, List, Optional
@@ -10,6 +11,8 @@ from .base import DataSetMeta, DataSetException
 from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 from libertem.io.dataset.base import MMapBackend
 from libertem.io.dataset.base.partition import BasePartition
+
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     import numpy.typing as nt
@@ -91,6 +94,8 @@ class RawFileGroupDataSet(RawFileDataSet):
         self._frame_footer = frame_footer
 
     def initialize(self, executor) -> 'RawFileGroupDataSet':
+        if len(set(self._paths)) != len(self._paths):
+            log.warning(f'Paths passed to {self.__class__.__name__} contains duplicates')
         # Stat files in groups up to size chunk_size
         # If we are running in a threaded/distributed executor each chunk of stat
         # calls will be hopefully be parallelised, should not be different from

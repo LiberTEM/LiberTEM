@@ -1,5 +1,6 @@
 import sys
 import itertools
+import logging
 import pathlib
 import contextlib
 import numpy as np
@@ -14,6 +15,8 @@ from libertem.io.dataset.base import BufferedBackend, MMapBackend, DirectBackend
 from libertem.io.dataset.base import Negotiator, DataSetException
 
 from utils import _mk_random
+
+log = logging.getLogger(__name__)
 
 
 def random_bytes(n):
@@ -274,3 +277,40 @@ def test_string_paths(tmpdir_factory, lt_ctx):
         result = lt_ctx.run_udf(dataset=ds, udf=udf)
         sum_frame = result['intensity'].data
         assert np.allclose(sum_frame, raw_data.sum(axis=(0, 1)))
+
+
+def test_single_file(tmpdir_factory, lt_ctx):
+    with get_dataset(tmpdir_factory, lt_ctx,
+                     frames_per_file=-1) as (ds, raw_data):
+        new_ds = RawFileGroupDataSet(paths=ds._paths[0],
+                                     nav_shape=ds.meta.shape.nav,
+                                     sig_shape=ds.meta.shape.sig,
+                                     dtype=raw_data.dtype)
+        new_ds.initialize(lt_ctx.executor)
+
+        udf = SumUDF()
+        result = lt_ctx.run_udf(dataset=new_ds, udf=udf)
+        sum_frame = result['intensity'].data
+        assert np.allclose(sum_frame, raw_data.sum(axis=(0, 1)))
+
+
+def test_repeated_file(caplog, tmpdir_factory, lt_ctx):
+    # Test that we log a warning if paths argument contains
+    # duplicates, but also that the class functions correctly
+    # in this case
+    caplog.set_level(logging.WARNING)
+    with get_dataset(tmpdir_factory, lt_ctx,
+                     frames_per_file=-1) as (ds, raw_data):
+        nav_shape = ds.meta.shape.nav
+        new_nav_shape = (nav_shape[0] * 2,) + nav_shape[1:]
+        new_ds = RawFileGroupDataSet(paths=2 * ds._paths,
+                                     nav_shape=new_nav_shape,
+                                     sig_shape=ds.meta.shape.sig,
+                                     dtype=raw_data.dtype)
+        new_ds.initialize(lt_ctx.executor)
+
+        udf = SumUDF()
+        result = lt_ctx.run_udf(dataset=new_ds, udf=udf)
+        sum_frame = result['intensity'].data
+        assert np.allclose(sum_frame, 2 * raw_data.sum(axis=(0, 1)))
+        assert 'contains duplicates' in caplog.text

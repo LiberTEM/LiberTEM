@@ -2,7 +2,7 @@ import os
 import pathlib
 import itertools
 import numpy as np
-from typing import Union, TYPE_CHECKING, Tuple, List, Optional, Dict
+from typing import Union, TYPE_CHECKING, Tuple, List, Optional
 
 from libertem.common.math import prod
 from libertem.common import Shape
@@ -98,12 +98,11 @@ class RawFileGroupDataSet(RawFileDataSet):
         chunk_size = self.MAX_OPEN_FILES
         chunked_paths = [self._paths[start:start + chunk_size]
                          for start in range(0, len(self._paths), chunk_size)]
-        _filesizes_list = executor.map(self._get_filesizes, chunked_paths)
-        _filesizes = dict(itertools.chain.from_iterable(d.items() for d in _filesizes_list))
-        _filesizes: Dict[Union[str, pathlib.Path], int]
-        self._filesize = sum(_filesizes.values())
+        _filesizes_lists = executor.map(self._get_filesizes, chunked_paths)
+        _filesizes = tuple(itertools.chain(*_filesizes_lists))
+        self._filesize = sum(v[1] for v in _filesizes)
         self._image_counts = tuple(self._frames_per_file(path, filesize=filesize)
-                                   for path, filesize in _filesizes.items())
+                                   for path, filesize in _filesizes)
         self._image_count = sum(self._image_counts)
         self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
@@ -148,12 +147,13 @@ class RawFileGroupDataSet(RawFileDataSet):
         """
         return os.stat(path).st_size
 
-    def _get_filesizes(self, paths: Union[str, pathlib.Path]) -> Dict[Union[str, pathlib.Path],
-                                                                      int]:
+    def _get_filesizes(self, paths: Union[str, pathlib.Path]) -> List[Tuple[Union[str,
+                                                                                  pathlib.Path],
+                                                                            int]]:
         """
         Compute the filesizes for a list of paths
         """
-        return {p: self._get_filesize(p) for p in paths}
+        return [(p, self._get_filesize(p)) for p in paths]
 
     def _frames_per_file(self,
                          path: Union[str, pathlib.Path],

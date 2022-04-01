@@ -5,6 +5,7 @@ import logging
 import time
 
 import numpy as np
+import magic
 import h5py
 
 from libertem.common.math import prod
@@ -304,8 +305,12 @@ class H5DataSet(DataSet):
     @classmethod
     def _do_detect(cls, path):
         try:
-            with h5py.File(path, 'r'):
-                pass
+            mime = magic.from_file(path, mime=True)
+            if mime == 'application/x-hdf':
+                with h5py.File(path, 'r'):
+                    pass
+            else:
+                raise DataSetException("File magic doesn't recognize HDF5")
         except OSError as e:
             raise DataSetException(repr(e)) from e
 

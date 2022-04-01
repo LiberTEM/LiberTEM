@@ -165,6 +165,7 @@ setup(
         'defusedxml',
         'async_generator',  # backwards-compat. for contextlib.asynccontextmanager
         'typing-extensions',  # backwards-compatibility for newer typing constructs
+        'python-magic',
     ],
     extras_require={
         'torch': 'torch',

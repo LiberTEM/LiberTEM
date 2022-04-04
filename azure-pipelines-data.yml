@@ -175,8 +175,13 @@ stages:
       - bash: pip install -U tox
         displayName: 'install requirements'
 
-      - bash: tox
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: tox -r
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
+
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: tox
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - ${{ if eq(parameters.run_slow, true) }}:
         - bash: tox -- -m slow --cov-append tests/
@@ -217,11 +222,13 @@ stages:
 #          path: $(tox_dir)
 #        displayName: 'cache tox environment'
 
-      - bash: pip install -U tox
-        displayName: 'install requirements'
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: tox -r
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
 
-      - bash: tox
-        displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: tox
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
@@ -266,8 +273,14 @@ stages:
 
       - bash: pip install -U tox
         displayName: 'install requirements'
-      - bash: tox
-        displayName: 'Run tox lint $(TOXENV) $(Agent.OS)'
+
+      - ${{ if eq(parameters.recreate_tox, true) }}:
+        - bash: tox -r
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
+
+      - ${{ if eq(parameters.recreate_tox, false) }}:
+        - bash: tox
+          displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
     - job: node_tests
       pool: DataAccess

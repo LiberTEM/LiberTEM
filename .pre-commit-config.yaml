@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.1.0
+  rev: v4.2.0
   hooks:
   - id: trailing-whitespace
     files: ^src/
@@ -19,11 +19,11 @@ repos:
   - id: flake8
     exclude: ^prototypes/
 - repo: https://github.com/regebro/pyroma
-  rev: "4.0b1"
+  rev: "4.0"
   hooks:
   - id: pyroma
 - repo: https://github.com/asottile/pyupgrade
-  rev: v2.31.1
+  rev: v2.32.0
   hooks:
     - id: pyupgrade
       args: ["--py36-plus"]

@@ -10,5 +10,4 @@ export interface Analysis {
     jobs: JobList,
 }
 
-export type AnalysisState = Analysis & {
-};
+export type AnalysisState = Analysis;

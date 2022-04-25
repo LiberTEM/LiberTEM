@@ -222,6 +222,9 @@ stages:
 #          path: $(tox_dir)
 #        displayName: 'cache tox environment'
 
+      - bash: pip install -U tox
+        displayName: 'install requirements'
+
       - ${{ if eq(parameters.recreate_tox, true) }}:
         - bash: tox -r
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'

@@ -1,4 +1,4 @@
-import * as pathfind from 'path';
+import * as pathfind from 'path-browserify';
 import { FormikErrors, FormikValues, withFormik } from 'formik';
 import { DatasetTypes, ShapeLengths } from "../messages";
 import { OpenFormProps } from "./types";

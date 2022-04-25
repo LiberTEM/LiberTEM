@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Dispatch } from "redux";
 import { Button, Dropdown, DropdownProps, Header, Icon, Modal, Segment, Tab } from "semantic-ui-react";
+import { AllActions } from "../../actions";
 import { AnalysisState } from "../../analysis/types";
 import { dispatchGenericError } from "../../errors/helpers";
 import { writeClipboard } from "../../helpers";
@@ -80,7 +82,7 @@ const CopyScripts: React.FC<CopyScriptsProps> = ({ compoundAnalysis }) => {
         analysis: initialAnalysis,
     });
 
-    const dispatch = useDispatch();
+    const dispatch: Dispatch<AllActions> = useDispatch();
 
     const cell = (code: string) => {
         const copy = () => {

@@ -23,13 +23,10 @@ const renderRow = (param: any[] | string, key: string, idx: number) => (
 
 const renderParams = (params: DatasetFormParams) => 
     Object.entries(params).map(([key, param], idx) => {
-        if (param && typeof param === 'object' && !(param instanceof Array)) {
-            return Object.keys(param).map((objKey: string, keyIdx: number) => renderRow(param, objKey, keyIdx));
-        } else if (param && (typeof param === "string" || param instanceof Array)) {
+        if (param && (typeof param === "string" || param instanceof Array)) {
             return renderRow(param, key, idx);
         }
     });
-
 
 const DatasetParams: React.FC<DatasetProps> = ({ dataset }) => (
     <Table>

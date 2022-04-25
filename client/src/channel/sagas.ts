@@ -19,7 +19,7 @@ const createWebSocketChannel = (/* addr */): SocketChannel => eventChannel((emit
             // TODO: cleanup createObjectURL results somewhere
             emit(channelMessages.Messages.binary(URL.createObjectURL(msg.data)));
         } else {
-            const parsed = JSON.parse(msg.data) as channelMessages.Messages;
+            const parsed = JSON.parse(msg.data as string) as channelMessages.Messages;
             emit(parsed);
         }
     }

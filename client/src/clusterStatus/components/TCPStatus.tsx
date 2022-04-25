@@ -1,12 +1,14 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { Dispatch } from "redux";
 import { Accordion, Button, Header, Icon, List, Modal, Segment } from "semantic-ui-react";
 import { v4 as uuid } from 'uuid';
-import { HostDetails } from "../../messages";
-import { getClusterDetail } from "../api";
+import { AllActions } from "../../actions";
 import * as errorActions from "../../errors/actions";
 import { writeClipboard } from "../../helpers";
+import { HostDetails } from "../../messages";
+import { getClusterDetail } from "../api";
 
 
 const ClusterDetails = (details: HostDetails[]) => {
@@ -88,7 +90,7 @@ const TCPStatus: React.FC<TCPStatusProps> = ({ address }) => {
         `ctx = lt.Context(executor=executor)`,
     ];
 
-    const dispatch = useDispatch();
+    const dispatch: Dispatch<AllActions> = useDispatch();
 
     const connectionCode = template.join("\n");
     const code = connectionCode.replace("URI", address);

@@ -13,12 +13,7 @@ RUN python3.9 -m venv /venv/
 # Update requirements.txt with ./update_reqs.sh
 COPY packaging/docker/requirements.txt /requirements.txt
 RUN /venv/bin/pip install -U pip
-RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt
-
-# Include pyproject.toml to allow building for Python 3.9
-# https://github.com/pyFFTW/pyFFTW/pull/226
-# FIXME switch to release version as soon as included
-RUN /venv/bin/pip install -e 'git+https://github.com/pyFFTW/pyFFTW.git#egg=pyfftw'
+RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt && /venv/bin/pip install --no-cache pyfftw
 
 # Only install test requirements if dev is set
 # docker build (...) --build-arg dev=1 (...) for dev build

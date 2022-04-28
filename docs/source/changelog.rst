@@ -19,8 +19,21 @@ Changelog
 
   changelog/*/*
 
-.. _`v0-9-0`:
+.. _`v0-9-2`:
 .. _latest:
+
+0.9.2 / 2022-04-28
+##################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6502282.svg
+   :target: https://doi.org/10.5281/zenodo.6502282
+
+This is a bugfix release with two small fixes:
+
+* Example notebook: compatibility with HyperSpy 1.7.0 :pr:`1242`
+* Compatibility of CoM auto button with Jupyter server proxy :pr:`1220`
+
+.. _`v0-9-0`:
 
 0.9.0 / 2022-02-17
 ##################

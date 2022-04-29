@@ -6,6 +6,9 @@ import sparse
 
 from libertem.utils import make_polar
 
+# Import here for backwards compatibility, refs #1031
+from libertem.common.sparse import to_dense, to_sparse, is_sparse  # NOQA: F401
+
 MaskArrayType = Union[np.ndarray, sp.coo.coo_matrix, sp.dok.dok_matrix]
 MaskFactoriesType = Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]]
 
@@ -409,27 +412,3 @@ def gradient_x(imageSizeX, imageSizeY, dtype=np.float32):
 
 def gradient_y(imageSizeX, imageSizeY, dtype=np.float32):
     return gradient_x(imageSizeY, imageSizeX, dtype).transpose()
-
-
-def to_dense(a):
-    if isinstance(a, sparse.SparseArray):
-        return a.todense()
-    elif sp.issparse(a):
-        return a.toarray()
-    else:
-        return np.array(a)
-
-
-def to_sparse(a):
-    if isinstance(a, sparse.COO):
-        return a
-    elif isinstance(a, sparse.SparseArray):
-        return sparse.COO(a)
-    elif sp.issparse(a):
-        return sparse.COO.from_scipy_sparse(a)
-    else:
-        return sparse.COO.from_numpy(np.array(a))
-
-
-def is_sparse(a):
-    return isinstance(a, sparse.SparseArray) or sp.issparse(a)

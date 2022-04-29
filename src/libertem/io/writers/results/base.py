@@ -1,6 +1,6 @@
 from typing import Type, Dict
 
-from libertem.analysis.base import AnalysisResultSet
+from libertem.common.analysis import AnalysisResultSet
 
 
 class ResultFormatRegistry(type):

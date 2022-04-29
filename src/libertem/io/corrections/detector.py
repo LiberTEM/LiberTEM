@@ -3,7 +3,7 @@ import numba
 import sparse
 
 from libertem.common.math import prod
-from libertem.masks import is_sparse
+from libertem.common.sparse import is_sparse
 from libertem.common.numba import (
     numba_ravel_multi_index_multi, numba_unravel_index_multi
 )

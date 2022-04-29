@@ -7,7 +7,7 @@ import numpy as np
 import cloudpickle
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 
-from libertem.masks import to_dense, to_sparse, is_sparse
+from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common import Slice
 
 

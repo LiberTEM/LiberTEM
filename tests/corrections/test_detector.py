@@ -4,7 +4,7 @@ import pytest
 
 from libertem.utils.generate import gradient_data, exclude_pixels
 from libertem.io.corrections import detector
-from libertem.masks import is_sparse
+from libertem.common.sparse import is_sparse
 
 
 REPEATS = 1

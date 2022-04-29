@@ -6,7 +6,7 @@ import numpy as np
 import sparse
 
 
-from libertem.masks import to_dense
+from libertem.common.sparse import to_dense
 from libertem.analysis.gridmatching import calc_coords
 from libertem.udf import UDF
 import libertem.common.backend as bae

@@ -6,7 +6,7 @@ import psutil
 import numpy as np
 
 from libertem.common.math import prod
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
     File, MMapBackend,

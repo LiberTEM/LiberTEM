@@ -11,7 +11,7 @@ from libertem.common.math import prod
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.io.corrections import CorrectionSet
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices,
     TilingScheme,

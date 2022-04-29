@@ -8,7 +8,7 @@ from libertem.io.dataset.base import (
     DataSet, DataSetMeta, BasePartition, File, FileSet, DataSetException
 )
 from libertem.io.dataset.base.backend_mmap import MMapFile, MMapBackend, MMapBackendImpl
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 
 log = logging.getLogger(__name__)
 

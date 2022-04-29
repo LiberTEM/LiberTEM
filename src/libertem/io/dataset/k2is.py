@@ -14,7 +14,7 @@ from ncempy.io import dm
 from libertem.common.math import prod
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, BasePartition, DataSetException, DataSetMeta,
     FileSet, File, Decoder, make_get_read_ranges,

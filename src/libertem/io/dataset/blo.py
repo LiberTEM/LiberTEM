@@ -9,7 +9,7 @@ from .base import (
     DataSet, DataSetException, DataSetMeta,
     BasePartition, FileSet, File, IOBackend,
 )
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 
 MAGIC_EXPECT = 258
 

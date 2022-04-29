@@ -21,6 +21,9 @@ class JobCancelledError(Exception):
 
 
 class Environment:
+    '''
+    Create the environment to run a task, in particular thread count.
+    '''
     def __init__(self, threads_per_worker: Optional[int], threaded_executor: bool):
         self._threads_per_worker = threads_per_worker
         self._threaded_executor = threaded_executor
@@ -62,6 +65,9 @@ class Environment:
 
 
 class TaskProtocol(Protocol):
+    '''
+    Interface for tasks
+    '''
     def __call__(self, params: "UDFParams", env: Environment):
         pass
 
@@ -70,6 +76,9 @@ T = TypeVar('T')
 
 
 class JobExecutor:
+    '''
+    Interface to execute functions on workers.
+    '''
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable `fn` on any worker
@@ -172,7 +181,7 @@ class JobExecutor:
 
     def run_each_worker(self, fn, *args, **kwargs):
         """
-        Run `fn` on each worker process, and pass :code:`*args`,
+        Run :code:`fn` on each worker process, and pass :code:`*args`,
         :code:`**kwargs` to it.
 
         Useful, for example, if you need to prepare the environment of
@@ -182,11 +191,9 @@ class JobExecutor:
         ----------
         fn : callable
             Function to call
-
-        *args
+        \\*args
             Arguments for fn
-
-        **kwargs
+        \\*\\*kwargs
             Keyword arguments for fn
 
         Returns
@@ -250,6 +257,9 @@ class JobExecutor:
 
 
 class AsyncJobExecutor:
+    '''
+    Async version of :class:`JobExecutor`.
+    '''
     async def run_tasks(self, tasks, params_handle, cancel_id):
         """
         Run a number of Tasks, yielding (result, task) tuples
@@ -285,7 +295,7 @@ class AsyncJobExecutor:
 
     async def run_each_worker(self, fn, *args, **kwargs):
         """
-        Run `fn` on each worker process, and pass *args, **kwargs to it.
+        Run :code:`fn` on each worker process, and pass :code:`*args`, :code:`**kwargs` to it.
 
         Useful, for example, if you need to prepare the environment of
         each Python interpreter, warm up per-process caches etc.
@@ -294,11 +304,10 @@ class AsyncJobExecutor:
         ----------
         fn : callable
             Function to call
-
-        *args
+        \\*args
             Arguments for fn
 
-        **kwargs
+        \\*\\*kwargs
             Keyword arguments for fn
         """
         raise NotImplementedError()

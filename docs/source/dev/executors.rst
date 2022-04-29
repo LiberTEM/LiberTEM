@@ -16,6 +16,12 @@ parts of LiberTEM. See :ref:`executors` for an overview from a user's perspectiv
     executors are reasonably stable. The rest of the API is subject to
     change without notice.
 
+Base classes
+................
+
+.. automodule:: libertem.common.executor
+    :members:
+
 .. _`dask executor`:
 
 Dask.Distributed

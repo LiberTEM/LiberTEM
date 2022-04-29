@@ -30,7 +30,7 @@ from libertem.io.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
-from libertem.executor.base import Environment, JobExecutor, TaskProtocol
+from libertem.common.executor import Environment, JobExecutor, TaskProtocol
 
 if TYPE_CHECKING:
     from typing import OrderedDict
@@ -267,7 +267,7 @@ class UDFMeta:
             set in the UDF based on :code:`threads_per_worker`. Numba, pyfftw, Torch, NumPy
             and SciPy should not be affected since they are loaded before the first discovery.
 
-        See also: :func:`libertem.utils.threading.set_num_threads`
+        See also: :func:`libertem.common.threading.set_num_threads`
 
         .. versionadded:: 0.7.0
         """

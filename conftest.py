@@ -27,14 +27,15 @@ from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import BufferedBackend, MMapBackend, DirectBackend
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.executor.concurrent import ConcurrentJobExecutor
-from libertem.utils.threading import set_num_threads_env
+from libertem.common.threading import set_num_threads_env
 from libertem.viz.base import Dummy2DPlot
 
 from libertem.utils.devices import detect
 
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState
-from libertem.executor.base import AsyncAdapter, sync_to_async
+from libertem.executor.base import AsyncAdapter
+from libertem.common.async_utils import sync_to_async
 from libertem.common.async_utils import adjust_event_loop_policy
 
 # A bit of gymnastics to import the test utilities since this

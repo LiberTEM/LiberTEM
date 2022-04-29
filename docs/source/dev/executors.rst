@@ -4,7 +4,7 @@ LiberTEM executors
 ==================
 
 All access to data and processing is done by an executor that implements the
-:class:`~libertem.executor.base.JobExecutor` interface to run functions and
+:class:`~libertem.common.executor.JobExecutor` interface to run functions and
 tasks. The executor specifies where and how processing is done, including
 running on a cluster or in a single thread, while being independent of other
 parts of LiberTEM. See :ref:`executors` for an overview from a user's perspective.

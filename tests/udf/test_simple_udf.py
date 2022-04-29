@@ -5,7 +5,7 @@ import pytest
 
 from libertem.udf.base import UDF, UDFRunner, UDFParams
 from libertem.udf.base import UDFMeta
-from libertem.executor.base import Environment
+from libertem.common.executor import Environment
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
 from libertem.utils.devices import detect

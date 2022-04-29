@@ -3,12 +3,13 @@ import cloudpickle
 import psutil
 import contextlib
 
-from .base import JobExecutor, Environment, TaskProtocol
-from .scheduler import Worker, WorkerSet
+from .base import BaseJobExecutor
+from libertem.common.executor import Environment, TaskProtocol
+from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 
 
-class InlineJobExecutor(JobExecutor):
+class InlineJobExecutor(BaseJobExecutor):
     """
     Naive JobExecutor that just iterates over partitions and processes them one after another
 

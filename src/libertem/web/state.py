@@ -8,7 +8,7 @@ import psutil
 import libertem
 from libertem.api import Context
 from libertem.analysis.base import AnalysisResultSet
-from libertem.executor.base import JobExecutor
+from libertem.common.executor import JobExecutor
 from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.io.writers.results import formats  # NOQA

@@ -8,13 +8,14 @@ from typing import Iterable, Any, Optional, Tuple
 from dask import distributed as dd
 import distributed
 
-from libertem.utils.threading import set_num_threads_env
+from libertem.common.threading import set_num_threads_env
 
-from .base import (
-    JobExecutor, JobCancelledError, TaskProtocol, sync_to_async, AsyncAdapter,
-    Environment,
+from .base import BaseJobExecutor, AsyncAdapter
+from libertem.common.executor import (
+    JobCancelledError, TaskProtocol, Environment,
 )
-from .scheduler import Worker, WorkerSet
+from libertem.common.async_utils import sync_to_async
+from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.async_utils import adjust_event_loop_policy
 
@@ -298,7 +299,7 @@ class CommonDaskMixin:
         return details_sorted
 
 
-class DaskJobExecutor(CommonDaskMixin, JobExecutor):
+class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     '''
     Default LiberTEM executor that uses `Dask futures
     <https://docs.dask.org/en/stable/futures.html>`_.

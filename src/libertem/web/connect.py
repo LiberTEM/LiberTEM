@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING
 
 import tornado.web
 
-from libertem.executor.base import AsyncAdapter, sync_to_async
+from libertem.executor.base import AsyncAdapter
+from libertem.common.async_utils import sync_to_async
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.web.engine import JobEngine
 from .messages import Message

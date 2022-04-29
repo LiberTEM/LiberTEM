@@ -819,7 +819,7 @@ New features
 * :ref:`Clustering` analysis (:pr:`401,408` by :user:`kruzaeva`).
 * :class:`libertem.io.dataset.dm.DMDataSet` implementation based on ncempy (:pr:`497`)
 
-  * Adds a new :meth:`~libertem.executor.base.JobExecutor.map` executor primitive. Used to concurrently
+  * Adds a new :meth:`~libertem.common.executor.JobExecutor.map` executor primitive. Used to concurrently
     read the metadata for DM3/DM4 files on initialization.
   * Note: no support for the web GUI yet, as the naming patterns for DM file series varies wildly. Needs
     changes in the file dialog.

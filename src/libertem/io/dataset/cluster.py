@@ -10,7 +10,7 @@ from .base import (
     WritablePartition, WritableDataSet
 )
 from .raw import RawFile, RawFileSet
-from libertem.executor.scheduler import WorkerSet
+from libertem.common.scheduler import WorkerSet
 from libertem.io.writers.base import WriteHandle
 from libertem.common import Shape, Slice
 

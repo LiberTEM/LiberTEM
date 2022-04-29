@@ -18,12 +18,15 @@ import libertem.analysis.gridmatching   # NOQA: F401
 
 # old imports, refs #1031
 from libertem.corrections import CorrectionSet  # NOQA: F401
-from libertem.corrections.corrset import CorrectionSet as _  # NOQA: F401
+from libertem.corrections.corrset import CorrectionSet  # NOQA: F401,F811
 from libertem.corrections.detector import (  # NOQA: F401
     correct, RepairDescriptor, RepairValueError, correct_dot_masks
 )
 
 from libertem.masks import to_dense, to_sparse, is_sparse  # NOQA: F401
+
+from libertem.viz import encode_image  # NOQA: F401
+from libertem.viz.base import encode_image  # NOQA: F401,F811
 
 
 def test_stuff():

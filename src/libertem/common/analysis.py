@@ -54,7 +54,7 @@ class AnalysisResult:
         return np.array(self.raw_data)
 
     def get_image(self, save_kwargs: Optional[Dict] = None) -> BytesIO:
-        from libertem.viz import encode_image
+        from libertem.common.viz import encode_image
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 
     @property

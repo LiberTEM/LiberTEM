@@ -28,7 +28,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.io.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
-from libertem.utils.async_utils import async_generator_eager
+from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.base import Environment, JobExecutor, TaskProtocol
 

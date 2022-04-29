@@ -3,7 +3,7 @@ import concurrent
 
 import pytest
 
-from libertem.utils.async_utils import async_generator_eager, async_generator
+from libertem.common.async_utils import async_generator_eager, async_generator
 
 
 @pytest.fixture(scope='module')

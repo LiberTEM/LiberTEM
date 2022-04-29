@@ -31,7 +31,7 @@ class JobEngine:
     async def run_sync(self, fn: Callable[..., T], *args, **kwargs) -> T:
         # to make sure everything is using `self._pool`, only import
         # `sync_to_async` as a local:
-        from libertem.utils.async_utils import sync_to_async
+        from libertem.common.async_utils import sync_to_async
         return await sync_to_async(fn, self._pool, *args, **kwargs)
 
     async def run_analysis(self, analysis_id: str, job_id: str):

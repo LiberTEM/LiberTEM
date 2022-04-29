@@ -28,7 +28,7 @@ from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFResultDict, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
-from libertem.utils.async_utils import async_generator, run_agen_get_last, run_gen_get_last
+from libertem.common.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 
 if TYPE_CHECKING:
     import numpy.typing as nt

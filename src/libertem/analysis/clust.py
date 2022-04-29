@@ -5,7 +5,7 @@ import re
 from textwrap import dedent
 
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
-from libertem.utils.async_utils import sync_to_async
+from libertem.common.async_utils import sync_to_async
 from libertem.executor.base import JobCancelledError
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.stddev import StdDevUDF, consolidate_result

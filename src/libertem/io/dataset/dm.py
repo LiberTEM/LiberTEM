@@ -9,7 +9,7 @@ import numpy as np
 from libertem.common.math import prod
 from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
-from libertem.web.messageconverter import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
 )

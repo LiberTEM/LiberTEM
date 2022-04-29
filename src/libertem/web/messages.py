@@ -1,5 +1,5 @@
 from .state import SharedState
-from .messageconverter import MessageConverter  # NOQA: F401
+from libertem.common.messageconverter import MessageConverter  # NOQA: F401
 
 
 class Message:

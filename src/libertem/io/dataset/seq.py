@@ -38,7 +38,7 @@ from ncempy.io.mrc import mrcReader
 
 from libertem.common.math import prod
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
     File, IOBackend,

@@ -9,7 +9,7 @@ from ncempy.io.ser import fileSER
 from libertem.common.math import prod
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
     _roi_to_indices, DataTile,

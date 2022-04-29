@@ -5,7 +5,7 @@ from ncempy.io.mrc import fileMRC
 
 from libertem.common.math import prod
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from .base import DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File
 from .base.backend import IOBackend
 from .base.backend_mmap import MMapBackendImpl, MMapFileBase

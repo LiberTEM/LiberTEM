@@ -6,7 +6,7 @@ import numpy as np
 
 from libertem.common.math import prod
 from libertem.common import Shape
-from libertem.web.messages import MessageConverter
+from libertem.common.messageconverter import MessageConverter
 from .base import DataSet, DataSetException, DataSetMeta, BasePartition, IOBackend
 from .raw import RawFile, RawFileSet
 

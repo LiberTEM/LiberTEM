@@ -1,7 +1,7 @@
 import logging
 import asyncio
 
-from libertem.utils.async_utils import sync_to_async
+from libertem.common.async_utils import sync_to_async
 from libertem.analysis.base import AnalysisResultSet
 
 log = logging.getLogger(__name__)

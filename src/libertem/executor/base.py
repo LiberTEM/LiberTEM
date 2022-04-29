@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from async_generator import asynccontextmanager
 
 from libertem.utils.threading import set_num_threads, mitigations
-from libertem.utils.async_utils import (
+from libertem.common.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager
 )
 

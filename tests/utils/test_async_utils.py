@@ -1,6 +1,6 @@
 import pytest
 
-from libertem.utils.async_utils import sync_to_async, MyStopIteration
+from libertem.common.async_utils import sync_to_async, MyStopIteration
 
 
 def _f():

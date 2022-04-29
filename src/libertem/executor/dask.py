@@ -16,7 +16,7 @@ from .base import (
 )
 from .scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
-from libertem.utils.async_utils import adjust_event_loop_policy
+from libertem.common.async_utils import adjust_event_loop_policy
 
 
 log = logging.getLogger(__name__)

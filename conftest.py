@@ -35,7 +35,7 @@ from libertem.utils.devices import detect
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter, sync_to_async
-from libertem.utils.async_utils import adjust_event_loop_policy
+from libertem.common.async_utils import adjust_event_loop_policy
 
 # A bit of gymnastics to import the test utilities since this
 # conftest.py file is shared between the doctests and unit tests

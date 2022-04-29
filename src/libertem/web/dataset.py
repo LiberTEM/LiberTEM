@@ -8,7 +8,7 @@ import tornado.web
 from libertem.io.dataset import load, detect, get_dataset_cls
 from libertem.common.numba import prime_numba_cache
 from .base import CORSMixin, log_message
-from libertem.utils.async_utils import sync_to_async
+from libertem.common.async_utils import sync_to_async
 from .messages import Message
 from .state import SharedState
 

@@ -4,7 +4,7 @@ from typing_extensions import Literal
 
 from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.common.async_utils import sync_to_async
-from libertem.executor.scheduler import Scheduler
+from libertem.common.scheduler import Scheduler
 
 
 filetypes = {

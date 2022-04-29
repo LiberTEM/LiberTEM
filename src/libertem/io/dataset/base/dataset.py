@@ -12,7 +12,7 @@ from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition, Partition
 
 if typing.TYPE_CHECKING:
-    from libertem.executor.base import JobExecutor
+    from libertem.common.executor import JobExecutor
     from libertem.io.dataset.base import IOBackend, Decoder, DataSetMeta
     from numpy import typing as nt
 

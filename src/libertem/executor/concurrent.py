@@ -5,10 +5,14 @@ import concurrent.futures
 from typing import Iterable, Any
 
 from .base import (
-    JobExecutor, JobCancelledError, TaskProtocol, sync_to_async, AsyncAdapter,
+    BaseJobExecutor, AsyncAdapter,
 )
+from libertem.common.executor import (
+    JobCancelledError, TaskProtocol
+)
+from libertem.common.async_utils import sync_to_async
 from libertem.utils.devices import detect
-from .scheduler import Worker, WorkerSet
+from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 from .dask import _run_task
 
@@ -16,7 +20,7 @@ from .dask import _run_task
 log = logging.getLogger(__name__)
 
 
-class ConcurrentJobExecutor(JobExecutor):
+class ConcurrentJobExecutor(BaseJobExecutor):
     '''
     :class:`JobExecutor` that uses :mod:`python.concurrent.futures`.
 

@@ -12,8 +12,9 @@ from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import DataSet
 from libertem.utils.devices import detect
 
-from .base import JobExecutor, Environment, TaskProtocol
-from .scheduler import Worker, WorkerSet
+from .base import BaseJobExecutor
+from libertem.common.executor import Environment, TaskProtocol
+from libertem.common.scheduler import Worker, WorkerSet
 
 from ..common.buffers import BufferWrapper
 from ..common.math import prod
@@ -177,9 +178,9 @@ class DelayedUDFRunner(UDFRunner):
         )
 
 
-class DelayedJobExecutor(JobExecutor):
+class DelayedJobExecutor(BaseJobExecutor):
     """
-    :class:`~libertem.executor.base.JobExecutor` that uses dask.delayed to execute tasks.
+    :class:`~libertem.common.executor.JobExecutor` that uses dask.delayed to execute tasks.
 
     .. versionadded:: 0.9.0
 

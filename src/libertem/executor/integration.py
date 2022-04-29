@@ -11,7 +11,7 @@ from .inline import InlineJobExecutor
 
 def get_dask_integration_executor():
     '''
-    Query the current Dask scheduler and return a :class:`~libertem.executor.base.JobExecutor`
+    Query the current Dask scheduler and return a :class:`~libertem.common.executor.JobExecutor`
     that is compatible with it. See https://docs.dask.org/en/stable/scheduling.html
     for the meaning of the different scheduler types.
 

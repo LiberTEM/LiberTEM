@@ -15,7 +15,7 @@ from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.integration import get_dask_integration_executor
-from libertem.executor.base import JobExecutor
+from libertem.common.executor import JobExecutor
 from libertem.masks import MaskFactoriesType
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
@@ -65,7 +65,7 @@ class Context:
     Parameters
     ----------
 
-    executor : ~libertem.executor.base.JobExecutor or None
+    executor : ~libertem.common.executor.JobExecutor or None
         If None, create a local dask.distributed cluster and client using
         :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` with optimal configuration
         for LiberTEM. It uses all cores and compatible GPUs

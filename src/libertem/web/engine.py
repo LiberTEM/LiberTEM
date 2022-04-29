@@ -5,7 +5,7 @@ import concurrent.futures
 from typing import TYPE_CHECKING, Callable, Optional, TypeVar
 
 from libertem.analysis.base import Analysis, AnalysisResultSet
-from libertem.executor.base import JobCancelledError
+from libertem.common.executor import JobCancelledError
 from libertem.udf.base import UDFResults
 from libertem.io.dataset.base.dataset import DataSet
 from libertem.web.models import AnalysisDetails

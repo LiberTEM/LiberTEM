@@ -41,7 +41,7 @@ def get_token(token_path):
               default=False, is_flag=True)
 def main(port, local_directory, browser, log_level, insecure, host="localhost",
         token_path=None, preload: Tuple[str] = ()):
-    from libertem.utils.threading import set_num_threads_env
+    from libertem.common.threading import set_num_threads_env
     token = get_token(token_path)
     if token is None and host != 'localhost' and not insecure:
         raise click.UsageError(

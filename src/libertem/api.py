@@ -6,7 +6,7 @@ from typing_extensions import Literal
 import warnings
 
 import numpy as np
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset import load, filetypes

@@ -8,7 +8,7 @@ import dask
 from dask import delayed
 import dask.array as da
 
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import DataSet
 from libertem.utils.devices import detect
 

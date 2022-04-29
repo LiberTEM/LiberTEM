@@ -12,8 +12,8 @@ from libertem.udf import UDF
 import libertem.common.backend as bae
 from libertem.udf.raw import PickUDF
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.corrections import CorrectionSet
-from libertem.corrections.detector import correct
+from libertem.io.corrections import CorrectionSet
+from libertem.io.corrections.detector import correct
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
 
 

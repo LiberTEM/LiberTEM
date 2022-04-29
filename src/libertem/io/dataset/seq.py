@@ -43,7 +43,7 @@ from libertem.io.dataset.base import (
     FileSet, DataSet, BasePartition, DataSetMeta, DataSetException,
     File, IOBackend,
 )
-from libertem.corrections import CorrectionSet
+from libertem.io.corrections import CorrectionSet
 
 DWORD = 'L'
 LONG = 'l'

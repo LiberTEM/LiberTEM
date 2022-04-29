@@ -8,7 +8,7 @@ from libertem.common.math import prod
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.web.messageconverter import MessageConverter
-from libertem.corrections.corrset import CorrectionSet
+from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition, Partition
 
 if typing.TYPE_CHECKING:

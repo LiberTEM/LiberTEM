@@ -132,7 +132,7 @@ def prime_numba_cache(ds):
 
         from libertem.udf.sum import SumUDF
         from libertem.udf.raw import PickUDF
-        from libertem.corrections.corrset import CorrectionSet
+        from libertem.io.corrections.corrset import CorrectionSet
         from libertem.io.dataset.base import Negotiator
 
         # need to have at least one UDF; here we run for both sum and pick

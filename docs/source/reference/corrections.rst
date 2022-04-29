@@ -17,7 +17,7 @@ this correction data:
 
 In the GUI, all corrections that are supplied by the data set will be applied. In the Python API,
 the user can decide to pass their own corrections to apply, via the :code:`corrections` parameter
-of :code:`Context.run()` and :code:`Context.run_udf()`. It expects a :class:`~libertem.corrections.CorrectionSet` object,
+of :code:`Context.run()` and :code:`Context.run_udf()`. It expects a :class:`~libertem.io.corrections.CorrectionSet` object,
 for example:
 
 .. testsetup:: *
@@ -33,7 +33,7 @@ for example:
 
 .. testcode::
 
-    from libertem.corrections import CorrectionSet
+    from libertem.io.corrections import CorrectionSet
     import sparse
 
     # excluded pixels are passed as a sparse COO matrix, which can be built
@@ -54,4 +54,4 @@ It can also be empty to disable corrections:
 
     ctx.run_udf(udf=SumUDF(), dataset=dataset, corrections=CorrectionSet())
 
-.. autoclass:: libertem.corrections.CorrectionSet
+.. autoclass:: libertem.io.corrections.CorrectionSet

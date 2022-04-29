@@ -3,9 +3,9 @@ import pytest
 import sparse
 import primesieve.numpy
 
-from libertem.corrections import CorrectionSet
-from libertem.corrections.detector import RepairValueError
-from libertem.corrections.corrset import factorizations
+from libertem.io.corrections import CorrectionSet
+from libertem.io.corrections.detector import RepairValueError
+from libertem.io.corrections.corrset import factorizations
 from libertem.utils.generate import exclude_pixels
 from libertem.udf.sum import SumUDF
 from libertem.udf.base import NoOpUDF

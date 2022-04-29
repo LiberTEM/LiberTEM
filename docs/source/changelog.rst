@@ -450,8 +450,8 @@ Bugfixes
 * GUI: Fixed the glitch in file opening dialogue by disallowing parallel browsing before loading is concluded (:pr:`752`).
 * Handle empty ROI and extra_shape with zero. Empty result buffers of the appropriate shape are returned if the ROI
   is empty or :code:`extra_shape` has a zero (:pr:`765`)
-* Improve internals of :mod:`libertem.corrections.detector` and
-  :mod:`libertem.corrections.corrset` to better support correction
+* Improve internals of :mod:`libertem.io.corrections.detector` and
+  :mod:`libertem.io.corrections.corrset` to better support correction
   of many dead pixels. (:pr:`890`, :issue:`889`)
 * Handle single-frame partitions in combination with aux data.
   Instead of squeezing the aux buffer, reshape to the correct shape (:issue:`791`, :pr:`902`).

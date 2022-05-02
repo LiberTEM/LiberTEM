@@ -1,6 +1,6 @@
 import pytest
 
-from libertem.common.numba import prime_numba_cache
+from libertem.web.dataset import prime_numba_cache
 
 
 @pytest.mark.benchmark()

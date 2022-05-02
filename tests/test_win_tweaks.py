@@ -26,14 +26,14 @@ def monkey_importerror(name, *args, **kwargs):
 
 def test_import_broken(monkeypatch):
     monkeypatch.delitem(sys.modules, 'win32security', raising=False)
-    monkeypatch.delitem(sys.modules, 'libertem.win_tweaks', raising=False)
+    monkeypatch.delitem(sys.modules, 'libertem.common.win_tweaks', raising=False)
     monkeypatch.setattr(builtins, '__import__', monkey_importerror)
 
     # Self test
     with pytest.raises(ImportError):
         import win32security  # NOQA: F401
 
-    from libertem.win_tweaks import get_owner_name
+    from libertem.common.win_tweaks import get_owner_name
 
     # Make sure the dummy fallback version works
     # This would fail with the actual get_owner_name() function
@@ -42,14 +42,14 @@ def test_import_broken(monkeypatch):
 
 def test_import_missing(monkeypatch):
     monkeypatch.delitem(sys.modules, 'win32security', raising=False)
-    monkeypatch.delitem(sys.modules, 'libertem.win_tweaks', raising=False)
+    monkeypatch.delitem(sys.modules, 'libertem.common.win_tweaks', raising=False)
     monkeypatch.setattr(builtins, '__import__', monkey_notfound)
 
     # Self test
     with pytest.raises(ModuleNotFoundError):
         import win32security  # NOQA: F401
 
-    from libertem.win_tweaks import get_owner_name
+    from libertem.common.win_tweaks import get_owner_name
 
     # Make sure the dummy fallback version works
     # This would fail with the actual get_owner_name() function

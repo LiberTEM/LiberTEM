@@ -30,7 +30,6 @@ except ImportError:
             "numba version %s" % str(numba.__version__)
         )
 
-import numpy as np  # NOQA: E402
 
 _cached_njit_reg = []
 
@@ -122,42 +121,3 @@ if dispatcher_registry is not None:
         dispatcher_registry[MyCPU] = MyCPUDispatcher
         jit_registry[MyCPU] = cached_njit  # FIXME: is this needed?
         target_registry["custom_cpu"] = MyCPU
-
-
-def prime_numba_cache(ds):
-    dtypes = (np.float32, None)
-    for dtype in dtypes:
-        roi = np.zeros(ds.shape.nav, dtype=bool).reshape((-1,))
-        roi[max(-ds._meta.sync_offset, 0)] = True
-
-        from libertem.udf.sum import SumUDF
-        from libertem.udf.raw import PickUDF
-        from libertem.io.corrections.corrset import CorrectionSet
-        from libertem.io.dataset.base import Negotiator
-
-        # need to have at least one UDF; here we run for both sum and pick
-        # to reduce the initial latency when switching to pick mode
-        udfs = [SumUDF(), PickUDF()]
-        neg = Negotiator()
-        for udf in udfs:
-            for corr_dtype in (np.float32, None):
-                if corr_dtype is not None:
-                    corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
-                else:
-                    corrections = None
-                found_first_tile = False
-                for p in ds.get_partitions():
-                    if found_first_tile:
-                        break
-                    p.set_corrections(corrections)
-                    tiling_scheme = neg.get_scheme(
-                        udfs=[udf],
-                        dataset=ds,
-                        approx_partition_shape=p.shape,
-                        read_dtype=dtype,
-                        roi=roi,
-                        corrections=corrections,
-                    )
-                    for t in p.get_tiles(tiling_scheme=tiling_scheme, roi=roi):
-                        found_first_tile = True
-                        break

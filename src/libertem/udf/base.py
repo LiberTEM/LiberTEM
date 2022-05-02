@@ -1,10 +1,9 @@
 from collections import defaultdict
-from enum import Enum
 from typing import (
     Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
     Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
 )
-from typing_extensions import Protocol, runtime_checkable, Literal, TypedDict
+from typing_extensions import Protocol, runtime_checkable, Literal
 import warnings
 import logging
 import uuid
@@ -22,10 +21,12 @@ from libertem.common.buffers import (
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
+from libertem.common.udf import TilingPreferences
 from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
+from libertem.common.udf import UDFProtocol
 from libertem.io.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager
@@ -49,20 +50,6 @@ ResourceDef = Dict[
 DeviceClass = Literal['cpu', 'cuda']
 UDFKwarg = Union[Any, AuxBufferWrapper]
 UDFKwargs = Dict[str, UDFKwarg]
-
-
-# markers for special values:
-class TileDepthEnum(Enum):
-    TILE_DEPTH_DEFAULT = object()
-
-
-class TileSizeEnum(Enum):
-    TILE_SIZE_BEST_FIT = object()
-
-
-class TilingPreferences(TypedDict):
-    depth: Union[int, TileDepthEnum]
-    total_size: Union[float, int]
 
 
 class UDFMeta:
@@ -683,7 +670,7 @@ def _default_merge_all(udf, ordered_results: 'OrderedDict[Slice, MergeAttrMappin
     return result
 
 
-class UDFBase:
+class UDFBase(UDFProtocol):
     '''
     Base class for UDFs with helper functions.
     '''
@@ -924,11 +911,6 @@ class UDF(UDFBase):
         `self.params.the_key_here`, will automatically return a view corresponding
         to the current unit of data (frame, tile, partition).
     """
-    USE_NATIVE_DTYPE = bool
-    TILE_SIZE_BEST_FIT = TileSizeEnum.TILE_SIZE_BEST_FIT
-    TILE_SIZE_MAX = np.inf
-    TILE_DEPTH_DEFAULT = TileDepthEnum.TILE_DEPTH_DEFAULT
-    TILE_DEPTH_MAX = np.inf
 
     def __init__(self, **kwargs: UDFKwarg) -> None:
         self._backend = 'numpy'  # default so that self.xp can always be used

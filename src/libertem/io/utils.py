@@ -14,7 +14,7 @@ try:
 # Assume that we are on Windows
 # TODO do a proper abstraction layer if this simple solution doesn't work anymore
 except ModuleNotFoundError:
-    from libertem.win_tweaks import get_owner_name  # noqa: F401
+    from libertem.common.win_tweaks import get_owner_name  # noqa: F401
 
 
 def get_partition_shape(

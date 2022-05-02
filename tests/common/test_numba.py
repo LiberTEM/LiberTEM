@@ -8,8 +8,9 @@ import scipy.sparse
 import pytest
 import numpy as np
 
-from libertem.common.numba import rmatmul, prime_numba_cache
+from libertem.common.numba import rmatmul
 from libertem.common.numba.cache import _cached_njit_reg
+from libertem.web.dataset import prime_numba_cache
 
 
 @pytest.mark.with_numba

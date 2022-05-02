@@ -1,7 +1,7 @@
 import math
 import logging
 import warnings
-from typing import List, TYPE_CHECKING, Optional, Tuple, Union
+from typing import List, TYPE_CHECKING, Optional, Tuple, Union, Sequence
 from typing_extensions import Literal
 
 import numpy as np
@@ -9,10 +9,10 @@ import numpy as np
 from libertem.io.corrections import CorrectionSet
 from libertem.common import Shape, Slice
 from libertem.common.math import prod
+from libertem.common.udf import UDFProtocol
 
 if TYPE_CHECKING:
     from numpy import typing as nt
-    from libertem.udf.base import UDF
     from libertem.io.dataset.base import DataSet, Partition
 
 log = logging.getLogger(__name__)
@@ -217,7 +217,7 @@ class Negotiator:
 
     def get_scheme(
             self,
-            udfs,
+            udfs: Sequence[UDFProtocol],
             dataset,
             read_dtype: "nt.DTypeLike",
             approx_partition_shape: Shape,
@@ -232,8 +232,8 @@ class Negotiator:
         Parameters
         ----------
 
-        udfs : List[UDF]
-            The concrete UDF to optimize the tiling scheme for.
+        udfs : Sequence[UDFProtocol]
+            The concrete UDFs to optimize the tiling scheme for.
             Depending on the method (tile, frame, partition)
             and preferred total input size and depth.
 
@@ -416,15 +416,14 @@ class Negotiator:
         # FIXME: adjust size to L3 // number of workers per node
         return 1*2**20
 
-    def _get_udf_size_pref(self, udf):
-        from libertem.udf import UDF
+    def _get_udf_size_pref(self, udf: UDFProtocol):
         udf_prefs = udf.get_tiling_preferences()
         size = udf_prefs.get("total_size", np.inf)
-        if size is UDF.TILE_SIZE_BEST_FIT:
+        if size is UDFProtocol.TILE_SIZE_BEST_FIT:
             size = self._get_default_size()
         return size
 
-    def _get_intent(self, udfs) -> TilingIntent:
+    def _get_intent(self, udfs: Sequence[UDFProtocol]) -> TilingIntent:
         intent: Optional[TilingIntent] = None
         if any(
             udf.get_method() == "tile"
@@ -444,7 +443,9 @@ class Negotiator:
         assert intent is not None
         return intent
 
-    def _get_size(self, io_max_size, udf, itemsize, approx_partition_shape: Shape, base_shape):
+    def _get_size(
+            self, io_max_size, udf: UDFProtocol, itemsize,
+            approx_partition_shape: Shape, base_shape):
         """
         Calculate the maximum tile size in bytes
         """
@@ -470,7 +471,7 @@ class Negotiator:
 
     def _get_base_shape(
         self,
-        udfs: List["UDF"],
+        udfs: Sequence["UDFProtocol"],
         dataset: "DataSet",
         approx_partition_shape: Shape,
         roi: Optional[np.ndarray],
@@ -489,17 +490,16 @@ class Negotiator:
             ).sig
         return base_shape
 
-    def _get_udf_depth_pref(self, udf: "UDF", approx_partition_shape: Shape) -> int:
-        from libertem.udf import UDF
+    def _get_udf_depth_pref(self, udf: "UDFProtocol", approx_partition_shape: Shape) -> int:
         udf_prefs = udf.get_tiling_preferences()
-        depth = udf_prefs.get("depth", UDF.TILE_DEPTH_DEFAULT)
-        if depth is UDF.TILE_DEPTH_DEFAULT:
+        depth = udf_prefs.get("depth", UDFProtocol.TILE_DEPTH_DEFAULT)
+        if depth is UDFProtocol.TILE_DEPTH_DEFAULT:
             depth = 32
         if depth > approx_partition_shape[0]:
             depth = approx_partition_shape[0]
         return depth
 
-    def _get_min_depth(self, udf: "UDF", approx_partition_shape: Shape) -> int:
+    def _get_min_depth(self, udf: "UDFProtocol", approx_partition_shape: Shape) -> int:
         udf_method = udf.get_method()
 
         if udf_method == "partition":

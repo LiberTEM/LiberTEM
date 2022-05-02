@@ -4,7 +4,7 @@ import numba
 import scipy.sparse
 import numpy as np
 
-from .cache import prime_numba_cache, cached_njit  # NOQA: F401
+from .cache import cached_njit  # NOQA: F401
 
 logger = logging.getLogger(__name__)
 

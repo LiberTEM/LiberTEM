@@ -1,6 +1,6 @@
 from enum import Enum
-from typing_extensions import Protocol, TypedDict
-from typing import Union, Literal
+from typing_extensions import Protocol, TypedDict, Literal
+from typing import Union
 
 import numpy as np
 

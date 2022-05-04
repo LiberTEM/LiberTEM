@@ -292,10 +292,8 @@ stages:
         - bash: tox
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
-    - job: integration-live
+    - job: integration_live
       pool: DataAccess
-      variables:
-        TOXENV: 'integration-live'
       steps:
       - task: UsePythonVersion@0
         displayName: 'Use Python 3.9'

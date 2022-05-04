@@ -4,6 +4,13 @@ trigger:
       - master
       - 'v*'
 
+resources:
+  repositories:
+    - repository: LiberTEM-live
+      type: github
+      endpoint: LiberTEM
+      name: LiberTEM/LiberTEM-live
+
 variables:
   - name: PIP_CACHE_DIR
     value: $(Pipeline.Workspace)/.pip
@@ -284,6 +291,34 @@ stages:
       - ${{ if eq(parameters.recreate_tox, false) }}:
         - bash: tox
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
+
+    - job: integration-live
+      pool: DataAccess
+      variables:
+        TOXENV: 'integration-live'
+      steps:
+      - task: UsePythonVersion@0
+        displayName: 'Use Python 3.9'
+        inputs:
+          versionSpec: '3.9'
+
+      - checkout: self
+      - checkout: LiberTEM-live
+
+      - bash: python3 -m venv $(Agent.TempDirectory)/venv/
+        displayName: create virtualenv
+
+      - bash: $(Agent.TempDirectory)/venv/bin/pip install $(Build.SourcesDirectory)/LiberTEM/
+        displayName: install LiberTEM
+
+      - bash: $(Agent.TempDirectory)/venv/bin/pip install $(Build.SourcesDirectory)/LiberTEM-live/
+        displayName: install LiberTEM-live
+
+      - bash: $(Agent.TempDirectory)/venv/bin/pip install $(Build.SourcesDirectory)/LiberTEM-live/test_requirements.txt
+        displayName: install LiberTEM-live test requirements
+
+      - bash: cd $(Build.SourcesDirectory)/LiberTEM-live/ && $(Agent.TempDirectory)/venv/bin/pytest
+        displayName: run LiberTEM-live tests
 
     - job: node_tests
       pool: DataAccess

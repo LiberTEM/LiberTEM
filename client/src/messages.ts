@@ -123,6 +123,7 @@ export enum DatasetTypes {
     SEQ = "SEQ",
     MRC = "MRC",
     TVIPS = "TVIPS",
+    NPY = "NPY",
 }
 
 export interface DatasetParamsCommon {
@@ -177,6 +178,15 @@ export type DatasetParamsMIB = {
 
 export type DatasetInfoMIB = {
     type: DatasetTypes.MIB,
+} & DatasetInfoCommon
+
+export type DatasetParamsNPY = {
+    type: DatasetTypes.NPY,
+    path: string,
+} & DatasetParamsCommon
+
+export type DatasetInfoNPY = {
+    type: DatasetTypes.NPY,
 } & DatasetInfoCommon
 
 export type DatasetParamsBLO = {
@@ -252,9 +262,8 @@ export type DatasetInfoTVIPS = {
     type: DatasetTypes.TVIPS,
 } & DatasetInfoCommon
 
-export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ | DatasetParamsMRC | DatasetParamsTVIPS
-
-export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ | DatasetInfoMRC | DatasetInfoTVIPS
+export type DatasetFormParams = DatasetParamsHDF5 | DatasetParamsRaw | DatasetParamsMIB | DatasetParamsBLO | DatasetParamsK2IS | DatasetParamsSER | DatasetParamsFRMS6 | DatasetParamsEMPAD | DatasetParamsSEQ | DatasetParamsMRC | DatasetParamsTVIPS | DatasetParamsNPY
+export type DatasetFormInfo = DatasetInfoHDF5 | DatasetInfoRAW | DatasetInfoMIB | DatasetInfoBLO | DatasetInfoK2IS | DatasetInfoSER | DatasetInfoFRMS6 | DatasetInfoEMPAD | DatasetInfoSEQ | DatasetInfoMRC | DatasetInfoTVIPS | DatasetInfoNPY
 
 export interface DatasetCreateParams {
     id: string,

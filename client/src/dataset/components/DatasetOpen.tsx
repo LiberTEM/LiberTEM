@@ -15,6 +15,7 @@ import HDF5ParamsForm from "./HDF5ParamsForm";
 import K2ISParamsForm from "./K2ISParamsForm";
 import MIBParamsForm from "./MIBParamsForm";
 import MRCParamsForm from "./MRCParamsForm";
+import NPYParamsForm from "./NPYParamsForm";
 import RawFileParamsForm from "./RawFileParamsForm";
 import SEQParamsForm from "./SEQParamsForm";
 import SERParamsForm from "./SERParamsForm";
@@ -177,6 +178,11 @@ const DatasetOpen = () => {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
             const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
             return renderForm(<MIBParamsForm {...commonParams} initial={initial} info={info} />);
+        }
+        case DatasetTypes.NPY: {
+            const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<NPYParamsForm {...commonParams} initial={initial} info={info} />);
         }
         case DatasetTypes.BLO: {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;

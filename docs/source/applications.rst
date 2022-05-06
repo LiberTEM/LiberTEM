@@ -16,5 +16,6 @@ Applications
    app/strain
    app/phasechange
    app/holography
+   app/processing
 
 * `Ptychography (external) <https://ptychography-4-0.github.io/ptychography/>`_

@@ -112,6 +112,7 @@ class BQLive2DPlot(Live2DPlot):
         dtype = np.result_type(self.data, np.int8)
         # Map on dtype that supports subtraction
         valid_data = self.data[damage].astype(dtype)
+        valid_data = valid_data[np.isfinite(valid_data)]
         if valid_data.size > 0:
             mmin = valid_data.min()
             mmax = valid_data.max()

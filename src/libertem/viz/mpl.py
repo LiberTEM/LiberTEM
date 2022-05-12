@@ -100,6 +100,7 @@ class MPLLive2DPlot(Live2DPlot):
         i_o = self.im_obj
         i_o.set_data(self.data)
         valid_data = self.data[damage]
+        valid_data = valid_data[np.isfinite(valid_data)]
         if len(valid_data) > 0:
             i_o.norm.vmin = np.min(valid_data)
             i_o.norm.vmax = np.max(valid_data)

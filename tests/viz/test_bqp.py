@@ -18,7 +18,17 @@ def test_bqp_smoke(monkeypatch, lt_ctx, default_raw):
     IPython.display.display.assert_called()
 
 
-def test_empty(monkeypatch, lt_ctx, default_raw):
+def test_bqp_asymm(monkeypatch, lt_ctx, default_raw_asymm):
+    pytest.importorskip("bqplot")
+    udfs = [SumSigUDF(), SumUDF()]
+    monkeypatch.setattr(IPython.display, 'display', mock.MagicMock())
+    monkeypatch.setattr(lt_ctx, 'plot_class', BQLive2DPlot)
+    lt_ctx.run_udf(dataset=default_raw_asymm, udf=udfs, plots=True)
+    IPython.display.display.assert_called()
+
+
+def test_empty(monkeypatch, lt_ctx, default_raw_asymm):
+    default_raw = default_raw_asymm
     pytest.importorskip("bqplot")
     udf = SumSigUDF()
     monkeypatch.setattr(IPython.display, 'display', mock.MagicMock())

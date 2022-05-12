@@ -246,6 +246,25 @@ def default_raw(tmpdir_factory, default_raw_data):
 
 
 @pytest.fixture(scope='session')
+def default_raw_asymm(tmpdir_factory, default_raw_data):
+    lt_ctx = lt.Context(executor=InlineJobExecutor())
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-default'
+    default_raw_data.tofile(str(filename))
+    del default_raw_data
+    ds = lt_ctx.load(
+        "raw",
+        path=str(filename),
+        dtype="float32",
+        nav_shape=(14, 17),
+        sig_shape=(128, 128),
+        io_backend=MMapBackend(),
+    )
+    ds.set_num_cores(2)
+    yield ds
+
+
+@pytest.fixture(scope='session')
 def buffered_raw(tmpdir_factory, default_raw_data):
     lt_ctx = lt.Context(executor=InlineJobExecutor())
     datadir = tmpdir_factory.mktemp('data')

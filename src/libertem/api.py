@@ -1007,10 +1007,12 @@ class Context:
                 yield udf_results
                 if enable_plotting:
                     self._update_plots(
-                        plots, udfs, udf_results.buffers, udf_results.damage, force=False
+                        plots, udfs, udf_results.buffers, udf_results.damage.data, force=False
                     )
             if enable_plotting:
-                self._update_plots(plots, udfs, udf_results.buffers, udf_results.damage, force=True)
+                self._update_plots(
+                    plots, udfs, udf_results.buffers, udf_results.damage.data, force=True
+                )
 
         if iterate:
             return _run_sync_wrap()

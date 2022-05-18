@@ -91,17 +91,19 @@ stages:
           Python36:
             python.version: '3.6'
             TOXENV: 'py36-data'
-          # 3.7: default in current Debian stable
           Python37:
             python.version: '3.7'
             TOXENV: 'py37-data'
           # Python38:
           #   python.version: '3.8'
           #   TOXENV: 'py38'
-          # Most recent supported version
+          # 3.9: default in current Debian stable
           Python39:
             python.version: '3.9'
             TOXENV: 'py39-data'
+          Python310:
+            python.version: '3.10'
+            TOXENV: 'py310-data'
       variables:
         TESTDATA_BASE_PATH: '/data/'
       steps:
@@ -161,6 +163,9 @@ stages:
           Python39:
             python.version: '3.9'
             TOXENV: 'py39'
+          Python310:
+            python.version: '3.10'
+            TOXENV: 'py310'
       variables:
         TOXENV: '$(TOXENV)'
       steps:

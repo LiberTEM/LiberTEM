@@ -12,7 +12,7 @@ from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition, Partition
 
 if typing.TYPE_CHECKING:
-    from libertem.common.executor import JobExecutor
+    from libertem.common.executor import JobExecutor, MainController
     from libertem.io.dataset.base import IOBackend, Decoder, DataSetMeta
     from numpy import typing as nt
 
@@ -295,6 +295,10 @@ class DataSet:
     @property
     def meta(self) -> Optional["DataSetMeta"]:
         return self._meta
+
+    def get_controller(self) -> "MainController":
+        from libertem.common.executor import NoopMainController
+        return NoopMainController()
 
 
 class WritableDataSet:

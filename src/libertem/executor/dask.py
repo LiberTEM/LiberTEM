@@ -268,7 +268,7 @@ class CommonDaskMixin:
             )
         )
 
-    def get_available_workers(self):
+    def get_available_workers(self) -> WorkerSet:
         info = self.client.scheduler_info()
         return WorkerSet([
             Worker(
@@ -350,6 +350,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
+        controller,
     ):
         tasks = list(tasks)
         tasks_w_index = list(enumerate(tasks))

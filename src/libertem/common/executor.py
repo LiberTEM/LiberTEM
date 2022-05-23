@@ -1,8 +1,14 @@
-from typing import Callable, Optional, Any, Iterable, TYPE_CHECKING, TypeVar, Type
+import queue
+from typing import (
+    Callable, Generator, Optional, Any, Iterable, TYPE_CHECKING, Tuple,
+    TypeVar, Type,
+)
 from typing_extensions import Protocol
 from contextlib import contextmanager
+from libertem.common.scheduler import WorkerSet
 
 from libertem.common.threading import set_num_threads, mitigations
+from libertem.io.dataset.base import Partition
 
 
 if TYPE_CHECKING:
@@ -25,9 +31,15 @@ class Environment:
     '''
     Create the environment to run a task, in particular thread count.
     '''
-    def __init__(self, threads_per_worker: Optional[int], threaded_executor: bool):
+    def __init__(
+        self,
+        threads_per_worker: Optional[int],
+        threaded_executor: bool,
+        worker_context: Optional["WorkerContext"] = None,
+    ):
         self._threads_per_worker = threads_per_worker
         self._threaded_executor = threaded_executor
+        self._worker_context = worker_context
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -46,8 +58,23 @@ class Environment:
         return self._threads_per_worker
 
     @property
-    def threaded_executor(self):
+    def threaded_executor(self) -> bool:
+        """
+        Whether or not the executor uses threading for parallelism.
+        If this flag is set, mitigations for common threading issues are
+        automatically applied.
+        """
         return self._threaded_executor
+
+    @property
+    def worker_context(self) -> Optional["WorkerContext"]:
+        """
+        A :code:`WorkerContext` instance, if available, as supplied
+        by the `JobExecutor`. This is used to manage streaming communication
+        between the main process and the workers. If :code:`None` is
+        returned, streaming communication with workers is not available.
+        """
+        return self._worker_context
 
     @contextmanager
     def enter(self):
@@ -71,6 +98,12 @@ class TaskProtocol(Protocol):
     '''
     def __call__(self, params: "UDFParams", env: Environment):
         pass
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        ...
+
+    def get_partition(self) -> Partition:
+        ...
 
     def get_tracing_span_context(self) -> "SpanContext":
         ...
@@ -112,6 +145,7 @@ class JobExecutor:
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
+        controller: "MainController",
     ):
         """
         Run the tasks with the given parameters
@@ -212,13 +246,9 @@ class JobExecutor:
         cleanup resources used by this executor, if any
         """
 
-    def get_available_workers(self):
+    def get_available_workers(self) -> WorkerSet:
         """
-        Returns a list of dicts with available workers
-
-        keys of the dictionary:
-            name : an identifying name of the worker
-            host : ip address or hostname where the worker is running
+        Returns a WorkerSet that contains the available workers
 
         Each worker should correspond to a "worker process", so if the executor
         is using multiple processes or threads, each process/thread should be
@@ -344,3 +374,129 @@ class AsyncJobExecutor:
 
     def get_udf_runner(self) -> Type['UDFRunner']:
         raise NotImplementedError()
+
+
+class WorkerQueueEmpty(Exception):
+    """
+    A non-blocking get was called on an empty queue, or a blocking `get` with a
+    non-zero timeout timed out.
+    """
+    pass
+
+
+class WorkerQueue:
+    @contextmanager
+    def get(
+        self,
+        block: bool = True,
+        timeout: Optional[float] = None,
+    ) -> Generator[Tuple[Any, memoryview], None, None]:
+        raise NotImplementedError()
+
+    def put(self, header: Any, payload: Optional[memoryview] = None):
+        raise NotImplementedError()
+
+    @contextmanager
+    def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
+        """
+        Put data into the queue, without an additional copy.
+        This will yield a writable `memoryview`, instead of requiring that
+        the data to be sent is already available as a `memoryview` and
+        copying into its final destination, as is the case in `put`.
+
+        This can be useful, for example, if you need to perform any kind
+        of operation that writes into a buffer. For example:
+
+        >>> q = SomeWorkerQueueImpl()
+        >>> with q.put_nocopy(1024) as send_buf:
+        ...     # NOTE: in reality, need to handle n_bytes < 1024
+        ...     n_bytes = some_socket.recvinto(send_buf)
+        """
+        raise NotImplementedError()
+
+
+class SimpleWorkerQueue(WorkerQueue):
+    """
+    A :code:`WorkerQueue` that uses a threading :code:`Queue` under the hood.
+    """
+    def __init__(self) -> None:
+        self.q: queue.Queue = queue.Queue()
+
+    def put(self, header, payload: Optional[memoryview] = None):
+        self.q.put((header, payload))
+
+    @contextmanager
+    def get(self, block: bool = True, timeout: Optional[float] = None):
+        try:
+            res = self.q.get(block=block, timeout=timeout)
+            yield res
+        except queue.Empty:
+            raise WorkerQueueEmpty()
+
+
+class WorkerContext:
+    """
+    A :code:`WorkerContext` is used to manage streaming communication between
+    the main process and the workers.
+    """
+    def get_worker_queue(self) -> WorkerQueue:
+        raise NotImplementedError()
+
+
+class MainController(Protocol):
+    """
+    This is the interface that is implemented by the acquisition object
+    to allow streaming communication with workers.
+    """
+    def handle_task(self, task: TaskProtocol, queue: WorkerQueue):
+        """
+        Handle the streaming connunication for the given :code:`task`
+        using the provided :code:`queue`. This function should
+        block until the communication for the given task has finished.
+        It may be run in a background thread on the main node,
+        or synchronously, depending on the :code:`JobExecutor`.
+
+        Parameters
+        ----------
+        task : TaskProtocol
+
+        queue : WorkerQueue
+            A queue used to communicate with the worker process
+            using an acquisition-specific protocol. The `Partition`
+            in the worker has access to this queue, too, and can
+            communicate using a data-source specific protocol.
+
+            The `MainController` and the `Partition` are tightly
+            coupled by this protocol, and the queue needs to be "clean"
+            after the data for a given task has been exchanged.
+        """
+        ...
+
+    def start(self):
+        """
+        A lifecycle method that is called before any task has been
+        run.
+        """
+        ...
+
+    def done(self):
+        """
+        A lifecycle method that is called after all tasks have benn
+        run.
+        """
+        ...
+
+
+class NoopMainController:
+    """
+    A `MainController` that doesn't perform any action, and doesn't
+    stream any data.
+    """
+    def handle_task(self, task: TaskProtocol, queue: WorkerQueue):
+        pass
+
+    def start(self):
+        pass
+
+    def done(self):
+        pass

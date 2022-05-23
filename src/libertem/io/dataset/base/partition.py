@@ -1,5 +1,5 @@
 import itertools
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import numpy as np
 
@@ -11,6 +11,10 @@ from .meta import DataSetMeta
 from .fileset import FileSet
 from . import IOBackend
 from .decode import Decoder
+
+
+if TYPE_CHECKING:
+    from libertem.common.executor import WorkerContext
 
 
 class WritablePartition:
@@ -86,6 +90,9 @@ class Partition:
     def set_corrections(self, corrections: CorrectionSet):
         raise NotImplementedError()
 
+    def set_worker_context(self, worker_context: "WorkerContext"):
+        pass
+
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
         raise NotImplementedError()
 
@@ -159,6 +166,7 @@ class BasePartition(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._corrections = CorrectionSet()
+        self._worker_context: Optional["WorkerContext"] = None
         if num_frames <= 0:
             raise ValueError("invalid number of frames: %d" % num_frames)
 
@@ -220,6 +228,9 @@ class BasePartition(Partition):
 
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
+
+    def set_worker_context(self, worker_context: "WorkerContext"):
+        self._worker_context = worker_context
 
     def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
         """

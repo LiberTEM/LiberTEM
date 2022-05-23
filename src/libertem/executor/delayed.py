@@ -203,6 +203,7 @@ class DelayedJobExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
+        controller,
     ):
         """
         Wraps the call task() such that it returns a flat list

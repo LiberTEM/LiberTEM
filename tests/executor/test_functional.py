@@ -1,4 +1,5 @@
 import os
+import sys
 from glob import glob
 import concurrent.futures
 import multiprocessing.pool
@@ -23,7 +24,7 @@ from utils import get_testdata_path
     scope='session',
     params=[
         "inline", "dask_executor", "dask_make_default", "dask_integration",
-        "concurrent", "delayed"
+        "concurrent", "delayed", "pipelined",
     ]
 )
 def ctx(request, local_cluster_url):
@@ -63,6 +64,16 @@ def ctx(request, local_cluster_url):
         yield Context.make_with("threads")
     elif request.param == "delayed":
         yield Context(executor=DelayedJobExecutor())
+    elif request.param == "pipelined":
+        if sys.version_info < (3, 8):
+            pytest.skip("PipelinedExecutor only supported from Python 3.8 onwards")
+        else:
+            from libertem.executor.pipelined import PipelinedExecutor
+            try:
+                ctx = Context(executor=PipelinedExecutor(n_workers=2))
+                yield ctx
+            finally:
+                ctx.close()
 
 
 @pytest.fixture(

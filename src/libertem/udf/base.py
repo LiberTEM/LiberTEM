@@ -1366,6 +1366,9 @@ class Task:
         self.idx = idx
         self._span_context = span_context
 
+    def get_partition(self):
+        return self.partition
+
     def get_locations(self):
         return self.partition.get_locations()
 
@@ -1555,6 +1558,12 @@ class UDFTask(Task):
             with attach_to_parent(self._span_context):
                 yield
 
+    def get_runner_cls(self) -> Type["UDFPartRunner"]:
+        return self._runner_cls
+
+    def get_udf_classes(self) -> List[Type["UDF"]]:
+        return self._udf_classes
+
     def get_resources(self) -> ResourceDef:
         """
         Intersection of resources of all UDFs, throws if empty.
@@ -1600,6 +1609,8 @@ class UDFPartRunner:
                     params.tiling_scheme,
                 )
                 partition.set_corrections(corrections)
+                if env.worker_context is not None:
+                    partition.set_worker_context(env.worker_context)
                 self._run_udfs(numpy_udfs, cupy_udfs, partition, params.tiling_scheme, roi, dtype)
                 self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
             finally:
@@ -1972,6 +1983,7 @@ class UDFRunner:
         self._debug_task_pickling(tasks)
 
         executor = executor.ensure_sync()
+        controller = dataset.get_controller()
 
         try:
             if progress:
@@ -1983,6 +1995,7 @@ class UDFRunner:
                         tasks,
                         params_handle,
                         cancel_id,
+                        controller,
                     ):
                         if progress:
                             t.update(1)

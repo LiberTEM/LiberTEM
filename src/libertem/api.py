@@ -51,6 +51,7 @@ ExecutorSpecType = Union[
     Literal['dask-integration'],
     Literal['dask-make-default'],
     Literal['delayed'],
+    Literal['pipelined'],
 ]
 
 
@@ -143,6 +144,9 @@ class Context:
                 computation using `dask.delayed <https://docs.dask.org/en/stable/delayed.html>`_.
                 This functionality is highly experimental at this time, see
                 :ref:`delayed_udfs` for more information.
+            "pipelined":
+                Create a :class:`~libertem.executor.pipelined.PipelinedExecutor`,
+                which is suitable for multi-process streaming live processing.
         *args, **kwargs
             Passed to :class:`Context`.
 

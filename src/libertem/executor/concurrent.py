@@ -59,6 +59,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
+        controller,
     ):
         tasks = list(tasks)
 

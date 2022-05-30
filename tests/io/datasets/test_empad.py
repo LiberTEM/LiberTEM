@@ -12,7 +12,7 @@ from libertem.analysis.raw import PickFrameAnalysis
 from libertem.io.dataset.base import (
     DataSetException, TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 )
-from libertem.io.dataset.empad import EMPADDataSet
+from libertem.io.dataset.empad import EMPADDataSet, get_params_from_xml
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -25,6 +25,7 @@ EMPAD_TESTDATA_PATH = os.path.join(get_testdata_path(), 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
 EMPAD_XML = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
 EMPAD_XML_2 = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_12_pretty.xml')
+EMPAD_XML_SERIES = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_series_pretty.xml')
 HAVE_EMPAD_TESTDATA = os.path.exists(EMPAD_RAW) and os.path.exists(EMPAD_XML)
 
 pytestmark = pytest.mark.skipif(not HAVE_EMPAD_TESTDATA, reason="need EMPAD testdata")  # NOQA
@@ -77,6 +78,11 @@ def test_new_empad_xml():
         path=EMPAD_XML_2,
     )
     ds = ds.initialize(executor)
+
+
+def test_series_acquisition_xml():
+    path_raw, nav_shape = get_params_from_xml(EMPAD_XML_SERIES)
+    assert nav_shape == (1000,)
 
 
 @pytest.fixture(scope='session')

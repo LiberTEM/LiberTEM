@@ -23,17 +23,27 @@ def get_params_from_xml(path):
         os.path.dirname(path),
         filename
     )
-    scan_parameters = [
-        elem
-        for elem in root.findall("scan_parameters")
-        if elem.attrib["mode"] == "acquire"
-    ]
 
-    node_scan_x = scan_parameters[0].find("scan_resolution_x")
-    node_scan_y = scan_parameters[0].find("scan_resolution_y")
-    nav_x = int(node_scan_x.text)
-    nav_y = int(node_scan_y.text)
-    nav_shape = (nav_y, nav_x)
+    typ = root.find("type")
+
+    if typ is None or typ.text == 'scan':
+        # assume "scan":
+        scan_parameters = [
+            elem
+            for elem in root.findall("scan_parameters")
+            if elem.attrib["mode"] == "acquire"
+        ]
+
+        node_scan_x = scan_parameters[0].find("scan_resolution_x")
+        node_scan_y = scan_parameters[0].find("scan_resolution_y")
+        nav_x = int(node_scan_x.text)
+        nav_y = int(node_scan_y.text)
+        nav_shape = (nav_y, nav_x)
+    elif typ.text == 'series':
+        nav_shape = (int(root.find("count").text),)
+    else:
+        raise ValueError(f"unknown type: {typ.text}")
+
     return path_raw, nav_shape
     # TODO: read more metadata
 
@@ -103,8 +113,9 @@ class EMPADDataSet(DataSet):
         the `nav_shape` parameter can be left out
 
     nav_shape: tuple of int, optional
-        A tuple (y, x) that specifies the size of the scanned region. It is
-        automatically read from the .xml file if you specify one as `path`.
+        A tuple (y, x) or (num_images,) that specifies the size of the scanned
+        region or number of frames in the series. It is automatically read from
+        the .xml file if you specify one as `path`.
 
     sig_shape: tuple of int, optional
         Signal/detector size (height, width)

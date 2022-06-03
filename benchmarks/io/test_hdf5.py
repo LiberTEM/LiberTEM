@@ -4,7 +4,6 @@ import timeit
 import numpy as np
 import pytest
 import h5py
-import primesieve
 
 from libertem.api import Context
 from libertem.udf.masks import ApplyMasksUDF
@@ -117,7 +116,8 @@ class TimeoutSumUDF(UDF):
 
 
 def random_hdf5_params():
-    factors = np.concatenate((primesieve.primes(28), [2, 2])).astype(int)
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23]
+    factors = np.concatenate((primes, [2, 2])).astype(int)
     n_dims = np.random.randint(2, 8)
     axes = np.ones(n_dims, dtype=int)
 

@@ -13,7 +13,7 @@ from libertem.io.corrections.detector import correct, RepairDescriptor
 def disjunct_multiplier(excluded, sig_shape, base_shape=1, target=1):
     '''
     Calculate an integer i close to target which is a multiple of base_shape
-    and for which i * n not in "excluded" for any n > 0, n <= sig_shape.
+    and for which i * n not in "excluded" for any n > 0, i * n < sig_shape.
 
     Cases with a bad pixel at 0 are handled downstream.
     '''

@@ -1,11 +1,9 @@
 import numpy as np
 import pytest
 import sparse
-import primesieve.numpy
 
 from libertem.io.corrections import CorrectionSet
 from libertem.io.corrections.detector import RepairValueError
-from libertem.io.corrections.corrset import factorizations
 from libertem.utils.generate import exclude_pixels
 from libertem.udf.sum import SumUDF
 from libertem.udf.base import NoOpUDF
@@ -20,13 +18,6 @@ def _validate(excluded_coords, adjusted, sig_shape):
         left_boundaries = set(range(adjusted[dim]-1, sig_shape[dim]-1, adjusted[dim]))
         boundaries = right_boundaries.union(left_boundaries)
         assert excluded_set.isdisjoint(boundaries)
-
-
-def test_factorizations():
-    n = np.random.randint(1, 2**12, 100)
-    primes = primesieve.numpy.primes(np.max(n))
-    fac = factorizations(n, primes)
-    assert np.all(np.prod(primes ** fac, axis=1) == n)
 
 
 @pytest.mark.parametrize("gain,dark", [
@@ -175,7 +166,7 @@ def test_tileshape_adjustment_2():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (15, 41)
+    assert adjusted == (16, 41)
     _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
@@ -295,7 +286,7 @@ def test_tileshape_adjustment_6_3():
     adjusted = corr.adjust_tileshape(
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
-    assert adjusted == (123, 256)
+    assert adjusted == (123, 246)
     _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 

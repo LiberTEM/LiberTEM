@@ -157,7 +157,6 @@ setup(
         'scikit-learn',
         'tqdm',
         'threadpoolctl>=3.0',
-        'primesieve',
         'nbformat',
         'nbconvert',
         'autopep8',

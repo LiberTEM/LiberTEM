@@ -1,10 +1,27 @@
 import numpy as np
 
-from libertem.contrib.daskadapter import make_dask_array
+from libertem.contrib.daskadapter import make_dask_array, _flat_slices_for_chunking
 from libertem.api import Context
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
+
+
+def test_slices():
+    shape = 100, 200
+    target_size = 333
+    slices = _flat_slices_for_chunking(shape, target_size)
+    # take from slices until exhausted
+    # accumulate slices until we exceed or equal shape[-1]
+    # assert it divides cleanly by shape[-1]
+    # how to check if when we have multi-dim chunks ??
+    # reset the accumulator
+    # assert sum(slice_lengths) == prod(shape)
+
+    # potentially accumulate until prod(shape[-n:]) is exceeded or equalled
+    # then check it divides evenly by shape[-n]
+    # go right to left in shape and we will be sure that
+    # shape[-n + 1] is also a factor !
 
 
 def test_dask_array():

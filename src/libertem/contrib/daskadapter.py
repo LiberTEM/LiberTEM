@@ -95,10 +95,34 @@ def _get_aligned_slices(dataset: 'DataSet', min_blocks: int = 1) -> List[Tuple[i
     sigsize = dataset.shape.sig.size * dtype_size_bytes
     ideal_frames_per_part = dataset.MAX_PARTITION_SIZE / sigsize
     min_blocks = max(dataset._cores, min_blocks)
-    chunks = _chunks_for_target_size(dataset.shape.nav,
+    return _flat_slices_for_chunking(dataset.shape.nav,
                                      ideal_frames_per_part,
                                      min_blocks=min_blocks)
-    chunksizes = array_mult(*_apply_chunking(dataset.shape.nav, chunks))
+
+
+def _flat_slices_for_chunking(shape, max_chunksize, min_blocks=1):
+    """
+    Get the (start, stop) slices into flattened shape which obey
+    max_chunksize, min_blocks and align onto the dimensions of shape
+
+    Parameters
+    ----------
+    shape : Tuple[int, ...]
+        The shape to split
+    max_chunksize : int
+        The maximum number of elements allowed per chunk
+    min_blocks : int, optional
+        The minimum number of blocks, by default 1
+
+    Returns
+    -------
+    List[Tuple[int, int]]
+        The flat nav-dimension frame slices [(start, stop), ...]
+    """
+    chunks = _chunks_for_target_size(shape,
+                                     max_chunksize,
+                                     min_blocks=min_blocks)
+    chunksizes = array_mult(*_apply_chunking(shape, chunks))
     frame_numbers = [0] + np.cumsum(chunksizes).astype(int).tolist()
     return [(start, stop) for start, stop in zip(frame_numbers[:-1], frame_numbers[1:])]
 

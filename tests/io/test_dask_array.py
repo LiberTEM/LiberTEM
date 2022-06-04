@@ -44,10 +44,11 @@ def test_flat_slices(repeat):
 def test_aligned_chunking():
     data = _mk_random(size=(16, 16, 16, 16))
     # Set num partitions as 7 which doesn't divide 16 or 16**2
+    num_part = 7
     dataset = MemoryDataSet(
         data=data,
         tileshape=(16, 16, 16),
-        num_partitions=7,
+        num_partitions=num_part,
     )
     # Use the core function which should create rechunking in the graph
     (da, workers) = _make_dask_array(dataset)
@@ -57,7 +58,10 @@ def test_aligned_chunking():
             or any(s.startswith('rechunk-split') for s in graph_keys))
 
     # Use the modified / public function which avoids rechunking
-    (da, workers) = make_dask_array(dataset)
+    # Use the same number of min_blocks as partitions for a fair comparison
+    (da, workers) = make_dask_array(dataset, min_blocks=num_part)
+    # Check we actually created a chunked array with min num_part blocks
+    assert np.prod(tuple(len(c) for c in da.chunks)) >= num_part
     graph_keys = [k[0] for k in da.__dask_graph__().keys()]
     assert da.shape == data.shape
     assert not any(s.startswith('rechunk-merge') for s in graph_keys)

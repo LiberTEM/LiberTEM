@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 
-from libertem.contrib.daskadapter import make_dask_array, _flat_slices_for_chunking
+from libertem.contrib.daskadapter import make_dask_array
+from libertem.contrib.daskadapter import _make_dask_array, _flat_slices_for_chunking
 from libertem.api import Context
 from libertem.io.dataset.memory import MemoryDataSet
 
@@ -38,6 +39,29 @@ def test_flat_slices(repeat):
                 assert acc % static_size == 0
                 acc = 0
     assert sum(e - s for s, e in slices) == nframes
+
+
+def test_aligned_chunking():
+    data = _mk_random(size=(16, 16, 16, 16))
+    # Set num partitions as 7 which doesn't divide 16 or 16**2
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(16, 16, 16),
+        num_partitions=7,
+    )
+    # Use the core function which should create rechunking in the graph
+    (da, workers) = _make_dask_array(dataset)
+    graph_keys = [k[0] for k in da.__dask_graph__().keys()]
+    assert da.shape == data.shape
+    assert (any(s.startswith('rechunk-merge') for s in graph_keys)
+            or any(s.startswith('rechunk-split') for s in graph_keys))
+
+    # Use the modified / public function which avoids rechunking
+    (da, workers) = make_dask_array(dataset)
+    graph_keys = [k[0] for k in da.__dask_graph__().keys()]
+    assert da.shape == data.shape
+    assert not any(s.startswith('rechunk-merge') for s in graph_keys)
+    assert not any(s.startswith('rechunk-split') for s in graph_keys)
 
 
 def test_dask_array():

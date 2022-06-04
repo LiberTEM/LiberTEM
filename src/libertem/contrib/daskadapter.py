@@ -38,23 +38,37 @@ def make_dask_array(dataset: 'DataSet',
     when creating partitions. In this case the chunking of the
     dask array may be sub-optimal.
     '''
-    chunks = []
-    workers = {}
     slices = _get_aligned_slices(dataset, min_blocks=min_blocks)
     make_slices = partial(_force_make_slices, slices)
     with _patch_make_slices(make_slices):
-        for p in dataset.get_partitions():
-            d = dask.delayed(p.get_macrotile)(
-                dest_dtype=dtype, roi=roi
+        return _make_dask_array(dataset, dtype=dtype, roi=roi)
+
+
+def _make_dask_array(dataset: 'DataSet',
+                     dtype='float32',
+                     roi: Optional[np.ndarray] = None) -> Tuple[dask.array.Array, Dict]:
+    """
+    Create a Dask array using the DataSet's partitions as blocks.
+
+    See make_dask_array for docstring
+
+    Should be called from make_dask_array() to ensure aligned chunking
+    but could be used directly to bypass that functionality
+    """
+    chunks = []
+    workers = {}
+    for p in dataset.get_partitions():
+        d = dask.delayed(p.get_macrotile)(
+            dest_dtype=dtype, roi=roi
+        )
+        workers[d] = p.get_locations()
+        chunks.append(
+            dask.array.from_delayed(
+                d,
+                dtype=dtype,
+                shape=p.slice.adjust_for_roi(roi).shape,
             )
-            workers[d] = p.get_locations()
-            chunks.append(
-                dask.array.from_delayed(
-                    d,
-                    dtype=dtype,
-                    shape=p.slice.adjust_for_roi(roi).shape,
-                )
-            )
+        )
     arr = dask.array.concatenate(chunks, axis=0)
     if roi is None:
         arr = arr.reshape(dataset.shape)

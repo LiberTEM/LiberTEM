@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 
 from libertem.contrib.daskadapter import make_dask_array, _flat_slices_for_chunking
@@ -7,21 +8,36 @@ from libertem.io.dataset.memory import MemoryDataSet
 from utils import _mk_random
 
 
-def test_slices():
-    shape = 100, 200
-    target_size = 333
-    slices = _flat_slices_for_chunking(shape, target_size)
-    # take from slices until exhausted
-    # accumulate slices until we exceed or equal shape[-1]
-    # assert it divides cleanly by shape[-1]
-    # how to check if when we have multi-dim chunks ??
-    # reset the accumulator
-    # assert sum(slice_lengths) == prod(shape)
+@pytest.mark.parametrize(
+    "repeat", range(30)
+)
+def test_flat_slices(repeat):
+    """
+    take from slices until exhausted and
+    accumulate until we exceed or equal prod(shape[-n:])
+    assert the accumulator divides exactly by prod(shape[-n:])
+    to be sure that the combination of slices is a factor
+    repeat for n in range(len(shape)) right-to-left
+    assures that all combinations of slices reshape
+    across each dimension correctly
+    """
+    min_blocks = np.random.randint(1, 10)
+    ndims = np.random.randint(1, 4)
+    shape = np.random.randint(1, 333, size=(ndims,))
+    nframes = np.prod(shape)
+    target_size = np.random.randint(1, nframes * 2)
+    slices = _flat_slices_for_chunking(shape, target_size, min_blocks=min_blocks)
+    assert len(slices) >= min_blocks
 
-    # potentially accumulate until prod(shape[-n:]) is exceeded or equalled
-    # then check it divides evenly by shape[-n]
-    # go right to left in shape and we will be sure that
-    # shape[-n + 1] is also a factor !
+    for idx in range(1, 1 + len(shape)):
+        static_size = np.prod(shape[-idx:])
+        acc = 0
+        for start, stop in slices:
+            acc += (stop - start)
+            if acc >= static_size:
+                assert acc % static_size == 0
+                acc = 0
+    assert sum(e - s for s, e in slices) == nframes
 
 
 def test_dask_array():

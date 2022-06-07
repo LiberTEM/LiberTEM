@@ -9,50 +9,64 @@ from libertem.common import Slice
 from libertem.io.corrections.detector import correct, RepairDescriptor
 
 
-@numba.njit
+@numba.njit(cache=True)
 def disjunct_multiplier(excluded, sig_shape, base_shape=1, target=1):
     '''
     Calculate an integer i close to target which is a multiple of base_shape
     and for which i * n not in "excluded" for any n > 0, i * n < sig_shape.
 
     Cases with a bad pixel at 0 are handled downstream.
+
+    Parameters
+    ----------
+
+    excluded: Sequence
+        Forbidden tile boundary positions
+    sig_shape: int
+        Signal shape of the adjusted dimension
+    base_shape: int
+        Base shape of the adjusted dimension
+    target: int
+        Target value for the tile size, find a solution close to this value.
+
+    Returns
+    -------
+
+    int
     '''
     approx_multiplier = int(np.round(target / base_shape))
     current_value = base_shape * approx_multiplier
-    if len(excluded):
-        max_excluded = np.max(excluded)
-        excluded_map = np.zeros(max_excluded + 1, dtype=np.uint8)
-        excluded_map[excluded] = 1
-        if current_value >= target:
-            sign = 1
-        else:
-            sign = -1
-        for offset in range(max_excluded // base_shape + 1):
-            # plus 0, minus 1, plus 2, ...
-            current_value += offset * sign * base_shape
-            sign *= -1
-            if current_value <= 0:
-                continue
-            clear = True
-            for multiplier in range(1, max_excluded // current_value + 1):
-                index = current_value * multiplier
-                bad = (
-                    index >= 0
-                    and index < sig_shape
-                    and index <= max_excluded
-                    and excluded_map[index]
-                )
-                if bad:
-                    clear = False
-                    break
-            if clear:
-                return current_value
-        # target value is max_excluded + 1,
-        # i.e. if the modulo is 0 we have to add one more
-        multiple = max_excluded // base_shape + 1
-        return multiple * base_shape
+    max_excluded = np.max(excluded)
+    excluded_map = np.zeros(max_excluded + 1, dtype=np.uint8)
+    excluded_map[excluded] = 1
+    if current_value >= target:
+        sign = 1
     else:
-        return current_value
+        sign = -1
+    for offset in range(max_excluded // base_shape + 1):
+        # plus 0, minus 1, plus 2, ...
+        current_value += offset * sign * base_shape
+        sign *= -1
+        if current_value <= 0:
+            continue
+        clear = True
+        for multiplier in range(1, max_excluded // current_value + 1):
+            index = current_value * multiplier
+            bad = (
+                index >= 0
+                and index < sig_shape
+                and index <= max_excluded
+                and excluded_map[index]
+            )
+            if bad:
+                clear = False
+                break
+        if clear:
+            return current_value
+    # target value is max_excluded + 1,
+    # i.e. if the modulo is 0 we have to add one more
+    multiple = max_excluded // base_shape + 1
+    return min(multiple * base_shape, sig_shape)
 
 
 class CorrectionSet:
@@ -188,6 +202,27 @@ class CorrectionSet:
 
 
 def adjust(adjusted_shape_inout, sig_shape, base_shape, excluded_list):
+    '''
+    Adjust the tile shape to avoid collisions with patched pixels.
+
+    Find a tile shape that is a multiple of base_shape in such a way that
+    excluded pixels are not touching a tile boundary.
+
+    The proposed tile shape in adjusted_shape_inout is used as a starting value.
+    If collisions can't be avoided, use sig_shape as tile shape for that dimension.
+
+    Parameters
+    ----------
+
+    adjusted_shape_inout: np.ndarray, size n_dim
+        Shape to adjust, modified in place
+    sig_shape: sequence, size n_dim
+        Signal shape
+    base_shape: sequence, size n_dim
+        The adjusted shape is a multiple of base_shape
+    excluded_list: 2D sequence
+        Coordinates of exluded pixels of shape (n_dim, n_pixels)
+    '''
     for dim in range(0, len(adjusted_shape_inout)):
         # Nothing to adjust, could trip downstream logic
         if sig_shape[dim] <= 1:
@@ -196,36 +231,32 @@ def adjust(adjusted_shape_inout, sig_shape, base_shape, excluded_list):
         # Very many pixels in the way, low chances of a solution
         if len(unique) > sig_shape[dim] / 3:
             adjusted_shape_inout[dim] = sig_shape[dim]
-        else:
-            adjust_direct(
-                adjusted_shape_inout=adjusted_shape_inout,
-                base_shape=base_shape,
-                sig_shape=sig_shape,
-                dim=dim,
-                excluded_list=unique,
+        elif len(unique):
+            stop = sig_shape[dim]
+            # Left and right side of an invalid pixel are forbidden
+            forbidden = np.concatenate((unique, unique + 1))
+            forbidden = forbidden[forbidden <= stop]
+            # Invalid pixel at zero is handled separately
+            nonzero_filter = forbidden != 0
+            m = min(
+                stop,
+                disjunct_multiplier(
+                    excluded=forbidden[nonzero_filter],
+                    sig_shape=sig_shape[dim],
+                    base_shape=base_shape[dim],
+                    target=adjusted_shape_inout[dim]
+                )
             )
-
-
-def adjust_direct(adjusted_shape_inout, base_shape, sig_shape, dim, excluded_list):
-    stop = sig_shape[dim]
-    forbidden = np.concatenate((excluded_list, excluded_list + 1))
-    forbidden = forbidden[forbidden <= stop]
-    nonzero_filter = forbidden != 0
-    m = min(
-        stop,
-        disjunct_multiplier(
-            excluded=forbidden[nonzero_filter],
-            sig_shape=sig_shape[dim],
-            base_shape=base_shape[dim],
-            target=adjusted_shape_inout[dim]
-        )
-    )
-    # In case we have a zero where the existing logic doesn't work
-    if not np.all(nonzero_filter):
-        min_size = max(m, 2)
-    else:
-        min_size = m
-    # Current shape is not a clean multiple
-    # of the ideal shape or too small
-    if adjusted_shape_inout[dim] < min_size or adjusted_shape_inout[dim] % m != 0:
-        adjusted_shape_inout[dim] = m
+            # handle zero
+            if not np.all(nonzero_filter):
+                min_size = max(m, 2)
+            else:
+                min_size = m
+            # Current shape is not a clean multiple
+            # of the ideal shape or too small: adjust
+            if adjusted_shape_inout[dim] < min_size or adjusted_shape_inout[dim] % m != 0:
+                adjusted_shape_inout[dim] = m
+        else:
+            target = adjusted_shape_inout[dim]
+            approx_multiplier = int(np.round(target / base_shape[dim]))
+            adjusted_shape_inout[dim] = base_shape[dim] * approx_multiplier

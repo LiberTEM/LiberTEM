@@ -136,6 +136,7 @@ def test_patch_pixels_only_excluded_pixels(lt_ctx, default_raw, default_raw_data
     assert np.allclose(res['intensity'], np.sum(default_raw_data, axis=(0, 1)))
 
 
+@pytest.mark.with_numba
 def test_tileshape_adjustment_1():
     sig_shape = (123, 456)
     tile_shape = (17, 42)
@@ -150,6 +151,24 @@ def test_tileshape_adjustment_1():
         tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
     )
     assert adjusted == (16, 41)
+    _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
+
+
+@pytest.mark.with_numba
+def test_tileshape_adjustment_numbacov():
+    sig_shape = (123, 456)
+    tile_shape = (16, 41)
+    base_shape = (3, 3)
+    excluded_coords = np.array([
+        (17, ),
+        (42, )
+    ])
+    excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
+    corr = CorrectionSet(excluded_pixels=excluded_pixels)
+    adjusted = corr.adjust_tileshape(
+        tile_shape=tile_shape, sig_shape=sig_shape, base_shape=base_shape
+    )
+    assert adjusted == (15, 39)
     _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
@@ -273,6 +292,7 @@ def test_tileshape_adjustment_6_2():
     _validate(excluded_coords=excluded_coords, adjusted=adjusted, sig_shape=sig_shape)
 
 
+@pytest.mark.with_numba
 def test_tileshape_adjustment_6_3():
     sig_shape = (123, 456)
     tile_shape = (1, 1)

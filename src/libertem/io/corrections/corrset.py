@@ -231,7 +231,7 @@ def adjust(adjusted_shape_inout, sig_shape, base_shape, excluded_list):
         # Very many pixels in the way, low chances of a solution
         if len(unique) > sig_shape[dim] / 3:
             adjusted_shape_inout[dim] = sig_shape[dim]
-        elif len(unique):
+        else:
             stop = sig_shape[dim]
             # Left and right side of an invalid pixel are forbidden
             forbidden = np.concatenate((unique, unique + 1))
@@ -256,7 +256,3 @@ def adjust(adjusted_shape_inout, sig_shape, base_shape, excluded_list):
             # of the ideal shape or too small: adjust
             if adjusted_shape_inout[dim] < min_size or adjusted_shape_inout[dim] % m != 0:
                 adjusted_shape_inout[dim] = m
-        else:
-            target = adjusted_shape_inout[dim]
-            approx_multiplier = int(np.round(target / base_shape[dim]))
-            adjusted_shape_inout[dim] = base_shape[dim] * approx_multiplier

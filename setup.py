@@ -164,13 +164,18 @@ setup(
         'defusedxml',
         'async_generator',  # backwards-compat. for contextlib.asynccontextmanager
         'typing-extensions',  # backwards-compatibility for newer typing constructs
+        'opentelemetry-api',
     ],
     extras_require={
         'torch': 'torch',
         'hdbscan': 'hdbscan',
         'cupy': 'cupy',
         'bqplot': ['bqplot', 'bqplot-image-gl', 'ipython'],
-        'hdf5plugin': 'hdf5plugin'
+        'hdf5plugin': 'hdf5plugin',
+        'tracing': [
+            'opentelemetry-distro',
+            'opentelemetry-exporter-otlp',
+        ],
     },
     package_dir={"": "src"},
     packages=find_packages(where='src'),

@@ -7,6 +7,7 @@ from libertem.common.threading import set_num_threads, mitigations
 
 if TYPE_CHECKING:
     from libertem.udf.base import UDFParams, UDFRunner
+    from opentelemetry.trace import SpanContext
 
 
 class ExecutorError(Exception):
@@ -70,6 +71,9 @@ class TaskProtocol(Protocol):
     '''
     def __call__(self, params: "UDFParams", env: Environment):
         pass
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        ...
 
 
 T = TypeVar('T')

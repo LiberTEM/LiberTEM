@@ -5,7 +5,9 @@ from typing import (
 from typing_extensions import Literal
 import warnings
 
+from opentelemetry import trace
 import numpy as np
+
 from libertem.io.corrections import CorrectionSet
 from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.executor.inline import InlineJobExecutor
@@ -33,6 +35,7 @@ from libertem.common.async_utils import async_generator, run_agen_get_last, run_
 if TYPE_CHECKING:
     import numpy.typing as nt
 
+tracer = trace.get_tracer(__name__)
 
 RunUDFResultType = UDFResultDict
 RunUDFSyncL = List[UDFResultDict]
@@ -746,28 +749,29 @@ class Context:
         # In short, we can't have an overload `run_udf(..., plots=None, sync: Literal[True])`
         # because either we have a non-default argument after a default argument, or we have
         # `Literal[True] = ...` which overlaps with `Literal[False] = ...``
-        if sync:
-            return self._run_sync(
-                dataset=dataset,
-                udf=udf,
-                roi=roi,
-                corrections=corrections,
-                progress=progress,
-                backends=backends,
-                plots=plots,
-                iterate=False,
-            )
-        else:
-            return self._run_async(
-                dataset=dataset,
-                udf=udf,
-                roi=roi,
-                corrections=corrections,
-                progress=progress,
-                backends=backends,
-                plots=plots,
-                iterate=False,
-            )
+        with tracer.start_as_current_span("Context.run_udf"):
+            if sync:
+                return self._run_sync(
+                    dataset=dataset,
+                    udf=udf,
+                    roi=roi,
+                    corrections=corrections,
+                    progress=progress,
+                    backends=backends,
+                    plots=plots,
+                    iterate=False,
+                )
+            else:
+                return self._run_async(
+                    dataset=dataset,
+                    udf=udf,
+                    roi=roi,
+                    corrections=corrections,
+                    progress=progress,
+                    backends=backends,
+                    plots=plots,
+                    iterate=False,
+                )
 
     def run_udf_iter(
         self,
@@ -983,7 +987,8 @@ class Context:
             udfs = list(udf)
 
         if enable_plotting:
-            plots = self._prepare_plots(udfs, dataset, roi, plots)
+            with tracer.start_as_current_span("prepare_plots"):
+                plots = self._prepare_plots(udfs, dataset, roi, plots)
 
         if corrections is None:
             corrections = dataset.get_correction_data()

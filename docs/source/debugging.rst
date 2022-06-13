@@ -123,3 +123,153 @@ captured logging output.
 You can sprinkle the code with `log.debug(...)` calls that output the relevant
 variables. In some cases you may also leave the logging statements in the code
 even after the problem is fixed, depending on the overhead.
+
+Tracing using opentelemetry
+---------------------------
+
+.. versionadded:: 0.10.0
+    Tracing support using opentelemetry was added in version 0.10.0
+
+Instead of sprinkling logging or print statements into your code,
+it is also possible to diagnose issues or gain insight into the runtime
+behavior of LiberTEM using opentelemetry tracing. This is also based on
+adding instrumentation to the code, but follows a more structured approach.
+
+Using tracing, instead of relatively unstructured "log lines",
+rich and structured information can be logged as traces, which are organized
+into spans. These traces can then be visualized, inspected, searched, ...
+using different tools and databases, here for example using
+`Jaeger <https://www.jaegertracing.io/>`_:
+
+.. image:: ./images/jaeger-tracing-visualization.png
+
+This becomes more interesting once your code goes beyond a single thread or
+process, when it is important to see the temporal relation between different
+events and functions executing concurrently. Crucially, it is possible to
+gather traces in distributed systems, from different nodes.
+
+For an overview of opentelemetry, please see `the official opentelemetry documentation
+<https://opentelemetry.io/docs/reference/specification/overview/>`_ - here, we
+will document the practical setup and usage. For the Python API docs, please
+see the `opentelemetry Python API docs <https://opentelemetry-python.readthedocs.io/en/latest/>`_.
+
+Getting tracing running
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Some external services are needed to gather traces. We include
+:code:`docker-compose` configuration for getting these up and running quickly
+in the :code:`examples/tracing/` directory. Please note that this configuration
+by default opens some ports, so be careful, as this may circumvent your
+device's firewall!
+
+To get these running, start :code:`docker-compose up` in said directory. This will
+pull in all required docker images and start the required services, until they
+are stopped using :code:`Ctrl+C`.
+
+The Jaeger UI, as shown above, is then available on `localhost:16686
+<http://localhost:16686>`_. An alternative UI, called Zipkin, is available on
+`localhost:9411 <http://localhost:9411>`_. Both of these should now be viewable
+by your browser.
+The actual trace collection API endpoint is started on port 4317, but is only
+used under the hood.
+
+In your LiberTEM virtual environment, you need to install the :code:`tracing`
+extra, for example via :code:`pip install -e .[tracing]`.
+
+The Python code then needs to be told to enable tracing, and how to connect to
+the trace collection API endpoint. The easiest way is to set environment variables,
+for example, in a notebook:
+
+.. code:: python
+
+    %env OTEL_ENABLE=1
+    %env OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+
+    from libertem.common.tracing import maybe_setup_tracing
+    maybe_setup_tracing(service_name="notebook-main")
+
+For enabling tracing across multiple Python processes, possibly on multiple
+nodes, set the environment variables for each of these processes, and also call
+the :func:`~libertem.common.tracing.maybe_setup_tracing` function on each.
+If these are workers managed by an executor, you can use the :code:`run_each_worker`
+method to accomplish this:
+
+.. code:: python
+
+    from libertem.common.tracing import maybe_setup_tracing
+    from libertem.api import Context
+    ctx = Context()
+    ctx.executor.run_each_worker(maybe_setup_tracing, service_name="libertem-worker")
+
+Support for setting up tracing on workers automatically is already integrated in
+the pipelined executor, and probably will be more closely integrated with other
+executors, too. Single-process (i.e. threading, inline) executors don't need any
+additional work for tracing to work.
+
+Adding your own intrumentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, a minimal set of functions is already annotated with tracing
+information, to be able to understand how UDFs are executed across multiple
+processes. Adding tracing intrumentation to your code is similar to setting
+up logging using the :code:`logging` module. At the top of your Python module,
+you create and use a :code:`Tracer` object like this:
+
+.. testsetup:: tracing
+
+    import time
+    from opentelemetry import trace
+    tracer = trace.get_tracer(__name__)
+
+.. testsetup:: nosetup
+    
+    pass
+
+.. testcode:: nosetup
+
+    import time
+    from opentelemetry import trace
+
+    tracer = trace.get_tracer(__name__)
+
+    def some_function():
+        with tracer.start_as_current_span("span-name"):
+            time.sleep(0.1)  # do some real work here
+
+    some_function()
+
+You can also add some more information to a span, for example events with attributes:
+
+.. testcode:: tracing
+
+    def some_function():
+        with tracer.start_as_current_span("span-name") as span:
+            for i in range(16):
+                time.sleep(0.1)  # do some real work here
+                span.add_event(f"work item done", {
+                    "item_id": i,  # you can add attributes to events
+                })
+
+    some_function()
+
+Attributes can also be added to spans themselves:
+
+.. testcode:: tracing
+
+    def some_function():
+        with tracer.start_as_current_span("span-name") as span:
+            time.sleep(0.1)  # do some real work here
+            span.set_attributes({
+                "attribute-name": "attribute-value-here",
+            })
+
+    some_function()
+
+
+Note that, while the tracing is quite lightweight, it is probably a good idea
+to not add spans and events in the innermost loops of your processing, like
+:code:`UDF.process_frame`, but spans for per-partition operations
+should be fine. In the future, metrics could also be collected to gain
+further insight into the performance characteristics.
+
+For more details, please also see the `opentelemetry Python API docs <https://opentelemetry-python.readthedocs.io/en/latest/>`_.

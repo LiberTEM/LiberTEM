@@ -1,4 +1,5 @@
 from collections import defaultdict
+from contextlib import contextmanager
 from typing import (
     Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
     Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
@@ -11,6 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 import cloudpickle
 import numpy as np
+from opentelemetry import trace, context as opentelemetry_context
+from libertem.common.tracing import attach_to_parent
 
 from libertem.io.dataset.base.tiling import DataTile
 
@@ -36,7 +39,9 @@ from libertem.common.executor import Environment, JobExecutor, TaskProtocol
 if TYPE_CHECKING:
     from typing import OrderedDict
     from numpy import typing as nt
+    from opentelemetry.trace import SpanContext
 
+tracer = trace.get_tracer(__name__)
 log = logging.getLogger(__name__)
 
 Backend = Literal['numpy', 'cuda', 'cupy']
@@ -1357,9 +1362,10 @@ class Task:
         Moved from libertem.job.base to libertem.udf.base as part of Job API deprecation
     """
 
-    def __init__(self, partition, idx):
+    def __init__(self, partition: Partition, idx: int, span_context: "SpanContext"):
         self.partition = partition
         self.idx = idx
+        self._span_context = span_context
 
     def get_locations(self):
         return self.partition.get_locations()
@@ -1421,6 +1427,9 @@ class Task:
         # default: run only on CPU and do computation
         # No CUDA support for the deprecated Job interface
         return {'CPU': 1, 'compute': 1, 'ndarray': 1}
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        return self._span_context
 
     def __call__(self, params: UDFParams, env: Environment):
         raise NotImplementedError()
@@ -1500,6 +1509,7 @@ class UDFTask(Task):
         udf_backends: List[BackendSpec],
         backends: Optional[BackendSpec],
         runner_cls: Type['UDFPartRunner'],
+        span_context: "SpanContext",
     ):
         """
         A computation for a single partition. The parameters that stay the same
@@ -1517,20 +1527,34 @@ class UDFTask(Task):
         backends : List[str]
             The specified backends we want to run on
         """
-        super().__init__(partition=partition, idx=idx)
+        super().__init__(partition=partition, idx=idx, span_context=span_context)
         self._backends = backends
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
         self._runner_cls = runner_cls
 
     def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:
-        udfs = [
-            cls.new_for_partition(kwargs, self.partition, params.roi)
-            for cls, kwargs in zip(self._udf_classes, params.kwargs)
-        ]
-        return self._runner_cls(udfs).run_for_partition(
-            self.partition, params, env,
-        )
+        with self._propagate_tracing(), tracer.start_as_current_span("UDFTask.__call__"):
+            udfs = [
+                cls.new_for_partition(kwargs, self.partition, params.roi)
+                for cls, kwargs in zip(self._udf_classes, params.kwargs)
+            ]
+            return self._runner_cls(udfs).run_for_partition(
+                self.partition, params, env,
+            )
+
+    @contextmanager
+    def _propagate_tracing(self):
+        """
+        Initialize the current tracing context from the :code:`SpanContext`
+        given in `self._span_context`, if we don't already have a running
+        tracing context.
+        """
+        if opentelemetry_context.get_current():
+            yield
+        else:
+            with attach_to_parent(self._span_context):
+                yield
 
     def get_resources(self) -> ResourceDef:
         """
@@ -1553,7 +1577,7 @@ class UDFPartRunner:
         self,
         partition: Partition,
         params: UDFParams,
-        env: Environment
+        env: Environment,
     ) -> Tuple[UDFData, ...]:
         roi = params.roi
         corrections = params.corrections
@@ -1993,12 +2017,13 @@ class UDFRunner:
         any_result = False
         for part_results, task in result_iter:
             any_result = True
-            self._apply_part_result(
-                udfs=self._udfs,
-                damage=damage,
-                part_results=part_results,
-                task=task
-            )
+            with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
+                self._apply_part_result(
+                    udfs=self._udfs,
+                    damage=damage,
+                    part_results=part_results,
+                    task=task
+                )
             if iterate:
                 yield self._make_udf_result(
                     udfs=self._udfs,
@@ -2049,6 +2074,9 @@ class UDFRunner:
             udf.get_backends()
             for udf in self._udfs
         ]
+
+        span = trace.get_current_span()
+        span_context = span.get_span_context()
         for idx, partition in enumerate(dataset.get_partitions()):
             if roi is not None:
                 roi_for_part = self._roi_for_partition(roi, partition)
@@ -2064,6 +2092,7 @@ class UDFRunner:
                 udf_backends=udf_backends,
                 backends=backends,
                 runner_cls=self.get_part_runner_cls(),
+                span_context=span_context,
             )
             yield tasks
 

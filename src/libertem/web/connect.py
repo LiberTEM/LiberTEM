@@ -3,6 +3,7 @@ from functools import partial
 from typing import TYPE_CHECKING
 
 import tornado.web
+from opentelemetry import trace
 
 from libertem.executor.base import AsyncAdapter
 from libertem.common.async_utils import sync_to_async
@@ -14,6 +15,7 @@ from .state import SharedState
 from libertem.utils.devices import detect
 
 log = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 if TYPE_CHECKING:
     from libertem.web.events import EventRegistry
@@ -43,36 +45,41 @@ class ConnectHandler(tornado.web.RequestHandler):
             })
 
     async def put(self):
+        with tracer.start_as_current_span("ConnectHandler.put"):
+            await self._do_connect()
+
+    async def _do_connect(self):
         # TODO: extract json request data stuff into mixin?
         request_data = tornado.escape.json_decode(self.request.body)
         connection = request_data['connection']
         pool = AsyncAdapter.make_pool()
-        if connection["type"].lower() == "tcp":
-            try:
-                sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
-                    scheduler_uri=connection['address'],
-                ), pool=pool)
-            except Exception as e:
-                msg = Message(self.state).cluster_conn_error(msg=str(e))
-                log_message(msg)
-                self.write(msg)
-                return None
-        elif connection["type"].lower() == "local":
-            devices = detect()
-            options = {
-                "local_directory": self.state.get_local_directory()
-            }
-            if "numWorkers" in connection:
-                devices["cpus"] = range(connection["numWorkers"])
-            devices["cudas"] = connection.get("cudas", [])
+        with tracer.start_as_current_span("executor setup"):
+            if connection["type"].lower() == "tcp":
+                try:
+                    sync_executor = await sync_to_async(partial(DaskJobExecutor.connect,
+                        scheduler_uri=connection['address'],
+                    ), pool=pool)
+                except Exception as e:
+                    msg = Message(self.state).cluster_conn_error(msg=str(e))
+                    log_message(msg)
+                    self.write(msg)
+                    return None
+            elif connection["type"].lower() == "local":
+                devices = detect()
+                options = {
+                    "local_directory": self.state.get_local_directory()
+                }
+                if "numWorkers" in connection:
+                    devices["cpus"] = range(connection["numWorkers"])
+                devices["cudas"] = connection.get("cudas", [])
 
-            sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
-                spec=cluster_spec(**devices, options=options, preload=self.state.get_preload())
-            ), pool=pool)
-        else:
-            raise ValueError("unknown connection type")
-        executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
-        await self.state.executor_state.set_executor(executor, request_data)
+                sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
+                    spec=cluster_spec(**devices, options=options, preload=self.state.get_preload())
+                ), pool=pool)
+            else:
+                raise ValueError("unknown connection type")
+            executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
+            await self.state.executor_state.set_executor(executor, request_data)
         await self.state.dataset_state.verify()
         datasets = await self.state.dataset_state.serialize_all()
         msg = Message(self.state).initial_state(

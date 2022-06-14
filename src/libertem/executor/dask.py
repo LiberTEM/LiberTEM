@@ -117,28 +117,42 @@ def cluster_spec(
         "options": cuda_options
     }
 
+    def _get_tracing_setup(service_name: str, service_id: str) -> str:
+        return (
+            f"from libertem.common.tracing import maybe_setup_tracing; "
+            f"maybe_setup_tracing(service_name='{service_name}', service_id='{service_id}')"
+        )
+
     for cpu in cpus:
+        worker_name = f'{name}-cpu-{cpu}'
         cpu_spec = deepcopy(cpu_base_spec)
         cpu_spec['options']['preload'] = preload + (
             'from libertem.executor.dask import worker_setup; '
             + f'worker_setup(resource="CPU", device={cpu})',
-            'libertem.preload'
+            _get_tracing_setup(worker_name, str(cpu)),
+            'libertem.preload',
         )
-        workers_spec[f'{name}-cpu-{cpu}'] = cpu_spec
+        workers_spec[worker_name] = cpu_spec
 
     for service in range(num_service):
+        worker_name = f'{name}-service-{service}'
         service_spec = deepcopy(service_base_spec)
-        service_spec['options']['preload'] = preload + ('libertem.preload',)
-        workers_spec[f'{name}-service-{service}'] = service_spec
+        service_spec['options']['preload'] = preload + (
+            _get_tracing_setup(worker_name, str(service)),
+            'libertem.preload',
+        )
+        workers_spec[worker_name] = service_spec
 
     for cuda in cudas:
+        worker_name = f'{name}-cuda-{cuda}'
         cuda_spec = deepcopy(cuda_base_spec)
         cuda_spec['options']['preload'] = preload + (
             'from libertem.executor.dask import worker_setup; '
             + f'worker_setup(resource="CUDA", device={cuda})',
-            'libertem.preload'
+            _get_tracing_setup(worker_name, str(cuda)),
+            'libertem.preload',
         )
-        workers_spec[f'{name}-cuda-{cuda}'] = cuda_spec
+        workers_spec[worker_name] = cuda_spec
 
     return workers_spec
 

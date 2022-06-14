@@ -105,11 +105,9 @@ class TaskProtocol(Protocol):
     def get_partition(self) -> Partition:
         ...
 
-    def get_tracing_span_context(self) -> "SpanContext":
-        ...
-
 
 T = TypeVar('T')
+V = TypeVar('V')
 
 
 class JobExecutor:
@@ -183,7 +181,7 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
-    def map(self, fn, iterable):
+    def map(self, fn: Callable[[V], T], iterable: Iterable[V]) -> Iterable[T]:
         """
         Run a callable `fn` for each element in `iterable`, on arbitrary worker nodes.
 

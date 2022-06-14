@@ -454,6 +454,9 @@ class PipelinedExecutor(BaseJobExecutor):
             result[worker.name] = self._run_function(fn, worker_idx=idx, *args, **kwargs)
         return result
 
+    def run_each_host(self, fn, *args, **kwargs):
+        return {"localhost": self.run_function(fn, *args, **kwargs)}
+
     @contextlib.contextmanager
     def scatter(self, obj):
         key = str(uuid.uuid4())

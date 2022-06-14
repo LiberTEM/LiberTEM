@@ -316,3 +316,33 @@ def test_use_synchronous():
     with dask.config.set(scheduler="synchronous"):
         ctx = Context.make_with("dask-integration")
         assert isinstance(ctx.executor, InlineJobExecutor)
+
+
+@pytest.mark.slow
+def test_executor_run_each_partition(ctx: Context):
+    ds = ctx.load("memory", data=np.random.randint(0, 1024, size=(16, 16, 128, 128)))
+    partitions = ds.get_partitions()
+
+    def _per_partition(p):
+        assert p.__class__.__name__ == "MemPartition"
+        return 42
+
+    for res in ctx.executor.run_each_partition(partitions, _per_partition):
+        assert res == 42
+
+
+@pytest.mark.slow
+def test_executor_map(ctx: Context):
+    inp = [1, 2, 3]
+    exp = [2, 3, 4]
+    assert list(ctx.executor.map(lambda x: x + 1, inp)) == exp
+
+
+@pytest.mark.slow
+def test_executor_run_each_host(ctx: Context):
+    res = ctx.executor.run_each_host(lambda x: 42 + x, 1)
+    workers = ctx.executor.get_available_workers()
+    assert set(res.keys()) == workers.hosts()
+    for k, v in res.items():
+        assert k in workers.hosts()
+        assert v == 43

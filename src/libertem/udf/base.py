@@ -8,12 +8,11 @@ from typing_extensions import Protocol, runtime_checkable, Literal
 import warnings
 import logging
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 
 import cloudpickle
 import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
-from libertem.common.tracing import attach_to_parent
+from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
 
 from libertem.io.dataset.base.tiling import DataTile
 
@@ -1816,7 +1815,7 @@ class UDFRunner:
     def __init__(self, udfs: List[UDF], debug: bool = False):
         self._udfs = udfs
         self._debug = debug
-        self._pool = ThreadPoolExecutor(max_workers=4)
+        self._pool = TracedThreadPoolExecutor(tracer, max_workers=4)
 
     @classmethod
     def inspect_udf(

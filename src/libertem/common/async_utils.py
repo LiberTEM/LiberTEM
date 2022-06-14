@@ -5,7 +5,11 @@ import threading
 from typing import AsyncGenerator, Callable, Generator, Optional, TypeVar
 from concurrent.futures import ThreadPoolExecutor
 
+from opentelemetry import trace
 
+from libertem.common.tracing import attach_to_parent
+
+tracer = trace.get_tracer(__name__)
 T = TypeVar('T')
 
 
@@ -113,11 +117,12 @@ class AsyncGenToQueueThread(threading.Thread):
     args, kwargs
         will be passed to :code:`Thread.__init__`
     """
-    def __init__(self, agen, q, *args, **kwargs):
+    def __init__(self, agen, q, span_context, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._agen = agen
         self._q = q
         self._should_stop = threading.Event()
+        self._span_context = span_context
         self.ex = None
 
     def run(self):
@@ -146,8 +151,10 @@ class AsyncGenToQueueThread(threading.Thread):
 
 
 def async_to_sync_generator(agen, pool=None):
+    span = trace.get_current_span()
+    span_context = span.get_span_context()
     q = queue.Queue()
-    t = AsyncGenToQueueThread(agen, q)
+    t = AsyncGenToQueueThread(agen, q, span_context)
     t.start()
     try:
         while True:
@@ -185,26 +192,28 @@ class SyncGenToQueueThread(threading.Thread):
     args, kwargs
         will be passed to :code:`Thread.__init__`
     """
-    def __init__(self, gen, q, *args, **kwargs):
+    def __init__(self, gen, q, span_context, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._gen = gen
         self._q = q
         self._should_stop = threading.Event()
+        self._span_context = span_context
         self.ex = None
 
     def run(self):
-        try:
-            # looping over `self._gen` can take some time for each item,
-            # this is where the "real" work happens:
-            for item in self._gen:
-                self._q.put(item)
-                if self._should_stop.is_set():
-                    break
-        except Exception as e:
-            self.ex = e
-        finally:
-            self._q.put(MyStopIteration)
-        return
+        with attach_to_parent(self._span_context):
+            try:
+                # looping over `self._gen` can take some time for each item,
+                # this is where the "real" work happens:
+                for item in self._gen:
+                    self._q.put(item)
+                    if self._should_stop.is_set():
+                        break
+            except Exception as e:
+                self.ex = e
+            finally:
+                self._q.put(MyStopIteration)
+            return
 
     def get_exception(self):
         return self.ex
@@ -229,8 +238,10 @@ async def async_generator_eager(gen, pool=None):
         The thread pool to run the generator in, can be None to create an
         ad-hoc thread
     """
+    span = trace.get_current_span()
+    span_context = span.get_span_context()
     q = queue.Queue()
-    t = SyncGenToQueueThread(gen, q)
+    t = SyncGenToQueueThread(gen, q, span_context)
 
     loop = asyncio.get_event_loop()
 

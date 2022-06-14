@@ -1940,18 +1940,19 @@ class UDFRunner:
         backends: Optional[BackendSpec] = None,
         dry: bool = False
     ) -> "UDFResults":
-        for res in self.run_for_dataset_sync(
-            dataset=dataset,
-            executor=executor.ensure_sync(),
-            roi=roi,
-            progress=progress,
-            corrections=corrections,
-            backends=backends,
-            dry=dry,
-            iterate=False
-        ):
-            pass
-        return res
+        with tracer.start_as_current_span("UDFRunner.run_for_dataset"):
+            for res in self.run_for_dataset_sync(
+                dataset=dataset,
+                executor=executor.ensure_sync(),
+                roi=roi,
+                progress=progress,
+                corrections=corrections,
+                backends=backends,
+                dry=dry,
+                iterate=False
+            ):
+                pass
+            return res
 
     def results_for_dataset_sync(
         self,
@@ -1963,9 +1964,10 @@ class UDFRunner:
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
     ) -> Iterable[Tuple[Tuple[UDFData, ...], TaskProtocol]]:
-        tasks, params = self._prepare_run_for_dataset(
-            dataset, executor, roi, corrections, backends, dry
-        )
+        with tracer.start_as_current_span("_prepare_run_for_dataset"):
+            tasks, params = self._prepare_run_for_dataset(
+                dataset, executor, roi, corrections, backends, dry
+            )
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
@@ -2046,19 +2048,20 @@ class UDFRunner:
         dry: bool = False,
         iterate: bool = True,
     ) -> AsyncGenerator["UDFResults", None]:
-        gen = self.run_for_dataset_sync(
-            dataset=dataset,
-            executor=executor.ensure_sync(),
-            roi=roi,
-            progress=progress,
-            corrections=corrections,
-            backends=backends,
-            dry=dry,
-            iterate=iterate,
-        )
+        with tracer.start_as_current_span("UDFRunner.run_for_dataset_async"):
+            gen = self.run_for_dataset_sync(
+                dataset=dataset,
+                executor=executor.ensure_sync(),
+                roi=roi,
+                progress=progress,
+                corrections=corrections,
+                backends=backends,
+                dry=dry,
+                iterate=iterate,
+            )
 
-        async for res in async_generator_eager(gen, pool=self._pool):
-            yield res
+            async for res in async_generator_eager(gen, pool=self._pool):
+                yield res
 
     def _roi_for_partition(self, roi: np.ndarray, partition: Partition) -> np.ndarray:
         return roi.reshape(-1)[partition.slice.get(nav_only=True)]

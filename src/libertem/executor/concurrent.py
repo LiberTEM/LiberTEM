@@ -4,6 +4,8 @@ import logging
 import concurrent.futures
 from typing import Iterable, Any
 
+from opentelemetry import trace
+
 from .base import (
     BaseJobExecutor, AsyncAdapter,
 )
@@ -14,10 +16,12 @@ from libertem.common.async_utils import sync_to_async
 from libertem.utils.devices import detect
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
+from libertem.common.tracing import TracedThreadPoolExecutor
 from .dask import _run_task
 
 
 log = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 class ConcurrentJobExecutor(BaseJobExecutor):
@@ -155,7 +159,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
         """
         devices = detect()
         n_threads = len(devices['cpus'])
-        client = concurrent.futures.ThreadPoolExecutor(max_workers=n_threads)
+        client = TracedThreadPoolExecutor(tracer, max_workers=n_threads)
         return cls(client=client, is_local=True)
 
     def __enter__(self):

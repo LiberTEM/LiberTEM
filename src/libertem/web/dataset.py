@@ -4,7 +4,7 @@ import functools
 from typing import Dict
 
 import tornado.web
-
+from opentelemetry import trace
 import numpy as np
 
 from libertem.io.dataset import load, detect, get_dataset_cls
@@ -14,6 +14,7 @@ from .messages import Message
 from .state import SharedState
 
 log = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 def prime_numba_cache(ds):
@@ -107,7 +108,8 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
             ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
 
-            await self.prime_numba_caches(ds)
+            with tracer.start_as_current_span("prime_numba_caches"):
+                await self.prime_numba_caches(ds)
 
             self.dataset_state.register(
                 uuid=uuid,

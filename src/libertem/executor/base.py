@@ -1,4 +1,3 @@
-import concurrent
 import functools
 import asyncio
 from typing import Callable, TYPE_CHECKING, Type, TypeVar
@@ -9,6 +8,7 @@ from libertem.common.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager
 )
 from libertem.common.executor import JobExecutor, AsyncJobExecutor
+from libertem.common.tracing import TracedThreadPoolExecutor
 
 
 if TYPE_CHECKING:
@@ -42,7 +42,7 @@ class AsyncAdapter(AsyncJobExecutor):
 
     @classmethod
     def make_pool(cls):
-        pool = concurrent.futures.ThreadPoolExecutor(1)
+        pool = TracedThreadPoolExecutor(1)
         pool.submit(adjust_event_loop_policy).result()
         pool.submit(lambda: asyncio.set_event_loop(asyncio.new_event_loop())).result()
         return pool

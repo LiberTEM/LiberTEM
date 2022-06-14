@@ -1,11 +1,13 @@
 import time
 import logging
 import asyncio
-import concurrent.futures
 from typing import TYPE_CHECKING, Callable, Optional, TypeVar
+
+from opentelemetry import trace
 
 from libertem.analysis.base import Analysis, AnalysisResultSet
 from libertem.common.executor import JobCancelledError
+from libertem.common.tracing import TracedThreadPoolExecutor
 from libertem.udf.base import UDFResults
 from libertem.io.dataset.base.dataset import DataSet
 from libertem.web.models import AnalysisDetails
@@ -14,6 +16,7 @@ from .state import SharedState
 from .base import log_message, result_images
 
 log = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 
 if TYPE_CHECKING:
@@ -26,7 +29,7 @@ class JobEngine:
     def __init__(self, state: SharedState, event_registry: "EventRegistry"):
         self.state = state
         self.event_registry = event_registry
-        self._pool = concurrent.futures.ThreadPoolExecutor()
+        self._pool = TracedThreadPoolExecutor(tracer=tracer)
 
     async def run_sync(self, fn: Callable[..., T], *args, **kwargs) -> T:
         # to make sure everything is using `self._pool`, only import
@@ -35,47 +38,48 @@ class JobEngine:
         return await sync_to_async(fn, self._pool, *args, **kwargs)
 
     async def run_analysis(self, analysis_id: str, job_id: str):
-        analysis_state = self.state.analysis_state[analysis_id]
-        ds = self.state.dataset_state[analysis_state['dataset']]
+        with tracer.start_as_current_span("JobEngine.run_analysis"):
+            analysis_state = self.state.analysis_state[analysis_id]
+            ds = self.state.dataset_state[analysis_state['dataset']]
 
-        analysis_details = analysis_state["details"]
-        analysis_type = analysis_details["analysisType"]
-        params = analysis_details["parameters"]
+            analysis_details = analysis_state["details"]
+            analysis_type = analysis_details["analysisType"]
+            params = analysis_details["parameters"]
 
-        analysis = Analysis.get_analysis_by_type(analysis_type)(
-            dataset=ds,
-            parameters=params,
-        )
-
-        try:
-            if analysis.TYPE != 'UDF':
-                raise TypeError(
-                    'Only Analysis classes with TYPE="UDF" are supported'
-                )
-            # Users of this class may call `register_job` before actually running it,
-            # for example if they want to finish their response before starting to
-            # actually run the UDF, so we check here and `register_job` if it hasn't
-            # happened already:
-            if job_id not in self.state.job_state:
-                await self.register_job(analysis_id, job_id)
-            return await self.run_udf(
-                job_id=job_id,
+            analysis = Analysis.get_analysis_by_type(analysis_type)(
                 dataset=ds,
-                dataset_id=analysis_state['dataset'],
-                analysis=analysis,
-                analysis_id=analysis_id,
-                details=analysis_details,
+                parameters=params,
             )
-        except JobCancelledError:
-            msg = Message(self.state).cancel_done(job_id)
-            log_message(msg)
-            await self.event_registry.broadcast_event(msg)
-            return
-        except Exception as e:
-            log.exception("error running job, params=%r", params)
-            msg = Message(self.state).job_error(job_id, "error running job: %s" % str(e))
-            self.event_registry.broadcast_event(msg)
-            await self.state.job_state.remove(job_id)
+
+            try:
+                if analysis.TYPE != 'UDF':
+                    raise TypeError(
+                        'Only Analysis classes with TYPE="UDF" are supported'
+                    )
+                # Users of this class may call `register_job` before actually running it,
+                # for example if they want to finish their response before starting to
+                # actually run the UDF, so we check here and `register_job` if it hasn't
+                # happened already:
+                if job_id not in self.state.job_state:
+                    await self.register_job(analysis_id, job_id)
+                return await self.run_udf(
+                    job_id=job_id,
+                    dataset=ds,
+                    dataset_id=analysis_state['dataset'],
+                    analysis=analysis,
+                    analysis_id=analysis_id,
+                    details=analysis_details,
+                )
+            except JobCancelledError:
+                msg = Message(self.state).cancel_done(job_id)
+                log_message(msg)
+                await self.event_registry.broadcast_event(msg)
+                return
+            except Exception as e:
+                log.exception("error running job, params=%r", params)
+                msg = Message(self.state).job_error(job_id, "error running job: %s" % str(e))
+                self.event_registry.broadcast_event(msg)
+                await self.state.job_state.remove(job_id)
 
     async def register_job(self, analysis_id: str, job_id: str):
         analysis_state = self.state.analysis_state[analysis_id]
@@ -86,6 +90,25 @@ class JobEngine:
         self.state.analysis_state.add_job(analysis_id, job_id)
 
     async def run_udf(
+        self,
+        job_id: str,
+        dataset: DataSet,
+        dataset_id: str,
+        analysis: Analysis,
+        analysis_id: str,
+        details: AnalysisDetails,
+    ) -> AnalysisResultSet:
+        with tracer.start_as_current_span("JobEngine.run_udf"):
+            return await self._run_udf(
+                job_id,
+                dataset,
+                dataset_id,
+                analysis,
+                analysis_id,
+                details,
+            )
+
+    async def _run_udf(
         self,
         job_id: str,
         dataset: DataSet,

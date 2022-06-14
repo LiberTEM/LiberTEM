@@ -158,7 +158,7 @@ Getting tracing running
 
 Some external services are needed to gather traces. We include
 :code:`docker-compose` configuration for getting these up and running quickly
-in the :code:`examples/tracing/` directory. Please note that this configuration
+in the :code:`tracing` directory. Please note that this configuration
 by default opens some ports, so be careful, as this may circumvent your
 device's firewall!
 
@@ -188,6 +188,21 @@ for example, in a notebook:
     from libertem.common.tracing import maybe_setup_tracing
     maybe_setup_tracing(service_name="notebook-main")
 
+Or, for intrumenting the :code:`libertem-server`:
+
+.. code:: bash
+
+    OTEL_ENABLE=1 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 libertem-server
+
+The same works for bringing up :code:`libertem-worker` processes:
+
+.. code:: bash
+
+    OTEL_ENABLE=1 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 libertem-worker
+
+Be sure to change the endpoint URL to whatever is the correct one from the
+perspective of the worker process in the distributed case.
+
 For enabling tracing across multiple Python processes, possibly on multiple
 nodes, set the environment variables for each of these processes, and also call
 the :func:`~libertem.common.tracing.maybe_setup_tracing` function on each.
@@ -201,10 +216,9 @@ method to accomplish this:
     ctx = Context()
     ctx.executor.run_each_worker(maybe_setup_tracing, service_name="libertem-worker")
 
-Support for setting up tracing on workers automatically is already integrated in
-the pipelined executor, and probably will be more closely integrated with other
-executors, too. Single-process (i.e. threading, inline) executors don't need any
-additional work for tracing to work.
+Support for setting up tracing on workers automatically is already integrated
+in the dask and pipelined executors. The inline executor doesn't need any
+additional setup for tracing to work.
 
 Adding your own intrumentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

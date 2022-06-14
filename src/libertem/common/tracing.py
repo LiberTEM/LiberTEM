@@ -57,8 +57,7 @@ def setup_tracing(
     if otlp_endpoint is None:
         otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
     if otlp_endpoint is None:
-        # otlp_endpoint = "http://localhost:4317"
-        raise Exception()
+        otlp_endpoint = "http://localhost:4317"
     try:
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
         from opentelemetry.sdk.resources import Resource

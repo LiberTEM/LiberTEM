@@ -220,12 +220,29 @@ Support for setting up tracing on workers automatically is already integrated
 in the dask and pipelined executors. The inline executor doesn't need any
 additional setup for tracing to work.
 
-Adding your own intrumentation
+On Windows
+~~~~~~~~~~
+
+The easiest way to get the tracing services up and running is using
+`Windows Subsystem for Linux <https://docs.microsoft.com/en-us/windows/wsl/install>`_
+to install Linux and Docker. This allows to run the tracing services as described above.
+Alternatively, `Docker Desktop for Windows <https://docs.docker.com/desktop/windows/install/>`_
+could be an option.
+
+Clients running natively on Windows can then connect to these services:
+
+.. code:: cmd
+
+    > set OTEL_ENABLE=1
+    > set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+    > libertem-server
+
+Adding your own instrumentation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, a minimal set of functions is already annotated with tracing
 information, to be able to understand how UDFs are executed across multiple
-processes. Adding tracing intrumentation to your code is similar to setting
+processes. Adding tracing instrumentation to your code is similar to setting
 up logging using the :code:`logging` module. At the top of your Python module,
 you create and use a :code:`Tracer` object like this:
 

@@ -231,14 +231,14 @@ could be an option.
 
 Clients running natively on Windows can then connect to these services:
 
-.. code:: cmd
+.. code:: bat
 
-    > set OTEL_ENABLE=1
-    > set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-    > libertem-server
+    set OTEL_ENABLE=1
+    set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+    libertem-server
 
 Adding your own instrumentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, a minimal set of functions is already annotated with tracing
 information, to be able to understand how UDFs are executed across multiple

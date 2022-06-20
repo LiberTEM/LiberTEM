@@ -220,18 +220,6 @@ def test_auto_sig_dims(lt_ctx):
     assert ds._sig_dims == 3
 
 
-def test_shape_override_toobig(default_npy_filepath, default_raw_data, lt_ctx):
-    nav_shape, sig_shape = default_raw_data.shape[:2], default_raw_data.shape[2:]
-    with pytest.raises(DataSetException):
-        lt_ctx.load(
-            "npy",
-            path=default_npy_filepath,
-            sig_dims=2,
-            nav_shape=tuple(n + 1 for n in nav_shape),
-            sig_shape=tuple(n + 1 for n in sig_shape),
-        )
-
-
 def test_shape_arg_smallernav(default_npy_filepath, default_raw_data, lt_ctx):
     nav_shape, sig_shape = default_raw_data.shape[:2], default_raw_data.shape[2:]
     smaller_nav_shape = tuple(n - 1 for n in nav_shape)

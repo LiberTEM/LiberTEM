@@ -58,7 +58,8 @@ def cluster_spec(
         number and identification of workers, not the CPU cores that are used.
     cudas
         IDs for CUDA device workers. LiberTEM will use the IDs specified here. This
-        has to match CUDA device IDs on the system.
+        has to match CUDA device IDs on the system. Specify the same ID multiple times
+        to spawn multiple workers on the same CUDA device.
     has_cupy
         Specify if the cluster should signal that it supports GPU-based array programming using
         CuPy
@@ -145,6 +146,9 @@ def cluster_spec(
 
     for cuda in cudas:
         worker_name = f'{name}-cuda-{cuda}'
+        if worker_name in workers_spec:
+            num_with_name = sum(n.startswith(worker_name) for n in workers_spec)
+            worker_name = f'{worker_name}-{num_with_name - 1}'
         cuda_spec = deepcopy(cuda_base_spec)
         cuda_spec['options']['preload'] = preload + (
             'from libertem.executor.dask import worker_setup; '

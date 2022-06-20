@@ -28,6 +28,13 @@ Raw binary files
 
 .. autoclass:: libertem.io.dataset.raw.RawFileDataSet
 
+.. _`npy format`:
+
+Numpy files (NPY)
+~~~~~~~~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.npy.NPYDataSet
+
 .. _`dm format`:
 
 Digital Micrograph (DM3, DM4) files

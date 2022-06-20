@@ -297,3 +297,8 @@ def test_use_plain_dask(hdf5_ds_1):
 
     assert np.all(udf_res['device_class'].data == 'cpu')
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
+
+
+def test_multi_cuda_worker():
+    spec = cluster_spec(cpus=(), cudas=(0, 1, 0, 1), has_cupy=False, num_service=0)
+    assert len(spec) == 4

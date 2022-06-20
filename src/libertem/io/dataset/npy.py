@@ -41,7 +41,7 @@ class NPYDatasetParams(MessageConverter):
                 "minItems": 2,
                 "maxItems": 2
             },
-            # "sync_offset": {"type": "number"},  FIXME
+            "sync_offset": {"type": "number"},
             "io_backend": {
                 "enum": IOBackend.get_supported(),
             },
@@ -58,8 +58,8 @@ class NPYDatasetParams(MessageConverter):
             data["nav_shape"] = tuple(raw_data["nav_shape"])
         if "sig_shape" in raw_data:
             data["sig_shape"] = tuple(raw_data["sig_shape"])
-        # if "sync_offset" in raw_data:
-        #     data["sync_offset"] = raw_data["sync_offset"]
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = int(raw_data["sync_offset"])
         return data
 
 

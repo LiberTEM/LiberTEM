@@ -283,11 +283,6 @@ class NPYDataSet(DataSet):
         sig_shape = self._sig_shape if self._sig_shape else np_shape.sig
         nav_shape = self._nav_shape if self._nav_shape else np_shape.nav
         shape = Shape(tuple(nav_shape) + tuple(sig_shape), sig_dims=self._sig_dims)
-        if shape.size > np_shape.size:
-            raise DataSetException('Shape parameters incompatible with .npy contents')
-        elif shape.size < np_shape.size:
-            log.info(f'Contents of {self._path} not fully accessed by read shape, '
-                     f'{shape} read vs. {np_shape} in file.')
         # Trying to follow implementation of RawFileDataSet i.e. the _image_count
         # is the whole block of data interpreted as N frames of sig_shape, noting that
         # here sig_shape can be either user-supplied or from the npy metadata

@@ -104,7 +104,7 @@ def test_read_npy_info(npy_random_array, repeat):
 def test_read_npy_info_fortran(npy_fortran_array):
     npy_filepath, array = npy_fortran_array
     assert array.flags.f_contiguous
-    with pytest.raises(AssertionError):
+    with pytest.raises(DataSetException):
         read_npy_info(npy_filepath)
 
 

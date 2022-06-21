@@ -199,7 +199,9 @@ def read_npy_info(path: str) -> NPYInfo:
     with open(path, "rb") as fp:
         version = read_magic(fp)
         shape, fortran_order, dtype = _read_array_header(fp, version)
-        assert not fortran_order
+        if fortran_order:
+            raise DataSetException('Unable to process Fortran-ordered NPY arrays, '
+                                   'consider converting with np.ascontiguousarray().')
         if len(shape) == 0:
             count = 1
         else:
@@ -210,9 +212,13 @@ def read_npy_info(path: str) -> NPYInfo:
 
 class NPYDataSet(DataSet):
     """
+    .. versionadded:: 0.10.0
+
     Read data stored in a numpy .npy binary file. Dataset shape
     and dtype are inferred from the file header unless overridden
     by the arguments to this class.
+
+    As of this time Fortran-ordered .npy files are not supported
 
     Parameters
     ----------
@@ -245,6 +251,8 @@ class NPYDataSet(DataSet):
     DataSetException
         If the supplied nav_shape + sig_shape describe an array larger
         than the contents of the .npy file
+    DataSetException
+        If the .npy file is Fortran-ordered
     """
     def __init__(
         self,

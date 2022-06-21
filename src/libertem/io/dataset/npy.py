@@ -224,25 +224,25 @@ class NPYDataSet(DataSet):
     ----------
     path : str
         The path to the .npy file
-    sig_dims : Optional[int], optional
+    sig_dims : int, optional, by default 2
         The number of dimensions from the end of the full shape
-        to interpret as signal dimensions, by default 2. If None
+        to interpret as signal dimensions. If None
         will be inferred from the sig_shape argument when present.
-    nav_shape : Optional[Tuple[int, int]], optional
+    nav_shape : Tuple[int, int], optional
         A nav_shape to apply to the dataset overriding the shape
         value read from the .npy header, by default None. This can
         be used to read a subset of the .npy file, or reshape the
         contained data. Frames are read in C-order from the beginning
         of the file.
-    sig_shape : Optional[Tuple[int, int]], optional
+    sig_shape : Tuple[int, int], optional
         A sig_shape to apply to the dataset overriding the shape
         value read from the .npy header, by default None. Pixels are
         read in C-order from the beginning of the file.
-    sync_offset : int, optional
+    sync_offset : int, optional, by default 0
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
-    io_backend : Optional[IOBackend], optional
-        _description_, by default None
+    io_backend : IOBackend, optional
+        The I/O backend to use, see :ref:`io backends`, by default None.
 
     Raises
     ------

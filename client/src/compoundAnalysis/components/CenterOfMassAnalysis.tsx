@@ -317,6 +317,13 @@ const CenterOfMassAnalysis: React.FC<CompoundAnalysisProps> = ({ compoundAnalysi
                     <List.Item>
                         <List.Content>
                             <MaskShapeSelector selectedShape={maskShape} handleChange={(e, data) => {
+                                if (data.value === CoMMaskShapes.RING && ri >= r){
+                                    // Fixes r being set smaller than ri when the ri handle is hidden
+                                    // and the constraint is therefore no longer applied
+                                    // Only possible when switching to RING from DISK
+                                    // Otherwise maintains previous memory behaviour of r and ri
+                                    setRI(r * 0.5)
+                                }
                                 setMaskShape(data.value as CoMMaskShapes)
                             }} />
                         </List.Content>

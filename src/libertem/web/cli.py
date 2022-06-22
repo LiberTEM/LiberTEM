@@ -40,7 +40,7 @@ def get_token(token_path):
               help="allow to bind to non-localhost without token auth",
               default=False, is_flag=True)
 def main(port, local_directory, browser, log_level, insecure, host="localhost",
-        token_path=None, preload: Tuple[str] = ()):
+        token_path=None, preload: Tuple[str, ...] = ()):
     is_custom_port = port is not None
     if port is None:
         port = 9000

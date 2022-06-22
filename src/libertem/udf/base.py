@@ -33,7 +33,9 @@ from libertem.io.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
-from libertem.common.executor import Environment, JobExecutor, TaskProtocol
+from libertem.common.executor import (
+    Environment, JobExecutor, MainController, NoopMainController, TaskProtocol,
+)
 
 if TYPE_CHECKING:
     from typing import OrderedDict
@@ -1868,15 +1870,16 @@ class UDFRunner:
         This can be used to create an empty result to initialize live plots
         before running an UDF.
         """
-        runner = cls(udfs)
-        executor = InlineJobExecutor()
-        res = runner.run_for_dataset(
-            dataset=dataset,
-            executor=executor,
-            roi=roi,
-            dry=True
-        )
-        return res
+        with tracer.start_as_current_span("UDFRunner.dry_run"):
+            runner = cls(udfs)
+            executor = InlineJobExecutor()
+            res = runner.run_for_dataset(
+                dataset=dataset,
+                executor=executor,
+                roi=roi,
+                dry=True
+            )
+            return res
 
     def _debug_task_pickling(self, tasks: List[UDFTask]) -> None:
         if self._debug:
@@ -1983,7 +1986,10 @@ class UDFRunner:
         self._debug_task_pickling(tasks)
 
         executor = executor.ensure_sync()
-        controller = dataset.get_controller()
+        if dry:
+            controller: MainController = NoopMainController()
+        else:
+            controller = dataset.get_controller()
 
         try:
             if progress:

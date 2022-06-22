@@ -1,12 +1,13 @@
 import os
 import gc
+import sys
 import logging
 import functools
 import contextlib
 import multiprocessing as mp
 from typing import (
     Any, Callable, Dict, Iterable, List, NamedTuple, Tuple,
-    Generator, TypeVar, TYPE_CHECKING
+    Generator, TypeVar,
 )
 import uuid
 
@@ -16,7 +17,7 @@ import psutil
 
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
-    WorkerQueueEmpty, MainController,
+    WorkerQueueEmpty, MainController, SimpleMPWorkerQueue,
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
@@ -28,9 +29,6 @@ try:
 except ImportError:
     prctl = None
 
-if TYPE_CHECKING:
-    from .utils.shmqueue import ShmQueue
-
 tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(__name__)
 
@@ -39,8 +37,8 @@ T = TypeVar('T')
 
 
 class WorkerQueues(NamedTuple):
-    request: "ShmQueue"
-    response: "ShmQueue"
+    request: "WorkerQueue"
+    response: "WorkerQueue"
 
 
 class WorkerPool:
@@ -54,16 +52,16 @@ class WorkerPool:
     Take care to properly close queues and join workers at shutdown.
     """
     def __init__(self, processes: int, worker_fn: Callable):
-        from .utils.shmqueue import ShmQueue
+        self._worker_q_cls = SimpleMPWorkerQueue
         self._workers: List[Tuple[WorkerQueues, mp.Process]] = []
         self._worker_fn = worker_fn
         self._num_processes = processes
-        self._response_q = ShmQueue()
+        self._response_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
         self._start_workers()
 
     @property
-    def response_queue(self) -> "ShmQueue":
+    def response_queue(self) -> "WorkerQueue":
         return self._response_q
 
     @property
@@ -100,9 +98,8 @@ class WorkerPool:
         return self._workers[idx][0]
 
     def _make_worker_queues(self):
-        from .utils.shmqueue import ShmQueue
         return WorkerQueues(
-            request=ShmQueue(),
+            request=self._worker_q_cls(),
             response=self._response_q,
         )
 
@@ -125,7 +122,7 @@ def worker_run_task(header, work_mem, queues, worker_idx, env):
     with tracer.start_as_current_span("RUN_TASK") as span:
         try:
             span.set_attributes({
-                "libertem.task_size": len(header["task"]),
+                "libertem.task_size_pickled": len(header["task"]),
             })
             gc.disable()
             task: TaskProtocol = cloudpickle.loads(header["task"])
@@ -213,6 +210,10 @@ def worker_loop(queues, work_mem, worker_idx, env):
 
 
 def pipelined_worker(queues: WorkerQueues, worker_idx: int, pin: bool):
+    # FIXME: propagate to parent process with a pipe or similar?
+    sys.stderr.close()
+    sys.stderr = open(os.open(os.devnull, os.O_RDWR), closefd=False)
+
     try:
         if hasattr(os, 'sched_setaffinity') and pin:
             os.sched_setaffinity(0, [worker_idx])
@@ -246,7 +247,7 @@ def pipelined_worker(queues: WorkerQueues, worker_idx: int, pin: bool):
 
 
 class PipelinedWorkerContext(WorkerContext):
-    def __init__(self, queue: "ShmQueue"):
+    def __init__(self, queue: "WorkerQueue"):
         self._queue = queue
 
     def get_worker_queue(self) -> WorkerQueue:
@@ -384,10 +385,6 @@ class PipelinedExecutor(BaseJobExecutor):
                         raise RuntimeError(f"failed to run tasks: {result['error']}")
                     in_flight -= 1
                     result_task_id = result["task_id"]
-                    # FIXME: adjust order of results to match tasks
-                    # idea: if in-order, just yield result, otherwise, put
-                    # result into an ordered queue, and yield out "contiguous"
-                    # runs of results as soon as they are available.
                     yield (result["result"], id_to_task[result_task_id], result_task_id)
             except WorkerQueueEmpty:
                 continue

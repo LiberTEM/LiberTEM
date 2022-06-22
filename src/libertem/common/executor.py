@@ -3,10 +3,13 @@ from typing import (
     Callable, Generator, Optional, Any, Iterable, TYPE_CHECKING, Tuple,
     TypeVar, Type,
 )
-from typing_extensions import Protocol
 from contextlib import contextmanager
-from libertem.common.scheduler import WorkerSet
+import multiprocessing as mp
 
+import numpy as np
+from typing_extensions import Protocol
+
+from libertem.common.scheduler import WorkerSet
 from libertem.common.threading import set_num_threads, mitigations
 from libertem.io.dataset.base import Partition
 
@@ -424,12 +427,59 @@ class SimpleWorkerQueue(WorkerQueue):
         self.q.put((header, payload))
 
     @contextmanager
+    def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
+        payload = np.zeros(size, dtype=np.uint8)
+        yield memoryview(payload)
+        self.q.put((header, payload))
+
+    @contextmanager
     def get(self, block: bool = True, timeout: Optional[float] = None):
         try:
             res = self.q.get(block=block, timeout=timeout)
             yield res
         except queue.Empty:
             raise WorkerQueueEmpty()
+
+    def close(self):
+        pass
+
+
+class SimpleMPWorkerQueue(WorkerQueue):
+    """
+    A :code:`WorkerQueue` that uses a :code:`mp.Queue` under the hood.
+    """
+    def __init__(self) -> None:
+        self._mp_ctx = mp.get_context("spawn")
+        self.q: mp.Queue = self._mp_ctx.Queue()
+        self._closed = False
+
+    def put(self, header, payload: Optional[memoryview] = None):
+        self.q.put((header, payload))
+
+    @contextmanager
+    def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
+        payload = np.zeros(size, dtype=np.uint8)
+        yield memoryview(payload)
+        self.q.put((header, payload))
+
+    @contextmanager
+    def get(self, block: bool = True, timeout: Optional[float] = None):
+        try:
+            res = self.q.get(block=block, timeout=timeout)
+            yield res
+        except queue.Empty:
+            raise WorkerQueueEmpty()
+
+    def close(self):
+        if not self._closed:
+            while True:
+                try:
+                    self.q.get_nowait()
+                except queue.Empty:
+                    break
+            self.q.close()
+            self.q.join_thread()
+            self._closed = True
 
 
 class WorkerContext:
@@ -441,7 +491,7 @@ class WorkerContext:
         raise NotImplementedError()
 
 
-class MainController(Protocol):
+class MainController:
     """
     This is the interface that is implemented by the acquisition object
     to allow streaming communication with workers.
@@ -485,7 +535,7 @@ class MainController(Protocol):
         ...
 
 
-class NoopMainController:
+class NoopMainController(MainController):
     """
     A `MainController` that doesn't perform any action, and doesn't
     stream any data.

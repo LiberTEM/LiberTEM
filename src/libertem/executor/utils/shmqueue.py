@@ -3,7 +3,7 @@ import contextlib
 from multiprocessing import shared_memory
 import math
 import queue
-from typing import NamedTuple, Optional
+from typing import Any, Generator, NamedTuple, Optional, Tuple
 
 import cloudpickle
 import numpy as np
@@ -123,7 +123,11 @@ class ShmQueue(WorkerQueue):
         self._pool_shm_client = None
         self._closed = False
 
-    # FIXME: implement `put_nocopy`
+    @contextlib.contextmanager
+    def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
+        alloc_handle, payload_shm = self._get_buf_for_writing(size)
+        yield payload_shm
+        self.q.put((cloudpickle.dumps(header), 'bytes', alloc_handle))
 
     def put(self, header, payload: Optional[memoryview] = None):
         """
@@ -131,25 +135,18 @@ class ShmQueue(WorkerQueue):
         `payload` to a shared memory segment while sending `header` plainly
         via a queue. The header should be `pickle`able.
         """
-        # FIXME: zero-copy version of this, which could be used to
-        # receive/decode/...  directly into a shared memory segment. Not
-        # important now, as zmq doesn't have a `recv_into` anyways...
         if payload is not None:
             payload_shm: Optional[PoolAllocation] = self._copy_to_shm(payload)
         else:
             payload_shm = None
         self.q.put((cloudpickle.dumps(header), 'bytes', payload_shm))
 
-    def _copy_to_shm(self, src_buffer: memoryview) -> PoolAllocation:
-        """
-        Copy the `buffer` to shared memory and return its name
-        """
+    def _get_buf_for_writing(self, size: int) -> Tuple[PoolAllocation, memoryview]:
         if self._pool_shm_allocator is None:
             # FIXME: config item size, pool size
             self._pool_shm_allocator = PoolShmAllocator(
                 item_size=512*512*4*2, size_num_items=24*128
             )
-        size = src_buffer.nbytes
         try:
             alloc_handle: PoolAllocation = self.release_q.get_nowait()
             alloc_handle = alloc_handle.resize(size)
@@ -157,6 +154,14 @@ class ShmQueue(WorkerQueue):
             alloc_handle = self._pool_shm_allocator.allocate(size)
         payload_shm = self._pool_shm_allocator.get(alloc_handle)
         assert payload_shm.nbytes == size, f"{payload_shm.nbytes} != {size}"
+        return alloc_handle, payload_shm
+
+    def _copy_to_shm(self, src_buffer: memoryview) -> PoolAllocation:
+        """
+        Copy the `buffer` to shared memory and return its name
+        """
+        size = src_buffer.nbytes
+        alloc_handle, payload_shm = self._get_buf_for_writing(size)
         src_arr = np.frombuffer(src_buffer, dtype=np.uint8)
         arr_shm = np.frombuffer(payload_shm, dtype=np.uint8)
         assert arr_shm.size == size, f"{arr_shm.size} != {size}"

@@ -5,3 +5,8 @@ graft client
 prune client/node_modules
 prune client/build
 prune client/coverage
+graft tests
+include conftest.py
+include pytest.ini
+include test_requirements.txt
+include tox.ini

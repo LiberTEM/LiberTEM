@@ -1,4 +1,5 @@
 graft src
+graft src/libertem/web/client/
 include LICENSE
 include README.rst
 graft client
@@ -10,3 +11,4 @@ include conftest.py
 include pytest.ini
 include test_requirements.txt
 include tox.ini
+global-exclude *.pyc *.nbi *.nbc __pycache__

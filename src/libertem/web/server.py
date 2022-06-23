@@ -3,6 +3,7 @@ import sys
 import logging
 import asyncio
 import signal
+import socket
 import select
 import threading
 import webbrowser
@@ -159,14 +160,14 @@ def main(host, port, numeric_level, event_registry, shared_state, token):
     app = make_app(event_registry, shared_state, token)
     http_server = tornado.httpserver.HTTPServer(app)
     try:
-        (socket,) = tornado.netutil.bind_sockets(port, host)
+        (bound_socket,) = tornado.netutil.bind_sockets(port, host, family=socket.AF_INET)
         log.info(f"listening on http://{host}:{port}")
     except OSError:
-        (socket,) = tornado.netutil.bind_sockets(0, host)
-        _, _port = socket.getsockname()
+        (bound_socket,) = tornado.netutil.bind_sockets(0, host, family=socket.AF_INET)
+        _, _port = bound_socket.getsockname()
         log.info(f"port {port} already in use, listening on http://{host}:{_port}")
-    http_server.add_socket(socket)
-    return http_server, socket
+    http_server.add_socket(bound_socket)
+    return http_server, bound_socket
 
 
 def _confirm_exit(shared_state, loop):
@@ -213,8 +214,8 @@ def run(host, port, browser, local_directory, numeric_level, token, preload):
 
     shared_state.set_local_directory(local_directory)
     shared_state.set_preload(preload)
-    _, socket = main(host, port, numeric_level, event_registry, shared_state, token)
-    _, port = socket.getsockname()
+    _, bound_socket = main(host, port, numeric_level, event_registry, shared_state, token)
+    _, port = bound_socket.getsockname()
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()

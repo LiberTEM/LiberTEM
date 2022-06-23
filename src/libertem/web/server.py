@@ -156,11 +156,17 @@ def main(host, port, numeric_level, event_registry, shared_state, token):
         level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
-    log.info(f"listening on {host}:{port}")
     app = make_app(event_registry, shared_state, token)
     http_server = tornado.httpserver.HTTPServer(app)
-    http_server.listen(address=host, port=port)
-    return http_server
+    try:
+        (socket,) = tornado.netutil.bind_sockets(port, host)
+        log.info(f"listening on http://{host}:{port}")
+    except OSError:
+        (socket,) = tornado.netutil.bind_sockets(0, host)
+        _, _port = socket.getsockname()
+        log.info(f"port {port} already in use, listening on http://{host}:{_port}")
+    http_server.add_socket(socket)
+    return http_server, socket
 
 
 def _confirm_exit(shared_state, loop):
@@ -207,7 +213,8 @@ def run(host, port, browser, local_directory, numeric_level, token, preload):
 
     shared_state.set_local_directory(local_directory)
     shared_state.set_preload(preload)
-    main(host, port, numeric_level, event_registry, shared_state, token)
+    _, socket = main(host, port, numeric_level, event_registry, shared_state, token)
+    _, port = socket.getsockname()
     if browser:
         webbrowser.open(f'http://{host}:{port}')
     loop = asyncio.get_event_loop()

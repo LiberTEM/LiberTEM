@@ -6,6 +6,7 @@ import signal
 import select
 import threading
 import webbrowser
+import ipaddress
 from functools import partial
 import hmac
 import hashlib
@@ -225,9 +226,15 @@ def run(host, port, browser, local_directory, numeric_level, token, preload, str
         port = _port
 
     main(bound_sockets, event_registry, shared_state, token)
-    log.info(f"listening on http://{host}:{port}")
+
+    try:
+        is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)
+    except ValueError:
+        is_ipv6 = False
+    url = f'http://[{host}]:{port}' if is_ipv6 else f'http://{host}:{port}'
+    log.info(f"listening on {url}")
     if browser:
-        webbrowser.open(f'http://{host}:{port}')
+        webbrowser.open(url)
     loop = asyncio.get_event_loop()
     handle_signal(shared_state)
     # Strictly necessary only on Windows, but doesn't do harm in any case.

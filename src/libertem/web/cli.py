@@ -22,9 +22,9 @@ def get_token(token_path):
 
 @click.command()
 @click.option('-h', '--host', help='host on which the server should listen on',
-              default="localhost", type=str)
-@click.option('-p', '--port', help='port on which the server should listen on',
-              default=9000, type=int)
+              default="localhost", type=str, show_default=True)
+@click.option('-p', '--port', help='port on which the server should listen on, [default: 9000]',
+              default=None, type=int)
 @click.option('-d', '--local-directory', help='local directory to manage dask-worker-space files',
               default='dask-worker-space', type=str)
 @click.option('-b/-n', '--browser/--no-browser',
@@ -41,6 +41,10 @@ def get_token(token_path):
               default=False, is_flag=True)
 def main(port, local_directory, browser, log_level, insecure, host="localhost",
         token_path=None, preload: Tuple[str] = ()):
+    is_custom_port = port is not None
+    if port is None:
+        port = 9000
+
     from libertem.common.threading import set_num_threads_env
     from libertem.common.tracing import maybe_setup_tracing
     token = get_token(token_path)

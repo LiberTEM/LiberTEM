@@ -48,7 +48,8 @@ def main(port, local_directory, browser, log_level, insecure, host="localhost",
     from libertem.common.threading import set_num_threads_env
     from libertem.common.tracing import maybe_setup_tracing
     token = get_token(token_path)
-    if token is None and host != 'localhost' and not insecure:
+    is_localhost = host in ['localhost', '127.0.0.1', '::1']
+    if token is None and not is_localhost and not insecure:
         raise click.UsageError(
             f'listening on non-localhost {host}:{port} currently requires token authentication '
             f'or --insecure'

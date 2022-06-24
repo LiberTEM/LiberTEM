@@ -61,4 +61,4 @@ def main(port, local_directory, browser, log_level, insecure, host="localhost",
         numeric_level = getattr(logging, log_level.upper(), None)
         if not isinstance(numeric_level, int):
             raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
-        run(host, port, browser, local_directory, numeric_level, token, preload)
+        run(host, port, browser, local_directory, numeric_level, token, preload, is_custom_port)

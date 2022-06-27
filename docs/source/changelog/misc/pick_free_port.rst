@@ -1,6 +1,7 @@
-[Misc] Server launcher picks free port if default/choice in use
-===============================================================
+[Misc] Server launcher picks free port if default in use
+========================================================
 
 * The function launching the `libertem-server` application will now
-  pick a free, random port if the default or chosen port is in use.
-  Closes #1184.
+  pick a free, random port if the default port is in use. Choosing 
+  an explicit port will continue to raise an error.
+  Closes :issue:`1184`.

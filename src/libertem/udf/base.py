@@ -12,10 +12,9 @@ import uuid
 import cloudpickle
 import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
+
 from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
-
 from libertem.io.dataset.base.tiling import DataTile
-
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
 from libertem.common.buffers import (
@@ -23,12 +22,11 @@ from libertem.common.buffers import (
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
-from libertem.common.udf import TilingPreferences
+from libertem.common.udf import TilingPreferences, UDFProtocol
 from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
-from libertem.common.udf import UDFProtocol
 from libertem.io.corrections import CorrectionSet
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager

@@ -6,6 +6,7 @@ from typing import (
 from contextlib import contextmanager
 import multiprocessing as mp
 
+import cloudpickle
 import numpy as np
 from typing_extensions import Protocol
 
@@ -454,7 +455,9 @@ class SimpleMPWorkerQueue(WorkerQueue):
         self._closed = False
 
     def put(self, header, payload: Optional[memoryview] = None):
-        self.q.put((header, payload))
+        header_serialized = cloudpickle.dumps(header)
+        payload_serialized = cloudpickle.dumps(payload)
+        self.q.put((header_serialized, payload_serialized))
 
     @contextmanager
     def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
@@ -466,7 +469,7 @@ class SimpleMPWorkerQueue(WorkerQueue):
     def get(self, block: bool = True, timeout: Optional[float] = None):
         try:
             res = self.q.get(block=block, timeout=timeout)
-            yield res
+            yield (cloudpickle.loads(res[0]), cloudpickle.loads(res[1]))
         except queue.Empty:
             raise WorkerQueueEmpty()
 

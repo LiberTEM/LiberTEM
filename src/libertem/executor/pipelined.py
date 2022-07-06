@@ -6,14 +6,15 @@ import functools
 import contextlib
 import multiprocessing as mp
 from typing import (
-    Any, Callable, Dict, Iterable, List, NamedTuple, Tuple,
-    Generator, TypeVar,
+    TYPE_CHECKING, Any, Callable, Dict, Iterable, List, NamedTuple, Tuple,
+    Generator, TypeVar, Union,
 )
+from typing_extensions import TypedDict, Literal
 import uuid
 
 import cloudpickle
 from opentelemetry import trace
-import psutil
+from libertem.common.backend import set_use_cpu, set_use_cuda
 
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
@@ -29,6 +30,9 @@ try:
 except ImportError:
     prctl = None
 
+if TYPE_CHECKING:
+    from opentelemetry.trace import SpanContext
+
 tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,13 @@ class WorkerQueues(NamedTuple):
     response: "WorkerQueue"
 
 
+class WorkerSpec(TypedDict):
+    name: str
+    device_id: int
+    device_kind: Union[Literal['CPU'], Literal['CUDA']]
+    worker_idx: int
+
+
 class WorkerPool:
     """
     Combination of worker processes and matching request queues,
@@ -51,13 +62,13 @@ class WorkerPool:
 
     Take care to properly close queues and join workers at shutdown.
     """
-    def __init__(self, processes: int, worker_fn: Callable):
+    def __init__(self, worker_fn: Callable, spec: List[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue
         self._workers: List[Tuple[WorkerQueues, mp.Process]] = []
         self._worker_fn = worker_fn
-        self._num_processes = processes
         self._response_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
+        self._spec = spec
         self._start_workers()
 
     @property
@@ -66,13 +77,18 @@ class WorkerPool:
 
     @property
     def size(self) -> int:
-        return self._num_processes
+        return len(self._spec)
 
     def _start_workers(self):
-        with tracer.start_as_current_span("WorkerPool._start_workers"):
-            for i in range(self._num_processes):
+        with tracer.start_as_current_span("WorkerPool._start_workers") as span:
+            span_context = span.get_span_context()
+            for spec_item in self._spec:
                 queues = self._make_worker_queues()
-                p = self._mp_ctx.Process(target=self._worker_fn, args=(queues, i))
+                p = self._mp_ctx.Process(target=self._worker_fn, kwargs={
+                    "queues": queues,
+                    "spec": spec_item,
+                    "span_context": span_context,
+                })
                 p.start()
                 self._workers.append((queues, p))
 
@@ -92,6 +108,12 @@ class WorkerPool:
         return all(p.is_alive() for (_, p) in self._workers)
 
     def close_resp_queue(self):
+        while True:
+            try:
+                with self._response_q.get(block=False):
+                    continue
+            except WorkerQueueEmpty:
+                break
         self._response_q.close()
 
     def get_worker_queues(self, idx: int) -> WorkerQueues:
@@ -123,6 +145,7 @@ def worker_run_task(header, work_mem, queues, worker_idx, env):
         try:
             span.set_attributes({
                 "libertem.task_size_pickled": len(header["task"]),
+                "libertem.os.pid": os.getpid(),
             })
             gc.disable()
             task: TaskProtocol = cloudpickle.loads(header["task"])
@@ -177,11 +200,27 @@ def worker_loop(queues, work_mem, worker_idx, env):
             if header_type == "RUN_TASK":
                 with attach_to_parent(header["span_context"]):
                     worker_run_task(header, work_mem, queues, worker_idx, env)
+                    # NOTE: in case of an error, need to drain the request queue
+                    # (anything that is left over from the detector-specific
+                    # data that was sent in `MainController.handle_task`):
+                    with tracer.start_as_current_span("drain after task") as span:
+                        while True:
+                            with queues.request.get() as msg:
+                                header, payload = msg
+                                header_type = header["type"]
+                                span.add_event("msg", {"type": header_type})
+                                assert header_type not in (
+                                    "RUN_TASK", "SCATTER", "RUN_FUNCTION",
+                                    "CLEANUP", "SHUTDOWN", "WARMUP",
+                                )
+                                if header_type == "END_TASK":
+                                    break
             elif header_type == "SCATTER":
                 # FIXME: array data could be transferred and stored in SHM instead
                 key = header["key"]
                 assert key not in work_mem
-                work_mem[key] = header["value"]
+                value = header["value"]
+                work_mem[key] = value
                 continue
             elif header_type == "RUN_FUNCTION":
                 with attach_to_parent(header["span_context"]):
@@ -192,9 +231,11 @@ def worker_loop(queues, work_mem, worker_idx, env):
                 del work_mem[key]
                 continue
             elif header_type == "SHUTDOWN":
-                queues.request.close()
-                queues.response.close()
-                break
+                with attach_to_parent(header["span_context"]):
+                    with tracer.start_as_current_span("SHUTDOWN") as span:
+                        queues.request.close()
+                        queues.response.close()
+                    break
             elif header_type == "WARMUP":
                 with attach_to_parent(header["span_context"]):
                     with tracer.start_as_current_span("WARMUP"):
@@ -209,32 +250,72 @@ def worker_loop(queues, work_mem, worker_idx, env):
                 continue
 
 
-def pipelined_worker(queues: WorkerQueues, worker_idx: int, pin: bool):
+DeviceT = Tuple[int, Union[Literal['CUDA'], Literal['CPU']]]
+
+
+def _setup_device(spec: WorkerSpec, pin: bool):
+    if spec["device_kind"].lower() == "cpu":
+        if hasattr(os, 'sched_setaffinity') and pin:
+            os.sched_setaffinity(0, [spec["device_id"]])
+        set_use_cpu(spec["device_id"])
+    elif spec["device_kind"].lower() == "cuda":
+        set_use_cuda(spec["device_id"])
+
+
+def _drain_and_close(queues: WorkerQueues):
+    while True:
+        try:
+            with queues.request.get(block=False):
+                continue
+        except WorkerQueueEmpty:
+            break
+    # close and join:
+    queues.request.close()
+    queues.response.close()
+
+
+def pipelined_worker(
+    queues: WorkerQueues,
+    pin: bool,
+    spec: WorkerSpec,
+    span_context: "SpanContext",
+):
     # FIXME: propagate to parent process with a pipe or similar?
     sys.stderr.close()
     sys.stderr = open(os.open(os.devnull, os.O_RDWR), closefd=False)
 
     try:
-        if hasattr(os, 'sched_setaffinity') and pin:
-            os.sched_setaffinity(0, [worker_idx])
-        work_mem: Dict[str, Any] = {}
-
-        set_thread_name(f"worker-{worker_idx}")
-
-        # FIXME: propagate exporter settings to the workers, too!
+        # FIXME: explicitly propagate exporter settings to the workers?
+        # right now taken care of by environment variables...
+        worker_idx = spec["worker_idx"]
         maybe_setup_tracing(service_name="pipelined_worker", service_id=f"worker-{worker_idx}")
 
-        worker_context = PipelinedWorkerContext(queues.request)
-        env = Environment(
-            threaded_executor=False,
-            threads_per_worker=1,
-            worker_context=worker_context
-        )
+        # attach to parent span context for startup:
+        with attach_to_parent(span_context),\
+                tracer.start_as_current_span("pipelined_worker.startup") as span:
+            _setup_device(spec, pin)
+            work_mem: Dict[str, Any] = {}
 
-        queues.response.put({
-            "type": "STARTUP_DONE",
-            "worker_id": worker_idx,
-        })
+            span.set_attributes({
+                "libertem.spec.name": spec["name"],
+                "libertem.spec.device_id": spec["device_id"],
+                "libertem.spec.devide_kind": spec["device_kind"],
+                "libertem.spec.worker_idx": spec["worker_idx"],
+            })
+
+            set_thread_name(f"worker-{worker_idx}")
+
+            worker_context = PipelinedWorkerContext(queues.request)
+            env = Environment(
+                threaded_executor=False,
+                threads_per_worker=1,
+                worker_context=worker_context
+            )
+
+            queues.response.put({
+                "type": "STARTUP_DONE",
+                "worker_id": worker_idx,
+            })
 
         return worker_loop(queues, work_mem, worker_idx, env)
     except Exception as e:
@@ -243,7 +324,7 @@ def pipelined_worker(queues: WorkerQueues, worker_idx: int, pin: bool):
             "worker_id": worker_idx,
             "error": e,
         })
-        # FIXME: do we need to explicitly join the queue(s) here, too?
+        _drain_and_close(queues)
 
 
 class PipelinedWorkerContext(WorkerContext):
@@ -294,25 +375,58 @@ def _order_results(results_in: ResultWithID) -> ResultT:
         last_sent_id = task_id
 
 
+def make_spec(
+    cpus: Iterable[int],
+    cudas: Iterable[int],
+    workers_per_gpu: int = 2,
+    has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
+) -> List[WorkerSpec]:
+    """
+    Takes the output of `libertem.utils.devices.detect`
+    and makes a plan for starting workers on them.
+
+    Additionally can start multiple workers per GPU
+    """
+    spec = []
+    worker_idx = 0
+    for device_id in cpus:
+        spec.append(WorkerSpec(
+            name=f"cpu-{device_id}",
+            device_id=device_id,
+            device_kind="CPU",
+            worker_idx=worker_idx,
+        ))
+        worker_idx += 1
+    for device_id in cudas:
+        for i in range(workers_per_gpu):
+            spec.append(WorkerSpec(
+                name=f"cuda-{device_id}-{i}",
+                device_id=device_id,
+                device_kind="CUDA",
+                worker_idx=worker_idx,
+            ))
+            worker_idx += 1
+    return spec
+
+
 class PipelinedExecutor(BaseJobExecutor):
     def __init__(
         self,
-        n_workers: int = None,
+        spec: List[WorkerSpec],
         pin_workers: bool = True,
     ) -> None:
-        if n_workers is None:
-            n_workers = psutil.cpu_count(logical=False)
-        self._n_workers = n_workers
         self._pin_workers = pin_workers
+        self._spec = spec
         self._pool = self.start_pool()
+        self._closed = False
 
     def start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:
             pool = WorkerPool(
-                processes=self._n_workers,
                 worker_fn=functools.partial(
                     pipelined_worker, pin=self._pin_workers,
-                )
+                ),
+                spec=self._spec,
             )
             for i in range(pool.size):
                 with pool.response_queue.get() as (msg, _):
@@ -326,6 +440,17 @@ class PipelinedExecutor(BaseJobExecutor):
                         )
                     span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
             return pool
+
+    @classmethod
+    def make_local(cls, **kwargs):
+        from libertem.utils.devices import detect
+        detected = detect()
+        spec = make_spec(**detected)
+        return cls(spec=spec, **kwargs)
+
+    @classmethod
+    def make_spec(cls, *args, **kwargs):
+        return make_spec(*args, **kwargs)
 
     def _run_tasks_inner(
         self,
@@ -366,6 +491,16 @@ class PipelinedExecutor(BaseJobExecutor):
             # all the data necessary for the given task,
             # (or, in the offline case, immediately)
             controller.handle_task(task, worker_queues.request)
+
+            # NOTE: sentinel message; in case of errors, the worker
+            # needs to discard the data from the queue until it receives
+            # this message:
+            worker_queues.request.put({
+                "type": "END_TASK",
+                "task_id": task_idx,
+                "params_handle": params_handle,
+                "span_context": span_context,
+            })
 
             try:
                 with self._pool.response_queue.get(block=False) as (result, _):
@@ -416,12 +551,31 @@ class PipelinedExecutor(BaseJobExecutor):
         ])
 
     def close(self):
-        self._pool.close_resp_queue()
-        for qs, p in self._pool.workers:
-            qs.request.put({"type": "SHUTDOWN"})
-            qs.request.close()
-            qs.response.close()
-            p.join()
+        with tracer.start_as_current_span("PipelinedExecutor.close") as span:
+            for idx, (qs, p) in enumerate(self._pool.workers):
+                span.add_event("sending SHUTDOWN", {"idx": idx})
+                qs.request.put({
+                    "type": "SHUTDOWN",
+                    "span_context": span.get_span_context(),
+                })
+                span.add_event("SHUTDOWN sent", {"idx": idx})
+                qs.request.close()
+                while True:
+                    try:
+                        with qs.response.get(block=False) as msg:
+                            logger.warn(f"got message on close: {msg[0]}")
+                    except WorkerQueueEmpty:
+                        break
+                # FIXME: timeout for the join, forcefully kill the process
+                # (might need to first send SHUTDOWN to all workers, as
+                # killing a process might make the request queue unusable, too)
+                p.join()
+            self._pool.close_resp_queue()
+            self._closed = True
+
+    def __del__(self):
+        if not self._closed:
+            self.close()
 
     def _run_function(self, fn: Callable[..., T], worker_idx, *args, **kwargs) -> T:
         qs = self._pool.get_worker_queues(worker_idx)

@@ -69,11 +69,17 @@ def ctx(request, local_cluster_url):
             pytest.skip("PipelinedExecutor only supported from Python 3.8 onwards")
         else:
             from libertem.executor.pipelined import PipelinedExecutor
+            ctx = None
             try:
-                ctx = Context(executor=PipelinedExecutor(n_workers=2))
+                ctx = Context(
+                    executor=PipelinedExecutor(
+                        spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
+                    )
+                )
                 yield ctx
             finally:
-                ctx.close()
+                if ctx is not None:
+                    ctx.close()
 
 
 @pytest.fixture(

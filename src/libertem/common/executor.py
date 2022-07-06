@@ -416,6 +416,9 @@ class WorkerQueue:
         """
         raise NotImplementedError()
 
+    def close(self):
+        raise NotImplementedError()
+
 
 class SimpleWorkerQueue(WorkerQueue):
     """

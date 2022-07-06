@@ -412,10 +412,12 @@ def make_spec(
 class PipelinedExecutor(BaseJobExecutor):
     def __init__(
         self,
-        spec: List[WorkerSpec],
+        spec: List[WorkerSpec] = None,
         pin_workers: bool = True,
     ) -> None:
         self._pin_workers = pin_workers
+        if spec is None:
+            spec = self._default_spec()
         self._spec = spec
         self._pool = self.start_pool()
         self._closed = False
@@ -442,10 +444,14 @@ class PipelinedExecutor(BaseJobExecutor):
             return pool
 
     @classmethod
-    def make_local(cls, **kwargs):
+    def _default_spec(cls):
         from libertem.utils.devices import detect
         detected = detect()
-        spec = make_spec(**detected)
+        return make_spec(**detected)
+
+    @classmethod
+    def make_local(cls, **kwargs):
+        spec = cls._default_spec()
         return cls(spec=spec, **kwargs)
 
     @classmethod

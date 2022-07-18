@@ -422,6 +422,10 @@ class PipelinedExecutor(BaseJobExecutor):
         self._pool = self.start_pool()
         self._closed = False
 
+        # FIXME: should this be configurable?
+        # timeout for cleanup, either from exception or when joining processes
+        self._cleanup_timeout = 10.0
+
     def start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:
             pool = WorkerPool(
@@ -468,69 +472,91 @@ class PipelinedExecutor(BaseJobExecutor):
         in_flight = 0
         id_to_task = {}
 
-        controller.start()
-        span = trace.get_current_span()
-        span_context = span.get_span_context()
+        try:
+            controller.start()
+            span = trace.get_current_span()
+            span_context = span.get_span_context()
 
-        for qs, _ in self._pool.workers:
-            qs.request.put({
-                "type": "WARMUP",
-                "span_context": span_context,
-            })
+            for qs, _ in self._pool.workers:
+                qs.request.put({
+                    "type": "WARMUP",
+                    "span_context": span_context,
+                })
 
-        for task_idx, task in enumerate(tasks):
-            in_flight += 1
-            id_to_task[task_idx] = task
+            for task_idx, task in enumerate(tasks):
+                in_flight += 1
+                id_to_task[task_idx] = task
 
-            worker_idx = task_idx % self._pool.size
-            worker_queues = self._pool.get_worker_queues(worker_idx)
-            worker_queues.request.put({
-                "type": "RUN_TASK",
-                "task": cloudpickle.dumps(task),
-                "task_id": task_idx,
-                "params_handle": params_handle,
-                "span_context": span_context,
-            })
-            # FIXME: semantics of this - is this enough?
-            # does it matter if this is enough? we can change it in the future if not
-            # could be: the function returns once it has forwarded
-            # all the data necessary for the given task,
-            # (or, in the offline case, immediately)
-            controller.handle_task(task, worker_queues.request)
+                worker_idx = task_idx % self._pool.size
+                worker_queues = self._pool.get_worker_queues(worker_idx)
+                worker_queues.request.put({
+                    "type": "RUN_TASK",
+                    "task": cloudpickle.dumps(task),
+                    "task_id": task_idx,
+                    "params_handle": params_handle,
+                    "span_context": span_context,
+                })
+                # FIXME: semantics of this - is this enough?
+                # does it matter if this is enough? we can change it in the future if not
+                # could be: the function returns once it has forwarded
+                # all the data necessary for the given task,
+                # (or, in the offline case, immediately)
+                controller.handle_task(task, worker_queues.request)
 
-            # NOTE: sentinel message; in case of errors, the worker
-            # needs to discard the data from the queue until it receives
-            # this message:
-            worker_queues.request.put({
-                "type": "END_TASK",
-                "task_id": task_idx,
-                "params_handle": params_handle,
-                "span_context": span_context,
-            })
+                # NOTE: sentinel message; in case of errors, the worker
+                # needs to discard the data from the queue until it receives
+                # this message:
+                worker_queues.request.put({
+                    "type": "END_TASK",
+                    "task_id": task_idx,
+                    "params_handle": params_handle,
+                    "span_context": span_context,
+                })
 
-            try:
-                with self._pool.response_queue.get(block=False) as (result, _):
-                    if result["type"] == "ERROR":
-                        raise RuntimeError(f"failed to run tasks: {result['error']}")
-                    in_flight -= 1
-                    result_task_id = result["task_id"]
-                    yield (result["result"], id_to_task[result_task_id], result_task_id)
-            except WorkerQueueEmpty:
-                continue
+                try:
+                    with self._pool.response_queue.get(block=False) as (result, _):
+                        in_flight -= 1
+                        if result["type"] == "ERROR":
+                            raise RuntimeError(f"failed to run tasks: {result['error']}")
+                        result_task_id = result["task_id"]
+                        yield (result["result"], id_to_task[result_task_id], result_task_id)
+                except WorkerQueueEmpty:
+                    continue
 
-        # at the end, block to get the remaining results:
-        while in_flight > 0:
-            try:
-                with self._pool.response_queue.get() as (result, _):
-                    if result["type"] == "ERROR":
-                        raise RuntimeError(f"failed to run tasks: {result['error']}")
-                    in_flight -= 1
-                    result_task_id = result["task_id"]
-                    yield (result["result"], id_to_task[result_task_id], result_task_id)
-            except WorkerQueueEmpty:
-                continue
+            # FIXME: code duplication
+            # at the end, block to get the remaining results:
+            while in_flight > 0:
+                try:
+                    with self._pool.response_queue.get() as (result, _):
+                        in_flight -= 1
+                        if result["type"] == "ERROR":
+                            raise RuntimeError(f"failed to run tasks: {result['error']}")
+                        result_task_id = result["task_id"]
+                        yield (result["result"], id_to_task[result_task_id], result_task_id)
+                except WorkerQueueEmpty:
+                    continue
 
-        controller.done()
+            controller.done()
+        except Exception:
+            # In case of an exception, we need to drain the response queue,
+            # so the next `run_tasks` call isn't polluted by old responses.
+            # -> just like in the happy case, we need to wait for responses
+            # for all in-flight tasks. In case the error happened between incrementing
+            # `in_flight` and actually sending the task to the queue, we should
+            # have a timeout here to not wait infinitely long.
+            while in_flight > 0:
+                try:
+                    with self._pool.response_queue.get(
+                        timeout=self._cleanup_timeout
+                    ) as (result, _):
+                        in_flight -= 1
+                        # we only raise the first exception; log the others here:
+                        if result["type"] == "ERROR":
+                            logger.error(f"Error response from worker: {result['error']}")
+                except WorkerQueueEmpty:
+                    continue
+            # if from a worker, this is the first exception that got put into the queue
+            raise
 
     def run_tasks(
         self,
@@ -565,17 +591,19 @@ class PipelinedExecutor(BaseJobExecutor):
                     "span_context": span.get_span_context(),
                 })
                 span.add_event("SHUTDOWN sent", {"idx": idx})
-                qs.request.close()
                 while True:
                     try:
                         with qs.response.get(block=False) as msg:
-                            logger.warn(f"got message on close: {msg[0]}")
+                            logger.warning(f"got message on close: {msg[0]}")
                     except WorkerQueueEmpty:
                         break
-                # FIXME: timeout for the join, forcefully kill the process
+                # FIXME: forcefully kill the process
                 # (might need to first send SHUTDOWN to all workers, as
                 # killing a process might make the request queue unusable, too)
-                p.join()
+                # -> basically, need to kill all workers in this case
+                # for now, let the timeout bubble up
+                p.join(timeout=self._cleanup_timeout)
+                qs.request.close()
             self._pool.close_resp_queue()
             self._closed = True
 

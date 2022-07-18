@@ -419,12 +419,17 @@ class PipelinedExecutor(BaseJobExecutor):
         if spec is None:
             spec = self._default_spec()
         self._spec = spec
-        self._pool = self.start_pool()
-        self._closed = False
+        self._closed = True
 
         # FIXME: should this be configurable?
         # timeout for cleanup, either from exception or when joining processes
         self._cleanup_timeout = 10.0
+
+        # timeout for starting a single worker
+        self._startup_timeout = 5.0
+
+        # keep this at the bottom:
+        self._pool = self.start_pool()
 
     def start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:
@@ -435,7 +440,7 @@ class PipelinedExecutor(BaseJobExecutor):
                 spec=self._spec,
             )
             for i in range(pool.size):
-                with pool.response_queue.get() as (msg, _):
+                with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
                     if msg["type"] == "ERROR":
                         raise RuntimeError(
                             f"error on startup: {msg['error']}"
@@ -445,6 +450,8 @@ class PipelinedExecutor(BaseJobExecutor):
                             f"unknown message type {msg['type']}, expected STARTUP_DONE"
                         )
                     span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
+            # set here, so we don't try to close the pool if it doesn't exist
+            self._closed = False
             return pool
 
     @classmethod
@@ -608,7 +615,9 @@ class PipelinedExecutor(BaseJobExecutor):
             self._closed = True
 
     def __del__(self):
-        if not self._closed:
+        # `self` may be already partially garbage-collected; only close
+        # if "enough" of `self` still exists:
+        if hasattr(self, '_closed') and not self._closed:
             self.close()
 
     def _run_function(self, fn: Callable[..., T], worker_idx, *args, **kwargs) -> T:

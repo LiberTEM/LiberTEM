@@ -175,8 +175,8 @@ def worker_run_task(header, work_mem, queues, worker_idx, env):
 
 def worker_run_function(header, queues, idx):
     with tracer.start_as_current_span("RUN_FUNCTION"):
-        fn = cloudpickle.loads(header["fn"])
         try:
+            fn = cloudpickle.loads(header["fn"])
             result = fn()
             queues.response.put({
                 "type": "RUN_FUNCTION_RESULT",
@@ -631,8 +631,10 @@ class PipelinedExecutor(BaseJobExecutor):
         })
         # FIXME: timeout?
         with qs.response.get() as (response, _):
+            if response["type"] == "ERROR":
+                raise RuntimeError(f"failed to run function: {response['error']}")
             if not response["type"] == "RUN_FUNCTION_RESULT":
-                raise RuntimeError(f"invalid response type: {response['TYPE']}")
+                raise RuntimeError(f"invalid response type: {response['type']}")
             result: T = response["result"]
             return result
 

@@ -409,8 +409,8 @@ class WorkerQueue:
         This can be useful, for example, if you need to perform any kind
         of operation that writes into a buffer. For example:
 
-        >>> q = SomeWorkerQueueImpl()
-        >>> with q.put_nocopy(1024) as send_buf:
+        >>> q = SomeWorkerQueueImpl()  # doctest: +SKIP
+        >>> with q.put_nocopy(1024) as send_buf:  # doctest: +SKIP
         ...     # NOTE: in reality, need to handle n_bytes < 1024
         ...     n_bytes = some_socket.recvinto(send_buf)
         """

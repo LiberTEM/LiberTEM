@@ -1,9 +1,11 @@
+from typing import Generator, Optional, TypeVar
+
 import pytest
 import numpy as np
 
 from libertem.api import Context
 from libertem.udf.sum import SumUDF
-from libertem.executor.pipelined import PipelinedExecutor
+from libertem.executor.pipelined import PipelinedExecutor, _order_results
 from libertem.udf import UDF
 
 
@@ -80,6 +82,132 @@ def test_default_spec():
 
         # to at least see that something works:
         assert executor.run_function(lambda: 42) == 42
+    finally:
+        if executor is not None:
+            executor.close()
+
+
+_STOP = object()
+
+T = TypeVar('T')
+
+
+def echo() -> Generator[Optional[T], T, None]:
+    last = None
+    while last is not _STOP:
+        print(f"yielding {last}")
+        last = yield last
+        print(f"got {last}")
+        if last is None:
+            import traceback
+            traceback.print_stack()
+
+
+def test_order_results_in_order():
+    r1 = object()
+    t1 = object()
+    t1id = 0
+
+    r2 = object()
+    t2 = object()
+    t2id = 1
+
+    r3 = object()
+    t3 = object()
+    t3id = 2
+
+    # results come in as triples (result, task, task_id)
+    def _trace_1():
+        yield (r1, t1, t1id)
+        yield (r2, t2, t2id)
+        yield (r3, t3, t3id)
+
+    # _order_results discards the task_id at the end
+    ordered = _order_results(_trace_1())
+    assert next(ordered) == (r1, t1)
+    assert next(ordered) == (r2, t2)
+    assert next(ordered) == (r3, t3)
+
+
+def test_order_results_missing_task():
+    r1 = object()
+    t1 = object()
+    t1id = 0
+
+    r3 = object()
+    t3 = object()
+    t3id = 2
+
+    # results come in as triples (result, task, task_id)
+    def _trace_1():
+        yield (r1, t1, t1id)
+        yield (r3, t3, t3id)
+
+    # _order_results discards the task_id at the end
+    ordered = _order_results(_trace_1())
+    assert next(ordered) == (r1, t1)
+    with pytest.raises(RuntimeError):
+        next(ordered)
+
+
+def test_order_results_postponed_task():
+    r1 = object()
+    t1 = object()
+    t1id = 0
+
+    r2 = object()
+    t2 = object()
+    t2id = 1
+
+    r3 = object()
+    t3 = object()
+    t3id = 2
+
+    # results come in as triples (result, task, task_id)
+    def _trace_1():
+        yield (r1, t1, t1id)
+        yield (r3, t3, t3id)
+        yield (r2, t2, t2id)
+
+    # _order_results discards the task_id at the end
+    ordered = _order_results(_trace_1())
+    assert next(ordered) == (r1, t1)
+    assert next(ordered) == (r2, t2)
+    assert next(ordered) == (r3, t3)
+
+
+def test_run_function_failure(pipelined_ex):
+    def _f():
+        raise Exception("this fails to run")
+
+    with pytest.raises(RuntimeError) as ex_info:
+        pipelined_ex.run_function(_f)
+
+    assert ex_info.match("^failed to run function: this fails to run$")
+
+
+def test_worker_loop_error():
+    executor = None
+    try:
+        executor = PipelinedExecutor(
+            spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+            pin_workers=False,
+        )
+
+        def _break(a, b, c):
+            raise RuntimeError("stuff is broken, can't do it.")
+
+        def _do_patch_worker():
+            # XXX this completely destroys the workers ability to properly
+            # function, but that's okay because it's a throwaway process pool
+            # anyways:
+            from libertem.executor import pipelined
+            pipelined.worker_run_function = _break
+
+        executor.run_function(_do_patch_worker)
+        with pytest.raises(RuntimeError) as e:
+            executor.run_function(lambda: 42)
+        assert e.match("failed to run function: stuff is broken, can't do it.")
     finally:
         if executor is not None:
             executor.close()

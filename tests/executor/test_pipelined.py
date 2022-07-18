@@ -66,4 +66,5 @@ def test_udf_exception_queued(pipelined_ex):
     # Fails immediately on run_udf because queue is in bad state
     normal_udf = SumUDF()
     ctx.run_udf(dataset=ds, udf=normal_udf)
-    # Error is raised during the task dispatch loop when we check if any tasks completed yet
+    # Error is raised during the task dispatch loop when we check if any tasks
+    # completed yet

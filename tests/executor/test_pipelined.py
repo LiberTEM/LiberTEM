@@ -5,7 +5,6 @@ from libertem.api import Context
 from libertem.udf.sum import SumUDF
 from libertem.executor.pipelined import PipelinedExecutor
 from libertem.udf import UDF
-# from libertem.io.dataset.memory import MemoryDataSet
 
 
 @pytest.fixture
@@ -14,6 +13,8 @@ def pipelined_ex():
     try:
         executor = PipelinedExecutor(
             spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+            # to prevent issues in already-pinned situations (i.e. containerized
+            # environments), don't pin our worker processes in testing:
             pin_workers=False,
         )
         yield executor
@@ -68,3 +69,17 @@ def test_udf_exception_queued(pipelined_ex):
     ctx.run_udf(dataset=ds, udf=normal_udf)
     # Error is raised during the task dispatch loop when we check if any tasks
     # completed yet
+
+
+def test_default_spec():
+    # make sure `.make_local` works:
+
+    executor = None
+    try:
+        executor = PipelinedExecutor.make_local()
+
+        # to at least see that something works:
+        assert executor.run_function(lambda: 42) == 42
+    finally:
+        if executor is not None:
+            executor.close()

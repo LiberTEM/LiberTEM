@@ -220,7 +220,7 @@ def test_auto_sig_dims(lt_ctx):
     assert ds._sig_dims == 3
 
 
-def test_shape_arg_smallernav(default_npy_filepath, default_raw_data, lt_ctx):
+def test_shape_arg_smallernav(default_npy, default_npy_filepath, default_raw_data, lt_ctx):
     nav_shape, sig_shape = default_raw_data.shape[:2], default_raw_data.shape[2:]
     smaller_nav_shape = tuple(n - 1 for n in nav_shape)
     ds = lt_ctx.load(
@@ -236,7 +236,7 @@ def test_shape_arg_smallernav(default_npy_filepath, default_raw_data, lt_ctx):
     assert result.data.shape == smaller_nav_shape
 
 
-def test_shape_arg_flatnav(default_npy_filepath, default_raw_data, lt_ctx):
+def test_shape_arg_flatnav(default_npy, default_npy_filepath, default_raw_data, lt_ctx):
     nav_shape, sig_shape = default_raw_data.shape[:2], default_raw_data.shape[2:]
     flat_nav_shape = (prod(nav_shape),)
     ds = lt_ctx.load(

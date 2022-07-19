@@ -1,3 +1,4 @@
+import itertools
 import os
 import gc
 import sys
@@ -378,14 +379,28 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 def make_spec(
     cpus: Iterable[int],
     cudas: Iterable[int],
-    workers_per_gpu: int = 2,
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
 ) -> List[WorkerSpec]:
     """
     Takes the output of `libertem.utils.devices.detect`
     and makes a plan for starting workers on them.
 
-    Additionally can start multiple workers per GPU
+    Parameters
+    ----------
+
+    cpus
+        Iterable of integer CPU identifiers. If pinning is enabled, each
+        worker processe is pinned to one of these identifiers, as accepted
+        by :code:`os.sched_setaffinity`. Pinning is currently only supported on
+        platforms that implement :code:`os.sched_setaffinity`.
+
+    cudas
+        Interable of CUDA device identifiers for which workers should be started.
+        Identifiers can be repeated to start multiple workers per GPU, which can
+        result in better device utilization.
+
+    has_cupy
+        Currently ignored, for compatibility with :code:`libertem.utils.devices.detect`
     """
     spec = []
     worker_idx = 0
@@ -397,8 +412,9 @@ def make_spec(
             worker_idx=worker_idx,
         ))
         worker_idx += 1
-    for device_id in cudas:
-        for i in range(workers_per_gpu):
+    grouped_cudas = itertools.groupby(cudas, lambda x: x)
+    for device_id, group in grouped_cudas:
+        for i in range(len(list(group))):
             spec.append(WorkerSpec(
                 name=f"cuda-{device_id}-{i}",
                 device_id=device_id,

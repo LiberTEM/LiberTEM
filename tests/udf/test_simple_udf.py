@@ -691,6 +691,7 @@ class ParamsCheckUDF(UDF):
         assert isinstance(self.params.int_param, int)
         assert self.params.get('is_222', default=None) == 222
         assert self.params.get('is_missing', default=333) == 333
+        assert self.params.get('is_missing') is None
 
 
 def test_params_check(lt_ctx):

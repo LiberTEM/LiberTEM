@@ -551,7 +551,6 @@ class PipelinedExecutor(BaseJobExecutor):
         this limit (in detail: each worker's startup time is limited by this timeout).
         In seconds.
 
-
     cleanup_timeout
         When cleaning up using :meth:`PipelinedExecutor.close`, give up after
         this limit. In seconds.

@@ -317,3 +317,39 @@ def test_success_with_delay(pipelined_ex):
     ds = ctx.load("memory", data=data, num_partitions=32)
     res = ctx.run_udf(dataset=ds, udf=udf)
     assert np.allclose(res['intensity'].data, np.sum(data, axis=(2, 3)))
+
+
+def test_make_spec_multi_cuda():
+    spec = pipelined._make_spec(cpus=[0], cudas=[0, 1, 2, 2])
+    assert spec == [
+        {
+            "device_id": 0,
+            "name": "cpu-0",
+            "device_kind": "CPU",
+            "worker_idx": 0,
+        },
+        {
+            "device_id": 0,
+            "name": "cuda-0-0",
+            "device_kind": "CUDA",
+            "worker_idx": 1,
+        },
+        {
+            "device_id": 1,
+            "name": "cuda-1-0",
+            "device_kind": "CUDA",
+            "worker_idx": 2,
+        },
+        {
+            "device_id": 2,
+            "name": "cuda-2-0",
+            "device_kind": "CUDA",
+            "worker_idx": 3,
+        },
+        {
+            "device_id": 2,
+            "name": "cuda-2-1",
+            "device_kind": "CUDA",
+            "worker_idx": 4,
+        },
+    ]

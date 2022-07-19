@@ -104,6 +104,7 @@ For special applications, the
 is experimental, see :ref:`dask` for more details. It might use threading as
 well, depending on the Dask scheduler that is used by :code:`compute()`.
 
+
 Common executor choices
 .......................
 
@@ -170,3 +171,39 @@ To control how many CPUs and which CUDA devices are used, you can specify them a
         ...
 
 Please see :ref:`dask executor` for a reference of the Dask-based executor.
+
+
+.. _`pipelined`:
+
+Pipelined executor
+------------------
+
+.. versionadded:: 0.10.0
+
+For live data processing, the :class:`~libertem.executor.pipelined.PipelinedExecutor`
+provides a multiprocessing executor that routes the live data source in a round-robin
+fashion to worker processes. This is important to support processing that cannot keep
+up with the detector speed on a single CPU core. This executor also works for offline
+data sets in principle, but is not optimized for that use case.
+
+Similar to the Dask-based executor, it is possible to customize the devices
+used for computation:
+
+.. code-block:: python
+
+    from libertem import api
+    from libertem.executor.pipelined import PipelinedExecutor
+    from libertem.utils.devices import detect
+
+    spec = PipelinedExecutor.make_spec(cpus=[0, 1, 2], cudas=[])
+    executor = PipelinedExecutor(
+        spec=spec,
+        pin_workers=False,  # set to True to keep worker processes pinned to specific CPU cores or CPUs
+    )
+    ...
+    executor.close()
+
+    # you can also use the `detect` function as above:
+    spec2 = PipelinedExecutor.make_spec(**detect())
+
+Please see :ref:`pipelined executor` for a reference of the pipelined executor.

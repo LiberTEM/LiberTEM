@@ -1,15 +1,19 @@
+import time
+import random
 from typing import Generator, Optional, TypeVar
 
 import pytest
 import numpy as np
 
 from libertem.api import Context
+from libertem.common.executor import WorkerQueueEmpty
 from libertem.udf.sum import SumUDF
 from libertem.executor.pipelined import PipelinedExecutor, _order_results
+from libertem.executor import pipelined
 from libertem.udf import UDF
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def pipelined_ex():
     executor = None
     try:
@@ -18,6 +22,7 @@ def pipelined_ex():
             # to prevent issues in already-pinned situations (i.e. containerized
             # environments), don't pin our worker processes in testing:
             pin_workers=False,
+            cleanup_timeout=0.5,
         )
         yield executor
     finally:
@@ -75,7 +80,6 @@ def test_udf_exception_queued(pipelined_ex):
 
 def test_default_spec():
     # make sure `.make_local` works:
-
     executor = None
     try:
         executor = PipelinedExecutor.make_local()
@@ -191,7 +195,7 @@ def test_run_function_failure(pipelined_ex):
     assert ex_info.match("^failed to run function: this fails to run$")
 
 
-def test_worker_loop_error():
+def test_run_function_error():
     executor = None
     try:
         executor = PipelinedExecutor(
@@ -206,13 +210,110 @@ def test_worker_loop_error():
             # XXX this completely destroys the workers ability to properly
             # function, but that's okay because it's a throwaway process pool
             # anyways:
-            from libertem.executor import pipelined
             pipelined.worker_run_function = _break
 
-        executor.run_function(_do_patch_worker)
+        executor.run_each_worker(_do_patch_worker)
         with pytest.raises(RuntimeError) as e:
             executor.run_function(lambda: 42)
         assert e.match("failed to run function: stuff is broken, can't do it.")
     finally:
         if executor is not None:
             executor.close()
+
+
+def _broken_pipelined_worker(queues, pin, spec, span_context):
+    raise RuntimeError("stuff is broken, can't do it.")
+
+
+def test_early_startup_error():
+    """
+    Simulate very early startup error, not even getting to the try/except
+    that gives us error feedback.
+    """
+    executor = None
+
+    # manual patching, we mock.patch doesn't work in multiprocessing
+    # environments:
+    original_pipelined_worker = pipelined.pipelined_worker
+    try:
+        pipelined.pipelined_worker = _broken_pipelined_worker
+        with pytest.raises(WorkerQueueEmpty):
+            executor = PipelinedExecutor(
+                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+                pin_workers=False,
+                startup_timeout=0.4,
+            )
+    finally:
+        pipelined.pipelined_worker = original_pipelined_worker
+        if executor is not None:
+            executor.close()
+
+
+def _patch_setup_device():
+    def _broken_setup_device(spec, pin):
+        """
+        Broken version of pipelined._setup_device for error injection
+        """
+        raise RuntimeError("stuff is broken, can't do it.")
+    pipelined._setup_device = _broken_setup_device
+
+
+def test_startup_error():
+    """
+    Simulate an error when starting up the worker, in this case we raise in _setup_device
+    """
+    executor = None
+    try:
+        with pytest.raises(RuntimeError) as e:
+            executor = PipelinedExecutor(
+                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+                pin_workers=False,
+                early_setup=_patch_setup_device,
+            )
+        assert e.match("error on startup: stuff is broken, can't do it.")
+    finally:
+        if executor is not None:
+            executor.close()
+
+
+class FailEventuallyUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            "stuff": self.buffer(kind="nav"),
+        }
+
+    def process_partition(self, partition):
+        if random.random() > 0.50:
+            time.sleep(0.1)
+        raise Exception("stuff happens")
+
+
+def test_failure_with_delay(pipelined_ex):
+    ctx = Context(executor=pipelined_ex)
+    udf = FailEventuallyUDF()
+    data = np.random.randn(1, 32, 16, 16)
+    ds = ctx.load("memory", data=data, num_partitions=32)
+    with pytest.raises(RuntimeError) as e:
+        ctx.run_udf(dataset=ds, udf=udf)
+    assert e.match("failed to run tasks: stuff happens")
+
+
+class SucceedEventuallyUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            "intensity": self.buffer(kind="nav"),
+        }
+
+    def process_partition(self, partition):
+        if random.random() > 0.50:
+            time.sleep(0.1)
+        self.results.intensity[:] = np.sum(partition, axis=(-1, -2))
+
+
+def test_success_with_delay(pipelined_ex):
+    ctx = Context(executor=pipelined_ex)
+    udf = SucceedEventuallyUDF()
+    data = np.random.randn(1, 32, 16, 16)
+    ds = ctx.load("memory", data=data, num_partitions=32)
+    res = ctx.run_udf(dataset=ds, udf=udf)
+    assert np.allclose(res['intensity'].data, np.sum(data, axis=(2, 3)))

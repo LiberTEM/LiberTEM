@@ -6,7 +6,7 @@ import functools
 import contextlib
 import multiprocessing as mp
 from typing import (
-    TYPE_CHECKING, Any, Callable, Dict, Iterable, List, NamedTuple, Tuple,
+    TYPE_CHECKING, Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple,
     Generator, TypeVar, Union,
 )
 from typing_extensions import TypedDict, Literal
@@ -92,17 +92,9 @@ class WorkerPool:
                 p.start()
                 self._workers.append((queues, p))
 
-    def all_worker_queues(self):
-        for (qs, _) in self._workers:
-            yield qs
-
     @property
     def workers(self):
         return self._workers
-
-    def join_all(self):
-        for (_, p) in self._workers:
-            p.join()
 
     def all_alive(self):
         return all(p.is_alive() for (_, p) in self._workers)
@@ -239,6 +231,9 @@ def worker_loop(queues, work_mem, worker_idx, env):
             elif header_type == "WARMUP":
                 with attach_to_parent(header["span_context"]):
                     with tracer.start_as_current_span("WARMUP"):
+                        import libertem.udf.base  # NOQA
+                        import libertem.api  # NOQA
+                        import libertem.preload  # NOQA
                         with env.enter():
                             pass
             else:
@@ -279,12 +274,16 @@ def pipelined_worker(
     pin: bool,
     spec: WorkerSpec,
     span_context: "SpanContext",
+    early_setup: Optional[Callable] = None,
 ):
     # FIXME: propagate to parent process with a pipe or similar?
     sys.stderr.close()
     sys.stderr = open(os.open(os.devnull, os.O_RDWR), closefd=False)
 
     try:
+        if early_setup:
+            early_setup()
+
         # FIXME: explicitly propagate exporter settings to the workers?
         # right now taken care of by environment variables...
         worker_idx = spec["worker_idx"]
@@ -325,6 +324,7 @@ def pipelined_worker(
             "error": e,
         })
         _drain_and_close(queues)
+        sys.exit(1)
 
 
 class PipelinedWorkerContext(WorkerContext):
@@ -414,19 +414,22 @@ class PipelinedExecutor(BaseJobExecutor):
         self,
         spec: List[WorkerSpec] = None,
         pin_workers: bool = True,
+        startup_timeout: float = 5.0,
+        cleanup_timeout: float = 10.0,
+        early_setup: Optional[Callable] = None,
     ) -> None:
         self._pin_workers = pin_workers
         if spec is None:
             spec = self._default_spec()
         self._spec = spec
         self._closed = True
+        self._early_setup = early_setup
 
-        # FIXME: should this be configurable?
         # timeout for cleanup, either from exception or when joining processes
-        self._cleanup_timeout = 10.0
+        self._cleanup_timeout = cleanup_timeout
 
         # timeout for starting a single worker
-        self._startup_timeout = 5.0
+        self._startup_timeout = startup_timeout
 
         # keep this at the bottom:
         self._pool = self.start_pool()
@@ -435,10 +438,14 @@ class PipelinedExecutor(BaseJobExecutor):
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:
             pool = WorkerPool(
                 worker_fn=functools.partial(
-                    pipelined_worker, pin=self._pin_workers,
+                    pipelined_worker,
+                    pin=self._pin_workers,
+                    early_setup=self._early_setup,
                 ),
                 spec=self._spec,
             )
+            # FIXME: check process liveness here, too, to catch early startup
+            # failures without having to run into the timeout
             for i in range(pool.size):
                 with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
                     if msg["type"] == "ERROR":
@@ -469,6 +476,10 @@ class PipelinedExecutor(BaseJobExecutor):
     def make_spec(cls, *args, **kwargs):
         return make_spec(*args, **kwargs)
 
+    def _validate_worker_state(self):
+        if not self._pool.all_alive():
+            raise RuntimeError("some workers are stopped, cannot continue")
+
     def _run_tasks_inner(
         self,
         tasks: Iterable[TaskProtocol],
@@ -480,6 +491,7 @@ class PipelinedExecutor(BaseJobExecutor):
         id_to_task = {}
 
         try:
+            self._validate_worker_state()
             controller.start()
             span = trace.get_current_span()
             span_context = span.get_span_context()
@@ -621,6 +633,7 @@ class PipelinedExecutor(BaseJobExecutor):
             self.close()
 
     def _run_function(self, fn: Callable[..., T], worker_idx, *args, **kwargs) -> T:
+        self._validate_worker_state()
         qs = self._pool.get_worker_queues(worker_idx)
         f = functools.partial(fn, *args, **kwargs)
         pickled = cloudpickle.dumps(f)
@@ -655,6 +668,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
     @contextlib.contextmanager
     def scatter(self, obj):
+        self._validate_worker_state()
         key = str(uuid.uuid4())
         for qs, p in self._pool.workers:
             qs.request.put({

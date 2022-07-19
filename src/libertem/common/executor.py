@@ -413,6 +413,13 @@ class WorkerQueue:
         >>> with q.put_nocopy(1024) as send_buf:  # doctest: +SKIP
         ...     # NOTE: in reality, need to handle n_bytes < 1024
         ...     n_bytes = some_socket.recvinto(send_buf)
+
+        If the data you receive is already in a shared memory segment,
+        you can send the handle as part of the `header` and use the normal `put`
+        method instead.
+
+        Note: for releasing memory, it might be necessary to implement another
+        queue that synchronizes the release process.
         """
         raise NotImplementedError()
 

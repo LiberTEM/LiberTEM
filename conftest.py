@@ -39,6 +39,10 @@ from libertem.web.state import SharedState
 from libertem.executor.base import AsyncAdapter
 from libertem.common.async_utils import sync_to_async
 from libertem.common.async_utils import adjust_event_loop_policy
+from libertem.common.tracing import maybe_setup_tracing
+
+maybe_setup_tracing("pytest")
+
 
 # A bit of gymnastics to import the test utilities since this
 # conftest.py file is shared between the doctests and unit tests

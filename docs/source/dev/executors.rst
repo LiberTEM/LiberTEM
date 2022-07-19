@@ -56,3 +56,11 @@ See :ref:`delayed_udfs` for more information about
 
 .. automodule:: libertem.executor.delayed
     :members:
+
+.. _`pipelined executor`:
+
+Pipelined executor
+..................
+
+.. automodule:: libertem.executor.pipelined
+    :members:

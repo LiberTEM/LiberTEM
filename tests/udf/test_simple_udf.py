@@ -679,3 +679,21 @@ def test_sig_slice(lt_ctx, backend, udf_class, tileshape, success):
                 lt_ctx.run_udf(udf=udf, dataset=dataset)
     finally:
         set_use_cpu(0)
+
+
+class ParamsCheckUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            "null": self.buffer(kind="nav", dtype=float)
+        }
+
+    def process_frame(self, frame):
+        assert isinstance(self.params.int_param, int)
+        assert self.params.get('is_222', default=None) == 222
+        assert self.params.get('is_missing', default=333) == 333
+
+
+def test_params_check(lt_ctx):
+    ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
+    udf = ParamsCheckUDF(int_param=5, is_222=222)
+    lt_ctx.run_udf(dataset=ds, udf=udf)

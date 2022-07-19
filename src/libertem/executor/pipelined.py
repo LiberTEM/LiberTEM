@@ -133,7 +133,34 @@ def set_thread_name(name: str):
     prctl.set_name(name)
 
 
-def worker_run_task(header, work_mem, queues, worker_idx, env):
+def worker_run_task(
+    header: Dict,
+    work_mem: Dict,
+    queues: WorkerQueues,
+    worker_idx: int,
+    env: Environment,
+):
+    """
+    Called from the worker main loop when a RUN_TASK message is received
+
+    Parameters
+    ----------
+
+    header
+        The header of the message that was received
+
+    work_mem
+        The worker's working memory, for accessing scattered data
+
+    queues
+        request and response queues
+
+    worker_idx
+        This worker's index
+
+    env
+        The Environment for preparing thread counts etc. for the UDF run
+    """
     with tracer.start_as_current_span("RUN_TASK") as span:
         try:
             span.set_attributes({
@@ -166,7 +193,21 @@ def worker_run_task(header, work_mem, queues, worker_idx, env):
                 gc.collect()
 
 
-def worker_run_function(header, queues, idx):
+def worker_run_function(header, queues, worker_idx):
+    """
+    Called from the worker main loop when a RUN_FUNCTION message is received
+
+    Parameters
+    ----------
+    header
+        The header of the message that was received
+
+    queues
+        request and response queues
+
+    worker_idx
+        This worker's index
+    """
     with tracer.start_as_current_span("RUN_FUNCTION"):
         try:
             fn = cloudpickle.loads(header["fn"])
@@ -174,18 +215,43 @@ def worker_run_function(header, queues, idx):
             queues.response.put({
                 "type": "RUN_FUNCTION_RESULT",
                 "result": result,
-                "worker_id": idx,
+                "worker_id": worker_idx,
             })
         except Exception as e:
             logger.exception("failure in RUN_FUNCTION")
             queues.response.put({
                 "type": "ERROR",
                 "error": e,
-                "worker_id": idx,
+                "worker_id": worker_idx,
             })
 
 
-def worker_loop(queues, work_mem, worker_idx, env):
+def worker_loop(
+    queues: WorkerQueues,
+    work_mem: Dict,
+    worker_idx: int,
+    env: Environment
+):
+    """
+    The worker main loop, called when the worker setup is done.
+    Waits for messages on the request queue until a SHUTDOWN message
+    is received.
+
+    Parameters
+    ----------
+
+    work_mem
+        The worker's working memory, for accessing scattered data
+
+    queues
+        request and response queues
+
+    worker_idx
+        This worker's index
+
+    env
+        The Environment for preparing thread counts etc. for the UDF run
+    """
     while True:
         with queues.request.get() as msg:
             header, payload = msg
@@ -250,6 +316,10 @@ DeviceT = Tuple[int, Union[Literal['CUDA'], Literal['CPU']]]
 
 
 def _setup_device(spec: WorkerSpec, pin: bool):
+    """
+    Set up this worker for its given task - either CPU or GPU comptation,
+    and maybe pin CPU workers to a given CPU core.
+    """
     if spec["device_kind"].lower() == "cpu":
         if hasattr(os, 'sched_setaffinity') and pin:
             os.sched_setaffinity(0, [spec["device_id"]])
@@ -259,6 +329,10 @@ def _setup_device(spec: WorkerSpec, pin: bool):
 
 
 def _drain_and_close(queues: WorkerQueues):
+    """
+    Drain request queue, close request and response queue,
+    Called in case the worker encounters an unhandled exception.
+    """
     while True:
         try:
             with queues.request.get(block=False):
@@ -277,6 +351,28 @@ def pipelined_worker(
     span_context: "SpanContext",
     early_setup: Optional[Callable] = None,
 ):
+    """
+    Main pipelined worker function.
+
+    Parameters
+    ----------
+
+    queues
+        request and response queues
+
+    pin
+        Whether or not the CPU worker should be pinned to a specific CPU
+
+    spec
+        This worker's spec, containing name, worker index, device kind etc.
+
+    span_context
+        The tracing span we should attach to for the setup code
+
+    early_setup
+        Function that will be called very early in the setup code,
+        allowing to inject custom functionality or specific warmup code
+    """
     # FIXME: propagate to parent process with a pipe or similar?
     sys.stderr.close()
     sys.stderr = open(os.open(os.devnull, os.O_RDWR), closefd=False)
@@ -329,6 +425,11 @@ def pipelined_worker(
 
 
 class PipelinedWorkerContext(WorkerContext):
+    """
+    A context object that is made available to the Partition
+    for custom communication to its matching DataSet class
+    (currently uni-directional)
+    """
     def __init__(self, queue: "WorkerQueue"):
         self._queue = queue
 
@@ -341,6 +442,10 @@ ResultWithID = Generator[Tuple[Any, TaskProtocol, int], None, None]
 
 
 def _order_results(results_in: ResultWithID) -> ResultT:
+    """
+    Order the `results_in` generator by the result id, yielding ordered results.
+    Requires indexes to be without gaps.
+    """
     last_sent_id = -1
     # for results that are received out-of-order, keep sorted:
     result_stack: List[Tuple[Any, TaskProtocol, int]] = []
@@ -376,7 +481,7 @@ def _order_results(results_in: ResultWithID) -> ResultT:
         last_sent_id = task_id
 
 
-def make_spec(
+def _make_spec(
     cpus: Iterable[int],
     cudas: Iterable[int],
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
@@ -426,9 +531,43 @@ def make_spec(
 
 
 class PipelinedExecutor(BaseJobExecutor):
+    """
+    Multi-process pipelined executor. Useful for live processing if your
+    processing function is not able to keep up with the incoming data stream in
+    a single process, but also works for offline processing.
+
+    Parameters
+    ----------
+    spec
+        Specification for the worker processes - can be generated
+        by `PipelinedExecutor.make_spec`.
+
+    pin_workers
+        Pin each CPU worker to a specific CPU, as defined by `os.sched_setaffinity`.
+        Only works on OSes that implement `os.sched_setaffinity`.
+
+    startup_timeout
+        Startup of the executor is cancelled if it doesn't finish within
+        this limit (in detail: each worker's startup time is limited by this timeout).
+        In seconds.
+
+
+    cleanup_timeout
+        When cleaning up using :meth:`PipelinedExecutor.close`, give up after
+        this limit. In seconds.
+
+    early_setup
+        Callable that will be run very early on each worker process. Useful for
+        custom warmup code or testing.
+
+    Note
+    ----
+    This executor is not thread-safe - concurrent calls into `run_tasks` or
+    `run_function` are not supported.
+    """
     def __init__(
         self,
-        spec: List[WorkerSpec] = None,
+        spec: Optional[List[WorkerSpec]] = None,
         pin_workers: bool = True,
         startup_timeout: float = 5.0,
         cleanup_timeout: float = 10.0,
@@ -448,9 +587,9 @@ class PipelinedExecutor(BaseJobExecutor):
         self._startup_timeout = startup_timeout
 
         # keep this at the bottom:
-        self._pool = self.start_pool()
+        self._pool = self._start_pool()
 
-    def start_pool(self) -> WorkerPool:
+    def _start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:
             pool = WorkerPool(
                 worker_fn=functools.partial(
@@ -481,16 +620,20 @@ class PipelinedExecutor(BaseJobExecutor):
     def _default_spec(cls):
         from libertem.utils.devices import detect
         detected = detect()
-        return make_spec(**detected)
+        return _make_spec(**detected)
 
     @classmethod
     def make_local(cls, **kwargs):
+        """
+        Create a :code:`PipelinedExecutor` with the default spec.
+        """
         spec = cls._default_spec()
         return cls(spec=spec, **kwargs)
 
     @classmethod
     def make_spec(cls, *args, **kwargs):
-        return make_spec(*args, **kwargs)
+        return _make_spec(*args, **kwargs)
+    make_spec.__doc__ = _make_spec.__doc__
 
     def _validate_worker_state(self):
         if not self._pool.all_alive():

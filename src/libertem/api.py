@@ -7,6 +7,7 @@ import warnings
 
 from opentelemetry import trace
 import numpy as np
+from libertem.executor.pipelined import PipelinedExecutor
 
 from libertem.io.corrections import CorrectionSet
 from libertem.executor.concurrent import ConcurrentJobExecutor
@@ -154,6 +155,7 @@ class Context:
         -------
         Instance of :class:`Context` using a new instance of the specified executor.
         '''
+        executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
             executor = InlineJobExecutor()
         elif executor_spec == 'threads':
@@ -164,10 +166,13 @@ class Context:
             executor = DaskJobExecutor.make_local(client_kwargs={"set_as_default": True})
         elif executor_spec == 'delayed':
             executor = DelayedJobExecutor()
+        elif executor_spec == 'pipelined':
+            executor = PipelinedExecutor()
         else:
             raise ValueError(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '
-                f'synchronous", "inline", "threads", "dask-integration" or "dask-make-default".'
+                f'synchronous", "inline", "threads", "dask-integration", '
+                f'"dask-make-default" or "pipelined".'
             )
         return cls(executor=executor, *args, **kwargs)
 

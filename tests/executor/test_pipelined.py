@@ -87,6 +87,11 @@ def test_default_spec():
             executor.close()
 
 
+def test_make_with():
+    with Context.make_with("pipelined") as ctx:
+        assert ctx.executor.run_function(lambda: 42) == 42
+
+
 _STOP = object()
 
 T = TypeVar('T')

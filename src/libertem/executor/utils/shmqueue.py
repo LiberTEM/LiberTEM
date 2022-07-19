@@ -1,14 +1,16 @@
 import multiprocessing as mp
 import contextlib
-from multiprocessing import shared_memory
 import math
 import queue
-from typing import Any, Generator, NamedTuple, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Generator, NamedTuple, Optional, Tuple
 
 import cloudpickle
 import numpy as np
 
 from libertem.common.executor import WorkerQueue, WorkerQueueEmpty
+
+if TYPE_CHECKING:
+    from multiprocessing import shared_memory
 
 
 class PoolAllocation(NamedTuple):
@@ -32,6 +34,7 @@ class PoolShmClient:
         self._shm_cache = {}
 
     def get(self, allocation: PoolAllocation) -> memoryview:
+        from multiprocessing import shared_memory
         offset = allocation.handle
         name = allocation.shm_name
         if name in self._shm_cache:
@@ -63,6 +66,7 @@ class PoolShmAllocator:
         self._shm = self._open()
 
     def _open(self):
+        from multiprocessing import shared_memory
         shm = shared_memory.SharedMemory(
             create=self._create,
             name=self._name,
@@ -168,7 +172,8 @@ class ShmQueue(WorkerQueue):
         arr_shm[:] = src_arr
         return alloc_handle
 
-    def _get_named_shm(self, name: str) -> shared_memory.SharedMemory:
+    def _get_named_shm(self, name: str) -> "shared_memory.SharedMemory":
+        from multiprocessing import shared_memory
         return shared_memory.SharedMemory(name=name, create=False)
 
     @contextlib.contextmanager

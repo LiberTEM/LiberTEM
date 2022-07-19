@@ -356,7 +356,7 @@ class UDFData:
     ) -> Optional[Union[T, np.ndarray, BufferWrapper]]:
         try:
             return self.__getattr__(k)
-        except KeyError:
+        except (KeyError, AttributeError):
             return default
 
     def __setattr__(self, k: str, v: "nt.ArrayLike") -> None:

@@ -29,7 +29,8 @@ parameters:
     default: false
 
   # This parameter allows to run slower tests, this is useful for running more
-  # comprehensive tests, for example before doing a release.
+  # comprehensive tests, for example before doing a release. This also enables more
+  # jobs to build on usually skipped Python versions.
   - name: run_slow
     displayName: Also run slow tests
     type: boolean
@@ -91,9 +92,13 @@ stages:
           Python36:
             python.version: '3.6'
             TOXENV: 'py36-data'
-          # Python38:
-          #   python.version: '3.8'
-          #   TOXENV: 'py38'
+          ${{ if eq(parameters.run_slow, true) }}:
+            Python37:
+              python.version: '3.7'
+              TOXENV: 'py37'
+            Python38:
+              python.version: '3.8'
+              TOXENV: 'py38'
           # 3.9: default in current Debian stable
           Python39:
             python.version: '3.9'
@@ -151,6 +156,10 @@ stages:
           Python36:
             python.version: '3.6'
             TOXENV: 'py36'
+          ${{ if eq(parameters.run_slow, true) }}:
+            Python37:
+              python.version: '3.7'
+              TOXENV: 'py37'
           Python38:
             python.version: '3.8'
             TOXENV: 'py38'

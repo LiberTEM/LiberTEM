@@ -267,7 +267,7 @@ def worker_loop(
                     worker_run_task(header, work_mem, queues, worker_idx, env)
                     # NOTE: in case of an error, need to drain the request queue
                     # (anything that is left over from the detector-specific
-                    # data that was sent in `MainController.handle_task`):
+                    # data that was sent in `TaskCommHandler.handle_task`):
                     with tracer.start_as_current_span("drain after task") as span:
                         while True:
                             with queues.request.get() as msg:
@@ -650,14 +650,14 @@ class PipelinedExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller: "TaskCommHandler",
+        task_comm_handler: "TaskCommHandler",
     ) -> ResultWithID:
         in_flight = 0
         id_to_task = {}
 
         try:
             self._validate_worker_state()
-            controller.start()
+            task_comm_handler.start()
             span = trace.get_current_span()
             span_context = span.get_span_context()
 
@@ -685,7 +685,7 @@ class PipelinedExecutor(BaseJobExecutor):
                 # could be: the function returns once it has forwarded
                 # all the data necessary for the given task,
                 # (or, in the offline case, immediately)
-                controller.handle_task(task, worker_queues.request)
+                task_comm_handler.handle_task(task, worker_queues.request)
 
                 # NOTE: sentinel message; in case of errors, the worker
                 # needs to discard the data from the queue until it receives
@@ -720,7 +720,7 @@ class PipelinedExecutor(BaseJobExecutor):
                 except WorkerQueueEmpty:
                     continue
 
-            controller.done()
+            task_comm_handler.done()
         except Exception:
             # In case of an exception, we need to drain the response queue,
             # so the next `run_tasks` call isn't polluted by old responses.
@@ -747,11 +747,11 @@ class PipelinedExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller: "TaskCommHandler",
+        task_comm_handler: "TaskCommHandler",
     ) -> ResultT:
         with tracer.start_as_current_span("PipelinedExecutor.run_tasks"):
             yield from _order_results(self._run_tasks_inner(
-                tasks, params_handle, cancel_id, controller,
+                tasks, params_handle, cancel_id, task_comm_handler,
             ))
 
     def get_available_workers(self) -> WorkerSet:

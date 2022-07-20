@@ -1985,9 +1985,9 @@ class UDFRunner:
 
         executor = executor.ensure_sync()
         if dry:
-            controller: TaskCommHandler = NoopCommHandler()
+            task_comm_handler: TaskCommHandler = NoopCommHandler()
         else:
-            controller = dataset.get_controller()
+            task_comm_handler = dataset.get_task_comm_handler()
 
         try:
             if progress:
@@ -1999,7 +1999,7 @@ class UDFRunner:
                         tasks,
                         params_handle,
                         cancel_id,
-                        controller,
+                        task_comm_handler,
                     ):
                         if progress:
                             t.update(1)

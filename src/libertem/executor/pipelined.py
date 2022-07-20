@@ -62,6 +62,12 @@ class WorkerPool:
     to use primitives that are compatible with spawn.
 
     Take care to properly close queues and join workers at shutdown.
+
+    Note
+    ----
+    We are not using the vanilla :class:`multiprocesing.Pool` here, because
+    we need to coordinate the sending and receiving side for each task,
+    and we need to keep state on the worker, pin processes to cores etc.
     """
     def __init__(self, worker_fn: Callable, spec: List[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue

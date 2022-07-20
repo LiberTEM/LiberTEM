@@ -147,7 +147,8 @@ class Context:
                 :ref:`delayed_udfs` for more information.
             "pipelined":
                 Create a :class:`~libertem.executor.pipelined.PipelinedExecutor`,
-                which is suitable for multi-process streaming live processing.
+                which is suitable for multi-process streaming live processing
+                using `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_.
         *args, **kwargs
             Passed to :class:`Context`.
 

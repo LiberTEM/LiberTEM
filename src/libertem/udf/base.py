@@ -32,7 +32,7 @@ from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.common.executor import (
-    Environment, JobExecutor, MainController, NoopMainController, TaskProtocol,
+    Environment, JobExecutor, TaskCommHandler, NoopCommHandler, TaskProtocol,
 )
 
 if TYPE_CHECKING:
@@ -1985,7 +1985,7 @@ class UDFRunner:
 
         executor = executor.ensure_sync()
         if dry:
-            controller: MainController = NoopMainController()
+            controller: TaskCommHandler = NoopCommHandler()
         else:
             controller = dataset.get_controller()
 

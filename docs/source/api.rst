@@ -180,7 +180,9 @@ Pipelined executor
 
 .. versionadded:: 0.10.0
 
-For live data processing, the :class:`~libertem.executor.pipelined.PipelinedExecutor`
+For live data processing using
+`LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_, the
+:class:`~libertem.executor.pipelined.PipelinedExecutor`
 provides a multiprocessing executor that routes the live data source in a round-robin
 fashion to worker processes. This is important to support processing that cannot keep
 up with the detector speed on a single CPU core. This executor also works for offline
@@ -206,4 +208,6 @@ used for computation:
     # you can also use the `detect` function as above:
     spec2 = PipelinedExecutor.make_spec(**detect())
 
-Please see :ref:`pipelined executor` for a reference of the pipelined executor.
+Please see :ref:`pipelined executor` for a reference of the pipelined executor,
+and `the LiberTEM-live documentation <https://libertem.github.io/LiberTEM-live/>`_
+for details on live processing.

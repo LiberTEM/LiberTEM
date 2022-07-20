@@ -147,7 +147,7 @@ class JobExecutor:
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller: "MainController",
+        controller: "TaskCommHandler",
     ):
         """
         Run the tasks with the given parameters
@@ -504,7 +504,7 @@ class WorkerContext:
         raise NotImplementedError()
 
 
-class MainController:
+class TaskCommHandler:
     """
     This is the interface that is implemented by the acquisition object
     to allow streaming communication with workers.
@@ -548,7 +548,7 @@ class MainController:
         ...
 
 
-class NoopMainController(MainController):
+class NoopCommHandler(TaskCommHandler):
     """
     A `MainController` that doesn't perform any action, and doesn't
     stream any data.

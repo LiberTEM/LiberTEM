@@ -9,7 +9,7 @@ from libertem.api import Context
 from libertem.common.executor import WorkerQueueEmpty
 from libertem.udf.sum import SumUDF
 from libertem.executor.pipelined import PipelinedExecutor, _order_results
-from libertem.executor import pipelined
+import libertem.executor.pipelined
 from libertem.udf import UDF
 
 
@@ -71,11 +71,8 @@ def test_udf_exception_queued(pipelined_ex):
     with pytest.raises(RuntimeError):  # raised by executor as expected
         ctx.run_udf(dataset=ds, udf=error_udf)
 
-    # Fails immediately on run_udf because queue is in bad state
     normal_udf = SumUDF()
     ctx.run_udf(dataset=ds, udf=normal_udf)
-    # Error is raised during the task dispatch loop when we check if any tasks
-    # completed yet
 
 
 def test_default_spec():
@@ -207,10 +204,12 @@ def test_run_function_error():
             raise RuntimeError("stuff is broken, can't do it.")
 
         def _do_patch_worker():
+            # monkeypatch the pipelined module; this should only be run on
+            # worker processes
             # XXX this completely destroys the workers ability to properly
             # function, but that's okay because it's a throwaway process pool
             # anyways:
-            pipelined.worker_run_function = _break
+            libertem.executor.pipelined.worker_run_function = _break
 
         executor.run_each_worker(_do_patch_worker)
         with pytest.raises(RuntimeError) as e:
@@ -228,15 +227,15 @@ def _broken_pipelined_worker(queues, pin, spec, span_context):
 def test_early_startup_error():
     """
     Simulate very early startup error, not even getting to the try/except
-    that gives us error feedback.
+    that gives us error feedback via the queue.
     """
     executor = None
 
     # manual patching, we mock.patch doesn't work in multiprocessing
     # environments:
-    original_pipelined_worker = pipelined.pipelined_worker
+    original_pipelined_worker = libertem.executor.pipelined.pipelined_worker
     try:
-        pipelined.pipelined_worker = _broken_pipelined_worker
+        libertem.executor.pipelined.pipelined_worker = _broken_pipelined_worker
         with pytest.raises(WorkerQueueEmpty):
             executor = PipelinedExecutor(
                 spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
@@ -244,7 +243,7 @@ def test_early_startup_error():
                 startup_timeout=0.4,
             )
     finally:
-        pipelined.pipelined_worker = original_pipelined_worker
+        libertem.executor.pipelined.pipelined_worker = original_pipelined_worker
         if executor is not None:
             executor.close()
 
@@ -255,12 +254,13 @@ def _patch_setup_device():
         Broken version of pipelined._setup_device for error injection
         """
         raise RuntimeError("stuff is broken, can't do it.")
-    pipelined._setup_device = _broken_setup_device
+    libertem.executor.pipelined._setup_device = _broken_setup_device
 
 
 def test_startup_error():
     """
-    Simulate an error when starting up the worker, in this case we raise in _setup_device
+    Simulate an error when starting up the worker, in this case we raise in
+    _setup_device
     """
     executor = None
     try:
@@ -320,7 +320,7 @@ def test_success_with_delay(pipelined_ex):
 
 
 def test_make_spec_multi_cuda():
-    spec = pipelined._make_spec(cpus=[0], cudas=[0, 1, 2, 2])
+    spec = PipelinedExecutor.make_spec(cpus=[0], cudas=[0, 1, 2, 2])
     assert spec == [
         {
             "device_id": 0,

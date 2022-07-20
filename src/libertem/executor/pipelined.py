@@ -19,7 +19,7 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
-    WorkerQueueEmpty, MainController, SimpleMPWorkerQueue,
+    WorkerQueueEmpty, TaskCommHandler, SimpleMPWorkerQueue,
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
@@ -532,9 +532,10 @@ def _make_spec(
 
 class PipelinedExecutor(BaseJobExecutor):
     """
-    Multi-process pipelined executor. Useful for live processing if your
-    processing function is not able to keep up with the incoming data stream in
-    a single process, but also works for offline processing.
+    Multi-process pipelined executor. Useful for live processing using
+    `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_
+    if your processing function is not able to keep up with the incoming data
+    stream in a single process, but also works for offline processing.
 
     Parameters
     ----------
@@ -643,7 +644,7 @@ class PipelinedExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller: "MainController",
+        controller: "TaskCommHandler",
     ) -> ResultWithID:
         in_flight = 0
         id_to_task = {}
@@ -740,7 +741,7 @@ class PipelinedExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller: "MainController",
+        controller: "TaskCommHandler",
     ) -> ResultT:
         with tracer.start_as_current_span("PipelinedExecutor.run_tasks"):
             yield from _order_results(self._run_tasks_inner(

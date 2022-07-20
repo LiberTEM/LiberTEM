@@ -13,7 +13,7 @@ from libertem.io.dataset.base import DataSet
 from libertem.utils.devices import detect
 
 from .base import BaseJobExecutor
-from libertem.common.executor import Environment, TaskProtocol
+from libertem.common.executor import Environment, TaskCommHandler, TaskProtocol
 from libertem.common.scheduler import Worker, WorkerSet
 
 from ..common.buffers import BufferWrapper
@@ -203,7 +203,7 @@ class DelayedJobExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller,
+        task_comm_handler: TaskCommHandler,
     ):
         """
         Wraps the call task() such that it returns a flat list

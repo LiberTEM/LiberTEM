@@ -147,7 +147,7 @@ class JobExecutor:
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller: "TaskCommHandler",
+        task_comm_handler: "TaskCommHandler",
     ):
         """
         Run the tasks with the given parameters
@@ -527,7 +527,7 @@ class TaskCommHandler:
             in the worker has access to this queue, too, and can
             communicate using a data-source specific protocol.
 
-            The `MainController` and the `Partition` are tightly
+            The `TaskCommHandler` and the `Partition` are tightly
             coupled by this protocol, and the queue needs to be "clean"
             after the data for a given task has been exchanged.
         """
@@ -550,7 +550,7 @@ class TaskCommHandler:
 
 class NoopCommHandler(TaskCommHandler):
     """
-    A `MainController` that doesn't perform any action, and doesn't
+    A `TaskCommHandler` that doesn't perform any action, and doesn't
     stream any data.
     """
     def handle_task(self, task: TaskProtocol, queue: WorkerQueue):

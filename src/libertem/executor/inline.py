@@ -5,7 +5,7 @@ import contextlib
 
 from .base import BaseJobExecutor
 from libertem.common.executor import (
-    Environment, SimpleWorkerQueue, TaskProtocol, WorkerContext, WorkerQueue,
+    Environment, SimpleWorkerQueue, TaskCommHandler, TaskProtocol, WorkerContext, WorkerQueue,
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
@@ -47,10 +47,10 @@ class InlineJobExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller,
+        task_comm_handler: TaskCommHandler,
     ):
         worker_queue = SimpleWorkerQueue()
-        controller.start()
+        task_comm_handler.start()
         threads = self._inline_threads
         if threads is None:
             threads = psutil.cpu_count(logical=False)
@@ -62,12 +62,12 @@ class InlineJobExecutor(BaseJobExecutor):
         for task in tasks:
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(task))
-            controller.handle_task(task, worker_queue)
+            task_comm_handler.handle_task(task, worker_queue)
             result = task(env=env, params=params_handle)
             if self._debug:
                 cloudpickle.loads(cloudpickle.dumps(result))
             yield result, task
-        controller.done()
+        task_comm_handler.done()
 
     def run_function(self, fn, *args, **kwargs):
         if self._debug:

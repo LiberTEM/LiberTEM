@@ -10,7 +10,7 @@ from .base import (
     BaseJobExecutor, AsyncAdapter,
 )
 from libertem.common.executor import (
-    JobCancelledError, TaskProtocol
+    JobCancelledError, TaskProtocol, TaskCommHandler,
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.utils.devices import detect
@@ -59,7 +59,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller,
+        task_comm_handler: TaskCommHandler,
     ):
         tasks = list(tasks)
 

@@ -296,7 +296,7 @@ class DataSet:
     def meta(self) -> Optional["DataSetMeta"]:
         return self._meta
 
-    def get_controller(self) -> "TaskCommHandler":
+    def get_task_comm_handler(self) -> "TaskCommHandler":
         from libertem.common.executor import NoopCommHandler
         return NoopCommHandler()
 

@@ -12,7 +12,7 @@ from libertem.common.threading import set_num_threads_env
 
 from .base import BaseJobExecutor, AsyncAdapter
 from libertem.common.executor import (
-    JobCancelledError, TaskProtocol, Environment,
+    JobCancelledError, TaskCommHandler, TaskProtocol, Environment,
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
@@ -350,7 +350,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         tasks: Iterable[TaskProtocol],
         params_handle: Any,
         cancel_id: Any,
-        controller,
+        task_comm_handler: TaskCommHandler,
     ):
         tasks = list(tasks)
         tasks_w_index = list(enumerate(tasks))

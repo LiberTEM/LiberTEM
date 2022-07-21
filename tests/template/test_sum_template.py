@@ -7,8 +7,10 @@ from libertem.udf.sum import SumUDF
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from libertem import masks
 from nbconvert.preprocessors import ExecutePreprocessor
+import pytest
 
 
+@pytest.mark.slow
 def test_sum_default(hdf5_ds_2, tmpdir_factory, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 
@@ -35,6 +37,7 @@ def test_sum_default(hdf5_ds_2, tmpdir_factory, local_cluster_url):
     assert np.allclose(expected, result)
 
 
+@pytest.mark.slow
 def test_sum_roi(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 

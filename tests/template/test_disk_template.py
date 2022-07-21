@@ -5,8 +5,10 @@ import nbformat
 from temp_utils import _get_hdf5_params
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from nbconvert.preprocessors import ExecutePreprocessor
+import pytest
 
 
+@pytest.mark.slow
 def test_disk_default(hdf5_ds_2, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 

@@ -374,6 +374,7 @@ def test_pick_analysis(default_mib, lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
+@pytest.mark.slow
 def test_correction(default_mib, lt_ctx, with_roi):
     ds = default_mib
 

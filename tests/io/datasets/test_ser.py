@@ -126,6 +126,7 @@ def test_with_udf(lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
+@pytest.mark.slow
 def test_correction(lt_ctx, with_roi):
     ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
 

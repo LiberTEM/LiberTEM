@@ -264,6 +264,7 @@ def test_detector_patch_too_large():
 
 
 @pytest.mark.with_numba
+@pytest.mark.slow
 def test_detector_patch_overlapping():
     for i in range(REPEATS):
         print(f"Loop number {i}")

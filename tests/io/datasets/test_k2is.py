@@ -171,6 +171,7 @@ def test_scheme_too_large(default_k2is):
 
 
 @needsdata
+@pytest.mark.slow
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
     udf = ValidationUDF(
@@ -285,6 +286,7 @@ def test_pick_analysis(default_k2is, lt_ctx):
     # Default is too large for test without ROI
     "with_roi", (True, )
 )
+@pytest.mark.slow
 def test_correction(default_k2is, lt_ctx, with_roi):
     ds = default_k2is
 

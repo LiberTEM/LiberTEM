@@ -232,6 +232,7 @@ def encode_roundtrip_quad(
         (encode_r12, 16),
     ],
 )
+@pytest.mark.slow
 def test_encode_roundtrip_quad(encode, bits_per_pixel):
     data, decoded = encode_roundtrip_quad(
         encode, bits_per_pixel, dataset_shape=(1, 512, 512), tileshape=(1, 512, 512),

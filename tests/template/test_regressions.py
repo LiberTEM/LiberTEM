@@ -1,11 +1,13 @@
 import io
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
+import pytest
 
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 from libertem.io.dataset.base import BufferedBackend
 
 
+@pytest.mark.slow
 def test_custom_io_backend(buffered_raw, tmpdir_factory, lt_ctx, local_cluster_url):
     datadir = tmpdir_factory.mktemp('template_tests')
 

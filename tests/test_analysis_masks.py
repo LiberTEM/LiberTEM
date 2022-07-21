@@ -821,6 +821,7 @@ def test_masks_spectrum(lt_ctx):
     assert results.mask_0.raw_data.shape == (16, 16)
 
 
+@pytest.mark.slow
 def test_masks_hyperspectral(lt_ctx):
     data = _mk_random(size=(16, 16, 16, 16, 16), dtype="<u2")
     dataset = MemoryDataSet(

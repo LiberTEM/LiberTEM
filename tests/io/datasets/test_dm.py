@@ -125,6 +125,7 @@ def test_comparison_3d_roi(dm_stack_of_3d, default_dm_3d_raw, lt_ctx_fast):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
+@pytest.mark.slow
 def test_correction(default_dm, lt_ctx, with_roi):
     ds = default_dm
 
@@ -377,6 +378,7 @@ def test_offset_greater_than_image_count(lt_ctx):
     )
 
 
+@pytest.mark.slow
 def test_reshape_nav(lt_ctx):
     udf = SumSigUDF()
     files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))

@@ -176,6 +176,7 @@ def test_pick_analysis(default_blo, lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
+@pytest.mark.slow
 def test_correction(default_blo, lt_ctx, with_roi):
     ds = default_blo
 

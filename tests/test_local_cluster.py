@@ -13,7 +13,6 @@ from libertem.utils.devices import detect, has_cupy
 from utils import DebugDeviceUDF
 
 
-@pytest.mark.functional
 def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))
     d = detect()
@@ -77,7 +76,7 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     assert np.all(numpy_only['device_class'].data == 'cpu')
 
 
-@pytest.mark.functional
+@pytest.mark.slow
 def test_start_local_cpuonly(hdf5_ds_1):
     # We don't use all since that might be too many
     cpus = (0, 1)
@@ -124,7 +123,7 @@ def test_start_local_cpuonly(hdf5_ds_1):
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
 
 
-@pytest.mark.functional
+@pytest.mark.slow
 @pytest.mark.skipif(not detect()['cudas'], reason="No CUDA devices")
 @pytest.mark.skipif(not has_cupy(), reason="No functional CuPy")
 def test_start_local_cupyonly(hdf5_ds_1):
@@ -189,7 +188,7 @@ def test_start_local_cupyonly(hdf5_ds_1):
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
 
 
-@pytest.mark.functional
+@pytest.mark.slow
 @pytest.mark.skipif(not detect()['cudas'], reason="No CUDA devices")
 def test_start_local_cudaonly(hdf5_ds_1):
     cudas = detect()['cudas']
@@ -231,7 +230,7 @@ def test_start_local_cudaonly(hdf5_ds_1):
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
 
 
-@pytest.mark.functional
+@pytest.mark.slow
 def test_preload(hdf5_ds_1):
     # We don't use all since that might be too many
     cpus = (0, 1)
@@ -253,7 +252,7 @@ def test_preload(hdf5_ds_1):
         ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)
 
 
-@pytest.mark.functional
+@pytest.mark.slow
 def test_use_plain_dask(hdf5_ds_1):
     # We deactivate the resource scheduling and run on a plain dask cluster
     hdf5_ds_1.set_num_cores(2)

@@ -181,18 +181,18 @@ other tests, you can use a boolean expression like this:
 
    $ tox -- -m "slow or not slow"
 
-Another example, to exclude both slow and functional tests:
+Another example, to exclude both slow and dist tests:
 
 .. code-block:: shell
 
-   $ tox -- -m "not functional and not slow"
+   $ tox -- -m "not dist and not slow"
 
 In these examples, ``--`` separates the the arguments of tox (left of ``--``)
 from the arguments for pytest on the right. List of marks used in our test
 suite:
 
 - `slow`: tests that take much longer than 1 second to run
-- `functional`: tests that spin up a local dask cluster
+- `dist`: tests that require a distributed Dask cluster setup
 
 Example notebooks
 ~~~~~~~~~~~~~~~~~

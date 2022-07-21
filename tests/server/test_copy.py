@@ -13,7 +13,7 @@ from aio_utils import (
 from libertem.io.writers.results import formats  # NOQA: F401
 
 
-pytestmark = [pytest.mark.functional]
+pytestmark = [pytest.mark.slow]
 
 
 @pytest.mark.slow

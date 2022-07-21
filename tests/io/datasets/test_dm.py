@@ -147,6 +147,28 @@ def test_detect_1(lt_ctx):
     }
 
 
+def test_get_metadata():
+    import distributed
+    from libertem.api import Context
+    from libertem.io.dataset.dm import _get_metadata
+
+    with distributed.Client(
+            n_workers=2,
+            threads_per_worker=1,
+            processes=False
+    ) as _:
+        ctx = Context.make_with("dask-integration")
+        fpath = os.path.join(DM_TESTDATA_PATH, '2018-7-17 15_29_0000.dm4')
+        ctx.executor.run_function(lambda: _get_metadata(fpath))
+
+
+def test_get_metadata_2():
+    from libertem.io.dataset.dm import _get_metadata
+
+    fpath = os.path.join(DM_TESTDATA_PATH, '2018-7-17 15_29_0000.dm4')
+    _get_metadata(fpath)
+
+
 def test_detect_2(lt_ctx):
     assert DMDataSet.detect_params(
         path="nofile.someext",

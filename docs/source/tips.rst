@@ -170,7 +170,7 @@ for details. If you are using :code:`pytest` directly, you can use the
      5.75s call     tests/test_analysis_masks.py::test_avoid_calculating_masks_on_client
     = 288 passed, 66 skipped, 6 deselected, 2 xfailed, 7 warnings in 260.65 seconds =
 
-Please note that functional tests which involve starting a local cluster have
+Please note that tests which involve starting a local cluster have
 long lead times that are hard to avoid.
 
 In order to gain more information on what slows down a particular test, you can

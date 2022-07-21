@@ -1,4 +1,5 @@
 import types
+import warnings
 
 import dask
 import dask.delayed
@@ -39,6 +40,13 @@ def get_dask_integration_executor():
     # JobExecutor instance.
     if isinstance(dask_scheduler, types.MethodType):
         if isinstance(dask_scheduler.__self__, dd.Client):
+            # See https://github.com/dask/distributed/issues/6776
+            if dask.config.get("distributed.worker.profile.enabled"):
+                warnings.warn(
+                    "Dask profiling seems to be enabled, which is known to cause issues with "
+                    "the DM reader. "
+                    "See https://github.com/dask/distributed/issues/6776"
+                )
             return DaskJobExecutor(client=dask_scheduler.__self__)
     elif dask_scheduler is dask.threaded.get:
         if dask.threaded.default_pool:

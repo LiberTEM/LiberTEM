@@ -18,72 +18,7 @@ from libertem.common.math import prod
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 
-from utils import dataset_correction_verification, ValidationUDF, _mk_random
-
-
-@pytest.fixture(scope='session')
-def npy_datadir(tmpdir_factory):
-    yield tmpdir_factory.mktemp('data_npy')
-
-
-@pytest.fixture(scope='session')
-def default_npy_filepath(npy_datadir):
-    yield str(npy_datadir + '/test_default.npy')
-
-
-@pytest.fixture()
-def npy_random_array(npy_datadir):
-    random_filename = str(npy_datadir + f'/array{np.random.randint(0, 1000)}.npy')
-    ndim = np.random.randint(1, 6)
-    shape = tuple(np.random.randint(1, 10) for _ in range(ndim))
-    dtype = np.random.choice([np.float32, np.uint8, np.int64, np.complex128])
-    array = np.empty(shape, dtype=dtype)
-    np.save(random_filename, array)
-    return random_filename, array
-
-
-@pytest.fixture()
-def npy_fortran_array(npy_datadir):
-    random_filename = str(npy_datadir + f'/array{np.random.randint(0, 1000)}.npy')
-    array = np.ones((55, 55), order='F')
-    np.save(random_filename, array)
-    return random_filename, array
-
-
-@pytest.fixture(scope='session')
-def npy_8x8x8x8_path(npy_datadir):
-    filename = npy_datadir + '/8x8x8x8.npy'
-    data = _mk_random(size=(8, 8, 8, 8), dtype='float32')
-    np.save(str(filename), data)
-    del data
-    yield str(filename)
-
-
-@pytest.fixture(scope='session')
-def npy_8x8x8x8_ds(npy_8x8x8x8_path):
-    lt_ctx = lt.Context.make_with('inline')
-    ds = lt_ctx.load(
-            'npy',
-            path=npy_8x8x8x8_path,
-        )
-    ds.set_num_cores(2)
-    yield ds
-
-
-@pytest.fixture(scope='session')
-def default_npy(default_npy_filepath, default_raw_data):
-    lt_ctx = lt.Context.make_with('inline')
-    filename = default_npy_filepath
-    np.save(filename, default_raw_data)
-    ds = lt_ctx.load(
-        "npy",
-        path=filename,
-        sig_dims=2,
-        io_backend=MMapBackend(),
-    )
-    ds.set_num_cores(2)
-    del default_raw_data
-    yield ds
+from utils import dataset_correction_verification, ValidationUDF
 
 
 @pytest.mark.parametrize(

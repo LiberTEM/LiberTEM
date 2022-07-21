@@ -6,7 +6,7 @@ import signal
 from typing import Iterable, Any, Optional, Tuple
 
 from dask import distributed as dd
-import distributed
+import dask
 
 from libertem.common.threading import set_num_threads_env
 
@@ -332,7 +332,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         Specify if the cluster has LiberTEM resource tags and environment
         variables for GPU processing. Autodetected by default.
     '''
-    def __init__(self, client: distributed.Client, is_local: bool = False,
+    def __init__(self, client: dd.Client, is_local: bool = False,
                 lt_resources: bool = None):
         self.is_local = is_local
         self.client = client
@@ -598,9 +598,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             cluster_kwargs['silence_logs'] = logging.WARN
 
         with set_num_threads_env(n=1):
-            cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
-            client = dd.Client(cluster, **(client_kwargs or {}))
-            client.wait_for_workers(len(spec))
+            # Mitigation for https://github.com/dask/distributed/issues/6776
+            with dask.config.set({"distributed.worker.profile.enabled": False}):
+                cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))
+                client = dd.Client(cluster, **(client_kwargs or {}))
+                client.wait_for_workers(len(spec))
 
         is_local = not client_kwargs['set_as_default']
 
@@ -654,15 +656,17 @@ def cli_worker(
         cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name, options=options, preload=preload)
 
     async def run(spec):
-        workers = []
-        for name, spec in spec.items():
-            cls = spec['cls']
-            workers.append(
-                cls(scheduler, name=name, **spec['options'])
-            )
-        import asyncio
-        await asyncio.gather(*workers)
-        for w in workers:
-            await w.finished()
+        # Mitigation for https://github.com/dask/distributed/issues/6776
+        with dask.config.set({"distributed.worker.profile.enabled": False}):
+            workers = []
+            for name, spec in spec.items():
+                cls = spec['cls']
+                workers.append(
+                    cls(scheduler, name=name, **spec['options'])
+                )
+            import asyncio
+            await asyncio.gather(*workers)
+            for w in workers:
+                await w.finished()
 
     asyncio.get_event_loop().run_until_complete(run(spec))

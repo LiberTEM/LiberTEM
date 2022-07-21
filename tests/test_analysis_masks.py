@@ -556,7 +556,6 @@ def test_multi_mask_force_dtype(lt_ctx):
     )
 
 
-@pytest.mark.functional
 def test_avoid_calculating_masks_on_client(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))
     # We have to start a local cluster so that the masks are
@@ -570,7 +569,6 @@ def test_avoid_calculating_masks_on_client(hdf5_ds_1, local_cluster_ctx):
     assert udf.masks._computed_masks is None
 
 
-@pytest.mark.functional
 def test_avoid_calculating_masks_on_client_udf(hdf5_ds_1, local_cluster_ctx):
     mask = _mk_random(size=(16, 16))
     # We have to use a real cluster instead of InlineJobExecutor so that the masks are

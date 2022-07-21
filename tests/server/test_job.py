@@ -10,7 +10,7 @@ from aio_utils import (
 )
 
 
-pytestmark = [pytest.mark.functional]
+pytestmark = [pytest.mark.slow]
 
 
 @pytest.mark.asyncio

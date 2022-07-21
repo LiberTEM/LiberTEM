@@ -178,7 +178,7 @@ def test_threads_per_worker(default_raw, dask_executor):
     assert np.allclose(res_inline, psutil.cpu_count(logical=False))
 
 
-@pytest.mark.functional
+@pytest.mark.slow
 def test_threads_per_worker_vanilla(default_raw, monkeypatch):
     old_threads = os.environ.get('NUMBA_NUM_THREADS')
     # Triggers #1053

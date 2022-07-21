@@ -1,7 +1,7 @@
 import pytest
 import random
 
-pytestmark = [pytest.mark.functional]
+pytestmark = [pytest.mark.slow]
 
 
 @pytest.mark.dist

@@ -141,7 +141,7 @@ stages:
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - ${{ if eq(parameters.run_slow, true) }}:
-        - bash: tox -- -m "slow and not dist" --cov-append
+        - bash: ./venv/bin/tox -- -m "slow and not dist" --cov-append
           displayName: 'Run tox slow tests $(TOXENV) $(Agent.OS)'
 
       - bash: ./scripts/codecov.sh -f ./coverage.xml

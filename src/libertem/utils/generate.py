@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 
 from libertem.common.math import prod
 from libertem.utils import make_cartesian, make_polar, frame_peaks

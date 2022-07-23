@@ -95,10 +95,10 @@ stages:
           ${{ if eq(parameters.run_slow, true) }}:
             Python37:
               python.version: '3.7'
-              TOXENV: 'py37'
+              TOXENV: 'py37-data'
             Python38:
               python.version: '3.8'
-              TOXENV: 'py38'
+              TOXENV: 'py38-data'
           # 3.9: default in current Debian stable
           Python39:
             python.version: '3.9'

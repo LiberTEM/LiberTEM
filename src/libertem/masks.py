@@ -9,7 +9,7 @@ from libertem.utils import make_polar
 # Import here for backwards compatibility, refs #1031
 from libertem.common.sparse import to_dense, to_sparse, is_sparse  # NOQA: F401
 
-MaskArrayType = Union[np.ndarray, sp.coo.coo_matrix, sp.dok.dok_matrix]
+MaskArrayType = Union[np.ndarray, sp.coo_matrix, sp.dok_matrix]
 MaskFactoriesType = Union[Callable[[], MaskArrayType], Iterable[Callable[[], MaskArrayType]]]
 
 

@@ -51,6 +51,12 @@ class WorkerSpec(TypedDict):
     device_id: int
     device_kind: Union[Literal['CPU'], Literal['CUDA']]
     worker_idx: int
+    has_cupy: bool
+
+
+class QueuesAndProcess(NamedTuple):
+    queues: WorkerQueues
+    process: mp.Process
 
 
 class WorkerPool:
@@ -71,7 +77,7 @@ class WorkerPool:
     """
     def __init__(self, worker_fn: Callable, spec: List[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue
-        self._workers: List[Tuple[WorkerQueues, mp.Process]] = []
+        self._workers: List[QueuesAndProcess] = []
         self._worker_fn = worker_fn
         self._response_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
@@ -97,14 +103,14 @@ class WorkerPool:
                     "span_context": span_context,
                 })
                 p.start()
-                self._workers.append((queues, p))
+                self._workers.append(QueuesAndProcess(queues=queues, process=p))
 
     @property
-    def workers(self):
+    def workers(self) -> List[QueuesAndProcess]:
         return self._workers
 
-    def all_alive(self):
-        return all(p.is_alive() for (_, p) in self._workers)
+    def all_alive(self) -> bool:
+        return all(qp.process.is_alive() for qp in self._workers)
 
     def close_resp_queue(self):
         while True:
@@ -115,8 +121,8 @@ class WorkerPool:
                 break
         self._response_q.close()
 
-    def get_worker_queues(self, idx: int) -> WorkerQueues:
-        return self._workers[idx][0]
+    def get_worker_queues(self, worker_idx: int) -> WorkerQueues:
+        return self._workers[worker_idx].queues
 
     def _make_worker_queues(self):
         return WorkerQueues(
@@ -274,26 +280,34 @@ def worker_loop(
                                 header, payload = msg
                                 header_type = header["type"]
                                 span.add_event("msg", {"type": header_type})
-                                assert header_type not in (
+                                if header_type in (
                                     "RUN_TASK", "SCATTER", "RUN_FUNCTION",
-                                    "CLEANUP", "SHUTDOWN", "WARMUP",
-                                )
+                                    "DELETE", "SHUTDOWN", "WARMUP",
+                                ):
+                                    raise RuntimeError(
+                                        f"unexpected message type {header_type}"
+                                    )
                                 if header_type == "END_TASK":
                                     break
             elif header_type == "SCATTER":
                 # FIXME: array data could be transferred and stored in SHM instead
                 key = header["key"]
-                assert key not in work_mem
-                value = header["value"]
-                work_mem[key] = value
+                if key in work_mem:
+                    queues.response.put({
+                        "type": "ERROR",
+                        "error": f"key {key} already stored in worker memory",
+                        "worker_id": worker_idx,
+                    })
+                    continue
+                work_mem[key] = header["value"]
                 continue
             elif header_type == "RUN_FUNCTION":
                 with attach_to_parent(header["span_context"]):
                     worker_run_function(header, queues, worker_idx)
-            elif header_type == "CLEANUP":
+            elif header_type == "DELETE":
                 key = header["key"]
-                assert key in work_mem
-                del work_mem[key]
+                if key in work_mem:
+                    del work_mem[key]
                 continue
             elif header_type == "SHUTDOWN":
                 with attach_to_parent(header["span_context"]):
@@ -315,7 +329,8 @@ def worker_loop(
                     "error": f"unknown message {header}",
                     "worker_id": worker_idx,
                 })
-                continue
+                # probably desynchronized with the main process, so give up:
+                raise RuntimeError(f"unknown message, shutting down worker {worker_idx}")
 
 
 DeviceT = Tuple[int, Union[Literal['CUDA'], Literal['CPU']]]
@@ -332,22 +347,6 @@ def _setup_device(spec: WorkerSpec, pin: bool):
         set_use_cpu(spec["device_id"])
     elif spec["device_kind"].lower() == "cuda":
         set_use_cuda(spec["device_id"])
-
-
-def _drain_and_close(queues: WorkerQueues):
-    """
-    Drain request queue, close request and response queue,
-    Called in case the worker encounters an unhandled exception.
-    """
-    while True:
-        try:
-            with queues.request.get(block=False):
-                continue
-        except WorkerQueueEmpty:
-            break
-    # close and join:
-    queues.request.close()
-    queues.response.close()
 
 
 def pipelined_worker(
@@ -426,7 +425,9 @@ def pipelined_worker(
             "worker_id": worker_idx,
             "error": e,
         })
-        _drain_and_close(queues)
+        # drain, close and join queues:
+        queues.request.close()
+        queues.response.close()
         sys.exit(1)
 
 
@@ -521,6 +522,7 @@ def _make_spec(
             device_id=device_id,
             device_kind="CPU",
             worker_idx=worker_idx,
+            has_cupy=False,
         ))
         worker_idx += 1
     grouped_cudas = itertools.groupby(cudas, lambda x: x)
@@ -531,6 +533,7 @@ def _make_spec(
                 device_id=device_id,
                 device_kind="CUDA",
                 worker_idx=worker_idx,
+                has_cupy=has_cupy,
             ))
             worker_idx += 1
     return spec
@@ -652,6 +655,9 @@ class PipelinedExecutor(BaseJobExecutor):
         cancel_id: Any,
         task_comm_handler: "TaskCommHandler",
     ) -> ResultWithID:
+        # In theory, `id_flight` could be calculated from `id_to_task`, but in case
+        # of exceptions, it becomes a bit harder to keep attribution of messages to
+        # tasks, which is why we have a separate counter for now.
         in_flight = 0
         id_to_task = {}
 
@@ -671,6 +677,12 @@ class PipelinedExecutor(BaseJobExecutor):
                 in_flight += 1
                 id_to_task[task_idx] = task
 
+                assert len(id_to_task) == in_flight
+
+                # NOTE: this implements simple round-robin "scheduling";
+                # as noted by @matbryan52 selecting the worker with the
+                # currently shortest request queue could be a simple extension
+                # and provide minimal load balancing
                 worker_idx = task_idx % self._pool.size
                 worker_queues = self._pool.get_worker_queues(worker_idx)
                 worker_queues.request.put({
@@ -704,6 +716,8 @@ class PipelinedExecutor(BaseJobExecutor):
                             raise RuntimeError(f"failed to run tasks: {result['error']}")
                         result_task_id = result["task_id"]
                         yield (result["result"], id_to_task[result_task_id], result_task_id)
+                        del id_to_task[result_task_id]
+                        assert len(id_to_task) == in_flight
                 except WorkerQueueEmpty:
                     continue
 
@@ -717,6 +731,8 @@ class PipelinedExecutor(BaseJobExecutor):
                             raise RuntimeError(f"failed to run tasks: {result['error']}")
                         result_task_id = result["task_id"]
                         yield (result["result"], id_to_task[result_task_id], result_task_id)
+                        del id_to_task[result_task_id]
+                        assert len(id_to_task) == in_flight
                 except WorkerQueueEmpty:
                     continue
 
@@ -755,19 +771,31 @@ class PipelinedExecutor(BaseJobExecutor):
             ))
 
     def get_available_workers(self) -> WorkerSet:
-        resources = {"compute": 1, "CPU": 1}
+        resources_by_kind = {
+            "CPU": {"compute": 1, "CPU": 1, "ndarray": 1},
+            "CUDA": {"compute": 1, "CUDA": 1},
+        }
+
+        def _resources_for_spec(worker_spec: WorkerSpec):
+            resources = resources_by_kind[worker_spec["device_kind"]]
+            if worker_spec["has_cupy"]:
+                resources["ndarray"] = 1
+            return resources
+
         return WorkerSet([
             Worker(
-                name="cpu-%d" % idx,
+                name=worker_spec["name"],
                 host="localhost",
-                resources=resources,
+                resources=_resources_for_spec(worker_spec),
                 nthreads=1,
             )
-            for idx, worker in enumerate(self._pool.workers)
+            for worker_spec in self._spec
         ])
 
     def close(self):
         with tracer.start_as_current_span("PipelinedExecutor.close") as span:
+            if self._closed:
+                return
             for idx, (qs, p) in enumerate(self._pool.workers):
                 span.add_event("sending SHUTDOWN", {"idx": idx})
                 qs.request.put({
@@ -818,7 +846,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         # FIXME: this is not concurrency-safe currently! beware!
-        with tracer.start_as_current_span("PipelinedExecutor.run_tasks"):
+        with tracer.start_as_current_span("PipelinedExecutor.run_function"):
             return self._run_function(fn, 0, *args, **kwargs)
 
     def run_each_worker(self, fn, *args, **kwargs):
@@ -841,12 +869,15 @@ class PipelinedExecutor(BaseJobExecutor):
                 "key": key,
                 "value": obj,
             })
-        yield key
-        for qs, p in self._pool.workers:
-            qs.request.put({
-                "type": "CLEANUP",
-                "key": key,
-            })
+        try:
+            yield key
+        finally:
+            if not self._closed:
+                for qs, p in self._pool.workers:
+                    qs.request.put({
+                        "type": "DELETE",
+                        "key": key,
+                    })
 
     def map(self, fn, iterable):
         # FIXME: replace with efficient impl if needed

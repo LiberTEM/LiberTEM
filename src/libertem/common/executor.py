@@ -423,7 +423,15 @@ class WorkerQueue:
         """
         raise NotImplementedError()
 
-    def close(self):
+    def close(self, drain: bool = True):
+        """
+        Parameters
+        ----------
+
+        drain
+            If needed by the underlying queue, remove any items
+            from the queue before closing
+        """
         raise NotImplementedError()
 
 
@@ -451,7 +459,7 @@ class SimpleWorkerQueue(WorkerQueue):
         except queue.Empty:
             raise WorkerQueueEmpty()
 
-    def close(self):
+    def close(self, drain: bool = True):
         pass
 
 
@@ -483,13 +491,14 @@ class SimpleMPWorkerQueue(WorkerQueue):
         except queue.Empty:
             raise WorkerQueueEmpty()
 
-    def close(self):
+    def close(self, drain: bool = True):
         if not self._closed:
-            while True:
-                try:
-                    self.q.get_nowait()
-                except queue.Empty:
-                    break
+            if drain:
+                while True:
+                    try:
+                        self.q.get_nowait()
+                    except queue.Empty:
+                        break
             self.q.close()
             self.q.join_thread()
             self._closed = True

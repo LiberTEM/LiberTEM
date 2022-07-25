@@ -54,9 +54,10 @@ class WorkerSpec(TypedDict):
     has_cupy: bool
 
 
-class QueuesAndProcess(NamedTuple):
+class PoolWorkerInfo(NamedTuple):
     queues: WorkerQueues
     process: mp.Process
+    spec: WorkerSpec
 
 
 class WorkerPool:
@@ -77,7 +78,7 @@ class WorkerPool:
     """
     def __init__(self, worker_fn: Callable, spec: List[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue
-        self._workers: List[QueuesAndProcess] = []
+        self._workers: List[PoolWorkerInfo] = []
         self._worker_fn = worker_fn
         self._response_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
@@ -103,10 +104,12 @@ class WorkerPool:
                     "span_context": span_context,
                 })
                 p.start()
-                self._workers.append(QueuesAndProcess(queues=queues, process=p))
+                self._workers.append(
+                    PoolWorkerInfo(queues=queues, process=p, spec=spec_item)
+                )
 
     @property
-    def workers(self) -> List[QueuesAndProcess]:
+    def workers(self) -> List[PoolWorkerInfo]:
         return self._workers
 
     def all_alive(self) -> bool:
@@ -566,8 +569,8 @@ class PipelinedExecutor(BaseJobExecutor):
         this limit. In seconds.
 
     early_setup
-        Callable that will be run very early on each worker process. Useful for
-        custom warmup code or testing.
+        Callable that will be run as early as possible on each worker process.
+        Useful for custom warmup code or testing.
 
     Note
     ----
@@ -621,6 +624,12 @@ class PipelinedExecutor(BaseJobExecutor):
                             f"unknown message type {msg['type']}, expected STARTUP_DONE"
                         )
                     span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
+
+            for qp in pool.workers:
+                qp.queues.request.put({
+                    "type": "WARMUP",
+                    "span_context": span.get_span_context(),
+                })
             # set here, so we don't try to close the pool if it doesn't exist
             self._closed = False
             return pool
@@ -655,7 +664,7 @@ class PipelinedExecutor(BaseJobExecutor):
         cancel_id: Any,
         task_comm_handler: "TaskCommHandler",
     ) -> ResultWithID:
-        # In theory, `id_flight` could be calculated from `id_to_task`, but in case
+        # In theory, `in_flight` could be calculated from `id_to_task`, but in case
         # of exceptions, it becomes a bit harder to keep attribution of messages to
         # tasks, which is why we have a separate counter for now.
         in_flight = 0
@@ -666,12 +675,6 @@ class PipelinedExecutor(BaseJobExecutor):
             task_comm_handler.start()
             span = trace.get_current_span()
             span_context = span.get_span_context()
-
-            for qs, _ in self._pool.workers:
-                qs.request.put({
-                    "type": "WARMUP",
-                    "span_context": span_context,
-                })
 
             for task_idx, task in enumerate(tasks):
                 in_flight += 1
@@ -784,12 +787,12 @@ class PipelinedExecutor(BaseJobExecutor):
 
         return WorkerSet([
             Worker(
-                name=worker_spec["name"],
+                name=worker_info.spec["name"],
                 host="localhost",
-                resources=_resources_for_spec(worker_spec),
+                resources=_resources_for_spec(worker_info.spec),
                 nthreads=1,
             )
-            for worker_spec in self._spec
+            for worker_info in self._pool.workers
         ])
 
     def close(self):
@@ -852,8 +855,10 @@ class PipelinedExecutor(BaseJobExecutor):
     def run_each_worker(self, fn, *args, **kwargs):
         # FIXME: not as fast as it could be, but also not really perf-sensitive?
         result = {}
-        for idx, worker in enumerate(self.get_available_workers()):
-            result[worker.name] = self._run_function(fn, worker_idx=idx, *args, **kwargs)
+        for idx, worker_info in enumerate(self._pool.workers):
+            result[worker_info.spec["name"]] = self._run_function(
+                fn, worker_idx=idx, *args, **kwargs
+            )
         return result
 
     def run_each_host(self, fn, *args, **kwargs):

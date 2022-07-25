@@ -165,6 +165,7 @@ setup(
         'async_generator',  # backwards-compat. for contextlib.asynccontextmanager
         'typing-extensions',  # backwards-compatibility for newer typing constructs
         'opentelemetry-api',
+        'tblib',
     ],
     extras_require={
         'torch': 'torch',

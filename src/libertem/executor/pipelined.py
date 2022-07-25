@@ -13,6 +13,7 @@ from typing import (
 from typing_extensions import TypedDict, Literal
 import uuid
 
+from tblib import pickling_support
 import cloudpickle
 from opentelemetry import trace
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -197,9 +198,11 @@ def worker_run_task(
             })
         except Exception as e:
             logger.exception("failure in RUN_TASK")
+            pickling_support.install(e)
             queues.response.put({
                 "type": "ERROR",
                 "error": e,
+                "exception": e,
                 "worker_id": worker_idx,
             })
         finally:
@@ -234,9 +237,11 @@ def worker_run_function(header, queues, worker_idx):
             })
         except Exception as e:
             logger.exception("failure in RUN_FUNCTION")
+            pickling_support.install(e)
             queues.response.put({
                 "type": "ERROR",
                 "error": e,
+                "exception": e,
                 "worker_id": worker_idx,
             })
 
@@ -427,6 +432,7 @@ def pipelined_worker(
             "type": "ERROR",
             "worker_id": worker_idx,
             "error": e,
+            "exception": e,
         })
         # drain, close and join queues:
         queues.request.close()
@@ -542,6 +548,13 @@ def _make_spec(
     return spec
 
 
+def _raise_from_msg(msg: Dict, err_prefix: str):
+    if "exception" in msg:
+        raise msg["exception"]
+    else:
+        raise RuntimeError(f"{err_prefix}: {msg['error']}")
+
+
 class PipelinedExecutor(BaseJobExecutor):
     """
     Multi-process pipelined executor. Useful for live processing using
@@ -616,9 +629,7 @@ class PipelinedExecutor(BaseJobExecutor):
             for i in range(pool.size):
                 with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
                     if msg["type"] == "ERROR":
-                        raise RuntimeError(
-                            f"error on startup: {msg['error']}"
-                        )
+                        _raise_from_msg(msg, "error on startup")
                     if msg["type"] != "STARTUP_DONE":
                         raise RuntimeError(
                             f"unknown message type {msg['type']}, expected STARTUP_DONE"
@@ -716,7 +727,7 @@ class PipelinedExecutor(BaseJobExecutor):
                     with self._pool.response_queue.get(block=False) as (result, _):
                         in_flight -= 1
                         if result["type"] == "ERROR":
-                            raise RuntimeError(f"failed to run tasks: {result['error']}")
+                            _raise_from_msg(result, "failed to run tasks")
                         result_task_id = result["task_id"]
                         yield (result["result"], id_to_task[result_task_id], result_task_id)
                         del id_to_task[result_task_id]
@@ -731,7 +742,7 @@ class PipelinedExecutor(BaseJobExecutor):
                     with self._pool.response_queue.get() as (result, _):
                         in_flight -= 1
                         if result["type"] == "ERROR":
-                            raise RuntimeError(f"failed to run tasks: {result['error']}")
+                            _raise_from_msg(result, "failed to run tasks")
                         result_task_id = result["task_id"]
                         yield (result["result"], id_to_task[result_task_id], result_task_id)
                         del id_to_task[result_task_id]
@@ -799,16 +810,16 @@ class PipelinedExecutor(BaseJobExecutor):
         with tracer.start_as_current_span("PipelinedExecutor.close") as span:
             if self._closed:
                 return
-            for idx, (qs, p) in enumerate(self._pool.workers):
+            for idx, worker_info in enumerate(self._pool.workers):
                 span.add_event("sending SHUTDOWN", {"idx": idx})
-                qs.request.put({
+                worker_info.queues.request.put({
                     "type": "SHUTDOWN",
                     "span_context": span.get_span_context(),
                 })
                 span.add_event("SHUTDOWN sent", {"idx": idx})
                 while True:
                     try:
-                        with qs.response.get(block=False) as msg:
+                        with worker_info.queues.response.get(block=False) as msg:
                             logger.warning(f"got message on close: {msg[0]}")
                     except WorkerQueueEmpty:
                         break
@@ -817,8 +828,8 @@ class PipelinedExecutor(BaseJobExecutor):
                 # killing a process might make the request queue unusable, too)
                 # -> basically, need to kill all workers in this case
                 # for now, let the timeout bubble up
-                p.join(timeout=self._cleanup_timeout)
-                qs.request.close()
+                worker_info.process.join(timeout=self._cleanup_timeout)
+                worker_info.queues.request.close()
             self._pool.close_resp_queue()
             self._closed = True
 
@@ -841,7 +852,10 @@ class PipelinedExecutor(BaseJobExecutor):
         # FIXME: timeout?
         with qs.response.get() as (response, _):
             if response["type"] == "ERROR":
-                raise RuntimeError(f"failed to run function: {response['error']}")
+                if "exception" in response:
+                    raise response["exception"]
+                else:
+                    raise RuntimeError(f"failed to run function: {response['error']}")
             if not response["type"] == "RUN_FUNCTION_RESULT":
                 raise RuntimeError(f"invalid response type: {response['type']}")
             result: T = response["result"]
@@ -868,8 +882,8 @@ class PipelinedExecutor(BaseJobExecutor):
     def scatter(self, obj):
         self._validate_worker_state()
         key = str(uuid.uuid4())
-        for qs, p in self._pool.workers:
-            qs.request.put({
+        for worker_info in self._pool.workers:
+            worker_info.queues.request.put({
                 "type": "SCATTER",
                 "key": key,
                 "value": obj,
@@ -878,8 +892,8 @@ class PipelinedExecutor(BaseJobExecutor):
             yield key
         finally:
             if not self._closed:
-                for qs, p in self._pool.workers:
-                    qs.request.put({
+                for worker_info in self._pool.workers:
+                    worker_info.queues.request.put({
                         "type": "DELETE",
                         "key": key,
                     })

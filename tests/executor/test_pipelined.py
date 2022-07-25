@@ -13,6 +13,10 @@ import libertem.executor.pipelined
 from libertem.udf import UDF
 
 
+class CustomException(Exception):
+    pass
+
+
 @pytest.fixture(scope="module")
 def pipelined_ex():
     executor = None
@@ -48,7 +52,7 @@ def test_run_function(pipelined_ex):
 
 
 class RaisesUDF(UDF):
-    def __init__(self, exc_cls=Exception):
+    def __init__(self, exc_cls=CustomException):
         super().__init__(exc_cls=exc_cls)
 
     def get_result_buffers(self):
@@ -68,7 +72,7 @@ def test_udf_exception_queued(pipelined_ex):
     ds = ctx.load("memory", data=data, num_partitions=16)
 
     error_udf = RaisesUDF()  # raises an error
-    with pytest.raises(RuntimeError):  # raised by executor as expected
+    with pytest.raises(CustomException):  # raised by executor as expected
         ctx.run_udf(dataset=ds, udf=error_udf)
 
     normal_udf = SumUDF()
@@ -184,12 +188,12 @@ def test_order_results_postponed_task():
 
 def test_run_function_failure(pipelined_ex):
     def _f():
-        raise Exception("this fails to run")
+        raise CustomException("this fails to run")
 
-    with pytest.raises(RuntimeError) as ex_info:
+    with pytest.raises(CustomException) as ex_info:
         pipelined_ex.run_function(_f)
 
-    assert ex_info.match("^failed to run function: this fails to run$")
+    assert ex_info.match("^this fails to run$")
 
 
 def test_run_function_error():
@@ -201,7 +205,7 @@ def test_run_function_error():
         )
 
         def _break(a, b, c):
-            raise RuntimeError("stuff is broken, can't do it.")
+            raise CustomException("stuff is broken, can't do it.")
 
         def _do_patch_worker():
             # monkeypatch the pipelined module; this should only be run on
@@ -212,16 +216,16 @@ def test_run_function_error():
             libertem.executor.pipelined.worker_run_function = _break
 
         executor.run_each_worker(_do_patch_worker)
-        with pytest.raises(RuntimeError) as e:
+        with pytest.raises(CustomException) as e:
             executor.run_function(lambda: 42)
-        assert e.match("failed to run function: stuff is broken, can't do it.")
+        assert e.match("stuff is broken, can't do it.")
     finally:
         if executor is not None:
             executor.close()
 
 
 def _broken_pipelined_worker(queues, pin, spec, span_context):
-    raise RuntimeError("stuff is broken, can't do it.")
+    raise CustomException("stuff is broken, can't do it.")
 
 
 def test_early_startup_error():
@@ -270,7 +274,7 @@ def test_startup_error():
                 pin_workers=False,
                 early_setup=_patch_setup_device,
             )
-        assert e.match("error on startup: stuff is broken, can't do it.")
+        assert e.match("stuff is broken, can't do it.")
     finally:
         if executor is not None:
             executor.close()
@@ -285,7 +289,7 @@ class FailEventuallyUDF(UDF):
     def process_partition(self, partition):
         if random.random() > 0.50:
             time.sleep(0.1)
-        raise Exception("stuff happens")
+        raise CustomException("stuff happens")
 
 
 def test_failure_with_delay(pipelined_ex):
@@ -293,9 +297,9 @@ def test_failure_with_delay(pipelined_ex):
     udf = FailEventuallyUDF()
     data = np.random.randn(1, 32, 16, 16)
     ds = ctx.load("memory", data=data, num_partitions=32)
-    with pytest.raises(RuntimeError) as e:
+    with pytest.raises(CustomException) as e:
         ctx.run_udf(dataset=ds, udf=udf)
-    assert e.match("failed to run tasks: stuff happens")
+    assert e.match("stuff happens")
 
 
 class SucceedEventuallyUDF(UDF):

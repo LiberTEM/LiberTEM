@@ -117,12 +117,6 @@ class WorkerPool:
         return all(qp.process.is_alive() for qp in self._workers)
 
     def close_resp_queue(self):
-        while True:
-            try:
-                with self._response_q.get(block=False):
-                    continue
-            except WorkerQueueEmpty:
-                break
         self._response_q.close()
 
     def get_worker_queues(self, worker_idx: int) -> WorkerQueues:
@@ -321,7 +315,7 @@ def worker_loop(
                 with attach_to_parent(header["span_context"]):
                     with tracer.start_as_current_span("SHUTDOWN") as span:
                         queues.request.close()
-                        queues.response.close()
+                        queues.response.close(drain=False)
                     break
             elif header_type == "WARMUP":
                 with attach_to_parent(header["span_context"]):
@@ -436,7 +430,7 @@ def pipelined_worker(
         })
         # drain, close and join queues:
         queues.request.close()
-        queues.response.close()
+        queues.response.close(drain=False)
         sys.exit(1)
 
 

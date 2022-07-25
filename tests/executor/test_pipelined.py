@@ -327,29 +327,46 @@ def test_make_spec_multi_cuda():
             "name": "cpu-0",
             "device_kind": "CPU",
             "worker_idx": 0,
+            "has_cupy": False,
         },
         {
             "device_id": 0,
             "name": "cuda-0-0",
             "device_kind": "CUDA",
             "worker_idx": 1,
+            "has_cupy": False,
         },
         {
             "device_id": 1,
             "name": "cuda-1-0",
             "device_kind": "CUDA",
             "worker_idx": 2,
+            "has_cupy": False,
         },
         {
             "device_id": 2,
             "name": "cuda-2-0",
             "device_kind": "CUDA",
             "worker_idx": 3,
+            "has_cupy": False,
         },
         {
             "device_id": 2,
             "name": "cuda-2-1",
             "device_kind": "CUDA",
             "worker_idx": 4,
+            "has_cupy": False,
         },
     ]
+
+
+def test_close_with_scatter():
+    # make sure `.make_local` works:
+    executor = None
+    try:
+        executor = PipelinedExecutor.make_local()
+        with executor.scatter("huh"):
+            executor.close()
+    finally:
+        if executor is not None:
+            executor.close()

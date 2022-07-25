@@ -1,5 +1,5 @@
 hdbscan>=0.8.28
-sphinx>=3.5.1
+sphinx>=5,<5.1
 sphinx-autobuild
 sphinxcontrib-bibtex>=2
 # https://github.com/sloria/sphinx-issues/issues/125

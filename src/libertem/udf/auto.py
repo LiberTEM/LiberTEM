@@ -32,7 +32,7 @@ class AutoUDF(UDF):
         '''
         Auto-generate result buffers based on the return value of f() called with a mock frame.
         '''
-        mock_frame = np.ones(tuple(self.meta.dataset_shape.sig), dtype=self.meta.dataset_dtype)
+        mock_frame = np.ones(tuple(self.meta.dataset_shape.sig), dtype=self.meta.input_dtype)
         result = np.array(self.params.f(mock_frame))
 
         try:

@@ -168,7 +168,10 @@ setup(
         'tblib',
     ],
     extras_require={
-        'torch': 'torch',
+        # NumPy interfacing issue on Win 11, Python 3.10
+        # Likely caused by other packages constraining NumPy version to <1.23
+        # FIXME recheck later again
+        'torch': 'torch<1.12',
         'hdbscan': 'hdbscan',
         'cupy': 'cupy',
         'bqplot': ['bqplot', 'bqplot-image-gl', 'ipython'],

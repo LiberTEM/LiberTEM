@@ -731,7 +731,7 @@ class Context:
 
         Examples
         --------
-        Run the `SumUDF` on a data set:
+        Run the :class:`~libertem.udf.sum.SumUDF` on a data set:
 
         >>> from libertem.udf.sum import SumUDF
         >>> result = ctx.run_udf(dataset=dataset, udf=SumUDF())
@@ -847,7 +847,7 @@ class Context:
 
         Examples
         --------
-        Run the `SumUDF` on a data set:
+        Run the :class:`~libertem.udf.sum.SumUDF` on a data set:
 
         >>> from libertem.udf.sum import SumUDF
         >>> for result in ctx.run_udf_iter(dataset=dataset, udf=SumUDF()):

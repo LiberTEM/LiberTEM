@@ -73,7 +73,7 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
-        run a callable `fn` on an arbitrary worker node
+        run a callable :code:`fn` on an arbitrary worker node
         """
         fn_with_args = functools.partial(self._wrapped.run_function, fn, *args, **kwargs)
         return await sync_to_async(fn_with_args, self._pool)
@@ -86,7 +86,7 @@ class AsyncAdapter(AsyncJobExecutor):
 
     async def map(self, fn, iterable):
         """
-        Run a callable `fn` for each item in iterable, on arbitrary worker nodes
+        Run a callable :code:`fn` for each item in iterable, on arbitrary worker nodes
 
         Parameters
         ----------

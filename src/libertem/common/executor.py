@@ -120,7 +120,7 @@ class JobExecutor:
     '''
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
-        run a callable `fn` on any worker
+        run a callable :code:`fn` on any worker
         """
         raise NotImplementedError()
 
@@ -157,7 +157,7 @@ class JobExecutor:
         tasks
             The tasks to be run
         params_handle : [type]
-            A handle for the task parameters, as returned from :meth:`JobExecutor.scatter`
+            A handle for the task parameters, as returned from :meth:`scatter`
         cancel_id
             An identifier which can be used for cancelling all tasks together. The
             same identifier should be passed to :meth:`AsyncJobExecutor.cancel`
@@ -187,7 +187,7 @@ class JobExecutor:
 
     def map(self, fn: Callable[[V], T], iterable: Iterable[V]) -> Iterable[T]:
         """
-        Run a callable `fn` for each element in `iterable`, on arbitrary worker nodes.
+        Run a callable :code:`fn` for each element in :code:`iterable`, on arbitrary worker nodes.
 
         Parameters
         ----------
@@ -202,8 +202,8 @@ class JobExecutor:
 
     def run_each_host(self, fn, *args, **kwargs):
         """
-        Run a callable `fn` once on each host, gathering all results into a dict host -> result
-
+        Run a callable :code:`fn` once on each host, gathering all results into
+        a dict host -> result
 
         Parameters
         ----------
@@ -269,14 +269,18 @@ class JobExecutor:
 
     def ensure_sync(self):
         """
-        Returns a synchronous executor, incase of a `JobExecutor` we just
-        return `self; in case of `AsyncJobExecutor` below more work is needed!
+        Returns a synchronous executor. In case of a
+        :class:`~libertem.common.executor.JobExecutor` we just return
+        :code:`self`; in case of
+        :class:`~libertem.common.executor.AsyncJobExecutor` below more work is
+        needed!
         """
         return self
 
     def ensure_async(self, pool=None):
         """
-        Returns an asynchronous executor; by default just wrap into `AsyncAdapter`.
+        Returns an asynchronous executor; by default just wrap into
+        :class:`~libertem.executor.base.AsyncAdapter`.
         """
         raise NotImplementedError()
 
@@ -304,7 +308,7 @@ class AsyncJobExecutor:
 
     async def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
-        Run a callable `fn` on any worker
+        Run a callable :code:`fn` on any worker
         """
         raise NotImplementedError()
 
@@ -313,7 +317,7 @@ class AsyncJobExecutor:
 
     async def map(self, fn, iterable):
         """
-        Run a callable `fn` for each item in iterable, on arbitrary worker nodes
+        Run a callable :code:`fn` for each item in :code:`iterable`, on arbitrary worker nodes
 
         Parameters
         ----------
@@ -387,6 +391,9 @@ class WorkerQueueEmpty(Exception):
 
 
 class WorkerQueue:
+    '''
+    Interface for queues to send input data to workers.
+    '''
     @contextmanager
     def get(
         self,
@@ -396,27 +403,30 @@ class WorkerQueue:
         raise NotImplementedError()
 
     def put(self, header: Any, payload: Optional[memoryview] = None):
+        '''
+        Put header and payload into the queue.
+        '''
         raise NotImplementedError()
 
     @contextmanager
     def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
         """
-        Put data into the queue, without an additional copy.
-        This will yield a writable `memoryview`, instead of requiring that
-        the data to be sent is already available as a `memoryview` and
-        copying into its final destination, as is the case in `put`.
+        Put data into the queue, without an additional copy. This will yield a
+        writable :class:`python:memoryview`, instead of requiring that the data
+        to be sent is already available as a :class:`python:memoryview` and
+        copying into its final destination, as is the case in :meth:`put`.
 
-        This can be useful, for example, if you need to perform any kind
-        of operation that writes into a buffer. For example:
+        This can be useful, for example, if you need to perform any kind of
+        operation that writes into a buffer. For example:
 
         >>> q = SomeWorkerQueueImpl()  # doctest: +SKIP
         >>> with q.put_nocopy(1024) as send_buf:  # doctest: +SKIP
         ...     # NOTE: in reality, need to handle n_bytes < 1024
         ...     n_bytes = some_socket.recvinto(send_buf)
 
-        If the data you receive is already in a shared memory segment,
-        you can send the handle as part of the `header` and use the normal `put`
-        method instead.
+        If the data you receive is already in a shared memory segment, you can
+        send the handle as part of the :code:`header` and use the normal
+        :meth:`put` method instead.
 
         Note: for releasing memory, it might be necessary to implement another
         queue that synchronizes the release process.
@@ -437,7 +447,8 @@ class WorkerQueue:
 
 class SimpleWorkerQueue(WorkerQueue):
     """
-    A :code:`WorkerQueue` that uses a threading :code:`Queue` under the hood.
+    A :class:`WorkerQueue` that uses a threading :class:`python:queue.Queue`
+    under the hood.
     """
     def __init__(self) -> None:
         self.q: queue.Queue = queue.Queue()
@@ -465,7 +476,7 @@ class SimpleWorkerQueue(WorkerQueue):
 
 class SimpleMPWorkerQueue(WorkerQueue):
     """
-    A :code:`WorkerQueue` that uses a :code:`mp.Queue` under the hood.
+    A :class:`WorkerQueue` that uses a :class:`python:multiprocessing.Queue` under the hood.
     """
     def __init__(self) -> None:
         self._mp_ctx = mp.get_context("spawn")
@@ -506,7 +517,7 @@ class SimpleMPWorkerQueue(WorkerQueue):
 
 class WorkerContext:
     """
-    A :code:`WorkerContext` is used to manage streaming communication between
+    A :class:`WorkerContext` is used to manage streaming communication between
     the main process and the workers.
     """
     def get_worker_queue(self) -> WorkerQueue:
@@ -524,7 +535,7 @@ class TaskCommHandler:
         using the provided :code:`queue`. This function should
         block until the communication for the given task has finished.
         It may be run in a background thread on the main node,
-        or synchronously, depending on the :code:`JobExecutor`.
+        or synchronously, depending on the :class:`JobExecutor`.
 
         Parameters
         ----------
@@ -559,7 +570,7 @@ class TaskCommHandler:
 
 class NoopCommHandler(TaskCommHandler):
     """
-    A `TaskCommHandler` that doesn't perform any action, and doesn't
+    A :class:`TaskCommHandler` that doesn't perform any action, and doesn't
     stream any data.
     """
     def handle_task(self, task: TaskProtocol, queue: WorkerQueue):

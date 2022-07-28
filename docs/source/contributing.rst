@@ -233,7 +233,7 @@ Code coverage
 ~~~~~~~~~~~~~
 
 After running the tests, you can inspect the test coverage by opening
-`htmlcov/index.html` in a web browser. When creating a pull request, the change
+:code:`htmlcov/index.html` in a web browser. When creating a pull request, the change
 in coverage is also reported by the codecov bot. Ideally, the test coverage
 should go up with each pull request, at least it should stay the same.
 

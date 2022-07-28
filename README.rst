@@ -157,6 +157,7 @@ documentation
 information!
 
 - Raw binary files
+- NumPy .npy binary files
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files
 - `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_
 - Nanomegas .blo block files
@@ -174,7 +175,7 @@ Detectors (experimental)
 ------------------------
 
 Currently the Quantum Detectors Merlin camera is supported for live processing.
-Support for the Gatan K2 IS camera is in a prototype state. Please
+Support for DECTRIS cameras and the Gatan K2 IS camera are in a prototype state. Please
 `contact us <https://gitter.im/LiberTEM/Lobby>`_ if you are interested in this
 feature! See https://github.com/LiberTEM/LiberTEM-live for more details on live
 processing.

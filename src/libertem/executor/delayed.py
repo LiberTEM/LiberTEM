@@ -210,7 +210,7 @@ class DelayedJobExecutor(BaseJobExecutor):
         of results, then unpacks the Delayed return value into
         the normal
 
-            tuple(udf.results for udf in self._udfs)
+            :code:`tuple(udf.results for udf in self._udfs)`
 
         where the buffers inside udf.results are dask arrays instead
         of normal np.arrays
@@ -219,7 +219,7 @@ class DelayedJobExecutor(BaseJobExecutor):
         that the results structure can be inferred. This reference is
         found in self._udfs, which is set with the method:
 
-            executor.register_master_udfs(udfs)
+            :code:`executor.register_master_udfs(udfs)`
 
         called from :meth:`DelayedUDFRunner.results_for_dataset_sync`
         """

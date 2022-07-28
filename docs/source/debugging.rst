@@ -62,10 +62,9 @@ instruct LiberTEM to use simple single-threaded execution using the
 
 .. testcode::
 
-   from libertem.executor.inline import InlineJobExecutor
    from libertem import api as lt
 
-   ctx = lt.Context(executor=InlineJobExecutor())
+   ctx = lt.Context.make_with('inline')
 
    ctx.run_udf(dataset=dataset, udf=udf)
 
@@ -87,12 +86,11 @@ calling :meth:`libertem.common.backend.set_use_cuda` with the device ID to use.
 
 .. testcode::
 
-   from libertem.executor.inline import InlineJobExecutor
    from libertem import api as lt
    from libertem.utils.devices import detect
    from libertem.common.backend import set_use_cpu, set_use_cuda
 
-   ctx = lt.Context(executor=InlineJobExecutor())
+   ctx = lt.Context.make_with('inline')
 
    d = detect()
    if d['cudas'] and d['has_cupy']:
@@ -111,7 +109,7 @@ Debugging failing test cases
 When a test case fails, there are some options to find the root cause:
 
 The :code:`--pdb` command line switch of pytest can be used to automatically
-drop you into a PDB prompt in the failing test case, where you will either land
+drop you into a :mod:`python:pdb` prompt in the failing test case, where you will either land
 on the failing :code:`assert` statement, or the place in the code where an
 exception was raised.
 
@@ -203,22 +201,14 @@ The same works for bringing up :code:`libertem-worker` processes:
 Be sure to change the endpoint URL to whatever is the correct one from the
 perspective of the worker process in the distributed case.
 
-For enabling tracing across multiple Python processes, possibly on multiple
-nodes, set the environment variables for each of these processes, and also call
-the :func:`~libertem.common.tracing.maybe_setup_tracing` function on each.
-If these are workers managed by an executor, you can use the :code:`run_each_worker`
-method to accomplish this:
-
-.. code:: python
-
-    from libertem.common.tracing import maybe_setup_tracing
-    from libertem.api import Context
-    ctx = Context()
-    ctx.executor.run_each_worker(maybe_setup_tracing, service_name="libertem-worker")
-
-Support for setting up tracing on workers automatically is already integrated
-in the dask and pipelined executors. The inline executor doesn't need any
+Support for setting up tracing on workers is already integrated
+in the Dask and pipelined executors. The inline executor doesn't need any
 additional setup for tracing to work.
+
+For enabling tracing across multiple Python processes in other scenarios,
+possibly on multiple nodes, set the environment variables for each of these
+processes, and also call the
+:func:`~libertem.common.tracing.maybe_setup_tracing` function on each.
 
 On Windows
 ~~~~~~~~~~

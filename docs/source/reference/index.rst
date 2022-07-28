@@ -15,8 +15,6 @@ Python API reference
    sparse
    internals
    dask
-   cluster-ds
-   caching
    corrections
    viz
 

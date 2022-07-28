@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.10.0.dev0
+0.11.0.dev0
 ###########
 
 .. toctree::
@@ -19,8 +19,63 @@ Changelog
 
   changelog/*/*
 
-.. _`v0-9-2`:
 .. _latest:
+.. _`v0-10-0`:
+
+0.10.0 / in preparation
+#######################
+
+This release features the :ref:`pipelined` for parallel live data processing (:pr:`1267`).
+This change greatly improves the processing performance for live data, in
+particular to support detectors with high data rate. Many thanks to Alexander
+Clausen and Matthew Bryan for their work! The corresponding capabilities in the
+`LiberTEM-live <https://github.com/LiberTEM/LiberTEM-live/>`_ package will be
+released soon and announced separately.
+
+Other changes:
+
+New features
+------------
+
+* Support for Python 3.10
+* :ref:`npy format` for reading NumPy .npy files (:issue:`222`, :pr:`1249`).
+* Support for updated EMPAD XML format, including series (:issue:`1259`,
+  :pr:`1260`).
+* Integrate :ref:`tracing` that allows to debug and trace distribted operation
+  of LiberTEM (:issue:`691`, :pr:`1266`).
+* :code:`libertem-server` picks a free port if the default is in use and no port
+  was specified (:pr:`1184`).
+* :func:`~libertem.executor.dask.cluster_spec` now accepts the same CUDA device
+  ID multiple times to spawn multiple workers on the same GPU. This can help
+  increase GPU resource utilisation for some workloads (:pr:`1270`).
+
+Bugfixes
+--------
+
+* Correct type determination in :class:`~libertem.udf.auto.AutoUDF`
+  (:pr:`1298`).
+* Fix non-square plots (:pr:`1255`).
+* Disable the Dask profiler due to `issues with the DM dataset
+  <https://github.com/dask/distributed/issues/6776>`_ (:pr:`1289`).
+* Fix GUI glitch in center of mass analysis (:pr:`1278`).
+
+Documentation
+-------------
+
+* Example on :ref:`binning <binning>` (:pr:`1250`).
+
+Miscellaneous
+-------------
+
+* Include tests in PyPi release to prepare release on conda-forge, and exclude
+  unneeded files. (:issue:`1271,1275`, :pr:`1276`).
+* Move some code around to make sure that :mod:`libertem.io` and
+  :mod:`libertem.common` only depend on code that is compatible with the MIT
+  license. Moved items are re-imported at the same positions as before to keep
+  backwards compatibility (:issue:`1031`, :pr:`1245`).
+
+
+.. _`v0-9-2`:
 
 0.9.2 / 2022-04-28
 ##################

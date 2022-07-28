@@ -30,7 +30,7 @@ Raw binary files
 
 .. _`npy format`:
 
-Numpy files (NPY)
+NumPy files (NPY)
 ~~~~~~~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.npy.NPYDataSet

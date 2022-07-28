@@ -122,6 +122,8 @@ You can sprinkle the code with `log.debug(...)` calls that output the relevant
 variables. In some cases you may also leave the logging statements in the code
 even after the problem is fixed, depending on the overhead.
 
+.. _`tracing`:
+
 Tracing using opentelemetry
 ---------------------------
 

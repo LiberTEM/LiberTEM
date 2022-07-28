@@ -318,12 +318,17 @@ def upload_to_github(verbose, files, token, release):
             "draft": False,
             "prerelease": True,
         })
-        # first, delete existing continuous tag and release:
+        # first, delete existing continuous tag and release(s):
         try:
-            cont_release = repo.get_release("continuous")
-            cont_release.delete_release()
-            if verbose:
-                print("deleted existing continuous release")
+            continuous_releases = [
+                r
+                for r in repo.get_releases()
+                if r.tag_name == "continuous"
+            ]
+            for cont_release in continuous_releases:
+                cont_release.delete_release()
+                if verbose:
+                    print("deleted existing continuous release")
         except UnknownObjectException:
             pass
         try:

@@ -497,7 +497,7 @@ def _make_spec(
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
 ) -> List[WorkerSpec]:
     """
-    Takes the output of `libertem.utils.devices.detect`
+    Takes the output of :func:`libertem.utils.devices.detect`
     and makes a plan for starting workers on them.
 
     Parameters
@@ -506,8 +506,8 @@ def _make_spec(
     cpus
         Iterable of integer CPU identifiers. If pinning is enabled, each
         worker processe is pinned to one of these identifiers, as accepted
-        by :code:`os.sched_setaffinity`. Pinning is currently only supported on
-        platforms that implement :code:`os.sched_setaffinity`.
+        by :func:`python:os.sched_setaffinity`. Pinning is currently only supported on
+        platforms that implement :func:`python:os.sched_setaffinity`.
 
     cudas
         Interable of CUDA device identifiers for which workers should be started.
@@ -515,7 +515,7 @@ def _make_spec(
         result in better device utilization.
 
     has_cupy
-        Currently ignored, for compatibility with :code:`libertem.utils.devices.detect`
+        Currently ignored, for compatibility with :func:`libertem.utils.devices.detect`
     """
     spec = []
     worker_idx = 0
@@ -560,11 +560,11 @@ class PipelinedExecutor(BaseJobExecutor):
     ----------
     spec
         Specification for the worker processes - can be generated
-        by `PipelinedExecutor.make_spec`.
+        by :meth:`make_spec`.
 
     pin_workers
-        Pin each CPU worker to a specific CPU, as defined by `os.sched_setaffinity`.
-        Only works on OSes that implement `os.sched_setaffinity`.
+        Pin each CPU worker to a specific CPU, as defined by :func:`python:os.sched_setaffinity`.
+        Only works on OSes that implement :func:`python:os.sched_setaffinity`.
 
     startup_timeout
         Startup of the executor is cancelled if it doesn't finish within
@@ -572,7 +572,7 @@ class PipelinedExecutor(BaseJobExecutor):
         In seconds.
 
     cleanup_timeout
-        When cleaning up using :meth:`PipelinedExecutor.close`, give up after
+        When cleaning up using :meth:`close`, give up after
         this limit. In seconds.
 
     early_setup
@@ -581,8 +581,8 @@ class PipelinedExecutor(BaseJobExecutor):
 
     Note
     ----
-    This executor is not thread-safe - concurrent calls into `run_tasks` or
-    `run_function` are not supported.
+    This executor is not thread-safe - concurrent calls into :meth:`run_tasks` or
+    :meth:`run_function` are not supported.
     """
     def __init__(
         self,

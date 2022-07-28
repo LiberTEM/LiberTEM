@@ -93,7 +93,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
 
     def run_function(self, fn, *args, **kwargs):
         """
-        run a callable `fn` on any worker
+        run a callable :code:`fn` on any worker
         """
         fn_with_args = functools.partial(fn, *args, **kwargs)
         future = self.client.submit(fn_with_args)
@@ -101,7 +101,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
 
     def map(self, fn, iterable):
         """
-        Run a callable `fn` for each element in `iterable`, on arbitrary worker nodes.
+        Run a callable :code:`fn` for each element in :code:`iterable`, on arbitrary worker nodes.
 
         Parameters
         ----------
@@ -133,7 +133,8 @@ class ConcurrentJobExecutor(BaseJobExecutor):
 
     def run_each_host(self, fn, *args, **kwargs):
         """
-        Run a callable `fn` once on each host, gathering all results into a dict host -> result
+        Run a callable :code:`fn` once on each host, gathering all results into
+        a dict host -> result
         """
         # TODO: any cancellation/errors to handle?
         future = self.client.submit(fn, *args, **kwargs)

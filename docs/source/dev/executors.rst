@@ -20,7 +20,7 @@ Base classes
 ................
 
 .. automodule:: libertem.common.executor
-    :members:
+    :members: JobExecutor, AsyncJobExecutor
 
 .. _`dask executor`:
 

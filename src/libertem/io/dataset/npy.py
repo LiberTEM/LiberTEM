@@ -214,7 +214,7 @@ class NPYDataSet(DataSet):
     """
     .. versionadded:: 0.10.0
 
-    Read data stored in a numpy .npy binary file. Dataset shape
+    Read data stored in a NumPy .npy binary file. Dataset shape
     and dtype are inferred from the file header unless overridden
     by the arguments to this class.
 

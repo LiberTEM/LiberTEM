@@ -3,6 +3,8 @@
 Visualization
 -------------
 
+See :ref:`plotting` for user documentation!
+
 Matplotlib
 ~~~~~~~~~~
 

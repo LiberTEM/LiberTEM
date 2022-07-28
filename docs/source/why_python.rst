@@ -17,7 +17,7 @@ Isn't Python slow?
 
 Yes, it can be slow, but we mostly use Python for setting up the computation, creating buffers,
 setting parameters, etc. We use it as a glue language for native parts
-(libhdfs3, numpy/OpenBLAS, ...) or use `Numba <https://numba.pydata.org/>`_ for critical
+(NumPy/OpenBLAS, ...) or use `Numba <https://numba.pydata.org/>`_ for critical
 code sections.
 
 See for example this profile, visualized as a flamegraph:
@@ -27,14 +27,14 @@ See for example this profile, visualized as a flamegraph:
 The workload is similar to what LiberTEM will later do: it reads files from HDFS
 and does matrix multiplication on the data.
 
-Most of the time is spent reading the file (block on the left: `sys_read`) or
-actually performing the matrix multiplication (center block: anything containing `dgemm`).
+Most of the time is spent reading the file (block on the left: :code:`sys_read`) or
+actually performing the matrix multiplication (center block: anything containing :code:`dgemm`).
 The Python parts are mostly in the narrow (= little time) but high (= deep call stacks)
 pillar on the right. The dask scheduler is also visible in the profile, but takes up
 less than 2% of the total samples.
 
-Note the `swapper` part on the right: this was a full-system profile, so unrelated
-things like `swapper` or `intel_idle` are also included. 
+Note the :code:`swapper` part on the right: this was a full-system profile, so unrelated
+things like :code:`swapper` or :code:`intel_idle` are also included.
 
 
 But what about (multicore) scaling?

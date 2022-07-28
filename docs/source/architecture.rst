@@ -5,26 +5,21 @@ Architecture
 
 .. image:: ./images/architecture.svg
 
-LiberTEM currently focuses on pixelated STEM and scanning electron beam
-diffraction data processing, both interactive and offline. The processing
-back-end supports any n-dimensional binary data. As concrete supported
-operations, we started with everything that can be expressed as the application
-of one or more masks and summation, i.e. virtual detector, center of mass etc.
-These operations are embarrassingly parallel and can be scaled to a distributed
-system very well. Furthermore, we support :ref:`user-defined functions` that
-process well-defined subsets of a dataset following a simplified `MapReduce
-programming model <https://en.wikipedia.org/wiki/MapReduce>`_.
+The LiberTEM processing back-end supports any n-dimensional binary data. We
+implement :ref:`user-defined functions` that process well-defined subsets of a
+dataset following a simplified `MapReduce programming model
+<https://en.wikipedia.org/wiki/MapReduce>`_. Many operations can be implemented
+to be embarrassingly parallel using this interface, and consequently they can be
+scaled to a distributed system or performed on live data streams very well.
 
 For our task, data locality is one of the most important factors for achieving
 good performance and scalability. With a traditional distributed storage
 solution (like Lustre or NFS), the network will quickly become the bottleneck.
 
-LiberTEM is distributing the data to the local storage of each compute node. One
-possible implementation is using the `Hadoop filesystem (HDFS)`_, although we
-are `working on a transparent caching layer
-<https://github.com/LiberTEM/LiberTEM/issues/136>`_ as an alternative. The
-general idea is to split the dataset into (usually disjoint) partitions, which
-are assigned to worker nodes.
+LiberTEM reads data locally on each each compute node. The dataset is split into
+disjoint partitions, which are associated to worker nodes. LiberTEM supports
+storage schemes where different nodes hold different parts of a dataset in fast
+local storage, such as the `Hadoop filesystem (HDFS)`_.
 
 The execution is structured into Tasks and Jobs. A Job represents the
 computation on a whole dataset, and is divided into Tasks for each partition.
@@ -38,14 +33,6 @@ can assure that computation on a partition of the dataset is scheduled on the
 node(s) that hold the partition on their local storage.
 
 .. _Hadoop filesystem (HDFS): https://hadoop.apache.org/docs/r3.1.0/
-
-
-For ingesting data into the cluster, a `caching layer
-<https://github.com/LiberTEM/LiberTEM/issues/136>`_ (WIP) will transparently
-read a dataset from a primary source (via a shared network file system, HTTP,
-...) and stores it on fast local storage in a format that is best suited for
-efficient processing. The cached data can also be pre-processed, for example for
-offset correction or applying a gain map.
 
 An important part of the architecture is the API server. Through the API server,
 the client gets access to the resources of the cluster, by running analyses. It

@@ -51,7 +51,6 @@ Documentation
    architecture
    dev/how-io-works
    dev/executors
-   gsoc
    authorship
 
 Indices and tables

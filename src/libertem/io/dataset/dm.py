@@ -92,7 +92,7 @@ class DMDataSet(DataSet):
 
     Note
     ----
-    You can use the PyPi package `natsort <https://pypi.org/project/natsort/>`_
+    You can use the PyPI package `natsort <https://pypi.org/project/natsort/>`_
     to sort the filenames by their numerical components, this is especially useful
     for filenames without leading zeros.
 

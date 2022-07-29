@@ -317,3 +317,63 @@ def test_from_shape():
         origin=(0, 0, 0),
         shape=Shape((1, 16, 16), sig_dims=2),
     )
+
+
+def test_shift_offset_consistency():
+    offset1 = (0, -3, 5)
+    offset2 = (1, 7, -19)
+    total_offset = tuple(o1 + o2 for (o1, o2) in zip(offset1, offset2))
+    s1 = Slice.from_shape(
+        (1, 16, 16),
+        sig_dims=2
+    )
+    s2 = s1.shift_to(offset1)
+    s3 = s2.shift_by(offset2)
+    assert s1.offset(s3) == total_offset
+
+
+def test_intersection_pair_1():
+    s1 = Slice.from_shape(
+        (1, 16, 16),
+        sig_dims=2
+    )
+    s2 = Slice.from_shape(
+        (1, 16, 16),
+        sig_dims=2
+    )
+    left, right = s1.intersection_pair(s2)
+    assert s1 == s2
+    assert left == s1
+    assert right == s1
+
+
+def test_intersection_pair_2():
+    s1 = Slice.from_shape(
+        (2, 16, 16),
+        sig_dims=2
+    )
+    s2 = Slice.from_shape(
+        (2, 16, 16),
+        sig_dims=2
+    ).shift_by((1, 2, 3))
+    left, right = s1.intersection_pair(s2)
+    assert left.origin == (1, 2, 3)
+    assert right.origin == (0, 0, 0)
+    assert left.shape == right.shape
+    assert left.shape == Shape((1, 14, 13), sig_dims=s1.shape.sig.dims)
+
+
+def test_intersection_pair_3():
+    s1 = Slice.from_shape(
+        (2, 16, 16),
+        sig_dims=2
+    )
+    s2 = Slice.from_shape(
+        (2, 16, 16),
+        sig_dims=2
+    ).shift_by((1, -2, 3))
+    left, right = s1.intersection_pair(s2)
+    assert left.origin == (1, 0, 3)
+    assert right.origin == (0, 2, 0)
+    assert left.shape == right.shape
+    assert left.shape == Shape((1, 14, 13), sig_dims=s1.shape.sig.dims)

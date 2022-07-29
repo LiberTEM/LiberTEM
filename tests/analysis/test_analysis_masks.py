@@ -11,7 +11,7 @@ from utils import _naive_mask_apply, _mk_random, set_device_class
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.udf.masks import ApplyMasksUDF
+from libertem.udf.masks import ApplyMasksUDF, ApplyShiftedMasksUDF
 from libertem.udf import UDF, UDFMeta
 
 
@@ -974,3 +974,151 @@ def test_numerics_succeed(lt_ctx):
 
     assert np.allclose(expected, naive)
     assert np.allclose(expected[0], results.mask_0.raw_data)
+
+
+@pytest.mark.parametrize(
+    'kwargs', (
+        {},
+        {'use_sparse': True},
+        {'use_sparse': False},
+        {'use_sparse': 'sparse.pydata'},
+        {'use_torch': True},
+    )
+)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_shifted_masks_udf_0(lt_ctx, kwargs, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+        if kwargs.get('use_sparse'):
+            pytest.skip("not implemented yet on CuPy")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        mask0 = _mk_random(size=(16, 16))
+        mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+        mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+        # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
+        # different from ApplyMasksJob
+        expected = np.moveaxis(_naive_mask_apply([mask0, mask1, mask2], data), (0, 1), (2, 0))
+
+        dataset = MemoryDataSet(data=data, num_partitions=2)
+        udf = ApplyShiftedMasksUDF(
+            mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
+            **kwargs
+        )
+        results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+
+        assert np.allclose(results['intensity'].data, expected)
+        assert np.allclose(results['residual'].data, 0)
+    finally:
+        set_use_cpu(0)
+
+
+@pytest.mark.parametrize(
+    'kwargs', (
+        {},
+        {'use_sparse': True},
+        {'use_sparse': False},
+        {'use_sparse': 'sparse.pydata'},
+        {'use_torch': True},
+    )
+)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_shifted_masks_udf_1(lt_ctx, kwargs, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+        if kwargs.get('use_sparse'):
+            pytest.skip("not implemented yet on CuPy")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        mask0 = _mk_random(size=(16, 16))
+        mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+        mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+        # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
+        # different from ApplyMasksJob
+        expected = np.moveaxis(_naive_mask_apply(
+            [mask0[0:15, 2:16], mask1[0:15, 2:16], mask2[0:15, 2:16]],
+            data[..., 1:16, 0:14]
+        ), (0, 1), (2, 0))
+
+        dataset = MemoryDataSet(data=data, num_partitions=2)
+        udf = ApplyShiftedMasksUDF(
+            mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
+            shifts=(1.1, -1.7),
+            **kwargs
+        )
+        results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+
+        assert np.allclose(results['intensity'].data, expected)
+        assert np.allclose(results['residual'].data, (0.1, 0.3))
+    finally:
+        set_use_cpu(0)
+
+
+@pytest.mark.parametrize(
+    'kwargs', (
+        {},
+        {'use_sparse': True},
+        {'use_sparse': False},
+        {'use_sparse': 'sparse.pydata'},
+        {'use_torch': True},
+    )
+)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_shifted_masks_udf_2(lt_ctx, kwargs, backend):
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+        if kwargs.get('use_sparse'):
+            pytest.skip("not implemented yet on CuPy")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(2, 16, 16), dtype="<u2")
+        mask0 = _mk_random(size=(16, 16))
+        mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
+        mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+        # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
+        # different from ApplyMasksJob
+        expected = np.empty((2, 3))
+        expected[0, 0] = (mask0[0:15, 2:16] * data[0, 1:16, 0:14]).sum(axis=(-1, -2))
+        expected[0, 1] = (mask1[0:15, 2:16].toarray() * data[0, 1:16, 0:14]).sum(axis=(-1, -2))
+        expected[0, 2] = (mask2[0:15, 2:16] * data[0, 1:16, 0:14]).sum(axis=(-1, -2))
+
+        expected[1, 0] = (mask0[2:16, 0:15] * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
+        expected[1, 1] = (mask1[2:16, 0:15].toarray() * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
+        expected[1, 2] = (mask2[2:16, 0:15] * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
+        dataset = MemoryDataSet(data=data)
+        udf = ApplyShiftedMasksUDF(
+            mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
+            shifts=ApplyShiftedMasksUDF.aux_data(
+                data=np.array([(1.1, -2.1), (-1.7, 0.9)]),
+                kind='nav',
+                extra_shape=(2, ),
+                dtype=float,
+            ),
+            **kwargs
+        )
+        results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+
+        assert np.allclose(results['intensity'].data, expected)
+        assert np.allclose(results['residual'].data, [(0.1, -0.1), (0.3, -0.1)])
+    finally:
+        set_use_cpu(0)

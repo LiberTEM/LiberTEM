@@ -103,6 +103,41 @@ class RadialFourierResultSet(AnalysisResultSet):
     pass
 
 
+def radial_mask_factory(detector_y, detector_x, cx, cy, ri, ro, n_bins, max_order, use_sparse):
+    def stack():
+        rings = masks.radial_bins(
+            centerX=cx,
+            centerY=cy,
+            imageSizeX=detector_x,
+            imageSizeY=detector_y,
+            radius=ro,
+            radius_inner=ri,
+            n_bins=n_bins,
+            use_sparse=use_sparse,
+            dtype=np.complex64
+        )
+
+        orders = np.arange(max_order + 1)
+
+        r, phi = masks.polar_map(
+            centerX=cx,
+            centerY=cy,
+            imageSizeX=detector_x,
+            imageSizeY=detector_y
+        )
+        modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
+
+        if use_sparse:
+            rings = rings.reshape((rings.shape[0], 1, *rings.shape[1:]))
+            ring_stack = [rings] * len(orders)
+            ring_stack = sparse.concatenate(ring_stack, axis=1)
+            ring_stack *= modulator
+        else:
+            ring_stack = rings[:, np.newaxis, ...] * modulator
+        return ring_stack.reshape((-1, detector_y, detector_x))
+    return stack
+
+
 class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
     '''
     The Radial Fourier Analysis can be used to characterize
@@ -243,47 +278,17 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
         (detector_y, detector_x) = self.dataset.shape.sig
         p = self.parameters
 
-        cx = p['cx']
-        cy = p['cy']
-        ri = p['ri']
-        ro = p['ro']
-        n_bins = p['n_bins']
-        max_order = p['max_order']
-
-        use_sparse = p['use_sparse']
-
-        def stack():
-            rings = masks.radial_bins(
-                centerX=cx,
-                centerY=cy,
-                imageSizeX=detector_x,
-                imageSizeY=detector_y,
-                radius=ro,
-                radius_inner=ri,
-                n_bins=n_bins,
-                use_sparse=use_sparse,
-                dtype=np.complex64
-            )
-
-            orders = np.arange(max_order + 1)
-
-            r, phi = masks.polar_map(
-                centerX=cx,
-                centerY=cy,
-                imageSizeX=detector_x,
-                imageSizeY=detector_y
-            )
-            modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
-
-            if use_sparse:
-                rings = rings.reshape((rings.shape[0], 1, *rings.shape[1:]))
-                ring_stack = [rings] * len(orders)
-                ring_stack = sparse.concatenate(ring_stack, axis=1)
-                ring_stack *= modulator
-            else:
-                ring_stack = rings[:, np.newaxis, ...] * modulator
-            return ring_stack.reshape((-1, detector_y, detector_x))
-        return stack
+        return radial_mask_factory(
+            detector_y=detector_y,
+            detector_x=detector_x,
+            cx=p['cx'],
+            cy=p['cy'],
+            ri=p['ri'],
+            ro=p['ro'],
+            n_bins=p['n_bins'],
+            max_order=p['max_order'],
+            use_sparse=p['use_sparse'],
+        )
 
     def get_parameters(self, parameters):
         (detector_y, detector_x) = self.dataset.shape.sig

@@ -22,8 +22,11 @@ Changelog
 .. _latest:
 .. _`v0-10-0`:
 
-0.10.0 / in preparation
-#######################
+0.10.0 / 2022-07-28
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6927963.svg
+   :target: https://doi.org/10.5281/zenodo.6927963
 
 This release features the :ref:`pipelined` for parallel live data processing (:pr:`1267`).
 This change greatly improves the processing performance for live data, in
@@ -37,7 +40,7 @@ Other changes:
 New features
 ------------
 
-* Support for Python 3.10
+* Support for Python 3.10.
 * :ref:`npy format` for reading NumPy .npy files (:issue:`222`, :pr:`1249`).
 * Support for updated EMPAD XML format, including series (:issue:`1259`,
   :pr:`1260`).
@@ -67,7 +70,7 @@ Documentation
 Miscellaneous
 -------------
 
-* Include tests in PyPi release to prepare release on conda-forge, and exclude
+* Include tests in PyPI release to prepare release on conda-forge, and exclude
   unneeded files. (:issue:`1271,1275`, :pr:`1276`).
 * Move some code around to make sure that :mod:`libertem.io` and
   :mod:`libertem.common` only depend on code that is compatible with the MIT

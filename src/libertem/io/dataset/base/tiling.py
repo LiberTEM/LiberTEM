@@ -311,12 +311,24 @@ class NumpyTile(DataTileMixin, np.ndarray):
         return np.asarray(self).view(np.ndarray).reshape(*args, **kwargs)
 
 
-class COOTile(DataTileMixin, sparse.COO):
+class SparseTile(DataTileMixin):
     def reshape(self, *args, **kwargs):
         # NOTE: "shedding" our DataTile class on reshape, as we can't properly update
         # the slice to keep it aligned with the reshape process.
-        cls = sparse.COO
+        cls = self.__class__.__bases__[1]
         return cls(self).reshape(*args, **kwargs)
+
+
+class COOTile(SparseTile, sparse.COO):
+    ...
+
+
+class GCXSTile(SparseTile, sparse.GCXS):
+    ...
+
+
+class DOKTile(SparseTile, sparse.DOK):
+    ...
 
 
 # FIXME other types as neede
@@ -326,8 +338,12 @@ class DataTile:
     def __new__(cls, input_array, tile_slice, scheme_idx):
         if isinstance(input_array, np.ndarray):
             obj = np.asarray(input_array).view(NumpyTile)
-        elif isinstance(input_array, sparse.SparseArray):
+        elif isinstance(input_array, sparse.COO):
             obj = COOTile(input_array)
+        elif isinstance(input_array, sparse.GCXS):
+            obj = GCXSTile(input_array)
+        elif isinstance(input_array, sparse.DOK):
+            obj = DOKTile(input_array)
         else:
             raise ValueError(f"Unknown array type {type(input_array)}.")
         obj.tile_slice = tile_slice

@@ -5,8 +5,6 @@ from numba.typed import List as NumbaList
 import numpy as np
 
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
-from .roi import _roi_to_indices
-
 
 log = logging.getLogger(__name__)
 
@@ -175,7 +173,7 @@ def make_get_read_ranges(
 
     @cached_njit(boundscheck=True, cache=True, nogil=True)
     def _get_read_ranges_inner(
-        start_at_frame, stop_before_frame, roi, depth,
+        start_at_frame, stop_before_frame, roi_nonzero, depth,
         slices_arr, fileset_arr, sig_shape,
         bpp, sync_offset=0, extra=None, frame_header_bytes=0, frame_footer_bytes=0,
     ):
@@ -183,22 +181,25 @@ def make_get_read_ranges(
         # Use NumPy prod for Numba compilation
         sig_size = np.prod(np.array(sig_shape).astype(np.int64))
 
-        if roi is None:
-            frame_indices = np.arange(max(0, start_at_frame), stop_before_frame)
-            # in case of a negative sync_offset, start_at_frame can be negative
-            if start_at_frame < 0:
-                slice_offset = abs(sync_offset)
-            else:
-                slice_offset = start_at_frame - sync_offset
+        # in case of a negative sync_offset, start_at_frame can be negative
+        if start_at_frame < 0:
+            slice_offset = abs(sync_offset)
         else:
-            frame_indices = _roi_to_indices(
-                roi, max(0, start_at_frame), stop_before_frame, sync_offset
-            )
-            # in case of a negative sync_offset, start_at_frame can be negative
-            if start_at_frame < 0:
-                slice_offset = np.count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
-            else:
-                slice_offset = np.count_nonzero(roi.reshape((-1,))[:start_at_frame - sync_offset])
+            slice_offset = start_at_frame - sync_offset
+
+        if roi_nonzero is None:
+            frame_indices = np.arange(max(0, start_at_frame), stop_before_frame)
+        else:
+            _start_original = max(0, start_at_frame)
+            _start = _start_original - sync_offset
+            _stop = stop_before_frame - sync_offset
+
+            nonzero_mask = np.logical_and(roi_nonzero >= _start, roi_nonzero < _stop)
+            frame_indices = roi_nonzero[nonzero_mask]
+
+            # Correct the slice_offset for skipped frames
+            slice_offset = np.count_nonzero(roi_nonzero < slice_offset)
+            slice_offset = max(slice_offset, 0)
 
         num_indices = frame_indices.shape[0]
 

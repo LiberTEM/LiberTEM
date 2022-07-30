@@ -3,7 +3,7 @@ from typing import Any, Dict, Generator, Optional, Sequence, Tuple, overload
 
 import numpy as np
 
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.common.shape import Shape, ShapeLike
 
 
@@ -359,8 +359,8 @@ class Slice:
         # We need to find how many 1s there are for all previous partitions, to know
         # the origin; then we count how many 1s there are in our partition
         # to find our shape.
-        origin = np.count_nonzero(roi[:s_o])
-        shape = np.count_nonzero(roi[s_o:s_o + s_s])
+        origin = count_nonzero(roi[:s_o])
+        shape = count_nonzero(roi[s_o:s_o + s_s])
         sig_dims = self.shape.sig.dims
         return Slice(
             origin=(origin,) + self.origin[-sig_dims:],

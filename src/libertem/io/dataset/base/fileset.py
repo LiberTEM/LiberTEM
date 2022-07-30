@@ -85,7 +85,9 @@ class FileSet:
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
-        roi_nonzero = flat_nonzero(roi).astype(np.int64)
+        roi_nonzero = None
+        if roi is not None:
+            roi_nonzero = flat_nonzero(roi).astype(np.int64)
         return default_get_read_ranges(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,

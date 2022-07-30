@@ -8,9 +8,8 @@ import collections
 
 import numpy as np
 
-from libertem.common.math import prod, count_nonzero
+from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.slice import Slice
-from libertem.common.sparse import to_dense
 from .backend import get_use_cuda
 
 if TYPE_CHECKING:
@@ -322,7 +321,7 @@ class BufferWrapper:
             # 'O' (object): None
             fill = None
         wrapper = np.full(shape, fill, dtype=self._dtype)
-        wrapper[to_dense(self._roi.reshape(self._ds_shape.nav))] = self._data
+        wrapper[flat_nonzero(self._roi)] = self._data
         return wrapper
 
     @property

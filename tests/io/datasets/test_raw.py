@@ -7,6 +7,7 @@ import random
 import numpy as np
 import pytest
 import warnings
+import sparse
 
 from libertem.udf.sum import SumUDF
 from libertem.udf.raw import PickUDF
@@ -21,6 +22,10 @@ from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 
 from utils import dataset_correction_verification, ValidationUDF
+
+
+def _roi_as_sparse(array):
+    return sparse.COO.from_numpy(array, fill_value=False)
 
 
 @pytest.fixture
@@ -105,13 +110,21 @@ def test_comparison(default_raw, default_raw_data, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_raw)
 
 
-def test_comparison_roi(default_raw, default_raw_data, lt_ctx_fast):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_comparison_roi(default_raw, default_raw_data, lt_ctx_fast, as_sparse):
     roi = np.random.choice(
         [True, False],
         size=tuple(default_raw.shape.nav),
         p=[0.5, 0.5]
     )
     udf = ValidationUDF(reference=default_raw_data[roi])
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     lt_ctx_fast.run_udf(udf=udf, dataset=default_raw, roi=roi)
 
 
@@ -146,7 +159,13 @@ def test_pick_analysis(default_raw, lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-def test_correction_default(default_raw, lt_ctx, with_roi):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_correction_default(default_raw, lt_ctx, with_roi, as_sparse):
     ds = default_raw
 
     if with_roi:
@@ -154,12 +173,19 @@ def test_correction_default(default_raw, lt_ctx, with_roi):
         roi[:1] = True
     else:
         roi = None
-
+    if with_roi and as_sparse:
+        roi = _roi_as_sparse(roi)
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
 @pytest.mark.with_numba
-def test_roi_1(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_1(default_raw, lt_ctx, as_sparse):
     p = next(default_raw.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
@@ -168,6 +194,8 @@ def test_roi_1(default_raw, lt_ctx):
         tileshape=Shape((1, 128, 128), sig_dims=2),
         dataset_shape=default_raw.shape,
     )
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
         print("tile:", tile)
         tiles.append(tile)
@@ -177,7 +205,13 @@ def test_roi_1(default_raw, lt_ctx):
 
 
 @pytest.mark.with_numba
-def test_roi_2(default_raw, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_2(default_raw, lt_ctx, as_sparse):
     p = next(default_raw.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
     stackheight = 4
@@ -186,11 +220,19 @@ def test_roi_2(default_raw, lt_ctx):
         dataset_shape=default_raw.shape,
     )
     roi[0:stackheight + 2] = 1
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 
 
-def test_uint16_as_float32(uint16_raw, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_uint16_as_float32(uint16_raw, lt_ctx, as_sparse):
     p = next(uint16_raw.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
 
@@ -200,6 +242,8 @@ def test_uint16_as_float32(uint16_raw, lt_ctx):
         dataset_shape=uint16_raw.shape,
     )
     roi[0:stackheight + 2] = 1
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 
@@ -207,7 +251,13 @@ def test_uint16_as_float32(uint16_raw, lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-def test_correction_uint16(uint16_raw, lt_ctx, with_roi):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_correction_uint16(uint16_raw, lt_ctx, with_roi, as_sparse):
     ds = uint16_raw
 
     if with_roi:
@@ -215,7 +265,8 @@ def test_correction_uint16(uint16_raw, lt_ctx, with_roi):
         roi[:1] = True
     else:
         roi = None
-
+    if with_roi and as_sparse:
+        roi = _roi_as_sparse(roi)
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
@@ -228,16 +279,30 @@ def test_macrotile_normal(lt_ctx, default_raw):
     assert macrotile.tile_slice.origin[0] == p2._start_frame
 
 
-def test_macrotile_roi_1(lt_ctx, default_raw):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_macrotile_roi_1(lt_ctx, default_raw, as_sparse):
     roi = np.zeros(default_raw.shape.nav, dtype=bool)
     roi[0, 5] = 1
     roi[0, 1] = 1
     p = next(default_raw.get_partitions())
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     macrotile = p.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == (2, 128, 128)
 
 
-def test_macrotile_roi_2(lt_ctx, default_raw):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_macrotile_roi_2(lt_ctx, default_raw, as_sparse):
     roi = np.zeros(default_raw.shape.nav, dtype=bool)
     # all ones are in the first partition, so we don't get any data in p2:
     roi[0, 5] = 1
@@ -250,6 +315,8 @@ def test_macrotile_roi_2(lt_ctx, default_raw):
         tileshape=p2.shape,
         dataset_shape=default_raw.shape,
     )
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     p2._get_read_ranges(tiling_scheme, roi=None)
     p2._get_read_ranges(tiling_scheme, roi=roi)
 
@@ -257,11 +324,19 @@ def test_macrotile_roi_2(lt_ctx, default_raw):
     assert tuple(macrotile.tile_slice.shape) == (0, 128, 128)
 
 
-def test_macrotile_roi_3(lt_ctx, default_raw):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_macrotile_roi_3(lt_ctx, default_raw, as_sparse):
     roi = np.ones(default_raw.shape.nav, dtype=bool)
     ps = default_raw.get_partitions()
     _ = next(ps)
     p2 = next(ps)
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     macrotile = p2.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)
 
@@ -396,12 +471,19 @@ def test_big_endian(big_endian_raw, lt_ctx):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi, as_sparse):
     ds = big_endian_raw
-
     if with_roi:
         roi = np.zeros(ds.shape.nav, dtype=bool)
         roi[:1] = True
+        if as_sparse:
+            roi = _roi_as_sparse(roi)
     else:
         roi = None
 
@@ -757,11 +839,19 @@ def test_compare_backends(lt_ctx, default_raw, buffered_raw):
     assert np.allclose(mm_f0, buffered_f0)
 
 
-def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw, as_sparse):
     roi = np.zeros(default_raw.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[-1] = True
+    if as_sparse:
+        roi = _roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_raw, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_raw, udf=PickUDF(), roi=roi)['intensity']
 

@@ -198,7 +198,7 @@ def make_get_read_ranges(
             frame_indices = roi_nonzero[nonzero_mask]
 
             # Correct the slice_offset for skipped frames
-            slice_offset = np.count_nonzero(roi_nonzero < slice_offset)
+            slice_offset = np.sum(roi_nonzero < slice_offset)
             slice_offset = max(slice_offset, 0)
 
         num_indices = frame_indices.shape[0]

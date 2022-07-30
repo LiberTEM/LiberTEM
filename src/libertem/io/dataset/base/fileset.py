@@ -2,6 +2,7 @@ import typing
 
 import numpy as np
 
+from libertem.common.math import flat_nonzero
 from .file import File
 from .utils import FileTree
 from .tiling import default_get_read_ranges
@@ -84,10 +85,11 @@ class FileSet:
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
+        roi_nonzero = flat_nonzero(roi).astype(np.int64)
         return default_get_read_ranges(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,
-            roi=roi,
+            roi_nonzero=roi_nonzero,
             depth=tiling_scheme.depth,
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,

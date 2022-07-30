@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.udf import UDF
 
 
@@ -29,7 +29,7 @@ class PickUDF(UDF):
         dtype = self.meta.input_dtype
         sigshape = tuple(self.meta.dataset_shape.sig)
         if self.meta.roi is not None:
-            navsize = np.count_nonzero(self.meta.roi)
+            navsize = count_nonzero(self.meta.roi)
         else:
             navsize = prod(self.meta.dataset_shape.nav)
         warn_limit = 2**28

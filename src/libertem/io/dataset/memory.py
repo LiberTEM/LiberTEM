@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import psutil
 import numpy as np
 
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
@@ -73,7 +73,7 @@ class MemBackendImpl(MMapBackendImpl):
             if sync_offset >= 0:
                 data_slice = tile_slice.get()
             else:
-                frames_to_skip = np.count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
+                frames_to_skip = count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
                 data_slice = Slice(
                     origin=(origin[0] - frames_to_skip,) + tuple(origin[-sig_dims:]),
                     shape=Shape(shape, sig_dims=sig_dims)

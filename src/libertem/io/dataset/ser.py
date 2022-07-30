@@ -6,7 +6,7 @@ import contextlib
 import numpy as np
 from ncempy.io.ser import fileSER
 
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.common.messageconverter import MessageConverter
@@ -297,9 +297,9 @@ class SERPartition(BasePartition):
                 indices = _roi_to_indices(roi, max(0, start), stop, sync_offset)
                 # in case of a negative sync_offset, 'start' can be negative
                 if start < 0:
-                    offset = np.count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
+                    offset = count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
                 else:
-                    offset = np.count_nonzero(roi.reshape((-1,))[:start - sync_offset])
+                    offset = count_nonzero(roi.reshape((-1,))[:start - sync_offset])
 
             with fileSER(self._path) as f:
                 for num, idx in enumerate(indices):

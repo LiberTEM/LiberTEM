@@ -32,6 +32,19 @@ def prod(iterable: Iterable[ProdAccepted]):
     return result
 
 
+def count_nonzero(array):
+    try:
+        return np.count_nonzero(array)
+    except TypeError:
+        return array.nnz
+
+
+def flat_nonzero(array):
+    if array is None:
+        return None
+    return array.flatten().nonzero()[0]
+
+
 def make_2D_square(shape: Tuple[int, ...]) -> Tuple[int, ...]:
     """
     Convert the 1D shape tuple into a square 2D shape tuple

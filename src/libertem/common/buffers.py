@@ -8,8 +8,9 @@ import collections
 
 import numpy as np
 
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.common.slice import Slice
+from libertem.common.sparse import to_dense
 from .backend import get_use_cuda
 
 if TYPE_CHECKING:
@@ -251,7 +252,7 @@ class BufferWrapper:
         roi_count = None
         if roi is not None:
             roi_part = self._roi[partition.slice.get(nav_only=True)]
-            roi_count = np.count_nonzero(roi_part)
+            roi_count = count_nonzero(roi_part)
             assert roi_count <= partition.shape[0]
             assert roi_part.shape[0] == partition.shape[0]
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
@@ -261,7 +262,7 @@ class BufferWrapper:
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
-            roi_count = np.count_nonzero(self._roi)
+            roi_count = count_nonzero(self._roi)
         self._shape = self._shape_for_kind(self._kind, dataset_shape.flatten_nav(), roi_count)
         self._update_roi_is_zero()
         self._ds_shape = dataset_shape
@@ -321,7 +322,7 @@ class BufferWrapper:
             # 'O' (object): None
             fill = None
         wrapper = np.full(shape, fill, dtype=self._dtype)
-        wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
+        wrapper[to_dense(self._roi.reshape(self._ds_shape.nav))] = self._data
         return wrapper
 
     @property

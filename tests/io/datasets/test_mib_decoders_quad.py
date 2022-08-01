@@ -3,6 +3,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from libertem.common.shape import Shape
 from libertem.common.slice import Slice
+from libertem.common.math import flat_nonzero
 from libertem.io.dataset.base import TilingScheme
 from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 
@@ -283,10 +284,14 @@ def test_readranges_quad(bits_per_pixel):
     # (start_idx, end_idx, file_idx, file_header_bytes)
     fileset_arr[0] = (0, dataset_shape.nav.size, 0, file_header_bytes)
 
+    roi_nonzero = None
+    if roi is not None:
+        roi_nonzero = flat_nonzero(roi).astype(np.int64)
+
     kwargs = dict(
         start_at_frame=start_at_frame,
         stop_before_frame=stop_before_frame,
-        roi=roi,
+        roi_nonzero=roi_nonzero,
         depth=tiling_scheme.depth,
         slices_arr=tiling_scheme.slices_array,
         fileset_arr=fileset_arr,

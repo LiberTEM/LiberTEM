@@ -181,25 +181,23 @@ def make_get_read_ranges(
         # Use NumPy prod for Numba compilation
         sig_size = np.prod(np.array(sig_shape).astype(np.int64))
 
-        # in case of a negative sync_offset, start_at_frame can be negative
-        if start_at_frame < 0:
-            slice_offset = abs(sync_offset)
-        else:
-            slice_offset = start_at_frame - sync_offset
-
         if roi_nonzero is None:
             frame_indices = np.arange(max(0, start_at_frame), stop_before_frame)
+            # in case of a negative sync_offset, start_at_frame can be negative
+            if start_at_frame < 0:
+                slice_offset = abs(sync_offset)
+            else:
+                slice_offset = start_at_frame - sync_offset
         else:
-            _start_original = max(0, start_at_frame)
-            _start = _start_original - sync_offset
-            _stop = stop_before_frame - sync_offset
+            shifted_roi = roi_nonzero + sync_offset
+            roi_mask = np.logical_and(shifted_roi >= max(0, start_at_frame),
+                                      shifted_roi < stop_before_frame)
+            frame_indices = shifted_roi[roi_mask]
 
-            nonzero_mask = np.logical_and(roi_nonzero >= _start, roi_nonzero < _stop)
-            frame_indices = roi_nonzero[nonzero_mask]
-
-            # Correct the slice_offset for skipped frames
-            slice_offset = np.sum(roi_nonzero < slice_offset)
-            slice_offset = max(slice_offset, 0)
+            if start_at_frame < 0:
+                slice_offset = np.sum(roi_nonzero < abs(sync_offset))
+            else:
+                slice_offset = np.sum(roi_nonzero < start_at_frame - sync_offset)
 
         num_indices = frame_indices.shape[0]
 

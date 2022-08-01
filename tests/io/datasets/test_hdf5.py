@@ -18,6 +18,7 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.auto import AutoUDF
 from libertem.io.dataset.base import TilingScheme, DataSetException
 from libertem.common import Shape
+from libertem.common.math import flat_nonzero
 from libertem.io.dataset.base import Negotiator
 from libertem.udf import UDF
 
@@ -276,7 +277,7 @@ def test_roi_4(hdf5, lt_ctx, as_sparse):
 
     assert np.allclose(
         sumres,
-        np.sum(hdf5['data'][:].reshape(25, 16, 16)[roi, ...], axis=0)
+        np.sum(hdf5['data'][:].reshape(25, 16, 16)[flat_nonzero(roi), ...], axis=0)
     )
 
 

@@ -7,7 +7,7 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, roi_as_sparse
 
 
 def test_get_macrotile():
@@ -26,7 +26,13 @@ def test_get_macrotile():
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-def test_correction(lt_ctx, with_roi):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_correction(lt_ctx, with_roi, as_sparse):
     data = _mk_random(size=(16, 16, 16, 16))
     ds = MemoryDataSet(
         data=data,
@@ -37,6 +43,8 @@ def test_correction(lt_ctx, with_roi):
     if with_roi:
         roi = np.zeros(ds.shape.nav, dtype=bool)
         roi[:1] = True
+        if as_sparse:
+            roi = roi_as_sparse(roi)
     else:
         roi = None
 
@@ -139,7 +147,13 @@ def test_negative_sync_offset(lt_ctx):
     assert np.allclose(result, result_with_offset)
 
 
-def test_positive_sync_offset_with_roi(lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_positive_sync_offset_with_roi(lt_ctx, as_sparse):
     udf = SumSigUDF()
 
     data = np.random.randn(8, 8, 8, 8).astype("float32")
@@ -163,14 +177,21 @@ def test_positive_sync_offset_with_roi(lt_ctx):
 
     roi = np.random.choice([False], (8, 8))
     roi[0:1] = True
-
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf, roi=roi)
     result_with_offset = result_with_offset['intensity'].raw_data
 
     assert np.allclose(result[sync_offset:8 + sync_offset], result_with_offset)
 
 
-def test_negative_sync_offset_with_roi(lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_negative_sync_offset_with_roi(lt_ctx, as_sparse):
     udf = SumSigUDF()
 
     data = np.random.randn(8, 8, 8, 8).astype("float32")
@@ -194,6 +215,8 @@ def test_negative_sync_offset_with_roi(lt_ctx):
 
     roi = np.random.choice([False], (8, 8))
     roi[0:1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
 
     result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf, roi=roi)
     result_with_offset = result_with_offset['intensity'].raw_data

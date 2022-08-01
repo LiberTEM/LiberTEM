@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import psutil
 import numpy as np
 
-from libertem.common.math import prod, count_nonzero
+from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
@@ -51,17 +51,12 @@ class MemBackendImpl(MMapBackendImpl):
 
         fh = open_files[0]
         memmap = fh.array.reshape((fh.desc.num_frames,) + tuple(ds_sig_shape))
-        if sync_offset == 0:
-            flat_roi = roi.reshape((-1,))
-        elif sync_offset > 0:
-            flat_roi = np.full(roi.reshape((-1,)).shape, False)
-            flat_roi[:sync_offset] = False
-            flat_roi[sync_offset:] = roi.reshape((-1,))[:-sync_offset]
-        else:
-            flat_roi = np.full(roi.reshape((-1,)).shape, False)
-            flat_roi[sync_offset:] = False
-            flat_roi[:sync_offset] = roi.reshape((-1,))[-sync_offset:]
+        flat_roi = np.full(roi.reshape((-1,)).shape, False)
+        roi_nonzero = flat_nonzero(roi)
+        offset_roi = np.clip(roi_nonzero + sync_offset, 0, flat_roi.size)
+        flat_roi[offset_roi] = True
         data_w_roi = memmap[flat_roi]
+
         for idx in range(slices.shape[0]):
             origin, shape = slices[idx]
             scheme_idx = scheme_indices[idx]

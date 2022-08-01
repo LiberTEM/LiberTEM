@@ -7,7 +7,6 @@ import random
 import numpy as np
 import pytest
 import warnings
-import sparse
 
 from libertem.udf.sum import SumUDF
 from libertem.udf.raw import PickUDF
@@ -21,11 +20,7 @@ from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 
-from utils import dataset_correction_verification, ValidationUDF
-
-
-def _roi_as_sparse(array):
-    return sparse.COO.from_numpy(array, fill_value=False)
+from utils import dataset_correction_verification, ValidationUDF, roi_as_sparse
 
 
 @pytest.fixture
@@ -124,7 +119,7 @@ def test_comparison_roi(default_raw, default_raw_data, lt_ctx_fast, as_sparse):
     )
     udf = ValidationUDF(reference=default_raw_data[roi])
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     lt_ctx_fast.run_udf(udf=udf, dataset=default_raw, roi=roi)
 
 
@@ -174,7 +169,7 @@ def test_correction_default(default_raw, lt_ctx, with_roi, as_sparse):
     else:
         roi = None
     if with_roi and as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
@@ -195,7 +190,7 @@ def test_roi_1(default_raw, lt_ctx, as_sparse):
         dataset_shape=default_raw.shape,
     )
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
         print("tile:", tile)
         tiles.append(tile)
@@ -221,7 +216,7 @@ def test_roi_2(default_raw, lt_ctx, as_sparse):
     )
     roi[0:stackheight + 2] = 1
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 
@@ -243,7 +238,7 @@ def test_uint16_as_float32(uint16_raw, lt_ctx, as_sparse):
     )
     roi[0:stackheight + 2] = 1
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 
@@ -266,7 +261,7 @@ def test_correction_uint16(uint16_raw, lt_ctx, with_roi, as_sparse):
     else:
         roi = None
     if with_roi and as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
 
@@ -291,7 +286,7 @@ def test_macrotile_roi_1(lt_ctx, default_raw, as_sparse):
     roi[0, 1] = 1
     p = next(default_raw.get_partitions())
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     macrotile = p.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == (2, 128, 128)
 
@@ -316,7 +311,7 @@ def test_macrotile_roi_2(lt_ctx, default_raw, as_sparse):
         dataset_shape=default_raw.shape,
     )
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     p2._get_read_ranges(tiling_scheme, roi=None)
     p2._get_read_ranges(tiling_scheme, roi=roi)
 
@@ -336,7 +331,7 @@ def test_macrotile_roi_3(lt_ctx, default_raw, as_sparse):
     _ = next(ps)
     p2 = next(ps)
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     macrotile = p2.get_macrotile(roi=roi)
     assert tuple(macrotile.tile_slice.shape) == tuple(p2.shape)
 
@@ -483,7 +478,7 @@ def test_correction_big_endian(big_endian_raw, lt_ctx, with_roi, as_sparse):
         roi = np.zeros(ds.shape.nav, dtype=bool)
         roi[:1] = True
         if as_sparse:
-            roi = _roi_as_sparse(roi)
+            roi = roi_as_sparse(roi)
     else:
         roi = None
 
@@ -851,7 +846,7 @@ def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw, as_sparse):
     roi[1] = True
     roi[-1] = True
     if as_sparse:
-        roi = _roi_as_sparse(roi)
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_raw, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_raw, udf=PickUDF(), roi=roi)['intensity']
 

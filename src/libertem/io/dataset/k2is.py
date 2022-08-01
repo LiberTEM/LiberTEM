@@ -11,7 +11,7 @@ import numba
 from numba.typed import List
 from ncempy.io import dm
 
-from libertem.common.math import prod, make_2D_square
+from libertem.common.math import prod, make_2D_square, flat_nonzero
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Shape
 from libertem.common.messageconverter import MessageConverter
@@ -688,10 +688,13 @@ class K2FileSet(FileSet):
         roi: typing.Union[np.ndarray, None] = None,
     ):
         fileset_arr = self.get_as_arr()
+        roi_nonzero = None
+        if roi is not None:
+            roi_nonzero = flat_nonzero(roi)
         kwargs = dict(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,
-            roi=roi,
+            roi_nonzero=roi_nonzero,
             depth=tiling_scheme.depth,
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,

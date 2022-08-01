@@ -18,7 +18,7 @@ from libertem.common.math import prod
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 
-from utils import dataset_correction_verification, ValidationUDF
+from utils import dataset_correction_verification, ValidationUDF, roi_as_sparse
 
 
 @pytest.mark.parametrize(
@@ -92,13 +92,22 @@ def test_comparison(default_npy, default_raw_data, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_npy)
 
 
-def test_comparison_roi(default_npy, default_raw_data, lt_ctx_fast):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_comparison_roi(default_npy, default_raw_data, lt_ctx_fast, as_sparse):
     roi = np.random.choice(
         [True, False],
         size=tuple(default_npy.shape.nav),
         p=[0.5, 0.5]
     )
-    udf = ValidationUDF(reference=default_raw_data[roi])
+    ref_data = default_raw_data[roi]
+    if as_sparse:
+        roi = roi_as_sparse(roi)
+    udf = ValidationUDF(reference=ref_data)
     lt_ctx_fast.run_udf(udf=udf, dataset=default_npy, roi=roi)
 
 

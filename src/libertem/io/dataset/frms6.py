@@ -15,6 +15,7 @@ import numpy as np
 from libertem.common.math import prod
 from libertem.io.corrections import CorrectionSet
 from libertem.common import Shape, Slice
+from libertem.common.math import flat_nonzero
 from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, DataSetException, DataSetMeta,
@@ -384,10 +385,13 @@ class FRMS6FileSet(FileSet):
     ):
         fileset_arr = self.get_as_arr()
         binning = self._global_header['readoutmode']['bin']
+        roi_nonzero = None
+        if roi is not None:
+            roi_nonzero = flat_nonzero(roi)
         return frms6_get_read_ranges(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,
-            roi=roi,
+            roi_nonzero=roi_nonzero,
             depth=tiling_scheme.depth,
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,

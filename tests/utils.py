@@ -351,3 +351,9 @@ class FakeBackendImpl(IOBackendImpl):
         # to make this a generator, there needs to be a yield statement in
         # the body of the function, even if it is never executed:
         yield
+
+
+def roi_as_sparse(roi):
+    if roi is None:
+        return roi
+    return sparse.COO.from_numpy(roi, fill_value=False)

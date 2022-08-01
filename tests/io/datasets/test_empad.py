@@ -19,7 +19,7 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 from utils import _mk_random
 
-from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 EMPAD_TESTDATA_PATH = os.path.join(get_testdata_path(), 'EMPAD')
 EMPAD_RAW = os.path.join(EMPAD_TESTDATA_PATH, 'scan_11_x4_y4.raw')
@@ -457,12 +457,20 @@ def test_compare_direct_to_mmap(lt_ctx, default_empad, direct_empad):
     assert np.allclose(mm_f0, buffered_f0)
 
 
-def test_compare_backends_sparse(lt_ctx, default_empad, buffered_empad):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_empad, buffered_empad, as_sparse):
     roi = np.zeros(default_empad.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[8] = True
     roi[-1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_empad, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_empad, udf=PickUDF(), roi=roi)['intensity']
 

@@ -17,7 +17,7 @@ from libertem.udf.raw import PickUDF
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 from libertem.io.corrections import CorrectionSet
 
-from utils import get_testdata_path, ValidationUDF
+from utils import get_testdata_path, ValidationUDF, roi_as_sparse
 import defusedxml.ElementTree as ET
 
 try:
@@ -785,13 +785,21 @@ def test_compare_direct_to_mmap(lt_ctx, default_seq, direct_seq):
 
 
 @needsdata
-def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_seq, buffered_seq, as_sparse):
     roi = np.zeros(default_seq.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[16] = True
     roi[32] = True
     roi[-1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_seq, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_seq, udf=PickUDF(), roi=roi)['intensity']
 

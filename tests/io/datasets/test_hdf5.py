@@ -22,7 +22,7 @@ from libertem.io.dataset.base import Negotiator
 from libertem.udf import UDF
 
 from utils import _naive_mask_apply, _mk_random, PixelsumUDF
-from utils import dataset_correction_verification
+from utils import dataset_correction_verification, roi_as_sparse
 
 
 def test_hdf5_apply_masks_1(lt_ctx, hdf5_ds_1):
@@ -183,7 +183,13 @@ def test_cloudpickle(lt_ctx, hdf5):
     assert len(pickled) < 1 * 1024
 
 
-def test_roi_1(hdf5, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_1(hdf5, lt_ctx, as_sparse):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data",
     )
@@ -200,6 +206,8 @@ def test_roi_1(hdf5, lt_ctx):
         tileshape=tileshape,
         dataset_shape=ds.shape,
     )
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
         print("tile:", tile)
         tiles.append(tile)
@@ -209,7 +217,13 @@ def test_roi_1(hdf5, lt_ctx):
     assert tiles[0].tile_slice.origin == (0, 0, 0)
 
 
-def test_roi_3(hdf5, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_3(hdf5, lt_ctx, as_sparse):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data",
         target_size=12800*2,
@@ -228,6 +242,8 @@ def test_roi_3(hdf5, lt_ctx):
     )
 
     tiles = []
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     for p in ds.get_partitions():
         for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
             print("tile:", tile)
@@ -239,7 +255,13 @@ def test_roi_3(hdf5, lt_ctx):
     assert np.allclose(tiles[0].data, hdf5['data'][4, 4])
 
 
-def test_roi_4(hdf5, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_4(hdf5, lt_ctx, as_sparse):
     ds = H5DataSet(
         path=hdf5.filename, ds_path="data",
         target_size=12800*2,
@@ -248,6 +270,8 @@ def test_roi_4(hdf5, lt_ctx):
     roi = np.random.choice(size=ds.shape.flatten_nav().nav, a=[True, False])
 
     sum_udf = lt_ctx.create_sum_analysis(dataset=ds)
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     sumres = lt_ctx.run(sum_udf, roi=roi)['intensity']
 
     assert np.allclose(

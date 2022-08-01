@@ -7,7 +7,7 @@ import time
 import numpy as np
 import h5py
 
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.io.corrections import CorrectionSet
@@ -652,7 +652,7 @@ class H5Partition(Partition):
         sig_origin = tuple([0] * self.meta.shape.sig.dims)
         frames_read = 0
         start_at_frame = self.slice.origin[0]
-        frame_offset = np.count_nonzero(flat_roi[:start_at_frame])
+        frame_offset = count_nonzero(flat_roi[:start_at_frame])
 
         indices = _roi_to_nd_indices(roi, self.slice_nd)
 

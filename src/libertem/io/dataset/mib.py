@@ -10,7 +10,7 @@ from numba.typed import List as NumbaList
 import numba
 import numpy as np
 
-from libertem.common.math import prod, make_2D_square
+from libertem.common.math import prod, make_2D_square, flat_nonzero
 from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.common.messageconverter import MessageConverter
@@ -931,10 +931,13 @@ class MIBFileSet(FileSet):
             bpp = 1
         else:
             bpp = np.dtype(dtype).itemsize * 8
+        roi_nonzero = None
+        if roi is not None:
+            roi_nonzero = flat_nonzero(roi).astype(np.int64)
         kwargs = dict(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,
-            roi=roi,
+            roi_nonzero=roi_nonzero,
             depth=tiling_scheme.depth,
             slices_arr=tiling_scheme.slices_array,
             fileset_arr=fileset_arr,

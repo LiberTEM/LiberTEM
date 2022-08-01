@@ -3,7 +3,7 @@ import typing
 import numpy as np
 
 from libertem.common import Slice
-from libertem.common.math import count_nonzero
+from libertem.common.math import count_nonzero, ndenumerate
 
 if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.partition import Partition
@@ -56,7 +56,7 @@ def _roi_to_nd_indices(roi, part_slice: Slice):
     nav_dims = part_slice.shape.nav.dims
     total = 0
     frames_in_roi = count_nonzero(roi)
-    for idx, value in np.ndenumerate(roi_slice):
+    for idx, value in ndenumerate(roi_slice):
         if not value:
             continue
         yield tuple(a + b

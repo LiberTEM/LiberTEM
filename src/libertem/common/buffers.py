@@ -320,9 +320,10 @@ class BufferWrapper:
             # 'm', 'M' (datetime, timedelta): NaT
             # 'O' (object): None
             fill = None
-        wrapper = np.full(shape, fill, dtype=self._dtype)
-        wrapper[flat_nonzero(self._roi)] = self._data
-        return wrapper
+        flat_shape_with_extra = (prod(shape) // prod(self._extra_shape),) + self._extra_shape
+        wrapper = np.full(flat_shape_with_extra, fill, dtype=self._dtype)
+        wrapper[flat_nonzero(self._roi), ...] = self._data
+        return wrapper.reshape(shape)
 
     @property
     def dtype(self):

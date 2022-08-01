@@ -197,7 +197,13 @@ def test_shape_arg_flatnav(default_npy, default_npy_filepath, default_raw_data, 
 
 
 @pytest.mark.with_numba
-def test_roi_1(default_npy, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_1(default_npy, lt_ctx, as_sparse):
     p = next(default_npy.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav().nav, dtype=bool)
     roi[0] = 1
@@ -206,6 +212,8 @@ def test_roi_1(default_npy, lt_ctx):
         tileshape=Shape((1, 128, 128), sig_dims=2),
         dataset_shape=default_npy.shape,
     )
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     for tile in p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi):
         print("tile:", tile)
         tiles.append(tile)
@@ -215,7 +223,13 @@ def test_roi_1(default_npy, lt_ctx):
 
 
 @pytest.mark.with_numba
-def test_roi_2(default_npy, lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi_2(default_npy, lt_ctx, as_sparse):
     p = next(default_npy.get_partitions())
     roi = np.zeros(p.meta.shape.flatten_nav(), dtype=bool)
     stackheight = 4
@@ -224,6 +238,8 @@ def test_roi_2(default_npy, lt_ctx):
         dataset_shape=default_npy.shape,
     )
     roi[0:stackheight + 2] = 1
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, dest_dtype="float32", roi=roi)
     tiles = list(tiles)
 

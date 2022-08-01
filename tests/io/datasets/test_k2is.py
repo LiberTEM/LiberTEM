@@ -20,7 +20,7 @@ from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem import masks
 
-from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 
 K2IS_TESTDATA_DIR = os.path.join(get_testdata_path(), 'Capture52')
@@ -484,13 +484,21 @@ def test_compare_direct_to_mmap(lt_ctx, default_k2is, direct_k2is):
 
 
 @needsdata
-def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_k2is, buffered_k2is, as_sparse):
     roi = np.zeros(default_k2is.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[16] = True
     roi[32] = True
     roi[-1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_k2is, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_k2is, udf=PickUDF(), roi=roi)['intensity']
 

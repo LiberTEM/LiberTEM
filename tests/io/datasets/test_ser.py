@@ -10,7 +10,7 @@ from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 
-from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
     import hyperspy.api as hs
@@ -73,7 +73,13 @@ def test_comparison_roi(default_ser, default_ser_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_ser, roi=roi)
 
 
-def test_roi(lt_ctx):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_roi(lt_ctx, as_sparse):
     ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
     roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 1] = True
@@ -96,7 +102,8 @@ def test_roi(lt_ctx):
 
     p1 = next(parts)
     roi.reshape((-1,))[p1.slice.get(nav_only=True)] = True
-
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     t1 = next(p1.get_tiles(tiling_scheme, roi=roi))
     assert t1.tile_slice.origin[0] == 1
 

@@ -15,7 +15,7 @@ from libertem.io.dataset.base import (
     TilingScheme, BufferedBackend, MMapBackend, DataSetException, DirectBackend
 )
 
-from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
     import hyperspy.api as hs
@@ -456,11 +456,19 @@ def test_compare_direct_to_mmap(lt_ctx, default_dm, direct_dm):
     assert np.allclose(mm_f0, buffered_f0)
 
 
-def test_compare_backends_sparse(lt_ctx, default_dm, buffered_dm):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_dm, buffered_dm, as_sparse):
     roi = np.zeros(default_dm.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[-1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_dm, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_dm, udf=PickUDF(), roi=roi)['intensity']
 

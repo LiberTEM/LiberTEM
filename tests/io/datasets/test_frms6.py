@@ -20,7 +20,7 @@ from libertem.common.buffers import reshaped_view
 from libertem.udf.raw import PickUDF
 
 from utils import (dataset_correction_verification, get_testdata_path, ValidationUDF,
-    FakeBackend)
+    FakeBackend, roi_as_sparse)
 
 try:
     import stemtool
@@ -604,13 +604,21 @@ def test_compare_direct_to_mmap(lt_ctx, default_frms6, direct_frms6):
 
 
 @needsdata
-def test_compare_backends_sparse(lt_ctx, default_frms6, buffered_frms6):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_frms6, buffered_frms6, as_sparse):
     roi = np.zeros(default_frms6.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[16] = True
     roi[32] = True
     roi[-1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_frms6, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_frms6, udf=PickUDF(), roi=roi)['intensity']
 

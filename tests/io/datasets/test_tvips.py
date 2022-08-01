@@ -18,7 +18,7 @@ from libertem.io.dataset.base import (
 )
 from libertem.common.buffers import reshaped_view
 
-from utils import dataset_correction_verification, get_testdata_path, ValidationUDF
+from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 TVIPS_TESTDATA_PATH = os.path.join(get_testdata_path(), 'TVIPS', 'rec_20200623_080237_000.tvips')
 HAVE_TVIPS_TESTDATA = os.path.exists(TVIPS_TESTDATA_PATH)
@@ -428,12 +428,20 @@ def test_compare_direct_to_mmap(lt_ctx, default_tvips, direct_tvips):
 
 
 @needsdata
-def test_compare_backends_sparse(lt_ctx, default_tvips, buffered_tvips):
+@pytest.mark.parametrize(
+    "as_sparse", (
+        False,
+        True
+    ),
+)
+def test_compare_backends_sparse(lt_ctx, default_tvips, buffered_tvips, as_sparse):
     roi = np.zeros(default_tvips.shape.nav, dtype=bool).reshape((-1,))
     roi[0] = True
     roi[1] = True
     roi[6] = True
     roi[-1] = True
+    if as_sparse:
+        roi = roi_as_sparse(roi)
     mm_f0 = lt_ctx.run_udf(dataset=default_tvips, udf=PickUDF(), roi=roi)['intensity']
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_tvips, udf=PickUDF(), roi=roi)['intensity']
 

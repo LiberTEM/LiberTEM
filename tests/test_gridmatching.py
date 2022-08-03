@@ -8,12 +8,12 @@ from utils import _fullgrid
 def test_consistency(zero, a, b, points, indices):
     coefficients = np.array((a, b))
     result = zero + np.dot(indices, coefficients)
-    assert(np.allclose(result, points))
+    assert np.allclose(result, points)
 
 
 def test_calc_coords(zero, a, b, points, indices):
     result = grm.calc_coords(zero, a, b, indices)
-    assert(np.allclose(result, points))
+    assert np.allclose(result, points)
 
 
 def test_within_frame():
@@ -38,18 +38,18 @@ def test_within_frame():
         False
     ])
     result = grm.within_frame(points, r=1, fy=10, fx=20)
-    assert(np.all(result == expected))
+    assert np.all(result == expected)
 
 
 def test_fastmatch(zero, a, b):
     grid = _fullgrid(zero, a, b, 5)
     matcher = grm.Matcher()
     match = matcher.fastmatch(centers=grid, zero=zero, a=a, b=b)
-    assert(np.allclose(zero, match.zero))
-    assert(np.allclose(a, match.a))
-    assert(np.allclose(b, match.b))
-    assert(len(match) == len(grid))
-    assert(np.allclose(match.calculated_refineds, grid))
+    assert np.allclose(zero, match.zero)
+    assert np.allclose(a, match.a)
+    assert np.allclose(b, match.b)
+    assert len(match) == len(grid)
+    assert np.allclose(match.calculated_refineds, grid)
 
 
 def test_affinematch(zero, a, b):
@@ -57,11 +57,11 @@ def test_affinematch(zero, a, b):
     indices = grm.get_indices(grid, zero, a, b)
     matcher = grm.Matcher()
     match = matcher.affinematch(centers=grid, indices=indices)
-    assert(np.allclose(zero, match.zero))
-    assert(np.allclose(a, match.a))
-    assert(np.allclose(b, match.b))
-    assert(len(match) == len(grid))
-    assert(np.allclose(match.calculated_refineds, grid))
+    assert np.allclose(zero, match.zero)
+    assert np.allclose(a, match.a)
+    assert np.allclose(b, match.b)
+    assert len(match) == len(grid)
+    assert np.allclose(match.calculated_refineds, grid)
 
 
 def test_get_transformation(points):
@@ -72,7 +72,7 @@ def test_get_transformation(points):
         (0, 7, 0),
         (-2, -3, 1)
     ])
-    assert(np.allclose(trans, target))
+    assert np.allclose(trans, target)
 
 
 def test_do_transformation(points):
@@ -83,7 +83,7 @@ def test_do_transformation(points):
     ])
     points2 = grm.do_transformation(m, points)
     target = points * np.array((3, 7)) + np.array((-2, -3))
-    assert(np.allclose(points2, target))
+    assert np.allclose(points2, target)
 
 
 def test_find_center(points):

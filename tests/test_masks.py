@@ -6,7 +6,7 @@ import libertem.masks as m
 
 def test_background_subtraction():
     mask = m.background_subtraction(10, 10, 20, 20, 5, 3)
-    assert(np.allclose(np.sum(mask), 0))
+    assert np.allclose(np.sum(mask), 0)
 
 
 @pytest.mark.parametrize(

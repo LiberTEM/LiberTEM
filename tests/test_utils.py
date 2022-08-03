@@ -18,13 +18,13 @@ def test_polar():
     ])
 
     result = ut.make_polar(data)
-    assert(data.shape == expected.shape)
-    assert(result.shape == expected.shape)
-    assert(np.allclose(expected, result))
+    assert data.shape == expected.shape
+    assert result.shape == expected.shape
+    assert np.allclose(expected, result)
 
 
 def test_conversion(points):
-    assert(np.allclose(points, ut.make_cartesian(ut.make_polar(points))))
+    assert np.allclose(points, ut.make_cartesian(ut.make_polar(points)))
 
 
 def test_rotation():

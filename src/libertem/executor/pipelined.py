@@ -763,14 +763,17 @@ class PipelinedExecutor(BaseJobExecutor):
                     continue
 
             task_comm_handler.done()
-        except Exception:
+        except Exception as e:
             # In case of an exception, we need to drain the response queue,
             # so the next `run_tasks` call isn't polluted by old responses.
             # -> just like in the happy case, we need to wait for responses
             # for all in-flight tasks. In case the error happened between incrementing
             # `in_flight` and actually sending the task to the queue, we should
             # have a timeout here to not wait infinitely long.
-            self._drain_response_queue(in_flight=in_flight)
+            try:
+                self._drain_response_queue(in_flight=in_flight)
+            except RuntimeError as e2:
+                raise e2 from e
             # if from a worker, this is the first exception that got put into the queue
             raise
 
@@ -793,7 +796,10 @@ class PipelinedExecutor(BaseJobExecutor):
                     if result["type"] == "ERROR":
                         logger.error(f"Error response from worker: {result['error']}")
             except WorkerQueueEmpty:
-                continue
+                # In the future we may kill or restart workers here
+                raise RuntimeError(
+                    f'Worker or queue presumably in a bad state, lost {in_flight} in-flight tasks.'
+                )
 
     def run_tasks(
         self,

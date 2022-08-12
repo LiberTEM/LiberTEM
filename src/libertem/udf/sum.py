@@ -1,7 +1,7 @@
 import numpy as np
 
 from libertem.udf import UDF
-from libertem.masks import to_dense
+from libertem.common.sparse import NUMPY, SPARSE_COO, SPARSE_GCXS
 
 
 class SumUDF(UDF):
@@ -28,6 +28,9 @@ class SumUDF(UDF):
     def get_preferred_input_dtype(self):
         return self.params.dtype
 
+    def get_formats(self):
+        return (SPARSE_GCXS, SPARSE_COO, NUMPY)
+
     def get_result_buffers(self):
         ''
         return {
@@ -36,7 +39,7 @@ class SumUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        self.results.intensity[:] += to_dense(np.sum(tile, axis=0))
+        self.results.intensity[:] += self.forbuf(np.sum(tile, axis=0))
 
     def merge(self, dest, src):
         ''

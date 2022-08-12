@@ -6,6 +6,9 @@ import numpy as np
 import sparse
 
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
+from libertem.common import Slice
+from .roi import _roi_to_indices
+
 
 log = logging.getLogger(__name__)
 
@@ -327,14 +330,14 @@ class GCXSTile(SparseTile, sparse.GCXS):
     ...
 
 
-class DOKTile(SparseTile, sparse.DOK):
-    ...
-
-
-# FIXME other types as neede
+# FIXME other types as needed
 
 
 class DataTile:
+    # to make MyPy happy...
+    tile_slice = Slice.from_shape((-1,), -1)
+    scheme_idx = -1
+
     def __new__(cls, input_array, tile_slice, scheme_idx):
         if isinstance(input_array, np.ndarray):
             obj = np.asarray(input_array).view(NumpyTile)
@@ -342,8 +345,6 @@ class DataTile:
             obj = COOTile(input_array)
         elif isinstance(input_array, sparse.GCXS):
             obj = GCXSTile(input_array)
-        elif isinstance(input_array, sparse.DOK):
-            obj = DOKTile(input_array)
         else:
             raise ValueError(f"Unknown array type {type(input_array)}.")
         obj.tile_slice = tile_slice

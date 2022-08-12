@@ -22,6 +22,7 @@ from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
     BufferKind, BufferUse, BufferLocation,
 )
+from libertem.common.sparse import FORMATS, array_format, NUMPY, as_format
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol
 from libertem.common.math import prod
@@ -75,6 +76,59 @@ def _get_dtype(
             tmp_dtype
         )
     return tmp_dtype
+
+
+class TileConverter:
+    def __init__(self, tile: DataTile):
+        self._tile = tile
+        # prime cache with identity
+        self._cache = {array_format(tile): tile}
+
+    def get_any(self, format):
+        '''
+        Get a converted tile in any of the specified formats.
+
+        Return from cache if any of them is in the cache,
+        otherwise convert to first entry in format specification.
+        '''
+        if format in FORMATS:
+            format = (format, )
+        for f in format:
+            if f in self._cache:
+                return self._cache[f]
+        f = format[0]
+        converted = DataTile(
+            as_format(self._tile, f),
+            self._tile.tile_slice,
+            self._tile.scheme_idx
+        )
+        self._cache[f] = converted
+        return converted
+
+
+class CupyTileConverter:
+    def __init__(self, tile_converter: TileConverter, xp):
+        self._tile_converter = tile_converter
+        self._xp = xp
+        self._cache: Dict[str, str] = {}
+
+    def get_any(self, format):
+        '''
+        Get a converted tile in any of the specified formats.
+
+        Return from cache if any of them is in the cache,
+        otherwise convert to first entry in format specification.
+        '''
+        if format in FORMATS:
+            format = (format, )
+        if NUMPY not in FORMATS:
+            raise NotImplementedError("Sparse input data not supported with CuPy")
+        f = NUMPY
+        if f in self._cache:
+            return self._cache[f]
+        converted = self._xp.asanyarray(self._tile_converter.get_any(NUMPY))
+        self._cache[f] = converted
+        return converted
 
 
 class UDFMeta:
@@ -791,6 +845,9 @@ class UDFBase(UDFProtocol):
     def get_backends(self) -> BackendSpec:
         raise NotImplementedError()  # see impl in UDF.get_backends
 
+    def get_formats(self):
+        raise NotImplementedError()  # see impl in UDF.get_formats
+
     @property
     def xp(self):
         '''
@@ -1168,6 +1225,32 @@ class UDF(UDFBase):
             :code:`cupy`
         '''
         return ('numpy', )
+
+    def get_formats(self):
+        '''
+        Signal which array formats the UDF can use. It can be
+        one of the format identifiers described in :mod:`libertem.common.sparse`
+
+        .. versionadded:: 0.11.0
+        '''
+        return (NUMPY, )
+
+    def forbuf(self, arr):
+        '''
+        Convert array to format that is compatible with result buffers.
+
+        This function should be wrapped around assignment to result buffers if
+        the array :code:`arr` might be sparse. It converts any of the supported
+        sparse input formats into a NumPy array. If the argument is already a
+        NumPy array or not recognized, it is a no-op.
+
+        The result of array operations on a sparse input tile can't always be
+        merged into dense result buffers directly since arrays from the
+        :mod:`sparse` package are not converted to NumPy arrays automatically.
+
+        .. versionadded:: 0.11.0
+        '''
+        return as_format(arr, NUMPY, strict=False)
 
     def cleanup(self) -> None:  # FIXME: name? implement cleanup as context manager somehow?
         pass
@@ -1669,11 +1752,12 @@ class UDFPartRunner:
         partition_progress.signal_start()
 
         for tile in tiles:
-            self._run_tile(numpy_udfs, partition, tile, tile, roi=roi)
+            converter = TileConverter(tile)
+            self._run_tile(numpy_udfs, partition, tile, converter, roi=roi)
             if cupy_udfs:
-                # Work-around, should come from dataset later
-                device_tile = xp.asanyarray(tile)
-                self._run_tile(cupy_udfs, partition, tile, device_tile, roi=roi)
+                # CuPy tile could come from dataset later
+                cupy_converter = CupyTileConverter(converter, xp)
+                self._run_tile(cupy_udfs, partition, tile, cupy_converter, roi=roi)
 
             partition_progress.signal_tile_complete(tile)
 
@@ -1688,18 +1772,22 @@ class UDFPartRunner:
         if device_class == 'cuda':
             for udf in self._udfs:
                 backends = udf.get_backends()
-                if 'cuda' in backends:
+                formats = udf.get_formats()
+                if 'cuda' in backends and NUMPY in formats:
                     numpy_udfs.append(udf)
-                elif 'cupy' in backends:
+                elif 'cupy' in backends and NUMPY in formats:
                     cupy_udfs.append(udf)
                 elif 'numpy' in backends:
                     warnings.warn(f"UDF {udf} backends are {backends}, recommended on CUDA are "
-                            "'cuda' and 'cupy'.", RuntimeWarning)
+                        "'cuda' and 'cupy'. "
+                        f"UDF formats are {formats}, supported on CUDA is {NUMPY}. "
+                        "Falling bak to numpy", RuntimeWarning)
                     numpy_udfs.append(udf)
                 else:
                     raise RuntimeError(
                         f"UDF {udf} backends are {backends}, supported on CUDA are "
                         "'cuda' and 'cupy', as well as 'numpy' as a compatibility fallback."
+                        f"UDF formats are {formats}, supported on CUDA is {NUMPY}."
                     )
         elif device_class == 'cpu':
             for udf in self._udfs:
@@ -1776,10 +1864,11 @@ class UDFPartRunner:
         udfs: List[UDF],
         partition: Partition,
         tile: DataTile,
-        device_tile: DataTile,
+        converter: Union[TileConverter, CupyTileConverter],
         roi: Optional[np.ndarray],
     ) -> None:
         for udf in udfs:
+            device_tile = converter.get_any(udf.get_formats())
             if isinstance(udf, UDFTileMixin):
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)

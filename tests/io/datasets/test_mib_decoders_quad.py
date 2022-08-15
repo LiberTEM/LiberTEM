@@ -219,7 +219,7 @@ def encode_roundtrip_quad(
         corrections=None,
     ):
         slice_shifted = tile.tile_slice.shift(outer_slice)
-        decoded[slice_shifted.get()] = tile.reshape(tile.tile_slice.shape)
+        decoded[slice_shifted.get()] = tile.data.reshape(tile.tile_slice.shape)
 
     assert_allclose(data, decoded)
     return data, decoded

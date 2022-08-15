@@ -92,7 +92,10 @@ class MemBackendImpl(MMapBackendImpl):
                     for tile in self._get_tiles_straight(
                         tiling_scheme, open_files, read_ranges, sync_offset
                     ):
-                        data = tile.astype(read_dtype)
+                        if tile.dtype != read_dtype or tile.c_contiguous is False:
+                            data = tile.data.astype(read_dtype)
+                        else:
+                            data = tile.data
                         self.preprocess(data, tile.tile_slice, corrections)
                         yield DataTile(data, tile.tile_slice, tile.scheme_idx)
                 else:
@@ -115,7 +118,7 @@ class MemBackendImpl(MMapBackendImpl):
                     roi=roi,
                     sync_offset=sync_offset,
                 ):
-                    data = tile.astype(read_dtype)
+                    data = tile.data.astype(read_dtype)
                     self.preprocess(data, tile.tile_slice, corrections)
                     yield DataTile(data, tile.tile_slice, tile.scheme_idx)
 

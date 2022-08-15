@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import cloudpickle
 
-from libertem.udf.base import UDF, UDFPartRunner, UDFParams, UDFMeta
+from libertem.udf.base import UDF, NoOpUDF, UDFPartRunner, UDFParams, UDFMeta
 from libertem.common.executor import Environment
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
@@ -747,3 +747,24 @@ def test_params_check(lt_ctx):
     ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
     udf = ParamsCheckUDF(int_param=5, is_222=222)
     lt_ctx.run_udf(dataset=ds, udf=udf)
+
+
+class TileAttrsUDF1(NoOpUDF):
+    def process_tile(self, tile):
+        tile.scheme_idx
+
+
+class TileAttrsUDF2(NoOpUDF):
+    def process_tile(self, tile):
+        tile.tile_slice
+
+
+@pytest.mark.parametrize(
+    'cls', [TileAttrsUDF1, TileAttrsUDF2]
+)
+def test_previous_attrs(lt_ctx, cls):
+    ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
+    # Check that we get an attribute error that points to
+    # the current alternative
+    with pytest.raises(AttributeError, match='self.meta.'):
+        lt_ctx.run_udf(dataset=ds, udf=cls())

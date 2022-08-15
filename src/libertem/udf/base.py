@@ -82,7 +82,7 @@ class TileConverter:
     def __init__(self, tile: DataTile):
         self._tile = tile
         # prime cache with identity
-        self._cache = {array_format(tile): tile}
+        self._cache = {array_format(tile.data): tile.data}
 
     def get_any(self, format):
         '''
@@ -97,11 +97,7 @@ class TileConverter:
             if f in self._cache:
                 return self._cache[f]
         f = format[0]
-        converted = DataTile(
-            as_format(self._tile, f),
-            self._tile.tile_slice,
-            self._tile.scheme_idx
-        )
+        converted = as_format(self._tile.data, f)
         self._cache[f] = converted
         return converted
 
@@ -1751,15 +1747,26 @@ class UDFPartRunner:
             partition_progress = PartitionTrackerNoOp()
         partition_progress.signal_start()
 
-        for tile in tiles:
-            converter = TileConverter(tile)
-            self._run_tile(numpy_udfs, partition, tile, converter, roi=roi)
-            if cupy_udfs:
-                # CuPy tile could come from dataset later
-                cupy_converter = CupyTileConverter(converter, xp)
-                self._run_tile(cupy_udfs, partition, tile, cupy_converter, roi=roi)
-
+        try:
+            for tile in tiles:
+                converter = TileConverter(tile)
+                self._run_tile(numpy_udfs, partition, tile, converter, roi=roi)
+                if cupy_udfs:
+                    # CuPy tile could come from dataset later
+                    cupy_converter = CupyTileConverter(converter, xp)
+                    self._run_tile(cupy_udfs, partition, tile, cupy_converter, roi=roi)
             partition_progress.signal_tile_complete(tile)
+        except AttributeError as e:
+            removed = {
+                'tile_slice': 'self.meta.slice',
+                'scheme_idx': 'self.meta.tiling_scheme_idx',
+            }
+            for r, repl in removed.items():
+                if r in e.args[0]:
+                    raise AttributeError(
+                        f'Attribute {r} for input tiles was removed. Please use {repl} instead.'
+                    )
+            raise
 
         # We could signal partition completion here, but this is already
         # handled on the main node via ProgressManager.finalize_task(task)

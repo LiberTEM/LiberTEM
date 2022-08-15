@@ -674,7 +674,7 @@ def test_hdf5_macrotile_roi(lt_ctx, hdf5_ds_1):
     p0 = next(partitions)
     m0 = p0.get_macrotile(roi=roi)
     assert_allclose(
-        m0,
+        m0.data,
         expected
     )
 
@@ -686,7 +686,7 @@ def test_hdf5_macrotile_empty_roi(lt_ctx, hdf5_ds_1):
     m0 = p0.get_macrotile(roi=roi)
     assert m0.shape == (0, 16, 16)
     assert_allclose(
-        m0,
+        m0.data,
         0,
     )
 

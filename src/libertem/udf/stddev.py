@@ -51,7 +51,7 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
 
     # compute sum of variances for joint samples
     partial_delta = mean_1 - mean
-    varsum = varsum_0 + varsum_1 + (n_1 * delta * partial_delta)
+    varsum = varsum_0 + varsum_1 + (n_1 * np.abs(delta) * np.abs(partial_delta))
     return sumsum, varsum
 
 
@@ -146,7 +146,7 @@ def process_tile(tile, n_0, sum_inout, varsum_inout):
         varsum[:] = 0
         for frame in range(n_frames):
             for i in range(BLOCKSIZE):
-                varsum[i] += (tile[frame, pixel_offset + i] - mean[i])**2
+                varsum[i] += np.abs(tile[frame, pixel_offset + i] - mean[i])**2
         for i in range(BLOCKSIZE):
             sum_inout[pixel_offset + i], varsum_inout[pixel_offset + i] = merge_single(
                 n,
@@ -160,7 +160,7 @@ def process_tile(tile, n_0, sum_inout, varsum_inout):
         mean_rest = sumsum_rest / n_frames
         varsum_rest = 0.
         for frame in range(n_frames):
-            varsum_rest += (tile[frame, pixel] - mean_rest)**2
+            varsum_rest += np.abs(tile[frame, pixel] - mean_rest)**2
         sum_inout[pixel], varsum_inout[pixel] = merge_single(
             n,
             n_0, sum_inout[pixel], varsum_inout[pixel],
@@ -223,10 +223,11 @@ class StdDevUDF(UDF):
             A dictionary that maps 'varsum',  'num_frames', 'sum' to
             the corresponding BufferWrapper objects
         """
-        dtype = np.result_type(self.meta.input_dtype, np.float64)
+        base_dtype = np.float64
+        dtype = np.result_type(self.meta.input_dtype, base_dtype)
         return {
             'varsum': self.buffer(
-                kind='sig', dtype=dtype
+                kind='sig', dtype=base_dtype
             ),
             'num_frames': self.buffer(
                 kind='single', dtype='int64'
@@ -235,10 +236,10 @@ class StdDevUDF(UDF):
                 kind='sig', dtype=dtype
             ),
             'var': self.buffer(
-                kind='sig', dtype=dtype, use='result_only',
+                kind='sig', dtype=base_dtype, use='result_only',
             ),
             'std': self.buffer(
-                kind='sig', dtype=dtype, use='result_only',
+                kind='sig', dtype=base_dtype, use='result_only',
             ),
             'mean': self.buffer(
                 kind='sig', dtype=dtype, use='result_only',
@@ -307,7 +308,7 @@ class StdDevUDF(UDF):
         delta = mean_1 - mean_0
         mean = mean_0 + (n_frames * delta) / cumulative_frames
         partial_delta = mean_1 - mean
-        varsum = pixel_varsums + (n_frames * delta * partial_delta)
+        varsum = pixel_varsums + (n_frames * np.abs(delta) * np.abs(partial_delta))
         varsum_total = np.sum(varsum, axis=0)
 
         return {
@@ -327,11 +328,11 @@ class StdDevUDF(UDF):
             tile of the data
         """
 
-        key = tile.scheme_idx
+        key = self.meta.tiling_scheme_idx
         n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]
 
-        dtype = self.results.varsum.dtype
+        dtype = np.result_type(self.results.varsum.dtype, np.complex64)
 
         if n_0 == 0:
             self.results.sum[:] = tile.sum(axis=0)

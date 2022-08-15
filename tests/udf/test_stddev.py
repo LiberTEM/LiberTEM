@@ -1,9 +1,13 @@
 import pytest
 import numpy as np
 import numba
+import sparse
 
 from libertem.udf.stddev import StdDevUDF, run_stddev, process_tile, merge
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.common.sparse import as_format, NUMPY
+from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.utils.devices import detect
 
 from utils import _mk_random
 
@@ -15,7 +19,16 @@ from utils import _mk_random
 @pytest.mark.parametrize(
     "dtype", [np.float32, np.complex128]
 )
-def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype):
+@pytest.mark.parametrize(
+    "use_numba", [True, False]
+)
+@pytest.mark.parametrize(
+    "sparse_input", [True, False]
+)
+@pytest.mark.parametrize(
+    'backend', ['numpy', 'cupy']
+)
+def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, sparse_input, backend):
     """
     Test variance, standard deviation, sum of frames, and mean computation
     implemented in udf/stddev.py
@@ -25,49 +38,65 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype):
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
-    data = _mk_random(size=(30, 3, 516), dtype=dtype)
-    dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
-                            num_partitions=2, sig_dims=2)
-    if use_roi:
-        roi = np.random.choice([True, False], size=dataset.shape.nav)
-        res = run_stddev(lt_ctx, dataset, roi=roi)
-        res_delayed = run_stddev(delayed_ctx, dataset, roi=roi)
-    else:
-        roi = np.ones(dataset.shape.nav, dtype=bool)
-        res = run_stddev(lt_ctx, dataset)
-        res_delayed = run_stddev(delayed_ctx, dataset)
+    if sparse_input and backend == 'cupy':
+        pytest.skip("No sparse input with CuPy yet")
+    if backend == 'cupy':
+        d = detect()
+        cudas = detect()['cudas']
+        if not d['cudas'] or not d['has_cupy']:
+            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
+    try:
+        if backend == 'cupy':
+            set_use_cuda(cudas[0])
+        data = _mk_random(size=(30, 3, 516), dtype=dtype)
+        if sparse_input:
+            data = sparse.COO(data)
+        dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
+                                num_partitions=2, sig_dims=2)
+        if use_roi:
+            roi = np.random.choice([True, False], size=dataset.shape.nav)
+            res = run_stddev(lt_ctx, dataset, roi=roi, use_numba=use_numba)
+            res_delayed = run_stddev(delayed_ctx, dataset, roi=roi, use_numba=use_numba)
+        else:
+            roi = np.ones(dataset.shape.nav, dtype=bool)
+            res = run_stddev(lt_ctx, dataset, use_numba=use_numba)
+            res_delayed = run_stddev(delayed_ctx, dataset, use_numba=use_numba)
 
-    assert 'sum' in res
-    assert 'num_frames' in res
-    assert 'var' in res
-    assert 'mean' in res
-    assert 'std' in res
+        assert 'sum' in res
+        assert 'num_frames' in res
+        assert 'var' in res
+        assert 'mean' in res
+        assert 'std' in res
 
-    N = np.count_nonzero(roi)
-    assert res['num_frames'] == N  # check the total number of frames
-    assert res_delayed['num_frames'] == N
+        N = np.count_nonzero(roi)
+        assert res['num_frames'] == N  # check the total number of frames
+        assert res_delayed['num_frames'] == N
 
-    print('sum')
-    print(res['sum'])
-    print(np.sum(data[roi], axis=0))
-    print(res['sum'] - np.sum(data[roi], axis=0))
-    assert np.allclose(res['sum'], np.sum(data[roi], axis=0))  # check sum of frames
-    assert np.allclose(res_delayed['sum'], np.sum(data[roi], axis=0))
+        print('sum')
+        refsum = as_format(np.sum(data[roi], axis=0), NUMPY)
+        print(res['sum'])
+        print(refsum)
+        print(res['sum'] - refsum)
+        assert np.allclose(res['sum'], refsum)  # check sum of frames
+        assert np.allclose(res_delayed['sum'], refsum)
 
-    assert np.allclose(res['mean'], np.mean(data[roi], axis=0))  # check mean
-    assert np.allclose(res_delayed['mean'], np.mean(data[roi], axis=0))
+        ref_mean = as_format(np.mean(data[roi], axis=0), NUMPY)
+        assert np.allclose(res['mean'], ref_mean)  # check mean
+        assert np.allclose(res_delayed['mean'], ref_mean)
 
-    var = np.var(data[roi], axis=0)
-    print('var')
-    print(res['var'])
-    print(var)
-    print(var - res['var'])
-    assert np.allclose(var, res['var'])  # check variance
-    assert np.allclose(var, res_delayed['var'])
+        refvar = as_format(np.var(data[roi], axis=0), NUMPY)
+        print('var')
+        print(res['var'])
+        print(refvar)
+        print(refvar - res['var'])
+        assert np.allclose(refvar, res['var'])  # check variance
+        assert np.allclose(refvar, res_delayed['var'])
 
-    std = np.std(data[roi], axis=0)
-    assert np.allclose(std, res['std'])  # check standard deviation
-    assert np.allclose(std, res_delayed['std'])
+        refstd = as_format(np.std(data[roi], axis=0), NUMPY)
+        assert np.allclose(refstd, res['std'])  # check standard deviation
+        assert np.allclose(refstd, res_delayed['std'])
+    finally:
+        set_use_cpu(0)
 
 
 @pytest.mark.slow

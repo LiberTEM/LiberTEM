@@ -44,7 +44,7 @@ def _naive_mask_apply(masks, data):
 def _mk_random(size, dtype='float32'):
     dtype = np.dtype(dtype)
     if dtype.kind == 'c':
-        choice = [0, 1, -1, 0+1j, 0-1j]
+        choice = [0, 1, -1, 0+1j, 0-1j, 2.3+17j, -23+42j]
     else:
         choice = [0, 1]
     data = np.random.choice(choice, size=size).astype(dtype)

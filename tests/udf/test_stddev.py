@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import numba
 
-from libertem.udf.stddev import run_stddev, process_tile, merge
+from libertem.udf.stddev import StdDevUDF, run_stddev, process_tile, merge
 from libertem.io.dataset.memory import MemoryDataSet
 
 from utils import _mk_random
@@ -68,6 +68,26 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype):
     std = np.std(data[roi], axis=0)
     assert np.allclose(std, res['std'])  # check standard deviation
     assert np.allclose(std, res_delayed['std'])
+
+
+@pytest.mark.slow
+def test_stddev_fuzz(concurrent_ctx):
+    for i in range(100):
+        total = np.random.randint(1, 20)
+        tile = np.random.randint(1, total + 1)
+        n_part = np.random.randint(1, total//tile + 1)
+        print(total, tile, n_part)
+        data = np.random.randn(total, 512, 512) + 1j*np.random.randn(total, 512, 512)
+        ds = concurrent_ctx.load(
+            'memory',
+            data=data,
+            tileshape=(tile, 512, 512),
+            num_partitions=n_part,
+            sig_dims=2,
+        )
+        var = np.var(data, axis=0)
+        res = concurrent_ctx.run_udf(dataset=ds, udf=StdDevUDF())
+        assert np.allclose(res['var'], var)
 
 
 @numba.njit(boundscheck=True, cache=True)

@@ -51,6 +51,21 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
 
     # compute sum of variances for joint samples
     partial_delta = mean_1 - mean
+    # The original version had delta * partial_delta, which gave wrong results
+    # for complex numbers. Taking the absolute seems to fix this for complex.
+    # For real values it is equivalent since delta and partial_delta always have
+    # the same sign: inserting mean from above yields
+    # partial_delta = delta + (n_1 * delta) / n
+    # n_1 and n are natural numbers.
+    # For complex values it is plausible since the variance
+    # sum of the total is a real number. If the mean of both subsets is equal,
+    # the total is varsum_0 + varsum_1, since both delta and partial_delta are
+    # zero. If the mean of the subsets is different, the total variance sum
+    # must always be larger than the variance sums of the
+    # subsets. Taking the absolute of both is the only plausible way I can see
+    # to make sure the calculation is equivalent for real values and at the same time always
+    # a positive real value for complex numbers.
+    # FIXME proper validation and proof for complex
     varsum = varsum_0 + varsum_1 + (n_1 * np.abs(delta) * np.abs(partial_delta))
     return sumsum, varsum
 

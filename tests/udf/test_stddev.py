@@ -12,7 +12,10 @@ from utils import _mk_random
 @pytest.mark.parametrize(
     "use_roi", [True, False]
 )
-def test_stddev(lt_ctx, delayed_ctx, use_roi):
+@pytest.mark.parametrize(
+    "dtype", [np.float32, np.complex128]
+)
+def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype):
     """
     Test variance, standard deviation, sum of frames, and mean computation
     implemented in udf/stddev.py
@@ -22,7 +25,7 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi):
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
-    data = _mk_random(size=(30, 3, 516), dtype="float32")
+    data = _mk_random(size=(30, 3, 516), dtype=dtype)
     dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
                             num_partitions=2, sig_dims=2)
     if use_roi:
@@ -44,6 +47,7 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi):
     assert res['num_frames'] == N  # check the total number of frames
     assert res_delayed['num_frames'] == N
 
+    print('sum')
     print(res['sum'])
     print(np.sum(data[roi], axis=0))
     print(res['sum'] - np.sum(data[roi], axis=0))
@@ -54,6 +58,10 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi):
     assert np.allclose(res_delayed['mean'], np.mean(data[roi], axis=0))
 
     var = np.var(data[roi], axis=0)
+    print('var')
+    print(res['var'])
+    print(var)
+    print(var - res['var'])
     assert np.allclose(var, res['var'])  # check variance
     assert np.allclose(var, res_delayed['var'])
 

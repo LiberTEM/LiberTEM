@@ -48,9 +48,10 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, sparse_input, ba
     try:
         if backend == 'cupy':
             set_use_cuda(cudas[0])
-        data = _mk_random(size=(30, 3, 516), dtype=dtype)
         if sparse_input:
-            data = sparse.COO(data)
+            data = sparse.random((30, 3, 516))
+        else:
+            data = _mk_random(size=(30, 3, 516), dtype=dtype)
         dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
                                 num_partitions=2, sig_dims=2)
         if use_roi:

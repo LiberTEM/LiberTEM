@@ -1,4 +1,4 @@
 [Bugfix] Avoid deadlock on missing tasks
 ========================================
 
-* Don't wait infinitely for missing in-flight tasks to avoid deadlocks.
+* Don't wait infinitely for missing in-flight tasks to avoid deadlocks (:pr:`1311`).

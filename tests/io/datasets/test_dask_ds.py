@@ -212,7 +212,7 @@ def test_part_file_mapping(lt_ctx):
 
     for part_idx, part in enumerate(ds.get_partitions()):
         macrotile = part.get_macrotile(dest_dtype="float32")
-        assert np.unique(np.asarray(macrotile)) == np.asarray([part_idx]).astype(np.float32)
+        assert np.unique(np.asarray(macrotile.data)) == np.asarray([part_idx]).astype(np.float32)
 
 
 def test_part_file_mapping2(lt_ctx):
@@ -223,7 +223,7 @@ def test_part_file_mapping2(lt_ctx):
     sequence = np.asarray([0, 1]).astype(np.float32)
     for part in ds.get_partitions():
         macrotile = part.get_macrotile(dest_dtype="float32")
-        assert np.allclose(np.unique(np.asarray(macrotile)), sequence)
+        assert np.allclose(np.unique(np.asarray(macrotile.data)), sequence)
         sequence += sequence.size
 
 

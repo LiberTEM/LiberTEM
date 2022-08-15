@@ -917,7 +917,7 @@ class H5Partition(Partition):
             roi=roi,
         ):
             rel_slice = tile.tile_slice.shift(self.slice)
-            data[rel_slice.get()] = tile
+            data[rel_slice.get()] = tile.data
         tile_slice = Slice(
             origin=(self.slice.origin[0], 0, 0),
             shape=Shape(data.shape, sig_dims=2),

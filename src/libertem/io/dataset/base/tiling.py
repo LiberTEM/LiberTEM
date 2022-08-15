@@ -3,10 +3,8 @@ import logging
 import numba
 from numba.typed import List as NumbaList
 import numpy as np
-import sparse
 
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
-from libertem.common import Slice
 from .roi import _roi_to_indices
 
 
@@ -273,19 +271,14 @@ def make_get_read_ranges(
 default_get_read_ranges = make_get_read_ranges()
 
 
-class DataTileMixin:
-    def __array_finalize__(self, obj):
-        if obj is None:
-            return
-
-        self.tile_slice = getattr(obj, 'tile_slice', None)
-        self.scheme_idx = getattr(obj, 'scheme_idx', None)
-
-        # invalidate `tile_slice` in case `obj` is modified/reshaped
-        # such that it doesn't match the `tile_slice` anymore
-        if self.tile_slice is not None:
-            if tuple(self.tile_slice.shape) != self.shape:
-                self.tile_slice = None
+class DataTile:
+    def __init__(self, data, tile_slice, scheme_idx):
+        if isinstance(data, DataTile):
+            data = data.data
+        assert data.shape == tuple(tile_slice.shape)
+        self._data = data
+        self.tile_slice = tile_slice
+        self.scheme_idx = scheme_idx
 
     @property
     def flat_data(self) -> np.ndarray:
@@ -301,60 +294,26 @@ class DataTileMixin:
             shape.nav.size,    # stackheight, number of frames we process at once
             shape.sig.size,    # framesize, number of pixels per tile
         )
-        return self.reshape(tileshape)
+        return self._data.reshape(tileshape)
+
+    @property
+    def dtype(self):
+        return self._data.dtype
+
+    @property
+    def shape(self):
+        return self._data.shape
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def c_contiguous(self):
+        try:
+            return self._data.flags.c_contiguous
+        except AttributeError:
+            return None
 
     def __repr__(self):
         return "<DataTile %r scheme_idx=%d>" % (self.tile_slice, self.scheme_idx)
-
-
-class NumpyTile(DataTileMixin, np.ndarray):
-    def reshape(self, *args, **kwargs):
-        # NOTE: "shedding" our DataTile class on reshape, as we can't properly update
-        # the slice to keep it aligned with the reshape process.
-        return np.asarray(self).view(np.ndarray).reshape(*args, **kwargs)
-
-
-class SparseTile(DataTileMixin):
-    def reshape(self, *args, **kwargs):
-        # NOTE: "shedding" our DataTile class on reshape, as we can't properly update
-        # the slice to keep it aligned with the reshape process.
-        cls = self.__class__.__bases__[1]
-        return cls(self).reshape(*args, **kwargs)
-
-
-class COOTile(SparseTile, sparse.COO):
-    ...
-
-
-class GCXSTile(SparseTile, sparse.GCXS):
-    ...
-
-
-# FIXME other types as needed
-
-
-class DataTile:
-    # to make MyPy happy...
-    tile_slice = Slice.from_shape((-1,), -1)
-    scheme_idx = -1
-
-    def __new__(cls, input_array, tile_slice, scheme_idx):
-        if isinstance(input_array, np.ndarray):
-            obj = np.asarray(input_array).view(NumpyTile)
-        elif isinstance(input_array, sparse.COO):
-            obj = COOTile(input_array)
-        elif isinstance(input_array, sparse.GCXS):
-            obj = GCXSTile(input_array)
-        else:
-            raise ValueError(f"Unknown array type {type(input_array)}.")
-        obj.tile_slice = tile_slice
-        obj.scheme_idx = scheme_idx
-
-        if tile_slice.shape.nav.dims != 1:
-            raise ValueError("DataTile should be flat in navigation axis")
-
-        if obj.shape != tuple(tile_slice.shape):
-            raise ValueError(
-                f"shape mismatch: data={obj.shape}, tile_slice={tile_slice.shape}"
-            )
-        return obj

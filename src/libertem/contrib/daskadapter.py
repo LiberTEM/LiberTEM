@@ -11,7 +11,7 @@ def make_dask_array(dataset, dtype='float32', roi=None):
     for p in dataset.get_partitions():
         d = dask.delayed(p.get_macrotile)(
             dest_dtype=dtype, roi=roi
-        )
+        ).data
         workers[d] = p.get_locations()
         chunks.append(
             dask.array.from_delayed(

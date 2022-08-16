@@ -109,6 +109,22 @@ class WorkerPool:
                     PoolWorkerInfo(queues=queues, process=p, spec=spec_item)
                 )
 
+    def kill(self):
+        for worker in self._workers:
+            worker.process.terminate()
+            worker.process.join(5)
+            if worker.process.exitcode is not None:
+                worker.process.kill()
+                # reap the dead process:
+                worker.process.join(30)
+        exitcodes = [
+            worker.process.exitcode
+            for worker in self._workers
+        ]
+        self._workers = None
+        self._response_q = None
+        assert all([e is not None for e in exitcodes])
+
     @property
     def workers(self) -> List[PoolWorkerInfo]:
         return self._workers
@@ -641,6 +657,10 @@ class PipelinedExecutor(BaseJobExecutor):
             self._closed = False
             return pool
 
+    def _restart_pool(self):
+        self._pool.kill()
+        self._pool = self._start_pool()
+
     @classmethod
     def _default_spec(cls):
         from libertem.utils.devices import detect
@@ -796,7 +816,8 @@ class PipelinedExecutor(BaseJobExecutor):
                     if result["type"] == "ERROR":
                         logger.error(f"Error response from worker: {result['error']}")
             except WorkerQueueEmpty:
-                # In the future we may kill or restart workers here
+                # kill and restart workers:
+                self._restart_pool()
                 raise RuntimeError(
                     f'Worker or queue presumably in a bad state, lost {in_flight} in-flight tasks.'
                 )

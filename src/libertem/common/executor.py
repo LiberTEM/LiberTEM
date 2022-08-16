@@ -433,7 +433,7 @@ class WorkerQueue:
         """
         raise NotImplementedError()
 
-    def close(self, drain: bool = True):
+    def close(self, drain: bool = True, force: bool = False):
         """
         Parameters
         ----------
@@ -441,6 +441,9 @@ class WorkerQueue:
         drain
             If needed by the underlying queue, remove any items
             from the queue before closing
+
+        force
+            Don't wait for data to be flushed, forcefully close the queue
         """
         raise NotImplementedError()
 
@@ -470,7 +473,7 @@ class SimpleWorkerQueue(WorkerQueue):
         except queue.Empty:
             raise WorkerQueueEmpty()
 
-    def close(self, drain: bool = True):
+    def close(self, drain: bool = True, force: bool = False):
         pass
 
 
@@ -502,7 +505,7 @@ class SimpleMPWorkerQueue(WorkerQueue):
         except queue.Empty:
             raise WorkerQueueEmpty()
 
-    def close(self, drain: bool = True):
+    def close(self, drain: bool = True, force: bool = False):
         if not self._closed:
             if drain:
                 while True:
@@ -511,7 +514,10 @@ class SimpleMPWorkerQueue(WorkerQueue):
                     except queue.Empty:
                         break
             self.q.close()
-            self.q.join_thread()
+            if force:
+                self.q.cancel_join_thread()
+            else:
+                self.q.join_thread()
             self._closed = True
 
 

@@ -6,7 +6,6 @@ import numba
 
 from libertem.udf import UDF
 from libertem.common.buffers import reshaped_view
-from libertem.common.sparse import NUMPY, SPARSE_COO, SPARSE_GCXS
 
 
 @numba.njit(fastmath=True, cache=True, nogil=True)
@@ -291,10 +290,10 @@ class StdDevUDF(UDF):
         super().__init__(dtype=dtype, use_numba=use_numba)
 
     def get_backends(self):
-        return ('numpy', 'cupy')
+        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
 
     def get_formats(self):
-        return (NUMPY, SPARSE_COO, SPARSE_GCXS)
+        return (self.FORMAT_NUMPY, self.FORMAT_SPARSE_COO, self.FORMAT_SPARSE_GCXS)
 
     def get_result_buffers(self):
         """

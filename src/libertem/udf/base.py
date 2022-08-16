@@ -1224,12 +1224,16 @@ class UDF(UDFBase):
 
     def get_formats(self):
         '''
-        Signal which array formats the UDF can use. It can be
-        one of the format identifiers described in :mod:`libertem.common.sparse`
+        Signal which array formats the UDF can use. It can be a single value or
+        an iterable of the format identifiers :attr:`UDF.FORMAT_NUMPY`,
+        :attr:`UDF.FORMAT_SPARSE_COO` or :attr:`UDF.FORMAT_SPARSE_GCXS`.
+        Format identifiers coming earlier are more likely to be selected.
+
+        The default is :code:`(UDF.FORMAT_NUMPY, )`.
 
         .. versionadded:: 0.11.0
         '''
-        return (NUMPY, )
+        return (self.FORMAT_NUMPY, )
 
     def forbuf(self, arr):
         '''
@@ -1788,7 +1792,7 @@ class UDFPartRunner:
                     warnings.warn(f"UDF {udf} backends are {backends}, recommended on CUDA are "
                         "'cuda' and 'cupy'. "
                         f"UDF formats are {formats}, supported on CUDA is {NUMPY}. "
-                        "Falling bak to numpy", RuntimeWarning)
+                        "Falling back to numpy", RuntimeWarning)
                     numpy_udfs.append(udf)
                 else:
                     raise RuntimeError(

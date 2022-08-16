@@ -1,7 +1,6 @@
 import numpy as np
 
 from libertem.udf import UDF
-from libertem.common.sparse import NUMPY, SPARSE_COO, SPARSE_GCXS
 
 
 class SumUDF(UDF):
@@ -28,13 +27,18 @@ class SumUDF(UDF):
     def get_preferred_input_dtype(self):
         return self.params.dtype
 
+    def get_backends(self):
+        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
+
     def get_formats(self):
-        return (SPARSE_GCXS, SPARSE_COO, NUMPY)
+        return (self.FORMAT_SPARSE_GCXS, self.FORMAT_SPARSE_COO, self.FORMAT_NUMPY)
 
     def get_result_buffers(self):
         ''
         return {
-            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype)
+            'intensity': self.buffer(
+                kind='sig', dtype=self.meta.input_dtype, where='device'
+            )
         }
 
     def process_tile(self, tile):

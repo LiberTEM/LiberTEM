@@ -20,11 +20,17 @@ class LogsumUDF(UDF):
     def __init__(self):
         super().__init__()
 
+    def get_backends(self):
+        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
+
+    def get_formats(self):
+        return (self.FORMAT_NUMPY, self.FORMAT_SPARSE_GCXS, self.FORMAT_SPARSE_COO)
+
     def get_result_buffers(self):
         ""
         return {
             'logsum': self.buffer(
-                kind='sig', dtype='float32'
+                kind='sig', dtype='float32', where='device'
             ),
         }
 
@@ -40,7 +46,7 @@ class LogsumUDF(UDF):
 
     def process_frame(self, frame):
         ""
-        self.results.logsum[:] += np.log(frame - np.min(frame) + 1)
+        self.results.logsum[:] += self.forbuf(np.log(frame - np.min(frame) + 1))
 
 
 def run_logsum(ctx, dataset, roi=None):

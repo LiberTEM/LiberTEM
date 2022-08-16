@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse as sp
 import sparse
 
-from utils import _naive_mask_apply, _mk_random
+from utils import _naive_mask_apply, _mk_random, set_backend
 
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -160,14 +160,7 @@ def test_signed(lt_ctx):
     'backend', ['numpy', 'cupy']
 )
 def test_multi_masks(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_backend(backend):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         mask0 = _mk_random(size=(16, 16))
         mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
@@ -192,8 +185,6 @@ def test_multi_masks(lt_ctx, backend):
             results.mask_2.raw_data,
             expected[2],
         )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(

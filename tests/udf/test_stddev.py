@@ -1,15 +1,12 @@
 import pytest
 import numpy as np
 import numba
-import sparse
 
 from libertem.udf.stddev import StdDevUDF, run_stddev, process_tile, merge
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.sparse import as_format, NUMPY
-from libertem.common.backend import set_use_cpu, set_use_cuda
-from libertem.utils.devices import detect
+from libertem.common.sparse import SPARSE_COO, as_format, NUMPY
 
-from utils import _mk_random
+from utils import _mk_random, set_backend
 
 
 @pytest.mark.with_numba
@@ -23,12 +20,12 @@ from utils import _mk_random
     "use_numba", [True, False]
 )
 @pytest.mark.parametrize(
-    "sparse_input", [True, False]
+    "format", [NUMPY, SPARSE_COO]
 )
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )
-def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, sparse_input, backend):
+def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, format, backend):
     """
     Test variance, standard deviation, sum of frames, and mean computation
     implemented in udf/stddev.py
@@ -38,20 +35,8 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, sparse_input, ba
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
-    if sparse_input and backend == 'cupy':
-        pytest.skip("No sparse input with CuPy yet")
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
-        if sparse_input:
-            data = sparse.random((30, 3, 516))
-        else:
-            data = _mk_random(size=(30, 3, 516), dtype=dtype)
+    with set_backend(backend):
+        data = _mk_random(size=(30, 3, 516), dtype=dtype, format=format)
         dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
                                 num_partitions=2, sig_dims=2)
         if use_roi:
@@ -96,8 +81,6 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, sparse_input, ba
         refstd = as_format(np.std(data[roi], axis=0), NUMPY)
         assert np.allclose(refstd, res['std'])  # check standard deviation
         assert np.allclose(refstd, res_delayed['std'])
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.slow

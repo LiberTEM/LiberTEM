@@ -1,12 +1,13 @@
 import datetime
 import time
 import os
+from contextlib import contextmanager
 
 import numpy as np
 import sparse
+import pytest
 
-
-from libertem.common.sparse import to_dense
+from libertem.common.sparse import NUMPY, SPARSE_COO, SPARSE_GCXS, to_dense
 from libertem.analysis.gridmatching import calc_coords
 from libertem.udf import UDF
 import libertem.common.backend as bae
@@ -15,6 +16,8 @@ from libertem.udf.masks import ApplyMasksUDF
 from libertem.io.corrections import CorrectionSet
 from libertem.io.corrections.detector import correct
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
+from libertem.common.backend import get_use_cpu, get_use_cuda, set_use_cpu, set_use_cuda
+from libertem.utils.devices import detect
 
 
 def _naive_mask_apply(masks, data):
@@ -41,18 +44,28 @@ def _naive_mask_apply(masks, data):
 
 # This function introduces asymmetries so that errors won't average out so
 # easily with large data sets
-def _mk_random(size, dtype='float32'):
+def _mk_random(size, dtype='float32', format=NUMPY):
     dtype = np.dtype(dtype)
-    if dtype.kind == 'c':
-        choice = [0, 1, -1, 0+1j, 0-1j, 2.3+17j, -23+42j]
+    if format == NUMPY:
+        if dtype.kind == 'c':
+            choice = [0, 1, -1, 0+1j, 0-1j, 2.3+17j, -23+42j]
+        else:
+            choice = [0, 1]
+        data = np.random.choice(choice, size=size).astype(dtype)
+        coords2 = tuple(np.random.choice(range(c)) for c in size)
+        coords10 = tuple(np.random.choice(range(c)) for c in size)
+        data[coords2] = np.random.choice(choice) * sum(size)
+        data[coords10] = np.random.choice(choice) * 10 * sum(size)
+        return data
+    elif format in (SPARSE_COO, SPARSE_GCXS):
+        if format == SPARSE_GCXS:
+            form = 'gcxs'
+        else:
+            form = 'coo'
+        data = sparse.random(size, format=form).astype(dtype)
+        return data
     else:
-        choice = [0, 1]
-    data = np.random.choice(choice, size=size).astype(dtype)
-    coords2 = tuple(np.random.choice(range(c)) for c in size)
-    coords10 = tuple(np.random.choice(range(c)) for c in size)
-    data[coords2] = np.random.choice(choice) * sum(size)
-    data[coords10] = np.random.choice(choice) * 10 * sum(size)
-    return data
+        raise ValueError(f"Don't understand array format {format}.")
 
 
 def _fullgrid(zero, a, b, index, skip_zero=False):
@@ -357,3 +370,37 @@ def roi_as_sparse(roi):
     if roi is None:
         return roi
     return sparse.COO.from_numpy(roi, fill_value=False)
+
+
+@contextmanager
+def set_backend(backend):
+    '''
+    This context manager is designed to work with the inline executor.
+    It simplifies running tests with several backends by skipping
+    unavailable backends and handling setting and re-setting the environment variables
+    correctly.
+    '''
+    prev_cuda_id = get_use_cuda()
+    prev_cpu_id = get_use_cpu()
+    try:
+        if backend in ('cupy', 'cuda'):
+            d = detect()
+            cudas = d['cudas']
+            if not d['cudas']:
+                pytest.skip(f"No CUDA device, skipping test with backend {backend}.")
+            if backend == 'cupy' and not d['has_cupy']:
+                pytest.skip(f"No CuPy, skipping test with backend {backend}.")
+            set_use_cuda(cudas[0])
+        else:
+            set_use_cpu(0)
+        print(f'running with {backend}')
+        yield
+    finally:
+        if prev_cpu_id is not None:
+            assert prev_cuda_id is None
+            set_use_cpu(prev_cpu_id)
+        elif prev_cuda_id is not None:
+            assert prev_cpu_id is None
+            set_use_cuda(prev_cuda_id)
+        else:
+            raise RuntimeError('No previous device ID, this should not happen.')

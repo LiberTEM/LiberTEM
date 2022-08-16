@@ -8,6 +8,7 @@ import pytest
 import distributed
 import dask
 import numpy as np
+import sparse
 
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.dask import DaskJobExecutor
@@ -85,7 +86,7 @@ def ctx(request, local_cluster_url):
 @pytest.fixture(
     scope='session',
     params=[
-        "HDF5", "RAW", "memory", "NPY", "BLO",
+        "HDF5", "RAW", "memory", "sparse", "NPY", "BLO",
         "DM", "EMPAD", "FRMS6", "K2IS",
         "MIB", "MRC", "SEQ", "SER", "TVIPS"
     ]
@@ -110,6 +111,11 @@ def load_kwargs(request, hdf5, default_raw, default_npy, default_npy_filepath):
         return {
             'filetype': 'memory',
             'data': np.ones((3, 4, 5, 6)),
+        }
+    elif param == 'sparse':
+        return {
+            'filetype': 'memory',
+            'data': sparse.ones((3, 4, 5, 6)),
         }
     elif param == 'NPY':
         return {

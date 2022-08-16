@@ -109,19 +109,24 @@ class WorkerPool:
                     PoolWorkerInfo(queues=queues, process=p, spec=spec_item)
                 )
 
+    def kill_worker(self, worker_info: PoolWorkerInfo):
+        worker_info.queues.request.close(drain=False, force=True)
+        worker_info.process.terminate()
+        worker_info.process.join(5)
+        if worker_info.process.exitcode is not None:
+            worker_info.process.kill()
+            # reap the dead process:
+            worker_info.process.join(30)
+
     def kill(self):
         for worker in self._workers:
-            worker.process.terminate()
-            worker.process.join(5)
-            if worker.process.exitcode is not None:
-                worker.process.kill()
-                # reap the dead process:
-                worker.process.join(30)
+            self.kill_worker(worker)
         exitcodes = [
             worker.process.exitcode
             for worker in self._workers
         ]
         self._workers = None
+        self._response_q.close(drain=False, force=True)
         self._response_q = None
         assert all([e is not None for e in exitcodes])
 
@@ -873,13 +878,10 @@ class PipelinedExecutor(BaseJobExecutor):
                             logger.warning(f"got message on close: {msg[0]}")
                     except WorkerQueueEmpty:
                         break
-                # FIXME: forcefully kill the process
-                # (might need to first send SHUTDOWN to all workers, as
-                # killing a process might make the request queue unusable, too)
-                # -> basically, need to kill all workers in this case
-                # for now, let the timeout bubble up
                 worker_info.process.join(timeout=self._cleanup_timeout)
-                worker_info.queues.request.close()
+                if worker_info.process.exitcode is None:
+                    self._pool.kill_worker(worker_info)
+                worker_info.queues.request.close(force=True)
             self._pool.close_resp_queue()
             self._closed = True
 

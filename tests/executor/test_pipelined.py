@@ -374,3 +374,24 @@ def test_close_with_scatter():
     finally:
         if executor is not None:
             executor.close()
+
+
+def test_exception_in_main_thread():
+    executor = None
+    try:
+        executor = PipelinedExecutor.make_local()
+        ctx = Context(executor=executor)
+        udf = SucceedEventuallyUDF()
+        data = np.random.randn(1, 32, 16, 16)
+        ds = ctx.load("memory", data=data, num_partitions=32)
+        with pytest.raises(RuntimeError):
+            res_iter = ctx.run_udf_iter(dataset=ds, udf=udf)
+            next(res_iter)
+            res_iter.throw(RuntimeError("stuff"))
+            next(res_iter)
+
+        # here, we get a KeyError if the worker queues aren't drained:
+        ctx.run_udf(dataset=ds, udf=udf)
+    finally:
+        if executor is not None:
+            executor.close()

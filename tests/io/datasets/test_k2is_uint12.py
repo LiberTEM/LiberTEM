@@ -28,7 +28,7 @@ def encode_12_little_little(inp, out):
     out = out.view(np.uint8)
     encoded_type = np.dtype('<u4')
     decoded_words = len(inp)
-    assert(len(out)*bytebits >= decoded_words*bits)
+    assert len(out)*bytebits >= decoded_words*bits
 
     encoded_bytes = encoded_type.itemsize
 

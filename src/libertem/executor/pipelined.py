@@ -109,6 +109,27 @@ class WorkerPool:
                     PoolWorkerInfo(queues=queues, process=p, spec=spec_item)
                 )
 
+    def kill_worker(self, worker_info: PoolWorkerInfo):
+        worker_info.queues.request.close(drain=False, force=True)
+        worker_info.process.terminate()
+        worker_info.process.join(5)
+        if worker_info.process.exitcode is not None:
+            worker_info.process.kill()
+            # reap the dead process:
+            worker_info.process.join(30)
+
+    def kill(self):
+        for worker in self._workers:
+            self.kill_worker(worker)
+        exitcodes = [
+            worker.process.exitcode
+            for worker in self._workers
+        ]
+        self._workers = None
+        self._response_q.close(drain=False, force=True)
+        self._response_q = None
+        assert all([e is not None for e in exitcodes])
+
     @property
     def workers(self) -> List[PoolWorkerInfo]:
         return self._workers
@@ -188,6 +209,7 @@ def worker_run_task(
                 "type": "RESULT",
                 "result": result,
                 "task_id": header["task_id"],
+                "uuid": header["uuid"],
                 "worker_id": worker_idx,
             })
         except Exception as e:
@@ -198,6 +220,7 @@ def worker_run_task(
                 "error": e,
                 "exception": e,
                 "worker_id": worker_idx,
+                "uuid": header["uuid"],
             })
         finally:
             gc.enable()
@@ -639,6 +662,10 @@ class PipelinedExecutor(BaseJobExecutor):
             self._closed = False
             return pool
 
+    def _restart_pool(self):
+        self._pool.kill()
+        self._pool = self._start_pool()
+
     @classmethod
     def _default_spec(cls):
         from libertem.utils.devices import detect
@@ -674,6 +701,7 @@ class PipelinedExecutor(BaseJobExecutor):
         # tasks, which is why we have a separate counter for now.
         in_flight = 0
         id_to_task = {}
+        tasks_uuid = str(uuid.uuid4())
 
         try:
             self._validate_worker_state()
@@ -695,6 +723,7 @@ class PipelinedExecutor(BaseJobExecutor):
                 worker_queues = self._pool.get_worker_queues(worker_idx)
                 worker_queues.request.put({
                     "type": "RUN_TASK",
+                    "uuid": tasks_uuid,
                     "task": cloudpickle.dumps(task),
                     "task_id": task_idx,
                     "params_handle": params_handle,
@@ -719,6 +748,13 @@ class PipelinedExecutor(BaseJobExecutor):
 
                 try:
                     with self._pool.response_queue.get(block=False) as (result, _):
+                        if result['uuid'] != tasks_uuid:
+                            # mismatch, log and ignore:
+                            logger.warning(
+                                "mismatched result, ignoring: %s != %s",
+                                result['uuid'], tasks_uuid,
+                            )
+                            continue
                         in_flight -= 1
                         if result["type"] == "ERROR":
                             _raise_from_msg(result, "failed to run tasks")
@@ -734,6 +770,13 @@ class PipelinedExecutor(BaseJobExecutor):
             while in_flight > 0:
                 try:
                     with self._pool.response_queue.get() as (result, _):
+                        if result['uuid'] != tasks_uuid:
+                            # mismatch, log and ignore:
+                            logger.warning(
+                                "mismatched result, ignoring: %s != %s",
+                                result['uuid'], tasks_uuid,
+                            )
+                            continue
                         in_flight -= 1
                         if result["type"] == "ERROR":
                             _raise_from_msg(result, "failed to run tasks")
@@ -745,26 +788,44 @@ class PipelinedExecutor(BaseJobExecutor):
                     continue
 
             task_comm_handler.done()
-        except Exception:
+        except Exception as e:
             # In case of an exception, we need to drain the response queue,
             # so the next `run_tasks` call isn't polluted by old responses.
             # -> just like in the happy case, we need to wait for responses
             # for all in-flight tasks. In case the error happened between incrementing
             # `in_flight` and actually sending the task to the queue, we should
             # have a timeout here to not wait infinitely long.
-            while in_flight > 0:
-                try:
-                    with self._pool.response_queue.get(
-                        timeout=self._cleanup_timeout
-                    ) as (result, _):
-                        in_flight -= 1
-                        # we only raise the first exception; log the others here:
-                        if result["type"] == "ERROR":
-                            logger.error(f"Error response from worker: {result['error']}")
-                except WorkerQueueEmpty:
-                    continue
+            try:
+                self._drain_response_queue(in_flight=in_flight)
+            except RuntimeError as e2:
+                raise e2 from e
             # if from a worker, this is the first exception that got put into the queue
             raise
+
+    def _drain_response_queue(self, in_flight: int) -> None:
+        """
+        Drain response queue and log any errors returned from workers
+
+        Parameters
+        ----------
+        in_flight : int
+            The number of requests that are still in flight
+        """
+        while in_flight > 0:
+            try:
+                with self._pool.response_queue.get(
+                    timeout=self._cleanup_timeout
+                ) as (result, _):
+                    in_flight -= 1
+                    # we only raise the first exception; log the others here:
+                    if result["type"] == "ERROR":
+                        logger.error(f"Error response from worker: {result['error']}")
+            except WorkerQueueEmpty:
+                # kill and restart workers:
+                self._restart_pool()
+                raise RuntimeError(
+                    f'Worker or queue presumably in a bad state, lost {in_flight} in-flight tasks.'
+                )
 
     def run_tasks(
         self,
@@ -817,13 +878,10 @@ class PipelinedExecutor(BaseJobExecutor):
                             logger.warning(f"got message on close: {msg[0]}")
                     except WorkerQueueEmpty:
                         break
-                # FIXME: forcefully kill the process
-                # (might need to first send SHUTDOWN to all workers, as
-                # killing a process might make the request queue unusable, too)
-                # -> basically, need to kill all workers in this case
-                # for now, let the timeout bubble up
                 worker_info.process.join(timeout=self._cleanup_timeout)
-                worker_info.queues.request.close()
+                if worker_info.process.exitcode is None:
+                    self._pool.kill_worker(worker_info)
+                worker_info.queues.request.close(force=True)
             self._pool.close_resp_queue()
             self._closed = True
 

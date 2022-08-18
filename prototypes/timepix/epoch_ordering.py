@@ -8,7 +8,7 @@ def reverse_shift_distance(window: np.ndarray, target: int, threshold: int) -> i
     Search backward through window until
         abs(window[-idx] - target) < threshold
     and return the reverse index value for this condition
-    
+
     If condition is not met return 0
     """
     shift = 1

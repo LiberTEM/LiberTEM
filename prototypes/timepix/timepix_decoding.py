@@ -374,10 +374,10 @@ def extract_between_offsets(fp, start_offset, end_offset,
 def extract_between_timestamps(filepath, structure, start_timestamp, end_timestamp, max_ooo=6400,
                                cross_offset: int = 2):
     """
-    structure is (timestamp, file_offset), epoch-corrected
+    structure is (timestamp, file_offset, epoch_start_timestamp), epoch-corrected
     start/end_timestamp are same base as the timestamp in structure, epoch-corrected
 
-    timestamps in structure are ordered increasing, ties broken by offset increasing
+    timestamps in structure are ordered increasing
 
     max_ooo is the max timestamp jitter we will allow, i.e. if the upper target timestamp
     is x, as soon as we see x + max_ooo we will stop searching for OOO values <= x
@@ -406,15 +406,15 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
         # Seek backwards if necessary
         append = main_head
         while not events_collector or times_collector[0].min() > start_timestamp - max_ooo:
+            previous_start = start_offset
             start_offset = max(0, start_offset - SEEK_AMOUNT)
-            if start_offset == 0:
-                # FIXME
+            if start_offset == 0 and previous_start == 0:
                 break
             (_events,
             _global_times,
             (_head, _tail)) = extract_between_offsets(fp,
                                                       start_offset,
-                                                      start_offset + SEEK_AMOUNT,
+                                                      previous_start,
                                                       append_data=append,
                                                       cross_offset=cross_offset)
             assert _tail is None
@@ -426,14 +426,14 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
         # Seek forwards if necessary
         prepend = main_tail
         while times_collector[-1].max() < end_timestamp + max_ooo:
+            previous_end = end_offset
             end_offset = min(filesize, end_offset + SEEK_AMOUNT)
-            if end_offset == filesize:
-                # FIXME
+            if end_offset == filesize and previous_end == filesize:
                 break
             (_events,
             _global_times,
             (_head, _tail)) = extract_between_offsets(fp,
-                                                      end_offset - SEEK_AMOUNT,
+                                                      previous_end,
                                                       end_offset,
                                                       prepend_data=prepend,
                                                       cross_offset=cross_offset)

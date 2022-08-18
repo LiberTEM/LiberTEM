@@ -25,6 +25,7 @@ class Timepix3DataSet(DataSet):
                  nav_shape: tuple[int, ...],
                  frame_times: np.ndarray | float | None = None,
                  cross_offset: int = 2,
+                 tot_threshold: int = 5,
                  sig_shape: tuple[int, int] = (512, 512),
                  sync_offset: int = 0,
                  io_backend=None):
@@ -58,6 +59,10 @@ class Timepix3DataSet(DataSet):
         assert isinstance(cross_offset, int)
         assert cross_offset >= 0
         self._cross_offset = cross_offset
+
+        assert isinstance(tot_threshold, (int, np.uint16))
+        assert tot_threshold >= 0
+        self._tot_threshold = tot_threshold
 
         sig_shape = tuple(sig_shape)
         if not all(isinstance(d, int) for d in sig_shape) or len(sig_shape) != 2:
@@ -118,7 +123,8 @@ class Timepix3DataSet(DataSet):
             image_count=self._nav_shape_product,
             metadata=dict(int_frame_times=int_frame_times,
                           file_structure=self._file_structure,
-                          cross_offset=self._cross_offset),
+                          cross_offset=self._cross_offset,
+                          tot_threshold=self._tot_threshold),
         )
         return self
 
@@ -206,6 +212,7 @@ class Timepix3Partition(BasePartition):
         start_frame = self._start_frame
         num_frames = self._num_frames
         cross_offset = self.meta.metadata['cross_offset']
+        tot_threshold = np.uint16(self.meta.metadata['tot_threshold'])
         # Check if this is 1-beyond or actual end index ?
         end_frame = start_frame + num_frames
         sig_shape = tuple(self.meta.shape.sig)
@@ -234,7 +241,8 @@ class Timepix3Partition(BasePartition):
                                          spans_for_tiles,
                                          sig_shape, max_ooo=6400,
                                          as_dense=True,
-                                         cross_offset=cross_offset)
+                                         cross_offset=cross_offset,
+                                         tot_threshold=tot_threshold)
             tile_block = tile_block.astype(np.dtype(dest_dtype))
 
             flat_nav_origin = frame_idcs[idx]

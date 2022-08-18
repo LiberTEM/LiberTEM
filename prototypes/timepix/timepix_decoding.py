@@ -258,17 +258,17 @@ def decode_block(data: np.ndarray, out_buffer: np.ndarray, cross_offset: int = 2
 
 
 @numba.njit
-def densify_valid(flat_idcs, values, valid, out_buffer):
+def densify_valid(flat_idcs, values, valid, threshold, out_buffer):
     for idx in range(len(flat_idcs)):
-        if not valid[idx]:
+        if not valid[idx] or values[idx] < threshold:
             continue
         flat_idx = flat_idcs[idx]
         out_buffer[flat_idx] += values[idx]
 
 
-def make_dense_valid(flat, values, valid, shape) -> np.ndarray:
+def make_dense_valid(flat, values, valid, threshold, shape) -> np.ndarray:
     dense_frame = np.zeros(np.prod(shape), dtype=np.uint64)
-    densify_valid(flat, values, valid, dense_frame)
+    densify_valid(flat, values, valid, threshold, dense_frame)
     return dense_frame.reshape(shape)
 
 
@@ -547,8 +547,8 @@ def split_contig_spans(spans: np.ndarray, structure: np.ndarray,
 
 
 def spans_as_frames(filepath, structure: np.ndarray, spans: np.ndarray,
-                    sig_shape: tuple[int, int], max_ooo=6400, as_dense=False,
-                    cross_offset: int = 2) -> sparse.COO:
+                    sig_shape: tuple[int, int], max_ooo=6400, as_dense: bool = False,
+                    cross_offset: int = 2, tot_threshold: int = 5) -> sparse.COO:
     assert are_spans_valid(spans)
     subspans = split_contig_spans(spans, structure, max_ooo)
     events, times = [], []
@@ -568,7 +568,8 @@ def spans_as_frames(filepath, structure: np.ndarray, spans: np.ndarray,
     span_id, ts_valid = span_idx_for_ts(spans, times)
     extended_shape = (spans.shape[0] + 1,) + sig_shape
     flat_idcs = np.ravel_multi_index((span_id, events[1], events[0]), extended_shape)
-    dense = make_dense_valid(flat_idcs, events[2], ts_valid, out_shape)
+    tot_threshold = np.uint16(tot_threshold)
+    dense = make_dense_valid(flat_idcs, events[2], ts_valid, tot_threshold, out_shape)
     if as_dense:
         return dense
     coords = np.argwhere(dense)

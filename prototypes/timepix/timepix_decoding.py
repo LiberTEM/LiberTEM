@@ -209,9 +209,9 @@ def full_timestamp(value_s: float | np.ndarray):
         return int(value_i)
 
 
-def find_timestamp_near(filepath: str, offset: int, max_offset: int) -> tuple[int, np.uint64]:
+def find_timestamp_near(filepath: str, offset: int, max_offset: int) -> tuple[np.uint64, int]:
     """
-    Return (file_offset, first_hit_timestamp) after a header in the file,
+    Return (first_hit_timestamp, file_offset) after a header in the file,
     search starting from offset
     Sequentially read READ_BLOCKSIZE bytes until a header + timestamp is found,
     else return (None, None) if we reach max_offset or end of file

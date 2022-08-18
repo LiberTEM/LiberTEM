@@ -84,7 +84,7 @@ def compute_epoch(times: np.ndarray,
     """
     assert (np.issubdtype(times.dtype, np.unsignedinteger)
             or np.issubdtype(times.dtype, np.integer))
-    times = times.astype(np.int32)
+    times = times.astype(int)
     dt = np.diff(times, prepend=times[0] - (times[1] - times[0]))
     # with this definition of dt, the edges are
     # the indexes just after the jump :

@@ -12,6 +12,7 @@ from libertem.io.dataset.base import (DataSet, DataSetException, DataSetMeta,
                                       BasePartition, File, FileSet)
 
 from timepix_decoding import read_file_structure, full_timestamp, spans_as_frames
+from epoch_ordering import compute_epoch
 
 if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.tiling_scheme import TilingScheme
@@ -75,8 +76,28 @@ class Timepix3DataSet(DataSet):
         self._image_count = self._nav_shape_product
         self._sync_offset_info = self.get_sync_offset_info()
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
-        # Currently read_file_structure does not do rollover correction
-        self._file_structure = read_file_structure(self._path, executor=executor)
+        _file_structure = read_file_structure(self._path, executor=executor)
+        _file_structure = np.concatenate((_file_structure,
+                                          np.zeros_like(_file_structure[:, :1])),
+                                         axis=1)
+        # Will assume that the global timer starts at 0 and
+        # always rolls over at the full interval (2**16, 2**34 etc)
+        # To support early rollovers will be extremely challenging
+        # to handle robustly. In the test file the end of the control
+        # packets does cause an early rollover, but here it's ignored
+        epoch_interval = 2**34
+        _rollover_epochs = compute_epoch(_file_structure[:, 0],
+                                         interval=epoch_interval,
+                                         look_back=10,
+                                         threshold=0.2)
+        # Compute epoch timestamp increments
+        for epoch_number, slices in _rollover_epochs:
+            for sl in slices:
+                _file_structure[sl, 2] = epoch_number * epoch_interval
+        # Add the timestamp increments to the raw timestamps
+        _file_structure[:, 0] += _file_structure[:, 2]
+        sorter = np.argsort(_file_structure[:, 0])
+        self._file_structure = _file_structure[sorter, :]
         min_timestamp = self._file_structure[:, 0].min()
         max_timestamp = self._file_structure[:, 0].max()
         if self._frame_times is None:
@@ -261,7 +282,7 @@ if __name__ == '__main__':
                              'experimental_200kv/edge/edge1_000001.tpx3').expanduser()
 
     ctx = lt.Context.make_with('inline')
-    ds = Timepix3DataSet(data_path, (10, 10), cross_offset=0)
+    ds = Timepix3DataSet(data_path, (10, 10))
     ds = ds.initialize(ctx.executor)
     ds.set_num_cores(4)
 

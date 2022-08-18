@@ -297,10 +297,7 @@ def read_file_structure(filepath, n_samples=512, start_offset=0,
         structure = executor.map(_find_timestamp_near, [*offset_iter])
 
     structure = [s for s in structure if s[0] is not None]
-    structure = np.asarray(structure).reshape(-1, 2)
-    # FIXME correct for epoch rollover here!!!
-    sorter = np.argsort(structure[:, 0])
-    return structure[sorter, :]
+    return np.asarray(structure).reshape(-1, 2)
 
 
 def estimate_true_offset(timestamps: np.ndarray, offsets: np.ndarray,

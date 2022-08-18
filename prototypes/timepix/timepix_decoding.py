@@ -114,6 +114,54 @@ def get_global_time_no_roll(spidr_time, coarse_toa, fine_toa):
 
 
 @numba.njit
+def correct_timestamp_rollover(raw_timestamps: np.ndarray, structure: np.ndarray,
+                               start_offset: int, end_offset: int):
+    """
+    Inplace correct np.uint64 timestamps extracted approximately
+    between corrected start_offset / end_offset based
+    on the file structure information, which contains
+         (corrected_timestamps, file_offset, epoch_start_timestamp)
+
+    Only valid for sets of timestamps which span part of one epoch
+    or one epoch boundary, multiple boundaries will break the logic
+
+    Will also fail if the file has been too-sparsely sampled
+    relative to the rollovers, requires at least a few samples per
+    epoch to be reasonable. This could probably be ensured adaptively!
+
+    This function is just a first attempt
+    """
+    centre_offset = (start_offset + end_offset) // 2
+    closest_file_loc = np.abs(structure[:, 1] - centre_offset).argmin()
+    ref_timestamp, ref_offset, epoch_start = structure[closest_file_loc]
+    ref_timestamp = np.uint64(ref_timestamp)
+    interval = np.uint64(2**34)
+    # consider as epoch shift if we are more than 1/4 of a rollover away
+    threshold = interval >> np.uint64(2)
+
+    for idx in range(raw_timestamps.size):
+        raw_timestamps[idx] += np.uint64(epoch_start)
+
+        approximate_offset = start_offset + idx * 8
+        if approximate_offset < ref_offset:
+            # We're before our reference point
+            # Assume either same or previous epoch
+            if ref_timestamp < raw_timestamps[idx] and \
+                    (raw_timestamps[idx] - ref_timestamp) > threshold:
+                # Before the reference offset and the corrected timestamp
+                # is much larger than reference timestamp => Probably a rollover
+                raw_timestamps[idx] -= interval
+        else:
+            # We're after our reference point
+            # Assume either same or next epoch
+            if ref_timestamp > raw_timestamps[idx] and \
+                    (ref_timestamp - raw_timestamps[idx]) > threshold:
+                # Before the reference offset and the corrected timestamp
+                # is much larger than reference timestamp => Probably a rollover
+                raw_timestamps[idx] += interval
+
+
+@numba.njit
 def is_header(value: np.uint64) -> bool:
     """
     title_ints = tuple(np.uint64(ord(x)) << np.uint64(i * 8) for i, x in enumerate('TPX3'))
@@ -401,6 +449,7 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
 
         if events.size:
             events_collector.append(events)
+            correct_timestamp_rollover(global_times, structure, start_offset, end_offset)
             times_collector.append(global_times)
 
         # Seek backwards if necessary
@@ -421,6 +470,7 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
             append = _head
             if _events.size:
                 events_collector.insert(0, _events)
+                correct_timestamp_rollover(_global_times, structure, start_offset, previous_start)
                 times_collector.insert(0, _global_times)
 
         # Seek forwards if necessary
@@ -441,6 +491,7 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
             prepend = _tail
             if _events.size:
                 events_collector.append(_events)
+                correct_timestamp_rollover(_global_times, structure, previous_end, end_offset)
                 times_collector.append(_global_times)
 
     # Concatenate all the events we read from the file

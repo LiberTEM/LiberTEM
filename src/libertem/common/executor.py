@@ -495,7 +495,9 @@ class SimpleMPWorkerQueue(WorkerQueue):
     def put_nocopy(self, header: Any, size: int) -> Generator[memoryview, None, None]:
         payload = np.zeros(size, dtype=np.uint8)
         yield memoryview(payload)
-        self.q.put((header, payload))
+        header_serialized = cloudpickle.dumps(header)
+        payload_serialized = cloudpickle.dumps(payload)
+        self.q.put((header_serialized, payload_serialized))
 
     @contextmanager
     def get(self, block: bool = True, timeout: Optional[float] = None):

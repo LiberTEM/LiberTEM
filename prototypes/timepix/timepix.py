@@ -177,12 +177,6 @@ class Timepix3Partition(BasePartition):
         """
         Return a generator over all DataTiles contained in this Partition.
 
-        Note
-        ----
-        The DataSet may reuse the internal buffer of a tile, so you should
-        directly process the tile and not accumulate a number of tiles and then work
-        on them.
-
         Parameters
         ----------
 

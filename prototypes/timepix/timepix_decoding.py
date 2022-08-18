@@ -137,7 +137,7 @@ def decode_headers(data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 @numba.njit
-def decode_block(data: np.ndarray, out_buffer: np.ndarray) -> \
+def decode_block(data: np.ndarray, out_buffer: np.ndarray, cross_offset: int = 2) -> \
                                         tuple[int, tuple[int, int], list[int]]:
     """
     Decode a block of data into events from the first header until the end of the last full payload
@@ -179,7 +179,9 @@ def decode_block(data: np.ndarray, out_buffer: np.ndarray) -> \
         hit_headers.append(out_pointer)
         # Decoding
         payload = data[header_idx + 1: header_idx + 1 + payload_size]
-        parse_hit_data(payload, chip_nr, out_buffer[:, out_pointer: out_pointer + payload_size])
+        parse_hit_data(payload, chip_nr,
+                       out_buffer[:, out_pointer: out_pointer + payload_size],
+                       cross_offset=cross_offset)
         header_idx += (1 + payload_size)
         out_pointer += payload_size
 
@@ -313,7 +315,9 @@ def offsets_for_timestamps(structure, start_timestamp, end_timestamp, max_ooo):
     return start_offset, end_offset
 
 
-def extract_between_offsets(fp, start_offset, end_offset, prepend_data=None, append_data=None):
+def extract_between_offsets(fp, start_offset, end_offset,
+                            prepend_data=None, append_data=None,
+                            cross_offset: int = 2):
     """
     Extract the data between (start_offset, end_offset) from the file
     and concatenate it with any prepend or append data from a previous,
@@ -334,7 +338,8 @@ def extract_between_offsets(fp, start_offset, end_offset, prepend_data=None, app
         data = np.concatenate((data, append_data), axis=0)
 
     events_buffer = np.empty((6, data.size), dtype=np.uint16)
-    out_pointer, events_slice, hit_headers = decode_block(data, events_buffer)
+    out_pointer, events_slice, hit_headers = decode_block(data, events_buffer,
+                                                          cross_offset=cross_offset)
     events_buffer = events_buffer[:, :out_pointer]
     global_times = get_global_time_no_roll(events_buffer[3], events_buffer[4], events_buffer[5])
 
@@ -348,7 +353,8 @@ def extract_between_offsets(fp, start_offset, end_offset, prepend_data=None, app
     return events_buffer, global_times, (head, tail)
 
 
-def extract_between_timestamps(filepath, structure, start_timestamp, end_timestamp, max_ooo=6400):
+def extract_between_timestamps(filepath, structure, start_timestamp, end_timestamp, max_ooo=6400,
+                               cross_offset: int = 2):
     """
     structure is (timestamp, file_offset), epoch-corrected
     start/end_timestamp are same base as the timestamp in structure, epoch-corrected
@@ -366,9 +372,12 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
 
     # Main events block
     with open(filepath, 'rb') as fp:
-        events, global_times, (main_head, main_tail) = extract_between_offsets(fp,
-                                                                               start_offset,
-                                                                               end_offset)
+        (events,
+        global_times,
+        (main_head, main_tail)) = extract_between_offsets(fp,
+                                                          start_offset,
+                                                          end_offset,
+                                                          cross_offset=cross_offset)
         events_collector = []
         times_collector = []
 
@@ -388,7 +397,8 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
             (_head, _tail)) = extract_between_offsets(fp,
                                                       start_offset,
                                                       start_offset + SEEK_AMOUNT,
-                                                      append_data=append)
+                                                      append_data=append,
+                                                      cross_offset=cross_offset)
             assert _tail is None
             append = _head
             if _events.size:
@@ -407,7 +417,8 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
             (_head, _tail)) = extract_between_offsets(fp,
                                                       end_offset - SEEK_AMOUNT,
                                                       end_offset,
-                                                      prepend_data=prepend)
+                                                      prepend_data=prepend,
+                                                      cross_offset=cross_offset)
             assert _head is None
             prepend = _tail
             if _events.size:
@@ -467,7 +478,8 @@ def split_contig_spans(spans: np.ndarray, structure: np.ndarray,
 
 
 def spans_as_frames(filepath, structure: np.ndarray, spans: np.ndarray,
-                    sig_shape: tuple[int, int], max_ooo=6400, as_dense=False) -> sparse.COO:
+                    sig_shape: tuple[int, int], max_ooo=6400, as_dense=False,
+                    cross_offset: int = 2) -> sparse.COO:
     assert are_spans_valid(spans)
     subspans = split_contig_spans(spans, structure, max_ooo)
     events, times = [], []
@@ -475,8 +487,9 @@ def spans_as_frames(filepath, structure: np.ndarray, spans: np.ndarray,
         start_timestamp = subspan.min()
         end_timestamp = subspan.max()
         _events, _times = extract_between_timestamps(filepath, structure,
-                                                   start_timestamp, end_timestamp,
-                                                   max_ooo=max_ooo)
+                                                     start_timestamp, end_timestamp,
+                                                     max_ooo=max_ooo,
+                                                     cross_offset=cross_offset)
         events.append(_events)
         times.append(_times)
     events = np.concatenate(events, axis=1)

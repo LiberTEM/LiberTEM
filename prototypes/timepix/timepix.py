@@ -55,6 +55,7 @@ class Timepix3DataSet(DataSet):
             raise DataSetException(f'Unrecognized frame_times argument {frame_times}')
 
         assert isinstance(cross_offset, int)
+        assert cross_offset >= 0
         self._cross_offset = cross_offset
 
         sig_shape = tuple(sig_shape)
@@ -95,7 +96,8 @@ class Timepix3DataSet(DataSet):
             sync_offset=self._sync_offset,
             image_count=self._nav_shape_product,
             metadata=dict(int_frame_times=int_frame_times,
-                          file_structure=self._file_structure),
+                          file_structure=self._file_structure,
+                          cross_offset=self._cross_offset),
         )
         return self
 
@@ -188,6 +190,7 @@ class Timepix3Partition(BasePartition):
         structure = self.meta.metadata['file_structure']
         start_frame = self._start_frame
         num_frames = self._num_frames
+        cross_offset = self.meta.metadata['cross_offset']
         # Check if this is 1-beyond or actual end index ?
         end_frame = start_frame + num_frames
         sig_shape = tuple(self.meta.shape.sig)
@@ -218,7 +221,8 @@ class Timepix3Partition(BasePartition):
             tile_block = spans_as_frames(filepath, structure,
                                          spans_for_tiles,
                                          sig_shape, max_ooo=6400,
-                                         as_dense=True)
+                                         as_dense=True,
+                                         cross_offset=cross_offset)
             tile_block = tile_block.astype(np.dtype(dest_dtype))
 
             flat_nav_origin = frame_idcs[idx]
@@ -260,7 +264,7 @@ if __name__ == '__main__':
                              'experimental_200kv/edge/edge1_000001.tpx3').expanduser()
 
     ctx = lt.Context.make_with('inline')
-    ds = Timepix3DataSet(data_path, (10, 10))
+    ds = Timepix3DataSet(data_path, (10, 10), cross_offset=0)
     ds = ds.initialize(ctx.executor)
     ds.set_num_cores(4)
 

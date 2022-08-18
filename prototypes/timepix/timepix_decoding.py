@@ -413,7 +413,7 @@ def extract_between_timestamps(filepath, structure, start_timestamp, end_timesta
 
 def are_spans_valid(spans: np.ndarray) -> bool:
     """
-    Assumes spans sorted by start time
+    Checks that spans are sorted, all have a width and don't overlap
     """
     nonzero = (spans[:, 1] > spans[:, 0]).all()
     disjoint = ((spans[1:, 0] - spans[:-1, 1]) >= 0).all()
@@ -438,9 +438,6 @@ def span_idx_for_ts(spans: np.ndarray, timestamps: np.ndarray) -> tuple[np.ndarr
 
 def spans_as_frames(filepath, structure: np.ndarray, spans: np.ndarray,
                     sig_shape: tuple[int, int], max_ooo=6400, as_dense=False) -> sparse.COO:
-    spans = np.asarray(spans).reshape(-1, 2)
-    start_sorter = np.argsort(spans[:, 0])
-    spans = spans[start_sorter, :]
     assert are_spans_valid(spans)
     # Could spans break into blocks if some inter-span times are large
     start_timestamp = spans.min()

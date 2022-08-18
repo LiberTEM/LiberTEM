@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import itertools
 import numpy as np
 import numba
 from numba.typed import List
@@ -253,18 +254,24 @@ def read_file_structure(filepath, n_samples=512, start_offset=0,
     """
     if max_offset is None:
         max_offset = os.stat(filepath).st_size
-    offsets = np.linspace(start_offset, max_offset, num=n_samples, endpoint=False).astype(int)
+    offsets = np.linspace(start_offset, max_offset, num=n_samples, endpoint=True).astype(int)
+    # Adjust final sample point to be near the end of the file to
+    # get a better estimation of the full time span
+    offsets[-1] = max_offset - 4 * READ_BLOCKSIZE
+    if offsets[-1] <= offsets[-2]:
+        offsets = offsets[:-1]
     offsets -= (offsets % 8)
+    offset_iter = itertools.zip_longest(offsets, offsets[1:], fillvalue=max_offset)
     if executor is None:
         structure = []
-        for offset, next_offset in zip(offsets[:-1], offsets[1:]):
+        for offset, next_offset in offset_iter:
             global_time, header_offset = find_timestamp_near(filepath, offset, next_offset)
             structure.append((global_time, header_offset))
     else:
         def _find_timestamp_near(_offsets):
             offset, next_offset = _offsets
             return find_timestamp_near(filepath, offset, next_offset)
-        structure = executor.map(_find_timestamp_near, [*zip(offsets[:-1], offsets[1:])])
+        structure = executor.map(_find_timestamp_near, [*offset_iter])
 
     structure = [s for s in structure if s[0] is not None]
     structure = np.asarray(structure).reshape(-1, 2)

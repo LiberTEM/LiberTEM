@@ -79,8 +79,10 @@ class Timepix3DataSet(DataSet):
         min_timestamp = self._file_structure[:, 0].min()
         max_timestamp = self._file_structure[:, 0].max()
         if self._frame_times is None:
-            # This conversion is flawed because we don't have the exact first/final
-            # timestamps and would have to do a better parsing to get them!
+            # This conversion is a little flawed because we don't have the
+            # exact first/final timestamps and would have to do a better
+            # parsing to get them, the implem of read_file_structure just tries
+            # to get a timestamp very close to the beginning and end of the file
             boundaries = np.linspace(min_timestamp, max_timestamp,
                                      endpoint=True, num=self._nav_shape_product + 1)
             frame_times = np.stack((boundaries[:-1], boundaries[1:]), axis=1)
@@ -235,7 +237,7 @@ if __name__ == '__main__':
     from libertem.udf.sum import SumUDF
 
     data_path = pathlib.Path('~/Workspace/libertem_dev/data/timepix/'
-                             'experimental_200kv/edge/edge1_000001.tpx3')
+                             'experimental_200kv/edge/edge1_000001.tpx3').expanduser()
 
     ctx = lt.Context.make_with('inline')
     ds = Timepix3DataSet(data_path, (1000,))

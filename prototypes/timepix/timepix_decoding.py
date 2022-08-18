@@ -33,7 +33,7 @@ def parse_hit_data(hit_data: np.ndarray, chip_nr: int,
                           chip_nr,
                           out_buffer[0],
                           out_buffer[1],
-                          cross_offset=cross_offset)
+                          cross_offset)
 
 
 @numba.njit
@@ -53,16 +53,17 @@ def convert_position_data(col: np.ndarray,
                           chip_nr: int,
                           out_x: np.ndarray,
                           out_y: np.ndarray,
-                          cross_offset: int = 2):
+                          cross_offset: int):
     # the x/y position values are for one chip so all np.uint8 (256x256 chip)
     # potential overflow issues here ?? probably impossible given the chip design
     out_x[:] = col + (pix >> np.uint16(2))
     out_y[:] = super_pix + (pix & np.uint16(0x3))
-    combine_chips(out_x, out_y, chip_nr, cross_offset=cross_offset)
+    combine_chips(out_x, out_y, chip_nr, cross_offset)
+    correct_chip_edge_hits(out_x, out_y, cross_offset)
 
 
 @numba.njit
-def combine_chips(x: np.ndarray, y: np.ndarray, chip_nr: int, cross_offset: int = 2):
+def combine_chips(x: np.ndarray, y: np.ndarray, chip_nr: int, cross_offset: int):
     """
     correction is applied inplace on x and y
 
@@ -83,6 +84,26 @@ def combine_chips(x: np.ndarray, y: np.ndarray, chip_nr: int, cross_offset: int 
         x[:] = size - x
     elif chip_nr == 3:
         y[:] = size - y + offset
+
+
+@numba.njit
+def correct_chip_edge_hits(x: np.ndarray, y: np.ndarray, cross_offset: int):
+    """
+    Correct the chip edge (cross) hits by smearing them out.
+    """
+    if cross_offset == 0:
+        return
+    first = 255
+    second = (256 + (2 * cross_offset))
+    for idx in range(x.size):
+        if x[idx] == second:
+            x[idx] -= np.uint16(np.random.randint(0, cross_offset + 1))
+        elif x[idx] == first:
+            x[idx] += np.uint16(np.random.randint(0, cross_offset + 1))
+        if y[idx] == second:
+            y[idx] -= np.uint16(np.random.randint(0, cross_offset + 1))
+        elif y[idx] == first:
+            y[idx] += np.uint16(np.random.randint(0, cross_offset + 1))
 
 
 @numba.njit

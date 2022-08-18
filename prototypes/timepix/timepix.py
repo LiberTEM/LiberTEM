@@ -176,8 +176,6 @@ class Timepix3Partition(BasePartition):
             in the ROI are considered, and the resulting tile slices are from a coordinate
             system that has the shape `(np.count_nonzero(roi),)`.
         """
-        assert roi is None, 'ROI Not implemented yet!'
-
         if self._start_frame >= self.meta.image_count:
             return
 
@@ -190,21 +188,42 @@ class Timepix3Partition(BasePartition):
         structure = self.meta.metadata['file_structure']
         start_frame = self._start_frame
         num_frames = self._num_frames
+        # Check if this is 1-beyond or actual end index ?
         end_frame = start_frame + num_frames
         sig_shape = tuple(self.meta.shape.sig)
         sig_dims = len(sig_shape)
 
+        if roi is None:
+            roi_slice = slice(None)
+            # flattened nav coord
+            frame_idcs = np.arange(start_frame, end_frame)
+        else:
+            roi_slice, = np.nonzero(roi.ravel()[start_frame: end_frame])
+            if not roi_slice.size:
+                return
+            flat_roi_full_idcs = np.flatnonzero(roi)
+            in_part = np.logical_and(flat_roi_full_idcs >= start_frame,
+                                     flat_roi_full_idcs < end_frame)
+            # flattened, roi nav coord
+            frame_idcs, = np.nonzero(in_part)
+            assert frame_idcs.size == roi_slice.size
+
+        part_frame_times = frame_times[start_frame: end_frame]
+        part_frame_times = part_frame_times[roi_slice]
+        n_frames_roi = part_frame_times.shape[0]
+
         depth = tiling_scheme.depth
-        for nav_idx in range(start_frame, end_frame, depth):
-            spans_for_tiles = frame_times[nav_idx: nav_idx + depth]
+        for idx in range(0, n_frames_roi, depth):
+            spans_for_tiles = part_frame_times[idx: idx + depth]
             tile_block = spans_as_frames(filepath, structure,
                                          spans_for_tiles,
                                          sig_shape, max_ooo=6400,
                                          as_dense=True)
             tile_block = tile_block.astype(np.dtype(dest_dtype))
 
+            flat_nav_origin = frame_idcs[idx]
             for scheme_idx, scheme_slice in enumerate(tiling_scheme):
-                origin = (nav_idx,) + tuple(scheme_slice.origin)
+                origin = (flat_nav_origin,) + tuple(scheme_slice.origin)
                 shape = (len(spans_for_tiles),) + tuple(scheme_slice.shape)
 
                 tile_slice = Slice(
@@ -235,14 +254,27 @@ class Timepix3File(File):
 if __name__ == '__main__':
     import libertem.api as lt
     from libertem.udf.sum import SumUDF
+    from libertem.udf.sumsigudf import SumSigUDF
 
     data_path = pathlib.Path('~/Workspace/libertem_dev/data/timepix/'
                              'experimental_200kv/edge/edge1_000001.tpx3').expanduser()
 
     ctx = lt.Context.make_with('inline')
-    ds = Timepix3DataSet(data_path, (1000,))
+    ds = Timepix3DataSet(data_path, (10, 10))
     ds = ds.initialize(ctx.executor)
     ds.set_num_cores(4)
 
-    udf = SumUDF()
-    res = ctx.run_udf(dataset=ds, udf=udf, progress=True)
+    roi = np.random.randint(0, 2, size=ds.meta.shape.nav, dtype=bool)
+    udfs = (SumUDF(), SumSigUDF())
+    res = ctx.run_udf(dataset=ds, udf=udfs, progress=True, roi=roi)
+
+    import matplotlib.pyplot as plt
+    fig, (ax0, ax1, ax2) = plt.subplots(1, 3)
+    ax0.imshow(res[0]['intensity'].data)
+    ax0.set_title(udfs[0].__class__.__name__)
+    ax1.imshow(res[1]['intensity'].data)
+    ax1.set_title(udfs[1].__class__.__name__)
+    if roi is not None:
+        ax2.imshow(roi)
+    ax2.set_title('ROI')
+    plt.show()

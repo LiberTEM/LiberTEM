@@ -1,3 +1,4 @@
+import functools
 import time
 import random
 from typing import Generator, Optional, TypeVar
@@ -8,7 +9,9 @@ import numpy as np
 from libertem.api import Context
 from libertem.common.executor import WorkerQueueEmpty
 from libertem.udf.sum import SumUDF
-from libertem.executor.pipelined import PipelinedExecutor, _order_results
+from libertem.executor.pipelined import (
+    PipelinedExecutor, WorkerPool, _order_results, pipelined_worker
+)
 import libertem.executor.pipelined
 from libertem.udf import UDF
 
@@ -395,3 +398,31 @@ def test_exception_in_main_thread():
     finally:
         if executor is not None:
             executor.close()
+
+
+def test_kill_pool():
+    spec = PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
+    pool = WorkerPool(
+        worker_fn=functools.partial(
+            pipelined_worker,
+            pin=False,
+        ),
+        spec=spec,
+    )
+    # monkey-patch: disable terminate; force use of kill
+    for worker_info in pool._workers:
+        worker_info.process.terminate = lambda: None
+    pool.kill(timeout=0.1)
+
+
+def test_term_pool():
+    spec = PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
+    pool = WorkerPool(
+        worker_fn=functools.partial(
+            pipelined_worker,
+            pin=False,
+        ),
+        spec=spec,
+    )
+    # hopefully this will hit the `terminate` branch:
+    pool.kill(timeout=5)

@@ -2,6 +2,8 @@ import itertools
 import os
 import gc
 import sys
+import signal
+import platform
 import logging
 import functools
 import contextlib
@@ -109,18 +111,29 @@ class WorkerPool:
                     PoolWorkerInfo(queues=queues, process=p, spec=spec_item)
                 )
 
-    def kill_worker(self, worker_info: PoolWorkerInfo):
+    def kill_worker(self, worker_info: PoolWorkerInfo, timeout: float = 5.0):
         worker_info.queues.request.close(drain=False, force=True)
         worker_info.process.terminate()
-        worker_info.process.join(5)
-        if worker_info.process.exitcode is not None:
-            worker_info.process.kill()
+        worker_info.process.join(timeout)
+        if worker_info.process.exitcode is None:
+            if hasattr(worker_info.process, 'kill'):
+                worker_info.process.kill()
+            else:
+                sig: int
+                if platform.system() == 'Windows':
+                    import win32api
+                    import win32process
+                    handle = win32api.OpenProcess(1, False, worker_info.process.pid)
+                    win32process.TerminateProcess(handle, -1)
+                    win32api.CloseHandle(handle)
+                else:
+                    os.kill(worker_info.process.pid, signal.SIGKILL)
             # reap the dead process:
             worker_info.process.join(30)
 
-    def kill(self):
+    def kill(self, timeout: float = 5):
         for worker in self._workers:
-            self.kill_worker(worker)
+            self.kill_worker(worker, timeout=timeout)
         exitcodes = [
             worker.process.exitcode
             for worker in self._workers

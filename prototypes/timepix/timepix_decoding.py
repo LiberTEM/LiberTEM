@@ -436,15 +436,44 @@ def span_idx_for_ts(spans: np.ndarray, timestamps: np.ndarray) -> tuple[np.ndarr
     return span_id, valid
 
 
+def split_contig_spans(spans: np.ndarray, structure: np.ndarray,
+                       max_ooo: int, split_threshold: int = 2**23) -> list[np.ndarray]:
+    """
+    Splits the timespans in spans into separate blocks
+    if the estimated distance between the blocks exceeds
+    split_threshold bytes in the file, by default 8 MB,
+    to avoid decoding events which will later be discarded
+    """
+    if spans.shape[0] == 1:
+        return [spans]
+
+    span_offsets = []
+    for start_timestamp, end_timestamp in spans:
+        span_offsets.append(offsets_for_timestamps(structure, start_timestamp,
+                                                   end_timestamp, max_ooo))
+    span_offsets = np.asarray(span_offsets).reshape(-1, 2)
+
+    inter_span_offset = np.abs(span_offsets[:-1, 1] - span_offsets[1:, 0])
+    splits = np.argwhere(inter_span_offset > split_threshold) + 1
+    boundaries = [0] + splits.squeeze(axis=1).tolist() + [spans.shape[0]]
+    return [spans[start: end] for start, end in zip(boundaries[:-1], boundaries[1:])]
+
+
 def spans_as_frames(filepath, structure: np.ndarray, spans: np.ndarray,
                     sig_shape: tuple[int, int], max_ooo=6400, as_dense=False) -> sparse.COO:
     assert are_spans_valid(spans)
-    # Could spans break into blocks if some inter-span times are large
-    start_timestamp = spans.min()
-    end_timestamp = spans.max()
-    events, times = extract_between_timestamps(filepath, structure,
-                                               start_timestamp, end_timestamp,
-                                               max_ooo=max_ooo)
+    subspans = split_contig_spans(spans, structure, max_ooo)
+    events, times = [], []
+    for subspan in subspans:
+        start_timestamp = subspan.min()
+        end_timestamp = subspan.max()
+        _events, _times = extract_between_timestamps(filepath, structure,
+                                                   start_timestamp, end_timestamp,
+                                                   max_ooo=max_ooo)
+        events.append(_events)
+        times.append(_times)
+    events = np.concatenate(events, axis=1)
+    times = np.concatenate(times)
 
     out_shape = (spans.shape[0],) + sig_shape
     span_id, ts_valid = span_idx_for_ts(spans, times)

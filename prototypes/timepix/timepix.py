@@ -204,12 +204,9 @@ class Timepix3Partition(BasePartition):
             roi_slice, = np.nonzero(roi.ravel()[start_frame: end_frame])
             if not roi_slice.size:
                 return
-            flat_roi_full_idcs = np.flatnonzero(roi)
-            in_part = np.logical_and(flat_roi_full_idcs >= start_frame,
-                                     flat_roi_full_idcs < end_frame)
-            # flattened, roi nav coord
-            frame_idcs, = np.nonzero(in_part)
-            assert frame_idcs.size == roi_slice.size
+            in_part = np.arange(roi_slice.size)
+            roi_idc_offset = np.count_nonzero(roi.ravel()[:start_frame])
+            frame_idcs = roi_idc_offset + in_part
 
         part_frame_times = frame_times[start_frame: end_frame]
         part_frame_times = part_frame_times[roi_slice]

@@ -26,6 +26,7 @@ class Timepix3DataSet(DataSet):
                  frame_times: np.ndarray | float | None = None,
                  cross_offset: int = 2,
                  tot_threshold: int = 5,
+                 as_dense: bool = True,
                  sig_shape: tuple[int, int] = (512, 512),
                  sync_offset: int = 0,
                  io_backend=None):
@@ -63,6 +64,8 @@ class Timepix3DataSet(DataSet):
         assert isinstance(tot_threshold, (int, np.uint16))
         assert tot_threshold >= 0
         self._tot_threshold = tot_threshold
+
+        self._as_dense = as_dense
 
         sig_shape = tuple(sig_shape)
         if not all(isinstance(d, int) for d in sig_shape) or len(sig_shape) != 2:
@@ -124,7 +127,8 @@ class Timepix3DataSet(DataSet):
             metadata=dict(int_frame_times=int_frame_times,
                           file_structure=self._file_structure,
                           cross_offset=self._cross_offset,
-                          tot_threshold=self._tot_threshold),
+                          tot_threshold=self._tot_threshold,
+                          as_dense=self._as_dense),
         )
         return self
 
@@ -217,6 +221,7 @@ class Timepix3Partition(BasePartition):
         end_frame = start_frame + num_frames
         sig_shape = tuple(self.meta.shape.sig)
         sig_dims = len(sig_shape)
+        as_dense = self.meta.metadata['as_dense']
 
         if roi is None:
             roi_slice = slice(None)
@@ -240,7 +245,7 @@ class Timepix3Partition(BasePartition):
             tile_block = spans_as_frames(filepath, structure,
                                          spans_for_tiles,
                                          sig_shape, max_ooo=6400,
-                                         as_dense=True,
+                                         as_dense=as_dense,
                                          cross_offset=cross_offset,
                                          tot_threshold=tot_threshold)
             tile_block = tile_block.astype(np.dtype(dest_dtype))

@@ -2,8 +2,11 @@ import time
 import concurrent
 
 import pytest
+import numpy as np
 
 from libertem.common.async_utils import async_generator_eager, async_generator
+from libertem.common.executor import SimpleMPWorkerQueue, SimpleWorkerQueue
+from libertem.common.buffers import reshaped_view
 
 
 @pytest.fixture(scope='module')
@@ -65,3 +68,37 @@ async def test_async_generator_err_handling(thread_pool):
             assert value == 'result'
 
     assert e.match("something unexpected happened")
+
+
+@pytest.mark.parametrize(
+    'queue', [SimpleMPWorkerQueue(), SimpleWorkerQueue()]
+)
+def test_worker_queues(queue):
+    payload_data = np.random.random((23, 42))
+    header = {
+        'asdf': lambda x: x,
+        'abc': 23,
+        'shape': payload_data.shape,
+        'dtype': payload_data.dtype,
+    }
+
+    def check_received(received_header, decoded_payload):
+        assert received_header['asdf']('abc') == 'abc'
+        for key in ('abc', 'shape', 'dtype'):
+            assert header[key] == received_header[key]
+        assert np.all(payload_data == decoded_payload)
+
+    queue.put(header, payload_data)
+    with queue.get() as res:
+        check_received(*res)
+
+    with queue.put_nocopy(header, size=payload_data.nbytes) as payload:
+        payload[:] = reshaped_view(payload_data, (23*42, )).view(np.uint8)
+
+    with queue.get() as res:
+        received_header, received_payload = res
+        decoded_payload = reshaped_view(
+            np.asarray(received_payload).view(received_header['dtype']),
+            received_header['shape']
+        )
+        check_received(received_header, decoded_payload)

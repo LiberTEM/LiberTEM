@@ -280,8 +280,15 @@ if __name__ == '__main__':
     from libertem.udf.sum import SumUDF
     from libertem.udf.sumsigudf import SumSigUDF
 
-    data_path = pathlib.Path('~/Workspace/libertem_dev/data/timepix/'
-                             'experimental_200kv/edge/edge1_000001.tpx3').expanduser()
+    data_idx = 0
+    data_root = pathlib.Path('~/Workspace/libertem_dev/data/'
+                             'timepix/experimental_200kv/').expanduser()
+
+    data_paths = [data_root / 'edge/edge1_000001.tpx3',
+                  data_root / 'espb/espbm_000004.tpx3',
+                  data_root / 'flat_field/ff_000000.tpx3',
+                  data_root / 'foil_holes/foil_000001.tpx3']
+    data_path = data_paths[data_idx]
 
     ctx = lt.Context.make_with('inline')
     ds = Timepix3DataSet(data_path, (10, 10))
@@ -294,7 +301,10 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
     fig, (ax0, ax1, ax2) = plt.subplots(1, 3)
-    ax0.imshow(res[0]['intensity'].data)
+    sig_res = res[0]['intensity'].data
+    # Seems to be a hot pixel (marker pixel ??)
+    sig_res[208, 317] = 0
+    ax0.imshow(sig_res)
     ax0.set_title(udfs[0].__class__.__name__)
     ax1.imshow(res[1]['intensity'].data)
     ax1.set_title(udfs[1].__class__.__name__)

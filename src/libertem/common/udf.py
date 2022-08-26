@@ -1,7 +1,7 @@
 from enum import Enum
 from typing_extensions import Protocol, TypedDict, Literal
 from typing import Union
-from libertem.common.sparse import NUMPY, SPARSE_COO, SPARSE_GCXS
+from libertem.common.array_formats import NUMPY, SPARSE_COO, SPARSE_GCXS
 
 import numpy as np
 

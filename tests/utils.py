@@ -7,7 +7,10 @@ import numpy as np
 import sparse
 import pytest
 
-from libertem.common.sparse import NUMPY, SPARSE_COO, SPARSE_GCXS, to_dense
+from libertem.common.array_formats import (
+    DENSEFORMATS, NDFORMATS, NUMPY, SPARSEFORMATS, SPARSE_GCXS, as_format
+)
+from libertem.common.sparse import to_dense
 from libertem.analysis.gridmatching import calc_coords
 from libertem.udf import UDF
 import libertem.common.backend as bae
@@ -45,8 +48,16 @@ def _naive_mask_apply(masks, data):
 # This function introduces asymmetries so that errors won't average out so
 # easily with large data sets
 def _mk_random(size, dtype='float32', format=NUMPY):
+    if format not in NDFORMATS and len(size) != 2:
+        raise ValueError(f"Format {format} does not support size {size}")
     dtype = np.dtype(dtype)
-    if format == NUMPY:
+    if format in SPARSEFORMATS:
+        if format == SPARSE_GCXS:
+            form = 'gcxs'
+        else:
+            form = 'coo'
+        data = as_format(sparse.random(size, format=form).astype(dtype), format)
+    elif format in DENSEFORMATS:
         if dtype.kind == 'c':
             choice = [0, 1, -1, 0+1j, 0-1j, 2.3+17j, -23+42j]
         else:
@@ -56,16 +67,14 @@ def _mk_random(size, dtype='float32', format=NUMPY):
         coords10 = tuple(np.random.choice(range(c)) for c in size)
         data[coords2] = np.random.choice(choice) * sum(size)
         data[coords10] = np.random.choice(choice) * 10 * sum(size)
-        return data
-    elif format in (SPARSE_COO, SPARSE_GCXS):
-        if format == SPARSE_GCXS:
-            form = 'gcxs'
-        else:
-            form = 'coo'
-        data = sparse.random(size, format=form).astype(dtype)
-        return data
+        data = as_format(data, format)
     else:
         raise ValueError(f"Don't understand array format {format}.")
+    if data.dtype != dtype:
+        raise ValueError(f"Can't make array with format {format} and dtype {dtype}.")
+    if data.shape != size:
+        raise ValueError(f"Can't make array with format {format} and shape {size}.")
+    return data
 
 
 def _fullgrid(zero, a, b, index, skip_zero=False):

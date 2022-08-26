@@ -22,7 +22,7 @@ from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
     BufferKind, BufferUse, BufferLocation,
 )
-from libertem.common.sparse import FORMATS, array_format, NUMPY, as_format
+from libertem.common.array_formats import FORMATS, array_format, NUMPY, as_format
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol
 from libertem.common.math import prod

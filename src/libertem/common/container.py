@@ -5,6 +5,9 @@ import sparse
 import scipy.sparse
 import numpy as np
 import cloudpickle
+from libertem.common.array_backends import (
+    CPU_BACKENDS, CUDA, CUPY_BACKENDS, for_backend, get_backend
+)
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
@@ -20,9 +23,9 @@ def _build_sparse(m, dtype, sparse_backend, backend):
         # and few entries
         return m.astype(dtype)
     elif 'scipy.sparse' in sparse_backend:
-        if backend == 'numpy':
+        if backend in CPU_BACKENDS or backend == CUDA:
             lib = scipy.sparse
-        elif backend == 'cupy':
+        elif backend in CUPY_BACKENDS:
             # Avoid import if possible
             import cupyx.scipy.sparse
             lib = cupyx.scipy.sparse
@@ -45,9 +48,9 @@ def _build_sparse(m, dtype, sparse_backend, backend):
     # Fall through if no return statement was reached
     raise ValueError(
         f"sparse_backend {sparse_backend} not implemented for backend {backend}. "
-        "Backend 'numpy' supports 'sparse.pydata', 'scipy.sparse', 'scipy.sparse.csc' or "
+        "CPU-based backends supports 'sparse.pydata', 'scipy.sparse', 'scipy.sparse.csc' or "
         "'scipy.sparse.csr'. "
-        "Backend 'cupy' supports 'scipy.sparse', 'scipy.sparse.csc' or 'scipy.sparse.csr'. "
+        "CUDA-based backends supports 'scipy.sparse', 'scipy.sparse.csc' or 'scipy.sparse.csr'. "
     )
 
 
@@ -61,15 +64,12 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
         if transpose:
             # We need the stack transposed in the next step
             m = m.T
+        print(type(m), backend)
+        print(get_backend(m), is_sparse(m))
         if is_sparse(m):
             return _build_sparse(m, dtype, sparse_backend, backend)
         else:
-            if backend == 'numpy':
-                return m.astype(dtype)
-            elif backend == 'cupy':
-                # Avoid importing if possible
-                import cupy
-                return cupy.array(m.astype(dtype))
+            return for_backend(m, backend).astype(dtype)
     return _get_masks_for_slice
 
 

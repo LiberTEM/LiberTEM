@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
+from libertem.common.array_backends import NUMPY
 from libertem.common.shape import Shape
 from libertem.common.slice import Slice
 from libertem.common.math import flat_nonzero
@@ -217,6 +218,7 @@ def encode_roundtrip_quad(
         decoder=decoder,
         sync_offset=0,
         corrections=None,
+        array_backend=NUMPY,
     ):
         slice_shifted = tile.tile_slice.shift(outer_slice)
         decoded[slice_shifted.get()] = tile.data.reshape(tile.tile_slice.shape)

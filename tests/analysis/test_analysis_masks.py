@@ -2,44 +2,48 @@ import pytest
 import numpy as np
 import scipy.sparse as sp
 import sparse
+from libertem.common.array_backends import (
+    CUPY, CUPY_BACKENDS, NUMPY, SPARSE_BACKENDS, SPARSE_COO, get_device_class
+)
 
-from utils import _naive_mask_apply, _mk_random, set_backend
+from utils import _naive_mask_apply, _mk_random, set_device_class
 
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
-from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common import Shape, Slice
-from libertem.utils.devices import detect
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf import UDF, UDFMeta
 
 
-def _run_mask_test_program(lt_ctx, dataset, mask, expected):
+def _run_mask_test_program(lt_ctx, dataset, mask, expected, do_sparse=True):
     dtype = UDF.USE_NATIVE_DTYPE
 
     analysis_default = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: mask], dtype=dtype
     )
-    analysis_sparse = lt_ctx.create_mask_analysis(
-        dataset=dataset, factories=[lambda: to_sparse(mask)], use_sparse=True,
-        dtype=dtype
-    )
+    if do_sparse:
+        analysis_sparse = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=[lambda: to_sparse(mask)], use_sparse=True,
+            dtype=dtype
+        )
     analysis_dense = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=[lambda: to_dense(mask)], use_sparse=False,
         dtype=dtype
     )
     results_default = lt_ctx.run(analysis_default)
-    results_sparse = lt_ctx.run(analysis_sparse)
+    if do_sparse:
+        results_sparse = lt_ctx.run(analysis_sparse)
     results_dense = lt_ctx.run(analysis_dense)
 
     assert np.allclose(
         results_default.mask_0.raw_data,
         expected
     )
-    assert np.allclose(
-        results_sparse.mask_0.raw_data,
-        expected
-    )
+    if do_sparse:
+        assert np.allclose(
+            results_sparse.mask_0.raw_data,
+            expected
+        )
     assert np.allclose(
         results_dense.mask_0.raw_data,
         expected
@@ -90,14 +94,30 @@ def test_normal_partition_shape(lt_ctx):
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
-def test_single_frame_tiles(lt_ctx):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    mask = _mk_random(size=(16, 16))
-    expected = _naive_mask_apply([mask], data)
+@pytest.mark.parametrize(
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
+)
+@pytest.mark.parametrize(
+    'dtype', ("<u2", "float32")
+)
+def test_single_frame_tiles(lt_ctx, backend, dtype):
+    with set_device_class(get_device_class(backend)):
+        if backend in SPARSE_BACKENDS:
+            data = _mk_random(size=(16, 16, 16, 16), dtype=dtype, array_backend=SPARSE_COO)
+        else:
+            data = _mk_random(size=(16, 16, 16, 16), dtype=dtype, array_backend=NUMPY)
 
-    dataset = MemoryDataSet(data=data, tileshape=(1, 16, 16), num_partitions=2)
+        mask = _mk_random(size=(16, 16))
+        expected = _naive_mask_apply([mask], data)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+        dataset = MemoryDataSet(
+            data=data,
+            tileshape=(1, 16, 16),
+            num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None,
+        )
+
+        _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
 @pytest.mark.slow
@@ -121,53 +141,86 @@ def test_subframe_tiles_fast(lt_ctx):
     _run_mask_test_program(lt_ctx, dataset, mask, expected)
 
 
-def test_mask_uint(lt_ctx):
-    data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-    mask = _mk_random(size=(16, 16)).astype("uint16")
-    expected = _naive_mask_apply([mask], data)
+@pytest.mark.parametrize(
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
+)
+def test_mask_uint(lt_ctx, backend):
+    with set_device_class(get_device_class(backend)):
+        if backend in SPARSE_BACKENDS:
+            data = _mk_random(size=(16, 16, 16, 16), dtype="<u2", array_backend=SPARSE_COO)
+        else:
+            data = _mk_random(size=(16, 16, 16, 16), dtype="<u2", array_backend=NUMPY)
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        mask = _mk_random(size=(16, 16)).astype("uint16")
+        expected = _naive_mask_apply([mask], data)
 
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
-
-
-def test_endian(lt_ctx):
-    data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype(">u2")
-    mask = _mk_random(size=(16, 16))
-    expected = _naive_mask_apply([mask], data)
-
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
-
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
-
-
-def test_signed(lt_ctx):
-    data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype("<i4")
-    mask = _mk_random(size=(16, 16))
-    expected = _naive_mask_apply([mask], data)
-
-    # NOTE: we allow casting from int32 to float32 here, and may lose some
-    # precision in case of data with large dynamic range
-    dataset = MemoryDataSet(
-        data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
-        check_cast=False,
-    )
-
-    _run_mask_test_program(lt_ctx, dataset, mask, expected)
+        dataset = MemoryDataSet(
+            data=data,
+            tileshape=(4 * 4, 4, 4),
+            num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None,
+        )
+        # We skip the sparse test with integer masks on CuPy
+        # since cuyx.scipy.sparse doesn't support it
+        do_sparse = backend not in CUPY_BACKENDS
+        _run_mask_test_program(lt_ctx, dataset, mask, expected, do_sparse=do_sparse)
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
+)
+def test_endian(lt_ctx, backend):
+    with set_device_class(get_device_class(backend)):
+        data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype(">u2")
+        mask = _mk_random(size=(16, 16))
+        expected = _naive_mask_apply([mask], data)
+
+        dataset = MemoryDataSet(
+            data=data,
+            tileshape=(4 * 4, 4, 4),
+            num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
+
+        _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+
+@pytest.mark.parametrize(
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
+)
+def test_signed(lt_ctx, backend):
+    with set_device_class(get_device_class(backend)):
+        data = np.random.choice(a=0xFFFF, size=(16, 16, 16, 16)).astype("<i4")
+        mask = _mk_random(size=(16, 16))
+        expected = _naive_mask_apply([mask], data)
+
+        # NOTE: we allow casting from int32 to float32 here, and may lose some
+        # precision in case of data with large dynamic range
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            check_cast=False,
+            array_backends=(backend, ) if backend is not None else None,
+        )
+
+        _run_mask_test_program(lt_ctx, dataset, mask, expected)
+
+
+@pytest.mark.parametrize(
+    # More in-depth tests below
+    'backend', (None, NUMPY, CUPY)
 )
 def test_multi_masks(lt_ctx, backend):
-    with set_backend(backend):
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         mask0 = _mk_random(size=(16, 16))
         mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
         mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
         expected = _naive_mask_apply([mask0, mask1, mask2], data)
 
-        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None,
+        )
         analysis = lt_ctx.create_mask_analysis(
             dataset=dataset, factories=[lambda: mask0, lambda: mask1, lambda: mask2],
         )
@@ -188,22 +241,18 @@ def test_multi_masks(lt_ctx, backend):
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
 )
 def test_multi_mask_stack_dense(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = _mk_random(size=(2, 16, 16))
         expected = _naive_mask_apply(masks, data)
 
-        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
         analysis = lt_ctx.create_mask_analysis(
             dataset=dataset, factories=lambda: masks, mask_count=2,
         )
@@ -217,27 +266,21 @@ def test_multi_mask_stack_dense(lt_ctx, backend):
             results.mask_1.raw_data,
             expected[1],
         )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
 )
 def test_multi_mask_stack_sparse(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
         expected = _naive_mask_apply(masks, data)
 
-        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
         analysis = lt_ctx.create_mask_analysis(
             dataset=dataset, factories=lambda: masks, mask_count=2,
         )
@@ -251,27 +294,21 @@ def test_multi_mask_stack_sparse(lt_ctx, backend):
             results.mask_1.raw_data,
             expected[1],
         )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
 )
 def test_multi_mask_stack_force_sparse(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = _mk_random(size=(2, 16, 16))
         expected = _naive_mask_apply(masks, data)
 
-        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
         analysis = lt_ctx.create_mask_analysis(
             dataset=dataset, factories=lambda: masks, use_sparse=True, mask_count=2
         )
@@ -285,23 +322,14 @@ def test_multi_mask_stack_force_sparse(lt_ctx, backend):
             results.mask_1.raw_data,
             expected[1],
         )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
 )
 @pytest.mark.with_numba  # coverage for rmatmul implementation
 def test_multi_mask_stack_force_scipy_sparse(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = _mk_random(size=(2, 16, 16))
         expected = _naive_mask_apply(masks, data)
@@ -320,23 +348,14 @@ def test_multi_mask_stack_force_scipy_sparse(lt_ctx, backend):
             results.mask_1.raw_data,
             expected[1],
         )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
 )
 @pytest.mark.with_numba  # coverage for rmatmul implementation
 def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = _mk_random(size=(2, 16, 16))
         expected = _naive_mask_apply(masks, data)
@@ -355,31 +374,25 @@ def test_multi_mask_stack_force_scipy_sparse_csc(lt_ctx, backend):
             results.mask_1.raw_data,
             expected[1],
         )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
 )
 def test_multi_mask_stack_force_sparse_pydata(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = _mk_random(size=(2, 16, 16))
         expected = _naive_mask_apply(masks, data)
 
-        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
         analysis = lt_ctx.create_mask_analysis(
             dataset=dataset, factories=lambda: masks, use_sparse='sparse.pydata', mask_count=2
         )
-        if backend == 'cupy':
+        if backend in CUPY_BACKENDS:
             with pytest.raises(ValueError):
                 results = lt_ctx.run(analysis)
         else:
@@ -392,27 +405,21 @@ def test_multi_mask_stack_force_sparse_pydata(lt_ctx, backend):
                 results.mask_1.raw_data,
                 expected[1],
             )
-    finally:
-        set_use_cpu(0)
 
 
 @pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )
 def test_multi_mask_stack_force_dense(lt_ctx, backend):
-    if backend == 'cupy':
-        d = detect()
-        cudas = detect()['cudas']
-        if not d['cudas'] or not d['has_cupy']:
-            pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
-    try:
-        if backend == 'cupy':
-            set_use_cuda(cudas[0])
+    with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         masks = sparse.COO.from_numpy(_mk_random(size=(2, 16, 16)))
         expected = _naive_mask_apply(masks, data)
 
-        dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
         analysis = lt_ctx.create_mask_analysis(
             dataset=dataset, factories=lambda: masks, use_sparse=False, mask_count=2
         )
@@ -426,8 +433,6 @@ def test_multi_mask_stack_force_dense(lt_ctx, backend):
             results.mask_1.raw_data,
             expected[1],
         )
-    finally:
-        set_use_cpu(0)
 
 
 def test_multi_mask_autodtype(lt_ctx):
@@ -528,7 +533,14 @@ def test_multi_mask_force_dtype(lt_ctx):
     masks = _mk_random(size=(2, 16, 16), dtype="bool")
     expected = _naive_mask_apply(masks.astype(force_dtype), data.astype(force_dtype))
 
-    dataset = MemoryDataSet(data=data, tileshape=(4 * 4, 4, 4), num_partitions=2)
+    dataset = MemoryDataSet(
+        data=data,
+        tileshape=(4 * 4, 4, 4),
+        num_partitions=2,
+        # disable other input dtypes to not upcast to floats
+        # for cupyx.scipy.sparse
+        array_backends=(NUMPY, ),
+    )
     analysis = lt_ctx.create_mask_analysis(
         dataset=dataset, factories=lambda: masks, dtype=force_dtype
     )

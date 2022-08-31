@@ -16,10 +16,7 @@ class SumSigUDF(UDF):
     """
 
     def get_backends(self):
-        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
-
-    def get_formats(self):
-        return (self.FORMAT_SPARSE_GCXS, self.FORMAT_SPARSE_COO, self.FORMAT_NUMPY, )
+        return self.BACKEND_ALL
 
     def get_result_buffers(self):
         ""
@@ -32,10 +29,14 @@ class SumSigUDF(UDF):
 
     def process_tile(self, tile):
         ""
-        self.results.intensity[:] += self.forbuf(np.sum(
-            tile,
-            axis=tuple(range(1, len(tile.shape)))
-        ))
+        self.results.intensity[:] += self.forbuf(
+            np.sum(
+                # Flatten and sum axis 1 for cupyx.scipy.sparse support
+                tile.reshape((tile.shape[0], -1)),
+                axis=1
+            ),
+            self.results.intensity
+        )
 
 
 def run_sumsig(ctx, dataset):

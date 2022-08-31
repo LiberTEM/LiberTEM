@@ -4,26 +4,25 @@ import numpy as np
 import pytest
 
 from libertem.udf.sum import SumUDF
-from libertem.common.array_formats import NUMPY, SPARSE_COO, SPARSE_GCXS, array_format, as_format
+from libertem.common.array_backends import (
+    CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO, SPARSE_GCXS, get_backend, for_backend
+)
 
-from utils import _mk_random, set_backend
+from utils import _mk_random, set_device_class
 
 
 # SumUDF supports sparse input and CuPy
 # Test that densification for CuPy and sparse input on NumPy works
 class SparseInputSumUDF(SumUDF):
-    def get_formats(self):
-        # Ensure sparse is preferred to make sure we receive
-        # it from a sparse dataset
-        return (SPARSE_COO, SPARSE_GCXS, NUMPY)
+    def get_backends(self):
+        return (SPARSE_COO, SPARSE_GCXS, SCIPY_COO, CUPY_SCIPY_CSR)
 
     def process_tile(self, tile):
-        format = array_format(tile)
+        format = get_backend(tile)
         if self.meta.device_class == 'cpu':
-            assert format in (SPARSE_COO, SPARSE_GCXS)
+            assert format in (SPARSE_COO, SPARSE_GCXS, SCIPY_COO)
         else:
-            import cupy
-            assert isinstance(tile, cupy.ndarray)
+            assert format in (CUPY_SCIPY_CSR, )
         return super().process_tile(tile)
 
 
@@ -36,34 +35,24 @@ class CupyInputSumUDF(SparseInputSumUDF):
 
 # Test densification due to UDF format requirements
 class DenseInputSumUDF(SumUDF):
-    def get_formats(self):
-        # also test returning single item instead of iterable
-        return self.FORMAT_NUMPY
+    def get_backends(self):
+        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
 
     def process_tile(self, tile):
-        format = array_format(tile)
-        assert format == self.FORMAT_NUMPY
+        backend = get_backend(tile)
+        assert backend in (self.BACKEND_NUMPY, self.BACKEND_CUPY)
         return super().process_tile(tile)
 
 
 # Test sparsification due to UDF format requirements
-# This one causes a warning on CuPy workers
-# since it uses CPU processing fallback to ensure sparse input.
 class OnlySparseSumUDF(SumUDF):
-    def get_formats(self):
-        return self.FORMAT_SPARSE_GCXS
+    def get_backends(self):
+        return self.BACKEND_SPARSE_GCXS
 
     def process_tile(self, tile):
-        format = array_format(tile)
-        assert format == self.FORMAT_SPARSE_GCXS
+        backend = get_backend(tile)
+        assert backend == self.BACKEND_SPARSE_GCXS
         return super().process_tile(tile)
-
-
-# This one should trigger an exception due to requirements that are
-# currently unsupported: Only sparse input, only CuPy
-class OnlyCupySparseSumUDF(OnlySparseSumUDF):
-    def get_backends(self):
-        return ('cupy', )
 
 
 @pytest.mark.parametrize(
@@ -74,7 +63,7 @@ def test_sparse(lt_ctx, format):
     Test that constraints are observed and selection logic works
     with different sets of UDFs.
     '''
-    data = _mk_random((7, 11, 13), format=format)
+    data = _mk_random((7, 11, 13), array_backend=format)
     ds = lt_ctx.load('memory', data=data)
     udfs = [OnlySparseSumUDF(), DenseInputSumUDF(), SumUDF(), SumUDF()]
     if format != NUMPY:
@@ -87,22 +76,18 @@ def test_sparse(lt_ctx, format):
             dataset=ds,
             udf=subset
         )
-        ref = as_format(data.sum(axis=0), NUMPY)
+        ref = for_backend(data.sum(axis=0), NUMPY)
         for r in res:
             assert np.allclose(ref, r['intensity'].raw_data)
 
 
 def test_on_cuda(lt_ctx):
-    with set_backend('cupy'):
-        data = _mk_random((7, 11, 13), format=SPARSE_COO)
+    with set_device_class('cupy'):
+        data = _mk_random((7, 11, 13), array_backend=SPARSE_COO)
         ds = lt_ctx.load('memory', data=data)
         # Densifies input on CuPy
         res1 = lt_ctx.run_udf(dataset=ds, udf=[CupyInputSumUDF()])
-        # Falls back to NumPy backend and complains
-        with pytest.warns(RuntimeWarning, match='recommended on CUDA are '):
-            res2 = lt_ctx.run_udf(dataset=ds, udf=[OnlySparseSumUDF()])
-        with pytest.raises(RuntimeError, match='supported on CUDA are '):
-            _ = lt_ctx.run_udf(dataset=ds, udf=[OnlyCupySparseSumUDF()])
+        res2 = lt_ctx.run_udf(dataset=ds, udf=[OnlySparseSumUDF()])
         ref = data.sum(axis=0).todense()
         assert np.allclose(ref, res1[0]['intensity'].raw_data)
         assert np.allclose(ref, res2[0]['intensity'].raw_data)

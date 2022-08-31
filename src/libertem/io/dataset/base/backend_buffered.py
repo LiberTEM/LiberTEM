@@ -13,6 +13,7 @@ from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool, ManagedBuffer
 from libertem.common.numba import cached_njit
+from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
 
@@ -394,8 +395,9 @@ class BufferedBackendImpl(IOBackendImpl):
 
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        sync_offset, corrections,
+        sync_offset, corrections, array_backend: ArrayBackend,
     ):
+        assert array_backend in (NUMPY, CUDA)
         with self.open_files(fileset) as open_files:
             yield from self._get_tiles_by_block(
                 tiling_scheme=tiling_scheme,

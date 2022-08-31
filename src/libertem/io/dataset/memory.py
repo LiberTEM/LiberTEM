@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 import psutil
 import numpy as np
@@ -14,7 +14,7 @@ from libertem.io.dataset.base import (
 from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import DataTile
-from libertem.common.array_formats import as_format
+from libertem.common.array_backends import BACKENDS, ArrayBackend, for_backend, get_backend
 
 
 log = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class MemBackendImpl(MMapBackendImpl):
 
     def get_tiles(
         self, decoder, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype,
-        sync_offset, corrections,
+        sync_offset, corrections, array_backend: ArrayBackend,
     ):
         if roi is None:
             # support arbitrary tiling in case of no roi
@@ -98,6 +98,7 @@ class MemBackendImpl(MMapBackendImpl):
                         else:
                             data = tile.data
                         self.preprocess(data, tile.tile_slice, corrections)
+                        data = for_backend(data, array_backend)
                         yield DataTile(data, tile.tile_slice, tile.scheme_idx)
                 else:
                     for tile in self._get_tiles_w_copy(
@@ -109,7 +110,8 @@ class MemBackendImpl(MMapBackendImpl):
                         decoder=decoder,
                         corrections=corrections,
                     ):
-                        yield tile
+                        data = for_backend(tile.data, array_backend)
+                        yield DataTile(data, tile.tile_slice, tile.scheme_idx)
         else:
             with self.open_files(fileset) as open_files:
                 for tile in self._get_tiles_roi(
@@ -121,6 +123,7 @@ class MemBackendImpl(MMapBackendImpl):
                 ):
                     data = tile.data.astype(read_dtype)
                     self.preprocess(data, tile.tile_slice, corrections)
+                    data = for_backend(data, array_backend)
                     yield DataTile(data, tile.tile_slice, tile.scheme_idx)
 
 
@@ -158,7 +161,7 @@ class MemDatasetParams(MessageConverter):
                 "maxItems": 2
             },
             "sync_offset": {"type": "number"},
-            "array_format": {"type": "string"},
+            "array_backend": {"type": "string"},
         },
         "required": ["type", "tileshape", "num_partitions"],
     }
@@ -167,7 +170,7 @@ class MemDatasetParams(MessageConverter):
         data = {
             k: raw_data[k]
             for k in ["tileshape", "num_partitions", "sig_dims", "check_cast",
-                      "crop_frames", "tiledelay", "datashape", "array_format"]
+                      "crop_frames", "tiledelay", "datashape", "array_backend"]
             if k in raw_data
         }
         if "nav_shape" in raw_data:
@@ -207,7 +210,7 @@ class MemoryDataSet(DataSet):
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=2,
                  check_cast=True, tiledelay=None, datashape=None, base_shape=None,
                  force_need_decode=False, io_backend=None,
-                 nav_shape=None, sig_shape=None, sync_offset=0, array_format=None):
+                 nav_shape=None, sig_shape=None, sync_offset=0, array_backends=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
             raise ValueError("MemoryDataSet currently doesn't support alternative I/O backends")
@@ -237,7 +240,7 @@ class MemoryDataSet(DataSet):
             self._sig_shape = tuple(sig_shape)
             self.sig_dims = len(self._sig_shape)
         self._sync_offset = sync_offset
-        self._array_format = array_format
+        self._array_backends = array_backends
         self._check_cast = check_cast
         self._tiledelay = tiledelay
         self._force_need_decode = force_need_decode
@@ -254,6 +257,7 @@ class MemoryDataSet(DataSet):
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=self._shape,
+            array_backends=self.array_backends,
             raw_dtype=self.data.dtype,
             sync_offset=self._sync_offset,
             image_count=self._image_count,
@@ -273,6 +277,20 @@ class MemoryDataSet(DataSet):
     @property
     def shape(self):
         return Shape(self.data.shape, sig_dims=self.sig_dims)
+
+    @property
+    def array_backends(self) -> Optional[Sequence[ArrayBackend]]:
+        """
+        All backends can be returned on request
+
+        .. versionadded:: 0.11.0
+        """
+        if self._array_backends is None:
+            native = get_backend(self.data)
+            # Indicate preference for the native backend
+            return (native, ) + tuple(BACKENDS - {native})
+        else:
+            return self._array_backends
 
     def check_valid(self):
         return True
@@ -334,19 +352,17 @@ class MemoryDataSet(DataSet):
                 force_need_decode=self._force_need_decode,
                 io_backend=self.get_io_backend(),
                 decoder=self.get_decoder(),
-                array_format=self._array_format,
             )
 
 
 class MemPartition(BasePartition):
-    def __init__(self, tiledelay, tileshape, force_need_decode=False, array_format=None,
+    def __init__(self, tiledelay, tileshape, force_need_decode=False,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tiledelay = tiledelay
         self._tileshape = tileshape
         self._force_tileshape = True
         self._force_need_decode = force_need_decode
-        self._array_format = array_format
 
     def get_io_backend(self):
         return MemBackend()
@@ -378,9 +394,8 @@ class MemPartition(BasePartition):
         tiles = super().get_tiles(tiling_scheme, *args, **kwargs)
         if self._tiledelay:
             log.debug("delayed get_tiles, tiledelay=%.3f" % self._tiledelay)
-        for tile in tiles:
-            if self._array_format is not None:
-                tile.data = as_format(tile.data, self._array_format)
-            yield tile
-            if self._tiledelay:
+            for tile in tiles:
+                yield tile
                 time.sleep(self._tiledelay)
+        else:
+            yield from tiles

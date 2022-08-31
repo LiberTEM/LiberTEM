@@ -28,10 +28,7 @@ class SumUDF(UDF):
         return self.params.dtype
 
     def get_backends(self):
-        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
-
-    def get_formats(self):
-        return (self.FORMAT_SPARSE_GCXS, self.FORMAT_SPARSE_COO, self.FORMAT_NUMPY)
+        return self.BACKEND_ALL
 
     def get_result_buffers(self):
         ''
@@ -43,7 +40,10 @@ class SumUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        self.results.intensity[:] += self.forbuf(np.sum(tile, axis=0))
+        self.results.intensity[:] += self.forbuf(
+            np.sum(tile, axis=0),
+            self.results.intensity
+        )
 
     def merge(self, dest, src):
         ''

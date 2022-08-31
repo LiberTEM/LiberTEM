@@ -1,8 +1,8 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from contextlib import contextmanager
 from typing import (
-    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List,
-    Tuple, Type, Iterable, TypeVar, Union, Set, TYPE_CHECKING
+    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List, Sequence,
+    Tuple, Type, Iterable, TypeVar, Union, TYPE_CHECKING
 )
 from typing_extensions import Protocol, runtime_checkable, Literal
 import warnings
@@ -16,13 +16,20 @@ from opentelemetry import trace, context as opentelemetry_context
 from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
 from libertem.common.progress import ProgressManager, PartitionProgressTracker, PartitionTrackerNoOp
 from libertem.io.dataset.base.tiling import DataTile
+from libertem.io.dataset.base import DataSetMeta
+from libertem.utils.devices import has_cupy
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
     BufferKind, BufferUse, BufferLocation,
 )
-from libertem.common.array_formats import FORMATS, array_format, NUMPY, as_format
+from libertem.common.array_backends import (
+    BACKENDS, CUPY_BACKENDS, D2_BACKENDS, DENSE_BACKENDS, ND_BACKENDS, SPARSE_BACKENDS, NUMPY,
+    CUDA_BACKENDS, CPU_BACKENDS, CUDA,
+    ArrayBackend, cheapest_pair, check_shape, get_backend, for_backend,
+    base_dtypes, get_cheapest_converter
+)
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol
 from libertem.common.math import prod
@@ -39,7 +46,6 @@ from libertem.common.executor import (
 )
 
 if TYPE_CHECKING:
-    from typing import OrderedDict
     from numpy import typing as nt
     from opentelemetry.trace import SpanContext
     from libertem.common.progress import ProgressReporter
@@ -47,8 +53,7 @@ if TYPE_CHECKING:
 tracer = trace.get_tracer(__name__)
 log = logging.getLogger(__name__)
 
-Backend = Literal['numpy', 'cuda', 'cupy']
-BackendSpec = Union[Backend, Iterable[Backend]]
+BackendSpec = Union[ArrayBackend, Iterable[ArrayBackend]]
 ResourceDef = Dict[
     Literal[
         'CPU', 'compute', 'ndarray', 'CUDA',
@@ -61,9 +66,10 @@ UDFKwargs = Dict[str, UDFKwarg]
 
 
 def _get_dtype(
-    udfs: List["UDF"],
+    udfs: List["UDFProtocol"],
     dtype: "nt.DTypeLike",
-    corrections: Optional[CorrectionSet]
+    corrections: Optional[CorrectionSet],
+    array_backends: Iterable[ArrayBackend],
 ) -> "nt.DTypeLike":
     tmp_dtype: "nt.DTypeLike"
     if corrections is not None and corrections.have_corrections():
@@ -73,7 +79,8 @@ def _get_dtype(
     for udf in udfs:
         tmp_dtype = np.result_type(
             udf.get_preferred_input_dtype(),
-            tmp_dtype
+            tmp_dtype,
+            *(base_dtypes[array_backend] for array_backend in array_backends),
         )
     return tmp_dtype
 
@@ -82,49 +89,195 @@ class TileConverter:
     def __init__(self, tile: DataTile):
         self._tile = tile
         # prime cache with identity
-        self._cache = {array_format(tile.data): tile.data}
+        self._cache = {get_backend(tile.data): tile.data}
 
-    def get_any(self, format):
+    def get(self, backend):
         '''
-        Get a converted tile in any of the specified formats.
+        Get a converted tile for the specified backend.
 
         Return from cache if any of them is in the cache,
-        otherwise convert to first entry in format specification.
+        otherwise choose cheapest option to convert from availabe cache.
         '''
-        if format in FORMATS:
-            format = (format, )
-        for f in format:
-            if f in self._cache:
-                return self._cache[f]
-        f = format[0]
-        converted = as_format(self._tile.data, f)
-        self._cache[f] = converted
-        return converted
+        res = self._cache.get(backend, None)
+        if res is None:
+            source, converter = get_cheapest_converter(self._cache.keys(), backend)
+            res = converter(self._cache[source])
+        if backend in ND_BACKENDS:
+            res = res.reshape(self._tile.shape)
+        self._cache[backend] = res
+        return res
 
 
-class CupyTileConverter:
-    def __init__(self, tile_converter: TileConverter, xp):
-        self._tile_converter = tile_converter
-        self._xp = xp
-        self._cache: Dict[str, str] = {}
+def _execution_plan(
+    udfs, ds: Union[DataSet, DataSetMeta], device_class: Optional[DeviceClass] = None,
+    available_backends: Iterable[ArrayBackend] = BACKENDS
+) -> OrderedDict[ArrayBackend, Iterable[UDFProtocol]]:
+    '''
+    Calculate which array format to use for which UDFs
+    '''
+    remaining = list(udfs)
+    execution_plan = OrderedDict()
+    # preserve order
+    ds_backends = tuple(d for d in ds.array_backends if d in available_backends)
+    available_backends = frozenset(available_backends)
+    if not ds_backends:
+        raise RuntimeError(
+            f"No overlap between dataset backends {ds.array_backends} and "
+            f"available backends {available_backends}."
+        )
+    if device_class is None:
+        # No preference, for example to prepare running for dataset
+        native_backends = available_backends
+    elif device_class == 'cuda':
+        native_backends = available_backends.intersection(CUDA_BACKENDS)
+    elif device_class == 'cpu':
+        native_backends = available_backends.intersection(CPU_BACKENDS)
+    else:
+        raise ValueError(f"Unknown device class{device_class}, allowed are 'cuda' and 'cpu'.")
 
-    def get_any(self, format):
+    aggregate_udf_aversion = defaultdict(lambda: 0.)
+    for udf in remaining:
+        backends = _get_canonical_backends(udf.get_backends())
+        for i, b in enumerate(backends):
+            aggregate_udf_aversion[b] += i / len(backends)
+
+    backend_popularity = sorted(
+        aggregate_udf_aversion.keys(),
+        key=lambda b: aggregate_udf_aversion[b]
+    )
+
+    def find_popular(remaining, restrict_to, preference_order):
         '''
-        Get a converted tile in any of the specified formats.
+        Parameters
+        ----------
 
-        Return from cache if any of them is in the cache,
-        otherwise convert to first entry in format specification.
+        preference_order: Order of preference for tie breaking if several formats can work for
+        the same number of UDFs
         '''
-        if format in FORMATS:
-            format = (format, )
-        if NUMPY not in FORMATS:
-            raise NotImplementedError("Sparse input data not supported with CuPy")
-        f = NUMPY
-        if f in self._cache:
-            return self._cache[f]
-        converted = self._xp.asanyarray(self._tile_converter.get_any(NUMPY))
-        self._cache[f] = converted
-        return converted
+        popular = defaultdict(OrderedDict)
+        for udf in remaining:
+            for b in _get_canonical_backends(udf.get_backends()):
+                if b in restrict_to:
+                    # Use dict with value True to make sure UDFs are not counted double
+                    popular[b][udf] = True
+        most_popular = sorted(popular.keys(), key=lambda b: len(popular[b]), reverse=True)
+        if most_popular:
+            max_len = len(popular[most_popular[0]])
+            most_popular = [b for b in most_popular if len(popular[b]) >= max_len]
+            if len(most_popular) > 1:
+                for b in preference_order:
+                    if b in most_popular:
+                        return b, list(popular[b].keys())
+            b = most_popular[0]
+            return b, list(popular[b].keys())
+        else:
+            return None, None
+
+    def apply(backend, udfs):
+        if backend is not None:
+            execution_plan[backend] = udfs
+            for udf in udfs:
+                remaining.remove(udf)
+
+    # First assign UDFs that work without conversion
+    # with a tile format native to dataset and device class
+    backend, selected_udfs = find_popular(
+        remaining,
+        restrict_to=native_backends.intersection(ds_backends),
+        preference_order=ds_backends
+    )
+    if backend is not None:
+        apply(backend, selected_udfs)
+    # The following covers the common case that the dataset is CPU-only
+    # and we require conversion to a CuPy format
+    # We should avoid costly conversion dense to sparse or sparse to dense
+    # by default when transforming between CPU and CuPy.
+    # Assign UDFs with sparse formats if the dataset has any sparse options
+    if SPARSE_BACKENDS.intersection(ds_backends):
+        backend, selected_udfs = find_popular(
+            remaining,
+            restrict_to=native_backends.intersection(SPARSE_BACKENDS),
+            preference_order=backend_popularity
+        )
+        if backend is not None:
+            apply(backend, selected_udfs)
+    # Assign a dense native format if the dataset has dense options
+    if DENSE_BACKENDS.intersection(ds_backends):
+        backend, selected_udfs = find_popular(
+            remaining,
+            restrict_to=native_backends.intersection(DENSE_BACKENDS),
+            preference_order=backend_popularity
+        )
+        if backend is not None:
+            apply(backend, selected_udfs)
+    # Then assign UDFs that work with an array format that matches the devie class
+    # That means arrays will be converted to allow execution on GPU or CPU even if the
+    # dataset can't deliver that natively and it requires conversion between sparse and dense.
+    # That is the case for the dataset default NumPy and UDFs that require sparse input.
+    while True:
+        backend, selected_udfs = find_popular(
+            remaining,
+            restrict_to=native_backends,
+            preference_order=backend_popularity
+        )
+        if backend is not None:
+            apply(backend, selected_udfs)
+        else:
+            break
+    # From here we have the "CPU on GPU fallback". A GPU on CPU fallback
+    # is attempted as well, may trigger an error downstream.
+    # Assign remaining UDFs that work with an array backend native to the dataset
+    backend, selected_udfs = find_popular(
+        remaining,
+        restrict_to=available_backends.intersection(ds_backends),
+        preference_order=ds_backends
+    )
+    if backend:
+        apply(backend, selected_udfs)
+    # Finally assign UDFs to any array backend even if they don't match the
+    # dataset or device class.
+    while True:
+        backend, selected_udfs = find_popular(
+            remaining,
+            restrict_to=available_backends,
+            preference_order=backend_popularity
+        )
+        if backend is not None:
+            apply(backend, selected_udfs)
+        else:
+            break
+
+    if remaining:
+        for r in remaining:
+            for b in _get_canonical_backends(r.get_backends()):
+                if b not in BACKENDS:
+                    raise ValueError(f"UDF {r} returned invalid backend {b}.")
+        raise RuntimeError(f"Could not find backends for remaining {remaining}.")
+
+    # Optimize the execution plan
+    reordered_plan = OrderedDict()
+    available = []
+    required = list(execution_plan.keys())
+    # First, determine the start point
+    ds_backend, right = cheapest_pair(ds_backends, required)
+    reordered_plan[right] = execution_plan[right]
+    available.append(ds_backend)
+    available.append(right)
+    required.remove(right)
+    # Now assign the remaining ones
+    while required:
+        _, right = cheapest_pair(available, required)
+        reordered_plan[right] = execution_plan[right]
+        required.remove(right)
+    # Now we should have covered all
+
+    trace.get_current_span().add_event(
+        'execution_plan', {
+            'ds_backend': ds_backend,
+            'execution_plan': reordered_plan,
+        }
+    )
+    return ds_backend, reordered_plan
 
 
 class UDFMeta:
@@ -140,6 +293,9 @@ class UDFMeta:
 
     .. versionchanged:: 0.9.0
         :code:`tiling_scheme_idx` and `sig_slice` added
+
+    .. versionchanged:: 0.11.0
+        :code:`array_format` added
     """
 
     def __init__(
@@ -153,7 +309,8 @@ class UDFMeta:
         tiling_index: int = 0,
         corrections: Optional[CorrectionSet] = None,
         device_class: Optional[DeviceClass] = None,
-        threads_per_worker: Optional[int] = None
+        threads_per_worker: Optional[int] = None,
+        array_backend: Optional[ArrayBackend] = None
     ):
         self._partition_slice = partition_slice
         self._dataset_shape = dataset_shape
@@ -173,6 +330,7 @@ class UDFMeta:
             corrections = CorrectionSet()
         self._corrections = corrections
         self._threads_per_worker = threads_per_worker
+        self._array_backend = array_backend
 
     @property
     def slice(self) -> Optional[Slice]:
@@ -334,6 +492,17 @@ class UDFMeta:
         .. versionadded:: 0.7.0
         """
         return self._threads_per_worker
+
+    @property
+    def array_backend(self) -> Optional[ArrayBackend]:
+        """
+        Array backend, one of the constants defined in
+        :mod:`libertem.common.array_backends` or None if not known
+        at that time.
+
+        .. versionadded:: 0.11.0
+        """
+        return self._array_backend
 
 
 class MergeAttrMapping:
@@ -834,15 +1003,12 @@ class UDFBase(UDFProtocol):
     def set_tile_idx(self, idx: int) -> None:
         self.meta.tiling_scheme_idx = idx
 
-    def set_backend(self, backend: Backend) -> None:
-        assert backend in self.get_backends()
+    def set_backend(self, backend: ArrayBackend) -> None:
+        assert backend in _get_canonical_backends(self.get_backends())
         self._backend = backend
 
     def get_backends(self) -> BackendSpec:
         raise NotImplementedError()  # see impl in UDF.get_backends
-
-    def get_formats(self):
-        raise NotImplementedError()  # see impl in UDF.get_formats
 
     @property
     def xp(self):
@@ -855,9 +1021,9 @@ class UDFBase(UDFProtocol):
         '''
         # Implemented as property and not variable to avoid pickling issues
         # tests/udf/test_simple_udf.py::test_udf_pickle
-        if self._backend == 'numpy' or self._backend == 'cuda':
+        if self._backend in CPU_BACKENDS or self._backend == CUDA:
             return np
-        elif self._backend == 'cupy':
+        elif self._backend in CUPY_BACKENDS:
             # Re-importing should be fast, right?
             # Importing only here to avoid superfluous import
             import cupy
@@ -865,7 +1031,7 @@ class UDFBase(UDFProtocol):
             # import numpy as cupy
             return cupy
         else:
-            raise ValueError(f"Backend name can be 'numpy', 'cuda' or 'cupy', got {self._backend}")
+            raise ValueError(f"Backend can be {BACKENDS}, got {self._backend}")
 
     def get_method(self) -> Literal['tile', 'frame', 'partition']:
         if hasattr(self, 'process_tile'):
@@ -1116,7 +1282,7 @@ class UDF(UDFBase):
                 "Please implement a suitable custom merge function."
             )
         for k in dest:
-            check_cast(getattr(dest, k), getattr(src, k))
+            check_cast(getattr(src, k), getattr(dest, k))
             getattr(dest, k)[:] = getattr(src, k)
 
     def get_results(self) -> Dict[str, np.ndarray]:
@@ -1222,26 +1388,15 @@ class UDF(UDFBase):
         '''
         return ('numpy', )
 
-    def get_formats(self):
+    def forbuf(self, arr, target):
         '''
-        Signal which array formats the UDF can use. It can be a single value or
-        an iterable of the format identifiers :attr:`UDF.FORMAT_NUMPY`,
-        :attr:`UDF.FORMAT_SPARSE_COO` or :attr:`UDF.FORMAT_SPARSE_GCXS`.
-        Format identifiers coming earlier are more likely to be selected.
-
-        The default is :code:`(UDF.FORMAT_NUMPY, )`.
-
-        .. versionadded:: 0.11.0
-        '''
-        return (self.FORMAT_NUMPY, )
-
-    def forbuf(self, arr):
-        '''
-        Convert array to format that is compatible with result buffers.
+        Convert array to format that is compatible with result buffers and
+        reshape.
 
         This function should be wrapped around assignment to result buffers if
-        the array :code:`arr` might be sparse. It converts any of the supported
-        sparse input formats into a NumPy array. If the argument is already a
+        the array :code:`arr` might be sparse and/or have a flattened sig
+        dimension. It converts any of the supported sparse input formats into
+        the array format of the target buffer. If the argument is already a
         NumPy array or not recognized, it is a no-op.
 
         The result of array operations on a sparse input tile can't always be
@@ -1250,7 +1405,8 @@ class UDF(UDFBase):
 
         .. versionadded:: 0.11.0
         '''
-        return as_format(arr, NUMPY, strict=False)
+        res = for_backend(arr, get_backend(target), strict=False).reshape(target.shape)
+        return res
 
     def cleanup(self) -> None:  # FIXME: name? implement cleanup as context manager somehow?
         pass
@@ -1528,16 +1684,16 @@ class Task:
         self._progress = True
 
 
-def _get_canonical_backends(backends: Optional[BackendSpec]) -> Set[Backend]:
+def _get_canonical_backends(backends: Optional[BackendSpec]) -> Sequence[ArrayBackend]:
     """
     Convert from either an iterable of backends or a simple string form into a
-    canonical form of Set[str]
+    canonical form of Sequence[str]
     """
     if backends is None:
-        return set()
+        return ()
     if isinstance(backends, str):
         backends = (backends,)
-    return set(backends)
+    return tuple(backends)
 
 
 def get_resources_for_backends(
@@ -1574,10 +1730,10 @@ def get_resources_for_backends(
         if user_backends_canonical:
             backends = set(user_backends_canonical).intersection(backend_set)
         else:
-            backends = backend_set
-        needs_cuda += 'numpy' not in backends
-        needs_cpu += ('cuda' not in backends) and ('cupy' not in backends)
-        needs_ndarray += 'cuda' not in backends
+            backends = set(backend_set)
+        needs_cuda += backends.isdisjoint(CPU_BACKENDS)
+        needs_cpu += backends.isdisjoint(CUDA_BACKENDS)
+        needs_ndarray += CUDA not in backends
     if needs_cuda and needs_cpu:
         raise ValueError(
             "There is no common supported UDF backend (have: %r, limited to %r)"
@@ -1600,7 +1756,7 @@ class UDFTask(Task):
         idx: int,
         udf_classes: List[Type[UDF]],
         udf_backends: List[BackendSpec],
-        backends: Optional[BackendSpec],
+        user_backends: Optional[BackendSpec],
         runner_cls: Type['UDFPartRunner'],
         span_context: "SpanContext",
         task_frames: int,
@@ -1624,9 +1780,9 @@ class UDFTask(Task):
             The number of frames this task must process (ROI included)
         """
         super().__init__(partition=partition, idx=idx, span_context=span_context)
-        self._backends = backends
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
+        self._user_backends = user_backends
         self._runner_cls = runner_cls
         self._task_frames = task_frames
 
@@ -1637,7 +1793,7 @@ class UDFTask(Task):
                 for cls, kwargs in zip(self._udf_classes, params.kwargs)
             ]
             return self._runner_cls(udfs, progress=self._progress).run_for_partition(
-                self.partition, params, env,
+                self.partition, params, env, self._user_backends,
             )
 
     @contextmanager
@@ -1665,7 +1821,7 @@ class UDFTask(Task):
 
         See docstring of super class for details.
         """
-        return get_resources_for_backends(self._udf_backends, user_backends=self._backends)
+        return get_resources_for_backends(self._udf_backends, user_backends=self._user_backends)
 
     def __repr__(self):
         return f"<UDFTask {self._udf_classes!r}>"
@@ -1690,33 +1846,52 @@ class UDFPartRunner:
         partition: Partition,
         params: UDFParams,
         env: Environment,
+        backend_choice: BackendSpec
     ) -> Tuple[UDFData, ...]:
         roi = params.roi
         corrections = params.corrections
+        if backend_choice is None:
+            backend_choice = BACKENDS
+        backend_choice = frozenset(_get_canonical_backends(backend_choice))
         with env.enter():
             try:
                 previous_id = None
                 device_class = get_device_class()
-                # numpy_udfs and cupy_udfs contain references to the objects in
-                # self._udfs
-                numpy_udfs, cupy_udfs = self._udf_lists(device_class)
-                # Will only be populated if actually on CUDA worker
-                # and any UDF supports 'cupy' (and not 'cuda')
-                if cupy_udfs:
+                if device_class == 'cpu':
+                    available_backends = backend_choice.intersection(CPU_BACKENDS)
+                elif device_class == 'cuda':
+                    if has_cupy():
+                        available_backends = backend_choice.intersection(BACKENDS)
+                    else:
+                        available_backends = backend_choice.intersection(
+                            CPU_BACKENDS.union((CUDA, ))
+                        )
+                else:
+                    raise RuntimeError(f"Unknown device class {device_class}.")
+                # This will raise an exception if unavailable backends would be used
+                ds_backend, execution_plan = _execution_plan(
+                    udfs=self._udfs,
+                    ds=partition.meta,
+                    device_class=device_class,
+                    available_backends=available_backends,
+                )
+                if CUPY_BACKENDS.intersection(execution_plan.keys()):
                     # Avoid importing if not used
                     import cupy
                     device = get_use_cuda()
                     previous_id = cupy.cuda.Device().id
                     cupy.cuda.Device(device).use()
-                (meta, dtype) = self._init_udfs(
-                    numpy_udfs, cupy_udfs, partition, roi, corrections, device_class, env,
+                dtype = self._init_udfs(
+                    execution_plan, partition, roi, corrections, device_class, env,
                     params.tiling_scheme,
                 )
                 partition.set_corrections(corrections)
                 if env.worker_context is not None:
                     partition.set_worker_context(env.worker_context)
-                self._run_udfs(numpy_udfs, cupy_udfs, partition, params.tiling_scheme, roi, dtype)
-                self._wrapup_udfs(numpy_udfs, cupy_udfs, partition)
+                self._run_udfs(
+                    ds_backend, execution_plan, partition, params.tiling_scheme, roi, dtype
+                )
+                self._wrapup_udfs(partition)
             finally:
                 if previous_id is not None:
                     cupy.cuda.Device(previous_id).use()
@@ -1725,8 +1900,8 @@ class UDFPartRunner:
 
     def _run_udfs(
         self,
-        numpy_udfs: List[UDF],
-        cupy_udfs: List[UDF],
+        ds_backend: ArrayBackend,
+        execution_plan: Dict[ArrayBackend, Iterable[UDF]],
         partition: Partition,
         tiling_scheme: TilingScheme,
         roi: Optional[np.ndarray],
@@ -1738,10 +1913,8 @@ class UDFPartRunner:
         tiles = partition.get_tiles(
             tiling_scheme=tiling_scheme,
             roi=roi, dest_dtype=dtype,
+            array_backend=ds_backend,
         )
-
-        if cupy_udfs:
-            xp = cupy_udfs[0].xp
 
         # type explicitly to help mypy
         partition_progress: Union[PartitionProgressTracker, PartitionTrackerNoOp]
@@ -1754,11 +1927,9 @@ class UDFPartRunner:
         try:
             for tile in tiles:
                 converter = TileConverter(tile)
-                self._run_tile(numpy_udfs, partition, tile, converter, roi=roi)
-                if cupy_udfs:
-                    # CuPy tile could come from dataset later
-                    cupy_converter = CupyTileConverter(converter, xp)
-                    self._run_tile(cupy_udfs, partition, tile, cupy_converter, roi=roi)
+                for backend, udfs in execution_plan.items():
+                    device_tile = converter.get(backend)
+                    self._run_tile(udfs, partition, tile, backend, device_tile, roi=roi)
             partition_progress.signal_tile_complete(tile)
         except AttributeError as e:
             removed = {
@@ -1783,29 +1954,28 @@ class UDFPartRunner:
         if device_class == 'cuda':
             for udf in self._udfs:
                 backends = udf.get_backends()
-                formats = udf.get_formats()
-                if 'cuda' in backends and NUMPY in formats:
+                if 'cuda' in backends and NUMPY in backends:
                     numpy_udfs.append(udf)
-                elif 'cupy' in backends and NUMPY in formats:
+                elif 'cupy' in backends and NUMPY in backends:
                     cupy_udfs.append(udf)
                 elif 'numpy' in backends:
                     warnings.warn(f"UDF {udf} backends are {backends}, recommended on CUDA are "
                         "'cuda' and 'cupy'. "
-                        f"UDF formats are {formats}, supported on CUDA is {NUMPY}. "
+                        f"UDF formats are {backends}, supported on CUDA is {NUMPY}. "
                         "Falling back to numpy", RuntimeWarning)
                     numpy_udfs.append(udf)
                 else:
                     raise RuntimeError(
                         f"UDF {udf} backends are {backends}, supported on CUDA are "
                         "'cuda' and 'cupy', as well as 'numpy' as a compatibility fallback."
-                        f"UDF formats are {formats}, supported on CUDA is {NUMPY}."
+                        f"UDF formats are {backends}, supported on CUDA is {NUMPY}."
                     )
         elif device_class == 'cpu':
             for udf in self._udfs:
-                backends = udf.get_backends()
-                if 'numpy' not in backends:
+                backends = _get_canonical_backends(udf.get_backends())
+                if CPU_BACKENDS.isdisjoint(backends):
                     raise RuntimeError(
-                        f"UDF {udf} backends are {backends}, supported on CPU is 'numpy'."
+                        f"UDF {udf} backends are {backends}, supported on CPU is {CPU_BACKENDS}."
                     )
             numpy_udfs = self._udfs
         else:
@@ -1815,8 +1985,7 @@ class UDFPartRunner:
 
     def _init_udfs(
         self,
-        numpy_udfs: List[UDF],
-        cupy_udfs: List[UDF],
+        execution_plan: Dict[ArrayBackend, Iterable[UDF]],
         partition: Partition,
         roi: Optional[np.ndarray],
         corrections: CorrectionSet,
@@ -1824,62 +1993,43 @@ class UDFPartRunner:
         env: Environment,
         tiling_scheme: TilingScheme,
     ) -> Tuple[UDFMeta, "nt.DTypeLike"]:
-        dtype = _get_dtype(self._udfs, partition.dtype, corrections)
-        meta = UDFMeta(
-            partition_slice=partition.slice.adjust_for_roi(roi),
-            dataset_shape=partition.meta.shape,
-            roi=roi,
-            dataset_dtype=partition.dtype,
-            input_dtype=dtype,
-            tiling_scheme=tiling_scheme,
-            corrections=corrections,
-            device_class=device_class,
-            threads_per_worker=env.threads_per_worker,
-        )
-        for udf in numpy_udfs:
-            backends = udf.get_backends()
-            if device_class == 'cuda':
-                # Warnings etc handled in _udf_lists()
-                if 'cuda' in backends:
-                    udf.set_backend('cuda')
-                elif 'numpy' in backends:  # fallback
-                    udf.set_backend('numpy')
-                else:
-                    # Should be covered in _udf_lists(), but just to be sure.
-                    raise ValueError("Can't run {udf} with backends {backends} on a CUDA worker.")
-            else:
-                udf.set_backend('numpy')
-        if device_class == 'cpu':
-            # Should be covered in _udf_lists(), but just to be sure.
-            assert not cupy_udfs
-        for udf in cupy_udfs:
-            udf.set_backend('cupy')
-        udfs = numpy_udfs + cupy_udfs
-        for udf in udfs:
-            udf.get_method()  # validate that one of the `process_*` methods is implemented
-            udf.set_meta(meta)
-            udf.init_result_buffers()
-            udf.allocate_for_part(partition, roi)
-            udf.init_task_data()
-            # TODO: preprocess doesn't have access to the tiling scheme - is this ok?
-            if isinstance(udf, UDFPreprocessMixin):
-                udf.clear_views()
-                udf.preprocess()
+        dtype = _get_dtype(self._udfs, partition.dtype, corrections, execution_plan.keys())
+        for backend, udfs in execution_plan.items():
+            meta = UDFMeta(
+                partition_slice=partition.slice.adjust_for_roi(roi),
+                dataset_shape=partition.meta.shape,
+                roi=roi,
+                dataset_dtype=partition.dtype,
+                input_dtype=dtype,
+                tiling_scheme=tiling_scheme,
+                corrections=corrections,
+                device_class=device_class,
+                threads_per_worker=env.threads_per_worker,
+                array_backend=backend,
+            )
+            for udf in udfs:
+                udf.set_backend(backend)
+                udf.get_method()  # validate that one of the `process_*` methods is implemented
+                udf.set_meta(meta)
+                udf.init_result_buffers()
+                udf.allocate_for_part(partition, roi)
+                udf.init_task_data()
+                if isinstance(udf, UDFPreprocessMixin):
+                    udf.clear_views()
+                    udf.preprocess()
 
-        for udf in udfs:
-            udf.set_meta(meta)
-        return (meta, dtype)
+        return dtype
 
     def _run_tile(
         self,
         udfs: List[UDF],
         partition: Partition,
         tile: DataTile,
-        converter: Union[TileConverter, CupyTileConverter],
+        array_backend: ArrayBackend,
+        device_tile: Any,
         roi: Optional[np.ndarray],
     ) -> None:
         for udf in udfs:
-            device_tile = converter.get_any(udf.get_formats())
             if isinstance(udf, UDFTileMixin):
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
@@ -1894,7 +2044,13 @@ class UDFPartRunner:
                                     sig_dims=tile_slice.shape.sig.dims),
                     )
                     # Internal checks for dataset consistency
-                    assert frame.shape == tuple(partition.shape.sig)
+                    assert frame_slice.shape[0] == 1
+                    if array_backend in ND_BACKENDS:
+                        # The sig dimension is squeezed out
+                        assert check_shape(frame, frame_slice.shape[1:])
+                    elif array_backend in D2_BACKENDS:
+                        # The matrix backend of the 2D arrays adds a sig dimension of 1
+                        assert check_shape(frame, frame_slice.shape)
                     udf.set_slice(frame_slice)
                     udf.set_views_for_frame(partition, tile, frame_idx)
                     udf.process_frame(frame)
@@ -1907,12 +2063,9 @@ class UDFPartRunner:
 
     def _wrapup_udfs(
         self,
-        numpy_udfs: List[UDF],
-        cupy_udfs: List[UDF],
         partition: Partition
     ) -> None:
-        udfs = numpy_udfs + cupy_udfs
-        for udf in udfs:
+        for udf in self._udfs:
             udf.flush(self._debug)
             if isinstance(udf, UDFPostprocessMixin):
                 udf.clear_views()
@@ -1929,7 +2082,7 @@ class UDFPartRunner:
                 raise TypeError("could not pickle partition")
             try:
                 cloudpickle.loads(cloudpickle.dumps(
-                    [u._do_get_results() for u in udfs]
+                    [u._do_get_results() for u in self._udfs]
                 ))
             except TypeError:
                 raise TypeError("could not pickle results")
@@ -1976,16 +2129,29 @@ class UDFRunner:
         """
         Return result buffer declarations for a given UDF/DataSet/roi combination
         """
+        ds_backend, execution_plan = _execution_plan(
+            udfs=(udf, ),
+            ds=dataset,
+            device_class='cuda',
+            # For the sake of dtype determination we'll assume all backends are available.
+            # On the workers some might be missing. The cupyx.scipy.sparse backends might
+            # trigger an up-conversion to float that may or may not happen in reality.
+            # By being inclusive with backends here we make sure that the result buffers
+            # can hold whatever the workers may be sending.
+            available_backends=BACKENDS,
+        )
+        dtype = _get_dtype(
+            [udf],
+            dataset.dtype,
+            corrections=None,
+            array_backends=execution_plan.keys(),
+        )
         meta = UDFMeta(
             partition_slice=None,
             dataset_shape=dataset.shape,
             roi=None,
             dataset_dtype=dataset.dtype,
-            input_dtype=_get_dtype(
-                [udf],
-                dataset.dtype,
-                corrections=None,
-            ),
+            input_dtype=dtype,
             corrections=None,
         )
 
@@ -2039,13 +2205,31 @@ class UDFRunner:
         dry: bool,
     ) -> Tuple[List[UDFTask], UDFParams]:
         self._check_preconditions(dataset, roi)
+        if backends is None:
+            backends = BACKENDS
+        backends = _get_canonical_backends(backends)
+        ds_backend, execution_plan = _execution_plan(
+            udfs=self._udfs,
+            ds=dataset,
+            # To include all possible backends without preference for device class
+            device_class=None,
+            # For the sake of dtype determination we'll assume all backends are available.
+            # On the workers some might be missing. The cupyx.scipy.sparse backends might
+            # trigger an up-conversion to float that may or may not happen in reality.
+            # By being inclusive with backends here we make sure that the result buffers
+            # can hold whatever the workers may be sending.
+            available_backends=backends,
+        )
+        dtype = _get_dtype(self._udfs, dataset.dtype, corrections, execution_plan.keys())
         meta = UDFMeta(
             partition_slice=None,
             dataset_shape=dataset.shape,
             roi=roi,
             dataset_dtype=dataset.dtype,
-            input_dtype=_get_dtype(self._udfs, dataset.dtype, corrections),
+            input_dtype=dtype,
             corrections=corrections,
+            # We don't specify the dataset input backend here since
+            # that will be determined dynamically on the workers.
         )
         for udf in self._udfs:
             udf.set_meta(meta)
@@ -2249,7 +2433,7 @@ class UDFRunner:
             tasks = UDFTask(
                 partition=partition, idx=idx, udf_classes=udf_classes,
                 udf_backends=udf_backends,
-                backends=backends,
+                user_backends=backends,
                 runner_cls=self.get_part_runner_cls(),
                 span_context=span_context,
                 task_frames=num_frames,

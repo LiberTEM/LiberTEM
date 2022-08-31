@@ -33,7 +33,7 @@ def merge_single(n, n_0, sum_0, varsum_0, n_1, sum_1, varsum_1, mean_1):
     sum_1, varsum_1, mean_1 : float
         Minibatch sum, sum of variances and mean. The mean is
         available from the previous minibatch calculation in the innermost
-        aggregation loop as a "hot" value.
+        aggregation loop as a "hot" value.samples
 
     Returns
     -------
@@ -191,8 +191,8 @@ def merge_ndarray(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum, src
     for CuPy and sparse input data
     '''
     if dest_n == 0:
-        dest_sum[:] = forbuf(src_sum)
-        dest_varsum[:] = forbuf(src_varsum)
+        dest_sum[:] = forbuf(src_sum, dest_sum)
+        dest_varsum[:] = forbuf(src_varsum, dest_varsum)
         return src_n
     else:
         n = dest_n + src_n
@@ -205,11 +205,15 @@ def merge_ndarray(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum, src
         mean = mean_0 + (src_n * delta) / n
 
         # compute sum of images for joint samples
-        dest_sum += forbuf(src_sum)
+        dest_sum += forbuf(src_sum, dest_sum)
 
         # compute sum of variances for joint samples
         partial_delta = mean_1 - mean
-        dest_varsum += forbuf(src_varsum + (src_n * np.abs(delta) * np.abs(partial_delta)))
+        dest_varsum += forbuf(
+            # Use multiply for compatibility with matrix interface (scipy.sparse)
+            src_varsum + (np.multiply(np.multiply(src_n, np.abs(delta)), np.abs(partial_delta))),
+            dest_varsum
+        )
         return n
 
 
@@ -222,7 +226,8 @@ def process_tile_ndarray(tile, n_0, sum_inout, varsum_inout, forbuf):
     n = n_0 + n_frames
     sumsum = np.sum(tile, axis=0)
     mean = sumsum / n_frames
-    varsum = np.sum(np.abs(tile - mean)**2, axis=0)
+    delta = np.abs(tile - mean)
+    varsum = np.sum(np.multiply(delta, delta), axis=0)
     merge_ndarray(
         n_0, sum_inout, varsum_inout,
         n_frames, sumsum, varsum, mean,
@@ -290,10 +295,7 @@ class StdDevUDF(UDF):
         super().__init__(dtype=dtype, use_numba=use_numba)
 
     def get_backends(self):
-        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
-
-    def get_formats(self):
-        return (self.FORMAT_NUMPY, self.FORMAT_SPARSE_COO, self.FORMAT_SPARSE_GCXS)
+        return self.BACKEND_ALL
 
     def get_result_buffers(self):
         """
@@ -423,16 +425,13 @@ class StdDevUDF(UDF):
         n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]
 
-        dtype = np.result_type(self.results.varsum.dtype, np.complex64)
-
         if n_0 == 0:
-            self.results.sum[:] = self.forbuf(tile.sum(axis=0))
-            # ddof changes the number the sum of variances is divided by.
-            # Setting it like here avoids multiplying by n_1 to get the sum
-            # of variances
-            # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.var.html
+            self.results.sum[:] = self.forbuf(tile.sum(axis=0), self.results.sum)
+            # Done this way to support the various array libraries
+            delta = np.abs(tile - tile.mean(axis=0))
             self.results.varsum[:] = self.forbuf(
-                np.var(tile, axis=0, ddof=n_1 - 1, dtype=dtype).real
+                np.sum(np.multiply(delta, delta), axis=0).real,
+                self.results.varsum
             )
             self.task_data.num_frames[key] = n_1
         else:

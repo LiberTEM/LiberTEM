@@ -1,19 +1,15 @@
 import numpy as np
-<<<<<<< HEAD
-import scipy.sparse as sp
-import sparse
+
 from typing import Union, TYPE_CHECKING, Optional, Tuple
 
 if TYPE_CHECKING:
     from libertem.common.shape import Shape
-=======
 
-from .array_formats import array_format, as_format, NUMPY, SPARSE_COO, SPARSEFORMATS
->>>>>>> a8c5e412 (WIP intermediate save)
+from .array_backends import get_backend, for_backend, NUMPY, SPARSE_COO, SPARSE_BACKENDS
 
 
 def to_dense(a):
-    res = as_format(a, NUMPY)
+    res = for_backend(a, NUMPY)
     if res.flags.c_contiguous:
         return res
     else:
@@ -21,7 +17,7 @@ def to_dense(a):
 
 
 def to_sparse(a):
-    return as_format(a, SPARSE_COO)
+    return for_backend(a, SPARSE_COO)
 
 
 def sparse_to_coo(a, shape: Optional[Union['Shape', Tuple[int]]] = None):
@@ -31,4 +27,4 @@ def sparse_to_coo(a, shape: Optional[Union['Shape', Tuple[int]]] = None):
 
 
 def is_sparse(a):
-    return array_format(a) in SPARSEFORMATS
+    return get_backend(a) in SPARSE_BACKENDS

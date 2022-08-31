@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Optional
 import warnings
 import contextlib
 
@@ -14,6 +15,7 @@ from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
     DataTile,
 )
+from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 
 log = logging.getLogger(__name__)
 
@@ -277,7 +279,11 @@ class SERPartition(BasePartition):
             return
         self._corrections.apply(tile_data, tile_slice)
 
-    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None,
+            array_backend: Optional[ArrayBackend] = None):
+        if array_backend is None:
+            array_backend = self.meta.array_backends[0]
+        assert array_backend in (NUMPY, CUDA)
         sync_offset = self.meta.sync_offset
         shape = Shape((1,) + tuple(self.shape.sig), sig_dims=self.shape.sig.dims)
         tiling_scheme = tiling_scheme.adjust_for_partition(self)

@@ -5,6 +5,7 @@ import contextlib
 import numpy as np
 
 from .fileset import FileSet
+from libertem.common.array_backends import ArrayBackend
 
 log = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ class IOBackendImpl:
 
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        sync_offset, corrections,
+        sync_offset, corrections, array_backend: ArrayBackend,
     ):
         """
         Read tiles from `fileset`, as specified by the parameters.
@@ -147,6 +148,11 @@ class IOBackendImpl:
 
         roi : np.ndarray
             Boolean array specifying which data should be read
+
+        array_backend : ArrayBackend
+            Array backend to use for reading the data
+
+            .. versionadded:: 0.11.0
 
         native_dtype : np.dtype
             The native on-disk data type. If there is no direct match to

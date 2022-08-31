@@ -1,3 +1,4 @@
+import functools
 import warnings
 import logging
 
@@ -53,6 +54,7 @@ def detect():
     }
 
 
+@functools.cache
 def has_cupy():
     '''
     Probe if :code:`cupy` was loaded successfully.

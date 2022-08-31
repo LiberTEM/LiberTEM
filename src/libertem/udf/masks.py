@@ -1,4 +1,5 @@
 import numpy as np
+from libertem.common.array_backends import CUPY_BACKENDS, NUMPY, SCIPY_COO, SCIPY_CSC, SCIPY_CSR
 
 from libertem.udf import UDF
 from libertem.common.container import MaskContainer
@@ -87,7 +88,7 @@ class ApplyMasksUDF(UDF):
             use_sparse = 'scipy.sparse'
 
         if backends is None:
-            backends = ('numpy', 'cupy')
+            backends = self.BACKEND_ALL
 
         self._mask_container = None
 
@@ -126,19 +127,15 @@ class ApplyMasksUDF(UDF):
             self._mask_container = self._make_mask_container()
         return self._mask_container
 
-    @property
-    def backend(self):
-        if self.meta.device_class == 'cuda':
-            backend = 'cupy'
-        else:
-            backend = 'numpy'
-        return backend
-
     def _make_mask_container(self):
         p = self.params
+        if self.meta.array_backend in CUPY_BACKENDS:
+            backend = self.BACKEND_CUPY
+        else:
+            backend = self.BACKEND_NUMPY
         return MaskContainer(
             p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
-            backend=self.backend
+            backend=backend
         )
 
     def get_task_data(self):
@@ -150,11 +147,65 @@ class ApplyMasksUDF(UDF):
         m = self.meta
         use_torch = self.params.use_torch
         if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype()
-                or self.meta.device_class != 'cpu' or self.masks.use_sparse):
+                or self.meta.device_class != 'cpu' or self.masks.use_sparse
+                or self.meta.array_backend != NUMPY):
             use_torch = False
+        backend = self.meta.array_backend
+        if use_torch:
+
+            def process_flat(flat_tile):
+                import torch
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=True
+                )
+                # CuPy back-end disables torch in get_task_data
+                # FIXME use GPU torch with CuPy array?
+                result = torch.mm(
+                    torch.from_numpy(flat_tile),
+                    torch.from_numpy(masks),
+                ).numpy()
+                return result
+
+        # Required due to https://github.com/scipy/scipy/issues/13211
+        elif (backend == NUMPY
+              and self.masks.use_sparse
+              and 'scipy.sparse' in self.masks.use_sparse):
+
+            def process_flat(flat_tile):
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=True
+                )
+                result = rmatmul(flat_tile, masks)
+                return result
+
+        elif (
+            backend in (SCIPY_COO, SCIPY_CSR, SCIPY_CSC)
+            and self.masks.use_sparse
+            and 'sparse.pydata' in self.masks.use_sparse
+        ):
+
+            def process_flat(flat_tile):
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=False
+                )
+                # Make sure the sparse.pydata mask comes first
+                # to choose the right multiplication method
+                result = (masks @ flat_tile.T).T
+                return result
+
+        else:
+
+            def process_flat(flat_tile):
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=True
+                )
+
+                result = flat_tile @ masks
+                return result
+
         return {
             'use_torch': use_torch,
-            'masks': self.masks,
+            'process_flat': process_flat,
         }
 
     def get_result_buffers(self):
@@ -173,35 +224,8 @@ class ApplyMasksUDF(UDF):
     def process_tile(self, tile):
         ''
         flat_data = tile.reshape((tile.shape[0], -1))
-        if self.task_data.use_torch:
-            import torch
-            masks = self.task_data.masks.get_for_sig_slice(
-                self.meta.sig_slice, transpose=True
-            )
-            # CuPy back-end disables torch in get_task_data
-            # FIXME use GPU torch with CuPy array?
-            result = torch.mm(
-                torch.from_numpy(flat_data),
-                torch.from_numpy(masks),
-            ).numpy()
-        # Required due to https://github.com/cupy/cupy/issues/4072
-        elif self.backend == 'cupy' and self.task_data.masks.use_sparse:
-            masks = self.task_data.masks.get_for_sig_slice(
-                self.meta.sig_slice, transpose=False
-            )
-            result = masks.dot(flat_data.T).T
-        # Required due to https://github.com/scipy/scipy/issues/13211
-        elif (self.backend == 'numpy'
-              and self.task_data.masks.use_sparse
-              and 'scipy.sparse' in self.task_data.masks.use_sparse):
-            masks = self.task_data.masks.get_for_sig_slice(
-                self.meta.sig_slice, transpose=True
-            )
-            result = rmatmul(flat_data, masks)
-        else:
-            masks = self.task_data.masks.get_for_sig_slice(
-                self.meta.sig_slice, transpose=True
-            )
-            result = flat_data @ masks
         # '+' is the correct merge for dot product
-        self.results.intensity[:] += result
+        self.results.intensity[:] += self.forbuf(
+            self.task_data.process_flat(flat_data),
+            self.results.intensity,
+        )

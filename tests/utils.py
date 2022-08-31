@@ -7,8 +7,8 @@ import numpy as np
 import sparse
 import pytest
 
-from libertem.common.array_formats import (
-    DENSEFORMATS, NDFORMATS, NUMPY, SPARSEFORMATS, SPARSE_GCXS, as_format
+from libertem.common.array_backends import (
+    DENSE_BACKENDS, ND_BACKENDS, NUMPY, SPARSE_BACKENDS, SPARSE_GCXS, ArrayBackend, for_backend
 )
 from libertem.common.sparse import to_dense
 from libertem.analysis.gridmatching import calc_coords
@@ -30,6 +30,7 @@ def _naive_mask_apply(masks, data):
 
     returns array of shape (num_masks, scan_y, scan_x)
     """
+    data = for_backend(data, NUMPY)
     assert len(data.shape) == 4
     for mask in masks:
         assert mask.shape == data.shape[2:], "mask doesn't fit frame size"
@@ -47,17 +48,18 @@ def _naive_mask_apply(masks, data):
 
 # This function introduces asymmetries so that errors won't average out so
 # easily with large data sets
-def _mk_random(size, dtype='float32', format=NUMPY):
-    if format not in NDFORMATS and len(size) != 2:
-        raise ValueError(f"Format {format} does not support size {size}")
+def _mk_random(size, dtype='float32', array_backend=NUMPY):
+    size = tuple(size)
+    if array_backend not in ND_BACKENDS and len(size) != 2:
+        raise ValueError(f"Format {array_backend} does not support size {size}")
     dtype = np.dtype(dtype)
-    if format in SPARSEFORMATS:
-        if format == SPARSE_GCXS:
+    if array_backend in SPARSE_BACKENDS:
+        if array_backend == SPARSE_GCXS:
             form = 'gcxs'
         else:
             form = 'coo'
-        data = as_format(sparse.random(size, format=form).astype(dtype), format)
-    elif format in DENSEFORMATS:
+        data = for_backend(sparse.random(size, format=form).astype(dtype), array_backend)
+    elif array_backend in DENSE_BACKENDS:
         if dtype.kind == 'c':
             choice = [0, 1, -1, 0+1j, 0-1j, 2.3+17j, -23+42j]
         else:
@@ -67,13 +69,16 @@ def _mk_random(size, dtype='float32', format=NUMPY):
         coords10 = tuple(np.random.choice(range(c)) for c in size)
         data[coords2] = np.random.choice(choice) * sum(size)
         data[coords10] = np.random.choice(choice) * 10 * sum(size)
-        data = as_format(data, format)
+        data = for_backend(data, array_backend)
     else:
-        raise ValueError(f"Don't understand array format {format}.")
+        raise ValueError(f"Don't understand array format {array_backend}.")
     if data.dtype != dtype:
-        raise ValueError(f"Can't make array with format {format} and dtype {dtype}.")
+        raise ValueError(f"Can't make array with format {array_backend} and dtype {dtype}.")
     if data.shape != size:
-        raise ValueError(f"Can't make array with format {format} and shape {size}.")
+        raise ValueError(
+            f"Can't make array with format {array_backend} and shape {size}, "
+            f"got shape {data.shape}."
+        )
     return data
 
 
@@ -367,7 +372,7 @@ class FakeBackend(IOBackend, id_="fake"):
 class FakeBackendImpl(IOBackendImpl):
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        sync_offset, corrections,
+        sync_offset, corrections, array_backend: ArrayBackend
     ):
         raise RuntimeError("nothing to see here")
         # to make this a generator, there needs to be a yield statement in
@@ -382,27 +387,27 @@ def roi_as_sparse(roi):
 
 
 @contextmanager
-def set_backend(backend):
+def set_device_class(device_class):
     '''
     This context manager is designed to work with the inline executor.
-    It simplifies running tests with several backends by skipping
-    unavailable backends and handling setting and re-setting the environment variables
+    It simplifies running tests with several device classes by skipping
+    unavailable device classes and handling setting and re-setting the environment variables
     correctly.
     '''
     prev_cuda_id = get_use_cuda()
     prev_cpu_id = get_use_cpu()
     try:
-        if backend in ('cupy', 'cuda'):
+        if device_class in ('cupy', 'cuda'):
             d = detect()
             cudas = d['cudas']
             if not d['cudas']:
-                pytest.skip(f"No CUDA device, skipping test with backend {backend}.")
-            if backend == 'cupy' and not d['has_cupy']:
-                pytest.skip(f"No CuPy, skipping test with backend {backend}.")
+                pytest.skip(f"No CUDA device, skipping test with device class {device_class}.")
+            if device_class == 'cupy' and not d['has_cupy']:
+                pytest.skip(f"No CuPy, skipping test with device class {device_class}.")
             set_use_cuda(cudas[0])
         else:
             set_use_cpu(0)
-        print(f'running with {backend}')
+        print(f'running with {device_class}')
         yield
     finally:
         if prev_cpu_id is not None:

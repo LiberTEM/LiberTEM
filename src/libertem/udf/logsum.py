@@ -21,10 +21,14 @@ class LogsumUDF(UDF):
         super().__init__()
 
     def get_backends(self):
-        return (self.BACKEND_NUMPY, self.BACKEND_CUPY)
-
-    def get_formats(self):
-        return (self.FORMAT_NUMPY, self.FORMAT_SPARSE_GCXS, self.FORMAT_SPARSE_COO)
+        return [
+            b for b in self.BACKEND_ALL
+            if b not in (
+                self.BACKEND_SCIPY_COO, self.BACKEND_SCIPY_CSR, self.BACKEND_SCIPY_CSC,
+                self.BACKEND_CUPY_SCIPY_COO, self.BACKEND_CUPY_SCIPY_CSC,
+                self.BACKEND_CUPY_SCIPY_CSR,
+            )
+        ]
 
     def get_result_buffers(self):
         ""
@@ -46,7 +50,10 @@ class LogsumUDF(UDF):
 
     def process_frame(self, frame):
         ""
-        self.results.logsum[:] += self.forbuf(np.log(frame - np.min(frame) + 1))
+        self.results.logsum[:] += self.forbuf(
+            np.log(frame - np.min(frame) + 1),
+            self.results.logsum
+        )
 
 
 def run_logsum(ctx, dataset, roi=None):

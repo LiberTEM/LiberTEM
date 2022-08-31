@@ -1,5 +1,5 @@
 import typing
-from typing import Generator, Optional, Tuple
+from typing import Generator, Optional, Sequence, Tuple
 
 import numpy as np
 from libertem.common.shape import Shape
@@ -10,6 +10,7 @@ from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition, Partition
+from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 
 if typing.TYPE_CHECKING:
     from libertem.common.executor import JobExecutor, TaskCommHandler
@@ -116,6 +117,17 @@ class DataSet:
         (for example, 4D for pixelated STEM)
         """
         raise NotImplementedError()
+
+    @property
+    def array_backends(self) -> Optional[Sequence[ArrayBackend]]:
+        """
+        The array backends the dataset can return data as.
+
+        Defaults to only NumPy arrays
+
+        .. versionadded:: 0.11.0
+        """
+        return (NUMPY, CUDA)
 
     def check_valid(self) -> bool:
         """

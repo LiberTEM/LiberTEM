@@ -49,7 +49,7 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
             cupy_only = ctx.run_udf(
                 udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
                 dataset=hdf5_ds_1,
-                backends=('cupy',)
+                backends=('cupy', 'cuda')
             )
         else:
             with pytest.raises(RuntimeError):

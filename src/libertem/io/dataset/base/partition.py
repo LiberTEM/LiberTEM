@@ -12,6 +12,7 @@ from .meta import DataSetMeta
 from .fileset import FileSet
 from . import IOBackend
 from .decode import Decoder
+from libertem.common.array_backends import ArrayBackend
 from .roi import roi_for_partition
 
 
@@ -108,7 +109,8 @@ class Partition:
     def set_worker_context(self, worker_context: "WorkerContext"):
         pass
 
-    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None,
+            array_backend: Optional[ArrayBackend] = None):
         raise NotImplementedError()
 
     def __repr__(self):
@@ -259,7 +261,8 @@ class BasePartition(Partition):
     def set_worker_context(self, worker_context: "WorkerContext"):
         self._worker_context = worker_context
 
-    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32",
+            roi=None, array_backend: Optional[ArrayBackend] = None):
         """
         Return a generator over all DataTiles contained in this Partition.
 
@@ -284,6 +287,12 @@ class BasePartition(Partition):
             the beginning of the dataset. Compressed means, only frames that have a 1
             in the ROI are considered, and the resulting tile slices are from a coordinate
             system that has the shape `(np.count_nonzero(roi),)`.
+
+        array_backend : ArrayBackend
+            Specify array backend to use. By default the first entry in the list of supported
+            backends is used.
+
+            .. versionadded:: 0.11.0
         """
         if self._start_frame < self.meta.image_count:
             dest_dtype = np.dtype(dest_dtype)
@@ -291,6 +300,8 @@ class BasePartition(Partition):
             self.validate_tiling_scheme(tiling_scheme_adj)
             read_ranges = self._get_read_ranges(tiling_scheme_adj, roi)
             io_backend = self.get_io_backend().get_impl()
+            if array_backend is None:
+                array_backend = self.meta.array_backends[0]
 
             yield from io_backend.get_tiles(
                 tiling_scheme=tiling_scheme_adj, fileset=self._fileset,
@@ -300,6 +311,7 @@ class BasePartition(Partition):
                 sync_offset=self.meta.sync_offset,
                 decoder=self._decoder,
                 corrections=self._corrections,
+                array_backend=array_backend,
             )
 
     def __repr__(self):

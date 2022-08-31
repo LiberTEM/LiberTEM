@@ -35,6 +35,7 @@ def test_concurrent_executor(lt_ctx, concurrent_ctx, default_raw, use_roi):
 
     for index, value in enumerate(ref_res):
         for key, ref in value.items():
+            print("index", index, "key", key)
             assert np.allclose(ref.data, res[index][key].data, equal_nan=True)
         for key in res[index].keys():
             assert key in value

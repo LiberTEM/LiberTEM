@@ -1,9 +1,10 @@
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING, Sequence
 
 import jsonschema
 import numpy as np
 
 from libertem.common import Shape
+from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 
 if TYPE_CHECKING:
     from numpy import typing as nt
@@ -13,6 +14,8 @@ class DataSetMeta:
     """
     shape
         "native" dataset shape, can have any dimensionality
+
+    array_backends: Optional[Sequence[ArrayBackend]]
 
     raw_dtype : np.dtype
         dtype used internally in the data set for reading
@@ -35,6 +38,7 @@ class DataSetMeta:
     def __init__(
         self,
         shape: Shape,
+        array_backends: Optional[Sequence[ArrayBackend]] = None,
         image_count: int = 0,
         raw_dtype: "Optional[nt.DTypeLike]" = None,
         dtype: "Optional[nt.DTypeLike]" = None,
@@ -42,6 +46,9 @@ class DataSetMeta:
         sync_offset: int = 0
     ):
         self.shape = shape
+        if array_backends is None:
+            array_backends = (NUMPY, CUDA)
+        self.array_backends = array_backends
         if dtype is None:
             dtype = raw_dtype
         self.dtype: np.dtype = np.dtype(dtype)

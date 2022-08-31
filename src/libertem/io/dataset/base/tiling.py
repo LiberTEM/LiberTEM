@@ -6,6 +6,7 @@ import numpy as np
 
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
 from .roi import _roi_to_indices
+from libertem.common.array_backends import check_shape
 
 
 log = logging.getLogger(__name__)
@@ -275,7 +276,7 @@ class DataTile:
     def __init__(self, data, tile_slice, scheme_idx):
         if isinstance(data, DataTile):
             data = data.data
-        assert data.shape == tuple(tile_slice.shape)
+        check_shape(data, tile_slice.shape)
         self._data = data
         self.tile_slice = tile_slice
         self.scheme_idx = scheme_idx
@@ -302,7 +303,7 @@ class DataTile:
 
     @property
     def shape(self):
-        return self._data.shape
+        return tuple(self.tile_slice.shape)
 
     @property
     def data(self):

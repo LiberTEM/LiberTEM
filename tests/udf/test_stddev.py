@@ -1,12 +1,13 @@
 import pytest
 import numpy as np
 import numba
+from libertem.common.array_backends import SPARSE_BACKENDS, get_device_class
 
 from libertem.udf.stddev import StdDevUDF, run_stddev, process_tile, merge
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.sparse import SPARSE_COO, as_format, NUMPY
+from libertem.common.sparse import SPARSE_COO, for_backend, NUMPY
 
-from utils import _mk_random, set_backend
+from utils import _mk_random, set_device_class
 
 
 @pytest.mark.with_numba
@@ -20,12 +21,9 @@ from utils import _mk_random, set_backend
     "use_numba", [True, False]
 )
 @pytest.mark.parametrize(
-    "format", [NUMPY, SPARSE_COO]
+    'backend', (None, ) + tuple(StdDevUDF().get_backends())
 )
-@pytest.mark.parametrize(
-    'backend', ['numpy', 'cupy']
-)
-def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, format, backend):
+def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, backend):
     """
     Test variance, standard deviation, sum of frames, and mean computation
     implemented in udf/stddev.py
@@ -35,10 +33,18 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, format, backend)
     lt_ctx
         Context class for loading dataset and creating jobs on them
     """
-    with set_backend(backend):
-        data = _mk_random(size=(30, 3, 516), dtype=dtype, format=format)
-        dataset = MemoryDataSet(data=data, tileshape=(3, 2, 257),
-                                num_partitions=2, sig_dims=2)
+    with set_device_class(get_device_class(backend)):
+        if backend in SPARSE_BACKENDS:
+            data = _mk_random(size=(30, 3, 516), dtype=dtype, array_backend=SPARSE_COO)
+        else:
+            data = _mk_random(size=(30, 3, 516), dtype=dtype, array_backend=NUMPY)
+        dataset = MemoryDataSet(
+            data=data,
+            tileshape=(3, 2, 257),
+            num_partitions=2,
+            sig_dims=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
         if use_roi:
             roi = np.random.choice([True, False], size=dataset.shape.nav)
             res = run_stddev(lt_ctx, dataset, roi=roi, use_numba=use_numba)
@@ -59,18 +65,18 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, format, backend)
         assert res_delayed['num_frames'] == N
 
         print('sum')
-        refsum = as_format(np.sum(data[roi], axis=0), NUMPY)
+        refsum = for_backend(np.sum(data[roi], axis=0), NUMPY)
         print(res['sum'])
         print(refsum)
         print(res['sum'] - refsum)
         assert np.allclose(res['sum'], refsum)  # check sum of frames
         assert np.allclose(res_delayed['sum'], refsum)
 
-        ref_mean = as_format(np.mean(data[roi], axis=0), NUMPY)
+        ref_mean = for_backend(np.mean(data[roi], axis=0), NUMPY)
         assert np.allclose(res['mean'], ref_mean)  # check mean
         assert np.allclose(res_delayed['mean'], ref_mean)
 
-        refvar = as_format(np.var(data[roi], axis=0), NUMPY)
+        refvar = for_backend(np.var(data[roi], axis=0), NUMPY)
         print('var')
         print(res['var'])
         print(refvar)
@@ -78,7 +84,7 @@ def test_stddev(lt_ctx, delayed_ctx, use_roi, dtype, use_numba, format, backend)
         assert np.allclose(refvar, res['var'])  # check variance
         assert np.allclose(refvar, res_delayed['var'])
 
-        refstd = as_format(np.std(data[roi], axis=0), NUMPY)
+        refstd = for_backend(np.std(data[roi], axis=0), NUMPY)
         assert np.allclose(refstd, res['std'])  # check standard deviation
         assert np.allclose(refstd, res_delayed['std'])
 

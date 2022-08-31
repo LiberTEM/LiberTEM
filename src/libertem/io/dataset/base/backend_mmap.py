@@ -13,6 +13,7 @@ from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool
 from libertem.common.numba import cached_njit
+from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
 
@@ -321,13 +322,13 @@ class MMapBackendImpl(IOBackendImpl):
 
     def get_tiles(
         self, tiling_scheme, fileset, read_ranges, roi, native_dtype, read_dtype, decoder,
-        sync_offset, corrections,
+        sync_offset, corrections, array_backend: ArrayBackend,
     ):
         # TODO: how would compression work?
         # TODO: sparse input data? COO format? fill rate? → own pipeline! → later!
         # strategy: assume low (20%?) fill rate, read whole partition and apply ROI in-memory
         #           partitioning when opening the dataset, or by having one file per partition
-
+        assert array_backend in (NUMPY, CUDA)
         with self.open_files(fileset) as open_files:
             if self._enable_readahead:
                 self._set_readahead_hints(roi, open_files)

@@ -13,6 +13,7 @@ from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.io.corrections import CorrectionSet
 from libertem.common.messageconverter import MessageConverter
+from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta,
     TilingScheme,
@@ -864,7 +865,11 @@ class H5Partition(Partition):
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections
 
-    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None,
+            array_backend: Optional[ArrayBackend] = None):
+        if array_backend is None:
+            array_backend = self.meta.array_backends[0]
+        assert array_backend in (NUMPY, CUDA)
         tiling_scheme = tiling_scheme.adjust_for_partition(self)
         if roi is not None:
             yield from self._get_tiles_with_roi(roi, dest_dtype, tiling_scheme)

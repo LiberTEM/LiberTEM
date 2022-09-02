@@ -115,10 +115,13 @@ def _flatsig(arr):
 
     All dimensions except the first one are flattened.
     '''
-    return arr.reshape((arr.shape[0], -1))
+    target_shape = (arr.shape[0], prod(arr.shape[1:]))
+    # print('_flatsig', arr.shape, type(arr), target_shape)
+    return arr.reshape(target_shape)
 
 
 def _identity(arr):
+    # print('_identity', arr.shape, type(arr))
     return arr
 
 
@@ -221,6 +224,18 @@ class ConverterDict:
     def _populate_cupy(self):
         import cupy
         import cupyx.scipy
+
+        def detect_csr_complex128_bug():
+            # https://github.com/cupy/cupy/issues/7035
+            a = cupy.array([
+                (1, 1j),
+                (1j, -1-1j)
+
+            ]).astype(np.complex128)
+            sp = cupyx.scipy.sparse.csr_matrix(a)
+            return not np.allclose(a, sp.todense())
+
+        has_csr_complex128_bug = detect_csr_complex128_bug()
 
         CUPY_SPARSE_DTYPES = {
             np.float32, np.float64, np.complex64, np.complex128
@@ -334,17 +349,20 @@ class ConverterDict:
 
         def _adjust_dtype_cupy_sparse(arr):
             if arr.dtype in CUPY_SPARSE_DTYPES:
-                return arr
+                res = arr
+                # print('_adjust_dtype_cupy_sparse passthrough', arr.dtype, res.dtype)
             else:
                 # Base dtype is the same for all cupyx.scipy.sparse matrices
-                return arr.astype(np.result_type(arr, base_dtypes[CUPY_SCIPY_COO]))
+                res = arr.astype(np.result_type(arr, base_dtypes[CUPY_SCIPY_COO]))
+                # print('_adjust_dtype_cupy_sparse convert', arr.dtype, res.dtype)
+            return res
 
         self._converters[(NUMPY, CUPY)] = cupy.array
         self._converters[(CUDA, CUPY)] = cupy.array
         self._converters[(CUPY, NUMPY)] = cupy.asnumpy
         self._converters[(CUPY, CUDA)] = cupy.asnumpy
         # Accepted by constructor of target class
-        for left in (CUPY, SCIPY_COO, SCIPY_CSR, SCIPY_CSC,
+        for left in (SCIPY_COO, SCIPY_CSR, SCIPY_CSC,
                 CUPY_SCIPY_COO, CUPY_SCIPY_CSR, CUPY_SCIPY_CSC):
             for right in CUPY_SCIPY_COO, CUPY_SCIPY_CSR, CUPY_SCIPY_CSC:
                 if (left, right) not in self._converters:
@@ -356,6 +374,27 @@ class ConverterDict:
                         self._converters[(left, right)] = chain(
                             _adjust_dtype_cupy_sparse, classes[right]
                         )
+        # Work around https://github.com/cupy/cupy/issues/7035
+        # Otherwise CUPY -> {CUPY_SCIPY_COO, CUPY_SCIPY_CSR, CUPY_SCIPY_CSC}
+        # could be handled by the block above.
+        left, right = CUPY, CUPY_SCIPY_COO
+        if (left, right) not in self._converters:
+            self._converters[(left, right)] = chain(
+                _flatsig, _adjust_dtype_cupy_sparse, classes[right]
+            )
+        for right in CUPY_SCIPY_CSR, CUPY_SCIPY_CSC:
+            if (left, right) not in self._converters:
+                if has_csr_complex128_bug:
+                    self._converters[(left, right)] = chain(
+                        # First convert to COO which is not affected
+                        # Fortunately the overhead is not too bad.
+                        _flatsig, _adjust_dtype_cupy_sparse, classes[CUPY_SCIPY_COO], classes[right]
+                    )
+                else:
+                    self._converters[(left, right)] = chain(
+
+                        _flatsig, _adjust_dtype_cupy_sparse, classes[right]
+                    )
         for left in NUMPY, CUDA:
             for right in CUPY_SCIPY_COO, CUPY_SCIPY_CSR, CUPY_SCIPY_CSC:
                 if (left, right) not in self._converters:

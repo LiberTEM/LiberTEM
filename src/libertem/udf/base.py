@@ -63,10 +63,11 @@ ResourceDef = Dict[
 DeviceClass = Literal['cpu', 'cuda']
 UDFKwarg = Union[Any, AuxBufferWrapper]
 UDFKwargs = Dict[str, UDFKwarg]
+ExecutionPlan = Dict[ArrayBackend, Iterable["UDF"]]
 
 
 def _get_dtype(
-    udfs: List["UDFProtocol"],
+    udfs: List["UDF"],
     dtype: "nt.DTypeLike",
     corrections: Optional[CorrectionSet],
     array_backends: Iterable[ArrayBackend],
@@ -111,13 +112,15 @@ class TileConverter:
 def _execution_plan(
     udfs, ds: Union[DataSet, DataSetMeta], device_class: Optional[DeviceClass] = None,
     available_backends: Iterable[ArrayBackend] = BACKENDS
-) -> OrderedDict[ArrayBackend, Iterable[UDFProtocol]]:
+) -> Tuple[ArrayBackend, ExecutionPlan]:
     '''
     Calculate which array format to use for which UDFs
     '''
     remaining = list(udfs)
     execution_plan = OrderedDict()
     # preserve order
+    if ds.array_backends is None:
+        raise ValueError("Available dataset backends need to be known.")
     ds_backends = tuple(d for d in ds.array_backends if d in available_backends)
     available_backends = frozenset(available_backends)
     if not ds_backends:
@@ -135,7 +138,7 @@ def _execution_plan(
     else:
         raise ValueError(f"Unknown device class{device_class}, allowed are 'cuda' and 'cpu'.")
 
-    aggregate_udf_aversion = defaultdict(lambda: 0.)
+    aggregate_udf_aversion: Dict[ArrayBackend, float] = defaultdict(lambda: 0.)
     for udf in remaining:
         backends = _get_canonical_backends(udf.get_backends())
         for i, b in enumerate(backends):
@@ -1901,7 +1904,7 @@ class UDFPartRunner:
     def _run_udfs(
         self,
         ds_backend: ArrayBackend,
-        execution_plan: Dict[ArrayBackend, Iterable[UDF]],
+        execution_plan: ExecutionPlan,
         partition: Partition,
         tiling_scheme: TilingScheme,
         roi: Optional[np.ndarray],
@@ -1985,14 +1988,14 @@ class UDFPartRunner:
 
     def _init_udfs(
         self,
-        execution_plan: Dict[ArrayBackend, Iterable[UDF]],
+        execution_plan: ExecutionPlan,
         partition: Partition,
         roi: Optional[np.ndarray],
         corrections: CorrectionSet,
         device_class,
         env: Environment,
         tiling_scheme: TilingScheme,
-    ) -> Tuple[UDFMeta, "nt.DTypeLike"]:
+    ) -> "nt.DTypeLike":
         dtype = _get_dtype(self._udfs, partition.dtype, corrections, execution_plan.keys())
         for backend, udfs in execution_plan.items():
             meta = UDFMeta(
@@ -2022,7 +2025,7 @@ class UDFPartRunner:
 
     def _run_tile(
         self,
-        udfs: List[UDF],
+        udfs: Iterable[UDF],
         partition: Partition,
         tile: DataTile,
         array_backend: ArrayBackend,

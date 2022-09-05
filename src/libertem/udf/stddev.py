@@ -410,6 +410,17 @@ class StdDevUDF(UDF):
             'num_frames': total_frames
         }
 
+    def _adjust_dtype(self, input):
+        base_dtype = self.params.dtype
+        if base_dtype is None:
+            base_dtype = np.float64
+        dtype = np.result_type(input.dtype, base_dtype)
+
+        if input.dtype != dtype:
+            return input.astype(dtype)
+        else:
+            return input
+
     def process_tile(self, tile):
         """
         Calculate a sum and variance minibatch for the tile and update partition buffers
@@ -426,6 +437,8 @@ class StdDevUDF(UDF):
         n_1 = tile.shape[0]
 
         if n_0 == 0:
+            # Make sure we calculate with full precision
+            tile = self._adjust_dtype(tile)
             self.results.sum[:] = self.forbuf(tile.sum(axis=0), self.results.sum)
             # Done this way to support the various array libraries
             delta = np.abs(tile - tile.mean(axis=0))
@@ -438,6 +451,8 @@ class StdDevUDF(UDF):
             if isinstance(tile, np.ndarray) and self.params.use_numba:
                 my_process_tile = process_tile
             else:
+                # Make sure we calculate with full precision
+                tile = self._adjust_dtype(tile)
                 my_process_tile = functools.partial(process_tile_ndarray, forbuf=self.forbuf)
             self.task_data.num_frames[key] = my_process_tile(
                 tile=tile.reshape((n_1, -1)),

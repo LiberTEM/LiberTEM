@@ -899,7 +899,8 @@ def local_cluster_url():
         # Only use at most 2 CPUs and 1 GPU
         cpus=devices['cpus'][:2],
         cudas=devices['cudas'][:1],
-        has_cupy=devices['has_cupy']
+        has_cupy=devices['has_cupy'],
+        cuda_info=devices['cuda_info'],
     )
 
     cluster_kwargs = {

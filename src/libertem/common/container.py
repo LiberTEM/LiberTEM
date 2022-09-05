@@ -6,7 +6,7 @@ import scipy.sparse
 import numpy as np
 import cloudpickle
 from libertem.common.array_backends import (
-    CPU_BACKENDS, CUDA, CUPY_BACKENDS, for_backend, get_backend
+    CPU_BACKENDS, CUDA, CUPY_BACKENDS, for_backend
 )
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 
@@ -64,8 +64,6 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
         if transpose:
             # We need the stack transposed in the next step
             m = m.T
-        print(type(m), backend)
-        print(get_backend(m), is_sparse(m))
         if is_sparse(m):
             return _build_sparse(m, dtype, sparse_backend, backend)
         else:

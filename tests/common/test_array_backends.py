@@ -63,7 +63,12 @@ def test_for_backend(left, right, dtype):
     else:
         target_shape = (shape[0], prod(shape[1:]))
 
-    check_shape(converted)
+    if left in ND_BACKENDS:
+        check_shape(converted, shape)
+    else:
+        check_shape(converted, target_shape)
+
+    assert converted.shape == target_shape
     assert converted_back.shape == target_shape
 
     assert np.allclose(left_ref.reshape(target_shape), converted_back)

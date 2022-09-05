@@ -1,3 +1,4 @@
+from libertem.common.math import prod
 import numpy as np
 from libertem.common.array_backends import CUPY_BACKENDS, NUMPY, SCIPY_COO, SCIPY_CSC, SCIPY_CSR
 
@@ -223,7 +224,9 @@ class ApplyMasksUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        flat_data = tile.reshape((tile.shape[0], -1))
+        flat_shape = (tile.shape[0], prod(tile.shape[1:]))
+        # Avoid reshape since older versions of scipy.sparse don't support it
+        flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
         # '+' is the correct merge for dot product
         self.results.intensity[:] += self.forbuf(
             self.task_data.process_flat(flat_data),

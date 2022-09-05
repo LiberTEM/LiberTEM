@@ -10,6 +10,7 @@ import pytest
 import numpy as np
 
 from libertem.api import Context
+from libertem.executor.utils.gpu_plan import DEFAULT_RAM_PER_WORKER
 from libertem.udf.sum import SumUDF
 from libertem.executor.pipelined import (
     PipelinedExecutor, WorkerPool, _order_results, pipelined_worker
@@ -27,7 +28,7 @@ def pipelined_ex():
     executor = None
     try:
         executor = PipelinedExecutor(
-            spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+            spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[], cuda_info={}),
             # to prevent issues in already-pinned situations (i.e. containerized
             # environments), don't pin our worker processes in testing:
             pin_workers=False,
@@ -206,7 +207,7 @@ def test_run_function_error():
     executor = None
     try:
         executor = PipelinedExecutor(
-            spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+            spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[], cuda_info={}),
             pin_workers=False,
         )
 
@@ -248,7 +249,7 @@ def test_early_startup_error():
         libertem.executor.pipelined.pipelined_worker = _broken_pipelined_worker
         with pytest.raises(RuntimeError) as e:
             executor = PipelinedExecutor(
-                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[], cuda_info={}),
                 pin_workers=False,
             )
         assert e.match("One or more workers failed to start")
@@ -280,7 +281,7 @@ def test_startup_error():
     try:
         with pytest.raises(RuntimeError) as e:
             executor = PipelinedExecutor(
-                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[], cuda_info={}),
                 pin_workers=False,
                 early_setup=_patch_setup_device,
             )
@@ -350,40 +351,47 @@ def test_success_with_delay(pipelined_ex):
 
 
 def test_make_spec_multi_cuda():
-    spec = PipelinedExecutor.make_spec(cpus=[0], cudas=[0, 1, 2, 2])
+    fake_cuda_info = {
+        0: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER)},
+        1: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER)},
+        2: {'mem_info': (2*DEFAULT_RAM_PER_WORKER, 2*DEFAULT_RAM_PER_WORKER)},
+    }
+    spec = PipelinedExecutor.make_spec(
+        cpus=[0, 1, 2, 3, 4], cudas=[0, 1, 2, 2], cuda_info=fake_cuda_info
+    )
     assert spec == [
         {
             "device_id": 0,
-            "name": "cpu-0",
-            "device_kind": "CPU",
+            "name": "cpu-0-cuda-0-0",
+            "device_kind": "CUDA",
             "worker_idx": 0,
             "has_cupy": False,
         },
         {
-            "device_id": 0,
-            "name": "cuda-0-0",
+            "device_id": 1,
+            "name": "cpu-1-cuda-1-0",
             "device_kind": "CUDA",
             "worker_idx": 1,
             "has_cupy": False,
         },
         {
-            "device_id": 1,
-            "name": "cuda-1-0",
+            "device_id": 2,
+            "name": "cpu-2-cuda-2-0",
             "device_kind": "CUDA",
             "worker_idx": 2,
             "has_cupy": False,
         },
         {
             "device_id": 2,
-            "name": "cuda-2-0",
+            "name": "cpu-3-cuda-2-1",
             "device_kind": "CUDA",
             "worker_idx": 3,
             "has_cupy": False,
         },
         {
-            "device_id": 2,
-            "name": "cuda-2-1",
-            "device_kind": "CUDA",
+            "device_id": 4,
+            "name": "cpu-4",
+            "device_kind": "CPU",
             "worker_idx": 4,
             "has_cupy": False,
         },

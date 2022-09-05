@@ -8,7 +8,7 @@ from libertem import api
 from libertem.udf.base import NoOpUDF
 from utils import _naive_mask_apply, _mk_random
 from libertem.executor.dask import cluster_spec, DaskJobExecutor
-from libertem.utils.devices import detect, has_cupy
+from libertem.utils.devices import detect
 
 from utils import DebugDeviceUDF
 
@@ -29,9 +29,8 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     num_cores_ds = ctx.load('memory', data=np.zeros((2, 3, 4, 5)))
     workers = ctx.executor.get_available_workers()
     cpu_count = len(workers.has_cpu())
-    gpu_count = len(workers.has_cuda())
 
-    assert num_cores_ds._cores == max(cpu_count, gpu_count)
+    assert num_cores_ds._cores == cpu_count
 
     # Based on ApplyMasksUDF, which is CuPy-enabled
     hybrid = ctx.run(analysis)
@@ -73,7 +72,8 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
         assert np.all(cuda_only['device_class'].data == 'cuda')
         if cupy_only is not None:
             assert np.all(cupy_only['device_class'].data == 'cuda')
-    assert np.all(numpy_only['device_class'].data == 'cpu')
+    np_only = numpy_only['device_class'].data
+    assert np.all((np_only == 'cpu') + (np_only == 'cuda'))
 
 
 @pytest.mark.slow
@@ -86,7 +86,7 @@ def test_start_local_cpuonly(hdf5_ds_1):
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False)
+    spec = cluster_spec(cpus=cpus, cudas=[], cuda_info={}, has_cupy=False)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
         analysis = ctx.create_mask_analysis(
@@ -261,7 +261,7 @@ def test_preload(hdf5_ds_1):
         "import os; os.environ['LT_TEST_2'] = 'world'",
     )
 
-    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False, preload=preloads)
+    spec = cluster_spec(cpus=cpus, cudas=[], cuda_info={}, has_cupy=False, preload=preloads)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
         ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)
@@ -311,8 +311,3 @@ def test_use_plain_dask(hdf5_ds_1):
 
     assert np.all(udf_res['device_class'].data == 'cpu')
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
-
-
-def test_multi_cuda_worker():
-    spec = cluster_spec(cpus=(), cudas=(0, 1, 0, 1), has_cupy=False, num_service=0)
-    assert len(spec) == 4

@@ -795,8 +795,15 @@ def make_like(arr, target, strict=True):
 
     This doesn't support broadcasting, i.e. array and target shape must match,
     minus flattened dimensions for conversion from 2D to nD array formats.
+
+    Parameters
+    ----------
+
+    strict
+        Check shape and do strict backend conversion
     '''
-    check_shape(arr, target.shape)
+    if strict:
+        check_shape(arr, target.shape)
     res = for_backend(arr, get_backend(target), strict=strict).reshape(target.shape)
     return res
 

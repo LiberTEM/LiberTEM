@@ -7,8 +7,6 @@ import numpy as np
 import scipy.sparse as sp
 import sparse
 
-from libertem.common.math import prod
-
 
 NUMPY = 'numpy'
 # Return type of aggregation operations on scipy.sparse matrices
@@ -107,6 +105,12 @@ base_dtypes = {
     CUPY_SCIPY_CSC: np.float32,
     CUPY_SCIPY_CSR: np.float32,
 }
+
+
+def prod(shape):
+    # Force 64 bit since int on Windows is 32 bit, leading to possible
+    # overflows of np.prod(shape)
+    return np.prod(shape, dtype=np.int64)
 
 
 def _flatsig(arr):
@@ -778,6 +782,23 @@ def get_device_class(backend: Optional[ArrayBackend]):
         return 'cpu'
     else:
         raise ValueError(f"Unknown backend {backend}.")
+
+
+def make_like(arr, target, strict=True):
+    '''
+    Convert to compatible format and shape for assignment into a target array.
+
+    The result of array operations on a sparse input array can't always be
+    merged into a result array of different format directly since arrays from
+    the :mod:`sparse` package are not converted to NumPy arrays automatically
+    and CUDA arrays may have to be transferred to CPU.
+
+    This doesn't support broadcasting, i.e. array and target shape must match,
+    minus flattened dimensions for conversion from 2D to nD array formats.
+    '''
+    check_shape(arr, target.shape)
+    res = for_backend(arr, get_backend(target), strict=strict).reshape(target.shape)
+    return res
 
 
 def benchmark_conversions(shape, dtype, density, backends=BACKENDS, repeats=10, warmup=True):

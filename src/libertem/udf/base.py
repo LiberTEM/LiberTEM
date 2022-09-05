@@ -27,8 +27,8 @@ from libertem.common.buffers import (
 from libertem.common.array_backends import (
     BACKENDS, CUPY_BACKENDS, D2_BACKENDS, DENSE_BACKENDS, ND_BACKENDS, SPARSE_BACKENDS, NUMPY,
     CUDA_BACKENDS, CPU_BACKENDS, CUDA,
-    ArrayBackend, cheapest_pair, check_shape, get_backend, for_backend,
-    base_dtypes, get_cheapest_converter
+    ArrayBackend, cheapest_pair, check_shape, get_backend,
+    base_dtypes, get_cheapest_converter, make_like
 )
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol
@@ -1408,7 +1408,7 @@ class UDF(UDFBase):
 
         .. versionadded:: 0.11.0
         '''
-        res = for_backend(arr, get_backend(target), strict=False).reshape(target.shape)
+        res = make_like(arr, target, strict=False)
         return res
 
     def cleanup(self) -> None:  # FIXME: name? implement cleanup as context manager somehow?

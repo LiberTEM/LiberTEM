@@ -147,7 +147,8 @@ def _stability_workhorse(data):
             dest_varsum=varsum,
             src_n=partition_N,
             src_sum=partition_sum,
-            src_varsum=partition_varsum
+            src_varsum=partition_varsum,
+            src_mean=partition_sum / partition_N,
         )
     return N, s, varsum
 

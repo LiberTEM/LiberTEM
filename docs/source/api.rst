@@ -197,7 +197,7 @@ used for computation:
     from libertem.executor.pipelined import PipelinedExecutor
     from libertem.utils.devices import detect
 
-    spec = PipelinedExecutor.make_spec(cpus=[0, 1, 2], cudas=[])
+    spec = PipelinedExecutor.make_spec(cpus=[0, 1, 2], cudas=[], cuda_info={})
     executor = PipelinedExecutor(
         spec=spec,
         pin_workers=False,  # set to True to keep worker processes pinned to specific CPU cores or CPUs

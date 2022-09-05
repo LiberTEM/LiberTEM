@@ -1,4 +1,3 @@
-import itertools
 import os
 import gc
 import sys
@@ -26,6 +25,7 @@ from libertem.common.executor import (
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
+from libertem.executor.utils.gpu_plan import make_gpu_plan
 
 from .utils import assign_cudas
 from .base import BaseJobExecutor
@@ -545,7 +545,10 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 def _make_spec(
     cpus: Union[int, Iterable[int]],
     cudas: Union[int, Iterable[int]],
+    cuda_info: Dict[int, Dict],
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
+    max_workers_per_cuda: int = 4,
+    ram_per_cuda_worker: int = 4*1024*1024*1024
 ) -> List[WorkerSpec]:
     """
     Takes the output of :func:`libertem.utils.devices.detect`
@@ -566,38 +569,48 @@ def _make_spec(
         Identifiers can be repeated to start multiple workers per GPU, which can
         result in better device utilization.
 
+    cuda_info
+        Dictionary with additional infomration about the CUDA devices.
+        * Keys: CUDA device IDs as int
+        * Values:
+          * :code:`'mem_info'`: Tuple[int, int] with available and total GPU ram
+
     has_cupy
         Currently ignored, for compatibility with :func:`libertem.utils.devices.detect`
     """
     spec = []
+    gpu_plan = make_gpu_plan(
+        cudas=cudas,
+        cuda_info=cuda_info,
+        max_workers_per_cuda=max_workers_per_cuda,
+        ram_per_cuda_worker=ram_per_cuda_worker,
+    )
+
     worker_idx = 0
 
     if isinstance(cpus, int):
         cpus = tuple(range(cpus))
 
     for device_id in cpus:
-        spec.append(WorkerSpec(
-            name=f"cpu-{device_id}",
-            device_id=device_id,
-            device_kind="CPU",
-            worker_idx=worker_idx,
-            has_cupy=False,
-        ))
-        worker_idx += 1
-
-    cudas = assign_cudas(cudas)
-
-    grouped_cudas = itertools.groupby(cudas, lambda x: x)
-    for device_id, group in grouped_cudas:
-        for i in range(len(list(group))):
+        if gpu_plan:
+            cuda_device_id, i = gpu_plan.pop(0)
             spec.append(WorkerSpec(
-                name=f"cuda-{device_id}-{i}",
-                device_id=device_id,
+                name=f"cpu-{device_id}-cuda-{cuda_device_id}-{i}",
+                device_id=cuda_device_id,
                 device_kind="CUDA",
                 worker_idx=worker_idx,
                 has_cupy=has_cupy,
             ))
-            worker_idx += 1
+        else:
+            spec.append(WorkerSpec(
+                name=f"cpu-{device_id}",
+                device_id=device_id,
+                device_kind="CPU",
+                worker_idx=worker_idx,
+                has_cupy=False,
+            ))
+        worker_idx += 1
+
     return spec
 
 

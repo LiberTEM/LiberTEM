@@ -8,8 +8,8 @@ import pytest
 import distributed
 import dask
 import numpy as np
-import sparse
 
+from libertem.utils.devices import detect
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.concurrent import ConcurrentJobExecutor
@@ -17,8 +17,15 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
+from libertem.common.array_backends import (
+    BACKENDS, CUPY, CUPY_BACKENDS, CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO
+)
 
 from utils import get_testdata_path
+
+
+d = detect()
+has_cupy = d['cudas'] and d['has_cupy']
 
 
 @pytest.fixture(
@@ -74,7 +81,7 @@ def ctx(request, local_cluster_url):
             try:
                 ctx = Context(
                     executor=PipelinedExecutor(
-                        spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
+                        spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[], cuda_info={})
                     )
                 )
                 yield ctx
@@ -86,7 +93,8 @@ def ctx(request, local_cluster_url):
 @pytest.fixture(
     scope='session',
     params=[
-        "HDF5", "RAW", "memory", "sparse", "NPY", "BLO",
+        # Only testing a selection of backends to keep the number of tests under control
+        "HDF5", "RAW", "memory", SCIPY_COO, SPARSE_COO, CUPY, CUPY_SCIPY_CSR, "NPY", "BLO",
         "DM", "EMPAD", "FRMS6", "K2IS",
         "MIB", "MRC", "SEQ", "SER", "TVIPS"
     ]
@@ -112,10 +120,13 @@ def load_kwargs(request, hdf5, default_raw, default_npy, default_npy_filepath):
             'filetype': 'memory',
             'data': np.ones((3, 4, 5, 6)),
         }
-    elif param == 'sparse':
+    elif param in BACKENDS:
+        if param in CUPY_BACKENDS and not has_cupy:
+            pytest.skip("No CuPy, skipping CuPy-based tiles")
         return {
             'filetype': 'memory',
-            'data': sparse.ones((3, 4, 5, 6)),
+            'data': np.ones((3, 4, 5, 6)),
+            'array_backends': (param, NUMPY)
         }
     elif param == 'NPY':
         return {
@@ -252,6 +263,7 @@ def test_executors(ctx, load_kwargs, reference):
             print(np.min(np.abs(right)))
             # To see what type we actually test
             print("is allclose", np.allclose(left, right))
+            print("dtypes", left.dtype, right.dtype)
             assert np.allclose(left, right)
 
 

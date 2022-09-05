@@ -40,10 +40,9 @@ def detect():
     cores = psutil.cpu_count(logical=False)
     if cores is None:
         cores = 2
-
+    cuda_info = {}
     try:
         cudas = [device.id for device in numba.cuda.gpus]
-        cuda_info = {}
         for cuda in cudas:
             cuda_info[cuda] = {}
             cuda_ctx = numba.cuda.current_context(cuda)
@@ -64,7 +63,7 @@ def detect():
     }
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=None)
 def has_cupy():
     '''
     Probe if :code:`cupy` was loaded successfully.

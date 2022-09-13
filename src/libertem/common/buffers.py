@@ -557,12 +557,15 @@ class BufferWrapper:
         '''
         if self._kind == "sig":
             for key, view in self._contiguous_cache.items():
-                sl = key.get(sig_only=True)
+                sl, _ = self._slice_from_key(key, tuple())
+                _, _, sig_dims = key
+                sl = sl[-sig_dims:]
                 self._data[sl] = view
-                if debug and not disjoint(key, self._contiguous_cache.keys()):
-                    raise RuntimeError(
-                        "`key` %r should be disjoint with existing keys" % key
-                    )
+                # FIXME disjoint() for tuple keys
+                # if debug and not disjoint(key, self._contiguous_cache.keys()):
+                #     raise RuntimeError(
+                #         "`key` %r should be disjoint with existing keys" % key
+                #     )
             self._contiguous_cache = dict()
         else:
             if self._contiguous_cache:

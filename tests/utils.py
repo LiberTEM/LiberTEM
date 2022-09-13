@@ -167,14 +167,22 @@ class ValidationUDF(UDF):
 
     def get_result_buffers(self):
         return {
-            # Just a buffer to "feel" the av shape
-            'nav_shape': self.buffer(kind="nav", dtype="float32"),
+            'seen': self.buffer(kind="nav", dtype=np.int64),
         }
 
     def process_tile(self, tile):
+        self.results.seen[:] += 1
         assert self.params.validation_function(
             self.meta.slice.get(self.params.reference), tile
         )
+
+    def _do_get_results(self):
+        results = super()._do_get_results()
+        if self.meta.roi is None:
+            assert (results['seen'].data == 1).all()
+        else:
+            assert (results['seen'].data == self.meta.roi.astype(np.int64)).all()
+        return results
 
 
 def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):

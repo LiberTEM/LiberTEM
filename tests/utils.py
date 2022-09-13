@@ -171,14 +171,20 @@ class ValidationUDF(UDF):
         }
 
     def process_tile(self, tile):
-        # This will increment self.results.seen for every tile
-        # i.e. multiple times per frame, the final value will
-        # correspond to the number of tiles each frame was split into
-        # If we can assume that the tiling scheme logic is robust
-        # then all the visited frames should share the same value
-        # and that all the pixels of a given frame were 'visited'
-        # the postprocess method is used to validate that all frames
-        # were visited the same number of time (or not at all)
+        """
+        Verifies that the tile corresponds to the equivalent data
+        in the reference array, and tracks which parts of the array
+        have been 'seen'
+
+        This will increment self.results.seen for every tile
+        i.e. multiple times per frame, the final values will
+        correspond to the number of tiles each frame was split into
+        If we can assume that the tiling scheme logic is robust
+        then all the visited frames should share the same value
+        and that all the pixels of a given frame were 'visited'
+        the postprocess method is used to validate that all frames
+        were visited the same number of time (or not at all)
+        """
         self.results.seen[:] += 1
         assert self.params.validation_function(
             self.meta.slice.get(self.params.reference), tile
@@ -186,9 +192,16 @@ class ValidationUDF(UDF):
 
     def postprocess(self):
         """
-        checks if all frames were visited either:
+        Checks if all frames were visited either:
          - never (i.e. not in partition or masked by roi)
-         - the same number of times as all other visited frames in the partition
+         - the same number of times as all other
+           visited frames in the partition
+
+        To help later comparison with any ROI, all nonzero 'seen'
+        frames are then set to 1 (i.e. a single 'full' visit)
+
+        The behaviour encoded in this function assumes that the
+        tiling scheme logic is robust and each frame is tiled completely
         """
         seen_values = np.unique(self.results.seen)
         assert seen_values.size in (1, 2)

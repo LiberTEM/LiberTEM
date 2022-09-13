@@ -31,7 +31,7 @@ class Slice:
                      len(self.origin), len(self.shape), self.origin, self.shape,
                  )
             )
-        if not hasattr(shape, 'sig'):
+        if not isinstance(shape, Shape):
             raise ValueError("please use libertem.common.Shape instance as shape parameter")
 
     def __repr__(self) -> str:
@@ -190,10 +190,7 @@ class Slice:
                 for i in range(s.nav.dims)
             )
         else:
-            slice_ = tuple(
-                slice(o, (o + s))
-                for (o, s) in zip(self.origin, self.shape)
-            )
+            slice_ = self._get()
         if arr is not None:
             if sig_only:
                 # Skip the supposed nav dimensions of the data
@@ -205,15 +202,32 @@ class Slice:
         else:
             return slice_
 
+    def _get(self):
+        """
+        Direct conversion from Slice to tuple(slice, ...) without options
+        """
+        return tuple(slice(o, (o + s)) for (o, s) in zip(self.origin, self.shape))
+
     def discard_nav(self) -> "Slice":
         """
         returns a copy with the origin/shape zeroed in the nav dimensions
 
         this is used to create uniform cache keys
         """
+        o, s, sig_dims = self._discard_nav_key()
+        new_shape = Shape(s, sig_dims=sig_dims)
+        return Slice(origin=o, shape=new_shape)
+
+    def _discard_nav_key(self) -> Tuple[Tuple[int, ...], Tuple[int, ...], int]:
+        """
+        Construct a hashable tuple of the Slice with a zero-length nav dimensions
+
+        Functions as discard_nav but avoids Shape and Slice constructor overheads
+        """
         o, s = self.origin, self.shape
-        new_shape = Shape(tuple([0] * s.nav.dims) + s[s.nav.dims:], sig_dims=s.sig.dims)
-        return Slice(origin=tuple([0] * s.nav.dims) + o[s.nav.dims:], shape=new_shape)
+        nav_dims = s.nav_dims
+        zero_nav = (0,) * nav_dims
+        return (zero_nav + o[nav_dims:], zero_nav + s._sig_shape, s.sig_dims)
 
     def subslices(self, shape: ShapeLike) -> Generator["Slice", None, None]:
         """

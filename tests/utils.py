@@ -176,6 +176,11 @@ class ValidationUDF(UDF):
             self.meta.slice.get(self.params.reference), tile
         )
 
+    def merge(self, dest, src):
+        # Need to sum results even for a nav merge to avoid
+        # missing double visits by overwriting with a slice
+        dest.seen[:] += src.seen
+
     def _do_get_results(self):
         results = super()._do_get_results()
         if self.meta.roi is None:

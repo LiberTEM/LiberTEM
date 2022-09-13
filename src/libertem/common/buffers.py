@@ -2,6 +2,7 @@ from typing import Any, Iterable, Optional, Tuple, Union, TYPE_CHECKING
 from typing_extensions import Literal
 import mmap
 import math
+import functools
 from contextlib import contextmanager
 import collections
 
@@ -418,11 +419,15 @@ class BufferWrapper:
         return self._data
 
     def _get_slice(self, slice: Slice):
-        real_slice = slice.get()
+        real_slice = slice._get()
+        shape = tuple(slice.shape) + self.extra_shape
+        return self._get_slice_direct(real_slice, shape)
+
+    def _get_slice_direct(self, real_slice: slice, shape):
         result = self._data[real_slice]
         # Defend against #1026 (internal bugs), allow deactivating in
         # optimized builds for performance
-        assert result.shape == tuple(slice.shape) + self.extra_shape
+        assert result.shape == shape
         return result
 
     def get_view_for_partition(self, partition):
@@ -519,11 +524,12 @@ class BufferWrapper:
 
         '''
         if self._kind == "sig":
-            key = tile.tile_slice.discard_nav()
+            key = tile.tile_slice._discard_nav_key()
             if key in self._contiguous_cache:
                 view = self._contiguous_cache[key]
             else:
-                view = self._get_slice(key.sig)
+                real_slice, expected_shape = self._slice_from_key(key, self.extra_shape)
+                view = self._get_slice_direct(real_slice, expected_shape)
                 # See if the signal dimension can be flattened
                 # https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html
                 if not view.flags.c_contiguous:
@@ -532,6 +538,16 @@ class BufferWrapper:
             return view
         else:
             return self.get_view_for_tile(partition, tile)
+
+    @staticmethod
+    @functools.lru_cache(maxsize=512)
+    def _slice_from_key(key, extra_shape):
+        origin, shape, sig_dims = key
+        expected_shape = shape[-sig_dims:]
+        return (
+            tuple(slice(o, (o + s)) for (o, s) in zip(origin[-sig_dims:], expected_shape)),
+            expected_shape + extra_shape
+        )
 
     def flush(self, debug=False):
         '''

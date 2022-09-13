@@ -29,6 +29,8 @@ class Shape:
         """
         Crop to navigation dimensions
 
+        #TODO Should be refactored with functools.cached_property when supported
+
         Returns
         -------
         shape : Shape
@@ -42,12 +44,14 @@ class Shape:
         >>> s.nav
         (5, 5)
         """
-        return Shape(shape=self._nav_shape, sig_dims=0)
+        return NavOnlyShape(shape=self._nav_shape)
 
     @property
     def sig(self) -> "Shape":
         """
         Crop to signal dimensions
+
+        #TODO Should be refactored with functools.cached_property when supported
 
         Returns
         -------
@@ -62,7 +66,7 @@ class Shape:
         >>> s.sig
         (16, 16)
         """
-        return Shape(shape=self._sig_shape, sig_dims=self._sig_dims)
+        return SigOnlyShape(shape=self._sig_shape)
 
     def to_tuple(self) -> Tuple[int, ...]:
         return tuple(self)
@@ -80,7 +84,7 @@ class Shape:
         >>> s.size
         256
         """
-        shape_tuple = tuple(self)
+        shape_tuple = self.to_tuple()
         if len(shape_tuple) == 0:
             return 0
         return functools.reduce(operator.mul, shape_tuple)
@@ -130,7 +134,15 @@ class Shape:
         >>> s.sig.dims
         2
         """
-        return len(self)
+        return self.nav_dims + self.sig_dims
+
+    @property
+    def nav_dims(self) -> int:
+        return len(self._nav_shape)
+
+    @property
+    def sig_dims(self) -> int:
+        return len(self._sig_shape)
 
     def __iter__(self) -> Iterator[int]:
         """
@@ -195,6 +207,74 @@ class Shape:
     def __setstate__(self, state: Dict[str, Any]) -> None:
         for k, v in state.items():
             setattr(self, k, v)
+
+
+class SigOnlyShape(Shape):
+    def __init__(self, shape: "ShapeLike"):
+        self._sig_shape = tuple(shape)
+        self._nav_shape = tuple()
+        self._sig_dims = len(self._sig_shape)
+
+    def __iter__(self):
+        return iter(self._sig_shape)
+
+    def __getitem__(self, k):
+        return self._sig_shape[k]
+
+    def __len__(self) -> int:
+        return len(self._sig_shape)
+
+    def to_tuple(self) -> Tuple[int, ...]:
+        return self._sig_shape
+
+    @property
+    def nav_dims(self) -> int:
+        return 0
+
+    @property
+    def sig_dims(self) -> int:
+        return len(self._sig_shape)
+
+    @property
+    def dims(self) -> int:
+        return self.sig_dims
+
+    def flatten_nav(self) -> "Shape":
+        return self
+
+
+class NavOnlyShape(Shape):
+    def __init__(self, shape: "ShapeLike"):
+        self._sig_shape = tuple()
+        self._nav_shape = tuple(shape)
+        self._sig_dims = 0
+
+    def __iter__(self):
+        return iter(self._nav_shape)
+
+    def __getitem__(self, k):
+        return self._nav_shape[k]
+
+    def __len__(self) -> int:
+        return len(self._nav_shape)
+
+    def to_tuple(self) -> Tuple[int, ...]:
+        return self._nav_shape
+
+    @property
+    def nav_dims(self) -> int:
+        return len(self._nav_shape)
+
+    @property
+    def sig_dims(self) -> int:
+        return 0
+
+    @property
+    def dims(self) -> int:
+        return self.nav_dims
+
+    def flatten_sig(self) -> "Shape":
+        return self
 
 
 ShapeLike = Union[Shape, Sequence[int]]

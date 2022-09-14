@@ -167,8 +167,11 @@ class ValidationUDF(UDF):
 
     def get_result_buffers(self):
         return {
-            'seen': self.buffer(kind="nav", dtype=np.int64),
+            'seen': self.buffer(kind="nav", dtype=object),
         }
+
+    def preprocess(self):
+        self.results.seen[:] = [[] for _ in range(self.results.seen.size)]
 
     def process_tile(self, tile):
         """
@@ -176,50 +179,55 @@ class ValidationUDF(UDF):
         in the reference array, and tracks which parts of the array
         have been 'seen'
 
-        This will increment self.results.seen for every tile
-        i.e. multiple times per frame, the final values will
-        correspond to the number of tiles each frame was split into
-        If we can assume that the tiling scheme logic is robust
-        then all the visited frames should share the same value
-        and that all the pixels of a given frame were 'visited'
-        the postprocess method is used to validate that all frames
-        were visited the same number of time (or not at all)
+        The elements of 'seen' are the slice tuples of each frame that
+        have been provided to this method, potentially unordered.
+        The remaining assumptions are that the flat nav dimension of
+        the tile slice corresponds correctly to the view into the seen
+        buffer, and that the frame slices are in fact correct for the
+        data provided (which is partially ensured by 'validation_function'
+        but could still fail on all-zeros data, for example).
         """
-        self.results.seen[:] += 1
+        # Cut out the flat nav dimension
+        tile_sig_origin = tile.tile_slice.origin[1:]
+        tile_sig_shape = tile.tile_slice.shape[1:]
+        # construct slices
+        frame_slices = tuple(slice(o, o + s) for o, s in zip(tile_sig_origin, tile_sig_shape))
+        for i in range(self.results.seen.size):
+            self.results.seen[i].append(frame_slices)
         assert self.params.validation_function(
             self.meta.slice.get(self.params.reference), tile
         )
 
-    def postprocess(self):
-        """
-        Checks if all frames were visited either:
-         - never (i.e. not in partition or masked by roi)
-         - the same number of times as all other
-           visited frames in the partition
-
-        To help later comparison with any ROI, all nonzero 'seen'
-        frames are then set to 1 (i.e. a single 'full' visit)
-
-        The behaviour encoded in this function assumes that the
-        tiling scheme logic is robust and each frame is tiled completely
-        """
-        seen_values = np.unique(self.results.seen)
-        assert seen_values.size in (1, 2)
-        if seen_values.size == 2:
-            assert 0 in seen_values
-        self.results.seen[:] = np.where(self.results.seen, 1, 0)
-
     def merge(self, dest, src):
-        # Need to sum results even for a nav merge to avoid
-        # missing double visits by overwriting with a slice
-        dest.seen[:] += src.seen
+        for i in range(dest.seen.size):
+            dest.seen[i].extend(src.seen[i])
 
     def _do_get_results(self):
+        """
+        Unpacks the slices seen for each frame and applies
+        them to a frame-size bitmask to verify a complete
+        tiling of each frame was recieved. If an ROI is provided
+        then the roi==False frames should have None in place
+        of their slices list, and are therefore checked against the ROI
+        """
         results = super()._do_get_results()
-        if self.meta.roi is None:
-            assert (results['seen'].data == 1).all()
-        else:
-            assert (results['seen'].data == self.meta.roi.astype(np.int64)).all()
+        roi = self.meta.roi
+        if roi is not None:
+            roi = roi.ravel()
+        sig_shape = self.meta.dataset_shape.sig.to_tuple()
+        frame_mask = np.zeros(sig_shape, dtype=bool)
+        for flat_idx, slices in enumerate(results['seen'].data.ravel()):
+            frame_mask[:] = False
+            if slices is None:
+                assert roi is not None and not roi[flat_idx]
+                continue
+            # This could be optimized with some slice combination
+            # but using a bitmask is completely robust and not
+            # actually that slow to run
+            for sl in slices:
+                frame_mask[sl] = True
+            assert frame_mask.all()
+        assert flat_idx == self.meta.dataset_shape.nav.size
         return results
 
 

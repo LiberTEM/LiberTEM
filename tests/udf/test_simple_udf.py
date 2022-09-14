@@ -27,7 +27,6 @@ def test_validation(lt_ctx):
     udf = ValidationUDF(reference=data.reshape((-1, 16, 16)))
     res = lt_ctx.run_udf(dataset=dataset, udf=udf)
     assert res['seen'].data.shape == (16, 16)
-    assert np.sum(res['seen'].data) == np.prod((16, 16))
 
     with pytest.raises(AssertionError):
         data2 = data.copy()

@@ -227,7 +227,7 @@ class ValidationUDF(UDF):
             for sl in slices:
                 frame_mask[sl] = True
             assert frame_mask.all()
-        assert flat_idx == self.meta.dataset_shape.nav.size
+        assert (flat_idx + 1) == self.meta.dataset_shape.nav.size
         return results
 
 

@@ -221,6 +221,9 @@ class ValidationUDF(UDF):
             if slices is None:
                 assert roi is not None and not roi[flat_idx]
                 continue
+            # Check that ROI=true frames match
+            if roi is not None:
+                assert roi[flat_idx]
             # This could be optimized with some slice combination
             # but using a bitmask is completely robust and not
             # actually that slow to run

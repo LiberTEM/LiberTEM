@@ -7,6 +7,7 @@ from libertem.udf.base import UDF, UDFPartRunner, UDFParams, UDFMeta
 from libertem.common.executor import Environment
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
+from libertem.io.dataset.raw import RawFileDataSet, RawPartition
 from libertem.utils.devices import detect
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
@@ -43,6 +44,55 @@ def test_validation(lt_ctx):
             validation_function=badcompare
         )
         res = lt_ctx.run_udf(dataset=dataset, udf=udf)
+
+
+class MissingFramesDataset(RawFileDataSet):
+    def get_partitions(self):
+        fileset = self._get_fileset()
+        for part_slice, start, stop in self.get_slices():
+            yield MissingFramesPartition(
+                meta=self._meta,
+                fileset=fileset,
+                partition_slice=part_slice,
+                start_frame=start,
+                num_frames=stop - start,
+                io_backend=self.get_io_backend(),
+            )
+
+
+class MissingFramesPartition(RawPartition):
+    def get_tiles(self, *args, **kwargs):
+        """
+        Skips 50% of tiles, guaranteed to skip at least the first
+        """
+        if self._start_frame < self.meta.image_count:
+            for tile_idx, tile in enumerate(super().get_tiles(*args, **kwargs)):
+                if tile_idx % 2:
+                    yield tile
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+def test_validation_skips(default_raw: RawFileDataSet, default_raw_data: np.ndarray,
+                          lt_ctx_fast, with_roi):
+    ds = MissingFramesDataset(default_raw._path,
+                              dtype=default_raw.meta.dtype,
+                              nav_shape=default_raw.meta.shape.nav,
+                              sig_shape=default_raw.meta.shape.sig)
+    ds.initialize(lt_ctx_fast.executor)
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    udf = ValidationUDF(
+        reference=reshaped_view(default_raw_data, (-1, *tuple(ds.shape.sig)))
+    )
+    with pytest.raises(AssertionError):
+        lt_ctx_fast.run_udf(udf=udf, dataset=ds, roi=roi)
 
 
 class PixelsumUDF(UDF):

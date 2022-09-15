@@ -355,7 +355,7 @@ class StdDevUDF(UDF):
             # Setting it like here avoids multiplying by n_1 to get the sum
             # of variances
             # See https://docs.scipy.org/doc/numpy/reference/generated/numpy.var.html
-            self.results.varsum[:] = np.var(tile, axis=0, ddof=n_1 - 1, dtype=dtype)
+            self.results.varsum[:] = np.var(tile, axis=0, ddof=n_1 - 1, dtype=dtype).real
             self.task_data.num_frames[key] = n_1
         else:
             self.task_data.num_frames[key] = process_tile(

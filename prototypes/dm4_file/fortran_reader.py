@@ -28,7 +28,6 @@ class FortranReader:
         self._dtype = dtype
         self._file_header = file_header
         self._sig_shape = tuple(shape.sig)
-        self._nav_shape = tuple(shape.nav)
         self._num_frames = shape.nav.size
         self._tiling_scheme = tiling_scheme
 
@@ -419,9 +418,9 @@ if __name__ == '__main__':
         with data_path.open('wb') as fp:
             data.T.tofile(fp)      
 
-    shape = Shape(nav_shape[::-1] + sig_shape, sig_dims=2)
+    shape = Shape(nav_shape + sig_shape, sig_dims=2)
     tile_depth = 8
-    num_tiles = 1
+    num_tiles = 4
     tile_width = sig_shape[-1] // num_tiles
     tileshape = Shape((tile_depth,) + (sig_shape[0], tile_width), sig_dims=2)
     ts = TilingScheme.make_for_shape(tileshape, shape)

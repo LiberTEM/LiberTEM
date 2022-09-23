@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, Iterable, Optional, Tuple, Union, TYPE_CHECKING, List
 from typing_extensions import Literal
 import mmap
 import math
@@ -14,6 +14,8 @@ from .backend import get_use_cuda
 
 if TYPE_CHECKING:
     from numpy import typing as nt
+    from libertem.common.shape import Shape
+    from libertem.io.dataset.base.partition import Partition
 
 BufferKind = Literal['nav', 'sig', 'single']
 BufferLocation = Optional[Literal['device']]
@@ -229,24 +231,29 @@ class BufferWrapper:
         self._shape = None
         self._ds_shape = None
         self._ds_partitions = None
+        self._nav_order: Literal['C', 'F'] = 'C'
         self._roi = None
         self._roi_is_zero = None
         self._contiguous_cache = dict()
         self.use = use
 
-    def set_roi(self, roi):
+    def set_roi(self, roi: Union[np.ndarray, None], ):
         if roi is not None:
-            roi = roi.reshape((-1,))
+            roi = roi.reshape((-1,), order=self._nav_order)
         self._roi = roi
 
-    def add_partitions(self, partitions):
+    def set_nav_order(self, order: Literal['C', 'F']):
+        self._nav_order = order
+
+    def add_partitions(self, partitions: 'List[Partition]'):
         """
         Add a list of dataset partitions to the buffer such that
         self.allocate() can make use of the structure
         """
         self._ds_partitions = partitions
 
-    def set_shape_partition(self, partition, roi=None):
+    def set_shape_partition(self, partition: 'Partition', roi=None):
+        self.set_nav_order(partition.shape.nav_order)
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
@@ -257,7 +264,8 @@ class BufferWrapper:
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
         self._update_roi_is_zero()
 
-    def set_shape_ds(self, dataset_shape, roi=None):
+    def set_shape_ds(self, dataset_shape: 'Shape', roi=None):
+        self.set_nav_order(dataset_shape.nav_order)
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
@@ -302,9 +310,12 @@ class BufferWrapper:
         """
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
-        if self._roi is None or self._kind != 'nav':
-            return self._data.reshape(self._shape_for_kind(self._kind, self._ds_shape))
         shape = self._shape_for_kind(self._kind, self._ds_shape)
+        if self._roi is None:
+            if self._kind == 'nav':
+                return self._data.reshape(shape, order=self._nav_order)
+            else:
+                return self._data.reshape(shape)
         if shape == self._data.shape:
             # preallocated and already wrapped
             return self._data
@@ -321,8 +332,9 @@ class BufferWrapper:
             # 'O' (object): None
             fill = None
         wrapper = np.full(shape, fill, dtype=self._dtype)
-        wrapper[self._roi.reshape(self._ds_shape.nav)] = self._data
-        return wrapper
+        wrapper = wrapper.reshape(-1, *self._extra_shape)
+        wrapper[self._roi] = self._data
+        return wrapper.reshape(shape, order=self._nav_order)
 
     @property
     def dtype(self):

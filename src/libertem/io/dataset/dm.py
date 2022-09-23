@@ -1,6 +1,6 @@
 import os
 import typing
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, Optional
 import logging
 import warnings
 
@@ -12,10 +12,10 @@ from libertem.common import Shape, Slice
 from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base.tiling import DataTile
-from libertem.io.dataset.base.decode import DtypeConversionDecoder
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
 )
+from libertem.io.dataset.base.backend_fortran import FortranReader
 
 log = logging.getLogger(__name__)
 
@@ -334,8 +334,8 @@ class SingleDMFileDataset(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
     """
-    def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None, sig_dims=2):
-        # Skip up-1 in MRO to get a clean __init__
+    def __init__(self, path, nav_shape=None, sig_shape=None,
+                 sync_offset=0, io_backend=None, sig_dims=2):
         super().__init__(io_backend=io_backend)
         self._filesize = None
 
@@ -448,13 +448,17 @@ class SingleDMFileDataset(DataSet):
         if self._array_c_ordered:
             _shape = tuple(reversed(array_meta['shape']))
         else:
-            # must check don't need to reverse col/row separately!
-            _shape = tuple(array_meta['shape'])
+            # Assuming have to invert sig dimensions too, but never
+            # seen any non-square DM4 signals
+            _shape = (array_meta['shape'][:-self._sig_dims][::-1]
+                      + array_meta['shape'][-self._sig_dims:][::-1])
+            # NOTE F-ordering completely breaks the contract
+            # behind sync_offset, which shifts scan start by columns
+            assert self._sync_offset == 0
         self._nav_shape = _shape[:-self._sig_dims]
         self._sig_shape = _shape[-self._sig_dims:]
-        # All libertem shapes are stored in normal nav+sig, assuming C-order
 
-        #### this might not be how sync_offset works!
+        # this might not be how sync_offset works!
         # _array_shape = (1, 1, 1, 1)
         # _array_size = int(prod(_array_shape))
         # _specified_size= int(prod(self._nav_shape + self._sig_shape))
@@ -470,6 +474,7 @@ class SingleDMFileDataset(DataSet):
         # Need to go understand sync_offset/image_count/nav_shape_product yet again
         self._image_count = self._nav_shape_product
         self._sync_offset_info = self.get_sync_offset_info()
+        # nav_order = 'C' if self._array_c_ordered else 'F'
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
         self._meta = DataSetMeta(
             shape=shape,
@@ -488,7 +493,6 @@ class SingleDMFileDataset(DataSet):
                 sig_shape=self.shape.sig,
                 native_dtype=self.meta.raw_dtype,
                 file_header=self._array_offset,
-                c_ordered=self._array_c_ordered,
             )
         ])
 
@@ -516,15 +520,12 @@ class SingleDMFileDataset(DataSet):
     #     in principle optimal to work on F-ordered data, but the API
     #     changes to make this transparent for user-facing code are monumental
     #     """
-    #     if self._array_c_ordered:
-    #         return super().get_num_partitions()
-    #     else:
-    #         return max(1, self._cores)
 
     def get_partitions(self):
+        partition_cls = DMPartition if self._array_c_ordered else RawPartitionFortran
         fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():
-            yield DMPartition(
+            yield partition_cls(
                 meta=self.meta,
                 partition_slice=part_slice,
                 fileset=fileset,
@@ -533,103 +534,94 @@ class SingleDMFileDataset(DataSet):
                 io_backend=self.get_io_backend(),
             )
 
+    def adjust_tileshape(
+        self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray]
+    ) -> Tuple[int, ...]:
+        """
+        If C-ordered, return proposed tileshape
+        If F-ordered, generates tiles which are close in size to
+        the proposed tileshape but tile only in the last signal dimension
+        All other tile sig-dims should equal the matching full sig-dim
+        Could adjust depth too to get tiles of similar byte-size?
+
+        # NOTE Check how corrections could be broken ??
+        """
+        if self._array_c_ordered:
+            return tileshape
+        sig_shape = self.shape.sig.to_tuple()
+        depth, sig_tile = tileshape[0], tileshape[1:]
+        if sig_tile == sig_shape:
+            # whole frames, nothing to do
+            return tileshape
+        sig_stub = sig_shape[:-1]
+        final_dim = max(1, prod(sig_tile) // prod(sig_stub))
+        return (depth,) + sig_stub + (final_dim,)
+
 
 class DMFile(File):
-    def __init__(self, *args, c_ordered: bool = True, **kwargs):
-        self._c_ordered = c_ordered
-        super().__init__(*args, **kwargs)
+    ...
 
 
 class DMPartition(BasePartition):
+    ...
+
+
+class RawPartitionFortran(BasePartition):
     def get_tiles(self, tiling_scheme: 'TilingScheme', dest_dtype="float32", roi=None):
         if self._start_frame >= self.meta.image_count:
             return
 
         assert len(self._fileset) == 1
         file: DMFile = self._fileset[0]
-        if file._c_ordered:
-            yield from super().get_tiles(tiling_scheme=tiling_scheme, dest_dtype=dest_dtype, roi=roi)
-            return
-        ###############
+
         dest_dtype = np.dtype(dest_dtype)
         tiling_scheme_adj = tiling_scheme.adjust_for_partition(self)
         self.validate_tiling_scheme(tiling_scheme_adj)
-        slices = tiling_scheme_adj.slices_array
-        depth = tiling_scheme_adj.depth
-        sig_dims = self.meta.shape.sig.dims
 
-        # Open the array in the file as a numpy, F-ordered, flat-navigation memmap
-        file_memmap = np.memmap(
-                            file.path,
-                            dtype=self.meta.raw_dtype,
-                            shape=tuple(self.meta.shape.flatten_nav()),
-                            offset=file.file_header_bytes,
-                            mode='r',
-                            order='F',
-                        )
-        # Handle slicing to account for ROIs
-        # No ROI will just use basic slicing, using ROI has to use an indexing array
-        # but the implementation is optimised to basic slice for contiguous chunks of the ROI
+        reader = FortranReader(
+                        file.path,
+                        self.meta.shape,
+                        self.meta.raw_dtype,
+                        tiling_scheme_adj,
+                        file_header=file.file_header_bytes,
+                    )
+        reader.create_memmaps()
+
+        part_slice = slice(self._start_frame, self._start_frame + self._num_frames)
         has_roi = roi is not None
         if has_roi:
-            roi_nonzero = np.flatnonzero(roi)
-            in_part_mask = np.logical_and(roi_nonzero >= self._start_frame,
-                                          roi_nonzero < self._start_frame + self._num_frames)
-            # full flat-nav indexes to slice from memmap array in this partition
-            fullnav_frame_idcs = roi_nonzero[in_part_mask]
-            # corresponding flat roi-accounting nav indices
-            roinav_frame_idcs = np.arange(roi_nonzero.size)[in_part_mask]
+            read_range = np.flatnonzero(roi.reshape(-1, order=self.shape.nav_order))
+            read_indices = np.arange(read_range.size, dtype=np.int64)
+            part_mask = np.logical_and(read_range >= part_slice.start,
+                                       read_range < part_slice.stop)
+            read_range = read_range[part_mask]
+            assert read_range.size, 'Empty ROI part ??'
+            read_range_idcs = read_indices[part_mask]
+            index_lookup = {full: compressed for full, compressed
+                            in zip(read_range, read_range_idcs)}
         else:
-            fullnav_frame_idcs = np.arange(self._start_frame, self._start_frame + self._num_frames)
-            roinav_frame_idcs = fullnav_frame_idcs
-            is_contig_slice = True
+            read_range = (part_slice,)
 
-        assert fullnav_frame_idcs.size == roinav_frame_idcs.size
-        tile_block_f = np.zeros((depth,) + tuple(self.meta.shape.sig),
-                                dtype=self.meta.raw_dtype,
-                                order='F')
-        tile_block_c = np.zeros((depth,) + tuple(self.meta.shape.sig),
-                                dtype=dest_dtype)
-
-        for start_idx in range(0, fullnav_frame_idcs.size, depth):
-            end_idx = min(fullnav_frame_idcs.size, start_idx + depth + 1)
-            if start_idx == end_idx:
-                break
-            tile_frame_idcs = fullnav_frame_idcs[start_idx: end_idx]
-            start_frame, end_frame = tile_frame_idcs[0], tile_frame_idcs[-1]
-            num_frames = end_frame - start_frame
+        for frame_idcs, scheme_idx, tile in reader.generate_tiles(*read_range):
+            # frame_idcs is tuple(int, ...) of f-ordered, whole-dataset indices
+            # not including compression for ROI (same as for read_range arg)
+            scheme_slice = tiling_scheme_adj[scheme_idx]
             if has_roi:
-                is_contig_slice = (tile_frame_idcs.size == 1) or (np.diff(tile_frame_idcs) == 1).all()
-            # Read the tile block
-            if is_contig_slice:
-                tile_block_f[:num_frames] = file_memmap[start_frame: end_frame]
+                nav_origin = (index_lookup[frame_idcs[0]],)
             else:
-                # use an index array for a disjoint stack of frames
-                tile_block_f[:num_frames] = file_memmap[tile_frame_idcs]
-
-            tile_block_c[:num_frames] = np.ascontiguousarray(tile_block_f[:num_frames],
-                                                             dtype=dest_dtype)
-
-            # Yield tiles from tile block
-            tile_nav_origin = (roinav_frame_idcs[start_idx],)
-            for scheme_idx, (origin, shape) in enumerate(slices):
-                origin = tuple(origin)
-                shape = tuple(shape)
-                real_slices = (slice(0, num_frames),) + tuple(slice(o, o + s)
-                                                              for o, s in
-                                                              zip(origin, shape))
-                data: np.ndarray = tile_block_c[real_slices]
-                data = data.reshape(-1, *shape)
-                tile_slice = Slice(
-                    origin=tile_nav_origin + origin,
-                    shape=Shape(data.shape[:1] + shape, sig_dims=sig_dims)
-                )
-                self.preprocess(data, tile_slice, self._corrections)
-                yield DataTile(
-                    data,
-                    tile_slice=tile_slice,
-                    scheme_idx=scheme_idx,
-                )
+                nav_origin = (frame_idcs[0],)
+            tile_slice = Slice(
+                origin=nav_origin + scheme_slice.origin,
+                shape=tile.shape[:1] + scheme_slice.shape,
+            )
+            if dest_dtype != tile.dtype:
+                tile = tile.astype(dest_dtype)
+            self.preprocess(tile, tile_slice, self._corrections)
+            yield DataTile(
+                tile,
+                tile_slice=tile_slice,
+                scheme_idx=scheme_idx,
+            )
 
     def preprocess(self, data, tile_slice, corrections):
         if corrections is None:

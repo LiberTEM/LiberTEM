@@ -5,7 +5,7 @@ import concurrent.futures
 import itertools
 import functools
 import numpy as np
-from math import ceil, comb, floor
+from math import ceil, floor
 
 if typing.TYPE_CHECKING:
     from libertem.common.shape import Shape
@@ -33,9 +33,10 @@ class FortranReader:
 
         self._memmaps = []
         self._chunks = []
-        
+
         slices = tiling_scheme.slices_array
-        assert (slices[:, 1, :-1] == self._sig_shape[:-1]).all(), 'slices not split in last dim only'
+        assert (slices[:, 1, :-1] == self._sig_shape[:-1]).all(), ('slices not split '
+                                                                   'in last dim only')
         tile_widths: list = slices[:, 1, -1].tolist()
         scheme_indices = list(range(len(tile_widths)))
 
@@ -64,7 +65,7 @@ class FortranReader:
             elif min_idx == 0:
                 # merging first
                 merge_to = 1
-            else:  
+            else:
                 previous_idx = min_idx - 1
                 next_idx = min_idx + 1
                 before_si = scheme_indices[previous_idx]
@@ -87,7 +88,7 @@ class FortranReader:
             tile_widths[merge_to] += min_val
             scheme_indices[merge_to] = scheme_indices[merge_to].union(scheme_indices[min_idx])
             tile_widths.pop(min_idx)
-            scheme_indices.pop(min_idx) 
+            scheme_indices.pop(min_idx)
 
         chunks = tuple((self._num_frames,) + self._sig_shape[:-1] + (width,)
                        for width in tile_widths)
@@ -138,8 +139,9 @@ class FortranReader:
             out_buf_f[slice_start:slice_start + length] = memmap[sl, ...]
             slice_start += length
         return idx
-    
-    def generate_tiles(self, *index_or_slice) -> typing.Generator[tuple[tuple[int], int, np.ndarray], None, None]:
+
+    def generate_tiles(self, *index_or_slice)\
+            -> typing.Generator[tuple[tuple[int], int, np.ndarray], None, None]:
         """
         Partition informs the backend of all the frame indices it needs
         Backend optimises the reads to override the depth value where possible
@@ -168,18 +170,25 @@ class FortranReader:
             for mmap_nav_slices, buffer_nav_slice, buffer_unpacks in reads:
                 combined_slices = self._slice_combine_array(*mmap_nav_slices)
                 raw_futures = []
-                for raw_idx, (memmap, sig_slice) in enumerate(zip(self._memmaps, self._sig_last_slices)):
-                    raw_futures.append(p.submit(self._load_data,
-                                                memmap,
-                                                combined_slices,
-                                                out_buffer_f[buffer_nav_slice, ..., sig_slice],
-                                                raw_idx)
-                                )
+                for raw_idx, (memmap, sig_slice) in enumerate(zip(self._memmaps,
+                                                                  self._sig_last_slices)):
+                    raw_futures.append(
+                            p.submit(
+                                self._load_data,
+                                memmap,
+                                combined_slices,
+                                out_buffer_f[buffer_nav_slice, ..., sig_slice],
+                                raw_idx
+                            )
+                        )
                 combined_futures = self._combine_raw_futures(raw_futures, p)
                 for complete in concurrent.futures.as_completed(combined_futures.keys()):
                     scheme_index = combined_futures[complete]
                     for (slice_in_buffer, idcs_in_flat_nav) in buffer_unpacks:
-                        tile = out_buffer_f[(slice_in_buffer,) + (Ellipsis,) + self._scheme_slices[scheme_index]]
+                        tile_slice = ((slice_in_buffer,)
+                                      + (Ellipsis,)
+                                      + self._scheme_slices[scheme_index])
+                        tile = out_buffer_f[tile_slice]
                         yield idcs_in_flat_nav, scheme_index, tile
 
     def _combine_raw_futures(self, futures, pool):
@@ -208,7 +217,7 @@ class FortranReader:
         # Compute number of frames to read
         slice_lengths = tuple(cls._length_slice(s) for s in index_or_slice)
         to_read = sum(slice_lengths)
-            
+
         if to_read == ts_depth:
             # Best to do in a single pass
             # This should cover pick_frame, i.e. no wasted buffer/reading
@@ -223,7 +232,7 @@ class FortranReader:
             # hold 1 or more complete tile/frame stacks in the buffer
             buffer_length = (min_read_depth // ts_depth) * ts_depth
             buffer_length = max(ts_depth, buffer_length)
-        
+
         # split splices down to len(sl) == buffer_length at maximum
         # must functools.reduce because self._split_slice returns tuples of slices
         index_or_slice = functools.reduce(operator.add,
@@ -286,7 +295,7 @@ class FortranReader:
             # can combine idx into _combining without exceeding buffer
             _combining.append(idx)
             idx += 1
-        
+
         if _combining:
             combinations.append(tuple(_combining))
         _combining.clear()
@@ -301,15 +310,16 @@ class FortranReader:
             mmap_slices = tuple(index_or_slice[i] for i in combination)
             # If we are just handling a single contig combination can optimise here by not
             # returning a frame index array but rather just a single nav slice object
-            frame_idcs = itertools.chain(*tuple(range(slice_info[i][2], slice_info[i][3] + 1) for i in combination))
+            frame_idcs = itertools.chain(*tuple(range(slice_info[i][2], slice_info[i][3] + 1)
+                                                for i in combination))
             frame_idcs = tuple(frame_idcs)
             read_length = sum(slice_info[i][0] for i in combination)
             buffer_allocation = slice(0, read_length)
             # Even though we ignore that mmap_slices may contain multiple read chunks
             # this should be OK because the DataTile system is blind to the ROI
             unpacks = [(slice(lb, ub), frame_idcs[lb:ub])
-                        for lb, ub
-                        in cls._gen_slices_for_depth(read_length, ts_depth)]
+                       for lb, ub
+                       in cls._gen_slices_for_depth(read_length, ts_depth)]
             reads.append((mmap_slices, buffer_allocation, unpacks))
 
         return buffer_length, reads
@@ -321,7 +331,7 @@ class FortranReader:
         if boundaries[-1] != length:
             boundaries.append(length)
         yield from zip(boundaries[:-1], boundaries[1:])
-        
+
     @staticmethod
     def _length_slice(sl_or_int):
         try:
@@ -383,61 +393,3 @@ class FortranReader:
                 _slices.append(sl)
         assert _slices, 'No slices to read'
         return _slices
-        
-
-if __name__ == '__main__':
-    import pathlib
-    import matplotlib.pyplot as plt
-    from libertem.common.shape import Shape
-    from libertem.io.dataset.base.tiling_scheme import TilingScheme
-
-    def generate_test_array(nav_shape, sig_shape):
-        dtype = np.float32
-        sig_size = np.prod(sig_shape, dtype=np.uint64)
-        frame = (np.arange(sig_size).astype(dtype) / sig_size).reshape(sig_shape)
-        nav_size = np.prod(nav_shape, dtype=np.uint64)
-        frames = np.repeat(frame[np.newaxis, ...], nav_size, axis=0)
-        frame_idcs = np.arange(nav_size).astype(dtype)
-        frames += frame_idcs[..., np.newaxis, np.newaxis]
-        return frames.reshape(nav_shape + sig_shape)
-
-    data_root = pathlib.Path(R'C:\Users\mb265392\Workspace\Data\dm4_test')
-    if False:
-        data_path = data_root / 'Series4 Diffraction SI.dm4'
-        f_offset = 110843
-        dtype = np.float32
-        nav_shape = (286, 50)
-        sig_shape = (512, 512)
-    else:
-        nav_shape = (8, 16)
-        sig_shape = (32, 32)
-        dtype = np.float32
-        data = generate_test_array(nav_shape, sig_shape).astype(dtype)
-        f_offset = 0
-        data_path = data_root / 'temparray.raw'
-        with data_path.open('wb') as fp:
-            data.T.tofile(fp)      
-
-    shape = Shape(nav_shape + sig_shape, sig_dims=2)
-    tile_depth = 8
-    num_tiles = 4
-    tile_width = sig_shape[-1] // num_tiles
-    tileshape = Shape((tile_depth,) + (sig_shape[0], tile_width), sig_dims=2)
-    ts = TilingScheme.make_for_shape(tileshape, shape)
-
-    reader = FortranReader(data_path, shape, dtype, ts, file_header=f_offset)
-    reader.create_memmaps()
-    # Slices and indices are in an f-ordered flat nav dimension
-    # this gives optimal reads without requiring strides
-    # ROI unwrapping and buffer allocation must take this into account
-    flat_data = data.reshape(-1, *sig_shape)
-    np.set_printoptions(suppress=True)
-
-    roi = np.random.randint(0, 2, size=nav_shape).astype(bool)
-    roi_nonzero = np.flatnonzero(roi.T)
-    for frame_idcs, scheme_index, tile in reader.generate_tiles(range(20), 26, np.asarray([30, 31, 32, 38]), 60, slice(61, 64)):
-        c_indices = np.ravel_multi_index(np.unravel_index(frame_idcs, nav_shape, order='F'), nav_shape)
-        ref_frames = flat_data[c_indices]
-        lt_slice = ts[scheme_index]
-        ref_tile = lt_slice.get(ref_frames, sig_only=True)
-        assert (tile == ref_tile).all()

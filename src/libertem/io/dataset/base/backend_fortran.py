@@ -98,7 +98,7 @@ class FortranReader:
                         for idx in range(len(chunksizes)))
         self._chunks = tuple((o, c) for o, c in zip(offsets, chunks))
         boundaries = [0] + np.cumsum(tile_widths).tolist()
-        self._sig_last_slices = tuple(slice(a, b) for a, b in zip(boundaries[:-1], boundaries[1:]))
+        self._sig_slices = tuple(slice(a, b) for a, b in zip(boundaries[:-1], boundaries[1:]))
         # self._chunks is ordered and this order sets the order of self._memmaps
         # then the indices in self._scheme_mapping match the memmap indices
         # this could be improved with a different data structure
@@ -171,7 +171,7 @@ class FortranReader:
                 combined_slices = self._slice_combine_array(*mmap_nav_slices)
                 raw_futures = []
                 for raw_idx, (memmap, sig_slice) in enumerate(zip(self._memmaps,
-                                                                  self._sig_last_slices)):
+                                                                  self._sig_slices)):
                     raw_futures.append(
                             p.submit(
                                 self._load_data,

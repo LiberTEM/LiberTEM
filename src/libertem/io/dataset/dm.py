@@ -448,15 +448,20 @@ class SingleDMFileDataset(DataSet):
         if self._array_c_ordered:
             _shape = tuple(reversed(array_meta['shape']))
         else:
-            # Assuming have to invert sig dimensions too, but never
-            # seen any non-square DM4 signals
+            # Data on disk is stored as (flat_sig_c_order, flat_nav_c_order)
+            # so a hybrid C/F byte order, as such we need to do some
+            # gymnastics to get a normal LT shape
             _shape = (array_meta['shape'][:-self._sig_dims][::-1]
                       + array_meta['shape'][-self._sig_dims:][::-1])
-            # NOTE F-ordering completely breaks the contract
-            # behind sync_offset, which shifts scan start by columns
+            # NOTE it should be possible to apply sync_offset
+            # as the nav dimension is fundamentally c-ordered on disk
+            # but at this time the lack of use cases and the complexity
+            # it would bring means enforcing self._sync_offset == 0
+            # in these style of DM4 files is preferred for now
             assert self._sync_offset == 0
         self._nav_shape = _shape[:-self._sig_dims]
         self._sig_shape = _shape[-self._sig_dims:]
+        # regardless of file order the Dataset shape property is 'standard'
 
         # this might not be how sync_offset works!
         # _array_shape = (1, 1, 1, 1)
@@ -474,7 +479,6 @@ class SingleDMFileDataset(DataSet):
         # Need to go understand sync_offset/image_count/nav_shape_product yet again
         self._image_count = self._nav_shape_product
         self._sync_offset_info = self.get_sync_offset_info()
-        # nav_order = 'C' if self._array_c_ordered else 'F'
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
         self._meta = DataSetMeta(
             shape=shape,
@@ -539,10 +543,10 @@ class SingleDMFileDataset(DataSet):
     ) -> Tuple[int, ...]:
         """
         If C-ordered, return proposed tileshape
-        If F-ordered, generates tiles which are close in size to
-        the proposed tileshape but tile only in the last signal dimension
-        All other tile sig-dims should equal the matching full sig-dim
-        Could adjust depth too to get tiles of similar byte-size?
+        If hybrid C/F ordered adjust tileshape so that
+        only the first signal dimension (rows) is tiled
+        as this should incurr reads in blocks of complete rows
+        without incurring additional striding
 
         # NOTE Check how corrections could be broken ??
         """
@@ -553,9 +557,11 @@ class SingleDMFileDataset(DataSet):
         if sig_tile == sig_shape:
             # whole frames, nothing to do
             return tileshape
-        sig_stub = sig_shape[:-1]
+        sig_stub = sig_shape[1:]
+        # try to pick a dimension which gives tiles of similar
+        # bytesize to that proposed by the Negotiator
         final_dim = max(1, prod(sig_tile) // prod(sig_stub))
-        return (depth,) + sig_stub + (final_dim,)
+        return (depth,) + (final_dim,) + sig_stub
 
 
 class DMFile(File):
@@ -567,6 +573,8 @@ class DMPartition(BasePartition):
 
 
 class RawPartitionFortran(BasePartition):
+    reader_class = FortranReader
+
     def get_tiles(self, tiling_scheme: 'TilingScheme', dest_dtype="float32", roi=None):
         if self._start_frame >= self.meta.image_count:
             return
@@ -578,7 +586,7 @@ class RawPartitionFortran(BasePartition):
         tiling_scheme_adj = tiling_scheme.adjust_for_partition(self)
         self.validate_tiling_scheme(tiling_scheme_adj)
 
-        reader = FortranReader(
+        reader = self.reader_class(
                         file.path,
                         self.meta.shape,
                         self.meta.raw_dtype,

@@ -14,35 +14,61 @@ if typing.TYPE_CHECKING:
 
 class FortranReader:
     """
-    Reads a single-file raw Fortran-ordered array from disk
-    in a best-case way for tiled or multi-frame processing
+    Reads a single-file raw array structured on disk as
+
+            (flat_sig, flat_nav)
+
+    which corresponds to a Fortran-like ordering
+    Splits the file into chunks spanning flat_sig
+    in a way which corresponds to the desired tiling
+    scheme and parallellises the reads to improve performance
     """
     def __init__(self,
                  path: os.PathLike,
                  shape: 'Shape',
                  dtype: np.dtype,
                  tiling_scheme: 'TilingScheme',
+                 sig_order='F',
                  file_header: int = 0,
                  min_num_chunks: int = 32):
         self._path = path
         self._dtype = dtype
         self._file_header = file_header
-        self._sig_shape = tuple(shape.sig)
-        self._num_frames = shape.nav.size
+        self._shape = shape
+        self._sig_size = shape.sig.size
+        self._sig_order = sig_order
+        self._nav_size = shape.nav.size
         self._tiling_scheme = tiling_scheme
 
         self._memmaps = []
         self._chunks = []
 
         slices = tiling_scheme.slices_array
-        assert (slices[:, 1, 1:] == self._sig_shape[1:]).all(), ('slices not split '
-                                                                 'in first dim only')
-        tile_widths: list = slices[:, 1, 0].tolist()
+        # sig slices are flattened according to sig_order
+        # if a sig slice does not span all dimensions except
+        # the first/last (for C-/F-) then the slices can't be ravelled
+        if sig_order == 'C':
+            assert (slices[:, 1, 1:] == self._shape.sig[1:]).all(), ('slices not split '
+                                                                     'in first dim only')
+        elif sig_order == 'F':
+            assert (slices[:, 1, :-1] == self._shape.sig[:-1]).all(), ('slices not split '
+                                                                       'in last dim only')
+        else:
+            raise ValueError(f'sig_order {sig_order} not recognized')
+        # Get sizes of each tile in number of elements
+        tile_widths: list = np.prod(slices[:, 1, :], axis=-1, dtype=np.int64).tolist()
+        boundaries = [0] + np.cumsum(tile_widths).tolist()
+        # slice into flat_sig for each tile in tiling scheme
+        self._tile_slices = tuple(slice(a, b) for a, b
+                                  in zip(boundaries[:-1], boundaries[1:]))
         scheme_indices = list(range(len(tile_widths)))
+        self._tile_shapes = tuple(self._tiling_scheme[scheme_index].shape.to_tuple()
+                                  for scheme_index in scheme_indices)
 
         # Merge or split tiles to get good sized chunks
         # Try to maintain tile boundaries (consider this for merges)
-        target_memmap_width = self._sig_shape[0] // min_num_chunks
+        # FIXME add target chunk bytesize to lower limit splitting
+        target_memmap_width = self._sig_size // min_num_chunks
         # Split big chunks
         while max(tile_widths) > 1.25 * target_memmap_width:
             max_idx = np.argmax(tile_widths)
@@ -90,15 +116,18 @@ class FortranReader:
             tile_widths.pop(min_idx)
             scheme_indices.pop(min_idx)
 
-        chunks = tuple((width,) + self._sig_shape[1:] + (self._num_frames,)
+        chunks = tuple((width,) + (self._nav_size,)
                        for width in tile_widths)
         chunksizes = tuple(self._byte_size(chunkshape)
                            for chunkshape in chunks)
         offsets = tuple(self._file_header + sum(chunksizes[:idx])
                         for idx in range(len(chunksizes)))
+        # self._chunks are the offsets and shapes of each memmap (chunk_of_sig, whole_nav)
         self._chunks = tuple((o, c) for o, c in zip(offsets, chunks))
         boundaries = [0] + np.cumsum(tile_widths).tolist()
-        self._sig_slices = tuple(slice(a, b) for a, b in zip(boundaries[:-1], boundaries[1:]))
+        # self._chunk_slices are the flat-sig slice objects for each mmap chunk
+        # used to assign each loaded chunk into the output buffer
+        self._chunk_slices = tuple(slice(a, b) for a, b in zip(boundaries[:-1], boundaries[1:]))
         # self._chunks is ordered and this order sets the order of self._memmaps
         # then the indices in self._scheme_mapping match the memmap indices
         # this could be improved with a different data structure
@@ -107,9 +136,13 @@ class FortranReader:
         for idx, s_idxs in enumerate(scheme_indices):
             for scheme_index in s_idxs:
                 self._scheme_mapping[scheme_index].append(idx)
-        self._scheme_slices = tuple(s.get(sig_only=True) for _, s in self._tiling_scheme.slices)
 
     def create_memmaps(self):
+        # Always memmap in C-order (slice_of_flat_sig), whole_flat_nav)
+        # Access is fast to a full set of values for a single sig pixel
+        # which reflects how the data is laid out
+        # The memmap will be used for slicing into whole_flat_nav,
+        # however this is unavoidable!
         assert len(self._memmaps) == 0
         for offset, chunkshape in self._chunks:
             self._memmaps.append(np.memmap(self._path,
@@ -127,7 +160,7 @@ class FortranReader:
         self.create_memmaps()
 
     @staticmethod
-    def _load_data(memmap, slices, out_buf_f, idx):
+    def _load_data(memmap, slices, out_buf, idx):
         slice_start = 0
         for sl in slices:
             # sl can be a slice or index array
@@ -135,7 +168,7 @@ class FortranReader:
                 length = sl.stop - sl.start
             except AttributeError:
                 length = len(sl)
-            out_buf_f[..., slice_start:slice_start + length] = memmap[..., sl]
+            out_buf[..., slice_start:slice_start + length] = memmap[..., sl]
             slice_start += length
         return idx
 
@@ -163,32 +196,33 @@ class FortranReader:
         """
         index_or_slice = self._splat_iterables(*index_or_slice)
         buffer_length, reads = self._plan_reads(self._tiling_scheme.depth, *index_or_slice)
-        out_buffer = np.empty(self._sig_shape + (buffer_length,), dtype=self._dtype)
+        out_buffer = np.empty((self._sig_size, buffer_length), dtype=self._dtype)
 
         with concurrent.futures.ThreadPoolExecutor() as p:
             for mmap_nav_slices, buffer_nav_slice, buffer_unpacks in reads:
                 combined_slices = self._slice_combine_array(*mmap_nav_slices)
                 raw_futures = []
-                for raw_idx, (memmap, sig_slice) in enumerate(zip(self._memmaps,
-                                                                  self._sig_slices)):
+                for raw_idx, (memmap, buffer_sig_slice) in enumerate(zip(self._memmaps,
+                                                                         self._chunk_slices)):
                     raw_futures.append(
                             p.submit(
                                 self._load_data,
                                 memmap,
                                 combined_slices,
-                                out_buffer[sig_slice, ..., buffer_nav_slice],
+                                out_buffer[buffer_sig_slice, buffer_nav_slice],
                                 raw_idx
                             )
                         )
                 combined_futures = self._combine_raw_futures(raw_futures, p)
                 for complete in concurrent.futures.as_completed(combined_futures.keys()):
                     scheme_index = combined_futures[complete]
-                    for (slice_in_buffer, idcs_in_flat_nav) in buffer_unpacks:
-                        tile_slice = (self._scheme_slices[scheme_index]
-                                      + (Ellipsis,)
-                                      + (slice_in_buffer,))
-                        tile = out_buffer[tile_slice]
-                        yield idcs_in_flat_nav, scheme_index, np.moveaxis(tile, -1, 0)
+                    for (buffer_nav_slice, idcs_in_flat_nav) in buffer_unpacks:
+                        # flat_tile has dims (flat_sig, flat_nav)
+                        flat_tile = out_buffer[self._tile_slices[scheme_index], buffer_nav_slice]
+                        tile_shape = self._tile_shapes[scheme_index] + flat_tile.shape[-1:]
+                        tile = flat_tile.reshape(tile_shape, order=self._sig_order)
+                        tile = np.moveaxis(tile, -1, 0)
+                        yield idcs_in_flat_nav, scheme_index, tile
 
     def _combine_raw_futures(self, futures, pool):
         combined_futures = {}

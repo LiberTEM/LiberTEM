@@ -526,7 +526,7 @@ class SingleDMFileDataset(DataSet):
     #     """
 
     def get_partitions(self):
-        partition_cls = DMPartition if self._array_c_ordered else RawPartitionFortran
+        partition_cls = DMPartition if self._array_c_ordered else DMPartitionFortran
         fileset = self._get_fileset()
         for part_slice, start, stop in self.get_slices():
             yield partition_cls(
@@ -573,7 +573,7 @@ class DMPartition(BasePartition):
 
 
 class RawPartitionFortran(BasePartition):
-    reader_class = FortranReader
+    sig_order = 'F'
 
     def get_tiles(self, tiling_scheme: 'TilingScheme', dest_dtype="float32", roi=None):
         if self._start_frame >= self.meta.image_count:
@@ -586,11 +586,12 @@ class RawPartitionFortran(BasePartition):
         tiling_scheme_adj = tiling_scheme.adjust_for_partition(self)
         self.validate_tiling_scheme(tiling_scheme_adj)
 
-        reader = self.reader_class(
+        reader = FortranReader(
                         file.path,
                         self.meta.shape,
                         self.meta.raw_dtype,
                         tiling_scheme_adj,
+                        sig_order=self.sig_order,
                         file_header=file.file_header_bytes,
                     )
         reader.create_memmaps()
@@ -635,3 +636,7 @@ class RawPartitionFortran(BasePartition):
         if corrections is None:
             return
         corrections.apply(data, tile_slice)
+
+
+class DMPartitionFortran(RawPartitionFortran):
+    sig_order = 'C'

@@ -35,14 +35,14 @@ class FortranReader:
         self._chunks = []
 
         slices = tiling_scheme.slices_array
-        assert (slices[:, 1, :-1] == self._sig_shape[:-1]).all(), ('slices not split '
-                                                                   'in last dim only')
-        tile_widths: list = slices[:, 1, -1].tolist()
+        assert (slices[:, 1, 1:] == self._sig_shape[1:]).all(), ('slices not split '
+                                                                 'in first dim only')
+        tile_widths: list = slices[:, 1, 0].tolist()
         scheme_indices = list(range(len(tile_widths)))
 
         # Merge or split tiles to get good sized chunks
         # Try to maintain tile boundaries (consider this for merges)
-        target_memmap_width = self._sig_shape[-1] // min_num_chunks
+        target_memmap_width = self._sig_shape[0] // min_num_chunks
         # Split big chunks
         while max(tile_widths) > 1.25 * target_memmap_width:
             max_idx = np.argmax(tile_widths)
@@ -90,7 +90,7 @@ class FortranReader:
             tile_widths.pop(min_idx)
             scheme_indices.pop(min_idx)
 
-        chunks = tuple((self._num_frames,) + self._sig_shape[:-1] + (width,)
+        chunks = tuple((width,) + self._sig_shape[1:] + (self._num_frames,)
                        for width in tile_widths)
         chunksizes = tuple(self._byte_size(chunkshape)
                            for chunkshape in chunks)
@@ -113,7 +113,6 @@ class FortranReader:
         assert len(self._memmaps) == 0
         for offset, chunkshape in self._chunks:
             self._memmaps.append(np.memmap(self._path,
-                                           order='F',
                                            mode='r',
                                            dtype=self._dtype,
                                            offset=offset,
@@ -136,7 +135,7 @@ class FortranReader:
                 length = sl.stop - sl.start
             except AttributeError:
                 length = len(sl)
-            out_buf_f[slice_start:slice_start + length] = memmap[sl, ...]
+            out_buf_f[..., slice_start:slice_start + length] = memmap[..., sl]
             slice_start += length
         return idx
 
@@ -164,7 +163,7 @@ class FortranReader:
         """
         index_or_slice = self._splat_iterables(*index_or_slice)
         buffer_length, reads = self._plan_reads(self._tiling_scheme.depth, *index_or_slice)
-        out_buffer_f = np.empty((buffer_length,) + self._sig_shape, dtype=self._dtype, order='F')
+        out_buffer = np.empty(self._sig_shape + (buffer_length,), dtype=self._dtype)
 
         with concurrent.futures.ThreadPoolExecutor() as p:
             for mmap_nav_slices, buffer_nav_slice, buffer_unpacks in reads:
@@ -177,7 +176,7 @@ class FortranReader:
                                 self._load_data,
                                 memmap,
                                 combined_slices,
-                                out_buffer_f[buffer_nav_slice, ..., sig_slice],
+                                out_buffer[sig_slice, ..., buffer_nav_slice],
                                 raw_idx
                             )
                         )
@@ -185,11 +184,11 @@ class FortranReader:
                 for complete in concurrent.futures.as_completed(combined_futures.keys()):
                     scheme_index = combined_futures[complete]
                     for (slice_in_buffer, idcs_in_flat_nav) in buffer_unpacks:
-                        tile_slice = ((slice_in_buffer,)
+                        tile_slice = (self._scheme_slices[scheme_index]
                                       + (Ellipsis,)
-                                      + self._scheme_slices[scheme_index])
-                        tile = out_buffer_f[tile_slice]
-                        yield idcs_in_flat_nav, scheme_index, tile
+                                      + (slice_in_buffer,))
+                        tile = out_buffer[tile_slice]
+                        yield idcs_in_flat_nav, scheme_index, np.moveaxis(tile, -1, 0)
 
     def _combine_raw_futures(self, futures, pool):
         combined_futures = {}

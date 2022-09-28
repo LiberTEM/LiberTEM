@@ -25,6 +25,7 @@ class FortranReader:
     """
     MIN_MEMMAP_SIZE = 512 * 2 ** 20  # 512 MB
     MAX_NUM_MEMMAP: int = 16
+    MIN_READ_DEPTH: int = 64
 
     def __init__(self,
                  path: os.PathLike,
@@ -200,24 +201,18 @@ class FortranReader:
     def generate_tiles(self, *index_or_slice)\
             -> typing.Generator[tuple[tuple[int], int, np.ndarray], None, None]:
         """
-        Partition informs the backend of all the frame indices it needs
-        Backend optimises the reads to override the depth value where possible
-        When we read a block of frames we can yield them one at a time with
-        the correct slice information, can yield tiles as they complete
-        If the partition only needs a few frames (or single frame for pick)
-        then only these few frames are read (heuristically as a block or not)
-        Memmaps should be aligned with tile boundaries where these exist
-        If one memmap contains multiple tile stacks then the return value from
-        the future should indicate this (scheme_idcs?). If one tile stack needs
-        multiple memmaps then this could be handled by having a combine future taking
-        multiple memmap futures as input, this could then be passed to as_completed
-        (this would be the case for yielding stacks of frames)
-        If just a few frames in the partition are skipped, then probably better
-        to read whole stacks ignoring the small holes then slice/mask the output buffer
+        Yields tiles from dataset according to tiling_scheme (potentially unordered)
+        *index_or_slice can be any/mix of [int, slice, iterable]
+        of flat_nav, full (no-ROI) frame indices to yield to the caller (the partition)
 
-        Need to impose a minimum number of tiles per frame
-        Tileshape is ideally sig-column-major for data on disk (last dim in numpy)
-        Need to impose a minimum depth to read as a block even for process_frame
+        The backend optimises the reads to override the tiling_scheme depth
+        but always yields tile stacks matching the tiling_scheme expectation
+        If the partition only needs a few frames then only these few frames are read
+
+        The caller should be aware of the ordering of the data on disk
+        The flat indices provided are assumed to correspond to the order
+        on disk, i.e. if you want the frames to be read in Fortran order
+        then provide *index_or_slice for a Fortran unrolling of the nav dims
         """
         index_or_slice = self._splat_iterables(*index_or_slice)
         buffer_length, reads = self._plan_reads(self._tiling_scheme.depth, *index_or_slice)
@@ -266,7 +261,7 @@ class FortranReader:
         return tuple(f.result() for f in futures)
 
     @classmethod
-    def _plan_reads(cls, ts_depth, *index_or_slice, min_read_depth: int = 64):
+    def _plan_reads(cls, ts_depth, *index_or_slice):
         """
         Performs a similar function to get_read_ranges but works on slices instead
         """
@@ -290,7 +285,7 @@ class FortranReader:
             # hence the multiply/max()
             # buffer_length will also be a multiple of ts_depth so we can
             # hold 1 or more complete tile/frame stacks in the buffer
-            buffer_length = (min_read_depth // ts_depth) * ts_depth
+            buffer_length = (cls.MIN_READ_DEPTH // ts_depth) * ts_depth
             buffer_length = max(ts_depth, buffer_length)
 
         # split splices down to len(sl) == buffer_length at maximum

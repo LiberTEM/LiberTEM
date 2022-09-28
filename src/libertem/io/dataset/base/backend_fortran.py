@@ -23,14 +23,16 @@ class FortranReader:
     in a way which corresponds to the desired tiling
     scheme and parallellises the reads to improve performance
     """
+    MIN_MEMMAP_SIZE = 512 * 2 ** 20  # 512 MB
+    MAX_NUM_MEMMAP: int = 16
+
     def __init__(self,
                  path: os.PathLike,
                  shape: 'Shape',
                  dtype: np.dtype,
                  tiling_scheme: 'TilingScheme',
                  sig_order='F',
-                 file_header: int = 0,
-                 min_num_chunks: int = 32):
+                 file_header: int = 0):
         self._path = path
         self._dtype = dtype
         self._file_header = file_header
@@ -67,10 +69,14 @@ class FortranReader:
 
         # Merge or split tiles to get good sized chunks
         # Try to maintain tile boundaries (consider this for merges)
-        # FIXME add target chunk bytesize to lower limit splitting
-        target_memmap_width = self._sig_size // min_num_chunks
+        nav_bytesize = np.dtype(self._dtype).itemsize * self._nav_size
+        min_width_bytesize = self.MIN_MEMMAP_SIZE // nav_bytesize
+        min_width_number = self._sig_size // self.MAX_NUM_MEMMAP
+        data_size = self._sig_size * self._nav_size
+        min_width = min(data_size, max(min_width_bytesize, min_width_number))
+        max_width = min(data_size, 2 * min_width)
         # Split big chunks
-        while max(tile_widths) > 1.25 * target_memmap_width:
+        while max(tile_widths) > max_width:
             max_idx = np.argmax(tile_widths)
             max_val = tile_widths[max_idx]
             new_widths = [floor(max_val / 2), ceil(max_val / 2)]
@@ -81,7 +87,7 @@ class FortranReader:
         # at this point we are guaranteed to have at least min_num_chunks
         scheme_indices = [{i} for i in scheme_indices]
         # and all elements in scheme_indices are set(integer)
-        while min(tile_widths) < target_memmap_width * 0.5:
+        while len(tile_widths) > 1 and min(tile_widths) < min_width:
             min_idx = np.argmin(tile_widths)
             min_val = tile_widths[min_idx]
             min_scheme = scheme_indices[min_idx]
@@ -131,11 +137,45 @@ class FortranReader:
         # self._chunks is ordered and this order sets the order of self._memmaps
         # then the indices in self._scheme_mapping match the memmap indices
         # this could be improved with a different data structure
-        self._scheme_mapping = {scheme_index: []
-                                for scheme_index in set().union(*scheme_indices)}
-        for idx, s_idxs in enumerate(scheme_indices):
-            for scheme_index in s_idxs:
-                self._scheme_mapping[scheme_index].append(idx)
+
+        # scheme_indices is list(set(int)) of which tile idxs are generated
+        # by each memmap chunk, noting that multiple (adjacent) chunks may contain
+        # parts of a given scheme index, requiring their ouputs to be combined
+        # need {chunk_int | tuple(chunk_int): tuple(scheme_index)} to define
+        # both the necessary combinations and unpackings
+        # must consider how a combination could span many futures
+        # but only the first is needed for a particular tile, probably best
+        # to check all futures (partial and full) and yeild tiles that
+        # are already available
+        # e.g. chunk[0] provides tile 0, 1, but chunk[0+1] provides tile
+        # 0, 1, 2, but when the combined 0+1 chunks are ready we only need to yield
+        # tile 2 because chunk 0 completed earlier and we already yielded tiles 0, 1
+        # in this structure we can store (combinations + unpacks) separately
+        # to (individual + unpacks), and some individual unpacks could be empty
+        # and either we just continue for an empty unpack or don't wait on
+        # that future at all if it's more performant (likely not important!!)
+
+        chunk_tile_map = np.zeros((len(chunks), len(tiling_scheme)), dtype=bool)
+        for chunk_idx, tile_idcs in enumerate(scheme_indices):
+            chunk_tile_map[chunk_idx, list(tile_idcs)] = True
+        chunks_per_tile = chunk_tile_map.sum(axis=0)
+        # Create lists of tiles provided uniquely by an individual chunk
+        independent_tiles = set(np.flatnonzero(chunks_per_tile == 1))
+        _scheme_map_independent = [s.intersection(independent_tiles)
+                                   for s in scheme_indices]
+        # Create map of chunks which must be combined to yield a tile
+        self._scheme_map_combination = {}
+        combination_tiles = np.flatnonzero(chunks_per_tile > 1)
+        for tile_idx in combination_tiles:
+            chunks_for_tile = tuple(np.flatnonzero(chunk_tile_map[:, tile_idx]))
+            try:
+                self._scheme_map_combination[chunks_for_tile].append(tile_idx)
+            except KeyError:
+                self._scheme_map_combination[chunks_for_tile] = [tile_idx]
+        self._scheme_map_combination = {k: set(v) for k, v
+                                        in self._scheme_map_combination.items()}
+        self._scheme_map = {**{ci: tis for ci, tis in enumerate(_scheme_map_independent)},
+                            **self._scheme_map_combination}
 
     def create_memmaps(self):
         # Always memmap in C-order (slice_of_flat_sig), whole_flat_nav)
@@ -214,25 +254,27 @@ class FortranReader:
                             )
                         )
                 combined_futures = self._combine_raw_futures(raw_futures, p)
-                for complete in concurrent.futures.as_completed(combined_futures.keys()):
-                    scheme_index = combined_futures[complete]
+                tiles_completed = set()
+                for complete in concurrent.futures.as_completed(raw_futures + combined_futures):
+                    chunks_completed = complete.result()
+                    tiles_ready: set = self._scheme_map[chunks_completed]
+                    tiles_to_yield = tiles_ready.difference(tiles_completed)
+                    if not tiles_to_yield:
+                        continue
+                    tiles_completed = tiles_completed.union(tiles_to_yield)
                     for (buffer_nav_slice, idcs_in_flat_nav) in buffer_unpacks:
-                        # flat_tile has dims (flat_sig, flat_nav)
-                        flat_tile = out_buffer[self._tile_slices[scheme_index], buffer_nav_slice]
-                        tile_shape = self._tile_shapes[scheme_index] + flat_tile.shape[-1:]
-                        tile = flat_tile.reshape(tile_shape, order=self._sig_order)
-                        tile = np.moveaxis(tile, -1, 0)
-                        yield idcs_in_flat_nav, scheme_index, tile
+                        for scheme_index in tiles_to_yield:
+                            # flat_tile has dims (flat_sig, flat_nav)
+                            flat_tile = out_buffer[self._tile_slices[scheme_index],
+                                                   buffer_nav_slice]
+                            tile_shape = self._tile_shapes[scheme_index] + flat_tile.shape[-1:]
+                            tile = flat_tile.reshape(tile_shape, order=self._sig_order)
+                            tile = np.moveaxis(tile, -1, 0)
+                            yield idcs_in_flat_nav, scheme_index, tile
 
     def _combine_raw_futures(self, futures, pool):
-        combined_futures = {}
-        for scheme_index, raw_idxs in self._scheme_mapping.items():
-            if len(raw_idxs) == 1:
-                combined_futures[futures[raw_idxs[0]]] = scheme_index
-                continue
-            combined = pool.submit(self._combine, *tuple(futures[i] for i in raw_idxs))
-            combined_futures[combined] = scheme_index
-        return combined_futures
+        return [pool.submit(self._combine, *tuple(futures[i] for i in combination))
+                for combination in self._scheme_map_combination.keys()]
 
     @staticmethod
     def _combine(*futures):

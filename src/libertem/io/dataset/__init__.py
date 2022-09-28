@@ -10,6 +10,7 @@ from libertem.common.scheduler import Scheduler
 filetypes = {
     "hdf5": "libertem.io.dataset.hdf5.H5DataSet",
     "raw": "libertem.io.dataset.raw.RawFileDataSet",
+    "raw_csr": "libertem.io.dataset.raw_csr.RawCSRDataSet",
     "mib": "libertem.io.dataset.mib.MIBDataSet",
     "blo": "libertem.io.dataset.blo.BloDataSet",
     "k2is": "libertem.io.dataset.k2is.K2ISDataSet",

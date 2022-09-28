@@ -3,6 +3,7 @@ import os
 import importlib.util
 import platform
 import threading
+from typing import Tuple
 import pkg_resources
 from functools import partial
 import warnings
@@ -16,11 +17,13 @@ import h5py
 import aiohttp
 from dask import distributed as dd
 import dask
+from scipy.sparse import csr_matrix
 
 from distributed.scheduler import Scheduler
 import tornado.httpserver
 
 import libertem.api as lt
+from libertem.common.array_backends import NUMPY, SCIPY_CSR, for_backend
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet
@@ -485,6 +488,46 @@ def raw_data_8x8x8x8_path(tmpdir_factory):
     data.tofile(str(filename))
     del data
     yield str(filename)
+
+
+@pytest.fixture(scope="session")
+def mock_sparse_data():
+    data = utils._mk_random((13, 17, 24, 19), array_backend=NUMPY)
+    data_flat = data.reshape((13*17, 24*19))
+    orig = for_backend(data_flat, SCIPY_CSR)
+    return orig, data_flat
+
+
+@pytest.fixture(scope="session")
+def raw_csr_generated(mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+    orig, data_flat = mock_sparse_data
+    datadir = tmpdir_factory.mktemp('raw_csr')
+    name_indptr = str(datadir / 'indptr.raw')
+    name_coords = str(datadir / 'coords.raw')
+    name_values = str(datadir / 'values.raw')
+    name_sidecar = str(datadir / 'sparse.toml')
+    with open(name_sidecar, "w") as f:
+        f.write(f"""
+[params]
+filetype = "raw_csr"
+nav_shape = [13, 17]
+sig_shape = [24, 19]
+
+[raw_csr]
+indptr_file = "indptr.raw"
+indptr_dtype = "{str(orig.indptr.dtype)}"
+
+indices_file = "coords.raw"
+indices_dtype = "{str(orig.indices.dtype)}"
+
+data_file = "values.raw"
+data_dtype = "{str(orig.data.dtype)}"
+""")
+    orig.indptr.tofile(name_indptr)
+    orig.indices.tofile(name_coords)
+    orig.data.tofile(name_values)
+    lt_ctx = lt.Context.make_with('inline')
+    yield lt_ctx.load("raw_csr", path=name_sidecar)
 
 
 @pytest.fixture(scope='session')

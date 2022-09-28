@@ -1,10 +1,13 @@
 import typing
+import os
 
 import scipy.sparse
 import numpy as np
 import numba
+import toml
 
 from libertem.common import Slice, Shape
+from libertem.common.math import prod
 from libertem.common.array_backends import SCIPY_CSR, ArrayBackend
 from libertem.io.corrections.corrset import CorrectionSet
 from libertem.io.dataset.base import (
@@ -13,27 +16,67 @@ from libertem.io.dataset.base import (
 from libertem.io.dataset.base.meta import DataSetMeta
 from libertem.io.dataset.base.partition import Partition
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
+from libertem.common.messageconverter import MessageConverter
 
 if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.backend import IOBackend
-    from libertem.common.messageconverter import MessageConverter
     from libertem.common.executor import JobExecutor
     import numpy.typing as nt
+
+
+class RawCSRDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/RawCSRDatasetParams.schema.json",
+        "title": "RawCSRDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "RAW_CSR"},
+            "path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
+        },
+        "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
+        return data
 
 
 class CSRDescriptor(typing.NamedTuple):
     indptr_file: str
     indptr_dtype: np.dtype
-    coords_file: str
-    coords_dtype: np.dtype
-    values_file: str
-    values_dtype: np.dtype
+    indices_file: str
+    indices_dtype: np.dtype
+    data_file: str
+    data_dtype: np.dtype
 
 
 class CSRTriple(typing.NamedTuple):
     indptr: np.ndarray
-    coords: np.ndarray
-    values: np.ndarray
+    indices: np.ndarray
+    data: np.ndarray
 
 
 class RawCSRDataSet(DataSet):
@@ -47,31 +90,62 @@ class RawCSRDataSet(DataSet):
 
     def __init__(
         self,
-        descriptor: CSRDescriptor,
-        nav_shape: typing.Tuple[int, ...],
-        sig_shape: typing.Tuple[int, ...],
-        io_backend: typing.Optional["IOBackend"],
+        path: str,
+        nav_shape: typing.Optional[typing.Tuple[int, ...]] = None,
+        sig_shape: typing.Optional[typing.Tuple[int, ...]] = None,
+        sync_offset: int = 0,
+        io_backend: typing.Optional["IOBackend"] = None
     ):
-        assert io_backend is None
+        if sync_offset != 0:
+            raise NotImplementedError()
+        if io_backend is not None:
+            raise NotImplementedError()
         super().__init__(io_backend=io_backend)
-        self._descriptor = descriptor
+        self._path = path
         self._nav_shape = nav_shape
         self._sig_shape = sig_shape
+        self._sync_offset = sync_offset
+        self._conf = None
+        self._descriptor = None
 
     def initialize(self, executor: "JobExecutor") -> "DataSet":
+        self._conf = conf = executor.run_function(toml.load, self._path)
+        assert conf is not None
+        if conf['params']['filetype'].lower() != 'raw_csr':
+            raise ValueError(f"Filetype is not CSR, found {conf['params']['filetype']}")
+        nav_shape = tuple(conf['params']['nav_shape'])
+        sig_shape = tuple(conf['params']['sig_shape'])
+        if self._nav_shape is None:
+            self._nav_shape = nav_shape
+        else:
+            if prod(self._nav_shape) != prod(nav_shape):
+                raise ValueError(f"Nav size mismatch between {self._nav_shape} and {nav_shape}.")
+        if self._sig_shape is None:
+            self._sig_shape = sig_shape
+        else:
+            if prod(self._sig_shape) != prod(sig_shape):
+                raise ValueError(f"Sig size mismatch between {self._sig_shape} and {sig_shape}.")
+
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
-        descriptor = self._descriptor
-        triple = executor.run_function(get_triple, descriptor)
-        image_count = triple.indptr.shape[0]
-        sync_offset = 0  # TODO
+        self._descriptor = descriptor = executor.run_function(get_descriptor, self._path)
+        executor.run_function(
+            check,
+            descriptor=descriptor,
+            nav_shape=nav_shape,
+            sig_shape=sig_shape
+        )
+        image_count = executor.run_function(get_nav_size, descriptor=descriptor)
+        self._image_count = image_count
+        self._nav_shape_product = int(prod(self._nav_shape))
+        self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=shape,
             array_backends=[SCIPY_CSR],
             image_count=image_count,
-            raw_dtype=self._descriptor.values_dtype,
+            raw_dtype=descriptor.data_dtype,
             dtype=None,
             metadata=None,
-            sync_offset=sync_offset,
+            sync_offset=self._sync_offset,
         )
         return self
 
@@ -93,20 +167,46 @@ class RawCSRDataSet(DataSet):
     def check_valid(self) -> bool:
         return True  # TODO
 
+    def supports_correction(self):
+        return False
+
     @classmethod
     def detect_params(cls, path: str, executor: "JobExecutor"):
-        return False  # TODO: can be implemented once we have a sidecar of some sort
+        try:
+            conf = executor.run_function(toml.load, path)
+            if "params" not in conf:
+                return False
+
+            if "filetype" not in conf["params"]:
+                return False
+            if conf["params"]["filetype"].lower() != "raw_csr":
+                return False
+            descriptor = executor.run_function(get_descriptor, path)
+            image_count = executor.run_function(get_nav_size, descriptor=descriptor)
+            return {
+                "parameters": {
+                    'path': path,
+                    "nav_shape": conf["params"]["nav_shape"],
+                    "sig_shape": conf["params"]["sig_shape"],
+                    "sync_offset": 0,
+                },
+                "info": {
+                    "image_count": image_count,
+                }
+            }
+        except (TypeError, toml.TomlDecodeError, UnicodeDecodeError):
+            return False
 
     @classmethod
     def get_msg_converter(cls) -> typing.Type["MessageConverter"]:
-        raise NotImplementedError()  # TODO: web GUI support once we have a sidecar
+        return RawCSRDatasetParams
 
     def get_diagnostics(self):
-        return []
+        return []  # TODO: nonzero elements?
 
     @classmethod
     def get_supported_extensions(cls) -> typing.Set[str]:
-        return set()  # TODO: extension of the sidecar file
+        return {"toml"}
 
     def get_cache_key(self) -> str:
         raise NotImplementedError()  # TODO
@@ -160,13 +260,17 @@ class RawCSRPartition(Partition):
         self._worker_context = None
         super().__init__(*args, **kwargs)
 
-    def set_corrections(self, corrections: CorrectionSet):
-        if corrections.have_corrections():
+    def set_corrections(self, corrections: typing.Optional[CorrectionSet]):
+        if corrections is not None and corrections.have_corrections():
             raise NotImplementedError("corrections not implemented for raw CSR data set")
 
     def validate_tiling_scheme(self, tiling_scheme: TilingScheme):
         if len(tiling_scheme) != 1:
             raise ValueError("Cannot slice CSR data in sig dimensions")
+
+    def get_locations(self):
+        # Allow using any worker by default
+        return None
 
     def get_tiles(
         self,
@@ -175,7 +279,7 @@ class RawCSRPartition(Partition):
         roi=None,
         array_backend: typing.Optional[ArrayBackend] = None
     ):
-        assert array_backend == SCIPY_CSR
+        assert array_backend == SCIPY_CSR or array_backend is None
         tiling_scheme = tiling_scheme.adjust_for_partition(self)
         self.validate_tiling_scheme(tiling_scheme)
         triple = get_triple(self._descriptor)
@@ -184,11 +288,10 @@ class RawCSRPartition(Partition):
                 "corrections are not yet supported for raw CSR"
             )
         # TODO: sync_offset
-        # TODO: dest_dtype
         if roi is None:
-            yield from read_tiles_straight(triple, self.slice, tiling_scheme)
+            yield from read_tiles_straight(triple, self.slice, tiling_scheme, dest_dtype)
         else:
-            yield from read_tiles_with_roi(triple, self.slice, tiling_scheme, roi)
+            yield from read_tiles_with_roi(triple, self.slice, tiling_scheme, roi, dest_dtype)
 
 
 def sliced_indptr(triple: CSRTriple, partition_slice: Slice):
@@ -199,21 +302,82 @@ def sliced_indptr(triple: CSRTriple, partition_slice: Slice):
 
 
 def get_triple(descriptor: CSRDescriptor) -> CSRTriple:
-    values: np.ndarray = np.memmap(descriptor.values_file, dtype=descriptor.values_dtype, mode='r')
-    coords: np.ndarray = np.memmap(descriptor.coords_file, dtype=descriptor.coords_dtype, mode='r')
-    indptr: np.ndarray = np.memmap(descriptor.indptr_file, dtype=descriptor.indptr_dtype, mode='r')
+    data: np.ndarray = np.memmap(
+        descriptor.data_file,
+        dtype=descriptor.data_dtype,
+        mode='r'
+    )
+    indices: np.ndarray = np.memmap(
+        descriptor.indices_file,
+        dtype=descriptor.indices_dtype,
+        mode='r'
+    )
+    indptr: np.ndarray = np.memmap(
+        descriptor.indptr_file,
+        dtype=descriptor.indptr_dtype,
+        mode='r'
+    )
 
     return CSRTriple(
         indptr=indptr,
-        coords=coords,
-        values=values,
+        indices=indices,
+        data=data,
     )
+
+
+def check(descriptor: CSRDescriptor, nav_shape, sig_shape, debug=False):
+    triple = get_triple(descriptor)
+    if triple.indices.shape != triple.data.shape:
+        raise RuntimeError('Shape mismatch between data and indices.')
+    if triple.indptr.shape != (prod(nav_shape) + 1, ):
+        raise RuntimeError(
+            f'Shape mismatch of indptr: File has {triple.indptr.shape}, '
+            f'expected is {(prod(nav_shape) + 1, )}.'
+        )
+    if debug:
+        assert np.min(triple.indices) >= 0
+        assert np.max(triple.indices) < prod(sig_shape)
+        assert np.min(triple.indptr) >= 0
+        assert np.max(triple.indptr) == len(triple.indices)
+
+
+def get_descriptor(path: str) -> CSRDescriptor:
+    """
+    Get a CSRDescriptor from the path to a toml sidecar file
+    """
+    conf = toml.load(path)
+    assert conf is not None
+    if conf['params']['filetype'].lower() != 'raw_csr':
+        raise ValueError(f"Filetype is not CSR, found {conf['params']['filetype']}")
+
+    base_path = os.path.dirname(path)
+    # make sure the key is not case sensitive to follow the convention of
+    # the Context.load() function.
+    csr_key = conf['params']['filetype']
+    csr_conf = conf[csr_key]
+    return CSRDescriptor(
+        indptr_file=os.path.join(base_path, csr_conf['indptr_file']),
+        indptr_dtype=csr_conf['indptr_dtype'],
+        indices_file=os.path.join(base_path, csr_conf['indices_file']),
+        indices_dtype=csr_conf['indices_dtype'],
+        data_file=os.path.join(base_path, csr_conf['data_file']),
+        data_dtype=csr_conf['data_dtype'],
+    )
+
+
+def get_nav_size(descriptor: CSRDescriptor) -> int:
+    '''
+    To run efficiently on a remote worker for dataset initialization
+    '''
+    indptr = np.memmap(descriptor.indptr_file, dtype=descriptor.indptr_dtype)
+    return len(indptr) - 1
 
 
 def read_tiles_straight(
     triple: CSRTriple,
     partition_slice: Slice,
-    tiling_scheme: TilingScheme
+    tiling_scheme: TilingScheme,
+    dest_dtype: np.dtype,
 ):
     assert len(tiling_scheme) == 1
 
@@ -232,12 +396,14 @@ def read_tiles_straight(
 
         start = indptr[indptr_start]
         stop = indptr[indptr_stop]
-        values = triple.values[start:stop]
-        coords = triple.coords[start:stop]
+        data = triple.data[start:stop]
+        if dest_dtype != data.dtype:
+            data = data.astype(dest_dtype)
+        indices = triple.indices[start:stop]
         indptr_slice = indptr[indptr_start:indptr_stop + 1]
         indptr_slice = indptr_slice - indptr_slice[0]
         arr = scipy.sparse.csr_matrix(
-            (values, coords, indptr_slice),
+            (data, indices, indptr_slice),
             shape=(indptr_stop - indptr_start, sig_size)
         )
         tile_slice = Slice(
@@ -255,20 +421,20 @@ def read_tiles_straight(
 def populate_tile(
     indptr_tile_start: "np.ndarray",
     indptr_tile_stop: "np.ndarray",
-    orig_values: "np.ndarray",
-    orig_coords: "np.ndarray",
-    values_out: "np.ndarray",
-    coords_out: "np.ndarray",
+    orig_data: "np.ndarray",
+    orig_indices: "np.ndarray",
+    data_out: "np.ndarray",
+    indices_out: "np.ndarray",
     indptr_out: "np.ndarray",
 ):
     offset = 0
     indptr_out[0] = 0
     for i, (start, stop) in enumerate(zip(indptr_tile_start, indptr_tile_stop)):
         chunk_size = stop - start
-        values_out[offset:offset + chunk_size] = orig_values[start:stop]
-        coords_out[offset:offset + chunk_size] = orig_coords[start:stop]
+        data_out[offset:offset + chunk_size] = orig_data[start:stop]
+        indices_out[offset:offset + chunk_size] = orig_indices[start:stop]
         offset += chunk_size
-    indptr_out[i + 1] = offset
+        indptr_out[i + 1] = offset
 
 
 def read_tiles_with_roi(
@@ -276,6 +442,7 @@ def read_tiles_with_roi(
     partition_slice: Slice,
     tiling_scheme: TilingScheme,
     roi: np.ndarray,
+    dest_dtype: np.dtype,
 ):
     assert len(tiling_scheme) == 1
     roi = roi.reshape((-1, ))
@@ -303,23 +470,23 @@ def read_tiles_with_roi(
         indptr_tile_stop = stop_values[indptr_start:indptr_stop]
         size = sum(indptr_tile_stop - indptr_tile_start)
 
-        values = np.zeros(dtype=triple.values.dtype, shape=size)
-        coords = np.zeros(dtype=triple.coords.dtype, shape=size)
+        data = np.zeros(dtype=dest_dtype, shape=size)
+        indices = np.zeros(dtype=triple.indices.dtype, shape=size)
         indptr_slice = np.zeros(
             dtype=indptr.dtype, shape=indptr_stop - indptr_start + 1
         )
         populate_tile(
             indptr_tile_start=indptr_tile_start,
             indptr_tile_stop=indptr_tile_stop,
-            orig_values=triple.values,
-            orig_coords=triple.coords,
-            values_out=values,
-            coords_out=coords,
+            orig_data=triple.data,
+            orig_indices=triple.indices,
+            data_out=data,
+            indices_out=indices,
             indptr_out=indptr_slice,
         )
 
         arr = scipy.sparse.csr_matrix(
-            (values, coords, indptr_slice),
+            (data, indices, indptr_slice),
             shape=(indptr_stop - indptr_start, sig_size)
         )
         tile_slice = Slice(

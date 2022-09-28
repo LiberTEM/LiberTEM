@@ -264,6 +264,9 @@ class DataSet:
         """
         return CorrectionSet()
 
+    def supports_correction(self):
+        return True
+
     def get_decoder(self) -> Optional["Decoder"]:
         return None
 

@@ -255,7 +255,7 @@ class BasePartition(Partition):
         assert self._io_backend is not None
         return self._io_backend
 
-    def set_corrections(self, corrections: CorrectionSet):
+    def set_corrections(self, corrections: Optional[CorrectionSet]):
         self._corrections = corrections
 
     def set_worker_context(self, worker_context: "WorkerContext"):

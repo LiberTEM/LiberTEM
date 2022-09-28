@@ -32,8 +32,12 @@ def prime_numba_cache(ds):
         # to reduce the initial latency when switching to pick mode
         udfs = [SumUDF(), PickUDF()]
         neg = Negotiator()
+        if ds.supports_correction():
+            corr_dtypes = (np.float32, None)
+        else:
+            corr_dtypes = (None, )
         for udf in udfs:
-            for corr_dtype in (np.float32, None):
+            for corr_dtype in corr_dtypes:
                 if corr_dtype is not None:
                     corrections = CorrectionSet(dark=np.zeros(ds.shape.sig, dtype=corr_dtype))
                 else:

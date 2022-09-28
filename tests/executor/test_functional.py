@@ -96,10 +96,11 @@ def ctx(request, local_cluster_url):
         # Only testing a selection of backends to keep the number of tests under control
         "HDF5", "RAW", "memory", SCIPY_COO, SPARSE_COO, CUPY, CUPY_SCIPY_CSR, "NPY", "BLO",
         "DM", "EMPAD", "FRMS6", "K2IS",
-        "MIB", "MRC", "SEQ", "SER", "TVIPS"
+        "MIB", "MRC", "SEQ", "SER", "TVIPS",
+        "RAW_CSR",
     ]
 )
-def load_kwargs(request, hdf5, default_raw, default_npy, default_npy_filepath):
+def load_kwargs(request, hdf5, default_raw, default_npy, default_npy_filepath, raw_csr_generated):
     param = request.param
     testdata_path = get_testdata_path()
     if param == 'HDF5':
@@ -205,6 +206,12 @@ def load_kwargs(request, hdf5, default_raw, default_npy, default_npy_filepath):
                 'filetype': 'TVIPS',
                 'path': tvips_path
             }
+    elif param == 'RAW_CSR':
+        if os.path.isfile(raw_csr_generated._path):
+            return {
+                'filetype': 'raw_csr',
+                'path': raw_csr_generated._path,
+            }
     else:
         raise ValueError(f'Unknown file type {param}')
     pytest.skip(f"Data file not found for {param}")
@@ -238,7 +245,7 @@ def _calculate(ctx, load_kwargs):
     result = ctx.run_udf(
         dataset=ds, udf=udfs, roi=roi, progress=True,
     )
-    return result
+    return result, udfs
 
 
 @pytest.fixture(scope='session')
@@ -249,10 +256,11 @@ def reference(load_kwargs):
 
 @pytest.mark.slow
 def test_executors(ctx, load_kwargs, reference):
-    result = _calculate(ctx, load_kwargs)
+    result, udfs = _calculate(ctx, load_kwargs)
     print(f"filetype: {load_kwargs['filetype']}")
 
-    for i, item in enumerate(reference):
+    for i, item in enumerate(reference[0]):
+        print(f"{i}: UDF {udfs[i]}")
         assert item.keys() == result[i].keys()
         for buf_key in item.keys():
             print(f"buffer {buf_key}")
@@ -264,7 +272,8 @@ def test_executors(ctx, load_kwargs, reference):
             # To see what type we actually test
             print("is allclose", np.allclose(left, right))
             print("dtypes", left.dtype, right.dtype)
-            assert np.allclose(left, right)
+            assert np.allclose(left, right),\
+                f"mismatching result for buffer {buf_key} in UDF {udfs[i]}"
 
 
 @pytest.mark.slow

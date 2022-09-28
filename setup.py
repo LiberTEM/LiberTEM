@@ -166,6 +166,7 @@ setup(
         'typing-extensions',  # backwards-compatibility for newer typing constructs
         'opentelemetry-api',
         'tblib',
+        'toml',
     ],
     extras_require={
         # NumPy interfacing issue on Win 11, Python 3.10

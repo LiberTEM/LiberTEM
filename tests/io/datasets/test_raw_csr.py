@@ -1,3 +1,4 @@
+from typing import Tuple
 from unittest import mock
 
 from scipy.sparse import csr_matrix
@@ -85,6 +86,7 @@ def test_get_tiles_simple():
     assert np.allclose(ref, res)
 
 
+@pytest.mark.with_numba
 def test_get_tiles_simple_roi():
     data = np.array((
         [1, 1, 1],
@@ -184,6 +186,26 @@ def mock_csr_triple(mock_sparse_data):
         yield triple
 
 
+@pytest.fixture(scope="module")
+def raw_csr_with_io(mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+    orig, data_flat = mock_sparse_data
+    datadir = tmpdir_factory.mktemp('raw_csr')
+    name_indptr = str(datadir / 'indptr.raw')
+    name_coords = str(datadir / 'coords.raw')
+    name_values = str(datadir / 'values.raw')
+    orig.indptr.tofile(name_indptr)
+    orig.indices.tofile(name_coords)
+    orig.data.tofile(name_values)
+    yield CSRDescriptor(
+        indptr_file=name_indptr,
+        indptr_dtype=orig.indptr.dtype,
+        coords_file=name_coords,
+        coords_dtype=orig.indices.dtype,
+        values_file=name_values,
+        values_dtype=orig.data.dtype,
+    )
+
+
 def test_raw_csr_ds_sum(mock_csr_triple: CSRTriple, mock_sparse_data, lt_ctx):
     orig, data_flat = mock_sparse_data
     desc = CSRDescriptor(
@@ -204,7 +226,7 @@ def test_raw_csr_ds_sum(mock_csr_triple: CSRTriple, mock_sparse_data, lt_ctx):
 
 
 def test_raw_csr_ds_sum_roi(mock_csr_triple: CSRTriple, mock_sparse_data, lt_ctx):
-    orig, data_flat = mock_sparse_data
+    _, data_flat = mock_sparse_data
     desc = CSRDescriptor(
         indptr_file="",
         indptr_dtype=mock_csr_triple.indptr.dtype,
@@ -214,6 +236,23 @@ def test_raw_csr_ds_sum_roi(mock_csr_triple: CSRTriple, mock_sparse_data, lt_ctx
         values_dtype=mock_csr_triple.values.dtype,
     )
     ds = RawCSRDataSet(descriptor=desc, nav_shape=(13, 17), sig_shape=(24, 19), io_backend=None)
+    ds = ds.initialize(executor=lt_ctx.executor)
+    udf = SumUDF()
+
+    roi = np.random.choice([True, False], data_flat.shape[0])
+    res = lt_ctx.run_udf(udf=udf, dataset=ds, roi=roi)
+    ref = for_backend(np.sum(data_flat[roi], axis=0), NUMPY)
+    assert np.allclose(ref, res['intensity'].data.reshape((-1,)))
+
+
+def test_raw_csr_ds_sum_roi_with_io(mock_sparse_data, raw_csr_with_io, lt_ctx):
+    _, data_flat = mock_sparse_data
+    ds = RawCSRDataSet(
+        descriptor=raw_csr_with_io,
+        nav_shape=(13, 17),
+        sig_shape=(24, 19),
+        io_backend=None
+    )
     ds = ds.initialize(executor=lt_ctx.executor)
     udf = SumUDF()
 

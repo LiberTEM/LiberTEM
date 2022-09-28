@@ -58,10 +58,10 @@ class RawCSRDataSet(DataSet):
         self._nav_shape = nav_shape
         self._sig_shape = sig_shape
 
-    def initialize(self, executor) -> "DataSet":
-        # FIXME: don't `get_triple` here, must use executor
+    def initialize(self, executor: "JobExecutor") -> "DataSet":
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
-        triple = self.get_triple()
+        descriptor = self._descriptor
+        triple = executor.run_function(get_triple, descriptor)
         image_count = triple.indptr.shape[0]
         sync_offset = 0  # TODO
         self._meta = DataSetMeta(
@@ -74,9 +74,6 @@ class RawCSRDataSet(DataSet):
             sync_offset=sync_offset,
         )
         return self
-
-    def get_triple(self):
-        return get_triple(self._descriptor)
 
     @property
     def dtype(self) -> "nt.DTypeLike":
@@ -202,9 +199,9 @@ def sliced_indptr(triple: CSRTriple, partition_slice: Slice):
 
 
 def get_triple(descriptor: CSRDescriptor) -> CSRTriple:
-    values = np.memmap(descriptor.values_file, dtype=descriptor.values_dtype, mode='r')
-    coords = np.memmap(descriptor.coords_file, dtype=descriptor.coords_dtype, mode='r')
-    indptr = np.memmap(descriptor.indptr_file, dtype=descriptor.indptr_dtype, mode='r')
+    values: np.ndarray = np.memmap(descriptor.values_file, dtype=descriptor.values_dtype, mode='r')
+    coords: np.ndarray = np.memmap(descriptor.coords_file, dtype=descriptor.coords_dtype, mode='r')
+    indptr: np.ndarray = np.memmap(descriptor.indptr_file, dtype=descriptor.indptr_dtype, mode='r')
 
     return CSRTriple(
         indptr=indptr,
@@ -256,13 +253,13 @@ def read_tiles_straight(
 
 @numba.njit(cache=True)
 def populate_tile(
-    indptr_tile_start: "nt.ArrayLike",
-    indptr_tile_stop: "nt.ArrayLike",
-    orig_values: "nt.ArrayLike",
-    orig_coords: "nt.ArrayLike",
-    values_out: "nt.ArrayLike",
-    coords_out: "nt.ArrayLike",
-    indptr_out: "nt.ArrayLike",
+    indptr_tile_start: "np.ndarray",
+    indptr_tile_stop: "np.ndarray",
+    orig_values: "np.ndarray",
+    orig_coords: "np.ndarray",
+    values_out: "np.ndarray",
+    coords_out: "np.ndarray",
+    indptr_out: "np.ndarray",
 ):
     offset = 0
     indptr_out[0] = 0

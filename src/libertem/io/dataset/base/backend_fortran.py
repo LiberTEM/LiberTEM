@@ -134,27 +134,12 @@ class FortranReader:
         # self._chunk_slices are the flat-sig slice objects for each mmap chunk
         # used to assign each loaded chunk into the output buffer
         self._chunk_slices = tuple(slice(a, b) for a, b in zip(boundaries[:-1], boundaries[1:]))
-        # self._chunks is ordered and this order sets the order of self._memmaps
-        # then the indices in self._scheme_mapping match the memmap indices
-        # this could be improved with a different data structure
-
         # scheme_indices is list(set(int)) of which tile idxs are generated
         # by each memmap chunk, noting that multiple (adjacent) chunks may contain
         # parts of a given scheme index, requiring their ouputs to be combined
-        # need {chunk_int | tuple(chunk_int): tuple(scheme_index)} to define
-        # both the necessary combinations and unpackings
-        # must consider how a combination could span many futures
-        # but only the first is needed for a particular tile, probably best
-        # to check all futures (partial and full) and yeild tiles that
-        # are already available
-        # e.g. chunk[0] provides tile 0, 1, but chunk[0+1] provides tile
-        # 0, 1, 2, but when the combined 0+1 chunks are ready we only need to yield
-        # tile 2 because chunk 0 completed earlier and we already yielded tiles 0, 1
-        # in this structure we can store (combinations + unpacks) separately
-        # to (individual + unpacks), and some individual unpacks could be empty
-        # and either we just continue for an empty unpack or don't wait on
-        # that future at all if it's more performant (likely not important!!)
-
+        # Here pre-compute which chunks need combining and which tiles
+        # come from a single chunk. The generator will yield tiles
+        # as soon as they are ready even if a combination future is still running
         chunk_tile_map = np.zeros((len(chunks), len(tiling_scheme)), dtype=bool)
         for chunk_idx, tile_idcs in enumerate(scheme_indices):
             chunk_tile_map[chunk_idx, list(tile_idcs)] = True

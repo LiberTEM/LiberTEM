@@ -301,19 +301,25 @@ class SingleDMFileDataset(DataSet):
     Reader for a single DM3/DM4 file
 
     Where possible the navigation structure: 4D-scan or 3D-stack,
-    will be inferred from the file metadata, but this can be overridden
-    using the arguments. In the GUI a 3D-stack will have an extra
-    singleton navigation dimension prepended to allow it to display.
+    will be inferred from the file metadata. In the GUI a 3D-stack
+    will have an extra singleton navigation dimension prepended
+    to allow it to display. DM files containing only a single data array
+    are supported (multi-array files will raise an error).
 
     Note
     ----
-    Single-file 4D DM(4) files are only supported where they were recorded
-    using C-ordering, which is an option in recent versions of GMS.
-    This dataset will try to infer if this is the true from the file
-    tags and throw a warning, but depending on the tag integrity
-    this might not be possible.
+    Single-file 4D DM(4) files are can be stored using normal C-ordering,
+    which is an option in recent versions of GMS. In this case the dataset
+    will try to infer this and use normal LiberTEM I/O for reading the file.
+    If the file uses the older hybrid C/F-ordering (flat_sig, flat_nav)
+    then a dedicated I/O backend will be used instead, though performance
+    will be severely limited in this mode.
 
-    Any UDF results for an F-ordered DM file will be invalid.
+    The format is normally stored in the DM tags, but depending on the tag
+    integrity it might not be possible to infer it. The DM-default is hybrid
+    C/F-ordering, therefore the lower-performance specialised I/O is
+    used by default. A C-ordered format interpretation can be forced
+    using the dataset parameters.
 
     Parameters
     ----------
@@ -322,20 +328,24 @@ class SingleDMFileDataset(DataSet):
         The path to the .dm3/.dm4 file
 
     nav_shape : Tuple[int] or None
-        By default, the files are loaded as a 3D stack. You can change this
-        by specifying the nav_shape, which reshapes the navigation dimensions.
-        Raises a `DataSetException` if the shape is incompatible with the data
-        that is loaded.
+        FIXME
 
     sig_shape: Tuple[int], optional
-        Signal/detector size (height, width)
+        FIXME
 
-    sync_offset: int, optional
+    sync_offset: int, optional, by default 0
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+        Only allowable != 0 if the file is C-ordered
+
+    force_c_order: bool, optional, by default False
+        Force the data to be interpreted as a C-ordered
+        array regardless of the tag information. This will lead
+        to incorrect results on an hybrid C/F-ordered file
     """
     def __init__(self, path, nav_shape=None, sig_shape=None,
-                 sync_offset=0, io_backend=None, sig_dims=2):
+                 sync_offset=0, io_backend=None, sig_dims=2,
+                 force_c_order=False):
         super().__init__(io_backend=io_backend)
         self._filesize = None
 
@@ -344,6 +354,7 @@ class SingleDMFileDataset(DataSet):
         self._sig_shape = tuple(sig_shape) if sig_shape else None
         self._sync_offset = sync_offset
         self._sig_dims = sig_dims
+        self._force_c_order = force_c_order
         if self._sig_dims != 2:
             raise DataSetException('Non-2D signals not yet supported in SingleDMFileDataset')
 
@@ -413,7 +424,19 @@ class SingleDMFileDataset(DataSet):
             tags = fp.allTags
         assert len(array_map) == 1
         array_meta = array_map[ds_idx]
-        return array_meta, tags
+
+        # Infer array ordering
+        nest = self._tags_to_nest(tags)
+        dm_data_key = str(array_meta['ds_idx'] + 1)
+        data_tags = nest['ImageList'][dm_data_key]
+        try:
+            # Must bool(int(val)) just in case the flag is string '0'
+            is_c_ordered = bool(int(data_tags['ImageTags']['Meta Data']['Data Order Swapped']))
+        except (KeyError, ValueError):
+            is_c_ordered = False
+        array_meta['c_order'] = is_c_ordered
+
+        return array_meta
 
     @staticmethod
     def _tags_to_nest(tags: Dict[str, Any]):
@@ -432,19 +455,15 @@ class SingleDMFileDataset(DataSet):
 
     def initialize(self, executor):
         self._filesize = executor.run_function(self._get_filesize)
-        array_meta, all_tags = executor.run_function(self._read_metadata)
-        # nest = self._tags_to_nest(all_tags)
-        # dm_data_key = str(array_meta['ds_idx'] + 1)
-        # data_tags = nest['ImageList'][dm_data_key]
+        array_meta = executor.run_function(self._read_metadata)
         self._array_offset = array_meta['offset']
         self._raw_dtype = array_meta['dtype']
         assert self._raw_dtype is not None and not isinstance(self._raw_dtype, int)
-
         # The shape reversal to read in C-ordering applies to DM4/STEM files
         # saved in the new style as well as DM3, 3D image stacks saved
         # in older versions of GMS. Must check whether newer image stacks
         # are saved in C-ordering as well (despite the metadata order)
-        self._array_c_ordered = False
+        self._array_c_ordered = self._force_c_order or array_meta['c_order']
         if self._array_c_ordered:
             _shape = tuple(reversed(array_meta['shape']))
         else:
@@ -499,31 +518,6 @@ class SingleDMFileDataset(DataSet):
                 file_header=self._array_offset,
             )
         ])
-
-    # def get_num_partitions(self):
-    #     """
-    #     When C-ordered defer to the default behaviour
-
-    #     F-ordering encourages very deep tile stacks,
-    #     ideally depth == ds.meta.nav_shape_product,
-    #     which can only be acheived with a single partition.
-    #     As for now we can't do overlapping partitions sliced
-    #     in the sig dimensions, the best case is to have very few
-    #     partitions each generating very short, single-sig-row tiles
-    #     The reality is that each partition will have to memmap and
-    #     traverse the whole file many times, so minimising the length
-    #     of any partiticular traversal is 'optimal'.
-
-    #     As all the data are disjoint anyway, to maintain the API
-    #     we absolutely must perform a copy to re-order to C before yielding tiles
-
-    #     This poses a problem for any `process_frame` or `process_partition`
-    #     UDF, which could end up loading a very large amount of data into memory.
-
-    #     For certain tasks (particular ApplyMasksUDF and SumUDF) it is
-    #     in principle optimal to work on F-ordered data, but the API
-    #     changes to make this transparent for user-facing code are monumental
-    #     """
 
     def get_partitions(self):
         partition_cls = DMPartition if self._array_c_ordered else DMPartitionFortran

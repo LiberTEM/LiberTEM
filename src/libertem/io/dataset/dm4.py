@@ -244,6 +244,10 @@ class DM4DataSet(DataSet):
 
     @staticmethod
     def _modify_shape(shape: Tuple[int], c_order: bool, sig_dims: int = 2):
+        # The shape reversal to read in C-ordering applies to DM4/STEM files
+        # saved in the new style as well as DM3, 3D image stacks saved
+        # in older versions of GMS. Must check whether newer image stacks
+        # are saved in C-ordering as well (despite the metadata order)
         if c_order:
             shape = tuple(reversed(shape))
         else:
@@ -263,10 +267,6 @@ class DM4DataSet(DataSet):
         self._array_offset = array_meta['offset']
         self._raw_dtype = array_meta['dtype']
         assert self._raw_dtype is not None and not isinstance(self._raw_dtype, int)
-        # The shape reversal to read in C-ordering applies to DM4/STEM files
-        # saved in the new style as well as DM3, 3D image stacks saved
-        # in older versions of GMS. Must check whether newer image stacks
-        # are saved in C-ordering as well (despite the metadata order)
         self._array_c_ordered = self._force_c_order or array_meta['c_order']
         nav_shape, sig_shape = self._modify_shape(array_meta['shape'],
                                                   self._array_c_ordered,
@@ -274,28 +274,8 @@ class DM4DataSet(DataSet):
         self._nav_shape = nav_shape
         self._sig_shape = sig_shape
         # regardless of file order the Dataset shape property is 'standard'
-        if not self._array_c_ordered:
-            # NOTE it should be possible to apply sync_offset
-            # as the nav dimension is fundamentally c-ordered on disk
-            # but at this time the lack of use cases and the complexity
-            # it would bring means enforcing self._sync_offset == 0
-            # in these style of DM4 files is preferred for now
-            assert self._sync_offset == 0
-
-        # this might not be how sync_offset works!
-        # _array_shape = (1, 1, 1, 1)
-        # _array_size = int(prod(_array_shape))
-        # _specified_size= int(prod(self._nav_shape + self._sig_shape))
-        # if _specified_size > _array_size:
-        #     raise DataSetException(
-        #         "specified shape must be <= data in file: "
-        #         f"array in file {_array_shape}, {_array_size} elements, "
-        #         f"specified shape {self._nav_shape + self._sig_shape}, {_specified_size} elements"
-        #     )
-
         self._nav_shape_product = int(prod(self._nav_shape))
-        # Can't infer image_count from filesize, must assume it matches the nav_shape
-        # Need to go understand sync_offset/image_count/nav_shape_product yet again
+        # Must assume image_count matches the nav_shape
         self._image_count = self._nav_shape_product
         self._sync_offset_info = self.get_sync_offset_info()
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)

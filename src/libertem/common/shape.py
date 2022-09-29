@@ -1,7 +1,6 @@
 import operator
 import functools
 from typing import Any, Dict, Iterator, Sequence, Tuple, Union, overload
-from typing_extensions import Literal
 
 
 class Shape:
@@ -17,14 +16,13 @@ class Shape:
         the number of dimensions that are considered part of the signal
     """
 
-    __slots__ = ["_sig_dims", "_nav_shape", "_sig_shape", "_nav_order"]
+    __slots__ = ["_sig_dims", "_nav_shape", "_sig_shape"]
 
-    def __init__(self, shape: "ShapeLike", sig_dims: int, nav_order='C'):
+    def __init__(self, shape: "ShapeLike", sig_dims: int):
         nav_dims = len(shape) - sig_dims
         self._sig_dims = sig_dims
         self._nav_shape = tuple(shape)[:nav_dims]
         self._sig_shape = tuple(shape)[nav_dims:]
-        self._nav_order = nav_order
 
     @property
     def nav(self) -> "Shape":
@@ -46,7 +44,7 @@ class Shape:
         >>> s.nav
         (5, 5)
         """
-        return NavOnlyShape(shape=self._nav_shape, nav_order=self._nav_order)
+        return NavOnlyShape(shape=self._nav_shape)
 
     @property
     def sig(self) -> "Shape":
@@ -103,9 +101,7 @@ class Shape:
         >>> s.flatten_nav()
         (25, 16, 16)
         """
-        return Shape(shape=(self.nav.size,) + self._sig_shape,
-                     sig_dims=self._sig_dims,
-                     nav_order=self._nav_order)
+        return Shape(shape=(self.nav.size,) + self._sig_shape, sig_dims=self._sig_dims)
 
     def flatten_sig(self) -> "Shape":
         """
@@ -119,9 +115,7 @@ class Shape:
         >>> s.flatten_sig()
         (5, 5, 256)
         """
-        return Shape(shape=self._nav_shape + (self.sig.size,),
-                     sig_dims=1,
-                     nav_order=self._nav_order)
+        return Shape(shape=self._nav_shape + (self.sig.size,), sig_dims=1)
 
     @property
     def dims(self) -> int:
@@ -149,14 +143,6 @@ class Shape:
     @property
     def sig_dims(self) -> int:
         return len(self._sig_shape)
-
-    @property
-    def nav_order(self) -> Literal['C', 'F']:
-        """
-        Whether the navigation dimensions (if present) should be unrolled
-        in C- or F-contiguous order, default 'C'
-        """
-        return self._nav_order
 
     def __iter__(self) -> Iterator[int]:
         """
@@ -224,11 +210,10 @@ class Shape:
 
 
 class SigOnlyShape(Shape):
-    def __init__(self, shape: "ShapeLike", nav_order='C'):
+    def __init__(self, shape: "ShapeLike"):
         self._sig_shape = tuple(shape)
         self._nav_shape = tuple()
         self._sig_dims = len(self._sig_shape)
-        self._nav_order = nav_order
 
     def __iter__(self):
         return iter(self._sig_shape)
@@ -259,11 +244,10 @@ class SigOnlyShape(Shape):
 
 
 class NavOnlyShape(Shape):
-    def __init__(self, shape: "ShapeLike", nav_order='C'):
+    def __init__(self, shape: "ShapeLike"):
         self._sig_shape = tuple()
         self._nav_shape = tuple(shape)
         self._sig_dims = 0
-        self._nav_order = nav_order
 
     def __iter__(self):
         return iter(self._nav_shape)

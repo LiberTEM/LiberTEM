@@ -2081,8 +2081,7 @@ class UDFRunner:
                 yield res
 
     def _roi_for_partition(self, roi: np.ndarray, partition: Partition) -> np.ndarray:
-        nav_order = partition.slice.shape.nav_order
-        return roi.reshape(-1, order=nav_order)[partition.slice.get(nav_only=True)]
+        return roi.reshape(-1)[partition.slice.get(nav_only=True)]
 
     def _make_udf_tasks(
         self,

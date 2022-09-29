@@ -13,7 +13,8 @@ from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base.tiling import DataTile
 from .base import (
-    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
+    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
+    File, IOBackend,
 )
 from libertem.io.dataset.base.backend_fortran import FortranReader
 
@@ -22,6 +23,7 @@ log = logging.getLogger(__name__)
 if typing.TYPE_CHECKING:
     from numpy import typing as nt
     from libertem.io.dataset.base.tiling_scheme import TilingScheme
+    from libertem.executor.base import JobExecutor
 
 
 class DMDatasetParams(MessageConverter):
@@ -296,7 +298,47 @@ class DMDataSet(DataSet):
         return "<DMDataSet for a stack of %d files>" % (len(self._get_files()),)
 
 
-class SingleDMFileDataset(DataSet):
+class DM4DatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/DM4DatasetParams.schema.json",
+        "title": "DM4DatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "DM4"},
+            "path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
+            "io_backend": {
+                "enum": IOBackend.get_supported(),
+            },
+        },
+        "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        for k in ["nav_shape", "sig_shape", "sync_offset"]:
+            if k in raw_data:
+                data[k] = raw_data[k]
+        return data
+
+
+class DM4DataSet(DataSet):
     """
     Reader for a single DM3/DM4 file
 
@@ -377,12 +419,32 @@ class SingleDMFileDataset(DataSet):
         return os.stat(self._path).st_size
 
     @classmethod
-    def get_msg_converter(cls) -> typing.Type[MessageConverter]:
-        ...
+    def get_msg_converter(cls):
+        return DM4DatasetParams
 
     @classmethod
     def detect_params(cls, path, executor):
-        ...
+        pathlow = path.lower()
+        if pathlow.endswith(".dm3") or pathlow.endswith(".dm4"):
+            array_meta = executor.run_function(cls._read_metadata, path)
+            sync_offset = 0
+            nav_shape, sig_shape = cls._modify_shape(array_meta['shape'],
+                                                     array_meta['c_order'])
+            image_count = prod(nav_shape)
+        else:
+            return False
+        return {
+            "parameters": {
+                "path": path,
+                "nav_shape": nav_shape,
+                "sig_shape": sig_shape,
+                "sync_offset": sync_offset,
+            },
+            "info": {
+                "image_count": image_count,
+                "native_sig_shape": sig_shape,
+            }
+        }
 
     def check_valid(self):
         try:
@@ -392,8 +454,9 @@ class SingleDMFileDataset(DataSet):
         except OSError as e:
             raise DataSetException("invalid dataset: %s" % e)
 
-    def _read_metadata(self):
-        with fileDM(self._path, on_memory=True) as fp:
+    @classmethod
+    def _read_metadata(cls, path):
+        with fileDM(path, on_memory=True) as fp:
             array_map = {}
             ndims = fp.dataShape
             for ds_idx, dims in enumerate(ndims):
@@ -426,7 +489,7 @@ class SingleDMFileDataset(DataSet):
         array_meta = array_map[ds_idx]
 
         # Infer array ordering
-        nest = self._tags_to_nest(tags)
+        nest = cls._tags_to_nest(tags)
         dm_data_key = str(array_meta['ds_idx'] + 1)
         data_tags = nest['ImageList'][dm_data_key]
         try:
@@ -453,9 +516,24 @@ class SingleDMFileDataset(DataSet):
             _insert_to[tag.split('.')[-1]] = element
         return tags_nest
 
-    def initialize(self, executor):
+    @staticmethod
+    def _modify_shape(shape: Tuple[int], c_order: bool, sig_dims: int = 2):
+        if c_order:
+            shape = tuple(reversed(shape))
+        else:
+            # Data on disk is stored as (flat_sig_c_order, flat_nav_c_order)
+            # so a hybrid C/F byte order, as such we need to do some
+            # gymnastics to get a normal LT shape
+            shape = (shape[:-sig_dims][::-1]
+                     + shape[-sig_dims:][::-1])
+        shape = tuple(map(int, shape))
+        nav_shape = shape[:-sig_dims]
+        sig_shape = shape[-sig_dims:]
+        return nav_shape, sig_shape
+
+    def initialize(self, executor: 'JobExecutor'):
         self._filesize = executor.run_function(self._get_filesize)
-        array_meta = executor.run_function(self._read_metadata)
+        array_meta = executor.run_function(self._read_metadata, self._path)
         self._array_offset = array_meta['offset']
         self._raw_dtype = array_meta['dtype']
         assert self._raw_dtype is not None and not isinstance(self._raw_dtype, int)
@@ -464,23 +542,19 @@ class SingleDMFileDataset(DataSet):
         # in older versions of GMS. Must check whether newer image stacks
         # are saved in C-ordering as well (despite the metadata order)
         self._array_c_ordered = self._force_c_order or array_meta['c_order']
-        if self._array_c_ordered:
-            _shape = tuple(reversed(array_meta['shape']))
-        else:
-            # Data on disk is stored as (flat_sig_c_order, flat_nav_c_order)
-            # so a hybrid C/F byte order, as such we need to do some
-            # gymnastics to get a normal LT shape
-            _shape = (array_meta['shape'][:-self._sig_dims][::-1]
-                      + array_meta['shape'][-self._sig_dims:][::-1])
+        nav_shape, sig_shape = self._modify_shape(array_meta['shape'],
+                                                  self._array_c_ordered,
+                                                  sig_dims=self._sig_dims)
+        self._nav_shape = nav_shape
+        self._sig_shape = sig_shape
+        # regardless of file order the Dataset shape property is 'standard'
+        if not self._array_c_ordered:
             # NOTE it should be possible to apply sync_offset
             # as the nav dimension is fundamentally c-ordered on disk
             # but at this time the lack of use cases and the complexity
             # it would bring means enforcing self._sync_offset == 0
             # in these style of DM4 files is preferred for now
             assert self._sync_offset == 0
-        self._nav_shape = _shape[:-self._sig_dims]
-        self._sig_shape = _shape[-self._sig_dims:]
-        # regardless of file order the Dataset shape property is 'standard'
 
         # this might not be how sync_offset works!
         # _array_shape = (1, 1, 1, 1)

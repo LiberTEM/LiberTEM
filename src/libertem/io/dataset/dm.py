@@ -593,6 +593,8 @@ class RawPartitionFortran(BasePartition):
         part_slice = slice(self._start_frame, self._start_frame + self._num_frames)
         has_roi = roi is not None
         if has_roi:
+            # Must unroll the ROI in the same way as the partitions were
+            # created, i.e. C- or F- unrolling, held by the shape.nav_order property
             read_range = np.flatnonzero(roi.reshape(-1, order=self.shape.nav_order))
             read_indices = np.arange(read_range.size, dtype=np.int64)
             part_mask = np.logical_and(read_range >= part_slice.start,
@@ -606,8 +608,10 @@ class RawPartitionFortran(BasePartition):
             read_range = (part_slice,)
 
         for frame_idcs, scheme_idx, tile in reader.generate_tiles(*read_range):
-            # frame_idcs is tuple(int, ...) of f-ordered, whole-dataset indices
+            # frame_idcs is tuple(int, ...) of whole-dataset indices
             # not including compression for ROI (same as for read_range arg)
+            # the meaning of the whole-dataset indices depends on if the
+            # nav dimension was unrolled in F or C-ordering
             scheme_slice = tiling_scheme_adj[scheme_idx]
             if has_roi:
                 nav_origin = (index_lookup[frame_idcs[0]],)

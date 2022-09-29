@@ -11,8 +11,7 @@ from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.common.messageconverter import MessageConverter
 from .base import (
-    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
-    File,
+    DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
 )
 
 log = logging.getLogger(__name__)

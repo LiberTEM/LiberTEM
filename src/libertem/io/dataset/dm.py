@@ -255,13 +255,13 @@ class DMDataSet(DataSet):
     @classmethod
     def detect_params(cls, path, executor):
         # FIXME: this doesn't really make sense for file series
-        pl = path.lower()
-        if pl.endswith(".dm3") or pl.endswith(".dm4"):
-            return {
-                "parameters": {
-                    "files": [path]
-                },
-            }
+        # pl = path.lower()
+        # if pl.endswith(".dm3") or pl.endswith(".dm4"):
+        #     return {
+        #         "parameters": {
+        #             "files": [path]
+        #         },
+        #     }
         return False
 
     @property

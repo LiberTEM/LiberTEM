@@ -20,6 +20,7 @@ import RawFileParamsForm from "./RawFileParamsForm";
 import SEQParamsForm from "./SEQParamsForm";
 import SERParamsForm from "./SERParamsForm";
 import TVIPSParamsForm from "./TVIPSParamsForm";
+import DM4ParamsForm from "./DM4ParamsForm";
 
 /**
  * Get the initial selection for the dataset type dropdown. If we have a previous
@@ -224,6 +225,11 @@ const DatasetOpen = () => {
             const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
             return renderForm(<TVIPSParamsForm {...commonParams} initial={initial} info={info} />);
         }
+        case DatasetTypes.DM4: {
+            const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<DM4ParamsForm {...commonParams} initial={initial} info={info} />);
+        }        
     }
     return assertNotReached("unknown dataset type");
 }

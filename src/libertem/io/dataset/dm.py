@@ -669,7 +669,7 @@ class RawPartitionFortran(BasePartition):
         if has_roi:
             # Must unroll the ROI in the same way as the partitions were
             # created, i.e. C- or F- unrolling, held by the shape.nav_order property
-            read_range = np.flatnonzero(roi.reshape(-1, order=self.shape.nav_order))
+            read_range = np.flatnonzero(roi.reshape(-1))
             read_indices = np.arange(read_range.size, dtype=np.int64)
             part_mask = np.logical_and(read_range >= part_slice.start,
                                        read_range < part_slice.stop)

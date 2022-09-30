@@ -124,7 +124,7 @@ class DM4DataSet(DataSet):
         self._sig_dims = sig_dims
         self._force_c_order = force_c_order
         if self._sig_dims != 2:
-            raise DataSetException('Non-2D signals not yet supported in SingleDMFileDataset')
+            raise DataSetException('Non-2D signals not yet supported in DM4DataSet')
 
     def __repr__(self):
         return f"<SingleDMFileDataset {self._path}>"
@@ -376,9 +376,6 @@ class RawPartitionFortran(BasePartition):
 
         sync_offset = self.meta.sync_offset
         ds_size = self.meta.shape.nav.size
-        # slice_offset only applies when roi is None
-        # roi mode uses a lookup to get its slice origin so sync_offset already applies
-        slice_offset = -sync_offset if sync_offset > 0 else abs(sync_offset)
 
         # Define the frame slice to read in this partition for frames which actually exist
         part_slice = slice(max(0, self._start_frame),
@@ -416,7 +413,7 @@ class RawPartitionFortran(BasePartition):
                 nav_origin = (index_lookup[frame_idcs[0]],)
             else:
                 # apply slice_offset to shift origin for sync_offset
-                nav_origin = (frame_idcs[0] + slice_offset,)
+                nav_origin = (frame_idcs[0] - sync_offset,)
             tile_slice = Slice(
                 origin=nav_origin + scheme_slice.origin,
                 shape=tile.shape[:1] + scheme_slice.shape,

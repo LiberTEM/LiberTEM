@@ -31,7 +31,7 @@ class FortranReader:
     """
     MIN_MEMMAP_SIZE = 512 * 2 ** 20  # 512 MB
     MAX_NUM_MEMMAP: int = 16
-    MIN_READ_DEPTH: int = 64
+    BUFFER_SIZE: int = 128 * 2 ** 20
 
     def __init__(self,
                  path: os.PathLike,
@@ -230,7 +230,10 @@ class FortranReader:
         then provide *index_or_slice for a Fortran unrolling of the nav dims
         """
         index_or_slice = self._splat_iterables(*index_or_slice)
-        buffer_length, reads = self._plan_reads(self._tiling_scheme.depth, *index_or_slice)
+        ideal_depth = 1 + self.BUFFER_SIZE // (self._sig_size * np.dtype(self._dtype).itemsize)
+        buffer_length, reads = self._plan_reads(ideal_depth,
+                                                self._tiling_scheme.depth,
+                                                *index_or_slice)
         out_buffer = np.empty((self._sig_size, buffer_length), dtype=self._dtype)
 
         with concurrent.futures.ThreadPoolExecutor() as p:
@@ -287,7 +290,10 @@ class FortranReader:
         return tuple(f.result() for f in futures)
 
     @classmethod
-    def _plan_reads(cls, ts_depth: int, *index_or_slice: Union[int, slice]) -> Tuple[int, List]:
+    def _plan_reads(cls,
+                    ideal_depth: int,
+                    ts_depth: int,
+                    *index_or_slice: Union[int, slice]) -> Tuple[int, List]:
         """
         For a given scheme depth and frame indices to read, try to find a good
         sequence of reads to perform which minimises the number of passes through the file
@@ -327,7 +333,7 @@ class FortranReader:
             # hence the multiply/max()
             # buffer_length will also be a multiple of ts_depth so we can
             # hold 1 or more complete tile/frame stacks in the buffer
-            buffer_length = (cls.MIN_READ_DEPTH // ts_depth) * ts_depth
+            buffer_length = ideal_depth - (ideal_depth % ts_depth)
             buffer_length = max(ts_depth, buffer_length)
 
         # split splices down to len(sl) == buffer_length at maximum
@@ -472,7 +478,7 @@ class FortranReader:
         Combines an iterable of slice or integer indices
         into an iterable of slices. Any items in index_or_slice
         which are sequential (slice0.stop == slice1.start) or (slice0.stop == int1)
-        are combined into a new slice slice(slice0.start, slice2.stop)
+        are combined into a new slice slice(slice0.start, slice1.stop)
         """
         slices = []
         for sl in index_or_slice:

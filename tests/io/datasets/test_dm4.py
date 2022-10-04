@@ -119,7 +119,7 @@ def _patch_filedm(monkeypatch, dm_obj):
 @pytest.mark.parametrize(
     "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
 )
-def test_comparison_f(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+def test_comparison(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 

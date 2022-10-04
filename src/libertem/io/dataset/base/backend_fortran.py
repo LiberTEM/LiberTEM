@@ -48,7 +48,6 @@ class FortranReader:
         self._shape = shape
         self._sig_size = shape.sig.size
         self._sig_order = sig_order
-        self._nav_size = shape.nav.size
         self._tiling_scheme = tiling_scheme
 
         self._memmaps = []

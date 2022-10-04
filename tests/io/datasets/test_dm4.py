@@ -7,8 +7,10 @@ import pytest
 from libertem.common.shape import Shape
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.udf.base import UDF
+from libertem.udf.sumsigudf import SumSigUDF
+from libertem.io.dataset.dm4 import DM4DataSet
 
-from utils import ValidationUDF, _mk_random
+from utils import ValidationUDF, _mk_random, dataset_correction_verification
 
 
 class MockFileDM:
@@ -194,3 +196,165 @@ def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     ds = lt_ctx_fast.load('dm4', filename)
     res = lt_ctx_fast.run_udf(dataset=ds, udf=SumFrameUDF())
     assert np.allclose(res['sum'].data, array.sum(axis=(2, 3)))
+
+
+@pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_corrections_default(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    ds = lt_ctx_fast.load('dm4', filename)
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+    else:
+        roi = None
+
+    dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx_fast)
+
+
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_macrotile_normal(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    ds = lt_ctx_fast.load('dm4', filename)
+    ds.set_num_cores(4)
+
+    ps = ds.get_partitions()
+    _ = next(ps)
+    p2 = next(ps)
+    macrotile = p2.get_macrotile()
+    assert macrotile.tile_slice.shape == p2.shape
+    assert macrotile.tile_slice.origin[0] == p2._start_frame
+
+
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_macrotile_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    ds = lt_ctx_fast.load('dm4', filename)
+
+    roi = np.zeros(ds.shape.nav, dtype=bool)
+    roi[0, 5] = 1
+    roi[1, 1] = 1
+    p = next(ds.get_partitions())
+    macrotile = p.get_macrotile(roi=roi)
+    assert tuple(macrotile.tile_slice.shape) == (2, 16, 24)
+
+
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_positive_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    udf = SumSigUDF()
+    sync_offset = 2
+
+    ds_no_offset = lt_ctx.load('dm4', filename)
+    ds_with_offset = DM4DataSet(
+        path=filename,
+        sync_offset=sync_offset,
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == 2
+    assert p0.slice.origin == (0, 0, 0)
+
+    tileshape = Shape(
+        (4,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds_with_offset.shape,
+    )
+
+    # t0 = next(p0.get_tiles(tiling_scheme))
+    # Not guaranteed as FortranReader can emit tiles out-of-order
+    # assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p.slice.origin == (24, 0, 0)
+    assert p.slice.shape[0] == 8
+
+    result = lt_ctx.run_udf(dataset=ds_no_offset, udf=udf)
+    result = result['intensity'].raw_data[sync_offset:]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[
+        :ds_with_offset._meta.image_count - sync_offset
+    ]
+
+    assert np.allclose(result, result_with_offset)
+
+
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_negative_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    udf = SumSigUDF()
+    sync_offset = -2
+
+    ds_no_offset = lt_ctx.load('dm4', filename)
+    ds_with_offset = DM4DataSet(
+        path=filename,
+        sync_offset=sync_offset,
+    )
+    ds_with_offset.set_num_cores(4)
+    ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
+    ds_with_offset.check_valid()
+
+    p0 = next(ds_with_offset.get_partitions())
+    assert p0._start_frame == -2
+    assert p0.slice.origin == (0, 0, 0)
+
+    tileshape = Shape(
+        (4,) + tuple(ds_with_offset.shape.sig),
+        sig_dims=ds_with_offset.shape.sig.dims
+    )
+    tiling_scheme = TilingScheme.make_for_shape(
+        tileshape=tileshape,
+        dataset_shape=ds_with_offset.shape,
+    )
+
+    # t0 = next(p0.get_tiles(tiling_scheme))
+    # Not guaranteed as FortranReader can emit tiles out-of-order
+    # assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+
+    for p in ds_with_offset.get_partitions():
+        for t in p.get_tiles(tiling_scheme=tiling_scheme):
+            pass
+
+    assert p.slice.origin == (24, 0, 0)
+    assert p.slice.shape[0] == 8
+
+    result = lt_ctx.run_udf(dataset=ds_no_offset, udf=udf)
+    result = result['intensity'].raw_data[:ds_no_offset._meta.image_count - abs(sync_offset)]
+
+    result_with_offset = lt_ctx.run_udf(dataset=ds_with_offset, udf=udf)
+    result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
+
+    assert np.allclose(result, result_with_offset)

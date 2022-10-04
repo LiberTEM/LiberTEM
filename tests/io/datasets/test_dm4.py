@@ -5,6 +5,8 @@ import numpy as np
 import pytest
 
 from libertem.common.shape import Shape
+from libertem.io.dataset.base.tiling_scheme import TilingScheme
+from libertem.udf.base import UDF
 
 from utils import ValidationUDF, _mk_random
 
@@ -110,28 +112,32 @@ def dm4_mockfile_c(tmpdir_factory):
     return _make_mock_array(datadir, shape, dtype, True)
 
 
-def _test_validation(ctx, array, filename):
-    ds = ctx.load('dm4', filename)
+def _patch_filedm(monkeypatch, dm_obj):
+    monkeypatch.setattr('ncempy.io.dm.fileDM', dm_obj)
+
+
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_comparison_f(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    ds = lt_ctx_fast.load('dm4', filename)
     assert ds.meta.shape.to_tuple() == array.shape
     flat_data = array.reshape(-1, *array.shape[-2:])
     udf = ValidationUDF(reference=flat_data)
-    ctx.run_udf(udf=udf, dataset=ds)
+    lt_ctx_fast.run_udf(udf=udf, dataset=ds)
 
 
-def test_comparison_f(monkeypatch, dm4_mockfile_f, lt_ctx_fast):
-    (array, filename), mock_fileDM = dm4_mockfile_f
-    monkeypatch.setattr('ncempy.io.dm.fileDM', mock_fileDM)
-    _test_validation(lt_ctx_fast, array, filename)
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_comparison_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
 
-
-def test_comparison_c(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
-    (array, filename), mock_fileDM = dm4_mockfile_c
-    monkeypatch.setattr('ncempy.io.dm.fileDM', mock_fileDM)
-    _test_validation(lt_ctx_fast, array, filename)
-
-
-def _test_roi(ctx, array, filename):
-    ds = ctx.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm4', filename)
     assert ds.meta.shape.to_tuple() == array.shape
 
     roi = np.random.choice(
@@ -142,16 +148,49 @@ def _test_roi(ctx, array, filename):
 
     flat_data = array.reshape(-1, *array.shape[-2:])
     udf = ValidationUDF(reference=flat_data[roi.ravel()])
-    ctx.run_udf(udf=udf, dataset=ds, roi=roi)
+    lt_ctx_fast.run_udf(udf=udf, dataset=ds, roi=roi)
 
 
-def test_comparison_f_roi(monkeypatch, dm4_mockfile_f, lt_ctx_fast):
-    (array, filename), mock_fileDM = dm4_mockfile_f
-    monkeypatch.setattr('ncempy.io.dm.fileDM', mock_fileDM)
-    _test_roi(lt_ctx_fast, array, filename)
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_many_tiles(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    ds = lt_ctx_fast.load('dm4', filename)
+    ds.set_num_cores(8)
+    _, _, sy, sx = array.shape
+    flat_data = array.reshape(-1, sy, sx)
+    # depth 5, height 3, divides neither flat_nav or sy evenly
+    tileshape = Shape((5, 3, sx), sig_dims=2)
+    tiling_scheme = TilingScheme.make_for_shape(tileshape, ds.meta.shape, intent='tile')
+    parts = [*ds.get_partitions()]
+    assert len(parts) > 1
+    ds_visited = np.zeros(flat_data.shape, dtype=int)
+    for part in parts:
+        for tile in part.get_tiles(tiling_scheme):
+            tile_slice = tile.tile_slice
+            assert np.allclose(tile_slice.get(flat_data), tile)
+            ds_visited[tile_slice.get()] += 1
+    assert (ds_visited == 1).all()
 
 
-def test_comparison_c_roi(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
-    (array, filename), mock_fileDM = dm4_mockfile_c
-    monkeypatch.setattr('ncempy.io.dm.fileDM', mock_fileDM)
-    _test_roi(lt_ctx_fast, array, filename)
+class SumFrameUDF(UDF):
+    def get_result_buffers(self):
+        return {'sum': self.buffer('nav')}
+
+    def process_frame(self, frame):
+        self.results.sum[:] += frame.sum()
+
+
+@pytest.mark.parametrize(
+    "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
+)
+def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    ds = lt_ctx_fast.load('dm4', filename)
+    res = lt_ctx_fast.run_udf(dataset=ds, udf=SumFrameUDF())
+    assert np.allclose(res['sum'].data, array.sum(axis=(2, 3)))

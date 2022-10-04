@@ -34,6 +34,7 @@ class FortranReader:
     MIN_MEMMAP_SIZE = 512 * 2 ** 20  # 512 MB
     MAX_NUM_MEMMAP: int = 16
     BUFFER_SIZE: int = 128 * 2 ** 20
+    THRESHOLD_COMBINE: int = 8  # small slices to convert to index arrays
 
     def __init__(self,
                  path: os.PathLike,
@@ -549,9 +550,8 @@ class FortranReader:
                 slices.append(sl)
         return tuple(slices)
 
-    @staticmethod
-    def _slice_combine_array(*slices: slice,
-                             threshold_combine: int = 8) -> List[Union[slice, List[int]]]:
+    @classmethod
+    def _slice_combine_array(cls, *slices: slice) -> List[Union[slice, List[int]]]:
         """
         Iterate over slices to find any which are shorter than threshold_combine
         and if so convert them into an integer array rather than a slice.
@@ -569,7 +569,7 @@ class FortranReader:
         for sl in slices:
             if sl.start is None:
                 sl = slice(0, sl.stop)
-            if (sl.stop - sl.start) <= threshold_combine:
+            if (sl.stop - sl.start) <= cls.THRESHOLD_COMBINE:
                 # convert to index array
                 slice_gen = range(sl.start, sl.stop)
                 if not _slices or (not isinstance(_slices[-1], list)):

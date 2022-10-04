@@ -160,6 +160,7 @@ class FortranReader:
             tile_widths.pop(min_idx)
             scheme_indices.pop(min_idx)
 
+        tile_widths: Tuple[int]
         chunks = tuple((width,) + (nav_size,)
                        for width in tile_widths)
         boundaries = [0] + np.cumsum(tile_widths).tolist()

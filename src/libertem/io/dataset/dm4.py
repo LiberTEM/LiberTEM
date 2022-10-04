@@ -199,11 +199,9 @@ class DM4DataSet(DataSet):
                 raise DataSetException('No support for multiple datasets in same file')
 
             array_offsets = fp.dataOffset
-            array_sizes = fp.dataSize
             array_types = fp.dataType
             for ds_idx in array_map.keys():
                 array_map[ds_idx]['offset'] = array_offsets[ds_idx]
-                array_map[ds_idx]['size'] = array_sizes[ds_idx]
                 try:
                     array_map[ds_idx]['dtype'] = fp._DM2NPDataType(array_types[ds_idx])
                 except OSError:

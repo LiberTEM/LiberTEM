@@ -51,7 +51,6 @@ class FortranReader:
         self._tiling_scheme = tiling_scheme
 
         self._memmaps = []
-        self._chunks = []
 
         self.verify_tiling(tiling_scheme, shape, sig_order)
         chunks, self._chunk_slices, chunk_scheme_indices = self.choose_chunks(tiling_scheme,

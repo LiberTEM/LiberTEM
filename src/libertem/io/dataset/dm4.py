@@ -3,7 +3,7 @@ import typing
 from typing import Dict, Any, Tuple, Optional
 import logging
 
-from ncempy.io.dm import fileDM
+import ncempy.io.dm
 import numpy as np
 
 from libertem.common.math import prod
@@ -174,7 +174,7 @@ class DM4DataSet(DataSet):
 
     def check_valid(self):
         try:
-            with fileDM(self._path, on_memory=True):
+            with ncempy.io.dm.fileDM(self._path, on_memory=True):
                 pass
             return True
         except OSError as e:
@@ -182,7 +182,7 @@ class DM4DataSet(DataSet):
 
     @classmethod
     def _read_metadata(cls, path):
-        with fileDM(path, on_memory=True) as fp:
+        with ncempy.io.dm.fileDM(path, on_memory=True) as fp:
             array_map = {}
             ndims = fp.dataShape
             for ds_idx, dims in enumerate(ndims):

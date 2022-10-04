@@ -229,7 +229,7 @@ class FortranReader:
         on disk, i.e. if you want the frames to be read in Fortran order
         then provide *index_or_slice for a Fortran unrolling of the nav dims
         """
-        index_or_slice = self._splat_iterables(*index_or_slice)
+        index_or_slice = tuple(self._splat_iterables(*index_or_slice))
         ideal_depth = 1 + self.BUFFER_SIZE // (self._sig_size * np.dtype(self._dtype).itemsize)
         buffer_length, reads = self._plan_reads(ideal_depth,
                                                 self._tiling_scheme.depth,
@@ -433,12 +433,23 @@ class FortranReader:
     @staticmethod
     def _length_slice(sl_or_int: Union[slice, int]) -> int:
         """
-        Get the length of a slice object. Returns 1 for integers
+        Get the length of an increasing slice object. Returns 1 for integers
         on the assumption that they represent slice(i, i + 1)
+
+        This function is only used in the context of partitions
+        and so it assumes non-negative / non-zero slice objects
+        slices are very flexible so it is impossible to define a
+        fully coherent 'length' except in restricted circumstances
         """
-        try:
-            return sl_or_int.stop - sl_or_int.start
-        except AttributeError:
+        if isinstance(sl_or_int, slice):
+            assert sl_or_int.step in (1, None)
+            if sl_or_int.start is not None:
+                assert sl_or_int.stop > sl_or_int.start
+                return sl_or_int.stop - sl_or_int.start
+            else:
+                return sl_or_int.stop
+        else:
+            assert isinstance(sl_or_int, int)
             return 1
 
     @classmethod
@@ -449,28 +460,30 @@ class FortranReader:
         """
         sl_length = cls._length_slice(sl)
         if sl_length <= target_length:
+            if isinstance(sl, int):
+                sl = slice(sl, sl + 1)
             return (sl,)
         start = sl.start
+        if start is None:
+            start = 0
         return tuple(slice(start + lb, start + ub)
                      for lb, ub
                      in cls._gen_slices_for_depth(sl_length, target_length))
 
     @staticmethod
-    def _splat_iterables(*index_or_slice: Union[Iterable, Any]):
+    def _splat_iterables(*index_or_slice: Union[Iterable, Any]) -> Generator[Any, None, None]:
         """
-        Any elements of index_or_slice which are iterable
-        are inserted elementwise into the returned list,
-        along with any non-iterable elements,
-        preserving the order of items in index_or_slice
+        Yield from any elements of index_or_slice which are
+        iterable, otherwise yield the element itself.
+        Similar to itertools.chain but yields the non-iterables
+        which are given as arguments, too.
         e.g. (0, (1, 2, 3), 4) => (0, 1, 2, 3, 4)
         """
-        slices = []
         for sl in index_or_slice:
             try:
-                slices.extend(tuple(sl))
+                yield from sl
             except TypeError:
-                slices.append(sl)
-        return slices
+                yield sl
 
     @staticmethod
     def _combine_sequential(*index_or_slice: Union[slice, int]) -> Tuple[slice]:
@@ -505,8 +518,14 @@ class FortranReader:
         Used to combine read operations for sparsely filled ROIs where we'd
         like to read the data for many ROI points in one pass
         """
+        if len(slices) <= 1:
+            # Skip for empty or single slice objects
+            # Single slices are common for Pick frame or (roi is None)
+            return slices
         _slices = []
         for sl in slices:
+            if sl.start is None:
+                sl = slice(0, sl.stop)
             if (sl.stop - sl.start) <= threshold_combine:
                 # convert to index array
                 slice_gen = range(sl.start, sl.stop)
@@ -521,4 +540,5 @@ class FortranReader:
                 # slice object is too long for index array, maintain as slice
                 _slices.append(sl)
         assert _slices, 'No slices to read'
+        # could convert any fully sequential index arrays back to slices here
         return _slices

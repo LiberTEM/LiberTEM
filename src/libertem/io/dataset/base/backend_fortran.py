@@ -174,6 +174,8 @@ class FortranReader:
         for individual chunks, and {tuple(chunk_idx): {scheme_indices}}
         for necessary combinations of chunks and the scheme_indices they provide
         """
+        if not all(c for c in chunk_scheme_indices):
+            raise ValueError('Cannot map empty chunk')
         # self._chunks are the offsets and shapes of each memmap (chunk_of_sig, whole_nav)
         # scheme_indices is list(set(int)) of which tile idxs are generated
         # by each memmap chunk,

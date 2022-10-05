@@ -213,3 +213,37 @@ def test_verify_tiling(shape, tileshape, order, raises):
 )
 def test_flat_tile_slices(shapes, slices):
     assert FortranReader._flat_tile_slices(shapes) == slices
+
+
+def test_build_chunk_map1():
+    chunk_schemes = [{4}, {5, 6}, {6}]
+    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
+    assert unique == {0: {4}, 1: {5}, 2: set()}
+    assert combined == {(1, 2): {6}}
+
+
+def test_build_chunk_map2():
+    chunk_schemes = [{0}]
+    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
+    assert unique == {0: {0}}
+    assert combined == {}
+
+
+def test_build_chunk_map3():
+    chunk_schemes = [{1}, {4}, {10}, {4}]
+    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
+    assert unique == {0: {1}, 1: set(), 2: {10}, 3: set()}
+    assert combined == {(1, 3): {4}}
+
+
+def test_build_chunk_map4():
+    chunk_schemes = [{0}, {0}, {0}, {0}]
+    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
+    assert unique == {0: set(), 1: set(), 2: set(), 3: set()}
+    assert combined == {(0, 1, 2, 3): {0}}
+
+
+def test_build_chunk_map_raises():
+    chunk_schemes = [{}, {5, 6}, {6}]
+    with pytest.raises(ValueError):
+        FortranReader.build_chunk_map(chunk_schemes)

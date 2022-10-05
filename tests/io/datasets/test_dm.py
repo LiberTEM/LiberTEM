@@ -137,15 +137,16 @@ def test_correction(default_dm, lt_ctx, with_roi):
 
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
 
-
-def test_detect_1(lt_ctx):
-    fpath = os.path.join(DM_TESTDATA_PATH, '2018-7-17 15_29_0000.dm4')
-    assert DMDataSet.detect_params(
-        path=fpath,
-        executor=lt_ctx.executor,
-    )["parameters"] == {
-        'files': [fpath],
-    }
+# Disabled while DMDataSet.detect_params returns False
+# to disable it in the Web UI
+# def test_detect_1(lt_ctx):
+#     fpath = os.path.join(DM_TESTDATA_PATH, '2018-7-17 15_29_0000.dm4')
+#     assert DMDataSet.detect_params(
+#         path=fpath,
+#         executor=lt_ctx.executor,
+#     )["parameters"] == {
+#         'files': [fpath],
+#     }
 
 
 def test_get_metadata():

@@ -3,6 +3,8 @@ import numpy as np
 
 import pytest
 
+from libertem.common.shape import Shape
+from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.io.dataset.base.backend_fortran import FortranReader
 
 
@@ -181,3 +183,33 @@ def test_plan_reads(repeat):
     assert all(all(0 < (rr[0].stop - rr[0].start) <= ts_depth for rr in r[2]) for r in reads)
     # verify each unpack unpacks to the correct number of frame indices
     assert all((rr[0].stop - rr[0].start) == len(rr[1]) for r in reads for rr in r[2])
+
+
+@pytest.mark.parametrize(
+    "shape, tileshape, order, raises",
+    [
+        (Shape((8, 30, 50), 2), Shape((3, 30, 3), 2), 'F', None),
+        (Shape((8, 30, 50), 2), Shape((3, 10, 5), 2), 'F', AssertionError),
+        (Shape((8, 30, 50), 2), Shape((3, 4, 15), 2), 'C', AssertionError),
+        (Shape((8, 4, 30, 50), 3), Shape((3, 1, 50, 50), 3), 'C', None),
+        (Shape((1, 2, 3), 2), Shape((1, 2, 3), 2), 'K', ValueError),
+    ],
+)
+def test_verify_tiling(shape, tileshape, order, raises):
+    scheme = TilingScheme.make_for_shape(tileshape, shape)
+    if raises is not None:
+        with pytest.raises(raises):
+            FortranReader.verify_tiling(scheme, shape, order)
+    else:
+        FortranReader.verify_tiling(scheme, shape, order)
+
+
+@pytest.mark.parametrize(
+    "shapes, slices",
+    [
+        (((10, 20), (10, 30)), (slice(0, 200), slice(200, 500))),
+        (((5, 10, 5),), (slice(0, 250),)),
+    ],
+)
+def test_flat_tile_slices(shapes, slices):
+    assert FortranReader._flat_tile_slices(shapes) == slices

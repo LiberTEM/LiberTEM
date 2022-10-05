@@ -8,6 +8,8 @@ import functools
 import numpy as np
 from math import ceil, floor
 
+from libertem.common.math import prod
+
 if typing.TYPE_CHECKING:
     from libertem.common.shape import Shape
     from libertem.io.dataset.base.tiling_scheme import TilingScheme
@@ -79,20 +81,6 @@ class FortranReader:
                                                                  'in last dim only')
         else:
             raise ValueError(f'sig_order {sig_order} not recognized')
-
-    @staticmethod
-    def unpack_scheme(tiling_scheme: 'TilingScheme'):
-        slices = tiling_scheme.slices_array
-        # Get sizes of each tile in number of elements
-        tile_widths: list = np.prod(slices[:, 1, :], axis=-1, dtype=np.int64).tolist()
-        boundaries = [0] + np.cumsum(tile_widths).tolist()
-        # slice into flat_sig for each tile in tiling scheme
-        tile_slices = tuple(slice(a, b) for a, b
-                            in zip(boundaries[:-1], boundaries[1:]))
-        scheme_indices = list(range(len(tile_widths)))
-        tile_shapes = tuple(tiling_scheme[scheme_index].shape.to_tuple()
-                            for scheme_index in scheme_indices)
-        return tile_slices, tile_shapes
 
     @classmethod
     def choose_chunks(cls, tiling_scheme: 'TilingScheme', shape: 'Shape', dtype: 'DTypeLike'):
@@ -273,7 +261,8 @@ class FortranReader:
         on disk, i.e. if you want the frames to be read in Fortran order
         then provide *index_or_slice for a Fortran unrolling of the nav dims
         """
-        tile_slices, tile_shapes = self.unpack_scheme(self._tiling_scheme)
+        tile_shapes = tuple(s.shape.to_tuple() for s in self._tiling_scheme)
+        tile_slices = self._flat_tile_slices(tile_shapes)
         index_or_slice = tuple(self._splat_iterables(*index_or_slice))
         ideal_depth = 1 + self.BUFFER_SIZE // (self._sig_size * np.dtype(self._dtype).itemsize)
         buffer_length, reads = self._plan_reads(ideal_depth,
@@ -586,3 +575,14 @@ class FortranReader:
         assert _slices, 'No slices to read'
         # could convert any fully sequential index arrays back to slices here
         return _slices
+
+    @staticmethod
+    def _flat_tile_slices(tile_shapes: Tuple[Tuple[int, ...]]) -> Tuple[slice]:
+        """
+        Create slice objects for iterable of shapes assuming they
+        represent a single contiguous flat dimension and are sequential
+        """
+        tile_size = tuple(map(prod, tile_shapes))
+        boundaries = tuple(itertools.accumulate(tile_size, initial=0))
+        return tuple(slice(a, b) for a, b
+                     in zip(boundaries[:-1], boundaries[1:]))

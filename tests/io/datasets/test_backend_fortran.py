@@ -247,3 +247,53 @@ def test_build_chunk_map_raises():
     chunk_schemes = [{}, {5, 6}, {6}]
     with pytest.raises(ValueError):
         FortranReader.build_chunk_map(chunk_schemes)
+
+
+def _slice_intersects(sl0: slice, sl1: slice) -> bool:
+    ll = max(sl0.start, sl1.start)
+    uu = min(sl0.stop, sl1.stop)
+    return uu - ll > 0
+
+
+@pytest.mark.parametrize(
+    "ds_size_mb", [30, 500, 3000, 6000, 40000],
+)
+@pytest.mark.parametrize(
+    "num_tiles", [1, 3, 13, 63],
+)
+def test_choose_chunks(ds_size_mb, num_tiles):
+    dtype = np.float32
+    itemsize = np.dtype(dtype).itemsize
+    ds_size = ds_size_mb * 2**20
+    sig_shape = tuple(np.random.randint(128, 1036, size=(2,)))
+    sig_size = np.prod(sig_shape, dtype=np.int64) * itemsize
+    n_frames = ds_size // sig_size
+    shape = Shape((n_frames,) + sig_shape, 2)
+    tile_width = sig_shape[0] // num_tiles
+    tileshape = Shape((min(n_frames, 8), tile_width, sig_shape[-1]), 2)
+
+    tiling_scheme = TilingScheme.make_for_shape(tileshape, shape)
+    chunks, chunk_slices, scheme_indices = FortranReader.choose_chunks(tiling_scheme,
+                                                                       shape,
+                                                                       dtype)
+
+    # Check we meet max num memmap param
+    assert len(chunks) <= FortranReader.MAX_NUM_MEMMAP
+    # All scheme indices are provided by the chunks
+    assert set().union(*scheme_indices) == set(range(len(tiling_scheme)))
+    # All scheme chunks cover the full nav_dimension
+    assert all(c[-1] == shape[0] for c in chunks)
+    # Assert chunk sig components sum to total sig size
+    assert sum(c[0] for c in chunks) == shape.sig.size
+    # Assert chunk slices are reasonable
+    assert chunk_slices[0].start == 0
+    assert chunk_slices[-1].stop == shape.sig.size
+    assert all(s0.stop == s1.start for s0, s1 in zip(chunk_slices[:-1],
+                                                     chunk_slices[1:]))
+    # Check each tile slice lies in the indicated chunks
+    tile_shapes = tuple(s.shape.to_tuple() for s in tiling_scheme)
+    tile_slices = FortranReader._flat_tile_slices(tile_shapes)
+    for scheme_idx, sl in enumerate(tile_slices):
+        for chunk_slice, chunk_scheme_idcs in zip(chunk_slices, scheme_indices):
+            if scheme_idx in chunk_scheme_idcs:
+                assert _slice_intersects(chunk_slice, sl)

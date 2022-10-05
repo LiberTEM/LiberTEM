@@ -1,7 +1,8 @@
 import os
 import operator
 import typing
-from typing import Tuple, Union, Generator, Iterable, List, Set, Dict, Any, Literal
+from typing import Tuple, Union, Generator, Iterable, List, Set, Dict, Any
+from typing_extensions import Literal
 import concurrent.futures
 import itertools
 import functools
@@ -248,7 +249,7 @@ class FortranReader:
         return idx
 
     def generate_tiles(self, *index_or_slice: Union[int, slice, Iterable])\
-            -> Generator[tuple[tuple[int], int, np.ndarray], None, None]:
+            -> Generator[Tuple[Tuple[int], int, np.ndarray], None, None]:
         """
         Yields tiles from dataset according to tiling_scheme (potentially unordered)
         *index_or_slice can be any/mix of [int, slice, iterable] (strictly ordered)
@@ -319,7 +320,7 @@ class FortranReader:
                 for combination in self._chunk_combinations.keys()]
 
     @staticmethod
-    def _combine(*futures: concurrent.futures.Future) -> tuple[int]:
+    def _combine(*futures: concurrent.futures.Future) -> Tuple[int]:
         """
         Wait on all provided futures to complete before returning
         """
@@ -455,7 +456,7 @@ class FortranReader:
         return buffer_length, reads
 
     @staticmethod
-    def _gen_slices_for_depth(length: int, depth: int) -> Generator[tuple[int, int], None, None]:
+    def _gen_slices_for_depth(length: int, depth: int) -> Generator[Tuple[int, int], None, None]:
         """
         Generate (lower, upper) index integers which split length
         into chunks of size depth, including a final chunk <= depth

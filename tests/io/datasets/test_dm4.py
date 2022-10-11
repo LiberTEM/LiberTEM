@@ -187,15 +187,29 @@ class SumFrameUDF(UDF):
 
 
 @pytest.mark.parametrize(
+    "with_roi", (True, False)
+)
+@pytest.mark.parametrize(
     "dm4_mockfile", [("dm4_mockfile_c"), ("dm4_mockfile_f")]
 )
-def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
+def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm4', filename)
-    res = lt_ctx_fast.run_udf(dataset=ds, udf=SumFrameUDF())
-    assert np.allclose(res['sum'].data, array.sum(axis=(2, 3)))
+    result = array.sum(axis=(2, 3))
+
+    if with_roi:
+        roi = np.zeros(ds.shape.nav, dtype=bool)
+        roi[:1] = True
+        result[np.logical_not(roi)] = np.nan
+    else:
+        roi = None
+
+    res = lt_ctx_fast.run_udf(dataset=ds, udf=SumFrameUDF(), roi=roi)
+    if roi is not None:
+        assert (np.isnan(res['sum'].data) == np.logical_not(roi)).all()
+    assert np.allclose(res['sum'].data, result, equal_nan=True)
 
 
 @pytest.mark.parametrize(

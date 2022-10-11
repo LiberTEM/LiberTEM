@@ -3,7 +3,9 @@ import numpy as np
 
 import pytest
 
+from libertem.common.math import prod
 from libertem.common.shape import Shape
+from libertem.io.dataset.base.exceptions import DataSetException
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.io.dataset.base.backend_fortran import FortranReader
 
@@ -108,6 +110,7 @@ def test_slice_combine_array(seq, result):
     "ideal_depth, ts_depth, sl",
     [
         (1, 3, slice(5, 100)),
+        (64, 8, slice(0, 250)),
         (16, 1, slice(5, 6)),
         (16, 8, slice(5, 6)),
     ],
@@ -116,11 +119,11 @@ def test_plan_reads_buffer_length(ideal_depth, ts_depth, sl):
     buffer_length, _ = FortranReader._plan_reads(ideal_depth,
                                                  ts_depth,
                                                  sl)
-    if (sl.stop - sl.start) <= ts_depth:
-        assert buffer_length == (sl.stop - sl.start)
-    else:
-        assert buffer_length >= ts_depth
-        assert (buffer_length % ts_depth) == 0
+    to_read = sl.stop - sl.start
+    # Never buffer more than we need to read in the partition
+    assert 0 < buffer_length <= to_read
+    # Either we buffer the whole slice/part or we buffer a multiple of ts_depth
+    assert (buffer_length % ts_depth) == 0 or buffer_length == to_read
 
 
 def _generate_random_slices():
@@ -147,7 +150,7 @@ def _generate_random_slices():
 
 
 def _expand_slices(*slices):
-    indices = tuple(i if isinstance(i, (np.integer, int))
+    indices = tuple(i if isinstance(i, (np.integer, int, list))
                     else range(i.start, i.stop)
                     for i in slices)
     return tuple(FortranReader._splat_iterables(*indices))
@@ -189,8 +192,8 @@ def test_plan_reads(repeat):
     "shape, tileshape, order, raises",
     [
         (Shape((8, 30, 50), 2), Shape((3, 30, 3), 2), 'F', None),
-        (Shape((8, 30, 50), 2), Shape((3, 10, 5), 2), 'F', AssertionError),
-        (Shape((8, 30, 50), 2), Shape((3, 4, 15), 2), 'C', AssertionError),
+        (Shape((8, 30, 50), 2), Shape((3, 10, 5), 2), 'F', DataSetException),
+        (Shape((8, 30, 50), 2), Shape((3, 4, 15), 2), 'C', DataSetException),
         (Shape((8, 4, 30, 50), 3), Shape((3, 1, 50, 50), 3), 'C', None),
         (Shape((1, 2, 3), 2), Shape((1, 2, 3), 2), 'K', ValueError),
     ],
@@ -217,34 +220,36 @@ def test_flat_tile_slices(shapes, slices):
 
 def test_build_chunk_map1():
     chunk_schemes = [{4}, {5, 6}, {6}]
-    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
-    assert unique == {0: {4}, 1: {5}, 2: set()}
-    assert combined == {(1, 2): {6}}
+    chunk_map = FortranReader.build_chunk_map(chunk_schemes)
+    assert chunk_map == {(0,): {4}, (1, 2): {5, 6}}
 
 
 def test_build_chunk_map2():
     chunk_schemes = [{0}]
-    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
-    assert unique == {0: {0}}
-    assert combined == {}
+    chunk_map = FortranReader.build_chunk_map(chunk_schemes)
+    assert chunk_map == {(0,): {0}}
 
 
 def test_build_chunk_map3():
-    chunk_schemes = [{1}, {4}, {10}, {4}]
-    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
-    assert unique == {0: {1}, 1: set(), 2: {10}, 3: set()}
-    assert combined == {(1, 3): {4}}
+    chunk_schemes = [{0}, {0}, {0}, {0}]
+    chunk_map = FortranReader.build_chunk_map(chunk_schemes)
+    assert chunk_map == {(0, 1, 2, 3): {0}}
 
 
 def test_build_chunk_map4():
-    chunk_schemes = [{0}, {0}, {0}, {0}]
-    unique, combined = FortranReader.build_chunk_map(chunk_schemes)
-    assert unique == {0: set(), 1: set(), 2: set(), 3: set()}
-    assert combined == {(0, 1, 2, 3): {0}}
+    chunk_schemes = [{0}, {1}, {7, 8}, {8}]
+    chunk_map = FortranReader.build_chunk_map(chunk_schemes)
+    assert chunk_map == {(0,): {0}, (1,): {1}, (2, 3): {7, 8}}
 
 
 def test_build_chunk_map_raises():
     chunk_schemes = [{}, {5, 6}, {6}]
+    with pytest.raises(ValueError):
+        FortranReader.build_chunk_map(chunk_schemes)
+
+
+def test_build_chunk_map_raises2():
+    chunk_schemes = [{1}, {4}, {10}, {4}]
     with pytest.raises(ValueError):
         FortranReader.build_chunk_map(chunk_schemes)
 
@@ -261,7 +266,10 @@ def _slice_intersects(sl0: slice, sl1: slice) -> bool:
 @pytest.mark.parametrize(
     "num_tiles", [1, 3, 13, 63],
 )
-def test_choose_chunks(ds_size_mb, num_tiles):
+@pytest.mark.parametrize(
+    "repeat", tuple(range(3)),
+)
+def test_choose_chunks(ds_size_mb, num_tiles, repeat):
     dtype = np.float32
     itemsize = np.dtype(dtype).itemsize
     ds_size = ds_size_mb * 2**20
@@ -273,23 +281,30 @@ def test_choose_chunks(ds_size_mb, num_tiles):
     tileshape = Shape((min(n_frames, 8), tile_width, sig_shape[-1]), 2)
 
     tiling_scheme = TilingScheme.make_for_shape(tileshape, shape)
-    chunks, chunk_slices, scheme_indices = FortranReader.choose_chunks(tiling_scheme,
-                                                                       shape,
-                                                                       dtype)
-
-    # Check we meet max num memmap param
-    assert len(chunks) <= FortranReader.MAX_NUM_MEMMAP
+    chunks, scheme_indices = FortranReader.choose_chunks(tiling_scheme,
+                                                         shape,
+                                                         dtype)
+    chunk_map = FortranReader.build_chunk_map(scheme_indices)
+    # Check that a chunk exists in a combination,
+    # or uniquely, but not both to avoid double-reading
+    assert len(tuple(FortranReader._splat_iterables(*chunk_map)))\
+        == len(set(FortranReader._splat_iterables(*chunk_map)))
+    # Check we meet max memmap size param
+    sizes = tuple(prod(c) * itemsize for c in chunks)
+    assert all(s <= FortranReader.MAX_MEMMAP_SIZE for s in sizes)
+    # Check no combination of adjacent chunks <= MAX_MEMMAP_SIZE
+    assert not any(s0 + s1 <= FortranReader.MAX_MEMMAP_SIZE
+                   for s0, s1 in zip(sizes[:-1], sizes[1:]))
     # All scheme indices are provided by the chunks
     assert set().union(*scheme_indices) == set(range(len(tiling_scheme)))
     # All scheme chunks cover the full nav_dimension
     assert all(c[-1] == shape[0] for c in chunks)
     # Assert chunk sig components sum to total sig size
     assert sum(c[0] for c in chunks) == shape.sig.size
-    # Assert chunk slices are reasonable
-    assert chunk_slices[0].start == 0
-    assert chunk_slices[-1].stop == shape.sig.size
-    assert all(s0.stop == s1.start for s0, s1 in zip(chunk_slices[:-1],
-                                                     chunk_slices[1:]))
+    # Build flat sig slices for the sequence of chunks
+    chunk_boundaries = tuple(itertools.accumulate((c[0] for c in chunks), initial=0))
+    chunk_slices = tuple(slice(c0, c1) for c0, c1 in zip(chunk_boundaries[:-1],
+                                                         chunk_boundaries[1:]))
     # Check each tile slice lies in the indicated chunks
     tile_shapes = tuple(s.shape.to_tuple() for s in tiling_scheme)
     tile_slices = FortranReader._flat_tile_slices(tile_shapes)

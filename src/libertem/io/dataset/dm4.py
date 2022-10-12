@@ -161,6 +161,8 @@ class DM4DataSet(DataSet):
             sync_offset = 0
             nav_shape, sig_shape = cls._modify_shape(array_meta['shape'],
                                                      array_meta['c_order'])
+            if len(nav_shape) == 1:
+                nav_shape = (1,) + nav_shape
             image_count = prod(nav_shape)
         else:
             return False
@@ -225,9 +227,9 @@ class DM4DataSet(DataSet):
             # Must bool(int(val)) just in case the flag is string '0'
             is_c_ordered = bool(int(data_tags['ImageTags']['Meta Data']['Data Order Swapped']))
         except (KeyError, ValueError):
-            is_c_ordered = False
+            # Defer to tag, otherwise assume F-order unless 3D dataset which seems to be C-ordered
+            is_c_ordered = False or (len(array_meta['shape']) == 3)
         array_meta['c_order'] = is_c_ordered
-
         return array_meta
 
     @staticmethod

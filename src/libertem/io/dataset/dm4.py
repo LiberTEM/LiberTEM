@@ -128,7 +128,11 @@ class DM4DataSet(DataSet):
             raise DataSetException('Non-2D signals not yet supported in DM4DataSet')
 
     def __repr__(self):
-        return f"<SingleDMFileDataset {self._path}>"
+        try:
+            shape = f' - {self.shape}'
+        except AttributeError:
+            shape = ''
+        return f"<DMFileDataset {self._path}>" + shape
 
     @property
     def dtype(self) -> "nt.DTypeLike":

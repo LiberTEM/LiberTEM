@@ -69,13 +69,23 @@ class ConnectHandler(tornado.web.RequestHandler):
                 options = {
                     "local_directory": self.state.get_local_directory()
                 }
-                if "numWorkers" in connection:
-                    devices["cpus"] = range(connection["numWorkers"])
-                devices["cudas"] = connection.get("cudas", [])
-
-                sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
-                    spec=cluster_spec(**devices, options=options, preload=self.state.get_preload())
-                ), pool=pool)
+                try:
+                    if "numWorkers" in connection:
+                        num_workers = connection["numWorkers"]
+                        if not isinstance(num_workers, int) or num_workers < 1:
+                            raise ValueError('Number of workers must be positive integer')
+                        devices["cpus"] = range(num_workers)
+                    devices["cudas"] = connection.get("cudas", [])
+                    sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
+                        spec=cluster_spec(**devices,
+                                          options=options,
+                                          preload=self.state.get_preload())
+                    ), pool=pool)
+                except Exception as e:
+                    msg = Message(self.state).cluster_conn_error(msg=str(e))
+                    log_message(msg)
+                    self.write(msg)
+                    return None
             else:
                 raise ValueError("unknown connection type")
             executor = AsyncAdapter(wrapped=sync_executor, pool=pool)

@@ -97,6 +97,21 @@ async def test_conn_connect_local(base_url, http_client, default_token):
 
 
 @pytest.mark.asyncio
+async def test_cluster_create_error(base_url, http_client, default_token):
+    url = f"{base_url}/api/config/connection/?token={default_token}"
+    conn_details = {
+        'connection': {
+            'type': 'local',
+            'numWorkers': 'foo',
+        }
+    }
+    async with http_client.put(url, json=conn_details) as response:
+        assert response.status == 200
+        conn_resp = await response.json()
+        assert_msg(conn_resp, 'CLUSTER_CONN_ERROR', status='error')
+
+
+@pytest.mark.asyncio
 async def test_cluster_connect_error(base_url, http_client, default_token):
     url = f"{base_url}/api/config/connection/?token={default_token}"
     conn_details = {

@@ -274,14 +274,35 @@ class DM4DataSet(DataSet):
         nav_shape, sig_shape = self._modify_shape(array_meta['shape'],
                                                   self._array_c_ordered,
                                                   sig_dims=self._sig_dims)
-        self._nav_shape = nav_shape
-        self._sig_shape = sig_shape
-        # regardless of file order the Dataset shape property is 'standard'
+
+        # Image count is true number of frames in file (?)
+        self._image_count = int(prod(nav_shape))
+        if self._nav_shape is not None:
+            manual_nav_shape_product = prod(self._nav_shape)
+            if manual_nav_shape_product > self._image_count:
+                raise DataSetException('Specified nav_shape greater than file nav size')
+            elif self._array_c_ordered and (manual_nav_shape_product != self._image_count):
+                raise DataSetException('Manual nav shape with different size '
+                                       'not supported for F-ordered DM4')
+        else:
+            self._nav_shape = nav_shape
+        # nav_shape product is either manual nav_shape if supplied or metadata nav_shape (?)
         self._nav_shape_product = int(prod(self._nav_shape))
-        # Must assume image_count matches the nav_shape
-        self._image_count = self._nav_shape_product
-        self._sync_offset_info = self.get_sync_offset_info()
+        sig_size = int(prod(sig_shape))
+        if self._sig_shape is not None:
+            manual_sig_size = int(prod(self._sig_shape))
+            if self._array_c_ordered and (sig_size != manual_sig_size):
+                raise DataSetException('Manual sig shape with different size '
+                                       'not supported for F-ordered DM4')
+            elif (manual_sig_size * self._nav_shape_product) > (self._image_count * sig_size):
+                raise DataSetException('Specified sig_shape and nav size '
+                                       'too large for data in file')
+        else:
+            self._sig_shape = sig_shape
+
+        # regardless of file order the Dataset shape property is 'standard'
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
+        self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=shape,
             raw_dtype=np.dtype(self._raw_dtype),

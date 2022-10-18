@@ -1,9 +1,11 @@
 import contextlib
+import warnings
 from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional, Tuple
+import itertools
+from typing import Iterable, Any, Optional, Tuple, Union
 
 from dask import distributed as dd
 import dask
@@ -37,9 +39,14 @@ def worker_setup(resource, device):
 
 
 def cluster_spec(
-        cpus: Iterable[int], cudas: Iterable[int], has_cupy: bool,
-        name: str = 'default', num_service: int = 1, options: Optional[dict] = None,
-        preload: Optional[Tuple[str]] = None):
+    cpus: Union[int, Iterable[int]],
+    cudas: Union[int, Iterable[int]],
+    has_cupy: bool,
+    name: str = 'default',
+    num_service: int = 1,
+    options: Optional[dict] = None,
+    preload: Optional[Tuple[str]] = None
+):
     '''
     Create a worker specification dictionary for a LiberTEM Dask cluster
 
@@ -53,14 +60,16 @@ def cluster_spec(
 
     Parameters
     ----------
-    cpus
-        IDs for CPU workers. Currently no pinning is used, i.e. this specifies the total
+    cpus, int | Iterable[int]
+        IDs for CPU workers as an iterable, or an integer number of workers to create.
+        Currently no pinning is used, i.e. this specifies the total
         number and identification of workers, not the CPU cores that are used.
-    cudas
-        IDs for CUDA device workers. LiberTEM will use the IDs specified here. This
-        has to match CUDA device IDs on the system. Specify the same ID multiple times
-        to spawn multiple workers on the same CUDA device.
-    has_cupy
+    cudas, int | Iterable[int]
+        IDs for CUDA device workers as an iterable, or an integer number of GPU workers to
+        create. LiberTEM will use the IDs specified or assign round-robin to the available devices.
+        In the iterable case these have to match CUDA device IDs on the system.
+        Specify the same ID multiple times to spawn multiple workers on the same CUDA device.
+    has_cupy, bool
         Specify if the cluster should signal that it supports GPU-based array programming using
         CuPy
     name
@@ -81,7 +90,6 @@ def cluster_spec(
     --------
     :func:`libertem.utils.devices.detect`
     '''
-
     if options is None:
         options = {}
     if preload is None:
@@ -124,6 +132,9 @@ def cluster_spec(
             f"maybe_setup_tracing(service_name='{service_name}', service_id='{service_id}')"
         )
 
+    if isinstance(cpus, int):
+        cpus = tuple(range(cpus))
+
     for cpu in cpus:
         worker_name = f'{name}-cpu-{cpu}'
         cpu_spec = deepcopy(cpu_base_spec)
@@ -143,6 +154,24 @@ def cluster_spec(
             'libertem.preload',
         )
         workers_spec[worker_name] = service_spec
+
+    if isinstance(cudas, int) or len(cudas):
+        # Needed to know if we can assign CUDA workers
+        from libertem.utils.devices import detect
+        avail_cudas = detect()['cudas']
+        if not avail_cudas and cudas:  # needed in case cudas == 0
+            warnings.warn('Specifying CUDA workers on system with '
+                          'no visible CUDA devices',
+                          RuntimeWarning)
+            # If we are assigning from int, just use increasing
+            # device indices even if they are unavailable
+            avail_cudas = itertools.count()
+
+        if isinstance(cudas, int):
+            # Round-Robin-assign to available CUDA devices
+            # Can override by specifying cudas as an iterable
+            cudas_iter = itertools.cycle(avail_cudas)
+            cudas = tuple(next(cudas_iter) for _ in range(cudas))
 
     for cuda in cudas:
         worker_name = f'{name}-cuda-{cuda}'

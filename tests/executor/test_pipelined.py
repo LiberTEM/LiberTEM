@@ -367,6 +367,22 @@ def test_make_spec_multi_cuda():
     ]
 
 
+def test_make_spec_cpu_int():
+    int_spec = PipelinedExecutor.make_spec(cpus=4, cudas=tuple(), has_cupy=True)
+    range_spec = PipelinedExecutor.make_spec(cpus=range(4), cudas=tuple(), has_cupy=True)
+    assert range_spec == int_spec
+
+
+def test_make_spec_cuda_int():
+    spec_n = 2
+    cuda_spec = PipelinedExecutor.make_spec(cpus=[0], cudas=spec_n)
+    num_cudas = 0
+    for spec in cuda_spec:
+        if spec['device_kind'] == 'CUDA':
+            num_cudas += 1
+    assert num_cudas == spec_n
+
+
 def test_close_with_scatter():
     # make sure `.make_local` works:
     executor = None

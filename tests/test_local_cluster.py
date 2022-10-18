@@ -188,6 +188,21 @@ def test_start_local_cupyonly(hdf5_ds_1):
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
 
 
+def test_cluster_spec_cpu_int():
+    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True)
+    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True)
+    assert range_spec == int_spec
+
+
+def test_cluster_spec_cudas_int():
+    spec_n = 4
+    cuda_spec = cluster_spec(cpus=tuple(), cudas=spec_n, has_cupy=True)
+    num_cudas = 0
+    for spec in cuda_spec.values():
+        num_cudas += spec.get('options', {}).get('resources', {}).get('CUDA', 0)
+    assert num_cudas == spec_n
+
+
 @pytest.mark.slow
 @pytest.mark.skipif(not detect()['cudas'], reason="No CUDA devices")
 def test_start_local_cudaonly(hdf5_ds_1):

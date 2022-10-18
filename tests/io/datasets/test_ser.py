@@ -285,10 +285,10 @@ def test_missing_frames(lt_ctx):
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
             pass
 
-    assert p._start_frame == 348
-    assert p._num_frames == 2
-    assert p.slice.origin == (348, 0, 0)
-    assert p.slice.shape[0] == 2
+    assert p._start_frame == 262
+    assert p._num_frames == 88
+    assert p.slice.origin == (262, 0, 0)
+    assert p.slice.shape[0] == 88
     assert t.tile_slice.origin == (279, 0, 0)
     assert t.tile_slice.shape[0] == 1
 

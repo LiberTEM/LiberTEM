@@ -41,6 +41,22 @@ def test_num_part_larger_than_num_frames():
         next(slice_iter)
 
 
+@pytest.mark.parametrize(
+    'repeat', range(30)
+)
+def test_make_slices(repeat):
+    num_part = np.random.randint(1, 41)
+    num_frames = np.random.randint(num_part, 333)
+    shape = Shape((num_frames,), 0)
+    slices = tuple(Partition.make_slices(shape=shape, num_partitions=num_part))
+    assert len(slices) == num_part
+    assert slices[0][0].origin[0] == 0
+    assert slices[-1][0].origin[0] + slices[-1][0].shape[0] == num_frames
+    assert slices[0][1] == 0
+    assert slices[-1][-1] == num_frames
+    assert all(s0[-1] == s1[1] for s0, s1 in zip(slices[:-1], slices[1:]))
+
+
 def test_roi_to_nd_indices():
     roi = np.full((5, 5), False)
     roi[1, 2] = True

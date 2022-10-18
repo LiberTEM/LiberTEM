@@ -6,7 +6,7 @@ from typing import IO, TYPE_CHECKING, Dict, NamedTuple, List, Optional, Tuple
 import numpy as np
 from glob import glob, escape
 
-from libertem.common.math import prod
+from libertem.common.math import prod, make_2D_square
 from libertem.common import Shape
 from libertem.common.executor import JobExecutor
 from libertem.common.messageconverter import MessageConverter
@@ -447,7 +447,7 @@ class TVIPSDataSet(DataSet):
                 sync_offset, nav_shape = executor.run_function(detect_shape, path)
             except DetectionError:
                 sync_offset = 0
-                nav_shape = tuple((image_count,))
+                nav_shape = make_2D_square((image_count,))
         else:
             return False
         return {

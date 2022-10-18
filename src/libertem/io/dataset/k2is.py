@@ -11,7 +11,7 @@ import numba
 from numba.typed import List
 from ncempy.io import dm
 
-from libertem.common.math import prod
+from libertem.common.math import prod, make_2D_square
 from libertem.common.buffers import zeros_aligned
 from libertem.common import Shape
 from libertem.common.messageconverter import MessageConverter
@@ -890,7 +890,7 @@ class K2ISDataSet(DataSet):
         sync_offset = num_frames - num_frames_w_shutter_active_flag_set
         nav_shape = executor.run_function(_get_nav_shape, path)
         if nav_shape is None:
-            nav_shape = (num_frames_w_shutter_active_flag_set,)
+            nav_shape = make_2D_square((num_frames_w_shutter_active_flag_set,))
         return {
             "parameters": {
                 "path": path,

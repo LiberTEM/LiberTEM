@@ -355,7 +355,7 @@ class MemPartition(BasePartition):
         return mt
 
     def get_tiles(self, *args, **kwargs):
-        if args and isinstance(args, TilingScheme):
+        if args and isinstance(args[0], TilingScheme):
             tiling_scheme = args[0]
             args = args[1:]
             intent = tiling_scheme.intent

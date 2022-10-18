@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from libertem.common.math import prod
+from libertem.common.math import prod, make_2D_square
 from libertem.common.shape import Shape
 
 
@@ -26,3 +26,24 @@ def test_prod(sequence, ref, typ):
     else:
         with pytest.raises(typ):
             res = prod(sequence)
+
+
+@pytest.mark.parametrize(
+    ('shape', 'result'), [
+        ((16,), (4, 4)),
+        ((100,), (10, 10)),
+        ((15,), (15,)),
+        ((1,), (1, 1)),
+        ((-20,), ValueError),
+        ((3, 7), (3, 7)),
+        (tuple(), tuple()),
+        ((0.4,), ValueError),
+    ]
+)
+def test_make_2D_square(shape, result):
+    if isinstance(result, tuple):
+        assert make_2D_square(shape) == result
+    elif issubclass(result, Exception):
+        with pytest.raises(result):
+            make_2D_square(shape)
+            return

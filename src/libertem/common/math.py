@@ -1,4 +1,4 @@
-from typing import Iterable, Union
+from typing import Iterable, Union, Tuple
 
 import numpy as np
 
@@ -30,3 +30,33 @@ def prod(iterable: Iterable[ProdAccepted]):
         else:
             raise ValueError()
     return result
+
+
+def make_2D_square(shape: Tuple[int, ...]) -> Tuple[int, ...]:
+    """
+    Convert the 1D shape tuple into a square 2D shape tuple
+    if the size of shape is a square number
+
+    Non-square dim and len(shape) != 1 are passed directly through.
+    shape (1,) is considered square and returns (1, 1)
+
+    Parameters
+    ----------
+    shape : Tuple[int, ...]
+        1D shape tuple[int]
+
+    Returns
+    -------
+    Tuple[int, ...]
+        2D shape tuple[int, int] if shape is 1D and contains a square
+        number of elements, else the input shape is returned
+    """
+    if len(shape) != 1:
+        return shape
+    size = prod(shape)
+    if size < 1:
+        raise ValueError('Zero or negative shape.size')
+    dim, remainder = divmod(np.sqrt(size), 1)
+    if remainder == 0:
+        return (dim,) * 2
+    return shape

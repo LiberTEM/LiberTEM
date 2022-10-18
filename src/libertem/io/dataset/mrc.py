@@ -3,7 +3,7 @@ import logging
 
 from ncempy.io.mrc import fileMRC
 
-from libertem.common.math import prod
+from libertem.common.math import prod, make_2D_square
 from libertem.common import Shape
 from libertem.common.messageconverter import MessageConverter
 from .base import DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File
@@ -188,7 +188,7 @@ class MRCDataSet(DataSet):
             return {
                 "parameters": {
                     "path": path,
-                    "nav_shape": tuple((int(nav_shape),)),
+                    "nav_shape": make_2D_square((int(nav_shape),)),
                     "sig_shape": sig_shape,
                 },
                 "info": {

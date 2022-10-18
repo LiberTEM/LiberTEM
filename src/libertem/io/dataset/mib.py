@@ -10,7 +10,7 @@ from numba.typed import List as NumbaList
 import numba
 import numpy as np
 
-from libertem.common.math import prod
+from libertem.common.math import prod, make_2D_square
 from libertem.common import Shape
 from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.common.messageconverter import MessageConverter
@@ -1121,7 +1121,7 @@ class MIBDataSet(DataSet):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):
             image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)
-            nav_shape = tuple((image_count,))
+            nav_shape = make_2D_square((image_count,))
         elif pathlow.endswith(".hdr") and executor.run_function(is_valid_hdr, path):
             hdr = executor.run_function(read_hdr_file, path)
             image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)

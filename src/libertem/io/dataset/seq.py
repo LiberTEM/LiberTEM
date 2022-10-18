@@ -36,7 +36,7 @@ import numpy as np
 import sparse
 from ncempy.io.mrc import mrcReader
 
-from libertem.common.math import prod
+from libertem.common.math import prod, make_2D_square
 from libertem.common import Shape
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
@@ -610,7 +610,7 @@ class SEQDataSet(DataSet):
             return {
                 "parameters": {
                     "path": path,
-                    "nav_shape": tuple((image_count,)),
+                    "nav_shape": make_2D_square((image_count,)),
                     "sig_shape": sig_shape,
                 },
                 "info": {

@@ -1,4 +1,4 @@
-import itertools
+import warnings
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
@@ -67,13 +67,23 @@ class Partition:
         indices for each partition.
         """
         num_frames = shape.nav.size
-        f_per_part = max(1, num_frames // num_partitions)
-        c0 = itertools.count(start=0, step=f_per_part)
-        c1 = itertools.count(start=f_per_part, step=f_per_part)
-        for (start, stop) in zip(c0, c1):
-            if start >= num_frames:
-                break
-            stop = min(stop, num_frames)
+        if num_partitions <= num_frames:
+            warnings.warn(
+                "dataset contains fewer frames than partitions, "
+                "setting equal to allow processing (use fewer workers?)",
+                RuntimeWarning
+            )
+            num_partitions = num_frames
+        boundaries = tuple(
+            np.linspace(
+                0,
+                num_frames,
+                num=max(2, num_partitions + 1),
+                endpoint=True,
+                dtype=int,
+            )
+        )
+        for (start, stop) in zip(boundaries[:-1], boundaries[1:]):
             part_slice = Slice(
                 origin=(start,) + tuple([0] * shape.sig.dims),
                 shape=Shape(((stop - start),) + tuple(shape.sig),

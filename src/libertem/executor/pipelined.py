@@ -3,6 +3,7 @@ import os
 import gc
 import sys
 import signal
+import warnings
 import platform
 import logging
 import functools
@@ -528,8 +529,8 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 
 
 def _make_spec(
-    cpus: Iterable[int],
-    cudas: Iterable[int],
+    cpus: Union[int, Iterable[int]],
+    cudas: Union[int, Iterable[int]],
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
 ) -> List[WorkerSpec]:
     """
@@ -539,14 +540,15 @@ def _make_spec(
     Parameters
     ----------
 
-    cpus
-        Iterable of integer CPU identifiers. If pinning is enabled, each
-        worker processe is pinned to one of these identifiers, as accepted
-        by :func:`python:os.sched_setaffinity`. Pinning is currently only supported on
-        platforms that implement :func:`python:os.sched_setaffinity`.
+    cpus, int | Iterable
+        Iterable of integer CPU identifiers or an integer number of workers to create.
+        If pinning is enabled, each worker processe is pinned to one of these identifiers,
+        as accepted by :func:`python:os.sched_setaffinity`. Pinning is currently only
+        supported on platforms that implement :func:`python:os.sched_setaffinity`.
 
-    cudas
-        Interable of CUDA device identifiers for which workers should be started.
+    cudas, int | Iterable
+        Interable of CUDA device identifiers for which workers should be started or
+        an integer number of GPU workers to create across the available devices.
         Identifiers can be repeated to start multiple workers per GPU, which can
         result in better device utilization.
 
@@ -555,6 +557,10 @@ def _make_spec(
     """
     spec = []
     worker_idx = 0
+
+    if isinstance(cpus, int):
+        cpus = tuple(range(cpus))
+
     for device_id in cpus:
         spec.append(WorkerSpec(
             name=f"cpu-{device_id}",
@@ -564,6 +570,25 @@ def _make_spec(
             has_cupy=False,
         ))
         worker_idx += 1
+
+    if isinstance(cudas, int) or len(cudas):
+        # Needed to know if we can assign CUDA workers
+        from libertem.utils.devices import detect
+        avail_cudas = detect()['cudas']
+        if not avail_cudas and cudas:  # needed in case cudas == 0
+            warnings.warn('Specifying CUDA workers on system with '
+                          'no visible CUDA devices',
+                          RuntimeWarning)
+            # If we are assigning from int, just use increasing
+            # device indices even if they are unavailable
+            avail_cudas = itertools.count()
+
+        if isinstance(cudas, int):
+            # Round-Robin-assign to available CUDA devices
+            # Can override by specifying cudas as an iterable
+            cudas_iter = itertools.cycle(avail_cudas)
+            cudas = tuple(next(cudas_iter) for _ in range(cudas))
+
     grouped_cudas = itertools.groupby(cudas, lambda x: x)
     for device_id, group in grouped_cudas:
         for i in range(len(list(group))):

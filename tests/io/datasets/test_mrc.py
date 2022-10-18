@@ -94,7 +94,7 @@ def test_detect_1(lt_ctx):
         executor=lt_ctx.executor,
     )["parameters"] == {
         'path': fpath,
-        'nav_shape': (4,),
+        'nav_shape': (2, 2),
         'sig_shape': (1024, 1024)
     }
 

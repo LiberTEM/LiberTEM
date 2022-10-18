@@ -354,15 +354,25 @@ class MemPartition(BasePartition):
         self._force_tileshape = True
         return mt
 
-    def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None):
+    def get_tiles(self, *args, **kwargs):
+        if args and isinstance(args, TilingScheme):
+            tiling_scheme = args[0]
+            args = args[1:]
+            intent = tiling_scheme.intent
+        elif 'tiling_scheme' in kwargs:
+            tiling_scheme = kwargs.pop('tiling_scheme')
+            intent = tiling_scheme.intent
+        else:
+            # In this case we require the next if-block to execute
+            intent = None
         # force our own tiling_scheme, if a tileshape is given:
         if self._tileshape is not None and self._force_tileshape:
             tiling_scheme = TilingScheme.make_for_shape(
                 tileshape=self._tileshape,
                 dataset_shape=self.meta.shape,
-                intent=tiling_scheme.intent,
+                intent=intent,
             )
-        tiles = super().get_tiles(tiling_scheme, dest_dtype=dest_dtype, roi=roi)
+        tiles = super().get_tiles(tiling_scheme, *args, **kwargs)
         if self._tiledelay:
             log.debug("delayed get_tiles, tiledelay=%.3f" % self._tiledelay)
             for tile in tiles:

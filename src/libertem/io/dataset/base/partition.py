@@ -74,15 +74,17 @@ class Partition:
                 RuntimeWarning
             )
             num_partitions = 1
-        boundaries = tuple(
-            np.linspace(
-                0,
-                num_frames,
-                num=max(2, num_partitions + 1),
-                endpoint=True,
-                dtype=int,
-            )
+        boundaries = np.linspace(
+            0,
+            num_frames,
+            num=max(2, num_partitions + 1),
+            endpoint=True,
+            dtype=int,
         )
+
+        # Cast explicitly to tuple[int, ...] to avoid pickle/JSON errors
+        boundaries = tuple(map(int, boundaries))
+
         for (start, stop) in zip(boundaries[:-1], boundaries[1:]):
             part_slice = Slice(
                 origin=(start,) + tuple([0] * shape.sig.dims),

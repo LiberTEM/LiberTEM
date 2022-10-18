@@ -67,13 +67,13 @@ class Partition:
         indices for each partition.
         """
         num_frames = shape.nav.size
-        if num_partitions <= num_frames:
+        if num_partitions > num_frames:
             warnings.warn(
                 "dataset contains fewer frames than partitions, "
-                "setting equal to allow processing (use fewer workers?)",
+                "setting num_part to 1 to allow processing (use fewer workers?)",
                 RuntimeWarning
             )
-            num_partitions = num_frames
+            num_partitions = 1
         boundaries = tuple(
             np.linspace(
                 0,

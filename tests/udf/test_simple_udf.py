@@ -696,7 +696,7 @@ class CheckSigSliceFrame(UDF):
     'udf_class,tileshape,success', [
         (CheckSigSliceFrame, (3, 3, 5), False),
         (CheckSigSliceFrame, (3, 3, 7), True),
-        (CheckSigSlicePartition, (3, 3, 7), False),
+        (CheckSigSlicePartition, (3, 3, 7), True),
         (CheckSigSlicePartition, (15, 3, 7), True),
         (CheckSigSlice, (3, 2, 2), True),
     ],

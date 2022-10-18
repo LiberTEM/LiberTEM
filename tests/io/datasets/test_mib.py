@@ -116,7 +116,7 @@ def test_detect(lt_ctx):
     params = MIBDataSet.detect_params(MIB_TESTDATA_PATH, lt_ctx.executor)["parameters"]
     assert params == {
         "path": MIB_TESTDATA_PATH,
-        "nav_shape": (1024,),
+        "nav_shape": (32, 32),
         "sig_shape": (256, 256)
     }
 

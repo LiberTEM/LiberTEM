@@ -55,7 +55,7 @@ class TouchUDF(UDF):
     'use_roi', (False, True)
 )
 @pytest.mark.parametrize(
-    'tileshape', (None, (7, 16, 16), (8*16, 16, 16))
+    'tileshape', (None, (7, 16, 16), (8 * 16, 16, 16))
 )
 def test_partition_roi(lt_ctx, use_roi, tileshape):
     data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
@@ -65,11 +65,6 @@ def test_partition_roi(lt_ctx, use_roi, tileshape):
     else:
         roi = None
     udf = TouchUDF()
-    success = (tileshape is None) or (tileshape == (8*16, 16, 16))
-    if success:
-        res = lt_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
-        print(data.shape, res['touched'].data.shape)
-        assert np.all(res['touched'].raw_data == 1)
-    else:
-        with pytest.raises(Exception):
-            lt_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+    res = lt_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+    print(data.shape, res['touched'].data.shape)
+    assert np.all(res['touched'].raw_data == 1)

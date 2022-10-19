@@ -10,7 +10,7 @@ import functools
 import numpy as np
 from math import ceil, floor
 
-from libertem.common.math import prod
+from libertem.common.math import prod, accumulate
 
 if typing.TYPE_CHECKING:
     from libertem.common.shape import Shape
@@ -279,7 +279,7 @@ class FortranReader:
         then provide *index_or_slice for a Fortran unrolling of the nav dims
         """
         chunksizes = tuple(c[0] for _, c in self._chunks)
-        chunk_offsets = tuple(itertools.accumulate(chunksizes, initial=0))
+        chunk_offsets = tuple(accumulate(chunksizes, initial=0))
         (max_sig_block, ideal_depth) = self._ideal_buffer_size(chunksizes,
                                                                self._chunk_map.keys(),
                                                                self._dtype)
@@ -608,7 +608,7 @@ class FortranReader:
         represent a single contiguous flat dimension and are sequential
         """
         tile_size = tuple(map(prod, tile_shapes))
-        boundaries = tuple(itertools.accumulate(tile_size, initial=0))
+        boundaries = tuple(accumulate(tile_size, initial=0))
         return tuple(slice(a, b) for a, b
                      in zip(boundaries[:-1], boundaries[1:]))
 

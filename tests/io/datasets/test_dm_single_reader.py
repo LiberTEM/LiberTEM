@@ -3,7 +3,7 @@ import numpy as np
 
 import pytest
 
-from libertem.common.math import prod
+from libertem.common.math import prod, accumulate
 from libertem.common.shape import Shape
 from libertem.common.slice import Slice
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
@@ -283,7 +283,7 @@ def test_choose_chunks(ds_size_mb, num_tiles, repeat):
     # Assert chunk sig components sum to total sig size
     assert sum(c[0] for c in chunks) == shape.sig.size
     # Build flat sig slices for the sequence of chunks
-    chunk_boundaries = tuple(itertools.accumulate((c[0] for c in chunks), initial=0))
+    chunk_boundaries = tuple(accumulate((c[0] for c in chunks), initial=0))
     chunk_slices = tuple(slice(c0, c1) for c0, c1 in zip(chunk_boundaries[:-1],
                                                          chunk_boundaries[1:]))
     # Check each tile slice lies in the indicated chunks

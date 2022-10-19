@@ -29,7 +29,7 @@ def pipelined_ex():
             # to prevent issues in already-pinned situations (i.e. containerized
             # environments), don't pin our worker processes in testing:
             pin_workers=False,
-            cleanup_timeout=0.5,
+            cleanup_timeout=5.,
         )
         yield executor
     finally:

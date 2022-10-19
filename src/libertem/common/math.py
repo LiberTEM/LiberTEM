@@ -1,5 +1,7 @@
 from typing import Iterable, Union, Tuple
 
+import itertools
+import operator
 import numpy as np
 
 
@@ -60,3 +62,32 @@ def make_2D_square(shape: Tuple[int, ...]) -> Tuple[int, ...]:
     if remainder == 0:
         return (dim,) * 2
     return shape
+
+
+def accumulate(iterable, func=operator.add, *, initial=None):
+    """
+    Yield the cumulative sum (or other operation) on iterable,
+    optionally specifying an initial value from which to begin.
+
+    Backport of :code:`itertools.accumulate` for Python 3.6
+    which does not normally have the :code:`initial` option.
+
+    Parameters
+    ----------
+    iterable : Iterable
+        Any iterable
+    func : _type_, optional
+        The operation to use for accumulation, by default operator.add
+    initial : _type_, optional
+        The initial value in the accumulation, by default None
+
+    Yields
+    ------
+    Any
+        The accumulated elements of :code:`iterable` + :code:`initial`
+    """
+    if initial is not None:
+        combined = itertools.chain((initial,), iterable)
+    else:
+        combined = iterable
+    yield from itertools.accumulate(combined, func=func)

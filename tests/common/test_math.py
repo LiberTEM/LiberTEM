@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
+import itertools
+import sys
 
-from libertem.common.math import prod, make_2D_square
+from libertem.common.math import prod, make_2D_square, accumulate
 from libertem.common.shape import Shape
 
 
@@ -47,3 +49,16 @@ def test_make_2D_square(shape, result):
         with pytest.raises(result):
             make_2D_square(shape)
             return
+
+
+@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
+@pytest.mark.parametrize(
+    ('sequence', 'initial', 'result'), [
+        ((4, 5, 6), None, (4, 9, 15)),
+        ((4, 5, 6), 1, (1, 5, 10, 16)),
+    ]
+)
+def test_accumulate(sequence, initial, result):
+    lt_impl = tuple(accumulate(sequence, initial=initial))
+    py_impl = tuple(itertools.accumulate(sequence, initial=initial))
+    assert lt_impl == py_impl == result

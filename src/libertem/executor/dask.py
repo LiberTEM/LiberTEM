@@ -1,10 +1,8 @@
 import contextlib
-import warnings
 from copy import deepcopy
 import functools
 import logging
 import signal
-import itertools
 from typing import Iterable, Any, Optional, Tuple, Union
 
 from dask import distributed as dd
@@ -20,7 +18,7 @@ from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.async_utils import adjust_event_loop_policy
-
+from .utils import assign_cudas
 
 log = logging.getLogger(__name__)
 
@@ -60,16 +58,16 @@ def cluster_spec(
 
     Parameters
     ----------
-    cpus, int | Iterable[int]
+    cpus: int | Iterable[int]
         IDs for CPU workers as an iterable, or an integer number of workers to create.
         Currently no pinning is used, i.e. this specifies the total
         number and identification of workers, not the CPU cores that are used.
-    cudas, int | Iterable[int]
+    cudas: int | Iterable[int]
         IDs for CUDA device workers as an iterable, or an integer number of GPU workers to
         create. LiberTEM will use the IDs specified or assign round-robin to the available devices.
         In the iterable case these have to match CUDA device IDs on the system.
         Specify the same ID multiple times to spawn multiple workers on the same CUDA device.
-    has_cupy, bool
+    has_cupy: bool
         Specify if the cluster should signal that it supports GPU-based array programming using
         CuPy
     name
@@ -155,23 +153,7 @@ def cluster_spec(
         )
         workers_spec[worker_name] = service_spec
 
-    if isinstance(cudas, int) or len(cudas):
-        # Needed to know if we can assign CUDA workers
-        from libertem.utils.devices import detect
-        avail_cudas = detect()['cudas']
-        if not avail_cudas and cudas:  # needed in case cudas == 0
-            warnings.warn('Specifying CUDA workers on system with '
-                          'no visible CUDA devices',
-                          RuntimeWarning)
-            # If we are assigning from int, just use increasing
-            # device indices even if they are unavailable
-            avail_cudas = itertools.count()
-
-        if isinstance(cudas, int):
-            # Round-Robin-assign to available CUDA devices
-            # Can override by specifying cudas as an iterable
-            cudas_iter = itertools.cycle(avail_cudas)
-            cudas = tuple(next(cudas_iter) for _ in range(cudas))
+    cudas = assign_cudas(cudas)
 
     for cuda in cudas:
         worker_name = f'{name}-cuda-{cuda}'

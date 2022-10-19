@@ -1,4 +1,4 @@
-from typing import Iterable, int, Union
+from typing import Iterable, Union
 import itertools
 import warnings
 

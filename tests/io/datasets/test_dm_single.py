@@ -5,10 +5,12 @@ import numpy as np
 import pytest
 
 from libertem.common.shape import Shape
+from libertem.common.math import prod
+from libertem.io.dataset.base.exceptions import DataSetException
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.udf.base import UDF
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.io.dataset.dm4 import DM4DataSet
+from libertem.io.dataset.dm_single import SingleDMDataSet, DM4PartitionFortran
 
 from utils import ValidationUDF, _mk_random, dataset_correction_verification
 
@@ -23,6 +25,8 @@ class MockFileDM:
         self.dataOffset = []
         self.dataType = []
         self.allTags = {}
+        self.thumbnail = False
+        self.numObjects = len(shapes)
 
         c_shape_order = (self.zSize2,
                          self.zSize,
@@ -46,9 +50,9 @@ class MockFileDM:
                 self.allTags[key] = 1
                 shape_unpack = zip(shape, c_shape_order)
             else:
-                key = f'ImageList.{ds_idx}.Null'
-                self.allTags[key] = 0
                 shape_unpack = zip(shape, f_shape_order)
+            key = f'ImageList.{ds_idx}.ImageTags.Meta Data.Format'
+            self.allTags[key] = 'Diffraction image'
             for s, dim in shape_unpack:
                 dim.append(s)
 
@@ -125,7 +129,7 @@ def test_comparison(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
     assert ds.meta.shape.to_tuple() == array.shape
     flat_data = array.reshape(-1, *array.shape[-2:])
     udf = ValidationUDF(reference=flat_data)
@@ -139,7 +143,7 @@ def test_comparison_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
     assert ds.meta.shape.to_tuple() == array.shape
 
     roi = np.random.choice(
@@ -160,7 +164,7 @@ def test_many_tiles(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
     ds.set_num_cores(8)
     _, _, sy, sx = array.shape
     flat_data = array.reshape(-1, sy, sx)
@@ -196,7 +200,7 @@ def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, request
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
     result = array.sum(axis=(2, 3))
 
     if with_roi:
@@ -222,7 +226,7 @@ def test_corrections_default(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, r
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
 
     if with_roi:
         roi = np.zeros(ds.shape.nav, dtype=bool)
@@ -240,7 +244,7 @@ def test_macrotile_normal(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
     ds.set_num_cores(4)
 
     ps = ds.get_partitions()
@@ -258,7 +262,7 @@ def test_macrotile_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm4', filename)
+    ds = lt_ctx_fast.load('dm', filename)
 
     roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 5] = 1
@@ -278,8 +282,8 @@ def test_positive_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
     udf = SumSigUDF()
     sync_offset = 2
 
-    ds_no_offset = lt_ctx.load('dm4', filename)
-    ds_with_offset = DM4DataSet(
+    ds_no_offset = lt_ctx.load('dm', filename)
+    ds_with_offset = SingleDMDataSet(
         path=filename,
         sync_offset=sync_offset,
     )
@@ -332,8 +336,8 @@ def test_negative_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
     udf = SumSigUDF()
     sync_offset = -2
 
-    ds_no_offset = lt_ctx.load('dm4', filename)
-    ds_with_offset = DM4DataSet(
+    ds_no_offset = lt_ctx.load('dm', filename)
+    ds_with_offset = SingleDMDataSet(
         path=filename,
         sync_offset=sync_offset,
     )
@@ -372,3 +376,87 @@ def test_negative_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
     result_with_offset = result_with_offset['intensity'].raw_data[abs(sync_offset):]
 
     assert np.allclose(result, result_with_offset)
+
+
+@pytest.mark.parametrize(
+    "shape, tileshape, raises",
+    [
+        (Shape((8, 30, 50), 2), Shape((3, 4, 15), 2), DataSetException),
+        (Shape((8, 4, 30, 50), 3), Shape((3, 1, 50, 50), 3), None),
+    ],
+)
+def test_validate_tiling_scheme(shape, tileshape, raises):
+    scheme = TilingScheme.make_for_shape(tileshape, shape)
+    if raises is not None:
+        with pytest.raises(raises):
+            DM4PartitionFortran.validate_tiling_scheme(scheme)
+    else:
+        DM4PartitionFortran.validate_tiling_scheme(scheme)
+
+
+def test_nav_reshaping_f_error(monkeypatch, dm4_mockfile_f, lt_ctx_fast):
+    (_, filename), mock_fileDM = dm4_mockfile_f
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    with pytest.raises(DataSetException):
+        lt_ctx_fast.load('dm', filename, nav_shape=(10, 10))
+
+
+def test_nav_reshaping_c_error(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    nav_shape = tuple(d + 1 for d in array.shape[:2])
+    with pytest.raises(DataSetException):
+        lt_ctx_fast.load('dm', filename, nav_shape=nav_shape)
+
+
+def test_nav_reshaping_c(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    # read only part of the nav space
+    manual_nav_shape = tuple(d - 1 for d in array.shape[:2])
+    ds = lt_ctx_fast.load('dm', filename, nav_shape=manual_nav_shape)
+    res = lt_ctx_fast.run_udf(dataset=ds, udf=SumSigUDF())
+    result_array = res['intensity'].data
+
+    _, _, sy, sx = array.shape
+    nframes = prod(manual_nav_shape)
+    partial_sum = array.reshape(-1, sy, sx).sum(axis=(1, 2))[:nframes]
+    assert np.allclose(result_array, partial_sum.reshape(manual_nav_shape))
+
+
+def test_sig_reshaping_f_error(monkeypatch, dm4_mockfile_f, lt_ctx_fast):
+    (_, filename), mock_fileDM = dm4_mockfile_f
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    with pytest.raises(DataSetException):
+        lt_ctx_fast.load('dm', filename, sig_shape=(10, 10))
+
+
+def test_sig_reshaping_c_error(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    sig_shape = tuple(d + 1 for d in array.shape[2:])
+    with pytest.raises(DataSetException):
+        lt_ctx_fast.load('dm', filename, sig_shape=sig_shape)
+
+
+def test_sig_reshaping_c(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    # read only part of each sig space
+    manual_sig_shape = tuple(d - 1 for d in array.shape[:2])
+    ds = lt_ctx_fast.load('dm', filename, sig_shape=manual_sig_shape)
+    res = lt_ctx_fast.run_udf(dataset=ds, udf=SumSigUDF())
+    result_array = res['intensity'].data
+
+    ny, nx = array.shape[:2]
+    flat_array = array.ravel()
+    nel = ny * nx * prod(manual_sig_shape)
+    partial_array = flat_array[:nel].reshape(array.shape[:2] + manual_sig_shape)
+    partial_sum = partial_array.sum(axis=(2, 3))
+    assert np.allclose(result_array, partial_sum)

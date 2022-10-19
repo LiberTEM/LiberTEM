@@ -12,6 +12,7 @@ from libertem.io.dataset.base.file import OffsetsSizes
 from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta, File,
+    IOBackend,
 )
 
 log = logging.getLogger(__name__)
@@ -20,7 +21,47 @@ if typing.TYPE_CHECKING:
     from numpy import typing as nt
 
 
-class DMDatasetParams(MessageConverter):
+class SingleDMDatasetParams(MessageConverter):
+    SCHEMA = {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://libertem.org/DMDatasetParams.schema.json",
+        "title": "DMDatasetParams",
+        "type": "object",
+        "properties": {
+            "type": {"const": "DM"},
+            "path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
+            "io_backend": {
+                "enum": IOBackend.get_supported(),
+            },
+        },
+        "required": ["type", "path"]
+    }
+
+    def convert_to_python(self, raw_data):
+        data = {
+            k: raw_data[k]
+            for k in ["path"]
+        }
+        for k in ["nav_shape", "sig_shape", "sync_offset"]:
+            if k in raw_data:
+                data[k] = raw_data[k]
+        return data
+
+
+class StackedDMDatasetParams(MessageConverter):
     SCHEMA: typing.Dict = {}
 
     def convert_from_python(self, raw_data):
@@ -64,6 +105,58 @@ class DMFileSet(FileSet):
 
 class DMDataSet(DataSet):
     """
+    Factory class for DigitalMicrograph file datasets
+
+     - Passing either the :code:`files` kwarg or a tuple/list as first
+       argument will create an instance of :class:`StackedDMDataSet`
+     - Passing either the :code:`path` kwarg or any other object
+       as first argument will create a :class:`SingleDMDataSet`
+
+    This class is necessary to handle the difference in signatures and
+    behaviours of the two DM dataset implementations, but these may
+    later be fused if a markup format for multi-file datasets is implemented
+
+    This class implements the methods necessary to expose a DMDataSet in
+    the web GUI, which it does by deferring to SingleDMDataSet. At this
+    time multi-file datasets are not supported in the UI.
+
+    NOTE this way of generating the subclasses breaks deeper
+    subclassing, as this __new__ method will always instantiate
+    a SingleDMDataSet or StackedDMDataSet, and not a subclass of
+    either of these. This could potentially be improved by using
+    the .__instance_subclass__() staticmethod to register the
+    subclasses and what they inherit from.
+    """
+    def __new__(cls, *args, **kwargs):
+        # delayed here to avoid circular reference
+        from .dm_single import SingleDMDataSet
+        if 'path' in kwargs:
+            subclass = SingleDMDataSet
+        elif 'files' in kwargs:
+            subclass = StackedDMDataSet
+        elif args and isinstance(args[0], (list, tuple)):
+            subclass = StackedDMDataSet
+        else:
+            subclass = SingleDMDataSet
+        return super().__new__(subclass)
+
+    @classmethod
+    def get_supported_extensions(cls):
+        return {"dm3", "dm4"}
+
+    @classmethod
+    def get_msg_converter(cls):
+        return SingleDMDatasetParams
+
+    @classmethod
+    def detect_params(cls, path, executor):
+        # delayed here to avoid circular reference
+        from .dm_single import SingleDMDataSet
+        return SingleDMDataSet.detect_params(path, executor)
+
+
+class StackedDMDataSet(DMDataSet):
+    """
     Reader for stacks of DM3/DM4 files.
 
     Note
@@ -74,21 +167,8 @@ class DMDataSet(DataSet):
 
     Note
     ----
-    Single-file 4D DM files are not yet supported. The use-case would be
-    to read DM4 files from the conversion of K2 STEMx data, but those data sets
-    are actually transposed (nav/sig are swapped).
-
-    That means the data would have to be transposed back into the usual shape,
-    which is slow, or algorithms would have to be adapted to work directly on
-    transposed data. As an example, applying a mask in the conventional layout
-    corresponds to calculating a weighted sum frame along the navigation
-    dimension in the transposed layout.
-
-    Since the transposed layout corresponds to a TEM tilt series, support for
-    transposed 4D STEM data could have more general applications beyond
-    supporting 4D DM4 files. Please contact us if you have a use-case for
-    single-file 4D DM files or other applications that process stacks of TEM
-    files, and we may add support!
+    Single-file 3/4D DM datasets are supported through the
+    :class:`~libertem.io.datasets.dm_single.SingleDMDataSet` class.
 
     Note
     ----
@@ -246,7 +326,7 @@ class DMDataSet(DataSet):
 
     @classmethod
     def get_msg_converter(cls) -> typing.Type[MessageConverter]:
-        return DMDatasetParams
+        return StackedDMDatasetParams
 
     @classmethod
     def detect_params(cls, path, executor):

@@ -5,9 +5,9 @@ import pytest
 
 from libertem.common.math import prod
 from libertem.common.shape import Shape
-from libertem.io.dataset.base.exceptions import DataSetException
+from libertem.common.slice import Slice
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
-from libertem.io.dataset.base.backend_fortran import FortranReader
+from libertem.io.dataset.dm_single_reader import FortranReader
 
 
 @pytest.mark.parametrize(
@@ -189,25 +189,6 @@ def test_plan_reads(repeat):
 
 
 @pytest.mark.parametrize(
-    "shape, tileshape, order, raises",
-    [
-        (Shape((8, 30, 50), 2), Shape((3, 30, 3), 2), 'F', None),
-        (Shape((8, 30, 50), 2), Shape((3, 10, 5), 2), 'F', DataSetException),
-        (Shape((8, 30, 50), 2), Shape((3, 4, 15), 2), 'C', DataSetException),
-        (Shape((8, 4, 30, 50), 3), Shape((3, 1, 50, 50), 3), 'C', None),
-        (Shape((1, 2, 3), 2), Shape((1, 2, 3), 2), 'K', ValueError),
-    ],
-)
-def test_verify_tiling(shape, tileshape, order, raises):
-    scheme = TilingScheme.make_for_shape(tileshape, shape)
-    if raises is not None:
-        with pytest.raises(raises):
-            FortranReader.verify_tiling(scheme, shape, order)
-    else:
-        FortranReader.verify_tiling(scheme, shape, order)
-
-
-@pytest.mark.parametrize(
     "shapes, slices",
     [
         (((10, 20), (10, 30)), (slice(0, 200), slice(200, 500))),
@@ -312,3 +293,44 @@ def test_choose_chunks(ds_size_mb, num_tiles, repeat):
         for chunk_slice, chunk_scheme_idcs in zip(chunk_slices, scheme_indices):
             if scheme_idx in chunk_scheme_idcs:
                 assert _slice_intersects(chunk_slice, sl)
+
+
+@pytest.mark.parametrize(
+    "tileshape", (
+            (3, 1, 4),  # partial row
+            (1, 1, 1),  # single pixel
+            (8, 1, 8),  # single-row-full-depth
+            (4, 2, 8),  # multi-row
+            (3, 8, 8),  # multi-whole-frame
+            (1, 8, 8),  # single-frame
+            (8 * 8, 8, 8),  # whole-partition
+            (1024, 1, 8),  # bizarre depth
+        )
+)
+def test_read_contig(raw_data_8x8x8x8_path, tileshape):
+    dtype = np.float32
+    array = np.fromfile(raw_data_8x8x8x8_path, dtype=dtype)
+    array = array.reshape((8, 8, 8, 8))
+    ds_shape = Shape(array.shape, 2)
+    tileshape = Shape(tileshape, 2)
+    tiling_scheme = TilingScheme.make_for_shape(tileshape, ds_shape)
+    reader = FortranReader(raw_data_8x8x8x8_path,
+                           ds_shape,
+                           dtype,
+                           tiling_scheme,
+                           sig_order='C')
+
+    # Must fake the transposed data as we are treating the
+    # data on-disk as F/C-ordered even though it is not!
+    array = np.transpose(array, (2, 3, 0, 1))
+    # array reshaped is how the data on disk should be read
+    # if it truly was F/C-ordered (flatnav, sigy, sigx)
+    array = array.reshape(-1, 8, 8)
+    # Skip first and last frame
+    get_slice = slice(1, 8 * 8 - 1)
+    for idcs_in_flat_nav, scheme_index, tile in reader.generate_tiles(get_slice):
+        tile_slice = tiling_scheme[scheme_index]
+        flat_nav_origin = idcs_in_flat_nav[0]
+        full_slice = Slice((flat_nav_origin,) + tile_slice.origin,
+                           tile.shape[:1] + tile_slice.shape)
+        assert np.allclose(full_slice.get(arr=array), tile)

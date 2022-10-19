@@ -1,7 +1,9 @@
 import os
+import mmap
 import operator
+import contextlib
 import typing
-from typing import Tuple, Union, Generator, Iterable, List, Set, Dict, Any
+from typing import Tuple, Union, Generator, Iterable, List, Set, Dict, Any, NamedTuple
 from typing_extensions import Literal
 import itertools
 import functools
@@ -9,12 +11,20 @@ import numpy as np
 from math import ceil, floor
 
 from libertem.common.math import prod
-from .exceptions import DataSetException
 
 if typing.TYPE_CHECKING:
     from libertem.common.shape import Shape
     from libertem.io.dataset.base.tiling_scheme import TilingScheme
     from numpy.typing import DTypeLike
+
+
+class MemmapContainer(NamedTuple):
+    idx: int
+    memmap: Union[mmap.mmap, None]
+    array: Union[np.ndarray, None]
+
+
+empty_memmapc = MemmapContainer(-1, None, None)
 
 
 class FortranReader:
@@ -42,7 +52,7 @@ class FortranReader:
                  shape: 'Shape',
                  dtype: np.dtype,
                  tiling_scheme: 'TilingScheme',
-                 sig_order='F',
+                 sig_order: Literal['F', 'C'] = 'F',
                  file_header: int = 0):
         self._path = path
         self._dtype = dtype
@@ -52,7 +62,9 @@ class FortranReader:
         self._sig_order = sig_order
         self._tiling_scheme = tiling_scheme
 
-        self.verify_tiling(tiling_scheme, shape, sig_order)
+        if sig_order not in ('F', 'C'):
+            raise ValueError('Unrecognized sig_order')
+
         chunks, chunk_scheme_indices = self.choose_chunks(tiling_scheme,
                                                           shape,
                                                           dtype)
@@ -63,26 +75,8 @@ class FortranReader:
         self._chunks = tuple((o, c) for o, c in zip(offsets, chunks))
         self._chunk_map = self.build_chunk_map(chunk_scheme_indices)
 
-        # (index of chunk currently mapped, None | np.memmap)
-        self._memmap = (-1, None)
-
-    @staticmethod
-    def verify_tiling(tiling_scheme: 'TilingScheme', shape: 'Shape', sig_order: Literal['F', 'C']):
-        slices = tiling_scheme.slices_array
-        # sig slices are flattened according to sig_order
-        # if a sig slice does not span all dimensions except
-        # the first/last (for C-/F-) then the slices can't be ravelled
-        if sig_order == 'C':
-            if not (slices[:, 1, 1:] == shape.sig[1:]).all():
-                raise DataSetException('slices not split in first dim only')
-        elif sig_order == 'F':
-            if not (slices[:, 1, :-1] == shape.sig[:-1]).all():
-                raise DataSetException('slices not split in last dim only')
-        else:
-            raise ValueError(f'sig_order {sig_order} not recognized')
-        # should also encourage that (nav_size * itemsize * shape.sig[1:]) < cls.MAX_MEMMAP_SIZE
-        # else we will have tiles spanning multiple chunks with read overhead
-        # favour small tiles to get optimal behaviour
+        self._handle = None
+        self._memmap = empty_memmapc
 
     @classmethod
     def choose_chunks(cls, tiling_scheme: 'TilingScheme', shape: 'Shape', dtype: 'DTypeLike'):
@@ -188,17 +182,45 @@ class FortranReader:
         # Sort to ensure chunks are read always read in order
         return {tuple(sorted(k)): v for k, v in scheme_map.items()}
 
-    def create_memmap(self, idx: int) -> np.ndarray:
+    @contextlib.contextmanager
+    def open_file(self):
+        self._handle = open(self._path, 'rb')
+        yield
+        try:
+            self.close_memmap()
+        finally:
+            self._handle.close()
+
+    def create_memmap(self, idx: int):
         offset, chunkshape = self._chunks[idx]
-        return np.memmap(self._path, mode='r', offset=offset, dtype=self._dtype, shape=chunkshape)
+        chunksize_bytes = prod(chunkshape) * np.dtype(self._dtype).itemsize
+        # Must memmap with an offset aligned mmap.ALLOCATIONGRANULARITY
+        nearest_alignment = offset % mmap.ALLOCATIONGRANULARITY
+        memmap = mmap.mmap(
+            fileno=self._handle.fileno(),
+            length=chunksize_bytes + nearest_alignment,
+            offset=offset - nearest_alignment,
+            access=mmap.ACCESS_READ,
+        )
+        array: np.ndarray = np.frombuffer(memoryview(memmap)[nearest_alignment:],
+                                          dtype=self._dtype)
+        return MemmapContainer(idx, memmap, array.reshape(chunkshape))
 
     def get_memmap(self, idx: int):
-        if self._memmap[0] != idx:
-            self._memmap = (idx, self.create_memmap(idx))
-        return self._memmap[1]
+        if self._memmap.idx != idx:
+            if self._memmap.memmap is not None:
+                self.close_memmap()
+            self._memmap = self.create_memmap(idx)
+        return self._memmap.array
 
     def close_memmap(self):
-        self._memmap = (-1, None)
+        memmap = self._memmap.memmap
+        array = self._memmap.array
+        self._memmap = empty_memmapc
+        # memmap.madvise(mmap.MADV_DONTNEED)
+        # memmap.close()
+        del array
+        del memmap
 
     def _byte_size(self, shape: Iterable) -> int:
         return np.dtype(self._dtype).itemsize * np.prod(shape, dtype=np.int64)
@@ -270,60 +292,56 @@ class FortranReader:
                                                 *index_or_slice)
         out_buffer = np.empty((max_sig_block, buffer_length), dtype=self._dtype)
 
-        # Outer chunk loop traverses all tiles in the tiling scheme
-        # chunks can be int | tuple[int, ...] mapping the chunks which need
-        # to be opened to provided the given scheme_indices
-        for chunks, scheme_indices in self._chunk_map.items():
-            # The tiling scheme slices are stored in whole-dataset coordinates
-            # but we read into a truncated buffer, this offset shifts the sig
-            # slice for this group of chunks into this truncated system
-            buffer_sig_offset = chunk_offsets[chunks[0]]
-            # For a given set of chunks (or single chunk), perform all necessary reads
-            for mmap_nav_slices, buffer_nav_slice, buffer_unpacks in reads:
-                # Phase 1: perform reads into buffer
-                sig_read = 0
-                # Inner chunk loop accounts for needing to combine data
-                # from more than one chunk to build a tile/frame stack
-                for raw_idx in chunks:
-                    # If just reading from a single chunk to make a tile then
-                    # memmap is only created once per item in _chunk_map
-                    # If we are building tiles/frames from chunk combinations we have
-                    # to switch the memmap multiple times for each fill of the buffer
-                    # which is the worst-case for this layout (massive overheads),
-                    # this is necessary because Dask limits us to ~1GiB memmaps
-                    memmap = self.get_memmap(raw_idx)
-                    sig_read_length = chunksizes[raw_idx]
-                    # The calls to _load_data could be threaded to parallise I/O and processing
-                    self._load_data(
-                        memmap,
-                        mmap_nav_slices,
-                        out_buffer[sig_read: sig_read + sig_read_length,
-                                   buffer_nav_slice],
-                    )
-                    sig_read += sig_read_length
+        with self.open_file():
+            # Outer chunk loop traverses all tiles in the tiling scheme
+            # chunks can be int | tuple[int, ...] mapping the chunks which need
+            # to be opened to provided the given scheme_indices
+            for chunks, scheme_indices in self._chunk_map.items():
+                # The tiling scheme slices are stored in whole-dataset coordinates
+                # but we read into a truncated buffer, this offset shifts the sig
+                # slice for this group of chunks into this truncated system
+                buffer_sig_offset = chunk_offsets[chunks[0]]
+                # For a given set of chunks (or single chunk), perform all necessary reads
+                for mmap_nav_slices, buffer_nav_slice, buffer_unpacks in reads:
+                    # Phase 1: perform reads into buffer
+                    sig_read = 0
+                    # Inner chunk loop accounts for needing to combine data
+                    # from more than one chunk to build a tile/frame stack
+                    for raw_idx in chunks:
+                        # If just reading from a single chunk to make a tile then
+                        # memmap is only created once per item in _chunk_map
+                        # If we are building tiles/frames from chunk combinations we have
+                        # to switch the memmap multiple times for each fill of the buffer
+                        # which is the worst-case for this layout (massive overheads),
+                        # this is necessary because Dask limits us to ~1GiB memmaps
+                        memmap = self.get_memmap(raw_idx)
+                        sig_read_length = chunksizes[raw_idx]
+                        # The calls to _load_data could be threaded to parallise I/O and processing
+                        self._load_data(
+                            memmap,
+                            mmap_nav_slices,
+                            out_buffer[sig_read: sig_read + sig_read_length,
+                                    buffer_nav_slice],
+                        )
+                        sig_read += sig_read_length
 
-                # Phase 2: unpack buffer and yield tiles
-                for (unpack_nav_slice, idcs_in_flat_nav) in buffer_unpacks:
-                    for scheme_index in scheme_indices:
-                        flat_tile_slice = tile_slices[scheme_index]
-                        # Shift tile slice from whole sig buffer to truncated sig buffer
-                        shifted_tile_slice = slice(flat_tile_slice.start - buffer_sig_offset,
-                                                   flat_tile_slice.stop - buffer_sig_offset)
-                        # flat_tile has dims (flat_sig, flat_nav)
-                        flat_tile = out_buffer[shifted_tile_slice,
-                                               unpack_nav_slice]
-                        # reshape from flat tile to shape expected by UDF
-                        tile_shape = tile_shapes[scheme_index] + flat_tile.shape[-1:]
-                        tile = flat_tile.reshape(tile_shape, order=self._sig_order)
-                        # must roll final axis to provide shape == (nav, *sig)
-                        # TODO benchmark how costly this is
-                        tile = np.moveaxis(tile, -1, 0)
-                        yield idcs_in_flat_nav, scheme_index, tile
-
-        # This class only exists for the duration of .get_tiles()
-        # so explicitly dereferencing the final memmap is not
-        # really necessary, but do it just in case
-        self.close_memmap()
+                    # Phase 2: unpack buffer and yield tiles
+                    for (unpack_nav_slice, idcs_in_flat_nav) in buffer_unpacks:
+                        for scheme_index in scheme_indices:
+                            flat_tile_slice = tile_slices[scheme_index]
+                            # Shift tile slice from whole sig buffer to truncated sig buffer
+                            shifted_tile_slice = slice(flat_tile_slice.start - buffer_sig_offset,
+                                                    flat_tile_slice.stop - buffer_sig_offset)
+                            # flat_tile has dims (flat_sig, flat_nav)
+                            flat_tile = out_buffer[shifted_tile_slice,
+                                                unpack_nav_slice]
+                            # reshape from flat tile to shape expected by UDF
+                            tile_shape = tile_shapes[scheme_index] + flat_tile.shape[-1:]
+                            tile = flat_tile.reshape(tile_shape, order=self._sig_order)
+                            # must roll final axis to provide shape == (nav, *sig)
+                            # TODO benchmark how costly this is
+                            tile = np.moveaxis(tile, -1, 0)
+                            yield idcs_in_flat_nav, scheme_index, tile
 
     @classmethod
     def _plan_reads(cls,

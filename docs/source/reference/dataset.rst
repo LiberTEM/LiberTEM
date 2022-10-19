@@ -40,7 +40,13 @@ NumPy files (NPY)
 Digital Micrograph (DM3, DM4) files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: libertem.io.dataset.dm.DMDataSet
+Note, both DM file datasets can be created using :code:`ctx.load('dm', ...)`,
+and where possible the choice of reader (single-file or stacked) will
+be inferred from the parameters.
+
+.. autoclass:: libertem.io.dataset.dm_single.SingleDMDataSet
+
+.. autoclass:: libertem.io.dataset.dm.StackedDMDataSet
 
 .. _`empad`:
 

@@ -23,7 +23,6 @@ filetypes = {
     "tvips": "libertem.io.dataset.tvips.TVIPSDataSet",
     "dask": "libertem.io.dataset.dask.DaskDataSet",
     "npy": "libertem.io.dataset.npy.NPYDataSet",
-    "dm4": "libertem.io.dataset.dm4.DM4DataSet",
 }
 
 

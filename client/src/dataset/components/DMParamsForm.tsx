@@ -2,14 +2,14 @@ import { ErrorMessage, Field, FormikProps } from "formik";
 import * as React from "react";
 import { Button, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
-import { DatasetInfoDM4, DatasetParamsDM4, DatasetTypes } from "../../messages";
+import { DatasetInfoDM, DatasetParamsDM, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, adjustShapeWithBounds, parseShapeInCommaSeparatedString, validateSyncOffsetAndSigShape, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
 import BackendSelectionDropdown from "./BackendSelectionDropdown";
 import Reshape from "./Reshape";
 
 // some fields have different types in the form vs. in messages
-type DatasetParamsDM4ForForm = Omit<DatasetParamsDM4,
+type DatasetParamsDMForForm = Omit<DatasetParamsDM,
     "type"
     | "path"
     | "nav_shape"
@@ -18,11 +18,11 @@ type DatasetParamsDM4ForForm = Omit<DatasetParamsDM4,
         sig_shape: string,
 };
 
-type FormValues = DatasetParamsDM4ForForm
+type FormValues = DatasetParamsDMForForm
 
-type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsDM4, DatasetInfoDM4>;
+type MergedProps = FormikProps<FormValues> & OpenFormProps<DatasetParamsDM, DatasetInfoDM>;
 
-const DM4FileParamsForm: React.FC<MergedProps> = ({
+const DMFileParamsForm: React.FC<MergedProps> = ({
     values,
     info,
     isSubmitting,
@@ -55,10 +55,10 @@ const DM4FileParamsForm: React.FC<MergedProps> = ({
     </Form>
 )
 
-export default withValidation<DatasetParamsDM4, DatasetParamsDM4ForForm, DatasetInfoDM4>({
+export default withValidation<DatasetParamsDM, DatasetParamsDMForForm, DatasetInfoDM>({
     formToJson: (values, path) => ({
         path,
-        type: DatasetTypes.DM4,
+        type: DatasetTypes.DM,
         name: values.name,
         nav_shape: parseShapeInCommaSeparatedString(values.nav_shape),
         sig_shape: parseShapeInCommaSeparatedString(values.sig_shape),
@@ -78,5 +78,5 @@ export default withValidation<DatasetParamsDM4, DatasetParamsDM4ForForm, Dataset
         values.sync_offset,
         info?.image_count
     ),
-    type: DatasetTypes.TVIPS,
-})(DM4FileParamsForm);
+    type: DatasetTypes.DM,
+})(DMFileParamsForm);

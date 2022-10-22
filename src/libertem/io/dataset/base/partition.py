@@ -134,6 +134,12 @@ class Partition:
     def get_io_backend(self):
         return None
 
+    def set_part_idx(self, idx: int):
+        self._part_idx = idx
+
+    def get_part_ident(self) -> str:
+        return f'part-{self._part_idx}'
+
 
 class BasePartition(Partition):
     """

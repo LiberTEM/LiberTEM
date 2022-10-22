@@ -2,7 +2,7 @@ import contextlib
 import functools
 import logging
 import concurrent.futures
-from typing import Iterable, Any
+from typing import Iterable, Any, Dict
 
 from opentelemetry import trace
 
@@ -10,18 +10,49 @@ from .base import (
     BaseJobExecutor, AsyncAdapter,
 )
 from libertem.common.executor import (
-    JobCancelledError, TaskProtocol, TaskCommHandler,
+    JobCancelledError, TaskProtocol, TaskCommHandler, WorkerContext,
+    SimpleWorkerQueue, WorkerQueue, Environment
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.utils.devices import detect
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 from libertem.common.tracing import TracedThreadPoolExecutor
-from .dask import _run_task
 
 
 log = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
+
+
+class ConcurrentWorkerContext(WorkerContext):
+    def __init__(self, msg_queue: WorkerQueue):
+        self._msg_queue = msg_queue
+
+    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+        if 'ident' in msg_dict:
+            raise ValueError('ident is a reserved name')
+        msg_dict.update({'ident': ident})
+        self._msg_queue.put((topic, msg_dict))
+
+
+def _run_task(task, params, task_id, threaded_executor, msg_queue):
+    """
+    Very simple wrapper function. As dask internally caches functions that are
+    submitted to the cluster in various ways, we need to make sure to
+    consistently use the same function, and not build one on the fly.
+
+    Without this function, UDFTask->UDF->UDFData ends up in the
+    cache, which blows up memory usage over time.
+    """
+    worker_context = ConcurrentWorkerContext(msg_queue)
+    env = Environment(threads_per_worker=1,
+                      threaded_executor=threaded_executor,
+                      worker_context=worker_context)
+    task_result = task(env=env, params=params)
+    return {
+        "task_result": task_result,
+        "task_id": task_id,
+    }
 
 
 class ConcurrentJobExecutor(BaseJobExecutor):
@@ -48,10 +79,11 @@ class ConcurrentJobExecutor(BaseJobExecutor):
     def scatter(self, obj):
         yield obj
 
-    def _get_future(self, wrapped_task, idx, params_handle):
+    def _get_future(self, wrapped_task, idx, params_handle, msg_queue):
         return self.client.submit(
             _run_task,
-            task=wrapped_task, params=params_handle, task_id=idx, threaded_executor=True
+            task=wrapped_task, params=params_handle, task_id=idx,
+            threaded_executor=True, msg_queue=msg_queue,
         )
 
     def run_tasks(
@@ -68,23 +100,26 @@ class ConcurrentJobExecutor(BaseJobExecutor):
 
         self._futures[cancel_id] = []
 
+        msg_queue = SimpleWorkerQueue()
+
         for idx, wrapped_task in list(enumerate(tasks)):
-            future = self._get_future(wrapped_task, idx, params_handle)
+            future = self._get_future(wrapped_task, idx, params_handle, msg_queue)
             self._futures[cancel_id].append(future)
 
-        try:
-            as_completed = concurrent.futures.as_completed(self._futures[cancel_id])
-            for future in as_completed:
-                result_wrap = future.result()
-                if future.cancelled():
+        with task_comm_handler.monitor(msg_queue):
+            try:
+                as_completed = concurrent.futures.as_completed(self._futures[cancel_id])
+                for future in as_completed:
+                    result_wrap = future.result()
+                    if future.cancelled():
+                        del self._futures[cancel_id]
+                        raise JobCancelledError()
+                    result = result_wrap['task_result']
+                    task = _id_to_task(result_wrap['task_id'])
+                    yield result, task
+            finally:
+                if cancel_id in self._futures:
                     del self._futures[cancel_id]
-                    raise JobCancelledError()
-                result = result_wrap['task_result']
-                task = _id_to_task(result_wrap['task_id'])
-                yield result, task
-        finally:
-            if cancel_id in self._futures:
-                del self._futures[cancel_id]
 
     def cancel(self, cancel_id):
         if cancel_id in self._futures:

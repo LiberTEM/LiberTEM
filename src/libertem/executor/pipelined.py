@@ -49,6 +49,7 @@ T = TypeVar('T')
 class WorkerQueues(NamedTuple):
     request: "WorkerQueue"
     response: "WorkerQueue"
+    message: "WorkerQueue"
 
 
 class WorkerSpec(TypedDict):
@@ -86,6 +87,7 @@ class WorkerPool:
         self._workers: List[PoolWorkerInfo] = []
         self._worker_fn = worker_fn
         self._response_q = self._worker_q_cls()
+        self._message_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
         self._spec = spec
         self._start_workers()
@@ -93,6 +95,10 @@ class WorkerPool:
     @property
     def response_queue(self) -> "WorkerQueue":
         return self._response_q
+
+    @property
+    def message_queue(self) -> "WorkerQueue":
+        return self._message_q
 
     @property
     def size(self) -> int:
@@ -155,6 +161,9 @@ class WorkerPool:
     def close_resp_queue(self):
         self._response_q.close()
 
+    def close_mesg_queue(self):
+        self._message_q.close()
+
     def get_worker_queues(self, worker_idx: int) -> WorkerQueues:
         return self._workers[worker_idx].queues
 
@@ -162,6 +171,7 @@ class WorkerPool:
         return WorkerQueues(
             request=self._worker_q_cls(),
             response=self._response_q,
+            message=self._message_q,
         )
 
 
@@ -354,6 +364,7 @@ def worker_loop(
                     with tracer.start_as_current_span("SHUTDOWN") as span:
                         queues.request.close()
                         queues.response.close(drain=False)
+                        queues.message.close(drain=False)
                     break
             elif header_type == "WARMUP":
                 with attach_to_parent(header["span_context"]):
@@ -446,7 +457,7 @@ def pipelined_worker(
 
             set_thread_name(f"worker-{worker_idx}")
 
-            worker_context = PipelinedWorkerContext(queues.request)
+            worker_context = PipelinedWorkerContext(queues.request, queues.message)
             env = Environment(
                 threaded_executor=False,
                 threads_per_worker=1,
@@ -469,6 +480,7 @@ def pipelined_worker(
         # drain, close and join queues:
         queues.request.close()
         queues.response.close(drain=False)
+        queues.message.close(drain=False)
         sys.exit(1)
 
 
@@ -478,11 +490,16 @@ class PipelinedWorkerContext(WorkerContext):
     for custom communication to its matching DataSet class
     (currently uni-directional)
     """
-    def __init__(self, queue: "WorkerQueue"):
+    def __init__(self, queue: "WorkerQueue", msg_queue: "WorkerQueue"):
         self._queue = queue
+        self._msg_queue = msg_queue
 
     def get_worker_queue(self) -> WorkerQueue:
         return self._queue
+
+    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+        msg_dict.update({'ident': ident})
+        self._msg_queue.put((topic, msg_dict))
 
 
 ResultT = Generator[Tuple[Any, TaskProtocol], None, None]
@@ -893,9 +910,10 @@ class PipelinedExecutor(BaseJobExecutor):
         task_comm_handler: "TaskCommHandler",
     ) -> ResultT:
         with tracer.start_as_current_span("PipelinedExecutor.run_tasks"):
-            yield from _order_results(self._run_tasks_inner(
-                tasks, params_handle, cancel_id, task_comm_handler,
-            ))
+            with task_comm_handler.monitor(self._pool.message_queue):
+                yield from _order_results(self._run_tasks_inner(
+                    tasks, params_handle, cancel_id, task_comm_handler,
+                ))
 
     def get_available_workers(self) -> WorkerSet:
         resources_by_kind = {
@@ -934,13 +952,14 @@ class PipelinedExecutor(BaseJobExecutor):
                     try:
                         with worker_info.queues.response.get(block=False) as msg:
                             logger.warning(f"got message on close: {msg[0]}")
-                    except WorkerQueueEmpty:
+                    except (WorkerQueueEmpty, TypeError):
                         break
                 worker_info.process.join(timeout=self._cleanup_timeout)
                 if worker_info.process.exitcode is None:
                     self._pool.kill_worker(worker_info)
                 worker_info.queues.request.close(force=True)
             self._pool.close_resp_queue()
+            self._pool.close_mesg_queue()
             self._closed = True
 
     def __del__(self):

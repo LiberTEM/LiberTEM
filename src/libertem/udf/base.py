@@ -1538,6 +1538,7 @@ class UDFTask(Task):
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
         self._runner_cls = runner_cls
+        self.partition.set_part_idx(self.idx)
         self._task_frames = task_frames
 
     def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:

@@ -28,6 +28,7 @@ from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
 from libertem.io.corrections import CorrectionSet
+from libertem.io.dataset.base.roi import roi_for_partition
 from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
@@ -2081,7 +2082,7 @@ class UDFRunner:
                 yield res
 
     def _roi_for_partition(self, roi: np.ndarray, partition: Partition) -> np.ndarray:
-        return roi.reshape(-1)[partition.slice.get(nav_only=True)]
+        return roi_for_partition(roi, partition)
 
     def _make_udf_tasks(
         self,

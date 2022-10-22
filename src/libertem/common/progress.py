@@ -196,8 +196,8 @@ class PartitionProgressTracker:
         if current_len:
             previous_t = self._history.pop()
             this_rate = elements / (current_t - previous_t)
-            self._progress_history.append(this_rate)
-            avg_rate = sum(self._progress_history) / current_len
+            self._history.append(this_rate)
+            avg_rate = sum(self._history) / current_len
 
         self._history.append(current_t)
         self._elements_complete += elements

@@ -3,7 +3,7 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional, Tuple, Union
+from typing import Iterable, Any, Optional, Tuple, Union, Dict, Callable
 
 from dask import distributed as dd
 import dask
@@ -12,7 +12,7 @@ from libertem.common.threading import set_num_threads_env
 
 from .base import BaseJobExecutor, AsyncAdapter
 from libertem.common.executor import (
-    JobCancelledError, TaskCommHandler, TaskProtocol, Environment,
+    JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
@@ -21,6 +21,20 @@ from libertem.common.async_utils import adjust_event_loop_policy
 from .utils import assign_cudas
 
 log = logging.getLogger(__name__)
+
+
+class DaskWorkerContext(WorkerContext):
+    @property
+    def dask_worker(self):
+        try:
+            return self._worker
+        except AttributeError:
+            self._worker = dd.get_worker()
+            return self._worker
+
+    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+        msg_dict.update({'ident': ident})
+        self.dask_worker.log_event(topic, msg_dict)
 
 
 def worker_setup(resource, device):
@@ -181,7 +195,10 @@ def _run_task(task, params, task_id, threaded_executor):
     Without this function, UDFTask->UDF->UDFData ends up in the
     cache, which blows up memory usage over time.
     """
-    env = Environment(threads_per_worker=1, threaded_executor=threaded_executor)
+    worker_context = DaskWorkerContext()
+    env = Environment(threads_per_worker=1,
+                      threaded_executor=threaded_executor,
+                      worker_context=worker_context)
     task_result = task(env=env, params=params)
     return {
         "task_result": task_result,
@@ -328,6 +345,11 @@ class CommonDaskMixin:
         return details_sorted
 
 
+def _wrap_handler(handler: Callable, topic: str, dask_message: Tuple[float, Dict]):
+    timestamp, message = dask_message
+    return handler(topic, message)
+
+
 class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     '''
     Default LiberTEM executor that uses `Dask futures
@@ -374,6 +396,12 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
         self._futures[cancel_id] = []
         initial = []
+
+        for topic, callables in task_comm_handler.subscriptions.items():
+            for handler in callables:
+                self.client.subscribe_topic(topic, functools.partial(_wrap_handler,
+                                                                     handler,
+                                                                     topic))
 
         for w in range(int(len(workers))):
             if not tasks_w_index:

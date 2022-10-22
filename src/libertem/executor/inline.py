@@ -1,22 +1,29 @@
-from typing import Any, Iterable
+from typing import Any, Iterable, Dict
 import cloudpickle
 import psutil
 import contextlib
 
 from .base import BaseJobExecutor
 from libertem.common.executor import (
-    Environment, SimpleWorkerQueue, TaskCommHandler, TaskProtocol, WorkerContext, WorkerQueue,
+    Environment, SimpleWorkerQueue, TaskCommHandler, TaskProtocol, WorkerContext, WorkerQueue
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
 
 
 class InlineWorkerContext(WorkerContext):
-    def __init__(self, queue: SimpleWorkerQueue):
+    def __init__(self, queue: SimpleWorkerQueue, msg_queue: SimpleWorkerQueue):
         self._queue = queue
+        self._msg_queue = msg_queue
 
     def get_worker_queue(self) -> WorkerQueue:
         return self._queue
+
+    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+        if 'ident' in msg_dict:
+            raise ValueError('ident is a reserved name')
+        msg_dict.update({'ident': ident})
+        self._msg_queue.put((topic, msg_dict))
 
 
 class InlineJobExecutor(BaseJobExecutor):
@@ -50,23 +57,28 @@ class InlineJobExecutor(BaseJobExecutor):
         task_comm_handler: TaskCommHandler,
     ):
         worker_queue = SimpleWorkerQueue()
+        msg_queue = SimpleWorkerQueue()
         task_comm_handler.start()
         threads = self._inline_threads
         if threads is None:
             threads = psutil.cpu_count(logical=False)
+        worker_context = InlineWorkerContext(queue=worker_queue,
+                                             msg_queue=msg_queue)
         env = Environment(
             threads_per_worker=threads,
             threaded_executor=False,
-            worker_context=InlineWorkerContext(queue=worker_queue),
+            worker_context=worker_context,
         )
-        for task in tasks:
-            if self._debug:
-                cloudpickle.loads(cloudpickle.dumps(task))
-            task_comm_handler.handle_task(task, worker_queue)
-            result = task(env=env, params=params_handle)
-            if self._debug:
-                cloudpickle.loads(cloudpickle.dumps(result))
-            yield result, task
+        with task_comm_handler.monitor(msg_queue):
+            for task in tasks:
+                if self._debug:
+                    cloudpickle.loads(cloudpickle.dumps(task))
+                task_comm_handler.handle_task(task, worker_queue)
+                result = task(env=env, params=params_handle)
+                if self._debug:
+                    cloudpickle.loads(cloudpickle.dumps(result))
+                yield result, task
+
         task_comm_handler.done()
 
     def run_function(self, fn, *args, **kwargs):

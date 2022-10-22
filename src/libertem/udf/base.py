@@ -1513,6 +1513,7 @@ class UDFTask(Task):
         backends: Optional[BackendSpec],
         runner_cls: Type['UDFPartRunner'],
         span_context: "SpanContext",
+        task_frames: int,
     ):
         """
         A computation for a single partition. The parameters that stay the same
@@ -1529,12 +1530,15 @@ class UDFTask(Task):
             The UDFs to run
         backends : List[str]
             The specified backends we want to run on
+        task_frames : int
+            The number of frames this task must process (ROI included)
         """
         super().__init__(partition=partition, idx=idx, span_context=span_context)
         self._backends = backends
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
         self._runner_cls = runner_cls
+        self._task_frames = task_frames
 
     def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:
         with self._propagate_tracing(), tracer.start_as_current_span("UDFTask.__call__"):
@@ -1575,6 +1579,14 @@ class UDFTask(Task):
 
     def __repr__(self):
         return f"<UDFTask {self._udf_classes!r}>"
+
+    @property
+    def task_frames(self) -> int:
+        """
+        The number of frames to be processed in this task
+        (accounting for ROI)
+        """
+        return self._task_frames
 
 
 class UDFPartRunner:
@@ -2098,11 +2110,10 @@ class UDFRunner:
         span = trace.get_current_span()
         span_context = span.get_span_context()
         for idx, partition in enumerate(dataset.get_partitions()):
-            if roi is not None:
-                roi_for_part = self._roi_for_partition(roi, partition)
-                if np.count_nonzero(roi_for_part) == 0:
-                    # roi is empty for this partition, ignore
-                    continue
+            num_frames = partition.get_frame_count(roi)
+            if not num_frames:
+                # roi is empty for this partition or zero-length, ignore
+                continue
             udf_classes = [
                 udf.__class__
                 for udf in self._udfs
@@ -2113,6 +2124,7 @@ class UDFRunner:
                 backends=backends,
                 runner_cls=self.get_part_runner_cls(),
                 span_context=span_context,
+                task_frames=num_frames,
             )
             yield tasks
 

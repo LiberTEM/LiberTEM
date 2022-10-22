@@ -72,7 +72,7 @@ class CommsDispatcher:
 
 class ProgressManager:
     def __init__(self, tasks: Iterable['UDFTask']):
-        self._task_max = {t.partition.get_part_ident(): t.task_frames
+        self._task_max = {t.partition.get_ident(): t.task_frames
                           for t in tasks}
         self._counters = {k: 0 for k in self._task_max.keys()}
         total_frames = sum(self._task_max.values())
@@ -148,8 +148,11 @@ class PartitionProgressTracker:
                 threshold_part_time: float = 2.,
                 min_message_interval: float = 1.,
             ):
-        self._ident = partition.get_part_ident()
-        self._worker_context = partition._worker_context
+        self._ident = partition.get_ident()
+        try:
+            self._worker_context = partition._worker_context
+        except AttributeError:
+            self._worker_context = None
 
         self._elements_complete = 0
         self._last_message = time.time()

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from libertem.common.executor import WorkerQueue, TaskCommHandler
     from libertem.udf.base import UDFTask
     from libertem.io.dataset.base.tiling import DataTile
-    from libertem.io.dataset.base.partition import BasePartition
+    from libertem.io.dataset.base.partition import Partition
 
 
 class CommsDispatcher:
@@ -142,7 +142,7 @@ class ProgressManager:
 class PartitionProgressTracker:
     def __init__(
                 self,
-                partition: 'BasePartition',
+                partition: 'Partition',
                 roi: Optional['np.ndarray'],
                 history_length: int = 5,
                 threshold_part_time: float = 2.,

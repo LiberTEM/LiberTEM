@@ -57,6 +57,7 @@ class Partition:
         self.slice = partition_slice
         self._io_backend = io_backend
         self._decoder = decoder
+        self._idx = None
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 
@@ -134,17 +135,17 @@ class Partition:
     def get_io_backend(self):
         return None
 
-    def set_part_idx(self, idx: int):
-        self._part_idx = idx
+    def set_idx(self, idx: int):
+        self._idx = idx
 
-    def get_part_ident(self) -> str:
-        return f'part-{self._part_idx}'
+    def get_ident(self) -> str:
+        return f'part-{self._idx}'
 
     def get_frame_count(self, roi: Optional[np.ndarray] = None) -> int:
         if roi is None:
             return self.shape.nav.size
         else:
-            return np.countnonzero(roi_for_partition(roi, self))
+            return np.count_nonzero(roi_for_partition(roi, self))
 
 
 class BasePartition(Partition):

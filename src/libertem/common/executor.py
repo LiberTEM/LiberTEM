@@ -1,7 +1,7 @@
 import queue
 from typing import (
     Callable, Generator, Optional, Any, Iterable, TYPE_CHECKING, Tuple,
-    TypeVar, Type, Dict
+    TypeVar, Type, Dict, List
 )
 from contextlib import contextmanager
 import multiprocessing as mp
@@ -577,6 +577,21 @@ class TaskCommHandler:
         run.
         """
         ...
+
+    @property
+    def subscriptions(self) -> Dict[str, List[Callable]]:
+        # Instantiate on first get to avoid creating __init__
+        try:
+            return self._subscriptions
+        except AttributeError:
+            self._subscriptions = {}
+            return self._subscriptions
+
+    def subscribe(self, topic: str, callback: Callable):
+        try:
+            self.subscriptions[topic].append(callback)
+        except KeyError:
+            self.subscriptions[topic] = [callback]
 
 
 class NoopCommHandler(TaskCommHandler):

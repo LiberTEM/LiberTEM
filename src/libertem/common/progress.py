@@ -217,3 +217,14 @@ class PartitionProgressTracker:
                 return True, elements
 
         return False, 0
+
+
+class NullTracker:
+    def signal_start(self, *args, **kwargs):
+        ...
+
+    def signal_tile_complete(self, *args, **kwargs):
+        ...
+
+    def signal_complete(self, *args, **kwargs):
+        ...

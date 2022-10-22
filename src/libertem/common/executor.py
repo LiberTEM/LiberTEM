@@ -593,6 +593,10 @@ class TaskCommHandler:
         except KeyError:
             self.subscriptions[topic] = [callback]
 
+    @contextmanager
+    def monitor(self, queue: WorkerQueue):
+        yield
+
 
 class NoopCommHandler(TaskCommHandler):
     """

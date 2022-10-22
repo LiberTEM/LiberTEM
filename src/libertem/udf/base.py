@@ -14,6 +14,7 @@ import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
 
 from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
+from libertem.common.progress import ProgressManager, PartitionProgressTracker
 from libertem.io.dataset.base.tiling import DataTile
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
@@ -1653,12 +1654,18 @@ class UDFPartRunner:
         if cupy_udfs:
             xp = cupy_udfs[0].xp
 
+        partition_progress = PartitionProgressTracker(partition, roi)
+        partition_progress.signal_start()
+
         for tile in tiles:
             self._run_tile(numpy_udfs, partition, tile, tile, roi=roi)
             if cupy_udfs:
                 # Work-around, should come from dataset later
                 device_tile = xp.asanyarray(tile)
                 self._run_tile(cupy_udfs, partition, tile, device_tile, roi=roi)
+
+            partition_progress.signal_tile_complete(tile)
+        partition_progress.signal_complete()
 
     def _udf_lists(self, device_class: DeviceClass) -> Tuple[List[UDF], List[UDF]]:
         numpy_udfs = []
@@ -1997,6 +2004,10 @@ class UDFRunner:
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
+        if not tasks:
+            # Nothing to do
+            return
+
         executor = executor.ensure_sync()
         if dry:
             task_comm_handler: TaskCommHandler = NoopCommHandler()
@@ -2005,22 +2016,18 @@ class UDFRunner:
 
         try:
             if progress:
-                from tqdm import tqdm
-                t = tqdm(total=len(tasks))
+                pman = ProgressManager(tasks)
+                pman.connect(task_comm_handler)
             with executor.scatter(params) as params_handle:
-                if tasks:
-                    for res in executor.run_tasks(
-                        tasks,
-                        params_handle,
-                        cancel_id,
-                        task_comm_handler,
-                    ):
-                        if progress:
-                            t.update(1)
-                        yield res
+                yield from executor.run_tasks(
+                    tasks,
+                    params_handle,
+                    cancel_id,
+                    task_comm_handler,
+                )
         finally:
             if progress:
-                t.close()
+                pman.close()
 
     def run_for_dataset_sync(
         self,

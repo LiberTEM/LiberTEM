@@ -11,6 +11,7 @@ from .meta import DataSetMeta
 from .fileset import FileSet
 from . import IOBackend
 from .decode import Decoder
+from .roi import roi_for_partition
 
 
 if TYPE_CHECKING:
@@ -223,6 +224,12 @@ class BasePartition(Partition):
                 tile_slice=tile_slice,
                 scheme_idx=0,
             )
+
+    def get_frame_count(self, roi: Optional[np.ndarray] = None) -> int:
+        if roi is None:
+            return self.shape.nav.size
+        else:
+            return np.countnonzero(roi_for_partition(roi, self))
 
     def _get_read_ranges(self, tiling_scheme, roi=None):
         return self._fileset.get_read_ranges(

@@ -595,7 +595,10 @@ class TaskCommHandler:
 
     @contextmanager
     def monitor(self, queue: WorkerQueue):
-        yield
+        # Avoid circular import
+        from libertem.common.progress import CommsDispatcher
+        with CommsDispatcher(queue, self.subscriptions):
+            yield
 
 
 class NoopCommHandler(TaskCommHandler):

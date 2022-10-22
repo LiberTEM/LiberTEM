@@ -14,7 +14,7 @@ import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
 
 from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
-from libertem.common.progress import ProgressManager, PartitionProgressTracker
+from libertem.common.progress import ProgressManager, PartitionProgressTracker, NullTracker
 from libertem.io.dataset.base.tiling import DataTile
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
@@ -1367,6 +1367,7 @@ class Task:
         self.partition = partition
         self.idx = idx
         self._span_context = span_context
+        self._progress = False
 
     def get_partition(self):
         return self.partition
@@ -1437,6 +1438,9 @@ class Task:
 
     def __call__(self, params: UDFParams, env: Environment):
         raise NotImplementedError()
+
+    def report_progress(self):
+        self._progress = True
 
 
 def _get_canonical_backends(backends: Optional[BackendSpec]) -> Set[Backend]:
@@ -1547,7 +1551,7 @@ class UDFTask(Task):
                 cls.new_for_partition(kwargs, self.partition, params.roi)
                 for cls, kwargs in zip(self._udf_classes, params.kwargs)
             ]
-            return self._runner_cls(udfs).run_for_partition(
+            return self._runner_cls(udfs, progress=self._progress).run_for_partition(
                 self.partition, params, env,
             )
 
@@ -1591,9 +1595,10 @@ class UDFTask(Task):
 
 
 class UDFPartRunner:
-    def __init__(self, udfs: List[UDF], debug: bool = False):
+    def __init__(self, udfs: List[UDF], debug: bool = False, progress: bool = False):
         self._udfs = udfs
         self._debug = debug
+        self._progress = progress
 
     def run_for_partition(
         self,
@@ -1653,7 +1658,12 @@ class UDFPartRunner:
         if cupy_udfs:
             xp = cupy_udfs[0].xp
 
-        partition_progress = PartitionProgressTracker(partition, roi)
+        # type explicitly to help mypy
+        partition_progress: Union[PartitionProgressTracker, NullTracker]
+        if self._progress:
+            partition_progress = PartitionProgressTracker(partition, roi)
+        else:
+            partition_progress = NullTracker()
         partition_progress.signal_start()
 
         for tile in tiles:
@@ -2017,6 +2027,8 @@ class UDFRunner:
             if progress:
                 pman = ProgressManager(tasks)
                 pman.connect(task_comm_handler)
+                for task in tasks:
+                    task.report_progress()
             with executor.scatter(params) as params_handle:
                 yield from executor.run_tasks(
                     tasks,

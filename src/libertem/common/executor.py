@@ -1,7 +1,7 @@
 import queue
 from typing import (
     Callable, Generator, Optional, Any, Iterable, TYPE_CHECKING, Tuple,
-    TypeVar, Type,
+    TypeVar, Type, Dict
 )
 from contextlib import contextmanager
 import multiprocessing as mp
@@ -529,6 +529,9 @@ class WorkerContext:
     the main process and the workers.
     """
     def get_worker_queue(self) -> WorkerQueue:
+        raise NotImplementedError()
+
+    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
         raise NotImplementedError()
 
 

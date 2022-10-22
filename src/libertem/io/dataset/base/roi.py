@@ -1,7 +1,11 @@
 import numba
+import typing
 import numpy as np
 
 from libertem.common import Slice
+
+if typing.TYPE_CHECKING:
+    from libertem.io.dataset.base.partition import Partition
 
 
 @numba.njit(nogil=True)
@@ -60,3 +64,7 @@ def _roi_to_nd_indices(roi, part_slice: Slice):
         total += 1
         if total == frames_in_roi:
             break
+
+
+def roi_for_partition(roi: np.ndarray, partition: 'Partition') -> np.ndarray:
+    return roi.reshape(-1)[partition.slice.get(nav_only=True)]

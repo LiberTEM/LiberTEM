@@ -99,6 +99,13 @@ class ProgressManager:
             return (f'Partitions {self._num_complete}'
                     f'/{self._num_total}, Frames')
 
+    def finalize_task(self, task: 'UDFTask'):
+        topic = 'partition_complete'
+        ident = task.partition.get_ident()
+        message = {'ident': task.partition.get_ident()}
+        if ident in self._task_max:
+            self.handle_end_task(topic, message)
+
     def update_description(self):
         self._bar.set_description(self.get_description())
 
@@ -125,7 +132,7 @@ class ProgressManager:
             self._bar.update(remain)
             self._counters[t_id] = self._task_max[t_id]
         self._num_complete += 1
-        self._num_in_progress -= 1
+        self._num_in_progress = max(0, self._num_in_progress - 1)
         self.update_description()
 
     def handle_tile_update(self, topic, message):

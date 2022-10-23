@@ -1674,7 +1674,6 @@ class UDFPartRunner:
                 self._run_tile(cupy_udfs, partition, tile, device_tile, roi=roi)
 
             partition_progress.signal_tile_complete(tile)
-        partition_progress.signal_complete()
 
     def _udf_lists(self, device_class: DeviceClass) -> Tuple[List[UDF], List[UDF]]:
         numpy_udfs = []
@@ -2013,10 +2012,6 @@ class UDFRunner:
         cancel_id = str(uuid.uuid4())
         self._debug_task_pickling(tasks)
 
-        if not tasks:
-            # Nothing to do
-            return
-
         executor = executor.ensure_sync()
         if dry:
             task_comm_handler: TaskCommHandler = NoopCommHandler()
@@ -2024,20 +2019,24 @@ class UDFRunner:
             task_comm_handler = dataset.get_task_comm_handler()
 
         try:
-            if progress:
+            if progress and tasks:
                 pman = ProgressManager(tasks)
                 pman.connect(task_comm_handler)
                 for task in tasks:
                     task.report_progress()
             with executor.scatter(params) as params_handle:
-                yield from executor.run_tasks(
-                    tasks,
-                    params_handle,
-                    cancel_id,
-                    task_comm_handler,
-                )
+                if tasks:
+                    for res in executor.run_tasks(
+                        tasks,
+                        params_handle,
+                        cancel_id,
+                        task_comm_handler,
+                    ):
+                        if progress:
+                            pman.finalize_task(res[1])
+                        yield res
         finally:
-            if progress:
+            if progress and tasks:
                 pman.close()
 
     def run_for_dataset_sync(

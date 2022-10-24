@@ -633,7 +633,7 @@ class PipelinedExecutor(BaseJobExecutor):
         self,
         spec: Optional[List[WorkerSpec]] = None,
         pin_workers: bool = True,
-        startup_timeout: float = 5.0,
+        startup_timeout: float = 30.0,
         cleanup_timeout: float = 10.0,
         early_setup: Optional[Callable] = None,
     ) -> None:
@@ -666,14 +666,22 @@ class PipelinedExecutor(BaseJobExecutor):
             # FIXME: check process liveness here, too, to catch early startup
             # failures without having to run into the timeout
             for i in range(pool.size):
-                with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
-                    if msg["type"] == "ERROR":
-                        _raise_from_msg(msg, "error on startup")
-                    if msg["type"] != "STARTUP_DONE":
-                        raise RuntimeError(
-                            f"unknown message type {msg['type']}, expected STARTUP_DONE"
-                        )
-                    span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
+                try:
+                    with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
+                        if msg["type"] == "ERROR":
+                            _raise_from_msg(msg, "error on startup")
+                        if msg["type"] != "STARTUP_DONE":
+                            raise RuntimeError(
+                                f"unknown message type {msg['type']}, expected STARTUP_DONE"
+                            )
+                        span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
+                except WorkerQueueEmpty:
+                    pool.kill()
+                    # break possibly confusing exception chain using "from None":
+                    raise RuntimeError(
+                        f"Timeout while starting workers, might need to increase "
+                        f"`startup_timeout` (is {self._startup_timeout}s)"
+                    ) from None
 
             for qp in pool.workers:
                 qp.queues.request.put({

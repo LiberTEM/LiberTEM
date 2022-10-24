@@ -264,6 +264,10 @@ def _patch_setup_device():
     libertem.executor.pipelined._setup_device = _broken_setup_device
 
 
+def _slow():
+    time.sleep(100)
+
+
 def test_startup_error():
     """
     Simulate an error when starting up the worker, in this case we raise in
@@ -278,6 +282,22 @@ def test_startup_error():
                 early_setup=_patch_setup_device,
             )
         assert e.match("stuff is broken, can't do it.")
+    finally:
+        if executor is not None:
+            executor.close()
+
+
+def test_startup_timeout():
+    executor = None
+    try:
+        with pytest.raises(RuntimeError) as e:
+            executor = PipelinedExecutor(
+                spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
+                pin_workers=False,
+                early_setup=_slow,
+                startup_timeout=0,
+            )
+        assert e.match("Timeout while starting workers")
     finally:
         if executor is not None:
             executor.close()

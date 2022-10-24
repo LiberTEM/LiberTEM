@@ -7,7 +7,6 @@ import pytest
 import numpy as np
 
 from libertem.api import Context
-from libertem.common.executor import WorkerQueueEmpty
 from libertem.udf.sum import SumUDF
 from libertem.executor.pipelined import (
     PipelinedExecutor, WorkerPool, _order_results, pipelined_worker
@@ -243,12 +242,14 @@ def test_early_startup_error():
     original_pipelined_worker = libertem.executor.pipelined.pipelined_worker
     try:
         libertem.executor.pipelined.pipelined_worker = _broken_pipelined_worker
-        with pytest.raises(WorkerQueueEmpty):
+        with pytest.raises(RuntimeError) as e:
             executor = PipelinedExecutor(
                 spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
                 pin_workers=False,
                 startup_timeout=0.4,
             )
+        # FIXME: can we differentiate between early errors and timeouts? probably not?
+        assert e.match("Timeout while starting workers")
     finally:
         libertem.executor.pipelined.pipelined_worker = original_pipelined_worker
         if executor is not None:

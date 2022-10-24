@@ -139,6 +139,8 @@ class ProgressManager:
         if topic != 'tile_complete':
             raise RuntimeError('Unrecognized topic')
         t_id = message['ident']
+        if self._counters[t_id] >= self._task_max[t_id]:
+            return
         elements = message['elements']
         pframes = elements / self._sig_size
         if int(pframes):

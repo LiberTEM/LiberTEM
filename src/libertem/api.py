@@ -4,6 +4,8 @@ from typing import (
 )
 from typing_extensions import Literal
 import warnings
+import weakref
+import atexit
 
 from opentelemetry import trace
 import numpy as np
@@ -107,6 +109,7 @@ class Context:
             executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
+        self._register_at_exit()
 
     @classmethod
     def make_with(cls, executor_spec: ExecutorSpecType, *args, **kwargs) -> 'Context':
@@ -1365,3 +1368,16 @@ class Context:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+
+    def _register_at_exit(self):
+        """
+        Register at-exit handler, to make sure the executor is closed
+        """
+        weak_ctx = weakref.ref(self)
+
+        def _exit():
+            if weak_ctx() is None:
+                return
+            weak_ctx().close()
+
+        atexit.register(_exit)

@@ -587,7 +587,16 @@ class TaskCommHandler:
             self._subscriptions = {}
             return self._subscriptions
 
-    def subscribe(self, topic: str, callback: Callable):
+    def subscribe(self, topic: str, callback: Callable[[str, Dict], None]):
+        """
+        Register a callback to run in response to messages
+        matching the topic string identifier
+
+        The callback should accept the arguments
+            (topic, message_dict)
+        message_dict will contain an 'ident' key
+        with the identiy of the message sender
+        """
         try:
             self.subscriptions[topic].append(callback)
         except KeyError:
@@ -595,6 +604,10 @@ class TaskCommHandler:
 
     @contextmanager
     def monitor(self, queue: WorkerQueue):
+        """
+        Monitor queue in a background thread and run the
+        callbacks in subscriptions in response to messages
+        """
         # Avoid circular import
         from libertem.common.progress import CommsDispatcher
         with CommsDispatcher(queue, self.subscriptions):

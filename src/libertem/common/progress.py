@@ -1,7 +1,6 @@
 import threading
 from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Optional, Tuple, Any
 import time
-from collections import deque
 from libertem.common.executor import WorkerQueueEmpty
 
 
@@ -144,7 +143,16 @@ class ProgressManager:
     def update_description(self):
         self._bar.set_description(self.get_description())
 
+    def update_bar(self, n: int):
+        """
+        Increment the progress bar, clipped to remain within the bar maximum
+        """
+        max_update = self._bar.total - self._bar.n
+        if max_update > 0:
+            self._bar.update(min(n, max_update))
+
     def close(self):
+        self.update_description()
         self._bar.close()
 
     def connect(self, comms: 'TaskCommHandler'):
@@ -179,7 +187,7 @@ class ProgressManager:
         t_id = message['ident']
         remain = self._task_max[t_id] - int(self._counters[t_id])
         if remain:
-            self._bar.update(remain)
+            self.update_bar(remain)
             self._counters[t_id] = self._task_max[t_id]
         self._num_complete += 1
         self._num_in_progress = max(0, self._num_in_progress - 1)
@@ -200,7 +208,7 @@ class ProgressManager:
         elements = message['elements']
         pframes = elements / self._sig_size
         if int(pframes):
-            self._bar.update(int(pframes))
+            self.update_bar(int(pframes))
         self._counters[t_id] += pframes
 
 
@@ -224,13 +232,24 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
     Tracks the tile processing speed of a Partition and
     dispatches messages via the worker_context.signal() method
     under certain conditions
+
+    Parameters
+    ----------
+    partition : Partition
+        The partition to track progress for
+    roi : Optional[np.ndarray]
+        The roi associated with this UDF run
+    threshold_part_time : float, optional
+        The total partition processing time below
+        which no messages are sent, by default 4 seconds.
+    min_message_interval : float, optional
+        The minumum time between messages, by default 1 second.
     """
     def __init__(
                 self,
                 partition: 'Partition',
                 roi: Optional['np.ndarray'],
-                history_length: int = 5,
-                threshold_part_time: float = 2.,
+                threshold_part_time: float = 4.,
                 min_message_interval: float = 1.,
             ):
         self._ident = partition.get_ident()
@@ -239,13 +258,13 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         except AttributeError:
             self._worker_context = None
 
+        # Counters to track / rate-limit messages
         self._elements_complete = 0
-        self._last_message = time.time()
+        self._last_message_t = None
         self._min_message_interval = min_message_interval
         # Size of data in partition (accounting for ROI)
         nel = partition.get_frame_count(roi) * partition.meta.shape.sig.size
         self._threshold_rate = nel / threshold_part_time
-        self._history = deque(tuple(), history_length)
 
     def signal_start(self):
         """
@@ -292,32 +311,34 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
 
     def should_send_progress(self, elements: int) -> Tuple[bool, int]:
         """
-        Given the number of elements of data that have just been processed
-        and a record of recent processing speed, decide if a signal
-        should be sent to the main node about the partition progress
-        and for how many total elements of data
+        Given the number elements of data that have been processed since
+        the last message was sent, decide if a signal should be sent to the
+        main node about the partition progress
+
+        The decision is made based on the average (elements / second) and time
+        since last message, thresholds were set in the class constructor
         """
         current_t = time.time()
-        current_len = len(self._history)
-
-        if current_len:
-            previous_t = self._history.pop()
-            this_rate = elements / (current_t - previous_t)
-            self._history.append(this_rate)
-            avg_rate = sum(self._history) / current_len
-
-        self._history.append(current_t)
         self._elements_complete += elements
 
-        if current_len:
-            part_is_slow = avg_rate < self._threshold_rate
-            time_since_last_m = current_t - self._last_message
-            not_rate_limited = time_since_last_m > self._min_message_interval
+        if self._last_message_t is None:
+            # Never send a message for the first tile stack
+            # as this might have warmup overheads associated
+            # Include the first elements in the history, however,
+            # to give a better accounting. The first tile stack
+            # is essentially treated as 'free'.
+            self._last_message_t = current_t
+            return False, 0
 
-            if part_is_slow and not_rate_limited:
-                elements = self._elements_complete
-                self._elements_complete = 0
-                self._last_message = current_t
-                return True, elements
+        time_since_last_m = current_t - self._last_message_t
+        avg_rate = self._elements_complete / time_since_last_m
+
+        part_is_slow = avg_rate < self._threshold_rate
+        not_rate_limited = time_since_last_m > self._min_message_interval
+        if part_is_slow and not_rate_limited:
+            completed_elements = self._elements_complete
+            self._elements_complete = 0
+            self._last_message = current_t
+            return True, completed_elements
 
         return False, 0

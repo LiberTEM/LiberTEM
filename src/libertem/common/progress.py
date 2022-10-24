@@ -61,12 +61,11 @@ class CommsDispatcher:
             with self._message_q.get(block=True) as ((topic, msg), _):
                 if topic == 'STOP':
                     break
-                else:
-                    try:
-                        for callback in self._subscriptions[topic]:
-                            callback(topic, msg)
-                    except KeyError:
-                        pass
+                try:
+                    for callback in self._subscriptions[topic]:
+                        callback(topic, msg)
+                except KeyError:
+                    pass
 
 
 class ProgressManager:

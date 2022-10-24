@@ -37,12 +37,7 @@ class ConcurrentWorkerContext(WorkerContext):
 
 def _run_task(task, params, task_id, threaded_executor, msg_queue):
     """
-    Very simple wrapper function. As dask internally caches functions that are
-    submitted to the cluster in various ways, we need to make sure to
-    consistently use the same function, and not build one on the fly.
-
-    Without this function, UDFTask->UDF->UDFData ends up in the
-    cache, which blows up memory usage over time.
+    Wraps the task to be run in the pool
     """
     worker_context = ConcurrentWorkerContext(msg_queue)
     env = Environment(threads_per_worker=1,

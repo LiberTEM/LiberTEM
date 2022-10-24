@@ -35,7 +35,11 @@ class DaskWorkerContext(WorkerContext):
 
     def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
         msg_dict.update({'ident': ident})
-        self.dask_worker.log_event(topic, msg_dict)
+        try:
+            self.dask_worker.log_event(topic, msg_dict)
+        except AttributeError:
+            # No structured logs available in this Dask
+            pass
 
 
 def worker_setup(resource, device):
@@ -398,11 +402,16 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._futures[cancel_id] = []
         initial = []
 
-        for topic, callables in task_comm_handler.subscriptions.items():
-            for handler in callables:
-                self.client.subscribe_topic(topic, functools.partial(_wrap_handler,
-                                                                     handler,
-                                                                     topic))
+        try:
+            for topic, callables in task_comm_handler.subscriptions.items():
+                for handler in callables:
+                    self.client.subscribe_topic(topic, functools.partial(_wrap_handler,
+                                                                        handler,
+                                                                        topic))
+        except AttributeError:
+            # Dask version does not support structured logs
+            # Fall back to partition-level progress updates only
+            pass
 
         for w in range(int(len(workers))):
             if not tasks_w_index:

@@ -148,7 +148,22 @@ class ProgressManager:
         self._counters[t_id] += pframes
 
 
-class PartitionProgressTracker:
+class PartitionTrackerNoOp:
+    """
+    A no-op class matching the PartitionProgressTracker interface
+    Used when progress == False to avoid any additional overhead
+    """
+    def signal_start(self, *args, **kwargs):
+        ...
+
+    def signal_tile_complete(self, *args, **kwargs):
+        ...
+
+    def signal_complete(self, *args, **kwargs):
+        ...
+
+
+class PartitionProgressTracker(PartitionTrackerNoOp):
     def __init__(
                 self,
                 partition: 'Partition',
@@ -226,14 +241,3 @@ class PartitionProgressTracker:
                 return True, elements
 
         return False, 0
-
-
-class NullTracker:
-    def signal_start(self, *args, **kwargs):
-        ...
-
-    def signal_tile_complete(self, *args, **kwargs):
-        ...
-
-    def signal_complete(self, *args, **kwargs):
-        ...

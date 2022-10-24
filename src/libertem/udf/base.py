@@ -14,7 +14,7 @@ import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
 
 from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
-from libertem.common.progress import ProgressManager, PartitionProgressTracker, NullTracker
+from libertem.common.progress import ProgressManager, PartitionProgressTracker, PartitionTrackerNoOp
 from libertem.io.dataset.base.tiling import DataTile
 from libertem.warnings import UseDiscouragedWarning
 from libertem.exceptions import UDFException
@@ -1659,11 +1659,11 @@ class UDFPartRunner:
             xp = cupy_udfs[0].xp
 
         # type explicitly to help mypy
-        partition_progress: Union[PartitionProgressTracker, NullTracker]
+        partition_progress: Union[PartitionProgressTracker, PartitionTrackerNoOp]
         if self._progress:
             partition_progress = PartitionProgressTracker(partition, roi)
         else:
-            partition_progress = NullTracker()
+            partition_progress = PartitionTrackerNoOp()
         partition_progress.signal_start()
 
         for tile in tiles:

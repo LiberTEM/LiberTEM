@@ -1,5 +1,5 @@
 import threading
-from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Optional, Tuple, Any
 import time
 from collections import deque
 from libertem.common.executor import WorkerQueueEmpty
@@ -71,10 +71,31 @@ class CommsDispatcher:
 
 
 class ProgressManager:
+    """
+    Handle construction and updating of a tqdm.tqdm progress bar
+    for a set of UDFTasks, to be completed in any order
+
+    The bar displays as such:
+
+        Partitions: n_complete(n_in_progress) / n_total, ...\
+            Frames: [XXXXX..] frames_completed / total_frames ...
+
+    When processing tile stacks, stacks are treated as frames
+    as such: (pseudo_frames = tile.size // sig_size)
+
+    The bar will render in a Jupyter notebook as a JS widget
+    automcatially via tqdm.auto
+    """
     def __init__(self, tasks: Iterable['UDFTask']):
+        if not tasks:
+            raise ValueError('Cannot display progress for empty tasks')
+        # the number of whole frames we expect each task to process
         self._task_max = {t.partition.get_ident(): t.task_frames
                           for t in tasks}
-        self._counters = {k: 0 for k in self._task_max.keys()}
+        # _counters is our record of progress on a task,
+        # values are floating whole frames processed
+        # as in tile mode we can process part of a frame
+        self._counters = {k: 0. for k in self._task_max.keys()}
         total_frames = sum(self._task_max.values())
         # For converting tiles to pseudo-frames
         self._sig_size = tasks[0].partition.shape.sig.size
@@ -85,13 +106,21 @@ class ProgressManager:
         # Create the bar object
         self._bar = self.make_bar(total_frames)
 
-    def make_bar(self, maxval):
+    def make_bar(self, maxval: int):
         from tqdm.auto import tqdm
         return tqdm(desc=self.get_description(),
                     total=maxval,
                     leave=True)
 
-    def get_description(self):
+    def get_description(self) -> str:
+        """
+        Get the most recent description string for the
+        bar, including partition information
+        If we know that partitions are in progress
+        include this in parentheses after n_completed
+
+        Only called when we start/end a partition
+        """
         if self._num_in_progress:
             return (f'Partitions {self._num_complete}({self._num_in_progress})'
                     f'/{self._num_total}, Frames')
@@ -100,6 +129,12 @@ class ProgressManager:
                     f'/{self._num_total}, Frames')
 
     def finalize_task(self, task: 'UDFTask'):
+        """
+        When a task completes and we recieve its results on
+        the main node, this is called to update the partition
+        progress counters and frame counter in case we didn't
+        recieve a complete history of the partition yet
+        """
         topic = 'partition_complete'
         ident = task.partition.get_ident()
         message = {'ident': task.partition.get_ident()}
@@ -113,17 +148,32 @@ class ProgressManager:
         self._bar.close()
 
     def connect(self, comms: 'TaskCommHandler'):
+        """
+        Register the callbacks on this class with the TaskCommHandler
+        which will be dispatching messages recieved from the tasks
+        """
         comms.subscribe('partition_start', self.handle_start_task)
         comms.subscribe('partition_complete', self.handle_end_task)
         comms.subscribe('tile_complete', self.handle_tile_update)
 
-    def handle_start_task(self, topic, message):
+    def handle_start_task(self, topic: str, message: Dict[str, Any]):
+        """
+        Increment the num_in_progress counter
+
+        # NOTE An extension to this would be to track
+        the identities of partitions in progress / completed
+        for a richer display / more accurate accounting
+        """
         if topic != 'partition_start':
             raise RuntimeError('Unrecognized topic')
         self._num_in_progress += 1
         self.update_description()
 
-    def handle_end_task(self, topic, message):
+    def handle_end_task(self, topic: str, message: Dict[str, Any]):
+        """
+        Increment the counter for the task to the max value
+        and update the various counters / description
+        """
         if topic != 'partition_complete':
             raise RuntimeError('Unrecognized topic')
         t_id = message['ident']
@@ -135,7 +185,13 @@ class ProgressManager:
         self._num_in_progress = max(0, self._num_in_progress - 1)
         self.update_description()
 
-    def handle_tile_update(self, topic, message):
+    def handle_tile_update(self, topic: str, message: Dict[str, Any]):
+        """
+        Update the frame progress counter for the task
+        and push the increment to the tqdm bar
+
+        Tile stacks are converted to pseudo-frames via the sig_size
+        """
         if topic != 'tile_complete':
             raise RuntimeError('Unrecognized topic')
         t_id = message['ident']
@@ -164,6 +220,11 @@ class PartitionTrackerNoOp:
 
 
 class PartitionProgressTracker(PartitionTrackerNoOp):
+    """
+    Tracks the tile processing speed of a Partition and
+    dispatches messages via the worker_context.signal() method
+    under certain conditions
+    """
     def __init__(
                 self,
                 partition: 'Partition',
@@ -187,6 +248,9 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         self._history = deque(tuple(), history_length)
 
     def signal_start(self):
+        """
+        Signal that the partition has begun processing
+        """
         if self._worker_context is None:
             return
         self._worker_context.signal(
@@ -196,6 +260,10 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         )
 
     def signal_tile_complete(self, tile: 'DataTile'):
+        """
+        Register that tile.size more elements have been processed
+        and if certain condition are met, send a signal
+        """
         if self._worker_context is None:
             return
 
@@ -208,6 +276,12 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
             )
 
     def signal_complete(self):
+        """
+        Signal that the partition has completed processing
+
+        This is not currently called as partition completion
+        is registered on the main node as a fallback
+        """
         if self._worker_context is None:
             return
         self._worker_context.signal(
@@ -217,6 +291,12 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         )
 
     def should_send_progress(self, elements: int) -> Tuple[bool, int]:
+        """
+        Given the number of elements of data that have just been processed
+        and a record of recent processing speed, decide if a signal
+        should be sent to the main node about the partition progress
+        and for how many total elements of data
+        """
         current_t = time.time()
         current_len = len(self._history)
 

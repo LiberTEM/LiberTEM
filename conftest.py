@@ -251,7 +251,10 @@ def default_raw(tmpdir_factory, default_raw_data):
         io_backend=MMapBackend(),
     )
     ds.set_num_cores(2)
-    yield ds
+    try:
+        yield ds
+    finally:
+        lt_ctx.close()
 
 
 @pytest.fixture(scope='session')

@@ -246,10 +246,8 @@ def test_early_startup_error():
             executor = PipelinedExecutor(
                 spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[]),
                 pin_workers=False,
-                startup_timeout=0.4,
             )
-        # FIXME: can we differentiate between early errors and timeouts? probably not?
-        assert e.match("Timeout while starting workers")
+        assert e.match("One or more workers failed to start")
     finally:
         libertem.executor.pipelined.pipelined_worker = original_pipelined_worker
         if executor is not None:

@@ -2,6 +2,9 @@ import functools
 import time
 import random
 from typing import Generator, Optional, TypeVar
+from multiprocessing import Process
+import sys
+import subprocess
 
 import pytest
 import numpy as np
@@ -33,6 +36,7 @@ def pipelined_ex():
         yield executor
     finally:
         if executor is not None:
+            print(f"pipelined_ex fixture: closing executor {id(executor)}")
             executor.close()
 
 
@@ -461,3 +465,34 @@ def test_term_pool():
     )
     # hopefully this will hit the `terminate` branch:
     pool.kill(timeout=5)
+
+
+def _teardown_manual():
+    spec = PipelinedExecutor.make_spec(cpus=range(1), cudas=[])
+    executor = PipelinedExecutor(
+        spec=spec,
+        pin_workers=False,
+        cleanup_timeout=5.,
+    )
+    ctx = Context(executor=executor)
+
+    # we explicitly clean up here, and the weakref in the atexit function
+    # should be None
+    ctx.close()
+    sys.exit(0)
+
+
+def test_auto_teardown():
+    subprocess.run([
+        sys.executable, '-c', 'from libertem.api import Context; ctx=Context.make_with("pipelined")'
+    ], timeout=10)
+
+
+def test_manual_teardown():
+    p = Process(target=_teardown_manual, name="_teardown_manual")
+    p.start()
+    p.join(10)
+    exitcode = p.exitcode
+    if exitcode != 0:
+        p.terminate()
+        raise RuntimeError(f"exitcode is {exitcode}, should be 0")

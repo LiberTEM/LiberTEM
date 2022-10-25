@@ -14,6 +14,7 @@ from typing import (
 )
 from typing_extensions import TypedDict, Literal
 import uuid
+import warnings
 
 from tblib import pickling_support
 import cloudpickle
@@ -594,6 +595,16 @@ def _raise_from_msg(msg: Dict, err_prefix: str):
         raise RuntimeError(f"{err_prefix}: {msg['error']}")
 
 
+def _inspect_startup(msg, span):
+    if msg["type"] == "ERROR":
+        _raise_from_msg(msg, "error on startup")
+    if msg["type"] != "STARTUP_DONE":
+        raise RuntimeError(
+            f"unknown message type {msg['type']}, expected STARTUP_DONE"
+        )
+    span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
+
+
 class PipelinedExecutor(BaseJobExecutor):
     """
     Multi-process pipelined executor. Useful for live processing using
@@ -663,19 +674,36 @@ class PipelinedExecutor(BaseJobExecutor):
                 ),
                 spec=self._spec,
             )
-            # FIXME: check process liveness here, too, to catch early startup
-            # failures without having to run into the timeout
+            # if any processes are already dead here, raise an exception so we
+            # don't have to run into a timeout below:
+            if not pool.all_alive():
+                pool.kill()
+                raise RuntimeError(
+                    "One or more workers failed to start"
+                )
+
+            warn_time = 5.0
+            time_to_warn = min(warn_time, self._startup_timeout)
+            time_after_warn = max(0.0, self._startup_timeout - warn_time)
+
             for i in range(pool.size):
                 try:
+                    try:
+                        with pool.response_queue.get(timeout=time_to_warn) as (msg, _):
+                            _inspect_startup(msg, span)
+                            continue
+                    except WorkerQueueEmpty:
+                        if time_after_warn == 0.0:
+                            raise
+                        warnings.warn('Slow worker startup, please be patient...', RuntimeWarning)
+
                     with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
-                        if msg["type"] == "ERROR":
-                            _raise_from_msg(msg, "error on startup")
-                        if msg["type"] != "STARTUP_DONE":
-                            raise RuntimeError(
-                                f"unknown message type {msg['type']}, expected STARTUP_DONE"
-                            )
-                        span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
+                        _inspect_startup(msg, span)
                 except WorkerQueueEmpty:
+                    if not pool.all_alive():
+                        raise RuntimeError(
+                            "One or more workers failed to start"
+                        )
                     pool.kill()
                     # break possibly confusing exception chain using "from None":
                     raise RuntimeError(

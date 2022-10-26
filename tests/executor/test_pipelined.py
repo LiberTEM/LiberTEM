@@ -449,18 +449,15 @@ def test_term_pool():
 
 
 def _teardown_manual():
-    spec = PipelinedExecutor.make_spec(cpus=range(1), cudas=[])
-    executor = PipelinedExecutor(
-        spec=spec,
-        pin_workers=False,
-        cleanup_timeout=5.,
-    )
-    ctx = Context(executor=executor)
-
-    # we explicitly clean up here, and the weakref in the atexit function
-    # should be None
-    ctx.close()
-    sys.exit(0)
+    subprocess.run([
+        sys.executable,
+        '-c',
+        'import time;'
+        'from libertem.api import Context;'
+        'ctx=Context.make_with("pipelined");'
+        'time.sleep(0.2);'
+        'ctx.close()'
+    ], timeout=30)
 
 
 def test_auto_teardown():
@@ -470,7 +467,6 @@ def test_auto_teardown():
         'import time;'
         'from libertem.api import Context;'
         'ctx=Context.make_with("pipelined");'
-        'time.sleep(0.2)'
     ], timeout=30)
 
 

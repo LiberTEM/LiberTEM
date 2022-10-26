@@ -460,13 +460,25 @@ def _teardown_manual():
     ], timeout=30)
 
 
-def test_auto_teardown():
+def test_auto_teardown_1():
     subprocess.run([
         sys.executable,
         '-c',
         'import time;'
         'from libertem.api import Context;'
         'ctx=Context.make_with("pipelined");'
+    ], timeout=30)
+
+
+def test_auto_teardown_2():
+    subprocess.run([
+        sys.executable,
+        '-c',
+        'import time;'
+        'import gc;'
+        'from libertem.api import Context;'
+        'Context.make_with("pipelined");'
+        'gc.collect();'
     ], timeout=30)
 
 

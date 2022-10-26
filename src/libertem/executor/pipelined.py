@@ -907,6 +907,12 @@ class PipelinedExecutor(BaseJobExecutor):
             self._pool.close_resp_queue()
             self._closed = True
 
+    def __del__(self):
+        # `self` may be already partially garbage-collected; only close
+        # if "enough" of `self` still exists:
+        if hasattr(self, '_closed') and not self._closed:
+            self.close()
+
     def _run_function(self, fn: Callable[..., T], worker_idx, *args, **kwargs) -> T:
         self._validate_worker_state()
         qs = self._pool.get_worker_queues(worker_idx)

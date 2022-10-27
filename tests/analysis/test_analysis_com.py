@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from scipy.ndimage import measurements
+from scipy import ndimage
 from libertem import masks
 from libertem.io.dataset.memory import MemoryDataSet
 
@@ -62,7 +62,7 @@ def test_com_comparison_scipy_1_nomask(ds_random, lt_ctx):
     field_x = field_x.reshape(16 * 16)
     field_y = field_y.reshape(16 * 16)
     for idx in range(16 * 16):
-        scy, scx = measurements.center_of_mass(raw_data_by_frame[idx])
+        scy, scx = ndimage.center_of_mass(raw_data_by_frame[idx])
         assert np.allclose(scx, field_x[idx])
         assert np.allclose(scy, field_y[idx])
 
@@ -84,7 +84,7 @@ def test_com_comparison_scipy_2_masked(ds_random, lt_ctx):
     )
     for idx in range(16 * 16):
         masked_frame = raw_data_by_frame[idx] * disk_mask
-        scy, scx = measurements.center_of_mass(masked_frame)
+        scy, scx = ndimage.center_of_mass(masked_frame)
         assert np.allclose(scx, field_x[idx])
         assert np.allclose(scy, field_y[idx])
 
@@ -146,7 +146,7 @@ def test_com_complex_numbers(lt_ctx):
     field_x = field_x.reshape(16 * 16)
     field_y = field_y.reshape(16 * 16)
     for idx in range(16 * 16):
-        scy, scx = measurements.center_of_mass(reshaped_data[idx])
+        scy, scx = ndimage.center_of_mass(reshaped_data[idx])
 
         print(scx, field_x[idx])
 

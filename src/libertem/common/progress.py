@@ -90,7 +90,7 @@ class ProgressReporter:
     def start(self, state: ProgressState):
         raise NotImplementedError()
 
-    def update(self, state: ProgressState, **kwargs):
+    def update(self, state: ProgressState):
         raise NotImplementedError()
 
     def end(self, state: ProgressState):
@@ -113,7 +113,10 @@ class TQDMProgressReporter:
                          total=state.num_frames_total,
                          leave=True)
 
-    def update(self, state: ProgressState, clip: bool = True, refresh: bool = False):
+    def update(self, state: ProgressState):
+        return self._update(state, clip=True, refresh=False)
+
+    def _update(self, state: ProgressState, *, clip: bool, refresh: bool):
         if state.num_frames_total != self._bar.total:
             # Should never happen but handle just in case
             self._bar.total = state.num_frames_total
@@ -127,7 +130,7 @@ class TQDMProgressReporter:
             self._bar.refresh()
 
     def end(self, state: ProgressState):
-        self.update(state, refresh=True)
+        self._update(state, clip=True, refresh=True)
         self._bar.close()
 
     def _should_update_description(self, state: ProgressState) -> bool:

@@ -916,7 +916,7 @@ class PipelinedExecutor(BaseJobExecutor):
                     try:
                         with worker_info.queues.response.get(block=False) as msg:
                             logger.warning(f"got message on close: {msg[0]}")
-                    except (WorkerQueueEmpty, TypeError):
+                    except WorkerQueueEmpty:
                         break
                 worker_info.process.join(timeout=self._cleanup_timeout)
                 if worker_info.process.exitcode is None:

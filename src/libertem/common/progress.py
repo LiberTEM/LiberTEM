@@ -302,9 +302,6 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         Given the number elements of data that have been processed since
         the last message was sent, decide if a signal should be sent to the
         main node about the partition progress
-
-        The decision is made based on the average (elements / second) and time
-        since last message, thresholds were set in the class constructor
         """
         current_t = time.time()
         self._elements_complete += elements

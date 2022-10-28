@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from typing import OrderedDict
     from numpy import typing as nt
     from opentelemetry.trace import SpanContext
+    from libertem.common.progress import ProgressReporter
 
 tracer = trace.get_tracer(__name__)
 log = logging.getLogger(__name__)
@@ -1852,10 +1853,12 @@ class UDFRunner:
             damage=damage
         )
 
-    def __init__(self, udfs: List[UDF], debug: bool = False):
+    def __init__(self, udfs: List[UDF], debug: bool = False,
+                 progress_reporter: Optional['ProgressReporter'] = None):
         self._udfs = udfs
         self._debug = debug
         self._pool = TracedThreadPoolExecutor(tracer, max_workers=4)
+        self._progress_reporter = progress_reporter
 
     @classmethod
     def inspect_udf(
@@ -2020,7 +2023,7 @@ class UDFRunner:
 
         try:
             if progress and tasks:
-                pman = ProgressManager(tasks)
+                pman = ProgressManager(tasks, reporter=self._progress_reporter)
                 pman.connect(task_comm_handler)
                 for task in tasks:
                     task.report_progress()

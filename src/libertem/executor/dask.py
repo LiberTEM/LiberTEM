@@ -27,7 +27,6 @@ class DaskWorkerContext(WorkerContext):
     @property
     def dask_worker(self):
         try:
-            # Might be a problem if a task changes worker somehow ?
             return self._worker
         except AttributeError:
             self._worker = dd.get_worker()

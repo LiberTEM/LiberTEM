@@ -1,11 +1,10 @@
 import threading
-from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Optional, Tuple, Any
+from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Tuple, Any
 import time
 from libertem.common.executor import WorkerQueueEmpty
 
 
 if TYPE_CHECKING:
-    import numpy as np
     from libertem.common.executor import WorkerQueue, TaskCommHandler
     from libertem.udf.base import UDFTask
     from libertem.io.dataset.base.tiling import DataTile
@@ -236,19 +235,12 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
     ----------
     partition : Partition
         The partition to track progress for
-    roi : Optional[np.ndarray]
-        The roi associated with this UDF run
-    threshold_part_time : float, optional
-        The total partition processing time below
-        which no messages are sent, by default 4 seconds.
     min_message_interval : float, optional
         The minumum time between messages, by default 1 second.
     """
     def __init__(
                 self,
                 partition: 'Partition',
-                roi: Optional['np.ndarray'],
-                threshold_part_time: float = 4.,
                 min_message_interval: float = 1.,
             ):
         self._ident = partition.get_ident()
@@ -261,9 +253,6 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         self._elements_complete = 0
         self._last_message_t = None
         self._min_message_interval = min_message_interval
-        # Size of data in partition (accounting for ROI)
-        nel = partition.get_frame_count(roi) * partition.meta.shape.sig.size
-        self._threshold_rate = nel / threshold_part_time
 
     def signal_start(self):
         """
@@ -330,11 +319,9 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
             return False, 0
 
         time_since_last_m = current_t - self._last_message_t
-        avg_rate = self._elements_complete / time_since_last_m
-
-        part_is_slow = avg_rate < self._threshold_rate
         not_rate_limited = time_since_last_m > self._min_message_interval
-        if part_is_slow and not_rate_limited:
+
+        if not_rate_limited:
             completed_elements = self._elements_complete
             self._elements_complete = 0
             self._last_message = current_t

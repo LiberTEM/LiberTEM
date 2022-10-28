@@ -3,7 +3,7 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional, Tuple, Union, Dict, Callable
+from typing import Iterable, Any, Optional, Tuple, Union, Dict, Callable, List
 
 from dask import distributed as dd
 import dask
@@ -24,6 +24,12 @@ log = logging.getLogger(__name__)
 
 
 class DaskWorkerContext(WorkerContext):
+    def __init__(self, comms_topic: Optional[str]):
+        # DaskWorkerContext sends all messages via a single unique topic id
+        # which are later unpacked on the client node; this allows us to handle
+        # concurrent runs using the same executor with separate comms channels
+        self._comms_topic = comms_topic
+
     @property
     def dask_worker(self):
         try:
@@ -33,11 +39,16 @@ class DaskWorkerContext(WorkerContext):
             return self._worker
 
     def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
-        msg_dict.update({'ident': ident})
+        if self._comms_topic is None:
+            # Scheduler Dask does not have comms so don't send
+            return
+        msg_dict.update({'ident': ident, 'topic': topic})
         try:
-            self.dask_worker.log_event(topic, msg_dict)
+            self.dask_worker.log_event(self._comms_topic, msg_dict)
         except AttributeError:
             # No structured logs available in this Dask
+            # Catch the exception here just in case there is
+            # version / API mismatch
             pass
 
 
@@ -190,7 +201,7 @@ def cluster_spec(
     return workers_spec
 
 
-def _run_task(task, params, task_id, threaded_executor):
+def _run_task(task, params, task_id, threaded_executor, comms_topic: Optional[str]):
     """
     Very simple wrapper function. As dask internally caches functions that are
     submitted to the cluster in various ways, we need to make sure to
@@ -199,7 +210,7 @@ def _run_task(task, params, task_id, threaded_executor):
     Without this function, UDFTask->UDF->UDFData ends up in the
     cache, which blows up memory usage over time.
     """
-    worker_context = DaskWorkerContext()
+    worker_context = DaskWorkerContext(comms_topic)
     env = Environment(threads_per_worker=1,
                       threaded_executor=threaded_executor,
                       worker_context=worker_context)
@@ -283,7 +294,8 @@ class CommonDaskMixin:
 
         return len(workers.filter(has_resources)) > 0
 
-    def _get_future(self, task, workers, idx, params_handle, threaded_executor):
+    def _get_future(self, task, workers, idx, params_handle,
+                    threaded_executor, comms_topic: Optional[str]):
         if len(workers) == 0:
             raise RuntimeError("no workers available!")
         return self._future_for_location(
@@ -296,7 +308,8 @@ class CommonDaskMixin:
             task_args=(
                 params_handle,
                 idx,
-                threaded_executor
+                threaded_executor,
+                comms_topic,
             )
         )
 
@@ -349,9 +362,15 @@ class CommonDaskMixin:
         return details_sorted
 
 
-def _wrap_handler(handler: Callable, topic: str, dask_message: Tuple[float, Dict]):
+def _dispatch_messages(subscribers: Dict[str, List[Callable]], dask_message: Tuple[float, Dict]):
+    """
+    Unpacks the Dask message format and forwards the message
+    to all subscribed callbacks for that topic (if any)
+    """
     timestamp, message = dask_message
-    return handler(topic, message)
+    true_topic = message.pop('topic')
+    for handler in subscribers.get(true_topic, []):
+        handler(true_topic, message)
 
 
 class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
@@ -402,21 +421,24 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         initial = []
 
         try:
-            for topic, callables in task_comm_handler.subscriptions.items():
-                for handler in callables:
-                    self.client.subscribe_topic(topic, functools.partial(_wrap_handler,
-                                                                        handler,
-                                                                        topic))
+            topic_id = f'topic-{cancel_id}'
+            # Wrap all subscriptions into single unique topic
+            self.client.subscribe_topic(
+                topic_id,
+                functools.partial(_dispatch_messages,
+                                  task_comm_handler.subscriptions)
+            )
         except AttributeError:
             # Dask version does not support structured logs
             # Fall back to partition-level progress updates only
-            pass
+            topic_id = None
 
         for w in range(int(len(workers))):
             if not tasks_w_index:
                 break
             idx, wrapped_task = tasks_w_index.pop(0)
-            future = self._get_future(wrapped_task, workers, idx, params_handle, threaded_executor)
+            future = self._get_future(wrapped_task, workers, idx, params_handle,
+                                      threaded_executor, topic_id)
             initial.append(future)
             self._futures[cancel_id].append(future)
 
@@ -431,7 +453,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
                 if tasks_w_index:
                     idx, wrapped_task = tasks_w_index.pop(0)
                     future = self._get_future(
-                        wrapped_task, workers, idx, params_handle, threaded_executor,
+                        wrapped_task, workers, idx, params_handle, threaded_executor, topic_id
                     )
                     as_completed.add(future)
                     self._futures[cancel_id].append(future)
@@ -439,6 +461,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         finally:
             if cancel_id in self._futures:
                 del self._futures[cancel_id]
+            if topic_id is not None:
+                self.client.unsubscribe_topic(topic_id)
 
     def cancel(self, cancel_id):
         if cancel_id in self._futures:

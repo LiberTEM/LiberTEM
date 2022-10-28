@@ -1,5 +1,5 @@
 import threading
-from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Tuple, Any
+from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Tuple, Any, NamedTuple
 import time
 from libertem.common.executor import WorkerQueueEmpty
 
@@ -67,6 +67,116 @@ class CommsDispatcher:
                     pass
 
 
+class ProgressState(NamedTuple):
+    """
+    Container for progress state, used to communicate
+    from ProgressManager to ProgressReporter
+    """
+    # Float because we can complete partial frames (tiles)
+    num_frames_complete: float
+    num_frames_total: int
+    num_part_complete: int
+    num_part_in_progress: int
+    num_part_total: int
+
+
+class ProgressReporter:
+    """
+    Interface for progress bar display / updating
+    """
+    def __init__(self):
+        raise NotImplementedError()
+
+    def start(self, state: ProgressState):
+        raise NotImplementedError()
+
+    def update(self, state: ProgressState, **kwargs):
+        raise NotImplementedError()
+
+    def end(self, state: ProgressState):
+        raise NotImplementedError()
+
+
+class TQDMProgressReporter:
+    """
+    Progress bar display via tqdm
+    """
+    def __init__(self):
+        self._bar = None
+        # Integers used to check if bar description should be changed
+        # integers because faster than strcmp, updated in _should_update_description
+        self._desc_key = (-1, -1, -1)
+
+    def start(self, state: ProgressState):
+        from tqdm.auto import tqdm
+        self._bar = tqdm(desc=self._get_description(state),
+                         total=state.num_frames_total,
+                         leave=True)
+
+    def update(self, state: ProgressState, clip: bool = True, refresh: bool = False):
+        if state.num_frames_total != self._bar.total:
+            # Should never happen but handle just in case
+            self._bar.total = state.num_frames_total
+            self._bar.refresh()
+        increment = self._get_increment(state, clip=clip)
+        if increment > 0:
+            self._bar.update(increment)
+        if self._should_update_description(state):
+            self._bar.set_description(self._get_description(state))
+        if refresh:
+            self._bar.refresh()
+
+    def end(self, state: ProgressState):
+        self.update(state, refresh=True)
+        self._bar.close()
+
+    def _should_update_description(self, state: ProgressState) -> bool:
+        """
+        Check the state to see if the elements used by self._get_description
+        have changed, and if so update our record (self._desc_key) and return True
+        """
+        new_desc_key = (
+            state.num_part_complete,
+            state.num_part_in_progress,
+            state.num_part_total
+        )
+        should_update = new_desc_key != self._desc_key
+        if should_update:
+            self._desc_key = new_desc_key
+        return should_update
+
+    @staticmethod
+    def _get_description(state: ProgressState) -> str:
+        """
+        Get the most recent description string for the
+        bar, including partition information
+        If we know that partitions are in progress
+        include this in parentheses after n_completed
+        """
+
+        if state.num_part_in_progress:
+            return (f'Partitions {state.num_part_complete}({state.num_part_in_progress})'
+                    f'/{state.num_part_total}, Frames')
+        else:
+            return (f'Partitions {state.num_part_complete}'
+                    f'/{state.num_part_total}, Frames')
+
+    def _get_increment(self, state: ProgressState, clip: bool = True):
+        """
+        Get the increment to apply to the progress bar based on current state
+        and the state of the bar itself (bar.n is the total as-tracked by tqdm)
+
+        Assumes self._bar.total has first been updated
+        to state.num_frames_total if this is necessary
+        """
+        increment = int(state.num_frames_complete) - self._bar.n
+        if clip:
+            max_update = self._bar.total - self._bar.n
+        else:
+            max_update = increment + 1
+        return max(0, min(increment, max_update))
+
+
 class ProgressManager:
     """
     Handle construction and updating of a tqdm.tqdm progress bar
@@ -83,7 +193,7 @@ class ProgressManager:
     The bar will render in a Jupyter notebook as a JS widget
     automatically via tqdm.auto
     """
-    def __init__(self, tasks: Iterable['UDFTask']):
+    def __init__(self, tasks: Iterable['UDFTask'], reporter=TQDMProgressReporter):
         if not tasks:
             raise ValueError('Cannot display progress for empty tasks')
         # the number of whole frames we expect each task to process
@@ -93,37 +203,28 @@ class ProgressManager:
         # values are floating whole frames processed
         # as in tile mode we can process part of a frame
         self._counters = {k: 0. for k in self._task_max.keys()}
-        total_frames = sum(self._task_max.values())
+        self._total_frames = sum(self._task_max.values())
         # For converting tiles to pseudo-frames
         self._sig_size = tasks[0].partition.shape.sig.size
         # Counters for part display
         self._num_complete = 0
         self._num_in_progress = 0
         self._num_total = len(self._counters)
-        # Create the bar object
-        self._bar = self.make_bar(total_frames)
+        # If not a ProgressReporter instance, instantiate as if it has a bare __init__
+        if not isinstance(reporter, ProgressReporter):
+            reporter = reporter()
+        self.reporter = reporter
+        reporter.start(self.state)
 
-    def make_bar(self, maxval: int):
-        from tqdm.auto import tqdm
-        return tqdm(desc=self.get_description(),
-                    total=maxval,
-                    leave=True)
-
-    def get_description(self) -> str:
-        """
-        Get the most recent description string for the
-        bar, including partition information
-        If we know that partitions are in progress
-        include this in parentheses after n_completed
-
-        Only called when we start/end a partition
-        """
-        if self._num_in_progress:
-            return (f'Partitions {self._num_complete}({self._num_in_progress})'
-                    f'/{self._num_total}, Frames')
-        else:
-            return (f'Partitions {self._num_complete}'
-                    f'/{self._num_total}, Frames')
+    @property
+    def state(self) -> ProgressState:
+        return ProgressState(
+            sum(self._counters.values()),
+            self._total_frames,
+            self._num_complete,
+            self._num_in_progress,
+            self._num_total,
+        )
 
     def finalize_task(self, task: 'UDFTask'):
         """
@@ -138,20 +239,8 @@ class ProgressManager:
         if ident in self._task_max:
             self.handle_end_task(topic, message)
 
-    def update_description(self):
-        self._bar.set_description(self.get_description())
-
-    def update_bar(self, n: int):
-        """
-        Increment the progress bar, clipped to remain within the bar maximum
-        """
-        max_update = self._bar.total - self._bar.n
-        if max_update > 0:
-            self._bar.update(min(n, max_update))
-
     def close(self):
-        self.update_description()
-        self._bar.close()
+        self.reporter.end(self.state)
 
     def connect(self, comms: 'TaskCommHandler'):
         """
@@ -173,7 +262,7 @@ class ProgressManager:
         if topic != 'partition_start':
             raise RuntimeError('Unrecognized topic')
         self._num_in_progress += 1
-        self.update_description()
+        self.reporter.update(self.state)
 
     def handle_end_task(self, topic: str, message: Dict[str, Any]):
         """
@@ -185,11 +274,10 @@ class ProgressManager:
         t_id = message['ident']
         remain = self._task_max[t_id] - int(self._counters[t_id])
         if remain:
-            self.update_bar(remain)
             self._counters[t_id] = self._task_max[t_id]
         self._num_complete += 1
         self._num_in_progress = max(0, self._num_in_progress - 1)
-        self.update_description()
+        self.reporter.update(self.state)
 
     def handle_tile_update(self, topic: str, message: Dict[str, Any]):
         """
@@ -205,9 +293,8 @@ class ProgressManager:
             return
         elements = message['elements']
         pframes = elements / self._sig_size
-        if int(pframes):
-            self.update_bar(int(pframes))
         self._counters[t_id] += pframes
+        self.reporter.update(self.state)
 
 
 class PartitionTrackerNoOp:

@@ -1676,6 +1676,11 @@ class UDFPartRunner:
 
             partition_progress.signal_tile_complete(tile)
 
+        # We could signal partition completion here, but this is already
+        # handled on the main node via ProgressManager.finalize_task(task)
+        # as it is the fallback method for executors that don't support comms
+        # partition_progress.signal_complete()
+
     def _udf_lists(self, device_class: DeviceClass) -> Tuple[List[UDF], List[UDF]]:
         numpy_udfs = []
         cupy_udfs = []

@@ -1,5 +1,5 @@
 import threading
-from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Tuple, Any, NamedTuple
+from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Tuple, Any, NamedTuple, Optional
 import time
 from libertem.common.executor import WorkerQueueEmpty
 
@@ -193,7 +193,7 @@ class ProgressManager:
     The bar will render in a Jupyter notebook as a JS widget
     automatically via tqdm.auto
     """
-    def __init__(self, tasks: Iterable['UDFTask'], reporter=TQDMProgressReporter):
+    def __init__(self, tasks: Iterable['UDFTask'], reporter: Optional[ProgressReporter] = None):
         if not tasks:
             raise ValueError('Cannot display progress for empty tasks')
         # the number of whole frames we expect each task to process
@@ -210,8 +210,11 @@ class ProgressManager:
         self._num_complete = 0
         self._num_in_progress = 0
         self._num_total = len(self._counters)
-        # If not a ProgressReporter instance, instantiate as if it has a bare __init__
-        if not isinstance(reporter, ProgressReporter):
+        if reporter is None:
+            reporter = TQDMProgressReporter()
+        elif not isinstance(reporter, ProgressReporter):
+            # If not a ProgressReporter instance,
+            # instantiate as if it has a bare __init__
             reporter = reporter()
         self.reporter = reporter
         reporter.start(self.state)

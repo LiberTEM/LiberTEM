@@ -81,7 +81,7 @@ class ProgressManager:
     as such: (pseudo_frames = tile.size // sig_size)
 
     The bar will render in a Jupyter notebook as a JS widget
-    automcatially via tqdm.auto
+    automatically via tqdm.auto
     """
     def __init__(self, tasks: Iterable['UDFTask']):
         if not tasks:

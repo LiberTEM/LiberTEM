@@ -1661,7 +1661,7 @@ class UDFPartRunner:
         # type explicitly to help mypy
         partition_progress: Union[PartitionProgressTracker, PartitionTrackerNoOp]
         if self._progress:
-            partition_progress = PartitionProgressTracker(partition, roi)
+            partition_progress = PartitionProgressTracker(partition)
         else:
             partition_progress = PartitionTrackerNoOp()
         partition_progress.signal_start()

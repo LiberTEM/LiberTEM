@@ -8,4 +8,4 @@ aiohttp
 websockets
 pytest-benchmark
 ipykernel
-joblib<1.2
+joblib

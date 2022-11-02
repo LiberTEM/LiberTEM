@@ -10,4 +10,4 @@ nbsphinx_link
 ipython
 libertem_blobfinder
 graphviz
-joblib<1.2
+joblib

@@ -97,7 +97,7 @@ class ProgressReporter:
         raise NotImplementedError()
 
 
-class TQDMProgressReporter:
+class TQDMProgressReporter(ProgressReporter):
     """
     Progress bar display via tqdm
     """
@@ -218,7 +218,11 @@ class ProgressManager:
         elif not isinstance(reporter, ProgressReporter):
             # If not a ProgressReporter instance,
             # instantiate as if it has a bare __init__
+            # Useful to be able to inject an instance
+            # of ProgressReporter in case we need to setup
+            # or access the reporter somehow (e.g. for testing)
             reporter = reporter()
+        assert isinstance(reporter, ProgressReporter)
         self.reporter = reporter
         reporter.start(self.state)
 

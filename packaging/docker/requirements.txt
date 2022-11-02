@@ -55,7 +55,7 @@ jinja2==3.0.3
     # via
     #   distributed
     #   nbconvert
-joblib==1.1.0
+joblib==1.2.0
     # via scikit-learn
 jsonschema==4.2.1
     # via

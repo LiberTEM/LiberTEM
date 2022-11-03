@@ -510,6 +510,8 @@ def test_chunked_weird(lt_ctx, tmpdir_factory, chunks, udf, shared_random_data):
         np.sum(data, axis=(2, 3))
     )
 
+    os.unlink(filename)
+
 
 @pytest.mark.parametrize('in_dtype', [
     np.float32,

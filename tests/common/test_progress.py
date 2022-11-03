@@ -1,6 +1,7 @@
 import time
 import typing
 
+import libertem.api as lt
 from libertem.udf.sum import SumUDF
 from libertem.udf.base import UDFRunner
 from libertem.common.progress import TQDMProgressReporter, ProgressState
@@ -9,7 +10,6 @@ import utils
 
 if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.tiling import DataTile
-    import libertem.api as lt
 
 
 class TrackingTQDM(TQDMProgressReporter):
@@ -133,7 +133,7 @@ class GoSlowSumUDF(WaitEndSumUDF):
         self._tiles_seen += 1
 
 
-def _test_progress_slowudf(context: 'lt.Context'):
+def _test_progress_slowudf(context: lt.Context):
     data = utils._mk_random(size=(4, 4, 16, 16), dtype='float32')
     ds = context.load(
         'memory',
@@ -168,3 +168,46 @@ def test_progress_inline_slowudf(lt_ctx):
 
 def test_progress_concurrent_slowudf(concurrent_ctx):
     _test_progress_slowudf(concurrent_ctx)
+
+
+def test_progress_dask(dask_executor, default_raw):
+    reporter = TrackingTQDM()
+    udf = GoSlowSumUDF()
+    runner = UDFRunner([udf], progress_reporter=reporter)
+    runner.run_for_dataset(
+        default_raw,
+        dask_executor,
+        roi=None,
+        progress=True
+    )
+
+    assert reporter._bar.n == reporter._bar.total
+    num_part = default_raw.get_num_partitions()
+    # Run start / stop + (part start / stop * num_part)
+    min_num_messages = 2 + num_part * 2
+    # default_raw doesn't have enough tiles to send intermediate
+    # tile messages (depending on the system resources), but we can at least
+    # check the comms are working by verifying we had min_num_messages
+    assert len(reporter._history) >= min_num_messages
+
+
+def test_progress_pipelined(default_raw):
+    with lt.Context.make_with("pipelined") as ctx:
+        reporter = TrackingTQDM()
+        udf = GoSlowSumUDF()
+        runner = UDFRunner([udf], progress_reporter=reporter)
+        runner.run_for_dataset(
+            default_raw,
+            ctx.executor,
+            roi=None,
+            progress=True
+        )
+
+        assert reporter._bar.n == reporter._bar.total
+        num_part = default_raw.get_num_partitions()
+        # Run start / stop + (part start / stop * num_part)
+        min_num_messages = 2 + num_part * 2
+        # default_raw doesn't have enough tiles to send intermediate
+        # tile messages (depending on the system resources), but we can at least
+        # check the comms are working by verifying we had min_num_messages
+        assert len(reporter._history) >= min_num_messages

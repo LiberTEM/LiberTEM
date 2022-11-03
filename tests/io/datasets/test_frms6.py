@@ -116,7 +116,14 @@ def default_frms6_raw(tmpdir_factory):
             block = _read_block(f, raw_shape, start, stop)
             view[offset + start:offset + stop] = _unfold_block(block)
         offset += frame_count
-    return data
+
+    yield data
+
+    # Might be needed for windows, so we don't keep any views, mmaps or open
+    # file handles around:
+    del view
+    del data
+    os.unlink(fn)
 
 
 @pytest.fixture(scope='module')

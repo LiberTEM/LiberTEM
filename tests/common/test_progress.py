@@ -1,4 +1,6 @@
 import time
+import pytest
+import sys
 import typing
 
 import libertem.api as lt
@@ -170,6 +172,8 @@ def test_progress_concurrent_slowudf(concurrent_ctx):
     _test_progress_slowudf(concurrent_ctx)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7),
+                    reason="Python3.6 Dask has no comms")
 def test_progress_dask(dask_executor, default_raw):
     reporter = TrackingTQDM()
     udf = GoSlowSumUDF()

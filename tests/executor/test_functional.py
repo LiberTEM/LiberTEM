@@ -219,7 +219,7 @@ def _calculate(ctx, load_kwargs):
     roi = roi.reshape(ds.shape.nav)
     print(f"calculating {load_kwargs['filetype']}")
     result = ctx.run_udf(
-        dataset=ds, udf=udfs, roi=roi
+        dataset=ds, udf=udfs, roi=roi, progress=True,
     )
     return result
 

@@ -1,5 +1,5 @@
 import threading
-from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Tuple, Any, NamedTuple, Optional
+from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Any, NamedTuple, Optional
 import time
 from libertem.common.executor import WorkerQueueEmpty
 
@@ -322,6 +322,11 @@ class PartitionTrackerNoOp:
         ...
 
 
+def get_time():
+    # Exists for testing / mocking
+    return time.time()
+
+
 class PartitionProgressTracker(PartitionTrackerNoOp):
     """
     Tracks the tile processing speed of a Partition and
@@ -371,12 +376,12 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         if self._worker_context is None:
             return
 
-        send, elements = self.should_send_progress(tile.size)
-        if send:
+        send_elements = self.should_send_progress(tile.size)
+        if send_elements:
             self._worker_context.signal(
                 self._ident,
                 'tile_complete',
-                {'elements': elements},
+                {'elements': send_elements},
             )
 
     def signal_complete(self):
@@ -394,13 +399,13 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
             {},
         )
 
-    def should_send_progress(self, elements: int) -> Tuple[bool, int]:
+    def should_send_progress(self, elements: int) -> int:
         """
         Given the number elements of data that have been processed since
         the last message was sent, decide if a signal should be sent to the
         main node about the partition progress
         """
-        current_t = time.time()
+        current_t = get_time()
         self._elements_complete += elements
 
         if self._last_message_t is None:
@@ -410,7 +415,7 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
             # to give a better accounting. The first tile stack
             # is essentially treated as 'free'.
             self._last_message_t = current_t
-            return False, 0
+            return 0
 
         time_since_last_m = current_t - self._last_message_t
         not_rate_limited = time_since_last_m > self._min_message_interval
@@ -418,7 +423,7 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         if not_rate_limited:
             completed_elements = self._elements_complete
             self._elements_complete = 0
-            self._last_message = current_t
-            return True, completed_elements
+            self._last_message_t = current_t
+            return completed_elements
 
-        return False, 0
+        return 0

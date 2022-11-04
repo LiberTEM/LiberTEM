@@ -522,9 +522,16 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
     def close(self):
         if self.is_local:
-            if self.client.cluster is not None:
-                self.client.cluster.close(timeout=30)
+            # Client.close won't close the Cluster itself because
+            # we provided an external dd.SpecCluster
             self.client.close()
+            # Manually close the cluster if not yet torn down
+            # use getattr just in case cluster is already gone
+            if getattr(self.client, 'cluster', None) is not None:
+                self.client.cluster.close(timeout=30)
+        # NOTE: distributed already registers atexit handlers for
+        # both clients and clusters, this is here to allow manual closure
+        # followed by creation of a new Executor without accumulating clusters
 
     @classmethod
     def connect(cls, scheduler_uri, *args, client_kwargs: Optional[dict] = None, **kwargs):

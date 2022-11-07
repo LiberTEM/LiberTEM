@@ -504,7 +504,7 @@ def test_auto_teardown_2():
 def test_manual_teardown():
     p = Process(target=_teardown_manual, name="_teardown_manual")
     p.start()
-    p.join(10)
+    p.join(30)
     exitcode = p.exitcode
     if exitcode != 0:
         p.terminate()

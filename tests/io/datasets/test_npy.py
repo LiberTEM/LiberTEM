@@ -1,10 +1,10 @@
 import os
 import sys
 import json
-import pickle
 
 import numpy as np
 import pytest
+import cloudpickle
 
 import libertem.api as lt
 
@@ -112,8 +112,8 @@ def test_comparison_roi(default_npy, default_raw_data, lt_ctx_fast, as_sparse):
 
 
 def test_pickle_is_small(default_npy):
-    pickled = pickle.dumps(default_npy)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_npy)
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 2 * 1024

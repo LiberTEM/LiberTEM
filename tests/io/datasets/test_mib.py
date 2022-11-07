@@ -1,12 +1,12 @@
 import os
 import sys
-import pickle
 import json
 from unittest import mock
 import random
 
 import numpy as np
 import pytest
+import cloudpickle
 
 from libertem.io.dataset.mib import MIBDataSet, get_filenames
 from libertem.udf.raw import PickUDF
@@ -341,8 +341,8 @@ def test_comparison_roi(default_mib, default_mib_raw, lt_ctx_fast):
 
 @needsdata
 def test_pickle_is_small(default_mib):
-    pickled = pickle.dumps(default_mib)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_mib)
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 2 * 1024

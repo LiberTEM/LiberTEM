@@ -1,6 +1,5 @@
 import os
 import json
-import pickle
 import threading
 import itertools
 from unittest import mock
@@ -148,8 +147,8 @@ def test_read_3(lt_ctx, random_hdf5):
 
 
 def test_pickle_ds(lt_ctx, hdf5_ds_1):
-    pickled = pickle.dumps(hdf5_ds_1)
-    loaded = pickle.loads(pickled)
+    pickled = cloudpickle.dumps(hdf5_ds_1)
+    loaded = cloudpickle.loads(pickled)
 
     assert loaded._dtype is not None
 

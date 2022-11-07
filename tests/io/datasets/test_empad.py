@@ -1,11 +1,11 @@
 import os
 import sys
 import json
-import pickle
 import random
 
 import pytest
 import numpy as np
+import cloudpickle
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.analysis.raw import PickFrameAnalysis
@@ -184,8 +184,8 @@ def test_scheme_too_large(default_empad):
 
 
 def test_pickle_is_small(default_empad):
-    pickled = pickle.dumps(default_empad)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_empad)
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 2 * 1024

@@ -1,9 +1,9 @@
 import os
-import pickle
 
 import numpy as np
 import pytest
 import dask.distributed as dd
+import cloudpickle
 
 from libertem.io.dataset.cached import CachedDataSet, LRUCacheStrategy
 from libertem.io.dataset.base import TilingScheme
@@ -106,4 +106,4 @@ def test_partition_pickles(default_cached_ds):
     assert that we don't do anything unpickleable in the Partition code!
     """
     p = next(default_cached_ds.get_partitions())
-    pickle.loads(pickle.dumps(p))
+    cloudpickle.loads(cloudpickle.dumps(p))

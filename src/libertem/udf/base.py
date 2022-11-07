@@ -24,7 +24,7 @@ from libertem.common.buffers import (
 )
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol
-from libertem.common.math import prod, count_nonzero
+from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )

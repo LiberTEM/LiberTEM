@@ -1,12 +1,12 @@
 import os
 import sys
 import json
-import pickle
 import random
 
 import numpy as np
 import pytest
 import warnings
+import cloudpickle
 
 from libertem.udf.sum import SumUDF
 from libertem.udf.raw import PickUDF
@@ -124,8 +124,8 @@ def test_comparison_roi(default_raw, default_raw_data, lt_ctx_fast, as_sparse):
 
 
 def test_pickle_is_small(default_raw):
-    pickled = pickle.dumps(default_raw)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_raw)
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 2 * 1024

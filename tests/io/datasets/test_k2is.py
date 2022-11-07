@@ -1,11 +1,11 @@
 import os
 import sys
 import json
-import pickle
 import random
 
 import numpy as np
 import pytest
+import cloudpickle
 
 from libertem.io.dataset.k2is import K2ISDataSet, get_filenames
 from libertem.executor.inline import InlineJobExecutor
@@ -301,8 +301,8 @@ def test_correction(default_k2is, lt_ctx, with_roi):
 
 @needsdata
 def test_dataset_is_picklable(default_k2is):
-    pickled = pickle.dumps(default_k2is)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_k2is)
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 4 * 1024
@@ -310,8 +310,8 @@ def test_dataset_is_picklable(default_k2is):
 
 @needsdata
 def test_partition_is_picklable(default_k2is):
-    pickled = pickle.dumps(next(default_k2is.get_partitions()))
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(next(default_k2is.get_partitions()))
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 4 * 1024

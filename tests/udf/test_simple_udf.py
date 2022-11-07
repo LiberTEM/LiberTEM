@@ -1,7 +1,6 @@
-import pickle
-
 import numpy as np
 import pytest
+import cloudpickle
 
 from libertem.udf.base import UDF, UDFPartRunner, UDFParams, UDFMeta
 from libertem.common.executor import Environment
@@ -454,7 +453,7 @@ def test_udf_pickle(lt_ctx):
     pixelsum.set_meta(meta)
     pixelsum.init_result_buffers()
     pixelsum.allocate_for_part(partition, None)
-    pickle.loads(pickle.dumps(pixelsum))
+    cloudpickle.loads(cloudpickle.dumps(pixelsum))
 
 
 class ExtraShapeWithZero(UDF):

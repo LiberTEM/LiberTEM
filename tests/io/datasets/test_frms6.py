@@ -1,12 +1,12 @@
 import os
 import sys
-import pickle
 import json
 import random
 import glob
 
 import pytest
 import numpy as np
+import cloudpickle
 
 from libertem.io.dataset.frms6 import (
     FRMS6DataSet, _map_y, FRMS6Decoder, get_filenames
@@ -310,8 +310,8 @@ def test_comparison_darkref(default_frms6, default_frms6_darkref):
 
 @needsdata
 def test_pickle_is_small(default_frms6):
-    pickled = pickle.dumps(default_frms6)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_frms6)
+    cloudpickle.loads(pickled)
 
     # because of the dark frame stuff, the dataset is actually quite large:
     assert len(pickled) < 300 * 1024

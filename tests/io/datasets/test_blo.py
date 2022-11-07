@@ -1,11 +1,11 @@
 import os
 import sys
-import pickle
 import json
 import random
 
 import numpy as np
 import pytest
+import cloudpickle
 
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.executor.inline import InlineJobExecutor
@@ -143,14 +143,14 @@ def test_comparison_roi(default_blo, default_blo_raw, lt_ctx_fast):
 
 
 def test_pickle_meta_is_small(default_blo):
-    pickled = pickle.dumps(default_blo._meta)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_blo._meta)
+    cloudpickle.loads(pickled)
     assert len(pickled) < 512
 
 
 def test_pickle_fileset_is_small(default_blo):
-    pickled = pickle.dumps(default_blo._get_fileset())
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_blo._get_fileset())
+    cloudpickle.loads(pickled)
     assert len(pickled) < 1024
 
 

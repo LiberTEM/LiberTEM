@@ -1,6 +1,5 @@
 import os
 import sys
-import pickle
 import random
 from pathlib import Path
 import glob
@@ -8,6 +7,7 @@ import glob
 import numpy as np
 import pytest
 from PIL import Image
+import cloudpickle
 
 from libertem.io.dataset.tvips import TVIPSDataSet, get_filenames
 from libertem.udf.raw import PickUDF
@@ -306,8 +306,8 @@ def test_scheme_too_large(default_tvips):
 
 @needsdata
 def test_pickle_is_small(default_tvips):
-    pickled = pickle.dumps(default_tvips)
-    pickle.loads(pickled)
+    pickled = cloudpickle.dumps(default_tvips)
+    cloudpickle.loads(pickled)
 
     # let's keep the pickled dataset size small-ish:
     assert len(pickled) < 2 * 1024

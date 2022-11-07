@@ -213,7 +213,7 @@ class ValidationUDF(UDF):
         results = super()._do_get_results()
         roi = self.meta.roi
         if roi is not None:
-            roi = roi.ravel()
+            roi = roi.reshape((-1,))
         sig_shape = self.meta.dataset_shape.sig.to_tuple()
         frame_mask = np.zeros(sig_shape, dtype=bool)
         for flat_idx, slices in enumerate(results['seen'].data.ravel()):

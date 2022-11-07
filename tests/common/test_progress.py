@@ -164,14 +164,17 @@ def _test_progress_slowudf(context: lt.Context):
     assert len(reporter._history) >= (min_num_messages + num_part)
 
 
+@pytest.mark.slow
 def test_progress_inline_slowudf(lt_ctx):
     _test_progress_slowudf(lt_ctx)
 
 
+@pytest.mark.slow
 def test_progress_concurrent_slowudf(concurrent_ctx):
     _test_progress_slowudf(concurrent_ctx)
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(sys.version_info < (3, 7),
                     reason="Python3.6 Dask has no comms")
 def test_progress_dask(dask_executor, default_raw):
@@ -195,6 +198,7 @@ def test_progress_dask(dask_executor, default_raw):
     assert len(reporter._history) >= min_num_messages
 
 
+@pytest.mark.slow
 def test_progress_pipelined(default_raw):
     with lt.Context.make_with("pipelined") as ctx:
         reporter = TrackingTQDM()

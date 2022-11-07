@@ -4,6 +4,7 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from libertem.common import Slice, Shape
+from libertem.common.math import count_nonzero
 from libertem.io.corrections import CorrectionSet
 from .tiling import DataTile
 from .tiling_scheme import TilingScheme
@@ -57,7 +58,7 @@ class Partition:
         self.slice = partition_slice
         self._io_backend = io_backend
         self._decoder = decoder
-        self._idx = None
+        self._idx = Optional[int]
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 
@@ -120,7 +121,7 @@ class Partition:
         return self.meta.dtype
 
     @property
-    def shape(self):
+    def shape(self) -> Shape:
         """
         the shape of the partition; dimensionality depends on format
         """
@@ -145,7 +146,7 @@ class Partition:
         if roi is None:
             return self.shape.nav.size
         else:
-            return np.count_nonzero(roi_for_partition(roi, self))
+            return count_nonzero(roi_for_partition(roi, self))
 
 
 class BasePartition(Partition):

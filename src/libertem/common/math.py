@@ -32,7 +32,7 @@ def prod(iterable: Iterable[ProdAccepted]):
     return result
 
 
-def count_nonzero(array):
+def count_nonzero(array) -> int:
     try:
         return np.count_nonzero(array)
     except TypeError:

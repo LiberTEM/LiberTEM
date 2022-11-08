@@ -2,6 +2,8 @@ from typing import Iterable, Union, Tuple
 
 import numpy as np
 
+from .sparse import assert_sparse
+
 
 _prod_accepted = (
     int, bool,
@@ -36,7 +38,9 @@ def count_nonzero(array) -> int:
     try:
         return np.count_nonzero(array)
     except TypeError:
-        return array.nnz
+        sparse_a = assert_sparse(array)
+        nnz: int = sparse_a.nnz
+        return nnz
 
 
 def flat_nonzero(array):

@@ -545,7 +545,7 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 def _make_spec(
     cpus: Union[int, Iterable[int]],
     cudas: Union[int, Iterable[int]],
-    cuda_info: Dict[int, Dict],
+    cuda_info: Optional[Dict[int, Dict]] = None,
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
     max_workers_per_cuda: int = 4,
     ram_per_cuda_worker: int = 4*1024*1024*1024
@@ -570,7 +570,7 @@ def _make_spec(
         result in better device utilization.
 
     cuda_info
-        Dictionary with additional infomration about the CUDA devices.
+        Dictionary with additional information about the CUDA devices.
         * Keys: CUDA device IDs as int
         * Values:
           * :code:`'mem_info'`: Tuple[int, int] with available and total GPU ram
@@ -579,6 +579,13 @@ def _make_spec(
         Currently ignored, for compatibility with :func:`libertem.utils.devices.detect`
     """
     spec = []
+
+    if cuda_info is None:
+        cuda_info = {}
+
+    if isinstance(cpus, int):
+        cpus = tuple(range(cpus))
+
     gpu_plan = make_gpu_plan(
         cudas=cudas,
         cuda_info=cuda_info,
@@ -587,9 +594,6 @@ def _make_spec(
     )
 
     worker_idx = 0
-
-    if isinstance(cpus, int):
-        cpus = tuple(range(cpus))
 
     for device_id in cpus:
         if gpu_plan:

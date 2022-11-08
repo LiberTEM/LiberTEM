@@ -194,7 +194,7 @@ class RawCSRDataSet(DataSet):
                     "image_count": image_count,
                 }
             }
-        except (TypeError, toml.TomlDecodeError, UnicodeDecodeError):
+        except (TypeError, toml.TomlDecodeError, UnicodeDecodeError, OSError):
             return False
 
     @classmethod

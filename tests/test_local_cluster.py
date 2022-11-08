@@ -8,7 +8,7 @@ from libertem import api
 from libertem.udf.base import NoOpUDF
 from utils import _naive_mask_apply, _mk_random
 from libertem.executor.dask import cluster_spec, DaskJobExecutor
-from libertem.utils.devices import detect
+from libertem.utils.devices import detect, has_cupy
 
 from utils import DebugDeviceUDF
 
@@ -189,14 +189,33 @@ def test_start_local_cupyonly(hdf5_ds_1):
 
 
 def test_cluster_spec_cpu_int():
-    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True)
-    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True)
+    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True, cuda_info={})
+    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True, cuda_info={})
     assert range_spec == int_spec
 
 
 def test_cluster_spec_cudas_int():
     spec_n = 4
-    cuda_spec = cluster_spec(cpus=tuple(), cudas=spec_n, has_cupy=True)
+    cuda_info = {
+        0: {
+            'mem_info': (10000000, 10000000),
+        },
+        1: {
+            'mem_info': (10000000, 10000000),
+        },
+        2: {
+            'mem_info': (10000000, 10000000),
+        },
+        3: {
+            'mem_info': (10000000, 10000000),
+        },
+    }
+    cuda_spec = cluster_spec(
+        cpus=tuple(),
+        cudas=spec_n,
+        has_cupy=True,
+        cuda_info=cuda_info
+    )
     num_cudas = 0
     for spec in cuda_spec.values():
         num_cudas += spec.get('options', {}).get('resources', {}).get('CUDA', 0)

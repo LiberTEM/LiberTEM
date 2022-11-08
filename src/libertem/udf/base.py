@@ -1933,7 +1933,7 @@ class UDFPartRunner:
                 for backend, udfs in execution_plan.items():
                     device_tile = converter.get(backend)
                     self._run_tile(udfs, partition, tile, backend, device_tile, roi=roi)
-            partition_progress.signal_tile_complete(tile)
+                partition_progress.signal_tile_complete(tile)
         except AttributeError as e:
             removed = {
                 'tile_slice': 'self.meta.slice',

@@ -406,7 +406,15 @@ def test_make_spec_cpu_int():
 
 def test_make_spec_cuda_int():
     spec_n = 2
-    cuda_spec = PipelinedExecutor.make_spec(cpus=[0], cudas=spec_n)
+    cuda_info = {
+        0: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER)},
+        1: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER)},
+    }
+    cuda_spec = PipelinedExecutor.make_spec(
+        cpus=[0, 1, 2],
+        cudas=spec_n,
+        cuda_info=cuda_info
+    )
     num_cudas = 0
     for spec in cuda_spec:
         if spec['device_kind'] == 'CUDA':

@@ -103,9 +103,10 @@ def cluster_spec(
         In the iterable case these have to match CUDA device IDs on the system.
         Specify the same ID multiple times to spawn multiple workers on the same CUDA device.
     cuda_info
-        Dictionary with additional infomration about the CUDA devices. * Keys:
-        CUDA device IDs as int * Values:
-          * :code:`'mem_info'`: Tuple[int, int] with available and total GPU ram
+        Dictionary with additional information about the CUDA devices.
+         * Keys: CUDA device IDs as int
+         * Values:
+           * :code:`'mem_info'`: Tuple[int, int] with available and total GPU ram
     has_cupy: bool
         Specify if the cluster should signal that it supports GPU-based array programming using
         CuPy

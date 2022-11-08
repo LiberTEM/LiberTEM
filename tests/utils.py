@@ -215,8 +215,8 @@ class ValidationUDF(UDF):
         but could still fail on all-zeros data, for example).
         """
         # Cut out the flat nav dimension
-        tile_sig_origin = tile.tile_slice.origin[1:]
-        tile_sig_shape = tile.tile_slice.shape[1:]
+        tile_sig_origin = self.meta.slice.origin[1:]
+        tile_sig_shape = self.meta.slice.shape[1:]
         # construct slices
         frame_slices = tuple(slice(o, o + s) for o, s in zip(tile_sig_origin, tile_sig_shape))
         for i in range(self.results.seen.size):

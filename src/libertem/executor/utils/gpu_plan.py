@@ -5,6 +5,10 @@ def make_gpu_plan(cudas, cuda_info, max_workers_per_cuda, ram_per_cuda_worker):
     gpu_plan = []
     disposable_ram = {}
     worker_count = {}
+
+    if isinstance(cudas, int):
+        cudas = tuple(range(cudas))
+
     for cuda in cudas:
         disposable_ram[cuda] = cuda_info[cuda]['mem_info'][1]
         worker_count[cuda] = 0

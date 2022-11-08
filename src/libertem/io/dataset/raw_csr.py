@@ -369,7 +369,11 @@ def get_nav_size(descriptor: CSRDescriptor) -> int:
     '''
     To run efficiently on a remote worker for dataset initialization
     '''
-    indptr = np.memmap(descriptor.indptr_file, dtype=descriptor.indptr_dtype)
+    indptr = np.memmap(
+        descriptor.indptr_file,
+        dtype=descriptor.indptr_dtype,
+        mode='r',
+    )
     return len(indptr) - 1
 
 

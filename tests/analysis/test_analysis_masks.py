@@ -35,6 +35,11 @@ def _run_mask_test_program(lt_ctx, dataset, mask, expected, do_sparse=True):
         results_sparse = lt_ctx.run(analysis_sparse)
     results_dense = lt_ctx.run(analysis_dense)
 
+    analysis_list_of_arr = lt_ctx.create_mask_analysis(
+        dataset=dataset, factories=lambda: [mask, mask], dtype=dtype
+    )
+    results_list_of_arr = lt_ctx.run(analysis_list_of_arr)
+
     assert np.allclose(
         results_default.mask_0.raw_data,
         expected

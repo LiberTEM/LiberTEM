@@ -4,7 +4,7 @@ import os
 import scipy.sparse
 import numpy as np
 import numba
-import toml
+import tomli
 
 from libertem.common import Slice, Shape
 from libertem.common.math import prod
@@ -22,6 +22,11 @@ if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.backend import IOBackend
     from libertem.common.executor import JobExecutor
     import numpy.typing as nt
+
+
+def load_toml(path: str):
+    with open(path, "rb") as f:
+        return tomli.load(f)
 
 
 class RawCSRDatasetParams(MessageConverter):
@@ -109,7 +114,7 @@ class RawCSRDataSet(DataSet):
         self._descriptor = None
 
     def initialize(self, executor: "JobExecutor") -> "DataSet":
-        self._conf = conf = executor.run_function(toml.load, self._path)
+        self._conf = conf = executor.run_function(load_toml, self._path)
         assert conf is not None
         if conf['params']['filetype'].lower() != 'raw_csr':
             raise ValueError(f"Filetype is not CSR, found {conf['params']['filetype']}")
@@ -173,7 +178,7 @@ class RawCSRDataSet(DataSet):
     @classmethod
     def detect_params(cls, path: str, executor: "JobExecutor"):
         try:
-            conf = executor.run_function(toml.load, path)
+            conf = executor.run_function(load_toml, path)
             if "params" not in conf:
                 return False
 
@@ -194,7 +199,7 @@ class RawCSRDataSet(DataSet):
                     "image_count": image_count,
                 }
             }
-        except (TypeError, toml.TomlDecodeError, UnicodeDecodeError, OSError):
+        except (TypeError, UnicodeDecodeError, tomli.TOMLDecodeError, OSError):
             return False
 
     @classmethod
@@ -345,7 +350,7 @@ def get_descriptor(path: str) -> CSRDescriptor:
     """
     Get a CSRDescriptor from the path to a toml sidecar file
     """
-    conf = toml.load(path)
+    conf = load_toml(path)
     assert conf is not None
     if conf['params']['filetype'].lower() != 'raw_csr':
         raise ValueError(f"Filetype is not CSR, found {conf['params']['filetype']}")

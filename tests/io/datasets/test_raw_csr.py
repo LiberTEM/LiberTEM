@@ -238,3 +238,14 @@ def test_detect_params(raw_csr_generated, default_raw, inline_executor):
 
 def test_diagnostics(raw_csr_generated):
     raw_csr_generated.diagnostics
+
+
+def test_exception_at_detect(tmpdir_factory, dask_executor):
+    # setup: detect on valid UFT8, invalid TOML
+    datadir = tmpdir_factory.mktemp('raw_csr_txt')
+    fn = str(datadir / 'test.txt')
+    with open(fn, "w") as f:
+        f.write("stuff,in,here")
+
+    # exceptions should be properly caught and should be pickleable:
+    assert RawCSRDataSet.detect_params(fn, executor=dask_executor) is False

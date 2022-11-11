@@ -1,0 +1,148 @@
+# can be missing or a directory path
+# can be relative ./, can use posix path semantics ../data, ~/Data
+# if missing, os.get_cwd() is assumed for cases
+# where other paths are not absolute
+# can be a mapping from hostname to path to support
+# different locations on different machines
+# root can be re-defined in file and fileset keys
+# and will be used preferentially in that scope
+root = '~/Data/'
+# can be string pointing to key in config, 
+# or a list of strings for multiple datasets
+
+[my_tvips_dataset]
+type = "dataset"
+# matches a libertem dataset identifier
+format = "tvips"
+# file / fileset specifiers are resolved from the global scope
+# therefore they can be external to the DS definition (i.e. re-usable)
+# or they can be internal to it in which case we would use
+# 'my_tvips_dataset.my_metadata_file'
+# can also be a file name or path directly as a shortcut,
+# if file given as 'my_tvips_dataset.tvips' there is
+# potential ambiguity over ['my_tvips_dataset']['tvips'] and
+# the literal file 'my_tvips_dataset.tvips', in this case
+# we look for the key first, and if found it takes priority,
+# else treat the value as a filename relative to root
+# these keys (meta, data) are dataset-specific but should
+# be standardised ideally
+meta = 'my_metadata_file'
+data = 'my_data_fileset'
+# To check if every dataset accepts this parameter
+nav_shape = [20, 30]
+# must 
+# To check if every dataset accepts this parameter
+sig_shape = [32, 32]
+# anything compatible with np.dtype
+dtype = 'float32'
+sync_offset = 0
+# a correctionset to associate to this dataset
+# can also connect a correctionset to a specific analysis run
+# using the same 'my_corrections' defintion
+corrections = 'my_corrections'
+# accept all other dataset arguments for specific ds type
+
+[my_metadata_file]
+type = 'file'
+# if root is present, overrides global root inside this scope
+# can be directory or mapping of hostname:directory
+# root = './'
+# can be an absolute file path or relative file path or simple file name
+# if relative or simple name, resolved relative to local or global root
+file = "/home/alex/Data/TVIPS/rec_20200623_080237_000.tvips"
+# optional specifiers
+format = 'RAW' # npy, tiff, jpg etc
+dtype = 'float32'
+shape = [64, 64]
+
+[my_data_fileset]
+type='fileset'
+# if root is present, overrides global root inside this scope
+# can be directory or mapping of hostname:directory
+# root = './'
+# can be a glob string applied from root
+# if files is a string and points to a file precisely (no-glob)
+# when combined with root, then read this file as text
+# to fill the files list
+# can be an array of file names / (full)paths
+# with posix semantics, including mixed path / globs
+# consider adding regex matching ??
+files = ["test.raw", 'test2.raw']
+# How to sort files found via the root/files keys
+# either false, or one of 'natsorted', 'humansorted' or 'os_sorted'
+# None will defer to the list provided or glob results,
+# though Python glob does not provide any ordering guarantee 
+sort = false
+# a list of strings in the natsort enum, only compatible
+# with sort == 'natsorted', else raise
+sort_options = []
+
+[my_corrections]
+type='correctionset'
+excluded_pixels = [
+    [0, 0],
+    [128, 128],
+]
+
+[my_corrections.dark_frame]
+# follows file specifier schema
+# requires format and dtype/shape as appropriate
+# alternatively could write data directly in TOML (verbose!)
+# data = [
+#    [5., 6., 7., 8.],
+#    [1., 2., 3., 4.],
+#    [5., 6., 7., 8.],
+#    [1., 2., 3., 4.],
+#]
+
+[my_corrections.gain_map]
+# follows file specifier schema
+# requires format and dtype/shape as appropriate
+# alternatively could write data directly in TOML (verbose!)
+
+[my_roi_file]
+#file_spec_schema
+
+[my_roi]
+type = 'roi'
+read_as = 'file'
+file = 'my_roi_file'
+# can follow file specifier schema
+# requires format and dtype/shape as appropriate
+# can declare directly with data=
+# or can declare :
+# roi_base = true / false
+# toggle_active = [
+#    [0, 0],
+#    [128, 128],
+#]
+# shape can be inferred from dataset shape at runtime
+
+[my_context]
+type = 'context'
+executor = 'Dask'
+# args passed to executor.from_toml(**kwargs)
+cpus = 4
+cudas = []
+
+[sum_udf]
+type='udf'
+class = 'libertem.udf.sum.SumUDF'
+
+[pick_a]
+type='analysis'
+analysis = 'pick'
+x = 5
+y = 10
+
+[my_run]
+type = 'run'
+context = 'my_context'
+dataset = 'my_tvips_dataset'
+tasks = ['sum_udf', 'pick_a']
+roi = 'my_roi'
+corrections = 'my_corrections'
+# if specified, write outputs in npz format
+# can be file specifier key or a file name / path
+# use root semantics
+output = ''

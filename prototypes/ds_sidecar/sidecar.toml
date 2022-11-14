@@ -85,15 +85,17 @@ excluded_pixels = [
 ]
 
 [my_corrections.dark_frame]
+type = 'array'
 # follows file specifier schema
 # requires format and dtype/shape as appropriate
 # alternatively could write data directly in TOML (verbose!)
-# data = [
-#    [5., 6., 7., 8.],
-#    [1., 2., 3., 4.],
-#    [5., 6., 7., 8.],
-#    [1., 2., 3., 4.],
-#]
+data = [
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+]
+shape = [2, 8]
 
 [my_corrections.gain_map]
 # follows file specifier schema

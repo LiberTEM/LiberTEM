@@ -1,9 +1,9 @@
-from typing import Dict, Any, Union, Sequence, Optional, List, TYPE_CHECKING
+from typing import Dict, Any, Union, Sequence, Optional, List, TYPE_CHECKING, NamedTuple
 from typing_extensions import Literal
 import glob
 import numpy as np
 import pathlib
-import toml
+import tomli
 import json
 import functools
 import operator
@@ -18,9 +18,9 @@ if TYPE_CHECKING:
     import numpy.typing as nt
 
 
-sort_types = Literal[False, 'natsorted', 'humansorted', 'os_sorted']
+sort_types = Literal['natsorted', 'humansorted', 'os_sorted']
 enum_names = tuple(en.name for en in natsort.ns)
-
+spec_type_key = 'type'
 
 class ParserException(Exception):
     ...
@@ -52,48 +52,119 @@ sort_methods = {
 }
 
 
-class SpecBase:
+def resolve_dotpath(struct: Dict, dotpath: str):
+    if not isinstance(dotpath, str):
+        raise TypeError(f'Cannot resolve key {dotpath}')
+    components = dotpath.split('.')
+    view = struct
+    for c in components:
+        if c not in view:
+            raise TypeError(f'Cannot resolve key {dotpath}')
+        view = view.get(c)
+    return view
+
+
+def dotpath_exists(struct: Dict, dotpath: str):
+    try:
+        _ = resolve_dotpath(struct, dotpath)
+        return True
+    except TypeError:
+        return False
+
+
+class SpecBase(dict):
     spec_type = 'base'
-    reserved_keys = ['type']
+    required_keys = []
+    parse_as = None
 
-    def __init__(
-        self,
-        spec: Dict[str, Any],
-        external_root: pathlib.Path,
-    ):
-        self._type = spec.pop('type', self.spec_type)
-        self._spec = spec
-        self._external_root = external_root
+    def __init__(self, **spec):
+        super().__init__(**spec)
+        self._root_structure = self
+        self.validate()
 
-    @property
-    def spec(self) -> Dict[str, Any]:
-        return self._spec
+    def validate(self):
+        # Add read_as injection of required_keys here
+        # consider needing some requires from type and some from read_as
+        missing = tuple(k for k in self.required_keys if k not in self)
+        if missing:
+            raise TypeError(f'Missing keys {missing} for {self.spec_type}')
+
+    def parse(self, parse_as: Optional[NamedTuple] = None):
+        # Convert self into a NamedTuple of fields specified in
+        # either the parse_as argument or the default parse_as for the class
+        if parse_as is None:
+            if self.parse_as is None:
+                raise TypeError(f'Cannot parse {self.__class__.__name__} '
+                                'to object without type definition')
+            parse_as = self.parse_as
+        fields = {}
+        for field in parse_as._fields:
+            try:
+                fields[field] = getattr(self, field)
+            except AttributeError as e:
+                if field not in parse_as._field_defaults:
+                    raise e
+        return parse_as(**fields)
+
+    def load(self):
+        # Try to load the oject defined by this spec
+        # Will call load on all sub-specs (assumed to be required)
+        raise NotImplementedError('Cannot load a bare SpecBase')
 
     @property
     def root(self) -> pathlib.Path:
-        local_root = self.spec.get('root', None)
-        if local_root is not None:
-            return pathlib.Path(local_root)
+        return self.get('root', None)
+
+    def read_as(self) -> Optional[str]:
+        return self.get('read_as', None)
+
+    def _set_root_structure(self, struct: Dict[str, Any]):
+        self._root_structure = struct
+
+    def resolve(self, key):
+        """
+        Get key from self in dot notation (a.b.c)
+        then try to get key from the root tree
+        If not available then raise
+        """
+        try:
+            return resolve_dotpath(self, key)
+        except AttributeError as e:
+            if self._root_structure is not self:
+                return resolve_dotpath(self._root_structure, key)
+            raise e
+
+    def as_tree(self, level=0, name=None):
+        ident = '  ' * level + f'{self.__class__.__name__}'
+        if name is not None:
+            ident = ident + f'   [{name}]'
+        lines = [ident]
+        if name is not None:
+            lines[-1]
+        for key, value in self.items():
+            if isinstance(value, SpecBase):
+                lines.extend(value.as_tree(level=level + 1, name=key))
+        if level == 0:
+            return '\n'.join(lines)
         else:
-            return self._external_root
+            return lines
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({super().__repr__()})'
+
+
+class FileT(NamedTuple):
+    path: pathlib.Path
 
 
 class FileSpec(SpecBase):
     spec_type = 'file'
-    reserved_keys = ['type', 'file', 'format']
-
-    def __init__(
-        self,
-        spec: Dict[str, Any],
-        external_root: pathlib.Path,
-    ):
-        super().__init__(spec, external_root)
-        if self.file is None:
-            raise ParserException('No file path supplied')
+    required_keys = ['file']
+    parse_as = FileT
 
     @property
     def file(self) -> Optional[str]:
-        return self.spec.get('file', None)
+        return self.get('file', None)
 
     @property
     def path(self) -> pathlib.Path:
@@ -105,39 +176,36 @@ class FileSpec(SpecBase):
 
     @property
     def format(self) -> str:
-        # could infer format from file suffix ??
-        format = self.spec.get('format', None)
+        format = self.get('format', None)
         if format is not None:
             return format.strip().lower()
         return format
 
     @property
-    def other_params(self) -> Dict[str, Any]:
-        return {k: v for k, v
-                in self.spec.values()
-                if k not in self.reserved_keys}
+    def load_options(self) -> Dict[str, Any]:
+        return self.get('load_options', {})
 
     def load(self) -> np.ndarray:
         if self.format is None:
-            return
-        if self.format not in format_defs.keys():
-            raise ParserException(f'Unrecognized file format {self.format}')
-        return format_defs[self.format](self.path, **self.other_params)
+            format = self.path.suffix.lstrip('.').lower()
+        else:
+            format = self.format
+        if format not in format_defs.keys():
+            raise ParserException(f'Unrecognized file format {format}')
+        return format_defs[format](self.path, **self.load_options)
+
+
+class FileSetT(NamedTuple):
+    filelist: List[pathlib.Path]
 
 
 class FileSetSpec(SpecBase):
     spec_type = 'fileset'
-    reserved_keys = ['type', 'files', 'sort', 'sort_keys']
+    required_keys = ['files']
+    parse_as = FileSetT
 
-    def __init__(
-        self,
-        spec: Dict[str, Any],
-        external_root: pathlib.Path,
-    ):
-        super().__init__(spec, external_root)
-        if self.files is None:
-            raise ParserException('No files specifier')
-
+    @property
+    def filelist(self):
         if isinstance(self.files, str):
             # files could be glob or a single filename
             # specifying a list of files
@@ -159,7 +227,9 @@ class FileSetSpec(SpecBase):
             # List of (potentially mixed) absolute, relative, or glob specifiers
             filelist = [pathlib.Path(f) for f in self.files]
             filelist = [f if f.is_absolute() else (self.root / f) for f in filelist]
-            filelist = [ff for f in filelist for ff in glob.glob(f)]
+            # Need to test if is glob here else we get errors too early for
+            # absolute files which are not present on the FS
+            filelist = [ff for f in filelist for ff in glob.glob(str(f))]
             filelist = [pathlib.Path(f).resolve() for f in filelist]
         else:
             raise ParserException(f'Unrecognized files specifier {type(self.files)}')
@@ -189,58 +259,53 @@ class FileSetSpec(SpecBase):
             filelist = sort_fn(filelist, alg=alg_option)
 
         # Could add existence checks here but the dataset should already do this!
-        self._filelist = filelist
+        return filelist
 
     @property
     def files(self) -> Union[str, None, Sequence[str]]:
-        return self.spec.get('files', None)
+        return self.get('files', None)
 
     @property
     def sort(self) -> sort_types:
-        return self.spec.get('sort', False)
+        return self.get('sort', False)
 
     @property
-    def sort_options(self) -> Union[False, str, Sequence[str]]:
-        return self.spec.get('sort_options', False)
+    def sort_options(self) -> Union[str, Sequence[str]]:
+        return self.get('sort_options', False)
 
-    @property
-    def filelist(self) -> List[pathlib.Path]:
-        return self._filelist
+
+class ArrayT(NamedTuple):
+    array: np.ndarray
 
 
 class ArraySpec(SpecBase):
     spec_type = 'array'
-    reserved_keys = ['type', 'data', 'dtype', 'shape']
-
-    def __init__(
-        self,
-        spec: Dict[str, Any],
-        external_root: pathlib.Path,
-    ):
-        super().__init__(spec, external_root)
-
-        if self.data is None:
-            raise ParserException('No data specified in ArraySpec')
+    required_keys = ['data']
+    parse_as = ArrayT
 
     @property
-    def data(self) -> List:
-        return self.spec.get('data', None)
+    def raw_data(self) -> List:
+        return self.get('data', None)
 
     @property
     def dtype(self) -> Optional['nt.DTypeLike']:
-        return self.spec.get('dtype', None)
+        return self.get('dtype', None)
 
     @property
     def shape(self) -> Optional[Sequence[int]]:
-        return self.spec.get('shape', None)
+        return self.get('shape', None)
 
-    def load(self) -> np.ndarray:
-        array = np.asarray(self.data)
+    @property
+    def array(self) -> np.ndarray:
+        array = np.asarray(self.raw_data)
         if self.dtype is not None:
             array = array.astype(self.dtype)
         if self.shape is not None:
             array = array.reshape(self.shape)
         return array
+
+    def load(self) -> np.ndarray:
+        return self.array
 
 
 class MaskSpec(SpecBase):
@@ -249,36 +314,51 @@ class MaskSpec(SpecBase):
 
 class CorrectionSetSpec(SpecBase):
     spec_type = 'correctionset'
-    reserved_keys = ['type', 'dark_frame', 'gain_map', 'excluded_pixels', 'allow_empty']
+    optional_keys = ['dark_frame', 'gain_map', 'excluded_pixels']
 
-    def __init__(
-        self,
-        spec: Dict[str, Any],
-        external_root: pathlib.Path,
-    ):
-        super().__init__(spec, external_root)
-        # type has been removed already
-        if not any(k in self.spec for k in self.reserved_keys):
+    def validate(self):
+        if not any(k in self for k in self.optional_keys):
             raise ParserException("Correction set doesn't define any known corrections")
 
     @property
     def dark_frame(self) -> Dict[str, Any]:
-        return self.spec.get('dark_frame', None)
+        return self.get('dark_frame', None)
 
     @property
     def gain_map(self) -> Dict[str, Any]:
-        return self.spec.get('gain_map', None)
+        return self.get('gain_map', None)
 
     @property
     def excluded_pixels(self):
-        return self.spec.get('excluded_pixels', None)
+        return self.get('excluded_pixels', None)
 
     def load(self):
-        CorrectionSet()
+        return CorrectionSet()
 
 
 class DataSetSpec(SpecBase):
     spec_type = 'dataset'
+
+
+class ROISpec(SpecBase):
+    spec_type = 'roi'
+    # default read_as ?
+
+
+class ContextSpec(SpecBase):
+    spec_type = 'context'
+
+
+class AnalysisSpec(SpecBase):
+    spec_type = 'analysis'
+
+
+class UDFSpec(SpecBase):
+    spec_type = 'udf'
+
+
+class RunSpec(SpecBase):
+    spec_type = 'run'
 
 
 parsers = {
@@ -287,32 +367,44 @@ parsers = {
     'array': ArraySpec,
     'dataset': DataSetSpec,
     'correctionset': CorrectionSetSpec,
+    'roi': ROISpec,
+    'context': ContextSpec,
+    'analysis': AnalysisSpec,
+    'udf': UDFSpec,
+    'run': RunSpec,
 }
 
 
-class RootSpec:
-    def __init__(self, spec):
-        ...
-
-    def files():
-        ...
-
-    def datasets():
-        ...
-    
-    def corrections():
-        ...
-
-    def contexts():
-        ...
-    
-    def analyses():
-        ...
+def parse_spec(struct: Dict[str, Any]):
+    if not isinstance(struct, dict):
+        return struct
+    for key, value in struct.items():
+        if isinstance(value, dict):
+            if 'root' not in value and 'root' in struct:
+                struct[key] = parse_spec({**value, 'root': struct['root']})
+            else:
+                struct[key] = parse_spec(value)
+    if spec_type_key in struct:
+        parser = parsers.get(struct[spec_type_key], None)
+        if parser is None:
+            raise TypeError(f'Unrecognized spec type {struct[spec_type_key]}')
+        return parser(**struct)
+    else:
+        return struct
 
 
-class SpecParser:
-    def __init__(self, spec):
-        self._structure = self._parse_spec(spec)
+class SpecTree(SpecBase):
+    def __init__(self, **spec):
+        super().__init__(**spec)
+        self.set_root(self, self)
+
+    @staticmethod
+    def set_root(struct, root):
+        for value in struct.values():
+            if isinstance(value, SpecBase):
+                value._set_root_structure(root)
+            if isinstance(value, dict):
+                SpecTree.set_root(value, root)
 
     @classmethod
     def from_file(cls, path):
@@ -322,7 +414,8 @@ class SpecParser:
             raise ParserException(f"Cannot find spec file {path}")
 
         if path.suffix == '.toml':
-            struct = toml.load(path)
+            with path.open('rb') as fp:
+                struct = tomli.load(fp)
         elif path.suffix == '.json':
             with path.open('r') as fp:
                 struct = json.load(fp)
@@ -331,25 +424,15 @@ class SpecParser:
         else:
             raise ParserException(f"Unrecognized format {path.suffix}")
 
-        return SpecParser(struct)
-
-    @classmethod
-    def _parse_spec(cls, spec: Dict[str, Any], parse_as: SpecBase):
-
-        if not isinstance(spec, dict):
-            raise ParserException(f"Cannot parse non-dict spec, got {type(spec)}")
-
-        structure = {}
-        for key, value in spec.items():
-            if isinstance(value, dict) and 'type' in value:
-                # sub spec
-                value_type = value['type']
-                parser = parsers.get(value_type, None)
-                if parser is None:
-                    pass
+        return cls(**struct)
 
 
+if __name__ == '__main__':
+    nest = SpecTree.from_file('./sidecar.toml')
 
+    class NullFileT(NamedTuple):
+        path: pathlib.Path
+        dtype: np.typing.DTypeLike = np.float32
 
 
 # ds = ctx.load('ds_def.toml')  # with/without 'auto' key ??

@@ -1,4 +1,5 @@
-from typing import Dict, Any, Union, Sequence, Optional, List, TYPE_CHECKING, NamedTuple
+from typing import (Dict, Any, Union, Sequence, Optional, List,
+                    TYPE_CHECKING, NamedTuple, Type, Tuple)
 from typing_extensions import Literal
 import glob
 import numpy as np
@@ -12,10 +13,7 @@ from skimage.io import imread
 from libertem.corrections import CorrectionSet
 
 import natsort
-
-
-if TYPE_CHECKING:
-    import numpy.typing as nt
+import numpy.typing as nt
 
 
 sort_types = Literal['natsorted', 'humansorted', 'os_sorted']
@@ -74,7 +72,7 @@ def dotpath_exists(struct: Dict, dotpath: str):
 
 class SpecBase(dict):
     spec_type = 'base'
-    required_keys = []
+    required_keys = tuple()
     parse_as = None
 
     def __init__(self, **spec):
@@ -82,10 +80,13 @@ class SpecBase(dict):
         self._root_structure = self
         self.validate()
 
-    def validate(self):
+    def validate(self, extra_keys=None):
         # Add read_as injection of required_keys here
         # consider needing some requires from type and some from read_as
-        missing = tuple(k for k in self.required_keys if k not in self)
+        required = self.read_as.required_keys
+        if extra_keys is not None:
+            required = required + extra_keys
+        missing = tuple(k for k in required if k not in self)
         if missing:
             raise TypeError(f'Missing keys {missing} for {self.spec_type}')
 
@@ -109,14 +110,19 @@ class SpecBase(dict):
     def load(self):
         # Try to load the oject defined by this spec
         # Will call load on all sub-specs (assumed to be required)
-        raise NotImplementedError('Cannot load a bare SpecBase')
+        raise NotImplementedError(f'No load method for {self.__class__.__name__}')
 
     @property
     def root(self) -> pathlib.Path:
         return self.get('root', None)
 
-    def read_as(self) -> Optional[str]:
-        return self.get('read_as', None)
+    @property
+    def read_as(self) -> Type['SpecBase']:
+        read_as = self.get('read_as', None)
+        if read_as is not None:
+            return parsers[read_as]
+        else:
+            return type(self)
 
     def _set_root_structure(self, struct: Dict[str, Any]):
         self._root_structure = struct
@@ -159,7 +165,7 @@ class FileT(NamedTuple):
 
 class FileSpec(SpecBase):
     spec_type = 'file'
-    required_keys = ['file']
+    required_keys = ('file',)
     parse_as = FileT
 
     @property
@@ -201,7 +207,7 @@ class FileSetT(NamedTuple):
 
 class FileSetSpec(SpecBase):
     spec_type = 'fileset'
-    required_keys = ['files']
+    required_keys = ('files',)
     parse_as = FileSetT
 
     @property
@@ -280,7 +286,7 @@ class ArrayT(NamedTuple):
 
 class ArraySpec(SpecBase):
     spec_type = 'array'
-    required_keys = ['data']
+    required_keys = ('data',)
     parse_as = ArrayT
 
     @property
@@ -314,7 +320,7 @@ class MaskSpec(SpecBase):
 
 class CorrectionSetSpec(SpecBase):
     spec_type = 'correctionset'
-    optional_keys = ['dark_frame', 'gain_map', 'excluded_pixels']
+    optional_keys = ('dark_frame', 'gain_map', 'excluded_pixels')
 
     def validate(self):
         if not any(k in self for k in self.optional_keys):
@@ -336,13 +342,113 @@ class CorrectionSetSpec(SpecBase):
         return CorrectionSet()
 
 
+class DataSetT(NamedTuple):
+    format: str
+    path: pathlib.Path
+    nav_shape: Tuple[int, ...] = None
+    sig_shape: Tuple[int, ...] = None
+    sync_offset: int = 0
+    dtype: nt.DTypeLike = None
+
+
 class DataSetSpec(SpecBase):
     spec_type = 'dataset'
+    parse_as = DataSetT
+
+    @property
+    def format(self):
+        return self.get('format', None)
+
+    @property
+    def path(self):
+        ...
+
+    @property
+    def nav_shape(self):
+        return self.get('nav_shape', None)
+
+    @property
+    def sig_shape(self):
+        return self.get('sig_shape', None)
+
+    @property
+    def dtype(self):
+        return self.get('dtype', None)
+
+
+class RoiT(NamedTuple):
+    array: np.ndarray
 
 
 class ROISpec(SpecBase):
     spec_type = 'roi'
-    # default read_as ?
+    parse_as = RoiT
+
+    def validate(self):
+        if self.read_as is type(self):
+            extra_requires = ('shape', 'roi_default')
+            super().validate(extra_keys=extra_requires)
+        else:
+            super().validate()
+
+    @property
+    def roi_default(self):
+        return self.get('roi_base', None)
+
+    @property
+    def shape(self):
+        return self.get('shape', None)
+
+    @property
+    def dtype(self):
+        return self.get('dtype', bool)
+
+    @property
+    def toggle_px(self):
+        toggle = self.get('toggle_px', None)
+        if toggle is None:
+            return []
+        elif isinstance(toggle, list):
+            return toggle
+        elif isinstance(toggle, SpecBase):
+            return toggle.load()
+        elif isinstance(toggle, str):
+            return self.resolve(toggle).load()
+        else:
+            raise ParserException(f'Unable to resolve toggle pixels {toggle}')
+
+    @property
+    def toggle_slices(self):
+        toggle = self.get('toggle_slices', None)
+        if toggle is None:
+            return []
+        return list(self._parse_slices(sl) for sl in toggle)
+
+    @staticmethod
+    def _parse_slices(slice_spec):
+        slice_spec = tuple(tuple(s_sl if (isinstance(s_sl, int) and not isinstance(s_sl, bool))
+                                 else None for s_sl in sl)
+                           if sl else (None,) for sl in slice_spec)
+        return tuple(slice(*sl) for sl in slice_spec)
+
+    @property
+    def array(self):
+        if self.read_as is not type(self):
+            proxy = self.read_as(**self)
+            proxy._set_root_structure(self._root_structure)
+            array = proxy.load()
+            if not isinstance(array, np.ndarray):
+                raise ParserException('ROI must be np.ndarray')
+        else:
+            array = np.full(self.shape, self.roi_default, dtype=self.dtype)
+            for toggle in self.toggle_px:
+                array[tuple(toggle)] = not self.roi_default
+            for slices in self.toggle_slices:
+                array[slices] = not self.roi_default
+        return array
+
+    def load(self):
+        return self.array
 
 
 class ContextSpec(SpecBase):
@@ -424,15 +530,12 @@ class SpecTree(SpecBase):
         else:
             raise ParserException(f"Unrecognized format {path.suffix}")
 
+        struct = parse_spec(struct)
         return cls(**struct)
 
 
 if __name__ == '__main__':
     nest = SpecTree.from_file('./sidecar.toml')
-
-    class NullFileT(NamedTuple):
-        path: pathlib.Path
-        dtype: np.typing.DTypeLike = np.float32
 
 
 # ds = ctx.load('ds_def.toml')  # with/without 'auto' key ??

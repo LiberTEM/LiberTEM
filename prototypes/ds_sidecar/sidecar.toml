@@ -107,18 +107,21 @@ shape = [2, 8]
 
 [my_roi]
 type = 'roi'
-read_as = 'file'
-file = 'my_roi_file'
 # can follow file specifier schema
 # requires format and dtype/shape as appropriate
 # can declare directly with data=
 # or can declare :
-# roi_base = true / false
-# toggle_active = [
-#    [0, 0],
-#    [128, 128],
-#]
-# shape can be inferred from dataset shape at runtime
+shape = [5, 5]
+roi_default = true
+toggle_px = [
+   [0, 0],
+   [3, 3],
+]
+toggle_slices = [
+    ['', [0, 2]],
+    [['', 7], '']
+]
+# shape could be inferred from dataset shape at runtime
 
 [my_context]
 type = 'context'

@@ -99,12 +99,26 @@ class SpecBase(dict):
                                 'to object without type definition')
             parse_as = self.parse_as
         fields = {}
+        other = {k: v for k, v in self.items() if k not in parse_as._fields}
         for field in parse_as._fields:
             try:
-                fields[field] = getattr(self, field)
+                value = getattr(self, field)
+                fields[field] = value
+                continue
+            except AttributeError as e:
+                pass
+            try:
+                value = self.get(field, None)
+                if value is not None:
+                    fields[field] = value
             except AttributeError as e:
                 if field not in parse_as._field_defaults:
+                    # required field!
                     raise e
+        if other:
+            if 'other' in fields:
+                raise ValueError('Name collision on key "other"')
+            fields['other'] = other
         return parse_as(**fields)
 
     def load(self):
@@ -158,27 +172,31 @@ class SpecBase(dict):
     def __repr__(self):
         return f'{self.__class__.__name__}({super().__repr__()})'
 
+    @classmethod
+    def construct(cls, arg):
+        raise NotImplementedError()
+
 
 class FileT(NamedTuple):
     path: pathlib.Path
+    format: str = None
+    dtype: nt.DTypeLike = None
+    shape: Tuple[int, ...] = None
+    other: Dict[str, Any] = None
 
 
 class FileSpec(SpecBase):
-    spec_type = 'file'
-    required_keys = ('file',)
+    spec_type = 'path'
+    required_keys = ('path',)
     parse_as = FileT
 
     @property
-    def file(self) -> Optional[str]:
-        return self.get('file', None)
-
-    @property
     def path(self) -> pathlib.Path:
-        file = pathlib.Path(self.file)
-        if file.is_absolute():
-            return file
+        path = pathlib.Path(self.get('path'))
+        if path.is_absolute():
+            return path
         else:
-            return (self.root / file).resolve()
+            return (self.root / path).resolve()
 
     @property
     def format(self) -> str:
@@ -200,9 +218,22 @@ class FileSpec(SpecBase):
             raise ParserException(f'Unrecognized file format {format}')
         return format_defs[format](self.path, **self.load_options)
 
+    @classmethod
+    def construct(cls, arg):
+        if isinstance(arg, str):
+            return cls(path=arg)
+        elif isinstance(arg, dict):
+            return cls(**arg)
+        else:
+            raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
+
 
 class FileSetT(NamedTuple):
-    filelist: List[pathlib.Path]
+    files: List[pathlib.Path]
+    format: str = None
+    dtype: nt.DTypeLike = None
+    shape: Tuple[int, ...] = None
+    other: Dict[str, Any] = None
 
 
 class FileSetSpec(SpecBase):
@@ -279,9 +310,19 @@ class FileSetSpec(SpecBase):
     def sort_options(self) -> Union[str, Sequence[str]]:
         return self.get('sort_options', False)
 
+    @classmethod
+    def construct(cls, arg):
+        if isinstance(arg, str):
+            return cls(files=arg)
+        elif isinstance(arg, dict):
+            return cls(**arg)
+        else:
+            raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
+
 
 class ArrayT(NamedTuple):
     array: np.ndarray
+    other: Dict[str, Any] = None
 
 
 class ArraySpec(SpecBase):
@@ -345,6 +386,15 @@ class CorrectionSetSpec(SpecBase):
 class DataSetT(NamedTuple):
     format: str
     path: pathlib.Path
+    nav_shape: Tuple[int, ...] = None
+    sig_shape: Tuple[int, ...] = None
+    sync_offset: int = 0
+    dtype: nt.DTypeLike = None
+
+
+class DataSetT(NamedTuple):
+    format: str
+    path: FileSpec
     nav_shape: Tuple[int, ...] = None
     sig_shape: Tuple[int, ...] = None
     sync_offset: int = 0
@@ -535,7 +585,7 @@ class SpecTree(SpecBase):
 
 
 if __name__ == '__main__':
-    nest = SpecTree.from_file('./sidecar.toml')
+    nest = SpecTree.from_file('./sidecar_file.toml')
 
 
 # ds = ctx.load('ds_def.toml')  # with/without 'auto' key ??

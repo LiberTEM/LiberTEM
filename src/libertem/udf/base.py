@@ -64,6 +64,7 @@ def _get_dtype(
     dtype: "nt.DTypeLike",
     corrections: Optional[CorrectionSet]
 ) -> "nt.DTypeLike":
+    tmp_dtype: "nt.DTypeLike"
     if corrections is not None and corrections.have_corrections():
         tmp_dtype = np.result_type(np.float32, dtype)
     else:
@@ -98,7 +99,7 @@ class UDFMeta:
         roi: Optional[np.ndarray],
         dataset_dtype: "nt.DTypeLike",
         input_dtype: "nt.DTypeLike",
-        tiling_scheme: TilingScheme = None,
+        tiling_scheme: Optional[TilingScheme] = None,
         tiling_index: int = 0,
         corrections: Optional[CorrectionSet] = None,
         device_class: Optional[DeviceClass] = None,

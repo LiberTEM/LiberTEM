@@ -6,14 +6,13 @@ import contextlib
 import numpy as np
 from ncempy.io.ser import fileSER
 
-from libertem.common.math import prod, count_nonzero
-from libertem.common.sparse import to_dense
+from libertem.common.math import prod, flat_nonzero
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.common.messageconverter import MessageConverter
 from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
-    _roi_to_indices, DataTile,
+    DataTile,
 )
 
 log = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ class SERDatasetParams(MessageConverter):
             "sync_offset": {"type": "number"},
         },
         "required": ["type", "path"]
-        }
+    }
 
     def convert_to_python(self, raw_data):
         data = {
@@ -295,14 +294,19 @@ class SERPartition(BasePartition):
                 else:
                     offset = start - sync_offset
             else:
-                # FIXME this to_dense can be remove by refactoring _roi_to_indices
-                # this call to _roi_to_indices is the only one in the whole codebase
-                indices = _roi_to_indices(to_dense(roi), max(0, start), stop, sync_offset)
+                # The following is taken (effectively) from _default_get_read_ranges
+                roi_nonzero = flat_nonzero(roi)
+
+                shifted_roi = roi_nonzero + sync_offset
+                roi_mask = np.logical_and(shifted_roi >= max(0, start),
+                                          shifted_roi < stop)
+                indices = shifted_roi[roi_mask]
+
                 # in case of a negative sync_offset, 'start' can be negative
                 if start < 0:
-                    offset = count_nonzero(roi.reshape((-1,))[:abs(sync_offset)])
+                    offset = np.sum(roi_nonzero < abs(sync_offset))
                 else:
-                    offset = count_nonzero(roi.reshape((-1,))[:start - sync_offset])
+                    offset = np.sum(roi_nonzero < start - sync_offset)
 
             with fileSER(self._path) as f:
                 for num, idx in enumerate(indices):

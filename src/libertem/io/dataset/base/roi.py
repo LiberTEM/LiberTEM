@@ -1,4 +1,3 @@
-import numba
 import typing
 import numpy as np
 
@@ -7,36 +6,6 @@ from libertem.common.math import count_nonzero, ndenumerate
 
 if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.partition import Partition
-
-
-@numba.njit(nogil=True)
-def _roi_to_indices(roi, start, stop, sync_offset=0):
-    """
-    Helper function to calculate indices from roi mask. Indices
-    are flattened.
-
-    Parameters
-    ----------
-
-    roi : numpy.ndarray of type bool, matching the navigation shape of the dataset
-
-    start : int
-        start frame index, relative to dataset start
-        can for example be the start frame index of a partition
-
-    stop : int
-        stop before this frame index, relative to dataset
-        can for example be the stop frame index of a partition
-
-    sync_offset : int
-        if positive, number of frames to skip from the start
-        if negative, number of blank frames to insert at the start
-        sync_offset should be in (-shape.nav.size, shape.nav.size)
-    """
-    roi = roi.reshape((-1,))
-    part_roi = roi[start - sync_offset:stop - sync_offset]
-    indices = np.arange(start, stop)
-    return indices[part_roi]
 
 
 def _roi_to_nd_indices(roi, part_slice: Slice):

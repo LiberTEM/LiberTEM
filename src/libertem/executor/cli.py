@@ -64,9 +64,9 @@ def main(kind, scheduler, local_directory, n_cpus, cudas,
         if cudas == '':
             cudas = []
         elif cudas is None:
-            cudas = list(defaults['cudas'])
+            cudas = defaults['cudas']
         else:
-            cudas = list(map(int, cudas.split(',')))
+            cudas = [int(i) for i in cudas.split(',')]
 
         if has_cupy is None:
             has_cupy = defaults['has_cupy']
@@ -79,6 +79,7 @@ def main(kind, scheduler, local_directory, n_cpus, cudas,
             local_directory=local_directory,
             cpus=cpus,
             cudas=cudas,
+            cuda_info=defaults['cuda_info'],
             has_cupy=has_cupy,
             name=name,
             log_level=numeric_level,

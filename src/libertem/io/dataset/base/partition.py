@@ -58,7 +58,7 @@ class Partition:
         self.slice = partition_slice
         self._io_backend = io_backend
         self._decoder = decoder
-        self._idx = Optional[int]
+        self._idx: Optional[int] = None
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 

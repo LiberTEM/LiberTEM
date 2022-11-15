@@ -27,7 +27,6 @@ from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
 from libertem.executor.utils.gpu_plan import make_gpu_plan
 
-from .utils import assign_cudas
 from .base import BaseJobExecutor
 
 try:

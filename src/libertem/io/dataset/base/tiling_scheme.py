@@ -187,7 +187,6 @@ class Negotiator:
         corrections: Optional[CorrectionSet],
     ):
         sig_shape = shape[1:]
-
         # we need some wiggle room with the size, because there may be a harder
         # lower size value for some cases (for example HDF5, which overrides
         # some of the sizing negotiation we are doing here)
@@ -209,10 +208,10 @@ class Negotiator:
             else:
                 raise ValueError(message)
         for dim in range(len(base_shape)):
-            if shape[dim] % base_shape[dim] != 0:
+            if shape[dim] % base_shape[dim] != 0 and shape[dim] != ds_sig_shape[dim]:
                 raise ValueError(
                     f"The tileshape {shape} is incompatible with base "
-                    f"shape {base_shape} in dimension {dim}."
+                    f"shape {base_shape} and dataset shape {ds_sig_shape} in dimension {dim}."
                 )
 
     def get_scheme(

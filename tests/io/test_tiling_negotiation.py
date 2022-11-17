@@ -5,7 +5,7 @@ import numpy as np
 from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import Negotiator
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.udf import UDF
+from libertem.udf.base import UDF, NoOpUDF
 
 from utils import _mk_random
 
@@ -429,3 +429,37 @@ def test_multi_partition_wins():
     print(scheme._debug)
     assert scheme.shape.sig.dims == 2
     assert tuple(scheme.shape) == (32, 1860, 2048)
+
+
+def test_base_shape_adjustment(lt_ctx_fast):
+    '''
+    This emulates an issue with the DECTRIS acquisition of LiberTEM Live
+    that overrides the tile shape to full frames.
+    Bad pixel patching leads to a base shape that is not evenly divinding the frame shape,
+    which then led to a conflict with the overridden shape.
+
+    Solution was to always accept full frames.
+    '''
+    class MockDectrisMemoryDataSet(MemoryDataSet):
+        def get_max_io_size(self):
+            return 12*512*512*8
+
+        def adjust_tileshape(self, tileshape, roi):
+            depth = 12
+            return (depth, *self.meta.shape.sig)
+
+    ds = MockDectrisMemoryDataSet(
+        datashape=(3, 3, 512, 512),
+    )
+
+    bad_y = (168, 291, 326, 301, 343, 292,   0,   0,   0,   0,   0, 511)
+    bad_x = (496, 458, 250, 162, 426, 458, 393, 396, 413, 414, 342, 491)
+
+    corr = CorrectionSet(
+        excluded_pixels=sparse.COO(
+            coords=(bad_y, bad_x),
+            data=1,
+            shape=ds.shape.sig
+        )
+    )
+    lt_ctx_fast.run_udf(dataset=ds, udf=NoOpUDF(), corrections=corr)

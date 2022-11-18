@@ -2,6 +2,8 @@ import pytest
 import numpy as np
 from unittest import mock
 import copy
+import sparse
+import scipy.sparse
 
 from libertem.io.dataset.base import MMapBackend
 from libertem.udf.sum import SumUDF
@@ -211,6 +213,38 @@ def test_roi_dtype(lt_ctx, default_raw, dtype):
 
     ref = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=ref_roi)
 
+    assert np.all(res['intensity'].raw_data == ref['intensity'].raw_data)
+
+
+@pytest.mark.parametrize(
+    'roi_type', (
+        sparse.COO,
+        sparse.DOK,
+        scipy.sparse.coo_matrix,
+        scipy.sparse.csr_matrix,
+        scipy.sparse.csr_array,
+        list,
+        tuple,
+    )
+)
+def test_allowed_rois(lt_ctx, default_raw, roi_type):
+    roi = np.zeros(default_raw.shape.nav, dtype=bool)
+    roi[0, 0] = True
+    roi[3, 6] = True
+
+    if issubclass(roi_type, sparse.SparseArray):
+        roi_input = roi_type.from_numpy(roi)
+    elif issubclass(roi_type, scipy.sparse.spmatrix):
+        roi_input = roi_type(roi)
+    elif roi_type in (tuple, list):
+        roi_input = np.argwhere(roi)
+        roi_input = roi_type(roi_type((roi_type(row), True)) for row in roi_input)
+    else:
+        raise ValueError('Unrecognized roi_type')
+
+    udf = SumUDF()
+    res = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi_input)
+    ref = lt_ctx.run_udf(dataset=default_raw, udf=udf, roi=roi)
     assert np.all(res['intensity'].raw_data == ref['intensity'].raw_data)
 
 

@@ -34,6 +34,7 @@ from libertem.analysis.base import AnalysisResultSet, Analysis
 from libertem.udf.base import UDFResultDict, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.common.async_utils import async_generator, run_agen_get_last, run_gen_get_last
+from libertem.common.sparse import sparse_to_coo, to_dense
 
 if TYPE_CHECKING:
     import numpy.typing as nt
@@ -644,6 +645,8 @@ class Context:
         analysis = job  # keep the old kwarg name for backward-compat.
         if roi is None:
             roi = analysis.get_roi()
+        else:
+            roi = sparse_to_coo(roi)
         udf_results: UDFResultDict = self.run_udf(  # type:ignore[assignment]
             dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
             corrections=corrections, progress=progress,
@@ -656,7 +659,7 @@ class Context:
         if roi is None:
             damage = True
         else:
-            damage = roi
+            damage = to_dense(roi)
         return analysis.get_udf_results(udf_results, roi, damage=damage)
 
     def run_udf(
@@ -1010,9 +1013,11 @@ class Context:
         if corrections is None:
             corrections = dataset.get_correction_data()
 
-        if (roi is not None) and (roi.dtype is not np.dtype(bool)):
-            warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
-            roi = roi.astype(bool)
+        if roi is not None:
+            roi = sparse_to_coo(roi, dataset.shape.nav)
+            if roi.dtype is not np.dtype(bool):
+                warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
+                roi = roi.astype(bool)
 
         def _run_sync_wrap() -> Generator[UDFResults, None, None]:
             runner_cls = self.executor.get_udf_runner()
@@ -1304,6 +1309,10 @@ class Context:
                 </table>
                 """
         runner_cls = self.executor.get_udf_runner()
+
+        if roi is not None:
+            roi = sparse_to_coo(roi, dataset.shape.nav)
+
         return _UDFInfo(
             title=udf.__class__.__name__,
             buffers=runner_cls.inspect_udf(udf, dataset, roi),

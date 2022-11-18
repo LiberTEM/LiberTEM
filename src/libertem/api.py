@@ -1,6 +1,6 @@
 from typing import (
     TYPE_CHECKING, Any, List, Optional, Union, Iterable, Generator, Coroutine,
-    AsyncGenerator, overload
+    AsyncGenerator, overload, Tuple
 )
 from typing_extensions import Literal
 import warnings
@@ -37,6 +37,8 @@ from libertem.common.async_utils import async_generator, run_agen_get_last, run_
 
 if TYPE_CHECKING:
     import numpy.typing as nt
+    from sparse import SparseArray
+    from scipy.sparse import spmatrix
 
 tracer = trace.get_tracer(__name__)
 
@@ -56,6 +58,8 @@ ExecutorSpecType = Union[
     Literal['delayed'],
     Literal['pipelined'],
 ]
+IterableRoiT = Iterable[Tuple[Tuple[int], bool]]
+RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', IterableRoiT]]
 
 
 class Context:
@@ -601,7 +605,7 @@ class Context:
 
     def run(
         self, job: Analysis,
-        roi: Optional[np.ndarray] = None,
+        roi: RoiT = None,
         progress: bool = False,
         corrections: Optional[CorrectionSet] = None,
     ) -> Union[np.ndarray, AnalysisResultSet]:
@@ -622,7 +626,7 @@ class Context:
         ----------
         job
             the analysis to run
-        roi : numpy.ndarray, optional
+        roi : numpy.ndarray or sparse array, optional
             Boolean mask of the navigation dimension.
         progress : bool
             Show progress bar
@@ -659,7 +663,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[UDF, Iterable[UDF]],
-        roi: Optional[np.ndarray] = None,
+        roi: RoiT = None,
         corrections: Optional[CorrectionSet] = None,
         progress: bool = False,
         backends=None,
@@ -687,7 +691,7 @@ class Context:
         udf
             UDF instance you want to run, or a list of UDF instances
 
-        roi : numpy.ndarray
+        roi : numpy.ndarray or sparse array, optional
             Region of interest as bool mask over the navigation axes of the dataset
 
         progress : bool
@@ -790,7 +794,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[UDF, Iterable[UDF]],
-        roi: np.ndarray = None,
+        roi: RoiT = None,
         corrections: CorrectionSet = None,
         progress: bool = False,
         backends=None,
@@ -811,7 +815,7 @@ class Context:
         udf
             UDF instance you want to run, or a list of UDF instances
 
-        roi : numpy.ndarray
+        roi : numpy.ndarray or sparse array, optional
             Region of interest as bool mask over the navigation axes of the dataset
 
         progress : bool
@@ -887,7 +891,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: UDF,
-        roi: np.ndarray,
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -901,7 +905,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: UDF,
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -914,7 +918,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Iterable[UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -927,7 +931,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Iterable[UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -940,7 +944,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[Iterable[UDF], UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -954,7 +958,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[Iterable[UDF], UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -968,7 +972,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[Iterable[UDF], UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends: Optional[Any],
@@ -980,7 +984,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[UDF, Iterable[UDF]],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1046,7 +1050,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: UDF,
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1059,7 +1063,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Iterable[UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1072,7 +1076,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: UDF,
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1085,7 +1089,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Iterable[UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1098,7 +1102,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[UDF, Iterable[UDF]],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1111,7 +1115,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[UDF, Iterable[UDF]],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1124,7 +1128,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[Iterable[UDF], UDF],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1136,7 +1140,7 @@ class Context:
         self,
         dataset: DataSet,
         udf: Union[UDF, Iterable[UDF]],
-        roi: Optional[np.ndarray],
+        roi: RoiT,
         corrections: Optional[CorrectionSet],
         progress: bool,
         backends,
@@ -1235,7 +1239,7 @@ class Context:
             udf_index = udfs.index(udf)
             plot.new_data(udf_results[udf_index], damage, force=force)
 
-    def display(self, dataset: DataSet, udf: UDF, roi=None):
+    def display(self, dataset: DataSet, udf: UDF, roi: RoiT = None):
         """
         Show information about the UDF in combination with the given DataSet.
         """
@@ -1305,7 +1309,7 @@ class Context:
             buffers=runner_cls.inspect_udf(udf, dataset, roi),
         )
 
-    def map(self, dataset: DataSet, f, roi: np.ndarray = None,
+    def map(self, dataset: DataSet, f, roi: RoiT = None,
             progress: bool = False,
             corrections: CorrectionSet = None,
             backends=None) -> BufferWrapper:
@@ -1326,7 +1330,7 @@ class Context:
         f:
             Function that accepts a frame as the only parameter. It should return a strongly
             reduced output compared to the size of a frame.
-        roi : numpy.ndarray
+        roi : numpy.ndarray or sparse array, optional
             region of interest as bool mask over the navigation axes of the dataset
         progress : bool
             Show progress bar

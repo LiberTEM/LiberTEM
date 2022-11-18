@@ -24,6 +24,8 @@ def to_sparse(a, shape: Optional[Union['Shape', Tuple[int]]] = None):
     elif sp.issparse(a):
         return sparse.COO.from_scipy_sparse(a)
     elif isinstance(a, (tuple, list)):
+        if all(isinstance(aa, int) for aa in a):
+            a = ((a, True),)
         unique = {aa[-1] for aa in a}
         if len(unique) != 1:
             raise ValueError('Cannot cast iterable roi coords with '

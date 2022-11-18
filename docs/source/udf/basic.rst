@@ -500,8 +500,20 @@ Regions of interest
 ~~~~~~~~~~~~~~~~~~~
 
 In addition, you can pass the :code:`roi` (region of interest) parameter, to
-run your UDF on a selected subset of data. :code:`roi` should be a NumPy array
-containing a bool mask, having the shape of the navigation axes of the dataset.
+run your UDF on a selected subset of data. :code:`roi` can be specified in several ways:
+
+- a single coordinate in the navigation dimensions, e.g. :code:`(3, 4)`
+  which will restrict the analysis to this frame only
+- a sequence of coordinates and their associated truth value, e.g.
+  :code:`[((0, 0), True), ((2, 3), True)]`. In this format all truth values 
+  must be identical, and the roi background value will be set to its opposite.
+  This allows quick specification of a small number of pixels to include or exclude
+  from the analysis.
+- a NumPy array containing a bool mask, having the shape of the navigation
+  axes of the dataset.
+- any :code:`scipy.sparse` matrix or array or :code:`pydata.sparse.SparseArray` format,
+  again having the same shape as the naivgation axes of the dataset
+
 For example, to process a random subset of a 4D-STEM dataset:
    
 .. testcode:: run

@@ -35,12 +35,13 @@ def prod(iterable: Iterable[ProdAccepted]):
 
 
 def count_nonzero(array) -> int:
+    nnz: int  # for mypy
     try:
-        return np.count_nonzero(array)
+        nnz = np.count_nonzero(array)
     except TypeError:
         sparse_a = assert_sparse(array)
-        nnz: int = sparse_a.nnz
-        return nnz
+        nnz = sparse_a.nnz
+    return nnz
 
 
 def flat_nonzero(array):

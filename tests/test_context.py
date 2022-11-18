@@ -225,11 +225,11 @@ def test_roi_dtype(lt_ctx, default_raw, dtype):
         scipy.sparse.csr_array,
         list,
         tuple,
+        int,
     )
 )
 def test_allowed_rois(lt_ctx, default_raw, roi_type):
     roi = np.zeros(default_raw.shape.nav, dtype=bool)
-    roi[0, 0] = True
     roi[3, 6] = True
 
     if issubclass(roi_type, sparse.SparseArray):
@@ -239,6 +239,8 @@ def test_allowed_rois(lt_ctx, default_raw, roi_type):
     elif roi_type in (tuple, list):
         roi_input = np.argwhere(roi)
         roi_input = roi_type(roi_type((roi_type(row), True)) for row in roi_input)
+    elif roi_type is int:
+        roi_input = tuple(np.argwhere(roi).squeeze().tolist())
     else:
         raise ValueError('Unrecognized roi_type')
 

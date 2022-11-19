@@ -222,7 +222,8 @@ def test_roi_dtype(lt_ctx, default_raw, dtype):
         sparse.DOK,
         scipy.sparse.coo_matrix,
         scipy.sparse.csr_matrix,
-        scipy.sparse.csr_array,
+        # scipy.sparse.csr_array,  # not available in py36 but this is supported too!
+        # causes a pytest collection error so no easy way to skipif in this situation
         list,
         tuple,
         int,

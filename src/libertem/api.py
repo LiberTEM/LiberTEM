@@ -60,7 +60,7 @@ ExecutorSpecType = Union[
     Literal['pipelined'],
 ]
 IterableRoiT = Iterable[Tuple[Tuple[int], bool]]
-RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', IterableRoiT]]
+RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int], IterableRoiT]]
 
 
 class Context:
@@ -627,8 +627,8 @@ class Context:
         ----------
         job
             the analysis to run
-        roi : numpy.ndarray or sparse array, optional
-            Boolean mask of the navigation dimension.
+        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional
+            Boolean mask of the navigation dimension. See :ref:`udf roi`.
         progress : bool
             Show progress bar
         corrections
@@ -694,8 +694,9 @@ class Context:
         udf
             UDF instance you want to run, or a list of UDF instances
 
-        roi : numpy.ndarray or sparse array, optional
-            Region of interest as bool mask over the navigation axes of the dataset
+        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional
+            Region of interest as bool mask over the navigation axes of the dataset.
+            See :ref:`udf roi`.
 
         progress : bool
             Show progress bar
@@ -818,8 +819,9 @@ class Context:
         udf
             UDF instance you want to run, or a list of UDF instances
 
-        roi : numpy.ndarray or sparse array, optional
-            Region of interest as bool mask over the navigation axes of the dataset
+        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional
+            Region of interest as bool mask over the navigation axes of the dataset.
+            See :ref:`udf roi`.
 
         progress : bool
             Show progress bar
@@ -1339,8 +1341,9 @@ class Context:
         f:
             Function that accepts a frame as the only parameter. It should return a strongly
             reduced output compared to the size of a frame.
-        roi : numpy.ndarray or sparse array, optional
-            region of interest as bool mask over the navigation axes of the dataset
+        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional
+            Region of interest as bool mask over the navigation axes of the dataset.
+            See :ref:`udf roi`.
         progress : bool
             Show progress bar
         corrections

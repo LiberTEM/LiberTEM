@@ -55,7 +55,7 @@ def resolve_dotpath(struct: Dict, dotpath: str):
     components = dotpath.split('.')
     view = struct
     for c in components:
-        if c not in view:
+        if not isinstance(view, dict) or c not in view:
             raise TypeError(f'Cannot resolve key {dotpath}')
         view = view.get(c)
     return view
@@ -67,6 +67,12 @@ def dotpath_exists(struct: Dict, dotpath: str):
         return True
     except TypeError:
         return False
+
+
+def find_root(struct: 'NestedDict'):
+    if struct.parent is None:
+        return struct
+    return find_root(struct.parent)
 
 
 class NestedDict(dict):
@@ -89,8 +95,9 @@ class NestedDict(dict):
         try:
             return resolve_dotpath(self, key)
         except AttributeError as e:
-            if self._root_structure is not self:
-                return resolve_dotpath(self._root_structure, key)
+            root = find_root(self)
+            if root is not self:
+                return resolve_dotpath(root, key)
             raise e
 
 

@@ -139,9 +139,11 @@ class SpecBase(NestedDict):
         return f'{self.__class__.__name__}({super().__repr__()})'
 
     @classmethod
-    def construct(cls, arg):
+    def construct(cls, arg, parent=None):
         if isinstance(arg, dict):
-            return cls(**arg)
+            instance = cls(**arg)
+            instance._set_parent(parent)
+            return instance
         else:
             raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
 
@@ -178,11 +180,13 @@ class FileSpec(SpecBase):
         return format_defs[format](self.path, **self.load_options)
 
     @classmethod
-    def construct(cls, arg):
+    def construct(cls, arg, parent=None):
         if isinstance(arg, str):
-            return cls(path=arg)
+            instance = cls(path=arg)
+            instance._set_parent(parent)
+            return instance
         else:
-            return super().construct(arg)
+            return super().construct(arg, parent=parent)
 
 
 class FileSetSpec(SpecBase):
@@ -258,11 +262,13 @@ class FileSetSpec(SpecBase):
         return self.get('sort_options', False)
 
     @classmethod
-    def construct(cls, arg):
-        if isinstance(arg, str):
-            return cls(files=arg)
+    def construct(cls, arg, parent=None):
+        if isinstance(arg, (tuple, list, str)):
+            instance = cls(files=arg)
+            instance._set_parent(parent)
+            return instance
         else:
-            return super().construct(arg)
+            return super().construct(arg, parent=parent)
 
 
 class ArraySpec(SpecBase):
@@ -293,11 +299,13 @@ class ArraySpec(SpecBase):
         return self.array
 
     @classmethod
-    def construct(cls, arg):
+    def construct(cls, arg, parent=None):
         if isinstance(arg, (np.ndarray, list, tuple)):
-            return cls(data=arg)
+            instance = cls(data=arg)
+            instance._set_parent(parent)
+            return instance
         else:
-            return super().construct(arg)
+            return super().construct(arg, parent=parent)
 
 
 class CorrectionSetSpec(SpecBase):

@@ -385,15 +385,6 @@ class CorrectionSetSpec(SpecBase):
 
 class DataSetT(NamedTuple):
     format: str
-    path: pathlib.Path
-    nav_shape: Tuple[int, ...] = None
-    sig_shape: Tuple[int, ...] = None
-    sync_offset: int = 0
-    dtype: nt.DTypeLike = None
-
-
-class DataSetT(NamedTuple):
-    format: str
     path: FileSpec
     nav_shape: Tuple[int, ...] = None
     sig_shape: Tuple[int, ...] = None

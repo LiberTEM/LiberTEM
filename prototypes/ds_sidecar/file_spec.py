@@ -69,10 +69,10 @@ def dotpath_exists(struct: Dict, dotpath: str):
         return False
 
 
-def find_root(struct: 'NestedDict'):
+def find_tree_root(struct: 'NestedDict'):
     if struct.parent is None:
         return struct
-    return find_root(struct.parent)
+    return find_tree_root(struct.parent)
 
 
 class NestedDict(dict):
@@ -95,10 +95,21 @@ class NestedDict(dict):
         try:
             return resolve_dotpath(self, key)
         except AttributeError as e:
-            root = find_root(self)
+            root = find_tree_root(self)
             if root is not self:
                 return resolve_dotpath(root, key)
             raise e
+
+    @property
+    def root(self) -> Optional[pathlib.Path]:
+        root = self.get('root', None)
+        if root is None and self.parent is not None:
+            return self.parent.root
+        else:
+            try:
+                return pathlib.Path(root)
+            except TypeError:
+                return root
 
 
 class SpecBase(NestedDict):
@@ -108,10 +119,6 @@ class SpecBase(NestedDict):
         # Try to load the oject defined by this spec
         # Will call load on all sub-specs (assumed to be required)
         raise NotImplementedError(f'No load method for {self.__class__.__name__}')
-
-    @property
-    def root(self) -> pathlib.Path:
-        return self.get('root', None)
 
     def as_tree(self, level=0, name=None):
         ident = '  ' * level + f'{self.__class__.__name__}'

@@ -583,6 +583,18 @@ class SpecTree(SpecBase):
         struct = parse_spec(struct)
         return cls(**struct)
 
+    @classmethod
+    def from_string(cls, string, format='toml'):
+        if format == 'toml':
+            struct = tomli.loads(string)
+        elif format == 'json':
+            struct = json.loads(string)
+        else:
+            raise ParserException(f"Unrecognized format {format}")
+
+        struct = parse_spec(struct)
+        return cls(**struct)
+
 
 if __name__ == '__main__':
     nest = SpecTree.from_file('./sidecar_file.toml')

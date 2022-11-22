@@ -72,54 +72,10 @@ def dotpath_exists(struct: Dict, dotpath: str):
 
 class SpecBase(dict):
     spec_type = 'base'
-    required_keys = tuple()
-    parse_as = None
 
     def __init__(self, **spec):
         super().__init__(**spec)
         self._root_structure = self
-        self.validate()
-
-    def validate(self, extra_keys=None):
-        # Add read_as injection of required_keys here
-        # consider needing some requires from type and some from read_as
-        required = self.read_as.required_keys
-        if extra_keys is not None:
-            required = required + extra_keys
-        missing = tuple(k for k in required if k not in self)
-        if missing:
-            raise TypeError(f'Missing keys {missing} for {self.spec_type}')
-
-    def parse(self, parse_as: Optional[NamedTuple] = None):
-        # Convert self into a NamedTuple of fields specified in
-        # either the parse_as argument or the default parse_as for the class
-        if parse_as is None:
-            if self.parse_as is None:
-                raise TypeError(f'Cannot parse {self.__class__.__name__} '
-                                'to object without type definition')
-            parse_as = self.parse_as
-        fields = {}
-        other = {k: v for k, v in self.items() if k not in parse_as._fields}
-        for field in parse_as._fields:
-            try:
-                value = getattr(self, field)
-                fields[field] = value
-                continue
-            except AttributeError as e:
-                pass
-            try:
-                value = self.get(field, None)
-                if value is not None:
-                    fields[field] = value
-            except AttributeError as e:
-                if field not in parse_as._field_defaults:
-                    # required field!
-                    raise e
-        if other:
-            if 'other' in fields:
-                raise ValueError('Name collision on key "other"')
-            fields['other'] = other
-        return parse_as(**fields)
 
     def load(self):
         # Try to load the oject defined by this spec
@@ -130,18 +86,10 @@ class SpecBase(dict):
     def root(self) -> pathlib.Path:
         return self.get('root', None)
 
-    @property
-    def read_as(self) -> Type['SpecBase']:
-        read_as = self.get('read_as', None)
-        if read_as is not None:
-            return parsers[read_as]
-        else:
-            return type(self)
-
     def _set_root_structure(self, struct: Dict[str, Any]):
         self._root_structure = struct
 
-    def resolve(self, key):
+    def resolve_key(self, key):
         """
         Get key from self in dot notation (a.b.c)
         then try to get key from the root tree
@@ -174,21 +122,14 @@ class SpecBase(dict):
 
     @classmethod
     def construct(cls, arg):
-        raise NotImplementedError()
-
-
-class FileT(NamedTuple):
-    path: pathlib.Path
-    format: str = None
-    dtype: nt.DTypeLike = None
-    shape: Tuple[int, ...] = None
-    other: Dict[str, Any] = None
+        if isinstance(arg, dict):
+            return cls(**arg)
+        else:
+            raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
 
 
 class FileSpec(SpecBase):
-    spec_type = 'path'
-    required_keys = ('path',)
-    parse_as = FileT
+    spec_type = 'file'
 
     @property
     def path(self) -> pathlib.Path:
@@ -222,24 +163,12 @@ class FileSpec(SpecBase):
     def construct(cls, arg):
         if isinstance(arg, str):
             return cls(path=arg)
-        elif isinstance(arg, dict):
-            return cls(**arg)
         else:
-            raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
-
-
-class FileSetT(NamedTuple):
-    files: List[pathlib.Path]
-    format: str = None
-    dtype: nt.DTypeLike = None
-    shape: Tuple[int, ...] = None
-    other: Dict[str, Any] = None
+            return super().construct(arg)
 
 
 class FileSetSpec(SpecBase):
     spec_type = 'fileset'
-    required_keys = ('files',)
-    parse_as = FileSetT
 
     @property
     def filelist(self):
@@ -314,21 +243,12 @@ class FileSetSpec(SpecBase):
     def construct(cls, arg):
         if isinstance(arg, str):
             return cls(files=arg)
-        elif isinstance(arg, dict):
-            return cls(**arg)
         else:
-            raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
-
-
-class ArrayT(NamedTuple):
-    array: np.ndarray
-    other: Dict[str, Any] = None
+            return super().construct(arg)
 
 
 class ArraySpec(SpecBase):
-    spec_type = 'array'
-    required_keys = ('data',)
-    parse_as = ArrayT
+    spec_type = 'nparray'
 
     @property
     def raw_data(self) -> List:
@@ -354,18 +274,17 @@ class ArraySpec(SpecBase):
     def load(self) -> np.ndarray:
         return self.array
 
-
-class MaskSpec(SpecBase):
-    spec_type = 'mask'
+    @classmethod
+    def construct(cls, arg):
+        if isinstance(arg, (np.ndarray, list, tuple)):
+            return cls(data=arg)
+        else:
+            return super().construct(arg)
 
 
 class CorrectionSetSpec(SpecBase):
     spec_type = 'correctionset'
     optional_keys = ('dark_frame', 'gain_map', 'excluded_pixels')
-
-    def validate(self):
-        if not any(k in self for k in self.optional_keys):
-            raise ParserException("Correction set doesn't define any known corrections")
 
     @property
     def dark_frame(self) -> Dict[str, Any]:
@@ -383,18 +302,8 @@ class CorrectionSetSpec(SpecBase):
         return CorrectionSet()
 
 
-class DataSetT(NamedTuple):
-    format: str
-    path: FileSpec
-    nav_shape: Tuple[int, ...] = None
-    sig_shape: Tuple[int, ...] = None
-    sync_offset: int = 0
-    dtype: nt.DTypeLike = None
-
-
 class DataSetSpec(SpecBase):
     spec_type = 'dataset'
-    parse_as = DataSetT
 
     @property
     def format(self):
@@ -417,20 +326,8 @@ class DataSetSpec(SpecBase):
         return self.get('dtype', None)
 
 
-class RoiT(NamedTuple):
-    array: np.ndarray
-
-
 class ROISpec(SpecBase):
     spec_type = 'roi'
-    parse_as = RoiT
-
-    def validate(self):
-        if self.read_as is type(self):
-            extra_requires = ('shape', 'roi_default')
-            super().validate(extra_keys=extra_requires)
-        else:
-            super().validate()
 
     @property
     def roi_default(self):
@@ -492,34 +389,31 @@ class ROISpec(SpecBase):
         return self.array
 
 
-class ContextSpec(SpecBase):
-    spec_type = 'context'
+# class ContextSpec(SpecBase):
+#     spec_type = 'context'
 
 
-class AnalysisSpec(SpecBase):
-    spec_type = 'analysis'
+# class AnalysisSpec(SpecBase):
+#     spec_type = 'analysis'
 
 
-class UDFSpec(SpecBase):
-    spec_type = 'udf'
+# class UDFSpec(SpecBase):
+#     spec_type = 'udf'
 
 
-class RunSpec(SpecBase):
-    spec_type = 'run'
+# class RunSpec(SpecBase):
+#     spec_type = 'run'
 
 
-parsers = {
-    'file': FileSpec,
-    'fileset': FileSetSpec,
-    'array': ArraySpec,
-    'dataset': DataSetSpec,
-    'correctionset': CorrectionSetSpec,
-    'roi': ROISpec,
-    'context': ContextSpec,
-    'analysis': AnalysisSpec,
-    'udf': UDFSpec,
-    'run': RunSpec,
-}
+spec_types = [
+    FileSpec,
+    FileSetSpec,
+    ArraySpec,
+    DataSetSpec,
+    CorrectionSetSpec,
+    ROISpec,
+]
+parsers = {s.spec_type: s for s in spec_types}
 
 
 def parse_spec(struct: Dict[str, Any]):
@@ -534,7 +428,7 @@ def parse_spec(struct: Dict[str, Any]):
     if spec_type_key in struct:
         parser = parsers.get(struct[spec_type_key], None)
         if parser is None:
-            raise TypeError(f'Unrecognized spec type {struct[spec_type_key]}')
+            raise TypeError(f'Unrecognized spec type: "{struct[spec_type_key]}"')
         return parser(**struct)
     else:
         return struct

@@ -134,7 +134,7 @@ pandocfilters==1.5.0
     # via nbconvert
 partd==1.2.0
     # via dask
-pillow==9.0.1
+pillow==9.3.0
     # via
     #   empyre
     #   imageio

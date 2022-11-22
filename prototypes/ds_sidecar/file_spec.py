@@ -18,7 +18,6 @@ import numpy.typing as nt
 
 sort_types = Literal['natsorted', 'humansorted', 'os_sorted']
 enum_names = tuple(en.name for en in natsort.ns)
-spec_type_key = 'type'
 
 class ParserException(Exception):
     ...
@@ -70,24 +69,16 @@ def dotpath_exists(struct: Dict, dotpath: str):
         return False
 
 
-class SpecBase(dict):
-    spec_type = 'base'
-
-    def __init__(self, **spec):
-        super().__init__(**spec)
-        self._root_structure = self
-
-    def load(self):
-        # Try to load the oject defined by this spec
-        # Will call load on all sub-specs (assumed to be required)
-        raise NotImplementedError(f'No load method for {self.__class__.__name__}')
+class NestedDict(dict):
+    def _set_parent(self, parent: Dict[str, Any]):
+        self._parent = parent
 
     @property
-    def root(self) -> pathlib.Path:
-        return self.get('root', None)
-
-    def _set_root_structure(self, struct: Dict[str, Any]):
-        self._root_structure = struct
+    def parent(self):
+        try:
+            return self._parent
+        except AttributeError:
+            return None
 
     def resolve_key(self, key):
         """
@@ -101,6 +92,19 @@ class SpecBase(dict):
             if self._root_structure is not self:
                 return resolve_dotpath(self._root_structure, key)
             raise e
+
+
+class SpecBase(NestedDict):
+    spec_type = 'base'
+
+    def load(self):
+        # Try to load the oject defined by this spec
+        # Will call load on all sub-specs (assumed to be required)
+        raise NotImplementedError(f'No load method for {self.__class__.__name__}')
+
+    @property
+    def root(self) -> pathlib.Path:
+        return self.get('root', None)
 
     def as_tree(self, level=0, name=None):
         ident = '  ' * level + f'{self.__class__.__name__}'
@@ -416,37 +420,28 @@ spec_types = [
 parsers = {s.spec_type: s for s in spec_types}
 
 
-def parse_spec(struct: Dict[str, Any]):
+def parse_spec(struct: Dict[str, Any], parent=None):
     if not isinstance(struct, dict):
         return struct
+    if 'type' in struct:
+        parser = parsers.get(struct['type'], None)
+        if parser is None:
+            raise TypeError(f'Unrecognized spec type: "{struct["type"]}"')
+        struct = parser(**struct)
+    elif parent is None:
+        # Must be root node
+        struct = SpecTree(**struct)
+    else:
+        # Convert regular dict to a NestedDict so it can reference parent
+        struct = NestedDict(**struct)
+    struct._set_parent(parent)
     for key, value in struct.items():
         if isinstance(value, dict):
-            if 'root' not in value and 'root' in struct:
-                struct[key] = parse_spec({**value, 'root': struct['root']})
-            else:
-                struct[key] = parse_spec(value)
-    if spec_type_key in struct:
-        parser = parsers.get(struct[spec_type_key], None)
-        if parser is None:
-            raise TypeError(f'Unrecognized spec type: "{struct[spec_type_key]}"')
-        return parser(**struct)
-    else:
-        return struct
+            struct[key] = parse_spec(value, parent=struct)
+    return struct
 
 
 class SpecTree(SpecBase):
-    def __init__(self, **spec):
-        super().__init__(**spec)
-        self.set_root(self, self)
-
-    @staticmethod
-    def set_root(struct, root):
-        for value in struct.values():
-            if isinstance(value, SpecBase):
-                value._set_root_structure(root)
-            if isinstance(value, dict):
-                SpecTree.set_root(value, root)
-
     @classmethod
     def from_file(cls, path):
         path = pathlib.Path(path)
@@ -465,8 +460,7 @@ class SpecTree(SpecBase):
         else:
             raise ParserException(f"Unrecognized format {path.suffix}")
 
-        struct = parse_spec(struct)
-        return cls(**struct)
+        return cls._get_tree(struct)
 
     @classmethod
     def from_string(cls, string, format='toml'):
@@ -477,9 +471,11 @@ class SpecTree(SpecBase):
         else:
             raise ParserException(f"Unrecognized format {format}")
 
-        struct = parse_spec(struct)
-        return cls(**struct)
+        return cls._get_tree(struct)
 
+    @classmethod
+    def _get_tree(cls, struct: Dict[str, Any]):
+        return parse_spec(struct)
 
 if __name__ == '__main__':
     nest = SpecTree.from_file('./sidecar_file.toml')

@@ -126,6 +126,11 @@ class NestedDict(dict):
 class SpecBase(NestedDict):
     spec_type = 'base'
 
+    def __init__(self, **kvals):
+        super().__init__(self, **kvals)
+        if not self.validate(None, self):
+            raise ParserException(f'Invalid spec for {self}')
+
     def load(self):
         # Try to load the oject defined by this spec
         # Will call load on all sub-specs (assumed to be required)
@@ -177,6 +182,16 @@ class SpecBase(NestedDict):
     @property
     def read_as(self):
         return self.get('read_as', None)
+
+    def view(self, spec_type: str):
+        if spec_type not in parsers:
+            raise ParserException(f'Cannot view {self.__class__.__name__} as {spec_type}')
+        instance_props = {k: v for k, v in self.items() if k != 'read_as'}
+        if 'type' in instance_props:
+            instance_props['type'] = spec_type
+        instance = parsers[spec_type](**instance_props)
+        instance._set_parent = self.parent
+        return instance
 
     @classmethod
     def readers(cls):
@@ -385,6 +400,9 @@ class ArraySpec(SpecBase):
 
     @classmethod
     def validate(cls, checker, instance):
+        if instance.read_as is not None:
+            view_instance = instance.view(instance.read_as)
+            return view_instance.validate(checker, view_instance)
         valid = super().validate(checker, instance)
         valid = valid and ('data' in instance)
         if valid:
@@ -399,8 +417,7 @@ class ArraySpec(SpecBase):
         return valid
 
     def _from_file(self):
-        file_form = FileSpec(**self)
-        file_form._set_parent(self.parent)
+        file_form = self.view(self.read_as)
         return file_form.load()
 
 

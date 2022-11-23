@@ -157,7 +157,13 @@ class SpecBase(NestedDict):
     def construct(cls, arg, parent=None):
         if isinstance(arg, dict):
             instance = cls(**arg)
-            instance._set_parent(parent)
+            # Retain arg's parent while casting if it
+            # is already a NestedDict, even if None,
+            # else use the external parent
+            try:
+                instance._set_parent(arg.parent)
+            except AttributeError:
+                instance._set_parent(parent)
             return instance
         else:
             raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')

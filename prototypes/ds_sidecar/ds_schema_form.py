@@ -1,8 +1,10 @@
 import pathlib
 import numpy as np
+from functools import partial
 from jsonschema import validators
+from jsonschema.exceptions import ValidationError
 
-from file_spec import SpecTree
+from file_spec import SpecTree, NestedDict, parsers
 
 
 toml_def = """
@@ -27,8 +29,8 @@ sort_options = []
 [my_tvips_dataset]
 type = "dataset"
 format = "tvips"
-meta = 'my_metadata_file'
-data = 'my_data_fileset'
+meta = '#/my_metadata_file'
+data = '#/my_data_fileset'
 nav_shape = [32, 32]
 sig_shape = [32, 32]
 dtype = 'float32'
@@ -41,13 +43,6 @@ tvips_schema = {
     "properties": {
         "meta": {
             "type": "file",
-            # file['file'].dtype should be
-            # auto-interpreted as format['dtype']
-            # "properties": {
-            #     "dtype": {
-            #         "type": "$dtype"
-            #     }
-            # },
             "required": ["dtype"],
         },
         "data": {
@@ -123,25 +118,77 @@ and not just locally, in the future this could lead to a change
 in how we .initialize a dataset
 """
 
+definitions = {
+    'file': is_file,
+    'dtype': is_dtype,
+    'fileset': is_fileset,
+    'dataset': is_dataset,
+}
+
+
+def extend_check_required(validator_class):
+    validate_required = validator_class.VALIDATORS["required"]
+
+    def check_required(validator, required, instance, schema):
+        checking_type = schema.get('type', None)
+        if checking_type in definitions.keys():
+            for property in required:
+                if property not in instance:
+                    yield ValidationError(f"{property!r} is a required property")
+        else:
+            yield from validate_required(validator, required, instance, schema)
+
+    return validators.extend(
+        validator_class, {"required": check_required},
+    )
+
+
+def extend_coerce_types(validator_class):
+    validate_properties = validator_class.VALIDATORS["properties"]
+
+    def coerce_types(validator, properties, instance, schema):
+        for property, subschema in properties.items():
+            property_value = instance.get(property, None)
+            intended_type = subschema.get('type')
+            if property_value is None or intended_type not in parsers.keys():
+                # Not present or specified, do nothing
+                continue
+            elif isinstance(property_value, str) and property_value.startswith('#/'):
+                # Relative path within spec, resolve it
+                property_value = instance.resolve_key(property_value)
+
+            spec_type = parsers[intended_type]
+            if not isinstance(property_value, spec_type):
+                # If not already of the correct spec type
+                # try to coerce it using the class constructor
+                # This will cast generic NestedDict to SpecBase's
+                # or single values if the constructor accepts that
+                property_value = spec_type.construct(property_value,
+                                                     parent=instance)
+            instance[property] = property_value
+
+        yield from validate_properties(
+            validator, properties, instance, schema,
+        )
+
+    return validators.extend(
+        validator_class, {"properties": coerce_types},
+    )
+
 
 if __name__ == '__main__':
     nest = SpecTree.from_string(toml_def)
-
-    definitions = {
-        'file': is_file,
-        'dtype': is_dtype,
-        'fileset': is_fileset,
-        'dataset': is_dataset,
-    }
 
     type_checker = validators.Draft202012Validator.TYPE_CHECKER.redefine_many(
         definitions=definitions
     )
 
-    CustomValidator = validators.extend(
+    Validator = validators.extend(
         validators.Draft202012Validator,
         type_checker=type_checker,
     )
+    Validator = extend_check_required(Validator)
+    Validator = extend_coerce_types(Validator)
 
-    validator = CustomValidator(schema=tvips_schema)
+    validator = Validator(schema=tvips_schema)
     print(validator.is_valid(nest['my_tvips_dataset']))

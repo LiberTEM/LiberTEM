@@ -120,7 +120,7 @@ class SpecBase(NestedDict):
         # Will call load on all sub-specs (assumed to be required)
         raise NotImplementedError(f'No load method for {self.__class__.__name__}')
 
-    def as_tree(self, level=0, name=None):
+    def as_tree(self, level=0, name=None, do_print=True):
         ident = '  ' * level + f'{self.__class__.__name__}'
         if name is not None:
             ident = ident + f'   [{name}]'
@@ -131,7 +131,11 @@ class SpecBase(NestedDict):
             if isinstance(value, SpecBase):
                 lines.extend(value.as_tree(level=level + 1, name=key))
         if level == 0:
-            return '\n'.join(lines)
+            tree_string = '\n'.join(lines)
+            if do_print:
+                print(tree_string)
+            else:
+                return tree_string
         else:
             return lines
 

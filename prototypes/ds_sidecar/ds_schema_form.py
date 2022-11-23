@@ -3,12 +3,10 @@ import numpy as np
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 
-from file_spec import SpecTree, parsers
+from file_spec import SpecTree, types
 
 
 toml_def = """
-root = '~/Data/'
-
 [my_metadata_file]
 type = 'file'
 path = "/home/alex/Data/TVIPS/rec_20200623_080237_000.tvips"
@@ -37,9 +35,6 @@ sync_offset = 0
 
 [my_dark_frame]
 type = 'nparray'
-# follows file specifier schema
-# requires format and dtype/shape as appropriate
-# alternatively could write data directly in TOML (verbose!)
 data = [
    [5.0, 6.0, 7.0, 8.0],
    [1.0, 2.0, 3.0, 4.0],
@@ -47,6 +42,11 @@ data = [
    [1.0, 2.0, 3.0, 4.0],
 ]
 shape = [2, 8]
+
+[my_roi]
+type = 'nparray'
+read_as = 'file'
+path = './test_roi.npy'
 """
 
 tvips_schema = {
@@ -92,42 +92,6 @@ tvips_schema = {
             "minItems": 1,
         }
     }
-}
-
-
-class WrappedType:
-    @classmethod
-    def validate(cls, checker, instance):
-        raise NotImplementedError()
-
-    @classmethod
-    def construct(cls, arg, parent=None):
-        return arg
-
-
-class DType(WrappedType):
-    spec_type = 'dtype'
-
-    @classmethod
-    def validate(cls, checker, instance):
-        try:
-            cls.construct(instance)
-            return True
-        except TypeError:
-            return False
-
-    @classmethod
-    def construct(cls, arg, parent=None):
-        dtype = np.dtype(arg)
-        if dtype.type is not None:
-            return dtype.type
-        return dtype
-
-
-wrapped_types = (DType,)
-types = {
-    **parsers,
-    **{t.spec_type: t for t in wrapped_types},
 }
 
 
@@ -186,9 +150,7 @@ def extend_coerce_types(validator_class):
     )
 
 
-if __name__ == '__main__':
-    nest = SpecTree.from_string(toml_def)
-
+def get_validator(schema):
     type_checker = validators.Draft202012Validator.TYPE_CHECKER.redefine_many(
         definitions={k: v.validate for k, v in types.items()}
     )
@@ -199,6 +161,10 @@ if __name__ == '__main__':
     )
     Validator = extend_check_required(Validator)
     Validator = extend_coerce_types(Validator)
+    return Validator(schema=schema)
 
-    validator = Validator(schema=tvips_schema)
+
+if __name__ == '__main__':
+    nest = SpecTree.from_string(toml_def)
+    validator = get_validator(tvips_schema)
     validator.validate(nest['my_tvips_dataset'])

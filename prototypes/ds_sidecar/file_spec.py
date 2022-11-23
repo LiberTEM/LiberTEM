@@ -596,6 +596,42 @@ class SpecTree(SpecBase):
     def _get_tree(cls, struct: Dict[str, Any]):
         return parse_spec(struct)
 
+
+class WrappedType:
+    @classmethod
+    def validate(cls, checker, instance):
+        raise NotImplementedError()
+
+    @classmethod
+    def construct(cls, arg, parent=None):
+        return arg
+
+
+class DType(WrappedType):
+    spec_type = 'dtype'
+
+    @classmethod
+    def validate(cls, checker, instance):
+        try:
+            cls.construct(instance)
+            return True
+        except TypeError:
+            return False
+
+    @classmethod
+    def construct(cls, arg, parent=None):
+        dtype = np.dtype(arg)
+        if dtype.type is not None:
+            return dtype.type
+        return dtype
+
+
+wrapped_types = (DType,)
+types = {
+    **parsers,
+    **{t.spec_type: t for t in wrapped_types},
+}
+
 if __name__ == '__main__':
     nest = SpecTree.from_file('./sidecar_file.toml')
 

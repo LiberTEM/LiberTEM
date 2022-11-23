@@ -76,25 +76,6 @@ tvips_schema = {
 }
 
 
-def is_dataset(checker, instance):
-    return True
-
-
-"""
-Parser tools have builtin conversions to resolve paths,
-fill globs, sort, find loaders and create dtypes.
-They should validate the schema 'required' args and types
-only when the object resolves them using its schema.
-They don't validate the parameters themselves, leave that
-to the datasets or other objects.
-
-Ideally the parser should return an object which can be
-accessed and resolved more than once (on different machines ?)
-so that globbing / resolving can happen on the target machine
-and not just locally, in the future this could lead to a change
-in how we .initialize a dataset
-"""
-
 class WrappedType:
     @classmethod
     def validate(cls, checker, instance):

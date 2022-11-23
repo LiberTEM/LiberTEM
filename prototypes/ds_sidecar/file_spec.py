@@ -192,11 +192,10 @@ class FileSpec(SpecBase):
 
     @property
     def path(self) -> pathlib.Path:
-        path = pathlib.Path(self.get('path'))
-        if path.is_absolute():
-            return path
-        else:
-            return (self.root / path).resolve()
+        paths = resolve_path_glob(self['path'], self.root)
+        if len(paths) != 1:
+            raise ParserException(f'path {self["path"]} matched {len(paths)} files')
+        return paths[0]
 
     @property
     def format(self) -> str:
@@ -233,6 +232,27 @@ class FileSpec(SpecBase):
         valid = valid and ('path' in instance)
         return valid and isinstance(instance['path'], (str, pathlib.Path))
 
+    def resolve(self):
+        return self.path
+
+
+def resolve_path_glob(path: pathlib.Path, root_dir: pathlib.Path) -> List[pathlib.Path]:
+    """
+    Resolve path using glob expansion
+    If path is relative concatenate path with root_dir.
+    A path containing no glob characters
+    will still resolve in glob.glob to List[path]
+    Return fully resolved paths
+
+    This essentially performs an existence check for files
+    Might not be desirable for cases where files are not present
+    on the main node but are on other nodes ?
+    """
+    filepath = pathlib.Path(path).expanduser()
+    if not filepath.is_absolute():
+        filepath = root_dir / filepath
+    return [pathlib.Path(p).resolve() for p in glob.glob(str(filepath))]
+
 
 class FileSetSpec(SpecBase):
     spec_type = 'fileset'
@@ -240,59 +260,22 @@ class FileSetSpec(SpecBase):
 
     @property
     def filelist(self):
-        if isinstance(self.files, str):
-            # files could be glob or a single filename
-            # specifying a list of files
-            filepath = pathlib.Path(self.files)
-            if not filepath.is_absolute():
-                filepath = self.root / filepath
-            if filepath.is_file():
-                # assume this is a textfile of files to read
-                # FIXME Catch which exceptions if assumption wrong ?
-                with filepath.open('r') as fp:
-                    filelist = filepath.readlines()
-                # Implicitly paths relative to text file specifier
-                filelist = [(filepath.parent / f).resolve() for f in filelist]
-            else:
-                # assume glob
-                filelist = glob.glob(filepath)
-                filelist = [pathlib.Path(f).resolve() for f in filelist]
-        elif isinstance(self.files, list):
+        if isinstance(self.files, (str, pathlib.Path)):
+            filelist = resolve_path_glob(self.files, self.root)
+        elif isinstance(self.files, (list, tuple)):
             # List of (potentially mixed) absolute, relative, or glob specifiers
-            filelist = [pathlib.Path(f) for f in self.files]
-            filelist = [f if f.is_absolute() else (self.root / f) for f in filelist]
-            # Need to test if is glob here else we get errors too early for
-            # absolute files which are not present on the FS
-            filelist = [ff for f in filelist for ff in glob.glob(str(f))]
-            filelist = [pathlib.Path(f).resolve() for f in filelist]
+            filelist = [f for path in self.files for f in resolve_path_glob(path, self.root)]
         else:
-            raise ParserException(f'Unrecognized files specifier {type(self.files)}')
+            raise ParserException(f'Unrecognized files specifier {self.files}')
 
         if not filelist:
             raise ParserException(f'Found no files with specifier {self.files}.')
 
+        # It's possible that multiple globs together may match a file more than once
+        # Could add some form of uniqueness check for resolved paths ?
         if self.sort:
-            sort_fn = sort_methods.get(self.sort, None)
-            if not sort_fn:
-                raise ParserException(f'Unrecognized sort method {self.sort} '
-                                      f'options are {tuple(sort_methods.keys())}')
-            alg_option = natsort.ns.DEFAULT
-            if self.sort_options:
-                option_ints = tuple(getattr(natsort.ns, option, None)
-                                    for option in self.sort_options)
-                if None in option_ints:
-                    invalid_idx = option_ints.index(None)
-                    invalid_option = self.sort_options[invalid_idx]
-                    raise ParserException(f'Unrecognized sort option {invalid_option}')
-                if len(option_ints) > 1:
-                    alg_option = functools.reduce(operator.or_, option_ints)
-                else:
-                    alg_option = option_ints[0]
+            filelist = self._sort(filelist)
 
-            # FIXME Ambiguity in sorting if we have are reading from multiple directories ?
-            filelist = sort_fn(filelist, alg=alg_option)
-
-        # Could add existence checks here but the dataset should already do this!
         return filelist
 
     @property
@@ -306,6 +289,27 @@ class FileSetSpec(SpecBase):
     @property
     def sort_options(self) -> Union[str, Sequence[str]]:
         return self.get('sort_options', False)
+
+    def _sort(self, filelist):
+        sort_fn = sort_methods.get(self.sort, None)
+        if not sort_fn:
+            raise ParserException(f'Unrecognized sort method {self.sort} '
+                                  f'options are {tuple(sort_methods.keys())}')
+        alg_option = natsort.ns.DEFAULT
+        if self.sort_options:
+            option_ints = tuple(getattr(natsort.ns, option, None)
+                                for option in self.sort_options)
+            if None in option_ints:
+                invalid_idx = option_ints.index(None)
+                invalid_option = self.sort_options[invalid_idx]
+                raise ParserException(f'Unrecognized sort option {invalid_option}')
+            if len(option_ints) > 1:
+                alg_option = functools.reduce(operator.or_, option_ints)
+            else:
+                alg_option = option_ints[0]
+
+        # FIXME Ambiguity in sorting if we have are reading from multiple directories ?
+        return sort_fn(filelist, alg=alg_option)
 
     @classmethod
     def construct(cls, arg, parent=None):
@@ -327,6 +331,9 @@ class FileSetSpec(SpecBase):
             elif isinstance(files_val, (list, tuple)):
                 valid = all(isinstance(s, (str, pathlib.Path)) for s in files_val)
         return valid
+
+    def resolve(self):
+        return self.filelist
 
 
 class ArraySpec(SpecBase):

@@ -196,7 +196,7 @@ class SpecBase(NestedDict):
         if 'type' in instance_props:
             instance_props['type'] = spec_type
         instance = parsers[spec_type](**instance_props)
-        instance._set_parent = self.parent
+        instance._set_parent(self.parent)
         return instance
 
     @classmethod
@@ -429,7 +429,7 @@ class ArraySpec(SpecBase):
 
 class CorrectionSetSpec(SpecBase):
     spec_type = 'correctionset'
-    optional_keys = ('dark_frame', 'gain_map', 'excluded_pixels')
+    resolve_to = CorrectionSet
 
     @property
     def dark_frame(self) -> Dict[str, Any]:
@@ -454,33 +454,18 @@ class DataSetSpec(SpecBase):
     def format(self):
         return self.get('format', None)
 
-    @property
-    def path(self):
-        ...
-
-    @property
-    def nav_shape(self):
-        return self.get('nav_shape', None)
-
-    @property
-    def sig_shape(self):
-        return self.get('sig_shape', None)
-
-    @property
-    def dtype(self):
-        return self.get('dtype', None)
-
 
 class ROISpec(SpecBase):
     spec_type = 'roi'
+    resolve_to = np.ndarray
 
     @property
-    def roi_default(self):
-        return self.get('roi_base', None)
+    def roi_base(self):
+        return self['roi_base']
 
     @property
     def shape(self):
-        return self.get('shape', None)
+        return self['shape']
 
     @property
     def dtype(self):
@@ -488,50 +473,51 @@ class ROISpec(SpecBase):
 
     @property
     def toggle_px(self):
-        toggle = self.get('toggle_px', None)
-        if toggle is None:
-            return []
-        elif isinstance(toggle, list):
-            return toggle
-        elif isinstance(toggle, SpecBase):
-            return toggle.load()
-        elif isinstance(toggle, str):
-            return self.resolve(toggle).load()
-        else:
-            raise ParserException(f'Unable to resolve toggle pixels {toggle}')
-
-    @property
-    def toggle_slices(self):
-        toggle = self.get('toggle_slices', None)
-        if toggle is None:
-            return []
-        return list(self._parse_slices(sl) for sl in toggle)
-
-    @staticmethod
-    def _parse_slices(slice_spec):
-        slice_spec = tuple(tuple(s_sl if (isinstance(s_sl, int) and not isinstance(s_sl, bool))
-                                 else None for s_sl in sl)
-                           if sl else (None,) for sl in slice_spec)
-        return tuple(slice(*sl) for sl in slice_spec)
+        # Existence and type checked in validate
+        return self['toggle_px']
 
     @property
     def array(self):
-        if self.read_as is not type(self):
-            proxy = self.read_as(**self)
-            proxy._set_root_structure(self._root_structure)
-            array = proxy.load()
-            if not isinstance(array, np.ndarray):
-                raise ParserException('ROI must be np.ndarray')
-        else:
-            array = np.full(self.shape, self.roi_default, dtype=self.dtype)
-            for toggle in self.toggle_px:
-                array[tuple(toggle)] = not self.roi_default
-            for slices in self.toggle_slices:
-                array[slices] = not self.roi_default
+        array = np.full(self.shape, self.roi_base, dtype=self.dtype)
+        for toggle in self.toggle_px:
+            array[tuple(toggle)] = not self.roi_base
         return array
 
-    def load(self):
+    def resolve(self) -> np.ndarray:
+        if self.read_as in self.readers():
+            return self.readers()[self.read_as](self)
         return self.array
+
+    @classmethod
+    def readers(cls):
+        return {
+            'file': cls._from_file,
+            'nparray': cls._from_array,
+        }
+
+    @classmethod
+    def validate(cls, checker, instance):
+        if instance.read_as is not None:
+            view_instance = instance.view(instance.read_as)
+            return view_instance.validate(checker, view_instance)
+        valid = super().validate(checker, instance)
+        required = {
+            'shape': (list, tuple, np.ndarray),
+            'roi_base': (bool,),
+            'toggle_px': (list, tuple, np.ndarray),
+        }
+        for key, types in required.items():
+            valid = valid and key in instance and isinstance(instance[key], types)
+        valid = valid and ('data' in instance)
+        return valid
+
+    def _from_file(self):
+        file_form = self.view(self.read_as)
+        return file_form.load()
+
+    def _from_array(self):
+        array_form = self.view(self.read_as)
+        return array_form.resolve()
 
 
 # class ContextSpec(SpecBase):

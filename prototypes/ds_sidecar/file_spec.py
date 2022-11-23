@@ -168,6 +168,10 @@ class SpecBase(NestedDict):
         else:
             raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
 
+    @classmethod
+    def validate(cls, checker, instance):
+        return isinstance(instance, cls)
+
 
 class FileSpec(SpecBase):
     spec_type = 'file'
@@ -208,6 +212,12 @@ class FileSpec(SpecBase):
             return instance
         else:
             return super().construct(arg, parent=parent)
+
+    @classmethod
+    def validate(cls, checker, instance):
+        valid = super().validate(checker, instance)
+        valid = valid and ('path' in instance)
+        return valid and isinstance(instance['path'], (str, pathlib.Path))
 
 
 class FileSetSpec(SpecBase):
@@ -290,6 +300,18 @@ class FileSetSpec(SpecBase):
             return instance
         else:
             return super().construct(arg, parent=parent)
+
+    @classmethod
+    def validate(cls, checker, instance):
+        valid = super().validate(checker, instance)
+        valid = valid and ('files' in instance)
+        if valid:
+            files_val = instance['files']
+            if isinstance(files_val, (str, pathlib.Path)):
+                pass
+            elif isinstance(files_val, (list, tuple)):
+                valid = all(isinstance(s, (str, pathlib.Path)) for s in files_val)
+        return valid
 
 
 class ArraySpec(SpecBase):

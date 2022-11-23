@@ -1,10 +1,9 @@
 import pathlib
 import numpy as np
-from functools import partial
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 
-from file_spec import SpecTree, NestedDict, parsers
+from file_spec import SpecTree, parsers
 
 
 toml_def = """
@@ -55,8 +54,7 @@ tvips_schema = {
             "$ref": "#/$defs/shape",
         },
         "dtype": {
-            "type": "string",
-            "format": "dtype",
+            "type": "dtype",
             "default": "float32"
         },
         "sync_offset": {
@@ -78,27 +76,6 @@ tvips_schema = {
 }
 
 
-def is_file(checker, instance):
-    return isinstance(instance, (str, pathlib.Path))
-
-
-def is_fileset(checker, instance):
-    if isinstance(instance, (str, pathlib.Path)):
-        return True
-    elif isinstance(instance, (list, tuple)):
-        return all(isinstance(s, (str, pathlib.Path)) for s in instance)
-    else:
-        return False
-
-
-def is_dtype(checker, instance):
-    try:
-        _ = np.dtype(instance)
-        return True
-    except TypeError:
-        return False
-
-
 def is_dataset(checker, instance):
     return True
 
@@ -118,11 +95,39 @@ and not just locally, in the future this could lead to a change
 in how we .initialize a dataset
 """
 
-definitions = {
-    'file': is_file,
-    'dtype': is_dtype,
-    'fileset': is_fileset,
-    'dataset': is_dataset,
+class WrappedType:
+    @classmethod
+    def validate(cls, checker, instance):
+        raise NotImplementedError()
+
+    @classmethod
+    def construct(cls, arg, parent=None):
+        return arg
+
+
+class DType(WrappedType):
+    spec_type = 'dtype'
+
+    @classmethod
+    def validate(cls, checker, instance):
+        try:
+            cls.construct(instance)
+            return True
+        except TypeError:
+            return False
+
+    @classmethod
+    def construct(cls, arg, parent=None):
+        dtype = np.dtype(arg)
+        if dtype.type is not None:
+            return dtype.type
+        return dtype
+
+
+wrapped_types = (DType,)
+types = {
+    **parsers,
+    **{t.spec_type: t for t in wrapped_types},
 }
 
 
@@ -131,8 +136,12 @@ def extend_check_required(validator_class):
 
     def check_required(validator, required, instance, schema):
         checking_type = schema.get('type', None)
-        if checking_type in definitions.keys():
+        if checking_type in types.keys():
             for property in required:
+                if not isinstance(instance, dict):
+                    yield ValidationError('Cannot use "required" in non-dict '
+                                          f'specification {checking_type}')
+                    continue
                 if property not in instance:
                     yield ValidationError(f"{property!r} is a required property")
         else:
@@ -150,14 +159,14 @@ def extend_coerce_types(validator_class):
         for property, subschema in properties.items():
             property_value = instance.get(property, None)
             intended_type = subschema.get('type')
-            if property_value is None or intended_type not in parsers.keys():
+            if property_value is None or intended_type not in types.keys():
                 # Not present or specified, do nothing
                 continue
             elif isinstance(property_value, str) and property_value.startswith('#/'):
                 # Relative path within spec, resolve it
                 property_value = instance.resolve_key(property_value)
 
-            spec_type = parsers[intended_type]
+            spec_type = types[intended_type]
             if not isinstance(property_value, spec_type):
                 # If not already of the correct spec type
                 # try to coerce it using the class constructor
@@ -180,7 +189,7 @@ if __name__ == '__main__':
     nest = SpecTree.from_string(toml_def)
 
     type_checker = validators.Draft202012Validator.TYPE_CHECKER.redefine_many(
-        definitions=definitions
+        definitions={k: v.validate for k, v in types.items()}
     )
 
     Validator = validators.extend(
@@ -191,4 +200,4 @@ if __name__ == '__main__':
     Validator = extend_coerce_types(Validator)
 
     validator = Validator(schema=tvips_schema)
-    print(validator.is_valid(nest['my_tvips_dataset']))
+    validator.validate(nest['my_tvips_dataset'])

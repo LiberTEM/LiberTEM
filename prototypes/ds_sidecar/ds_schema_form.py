@@ -34,6 +34,19 @@ nav_shape = [32, 32]
 sig_shape = [32, 32]
 dtype = 'float32'
 sync_offset = 0
+
+[my_dark_frame]
+type = 'nparray'
+# follows file specifier schema
+# requires format and dtype/shape as appropriate
+# alternatively could write data directly in TOML (verbose!)
+data = [
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+]
+shape = [2, 8]
 """
 
 tvips_schema = {

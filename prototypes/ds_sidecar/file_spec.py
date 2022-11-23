@@ -318,8 +318,10 @@ class ArraySpec(SpecBase):
     spec_type = 'nparray'
 
     @property
-    def raw_data(self) -> List:
-        return self.get('data', None)
+    def data(self):
+        if 'data' not in self:
+            raise ParserException('Require key "data"')
+        return self.get('data')
 
     @property
     def dtype(self) -> Optional['nt.DTypeLike']:
@@ -331,7 +333,7 @@ class ArraySpec(SpecBase):
 
     @property
     def array(self) -> np.ndarray:
-        array = np.asarray(self.raw_data)
+        array = np.asarray(self.data)
         if self.dtype is not None:
             array = array.astype(self.dtype)
         if self.shape is not None:
@@ -349,6 +351,21 @@ class ArraySpec(SpecBase):
             return instance
         else:
             return super().construct(arg, parent=parent)
+
+    @classmethod
+    def validate(cls, checker, instance):
+        valid = super().validate(checker, instance)
+        valid = valid and ('data' in instance)
+        if valid:
+            # Very few things can't be cast to np.ndarray
+            # especially with dtype=object, but check at least
+            # that the cast succeeds (even if unexpected results)
+            # This will check that the reshape and dtype params work
+            try:
+                _ = instance.array
+            except Exception:
+                valid = False
+        return valid
 
 
 class CorrectionSetSpec(SpecBase):

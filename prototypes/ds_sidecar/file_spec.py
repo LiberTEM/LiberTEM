@@ -170,11 +170,20 @@ class SpecBase(NestedDict):
 
     @classmethod
     def validate(cls, checker, instance):
+        if instance.read_as is not None and instance.read_as not in instance.readers():
+            return False
         return isinstance(instance, cls)
 
     @property
     def read_as(self):
         return self.get('read_as', None)
+
+    @classmethod
+    def readers(cls):
+        return {}
+
+    def resolve(self):
+        raise NotImplementedError('Cannot reosolve bare SpecBase')
 
 
 class FileSpec(SpecBase):

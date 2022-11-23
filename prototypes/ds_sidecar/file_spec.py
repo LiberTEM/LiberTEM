@@ -542,6 +542,10 @@ class SpecTree(SpecBase):
         else:
             raise ParserException(f"Unrecognized format {path.suffix}")
 
+        if 'root' not in struct:
+            # set parent directory of config file
+            struct['root'] = path.parent
+
         return cls._get_tree(struct)
 
     @classmethod
@@ -552,6 +556,10 @@ class SpecTree(SpecBase):
             struct = json.loads(string)
         else:
             raise ParserException(f"Unrecognized format {format}")
+
+        if 'root' not in struct:
+            # set cwd
+            struct['root'] = pathlib.Path()
 
         return cls._get_tree(struct)
 

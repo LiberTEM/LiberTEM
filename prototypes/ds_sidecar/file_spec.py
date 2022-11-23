@@ -184,6 +184,12 @@ class SpecBase(NestedDict):
         return self.get('read_as', None)
 
     def view(self, spec_type: str):
+        """
+        Get a copy of this instance as another type
+
+        Removes the read_as key from the copy
+        and sets 'type' to equal the new type
+        """
         if spec_type not in parsers:
             raise ParserException(f'Cannot view {self.__class__.__name__} as {spec_type}')
         instance_props = {k: v for k, v in self.items() if k != 'read_as'}

@@ -209,7 +209,8 @@ class SpecBase(NestedDict):
     def resolve_as(self, spec_type):
         if spec_type in self.readers():
             return self.readers()[self.read_as](self)
-        raise ParserException(f'Unrecognized read_as "{self.read_as}" for {self.__class__.__name__}')
+        raise ParserException(f'Unrecognized read_as "{self.read_as}" for '
+                              f'{self.__class__.__name__}')
 
 
 class FileSpec(SpecBase):

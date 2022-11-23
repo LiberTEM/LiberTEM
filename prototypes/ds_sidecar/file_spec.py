@@ -172,9 +172,14 @@ class SpecBase(NestedDict):
     def validate(cls, checker, instance):
         return isinstance(instance, cls)
 
+    @property
+    def read_as(self):
+        return self.get('read_as', None)
+
 
 class FileSpec(SpecBase):
     spec_type = 'file'
+    resolve_to = pathlib.Path
 
     @property
     def path(self) -> pathlib.Path:
@@ -222,6 +227,7 @@ class FileSpec(SpecBase):
 
 class FileSetSpec(SpecBase):
     spec_type = 'fileset'
+    resolve_to = List[pathlib.Path]
 
     @property
     def filelist(self):
@@ -316,6 +322,7 @@ class FileSetSpec(SpecBase):
 
 class ArraySpec(SpecBase):
     spec_type = 'nparray'
+    resolve_to = np.ndarray
 
     @property
     def data(self):
@@ -340,8 +347,16 @@ class ArraySpec(SpecBase):
             array = array.reshape(self.shape)
         return array
 
-    def load(self) -> np.ndarray:
+    def resolve(self) -> np.ndarray:
+        if self.read_as in self.readers():
+            return self.readers()[self.read_as](self)
         return self.array
+
+    @classmethod
+    def readers(cls):
+        return {
+            'file': cls._from_file
+        }
 
     @classmethod
     def construct(cls, arg, parent=None):
@@ -366,6 +381,11 @@ class ArraySpec(SpecBase):
             except Exception:
                 valid = False
         return valid
+
+    def _from_file(self):
+        file_form = FileSpec(**self)
+        file_form._set_parent(self.parent)
+        return file_form.load()
 
 
 class CorrectionSetSpec(SpecBase):

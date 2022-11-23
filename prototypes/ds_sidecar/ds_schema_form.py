@@ -138,7 +138,8 @@ def extend_coerce_types(validator_class):
 
     def coerce_types(validator, properties, instance, schema):
         for property, subschema in properties.items():
-            property_value = instance.get(property, None)
+            default = subschema.get('default', None)
+            property_value = instance.get(property, default)
             intended_type = subschema.get('type')
             if property_value is None or intended_type not in types.keys():
                 # Not present or specified, do nothing

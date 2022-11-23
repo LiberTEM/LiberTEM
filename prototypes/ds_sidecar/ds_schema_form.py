@@ -42,6 +42,12 @@ tvips_schema = {
     "properties": {
         "meta": {
             "type": "file",
+            "properties": {
+                "dtype": {
+                    "type": "dtype",
+                    "default": "float32"
+                },
+            },
             "required": ["dtype"],
         },
         "data": {

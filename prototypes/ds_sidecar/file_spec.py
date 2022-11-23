@@ -206,6 +206,11 @@ class SpecBase(NestedDict):
     def resolve(self):
         raise NotImplementedError('Cannot reosolve bare SpecBase')
 
+    def resolve_as(self, spec_type):
+        if spec_type in self.readers():
+            return self.readers()[self.read_as](self)
+        raise ParserException(f'Unrecognized read_as "{self.read_as}" for {self.__class__.__name__}')
+
 
 class FileSpec(SpecBase):
     spec_type = 'file'
@@ -385,8 +390,8 @@ class ArraySpec(SpecBase):
         return array
 
     def resolve(self) -> np.ndarray:
-        if self.read_as in self.readers():
-            return self.readers()[self.read_as](self)
+        if self.read_as is not None:
+            return self.resolve_as(self.read_as)
         return self.array
 
     @classmethod
@@ -484,8 +489,8 @@ class ROISpec(SpecBase):
         return array
 
     def resolve(self) -> np.ndarray:
-        if self.read_as in self.readers():
-            return self.readers()[self.read_as](self)
+        if self.read_as is not None:
+            return self.resolve_as(self.read_as)
         return self.array
 
     @classmethod

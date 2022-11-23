@@ -50,13 +50,21 @@ sort_methods = {
 
 
 def resolve_dotpath(struct: Dict, dotpath: str):
-    if not isinstance(dotpath, str):
-        raise TypeError(f'Cannot resolve key {dotpath}')
-    components = dotpath.split('.')
+    return _resolve_generic(struct, dotpath, '.', '.')
+
+
+def resolve_jsonpath(struct: Dict, jsonpath: str):
+    return _resolve_generic(struct, jsonpath, '#/', '/')
+
+
+def _resolve_generic(struct: Dict, path: str, strip: str, split: str):
+    if not isinstance(path, str):
+        raise TypeError(f'Cannot resolve key {path}')
+    components = path.strip().strip(strip).split(split)
     view = struct
     for c in components:
         if not isinstance(view, dict) or c not in view:
-            raise TypeError(f'Cannot resolve key {dotpath}')
+            raise TypeError(f'Cannot resolve key {path}')
         view = view.get(c)
     return view
 
@@ -86,19 +94,22 @@ class NestedDict(dict):
         except AttributeError:
             return None
 
-    def resolve_key(self, key):
+    def resolve_key(self, key: str):
         """
-        Get key from self in dot notation (a.b.c)
+        Get key from tree in JSON path notation
+           i.e. #/key1/key2
+        starting from root or if a bare key is provided
+        resolve from self (using dot notation)
         then try to get key from the root tree
         If not available then raise
         """
-        try:
-            return resolve_dotpath(self, key)
-        except AttributeError as e:
+        if not isinstance(key, str):
+            raise TypeError(f'Cannot resolve key {key}')
+        if key.startswith('#'):
             root = find_tree_root(self)
-            if root is not self:
-                return resolve_dotpath(root, key)
-            raise e
+            return resolve_jsonpath(root, key)
+        else:
+            return resolve_dotpath(self, key)
 
     @property
     def root(self) -> Optional[pathlib.Path]:

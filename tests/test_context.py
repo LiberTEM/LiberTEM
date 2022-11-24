@@ -1,7 +1,9 @@
+import sys
+import copy
+from unittest import mock
+
 import pytest
 import numpy as np
-from unittest import mock
-import copy
 import sparse
 import scipy.sparse
 
@@ -216,18 +218,22 @@ def test_roi_dtype(lt_ctx, default_raw, dtype):
     assert np.all(res['intensity'].raw_data == ref['intensity'].raw_data)
 
 
+roi_types = (
+    sparse.COO,
+    sparse.DOK,
+    scipy.sparse.coo_matrix,
+    scipy.sparse.csr_matrix,
+    list,
+    tuple,
+    int,
+)
+
+if sys.version_info >= (3, 7) and hasattr(scipy.sparse, 'csr_array'):
+    roi_types = roi_types + (scipy.sparse.csr_array,)  # not available in py36
+
+
 @pytest.mark.parametrize(
-    'roi_type', (
-        sparse.COO,
-        sparse.DOK,
-        scipy.sparse.coo_matrix,
-        scipy.sparse.csr_matrix,
-        # scipy.sparse.csr_array,  # not available in py36 but this is supported too!
-        # causes a pytest collection error so no easy way to skipif in this situation
-        list,
-        tuple,
-        int,
-    )
+    'roi_type', roi_types
 )
 def test_allowed_rois(lt_ctx, default_raw, roi_type):
     roi = np.zeros(default_raw.shape.nav, dtype=bool)

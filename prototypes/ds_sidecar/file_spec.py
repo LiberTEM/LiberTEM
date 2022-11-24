@@ -64,7 +64,7 @@ def _resolve_generic(struct: Dict, path: str, strip: str, split: str):
     view = struct
     for c in components:
         if not isinstance(view, dict) or c not in view:
-            raise TypeError(f'Cannot resolve key {path}')
+            raise KeyError(f'Cannot resolve key {path}')
         view = view.get(c)
     return view
 
@@ -73,7 +73,7 @@ def dotpath_exists(struct: Dict, dotpath: str):
     try:
         _ = resolve_dotpath(struct, dotpath)
         return True
-    except TypeError:
+    except KeyError:
         return False
 
 
@@ -183,7 +183,7 @@ class SpecBase(NestedDict):
     def read_as(self):
         return self.get('read_as', None)
 
-    def view(self, spec_type: str):
+    def view(self, spec_type: str, read_as: str = None):
         """
         Get a copy of this instance as another type
 
@@ -195,6 +195,8 @@ class SpecBase(NestedDict):
         instance_props = {k: v for k, v in self.items() if k != 'read_as'}
         if 'type' in instance_props:
             instance_props['type'] = spec_type
+        if read_as is not None:
+            instance_props['read_as'] = read_as
         instance = parsers[spec_type](**instance_props)
         instance._set_parent(self.parent)
         return instance
@@ -438,19 +440,80 @@ class CorrectionSetSpec(SpecBase):
     resolve_to = CorrectionSet
 
     @property
+    def allow_empty(self):
+        return self.get('allow_empty', None)
+
+    @property
     def dark_frame(self) -> Dict[str, Any]:
-        return self.get('dark_frame', None)
+        val = self.get('dark_frame', None)
+        return self._get_property(val)
 
     @property
     def gain_map(self) -> Dict[str, Any]:
-        return self.get('gain_map', None)
+        val = self.get('gain_map', None)
+        return self._get_property(val)
 
     @property
     def excluded_pixels(self):
-        return self.get('excluded_pixels', None)
+        val = self.get('excluded_pixels', None)
+        return self._get_property(val)
+
+    def _get_property(self, val):
+        if val is None:
+            return
+        if isinstance(val, SpecBase):
+            instance = val
+        elif isinstance(val, pathlib.Path):
+            instance = FileSpec.construct(val, parent=self.parent)
+        elif isinstance(val, str):
+            try:
+                # try to resolve as a key in tree
+                instance = self.resolve_key(val)
+            except KeyError:
+                # assume it points to a loadable file
+                instance = FileSpec.construct(val, parent=self.parent)
+        else:
+            raise ParserException(f'Unrecognized format: {val}')
+        if not isinstance(instance, (FileSpec, ArraySpec)):
+            raise ParserException('Only file or nparray supported for correction values')
+        if isinstance(instance, FileSpec):
+            instance = instance.view('nparray', read_as='file')
+        return instance
 
     def load(self):
         return CorrectionSet()
+
+    @classmethod
+    def validate(cls, checker, instance):
+        valid = super().validate(checker, instance)
+        # FIXME Need to accept dict in case of nested property dicst
+        # which aren't necessarily cast to Spec by the time this is called
+        # Should perform all casting THEN run all the validate methods
+        accepted_types = (str, pathlib.Path, FileSpec, ArraySpec, dict)
+        props = {
+            'dark_frame': accepted_types,
+            'gain_map': accepted_types,
+            'excluded_pixels': accepted_types,
+            'allow_empty': bool,
+        }
+        valid = valid and any(d in instance for d in props.keys())
+        for prop, types in props.items():
+            if prop not in instance:
+                continue
+            valid = valid and isinstance(instance[prop], types)
+        return valid
+
+    def resolve(self) -> np.ndarray:
+        kwargs = {}
+        if self.dark_frame is not None:
+            kwargs['dark'] = self.dark_frame.resolve()
+        if self.gain_map is not None:
+            kwargs['gain'] = self.gain_map.resolve()
+        if self.excluded_pixels is not None:
+            kwargs['excluded_pixels'] = self.excluded_pixels.resolve()
+        if self.allow_empty is not None:
+            kwargs['allow_empty'] = self.allow_empty
+        return CorrectionSet(**kwargs)
 
 
 class DataSetSpec(SpecBase):

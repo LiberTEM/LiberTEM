@@ -616,10 +616,10 @@ class H5Partition(Partition):
         with self._get_h5ds() as dataset:
             # because the dtype conversion done by HDF5 itself can be quite slow,
             # we need to use a buffer for reading in hdf5 native dtype:
-            data_flat = zeros_aligned(tiling_scheme.shape, dtype=dataset.dtype).reshape((-1,))
+            data_flat = np.zeros(tiling_scheme.shape, dtype=dataset.dtype).reshape((-1,))
 
             # ... and additionally a result buffer, for re-using the array used in the DataTile:
-            data_flat_res = zeros_aligned(tiling_scheme.shape, dtype=dest_dtype).reshape((-1,))
+            data_flat_res = np.zeros(tiling_scheme.shape, dtype=dest_dtype).reshape((-1,))
 
             subslices = self._get_subslices(
                 tiling_scheme=tiling_scheme,

@@ -15,6 +15,7 @@ from typing import (
 from typing_extensions import TypedDict, Literal
 import uuid
 import warnings
+import time
 
 from tblib import pickling_support
 import cloudpickle
@@ -315,73 +316,81 @@ def worker_loop(
         The Environment for preparing thread counts etc. for the UDF run
     """
     while True:
-        with queues.request.get() as msg:
-            header, payload = msg
-            header_type = header["type"]
-            if header_type == "RUN_TASK":
-                with attach_to_parent(header["span_context"]):
-                    worker_run_task(header, work_mem, queues, worker_idx, env)
-                    # NOTE: in case of an error, need to drain the request queue
-                    # (anything that is left over from the detector-specific
-                    # data that was sent in `TaskCommHandler.handle_task`):
-                    with tracer.start_as_current_span("drain after task") as span:
-                        while True:
-                            with queues.request.get() as msg:
-                                header, payload = msg
-                                header_type = header["type"]
-                                span.add_event("msg", {"type": header_type})
-                                if header_type in (
-                                    "RUN_TASK", "SCATTER", "RUN_FUNCTION",
-                                    "DELETE", "SHUTDOWN", "WARMUP",
-                                ):
-                                    raise RuntimeError(
-                                        f"unexpected message type {header_type}"
-                                    )
-                                if header_type == "END_TASK":
-                                    break
-            elif header_type == "SCATTER":
-                # FIXME: array data could be transferred and stored in SHM instead
-                key = header["key"]
-                if key in work_mem:
+        try:
+            with queues.request.get() as msg:
+                header, payload = msg
+                header_type = header["type"]
+                if header_type == "RUN_TASK":
+                    with attach_to_parent(header["span_context"]):
+                        worker_run_task(header, work_mem, queues, worker_idx, env)
+                        # NOTE: in case of an error, need to drain the request queue
+                        # (anything that is left over from the detector-specific
+                        # data that was sent in `TaskCommHandler.handle_task`):
+                        with tracer.start_as_current_span("drain after task") as span:
+                            while True:
+                                with queues.request.get() as msg:
+                                    header, payload = msg
+                                    header_type = header["type"]
+                                    span.add_event("msg", {"type": header_type})
+                                    if header_type in (
+                                        "RUN_TASK", "SCATTER", "RUN_FUNCTION",
+                                        "DELETE", "SHUTDOWN", "WARMUP",
+                                    ):
+                                        raise RuntimeError(
+                                            f"unexpected message type {header_type}"
+                                        )
+                                    if header_type == "END_TASK":
+                                        break
+                elif header_type == "SCATTER":
+                    # FIXME: array data could be transferred and stored in SHM instead
+                    key = header["key"]
+                    if key in work_mem:
+                        queues.response.put({
+                            "type": "ERROR",
+                            "error": f"key {key} already stored in worker memory",
+                            "worker_id": worker_idx,
+                        })
+                        continue
+                    work_mem[key] = header["value"]
+                    continue
+                elif header_type == "RUN_FUNCTION":
+                    with attach_to_parent(header["span_context"]):
+                        worker_run_function(header, queues, worker_idx)
+                elif header_type == "DELETE":
+                    key = header["key"]
+                    if key in work_mem:
+                        del work_mem[key]
+                    continue
+                elif header_type == "SHUTDOWN":
+                    with attach_to_parent(header["span_context"]):
+                        with tracer.start_as_current_span("SHUTDOWN") as span:
+                            queues.request.close()
+                            queues.response.close(drain=False)
+                            queues.message.close(drain=False)
+                        break
+                elif header_type == "WARMUP":
+                    with attach_to_parent(header["span_context"]):
+                        with tracer.start_as_current_span("WARMUP"):
+                            import libertem.udf.base  # NOQA
+                            import libertem.api  # NOQA
+                            import libertem.preload  # NOQA
+                            with env.enter():
+                                pass
+                else:
                     queues.response.put({
                         "type": "ERROR",
-                        "error": f"key {key} already stored in worker memory",
+                        "error": f"unknown message {header}",
                         "worker_id": worker_idx,
                     })
-                    continue
-                work_mem[key] = header["value"]
-                continue
-            elif header_type == "RUN_FUNCTION":
-                with attach_to_parent(header["span_context"]):
-                    worker_run_function(header, queues, worker_idx)
-            elif header_type == "DELETE":
-                key = header["key"]
-                if key in work_mem:
-                    del work_mem[key]
-                continue
-            elif header_type == "SHUTDOWN":
-                with attach_to_parent(header["span_context"]):
-                    with tracer.start_as_current_span("SHUTDOWN") as span:
-                        queues.request.close()
-                        queues.response.close(drain=False)
-                        queues.message.close(drain=False)
-                    break
-            elif header_type == "WARMUP":
-                with attach_to_parent(header["span_context"]):
-                    with tracer.start_as_current_span("WARMUP"):
-                        import libertem.udf.base  # NOQA
-                        import libertem.api  # NOQA
-                        import libertem.preload  # NOQA
-                        with env.enter():
-                            pass
-            else:
-                queues.response.put({
-                    "type": "ERROR",
-                    "error": f"unknown message {header}",
-                    "worker_id": worker_idx,
-                })
-                # probably desynchronized with the main process, so give up:
-                raise RuntimeError(f"unknown message, shutting down worker {worker_idx}")
+                    # probably desynchronized with the main process, so give up:
+                    raise RuntimeError(f"unknown message, shutting down worker {worker_idx}")
+        except KeyboardInterrupt as e:
+            queues.response.put({
+                "type": "ERROR",
+                "error": "KeyboardInterrupt",
+                "worker_id": worker_idx,
+            })
+            raise
 
 
 DeviceT = Tuple[int, Union[Literal['CUDA'], Literal['CPU']]]
@@ -774,7 +783,7 @@ class PipelinedExecutor(BaseJobExecutor):
         # In theory, `in_flight` could be calculated from `id_to_task`, but in case
         # of exceptions, it becomes a bit harder to keep attribution of messages to
         # tasks, which is why we have a separate counter for now.
-        in_flight = 0
+        in_flight = [0]
         id_to_task = {}
         tasks_uuid = str(uuid.uuid4())
 
@@ -784,11 +793,31 @@ class PipelinedExecutor(BaseJobExecutor):
             span = trace.get_current_span()
             span_context = span.get_span_context()
 
+            def yield_result_if_found(block, timeout):
+                try:
+                    with self._pool.response_queue.get(block=block, timeout=timeout) as (result, _):
+                        if result.get('uuid') != tasks_uuid:
+                            # mismatch, log and ignore:
+                            logger.warning(
+                                "mismatched result, ignoring: %s != %s",
+                                result.get('uuid'), tasks_uuid,
+                            )
+                            return
+                        in_flight[0] -= 1
+                        if result["type"] == "ERROR":
+                            _raise_from_msg(result, "failed to run tasks")
+                        result_task_id = result["task_id"]
+                        yield (result["result"], id_to_task[result_task_id], result_task_id)
+                        del id_to_task[result_task_id]
+                        assert len(id_to_task) == in_flight[0]
+                except WorkerQueueEmpty:
+                    self._validate_worker_state()
+
             for task_idx, task in enumerate(tasks):
-                in_flight += 1
+                in_flight[0] += 1
                 id_to_task[task_idx] = task
 
-                assert len(id_to_task) == in_flight
+                assert len(id_to_task) == in_flight[0]
 
                 # NOTE: this implements simple round-robin "scheduling";
                 # as noted by @matbryan52 selecting the worker with the
@@ -821,46 +850,13 @@ class PipelinedExecutor(BaseJobExecutor):
                     "span_context": span_context,
                 })
 
-                try:
-                    with self._pool.response_queue.get(block=False) as (result, _):
-                        if result['uuid'] != tasks_uuid:
-                            # mismatch, log and ignore:
-                            logger.warning(
-                                "mismatched result, ignoring: %s != %s",
-                                result['uuid'], tasks_uuid,
-                            )
-                            continue
-                        in_flight -= 1
-                        if result["type"] == "ERROR":
-                            _raise_from_msg(result, "failed to run tasks")
-                        result_task_id = result["task_id"]
-                        yield (result["result"], id_to_task[result_task_id], result_task_id)
-                        del id_to_task[result_task_id]
-                        assert len(id_to_task) == in_flight
-                except WorkerQueueEmpty:
-                    continue
+                yield from yield_result_if_found(block=False, timeout=None)
 
             # FIXME: code duplication
             # at the end, block to get the remaining results:
-            while in_flight > 0:
-                try:
-                    with self._pool.response_queue.get() as (result, _):
-                        if result['uuid'] != tasks_uuid:
-                            # mismatch, log and ignore:
-                            logger.warning(
-                                "mismatched result, ignoring: %s != %s",
-                                result['uuid'], tasks_uuid,
-                            )
-                            continue
-                        in_flight -= 1
-                        if result["type"] == "ERROR":
-                            _raise_from_msg(result, "failed to run tasks")
-                        result_task_id = result["task_id"]
-                        yield (result["result"], id_to_task[result_task_id], result_task_id)
-                        del id_to_task[result_task_id]
-                        assert len(id_to_task) == in_flight
-                except WorkerQueueEmpty:
-                    continue
+            while in_flight[0] > 0:
+                yield from yield_result_if_found(block=True, timeout=0.1)
+                
 
             task_comm_handler.done()
         except Exception as e:
@@ -871,7 +867,7 @@ class PipelinedExecutor(BaseJobExecutor):
             # `in_flight` and actually sending the task to the queue, we should
             # have a timeout here to not wait infinitely long.
             try:
-                self._drain_response_queue(in_flight=in_flight)
+                self._drain_response_queue(in_flight=in_flight[0])
             except RuntimeError as e2:
                 raise e2 from e
             # if from a worker, this is the first exception that got put into the queue
@@ -886,11 +882,14 @@ class PipelinedExecutor(BaseJobExecutor):
         in_flight : int
             The number of requests that are still in flight
         """
+        t0 = time.time()
         while in_flight > 0:
             try:
+                timeout = max(0.010, self._cleanup_timeout - (time.time() - t0))
                 with self._pool.response_queue.get(
-                    timeout=self._cleanup_timeout
+                    timeout=timeout,
                 ) as (result, _):
+                    t0 = time.time()
                     in_flight -= 1
                     # we only raise the first exception; log the others here:
                     if result["type"] == "ERROR":

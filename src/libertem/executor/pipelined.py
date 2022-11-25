@@ -128,7 +128,6 @@ class WorkerPool:
             if hasattr(worker_info.process, 'kill'):
                 worker_info.process.kill()
             else:
-                sig: int
                 if platform.system() == 'Windows':
                     import win32api
                     import win32process
@@ -384,7 +383,7 @@ def worker_loop(
                     })
                     # probably desynchronized with the main process, so give up:
                     raise RuntimeError(f"unknown message, shutting down worker {worker_idx}")
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             queues.response.put({
                 "type": "ERROR",
                 "error": "KeyboardInterrupt",
@@ -856,7 +855,6 @@ class PipelinedExecutor(BaseJobExecutor):
             # at the end, block to get the remaining results:
             while in_flight[0] > 0:
                 yield from yield_result_if_found(block=True, timeout=0.1)
-                
 
             task_comm_handler.done()
         except Exception as e:

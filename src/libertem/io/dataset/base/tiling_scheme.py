@@ -208,7 +208,11 @@ class Negotiator:
             else:
                 raise ValueError(message)
         for dim in range(len(base_shape)):
-            if shape[dim] % base_shape[dim] != 0 and shape[dim] != ds_sig_shape[dim]:
+            # Tile shape always has one nav dim
+            # Allow only base shape for nav
+            # Allow full frames for sig
+            if ((shape[dim] % base_shape[dim] != 0)
+                    and (dim == 0 or (dim > 0 and shape[dim] != ds_sig_shape[dim - 1]))):
                 raise ValueError(
                     f"The tileshape {shape} is incompatible with base "
                     f"shape {base_shape} and dataset shape {ds_sig_shape} in dimension {dim}."
@@ -333,10 +337,25 @@ class Negotiator:
         # if the veto generated a tileshape that is smaller than the full base shape,
         # we need to re-adjust the full_base_shape
         if tileshape_orig != tileshape:  # make sure we don't change too eagerly:
-            for bs, s in zip(full_base_shape, tileshape):
-                if s < bs:
-                    full_base_shape = tileshape
-                    break
+            if tileshape[0] < full_base_shape[0]:
+                full_base_shape = (tileshape[0], *full_base_shape[1:])
+            has_pixel_corr = (
+                corrections is not None
+                and corrections.get_excluded_pixels() is not None
+            )
+            for (orig, new, sig) in zip(tileshape_orig[1:], tileshape[1:], ds_sig_shape):
+                if new != orig and new != sig:
+                    # Otherwise we may generate incorrect correction results
+                    err_str = (
+                        "dataset.adjust_tileshape() can only accept tile sig shape or switch to"
+                        "full frames if dead pixel patching is active. "
+                        f"Got original tile shape {tileshape_orig}, new tileshape {tileshape} "
+                        f"and dataset sig shape {ds_sig_shape}"
+                    )
+                    if has_pixel_corr:
+                        raise ValueError(err_str)
+                    else:
+                        warnings.warn(err_str)
 
         self.validate(
             tileshape, ds_sig_shape, size, io_max_size, itemsize, full_base_shape, corrections,

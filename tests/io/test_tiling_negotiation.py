@@ -431,7 +431,35 @@ def test_multi_partition_wins():
     assert tuple(scheme.shape) == (32, 1860, 2048)
 
 
-def test_base_shape_adjustment(lt_ctx_fast):
+def test_base_shape_adjustment_asis(lt_ctx_fast):
+    '''
+    Confirm that dataset can just accept tile shape as-is
+    '''
+    class MockDectrisMemoryDataSet(MemoryDataSet):
+        def get_max_io_size(self):
+            return 12*512*512*8
+
+        def adjust_tileshape(self, tileshape, roi):
+            return tileshape
+
+    ds = MockDectrisMemoryDataSet(
+        datashape=(3, 3, 512, 512),
+    )
+
+    bad_y = (168, 291, 326, 301, 343, 292,   0,   0,   0,   0,   0, 511)
+    bad_x = (496, 458, 250, 162, 426, 458, 393, 396, 413, 414, 342, 491)
+
+    corr = CorrectionSet(
+        excluded_pixels=sparse.COO(
+            coords=(bad_y, bad_x),
+            data=1,
+            shape=ds.shape.sig
+        )
+    )
+    lt_ctx_fast.run_udf(dataset=ds, udf=NoOpUDF(), corrections=corr)
+
+
+def test_base_shape_adjustment_valid(lt_ctx_fast):
     '''
     This emulates an issue with the DECTRIS acquisition of LiberTEM Live
     that overrides the tile shape to full frames.
@@ -446,6 +474,7 @@ def test_base_shape_adjustment(lt_ctx_fast):
 
         def adjust_tileshape(self, tileshape, roi):
             depth = 12
+            assert tileshape[0] != depth
             return (depth, *self.meta.shape.sig)
 
     ds = MockDectrisMemoryDataSet(
@@ -463,3 +492,34 @@ def test_base_shape_adjustment(lt_ctx_fast):
         )
     )
     lt_ctx_fast.run_udf(dataset=ds, udf=NoOpUDF(), corrections=corr)
+
+
+def test_base_shape_adjustment_invalid(lt_ctx_fast):
+    '''
+    Forbid arbitrary tile shape adjustments by dataset if pixel patching is active.
+
+    Only original tile sig shape and full frames are allowed.
+    '''
+    class MockDectrisMemoryDataSet(MemoryDataSet):
+        def get_max_io_size(self):
+            return 12*512*512*8
+
+        def adjust_tileshape(self, tileshape, roi):
+            return (tileshape[0], 234, 345)
+
+    ds = MockDectrisMemoryDataSet(
+        datashape=(3, 3, 512, 512),
+    )
+
+    bad_y = (168, 291, 326, 301, 343, 292,   0,   0,   0,   0,   0, 511)
+    bad_x = (496, 458, 250, 162, 426, 458, 393, 396, 413, 414, 342, 491)
+
+    corr = CorrectionSet(
+        excluded_pixels=sparse.COO(
+            coords=(bad_y, bad_x),
+            data=1,
+            shape=ds.shape.sig
+        )
+    )
+    with pytest.raises(ValueError):
+        lt_ctx_fast.run_udf(dataset=ds, udf=NoOpUDF(), corrections=corr)

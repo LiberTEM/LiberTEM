@@ -226,7 +226,7 @@ class H5DataSet(DataSet):
     :code:`libertem-worker --preload hdf5plugin tcp://scheduler_ip:port`.
     :code:`--preload` can be specified multiple times.
     """
-    def __init__(self, path, ds_path=None, tileshape=None,
+    def __init__(self, path, ds_path=None, tileshape=None, nav_shape=None, sig_shape=None,
                  target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
@@ -244,6 +244,9 @@ class H5DataSet(DataSet):
         self.min_num_partitions = min_num_partitions
         self._dtype = None
         self._shape = None
+        self._nav_shape = nav_shape
+        if sig_shape is not None:
+            raise NotImplementedError('HDF5 sig reshaping not yet available')
         self._sync_offset = 0
         self._chunks = None
         self._compression = None
@@ -267,13 +270,18 @@ class H5DataSet(DataSet):
                 # shape = (1,) + shape -> this leads to indexing errors down the line
                 # so we currently don't support opening 2D HDF5 files
                 raise DataSetException("2D HDF5 files are currently not supported")
-            self._shape = Shape(shape, sig_dims=self.sig_dims)
-            self._image_count = self._shape.nav.size
+            ds_shape = Shape(shape, sig_dims=self.sig_dims)
+            self._image_count = ds_shape.nav.size
+            if self._nav_shape is not None:
+                assert prod(self._nav_shape) == self._image_count
+            nav_shape = ds_shape.nav if self._nav_shape is None else self._nav_shape
+            self._shape = nav_shape + ds_shape.sig
             self._meta = DataSetMeta(
                 shape=self.shape,
                 raw_dtype=self._dtype,
                 sync_offset=self._sync_offset,
                 image_count=self._image_count,
+                metadata={'ds_raw_shape': ds_shape}
             )
             self._chunks = h5ds.chunks
             self._compression = h5ds.compression
@@ -448,8 +456,9 @@ class H5DataSet(DataSet):
         return True
 
     def get_partitions(self):
-        ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
-        ds_slice = Slice(origin=[0] * len(self.shape), shape=ds_shape)
+        # ds_shape = Shape(self.shape, sig_dims=self.sig_dims)
+        ds_shape: Shape = self.meta['ds_raw_shape']
+        ds_slice = Slice(origin=[0] * len(ds_shape), shape=ds_shape)
         target_size = self.target_size
         if target_size is None:
             if self._compression is None:
@@ -459,7 +468,9 @@ class H5DataSet(DataSet):
         partition_shape = self.partition_shape(
             target_size=target_size,
             dtype=self.dtype,
-        ) + tuple(self.shape.sig)
+            containing_shape=ds_shape,
+        ) + tuple(ds_shape.sig)
+        # ) + tuple(self.shape.sig)
 
         # if the data is chunked in the navigation axes, choose a compatible
         # partition size (even important for non-compressed data!)
@@ -471,7 +482,7 @@ class H5DataSet(DataSet):
             yield H5Partition(
                 meta=self._meta,
                 reader=self.get_reader(),
-                partition_slice=pslice.flatten_nav(self.shape),
+                partition_slice=pslice.flatten_nav(ds_shape),
                 slice_nd=pslice,
                 io_backend=self.get_io_backend(),
                 chunks=self._chunks,
@@ -612,7 +623,7 @@ class H5Partition(Partition):
         cache_size = self._get_read_cache_size()
         return self.reader.get_h5ds(cache_size=cache_size)
 
-    def _get_tiles_normal(self, tiling_scheme, dest_dtype):
+    def _get_tiles_normal(self, tiling_scheme: TilingScheme, dest_dtype):
         with self._get_h5ds() as dataset:
             # because the dtype conversion done by HDF5 itself can be quite slow,
             # we need to use a buffer for reading in hdf5 native dtype:
@@ -625,7 +636,7 @@ class H5Partition(Partition):
                 tiling_scheme=tiling_scheme,
             )
             for scheme_idx, tile_slice in subslices:
-                tile_slice_flat = tile_slice.flatten_nav(self.meta.shape)
+                tile_slice_flat: Slice = tile_slice.flatten_nav(self.meta['ds_raw_shape'])
                 # cut buffer into the right size
                 buf_size = tile_slice.shape.size
                 buf = data_flat[:buf_size].reshape(tile_slice.shape)
@@ -646,7 +657,8 @@ class H5Partition(Partition):
         assert len(tiling_scheme) == 1, "incompatible tiling scheme! (%r)" % (tiling_scheme)
 
         flat_roi = roi.reshape((-1,))
-        roi = roi.reshape(self.meta.shape.nav)
+        # reshape roi into ds_raw form
+        roi = roi.reshape(self.meta['ds_raw_shape'].nav.to_tuple())
 
         result_shape = Shape((1,) + tuple(self.meta.shape.sig), sig_dims=self.meta.shape.sig.dims)
         sig_origin = tuple([0] * self.meta.shape.sig.dims)

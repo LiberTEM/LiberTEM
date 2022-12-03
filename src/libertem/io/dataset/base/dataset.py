@@ -176,6 +176,7 @@ class DataSet:
         dtype: "nt.DTypeLike",
         target_size: int,
         min_num_partitions: Optional[int] = None,
+        containing_shape: Optional[Shape] = None,
     ) -> typing.Tuple[int, ...]:
         """
         Calculate partition shape for the given ``target_size``
@@ -198,8 +199,10 @@ class DataSet:
         """
         if min_num_partitions is None:
             min_num_partitions = self._cores
+        if containing_shape is None:
+            containing_shape = self.shape
         return get_partition_shape(
-            dataset_shape=self.shape,
+            dataset_shape=containing_shape,
             target_size_items=target_size // np.dtype(dtype).itemsize,
             min_num=min_num_partitions
         )

@@ -16,9 +16,15 @@ shape = [64, 64]
 
 [my_data_fileset]
 type='fileset'
+files = "./testfiles/file*.raw"
+sort = false
+sort_options = []
+
+[my_data_fileset2]
+type='fileset'
 files = [
-    "test.raw",
-    "test2.raw"
+    "./testfiles/file*.raw",
+    "./testfiles/file_other*.raw"
 ]
 sort = false
 sort_options = []
@@ -44,8 +50,36 @@ data = [
 shape = [2, 8]
 
 [my_roi]
-type = 'nparray'
+type = 'roi'
 read_as = 'file'
+path = './test_roi.npy'
+
+[my_roi2]
+type = 'roi'
+read_as = 'nparray'
+data = [
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+]
+shape = [2, 8]
+
+[my_corrections]
+type='correctionset'
+
+[my_corrections.dark_frame]
+type = 'nparray'
+data = [
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+   [5.0, 6.0, 7.0, 8.0],
+   [1.0, 2.0, 3.0, 4.0],
+]
+shape = [2, 8]
+
+[my_corrections.gain_map]
+type = 'file'
 path = './test_roi.npy'
 """
 

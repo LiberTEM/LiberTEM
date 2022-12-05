@@ -710,3 +710,75 @@ def test_hdf5_filters(local_cluster_ctx, lt_ctx, tmpdir_factory):
             ds = ctx.load('HDF5', path=filename)
             res = ctx.run_udf(dataset=ds, udf=SumSigUDF())
             assert np.allclose(res['intensity'].raw_data, np.prod(ds.shape.sig))
+
+
+@pytest.mark.parametrize(
+    'file_nav_shape, nav_chunks, nav_shape,', [
+        ((9,), (3,), (3, 3,)),
+        ((10,), (9,), (2, 5,)),
+        ((4, 4), (2, 2), (2, 8)),
+        ((4, 4, 2), (2, 4, 2), (32,)),
+    ])
+@pytest.mark.parametrize('roi', [
+        None, True,
+    ])
+def test_nav_reshape(lt_ctx, tmpdir_factory, file_nav_shape, nav_chunks, nav_shape, roi):
+    sig_shape = (16, 16)
+    sig_chunks = (16, 16)
+    sig_dims = len(sig_shape)
+    frame_size_bytes = np.prod(sig_shape) * np.dtype(np.float32).itemsize
+    target_size_bytes = 8 * frame_size_bytes
+
+    datadir = tmpdir_factory.mktemp('data')
+    file_shape = file_nav_shape + sig_shape
+    filename = os.path.join(datadir, f'data_{"_".join(str(s) for s in file_shape)}.h5')
+    data = np.random.uniform(size=file_shape).astype(np.float32)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data, chunks=nav_chunks + sig_chunks)
+
+    if roi:
+        roi = np.random.choice([True, False], size=nav_shape).astype(bool)
+
+    ds = lt_ctx.load(
+        "hdf5",
+        path=filename,
+        nav_shape=nav_shape,
+        sig_dims=sig_dims,
+        target_size=target_size_bytes,
+    )
+    res = lt_ctx.run_udf(dataset=ds, udf=SumSigUDF(), roi=roi)
+
+    data = data.reshape(nav_shape + sig_shape)
+    sum_result = data.sum(axis=tuple(range(-1, -sig_dims - 1, -1)))
+    if roi is not None:
+        sum_result[np.logical_not(roi)] = np.nan
+
+    assert np.allclose(
+        res['intensity'].data,
+        sum_result,
+        equal_nan=roi is not None,
+    )
+
+    os.unlink(filename)
+
+
+def test_nav_reshape_incompatible(lt_ctx, tmpdir_factory):
+    file_shape = (8, 16, 16)
+    nav_shape = (3, 3)
+    sig_dims = 2
+
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, f'data_{"_".join(str(s) for s in file_shape)}.h5')
+    data = np.random.uniform(size=file_shape).astype(np.float32)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data)
+
+    with pytest.raises(DataSetException):
+        lt_ctx.load(
+            "hdf5",
+            path=filename,
+            nav_shape=nav_shape,
+            sig_dims=sig_dims,
+        )

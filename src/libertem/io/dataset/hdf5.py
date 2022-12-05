@@ -185,6 +185,18 @@ class H5DataSet(DataSet):
     ds_path: str
         Path to the HDF5 data set inside the file
 
+    nav_shape: tuple of int, optional
+        A n-tuple that specifies the shape of the navigation / scan grid.
+        This must match the number of frames / size of the selected HDF5
+        dataset but can be used to change the shape and dimensionality.
+        By default this is inferred from the HDF5 dataset.
+
+    sig_shape: tuple of int, optional
+        A n-tuple that specifies the shape of the signal / frame grid.
+        This parameter is currently unsupported and will raise an error
+        if provided. By default the sig_shape is inferred from the HDF5 dataset
+        via the :code:`sig_dims` parameter.
+
     sig_dims: int
         Number of dimensions that should be considered part of the signal (for example
         2 when dealing with 2D image data)

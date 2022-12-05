@@ -241,6 +241,7 @@ class H5DataSet(DataSet):
                 "tileshape argument is ignored and will be removed after 0.6.0",
                 FutureWarning
             )
+        # self.min_num_partitions appears to be never used
         self.min_num_partitions = min_num_partitions
         self._dtype = None
         self._shape = None
@@ -272,8 +273,11 @@ class H5DataSet(DataSet):
                 raise DataSetException("2D HDF5 files are currently not supported")
             ds_shape = Shape(shape, sig_dims=self.sig_dims)
             self._image_count = ds_shape.nav.size
-            if self._nav_shape is not None:
-                assert prod(self._nav_shape) == self._image_count
+            if self._nav_shape is not None and prod(self._nav_shape) != self._image_count:
+                raise DataSetException(
+                    'Only support reshaping between same number of frames, '
+                    f'got {self._nav_shape} for dataset with shape {ds_shape.nav}'
+                )
             nav_shape = ds_shape.nav if self._nav_shape is None else self._nav_shape
             self._shape = nav_shape + ds_shape.sig
             self._meta = DataSetMeta(
@@ -470,7 +474,6 @@ class H5DataSet(DataSet):
             dtype=self.dtype,
             containing_shape=ds_shape,
         ) + tuple(ds_shape.sig)
-        # ) + tuple(self.shape.sig)
 
         # if the data is chunked in the navigation axes, choose a compatible
         # partition size (even important for non-compressed data!)
@@ -654,6 +657,7 @@ class H5Partition(Partition):
     def _get_tiles_with_roi(self, roi, dest_dtype, tiling_scheme):
         # we currently don't chop up the frames when reading with a roi, so
         # the tiling scheme also must not contain more than one slice:
+        # NOTE Why is this ??
         assert len(tiling_scheme) == 1, "incompatible tiling scheme! (%r)" % (tiling_scheme)
 
         flat_roi = roi.reshape((-1,))

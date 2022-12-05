@@ -278,7 +278,7 @@ class H5DataSet(DataSet):
                     'Only support reshaping between same number of frames, '
                     f'got {self._nav_shape} for dataset with shape {ds_shape.nav}'
                 )
-            nav_shape = ds_shape.nav if self._nav_shape is None else self._nav_shape
+            nav_shape = ds_shape.nav.to_tuple() if self._nav_shape is None else self._nav_shape
             self._shape = nav_shape + ds_shape.sig
             self._meta = DataSetMeta(
                 shape=self.shape,

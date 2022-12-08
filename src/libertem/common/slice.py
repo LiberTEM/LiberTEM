@@ -367,6 +367,10 @@ class Slice:
             shape=Shape((shape,) + tuple(self.shape.sig), sig_dims=sig_dims),
         )
 
+    def clip_to(self, shape: Shape):
+        other_slice = Slice((0,) * shape.dims, shape)
+        return self.intersection_with(other_slice)
+
     def __getstate__(self) -> Dict[str, Any]:
         return {
             k: getattr(self, k)

@@ -766,7 +766,9 @@ def test_nav_reshape(lt_ctx, tmpdir_factory, file_nav_shape,
     sig_chunks = (16, 16)
     sig_dims = len(sig_shape)
     frame_size_bytes = np.prod(sig_shape) * np.dtype(np.float32).itemsize
-    target_size_bytes = 8 * frame_size_bytes
+    # Choose a deliberately small partition size so that some
+    # partition + sync_offset combinations mean some parts are unneeded
+    target_size_bytes = 4 * frame_size_bytes
 
     datadir = tmpdir_factory.mktemp('data')
     file_shape = file_nav_shape + sig_shape
@@ -825,3 +827,26 @@ def test_sig_reshape_unsupported(lt_ctx, tmpdir_factory):
             sig_shape=sig_shape,
             sig_dims=sig_dims,
         )
+
+    os.unlink(filename)
+
+
+def test_sync_offset_beyond_ds(lt_ctx, tmpdir_factory):
+    file_shape = (8, 16, 16)
+    sync_offset = 10
+
+    datadir = tmpdir_factory.mktemp('data')
+    filename = os.path.join(datadir, f'data_{"_".join(str(s) for s in file_shape)}.h5')
+    data = np.random.uniform(size=file_shape).astype(np.float32)
+
+    with h5py.File(filename, "w") as f:
+        f.create_dataset("data", data=data)
+
+    with pytest.raises(DataSetException):
+        lt_ctx.load(
+            "hdf5",
+            path=filename,
+            sync_offset=sync_offset,
+        )
+
+    os.unlink(filename)

@@ -4,6 +4,7 @@ import threading
 import itertools
 from unittest import mock
 import sys
+from typing import Optional, Tuple
 
 import cloudpickle
 import numpy as np
@@ -712,17 +713,55 @@ def test_hdf5_filters(local_cluster_ctx, lt_ctx, tmpdir_factory):
             assert np.allclose(res['intensity'].raw_data, np.prod(ds.shape.sig))
 
 
+def _place_results(
+    data: np.ndarray,
+    nav_shape: Tuple[int],
+    sync_offset: int = 0,
+    roi: Optional[np.ndarray] = None
+) -> np.ndarray:
+    """
+    Places ravelled data into an array of nav_shape
+    following the sync_offset, roi and reshaping conventions
+    of LiberTEM.
+
+    roi.shape must equal nav_shape
+    data.size can be smaller or larger than nav_shape.size
+    the data will be clipped or filled with zeros appropriately
+    """
+    data = data.ravel()
+    output_size = np.prod(nav_shape)
+    output = np.zeros((output_size,), dtype=data.dtype)
+    if sync_offset <= 0:
+        nel = min(output[abs(sync_offset):].size, data.size)
+        output[abs(sync_offset): abs(sync_offset) + nel] = data[:nel]
+    else:
+        nel = min(data[sync_offset:].size, output.size)
+        output[:nel] = data[sync_offset:sync_offset + nel]
+    output = output.reshape(nav_shape)
+    if roi is not None:
+        output[np.logical_not(roi)] = np.nan
+    return output
+
+
 @pytest.mark.parametrize(
     'file_nav_shape, nav_chunks, nav_shape,', [
         ((9,), (3,), (3, 3,)),
-        ((10,), (9,), (2, 5,)),
         ((4, 4), (2, 2), (2, 8)),
         ((4, 4, 2), (2, 4, 2), (32,)),
+        ((16,), (4,), (3, 3,)),
+        ((9, 9), (3, 9), (4, 4,)),
+        ((9, 9), (3, 9), (16, 16)),
+        ((125,), (10,), (5, 5)),
+        ((125,), (10,), (100, 100)),
     ])
 @pytest.mark.parametrize('roi', [
-        None, True,
-    ])
-def test_nav_reshape(lt_ctx, tmpdir_factory, file_nav_shape, nav_chunks, nav_shape, roi):
+    None, True,
+])
+@pytest.mark.parametrize('sync_offset', [
+    0, -5, 5,
+])
+def test_nav_reshape(lt_ctx, tmpdir_factory, file_nav_shape,
+                     nav_chunks, nav_shape, roi, sync_offset):
     sig_shape = (16, 16)
     sig_chunks = (16, 16)
     sig_dims = len(sig_shape)
@@ -746,13 +785,17 @@ def test_nav_reshape(lt_ctx, tmpdir_factory, file_nav_shape, nav_chunks, nav_sha
         nav_shape=nav_shape,
         sig_dims=sig_dims,
         target_size=target_size_bytes,
+        sync_offset=sync_offset,
     )
     res = lt_ctx.run_udf(dataset=ds, udf=SumSigUDF(), roi=roi)
 
-    data = data.reshape(nav_shape + sig_shape)
-    sum_result = data.sum(axis=tuple(range(-1, -sig_dims - 1, -1)))
-    if roi is not None:
-        sum_result[np.logical_not(roi)] = np.nan
+    full_sum_result = data.sum(axis=tuple(range(-1, -sig_dims - 1, -1))).ravel()
+    sum_result = _place_results(
+        full_sum_result,
+        nav_shape,
+        sync_offset=sync_offset,
+        roi=roi,
+    )
 
     assert np.allclose(
         res['intensity'].data,
@@ -763,9 +806,9 @@ def test_nav_reshape(lt_ctx, tmpdir_factory, file_nav_shape, nav_chunks, nav_sha
     os.unlink(filename)
 
 
-def test_nav_reshape_incompatible(lt_ctx, tmpdir_factory):
+def test_sig_reshape_unsupported(lt_ctx, tmpdir_factory):
     file_shape = (8, 16, 16)
-    nav_shape = (3, 3)
+    sig_shape = (3, 3)
     sig_dims = 2
 
     datadir = tmpdir_factory.mktemp('data')
@@ -779,6 +822,6 @@ def test_nav_reshape_incompatible(lt_ctx, tmpdir_factory):
         lt_ctx.load(
             "hdf5",
             path=filename,
-            nav_shape=nav_shape,
+            sig_shape=sig_shape,
             sig_dims=sig_dims,
         )

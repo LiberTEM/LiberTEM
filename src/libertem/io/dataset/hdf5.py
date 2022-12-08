@@ -515,7 +515,7 @@ class H5DataSet(DataSet):
 
             # All raw_frames_slice should have non-zero dims here
             partition_slice = raw_frames_slice.clip_to(ds_flat_shape)
-            if any(v <= 0 for v in raw_frames_slice.shape):
+            if any(v <= 0 for v in partition_slice.shape):
                 # Empty partition after clip to desired shape, skip
                 continue
 

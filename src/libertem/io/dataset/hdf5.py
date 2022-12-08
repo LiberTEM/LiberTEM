@@ -7,13 +7,13 @@ import time
 import numpy as np
 import h5py
 
-from libertem.common.math import prod, count_nonzero
+from libertem.common.math import prod, flat_nonzero
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.io.corrections import CorrectionSet
 from libertem.common.messageconverter import MessageConverter
 from .base import (
-    DataSet, Partition, DataTile, DataSetException, DataSetMeta, _roi_to_nd_indices,
+    DataSet, Partition, DataTile, DataSetException, DataSetMeta,
     TilingScheme,
 )
 
@@ -194,7 +194,8 @@ class H5DataSet(DataSet):
     sig_shape: tuple of int, optional
         A n-tuple that specifies the shape of the signal / frame grid.
         This parameter is currently unsupported and will raise an error
-        if provided. By default the sig_shape is inferred from the HDF5 dataset
+        if provided and not matching the underlying data sig shape.
+        By default the sig_shape is inferred from the HDF5 dataset
         via the :code:`sig_dims` parameter.
 
     sig_dims: int
@@ -239,7 +240,8 @@ class H5DataSet(DataSet):
     :code:`--preload` can be specified multiple times.
     """
     def __init__(self, path, ds_path=None, tileshape=None, nav_shape=None, sig_shape=None,
-                 target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None):
+                 target_size=None, min_num_partitions=None, sig_dims=2, io_backend=None,
+                 sync_offset: int = 0):
         super().__init__(io_backend=io_backend)
         if io_backend is not None:
             raise ValueError("H5DataSet currently doesn't support alternative I/O backends")
@@ -258,9 +260,8 @@ class H5DataSet(DataSet):
         self._dtype = None
         self._shape = None
         self._nav_shape = nav_shape
-        if sig_shape is not None:
-            raise NotImplementedError('HDF5 sig reshaping not yet available')
-        self._sync_offset = 0
+        self._sig_shape = sig_shape
+        self._sync_offset = sync_offset
         self._chunks = None
         self._compression = None
 
@@ -284,12 +285,9 @@ class H5DataSet(DataSet):
                 # so we currently don't support opening 2D HDF5 files
                 raise DataSetException("2D HDF5 files are currently not supported")
             ds_shape = Shape(shape, sig_dims=self.sig_dims)
+            if self._sig_shape is not None and self._sig_shape != ds_shape.sig:
+                raise DataSetException("sig reshaping currently not supported with HDF5 files")
             self._image_count = ds_shape.nav.size
-            if self._nav_shape is not None and prod(self._nav_shape) != self._image_count:
-                raise DataSetException(
-                    'Only support reshaping between same number of frames, '
-                    f'got {self._nav_shape} for dataset with shape {ds_shape.nav}'
-                )
             nav_shape = ds_shape.nav.to_tuple() if self._nav_shape is None else self._nav_shape
             self._shape = nav_shape + ds_shape.sig
             self._meta = DataSetMeta(
@@ -493,15 +491,55 @@ class H5DataSet(DataSet):
         if chunks is not None and not _have_contig_chunks(chunks, ds_shape):
             partition_shape = _partition_shape_for_chunking(chunks, ds_shape)
 
-        for pslice in ds_slice.subslices(partition_shape):
+        # -ve sync offset insert blank at beginning (skips at end)
+        # +ve sync offset skips frames at beginning (blank at end)
+        # h5_array is paritioned using chunk-aligned partitions (normal slice_nd
+        # generation ignoring sync_offset)
+        # each h5_ds_part is associated to a flat partition slice of HDF5Partition
+        # for -ve sync offset, all the start frames of the partitions start at +abs(sync_offset)
+        # partitions are clipped to the desired nav_size or actual (dataset size + sync_offset)
+        # for +ve sync offset, all the start frames/lengths of the partition slices are as-normal,
+        # but the first partition clips itself by discarding the initial frames
+        # NOTE handle case of shorter first slice_nd than sync_offset
+        # shorter desired nav_shape is handled by not yielding partitions which
+        # have slice_nd frame indexes which don't intersect the desired nav_size
+        # longer nav_shape handled by letting the partitions complete, blank frames automatic
+        # must be sure to handle data clipping to actual partition length
+        sync_offset = self._sync_offset
+        ds_flat_shape = self.shape.flatten_nav()
+
+        for slice_nd in ds_slice.subslices(partition_shape):
+            raw_frames_slice = slice_nd.flatten_nav(ds_shape)
+            raw_origin = raw_frames_slice.origin
+            if self._sync_offset <= 0:
+                # negative or zero s-o, shift right, clip length at end
+                raw_frames_slice.origin = (raw_origin[0] + abs(sync_offset),) + raw_origin[1:]
+            else:
+                # positive s-o, shift left, clip part length at beginning
+                corrected_nav_origin = raw_origin[0] - sync_offset
+                if corrected_nav_origin < 0:
+                    corrected_nav_size = raw_frames_slice.shape[0] + corrected_nav_origin
+                    if corrected_nav_size <= 0:
+                        # Empty partition, skip
+                        continue
+                    raw_frames_slice.shape = (corrected_nav_size,) + raw_frames_slice.shape.sig
+                raw_frames_slice.origin = (max(0, corrected_nav_origin),) + raw_origin[1:]
+
+            # All raw_frames_slice should have non-zero dims here
+            partition_slice = raw_frames_slice.clip_to(ds_flat_shape)
+            if any(v <= 0 for v in raw_frames_slice.shape):
+                # Empty partition after clip to desired shape, skip
+                continue
+
             yield H5Partition(
                 meta=self._meta,
                 reader=self.get_reader(),
-                partition_slice=pslice.flatten_nav(ds_shape),
-                slice_nd=pslice,
+                partition_slice=partition_slice,
+                slice_nd=slice_nd,
                 io_backend=self.get_io_backend(),
                 chunks=self._chunks,
                 decoder=None,
+                sync_offset=self._sync_offset,
             )
 
     def __repr__(self):
@@ -509,11 +547,12 @@ class H5DataSet(DataSet):
 
 
 class H5Partition(Partition):
-    def __init__(self, reader, slice_nd, chunks, *args, **kwargs):
+    def __init__(self, reader: H5Reader, slice_nd: Slice, chunks, sync_offset=0, *args, **kwargs):
         self.reader = reader
         self.slice_nd = slice_nd
         self._corrections = None
         self._chunks = chunks
+        self._sync_offset = sync_offset
         super().__init__(*args, **kwargs)
 
     def _have_compatible_chunking(self):
@@ -650,6 +689,10 @@ class H5Partition(Partition):
             subslices = self._get_subslices(
                 tiling_scheme=tiling_scheme,
             )
+
+            sync_offset = self._sync_offset
+            ds_num_frames = self.meta.shape.nav.size
+
             for scheme_idx, tile_slice in subslices:
                 tile_slice_flat: Slice = tile_slice.flatten_nav(self.meta['ds_raw_shape'])
                 # cut buffer into the right size
@@ -659,6 +702,51 @@ class H5Partition(Partition):
                 dataset.read_direct(buf, source_sel=tile_slice.get())
                 buf_res[:] = buf  # extra copy for faster dtype/endianess conversion
                 tile_data = buf_res.reshape(tile_slice_flat.shape)
+
+                # Now correct tile_slice_flat (and tile_data) to match
+                # desired nav coordinate system, clipping data if necessary to fit
+                # Data is (flat_nav, *sig) corresponding to tile_slice_flat in raw coords
+                # Need to shift tile_slice_flat.origin[0] to match the sync_offset
+                # -ve sync offset insert blank at beginning (skips at end)
+                # +ve sync offset skips frames at beginning (blank at end)
+                raw_origin = tile_slice_flat.origin
+                if self._sync_offset <= 0:
+                    # clip at end of dataset unless nav_size increased
+                    # by at least abs(sync_offset)
+                    # tile_slice_flat.origin[0] shifted right
+                    tile_slice_flat.origin = (raw_origin[0] + abs(sync_offset),) + raw_origin[1:]
+                else:
+                    # positive s-o, shift left, clip at beginning
+                    corrected_nav_origin = raw_origin[0] - sync_offset
+                    # Special case for positive s-o is that we might need
+                    # to discard data at the beginning of the dataset
+                    # May need to do this multiple times if the tile stack depth
+                    # is greater than the sync offset
+                    # FIXME this can be pre-computed and skipped before read
+                    # Doesn't apply for negative s-o because we align:left
+                    # when reshaping up/down in nav_shape
+                    if corrected_nav_origin < 0:
+                        corrected_nav_size = tile_slice_flat.shape[0] + corrected_nav_origin
+                        if corrected_nav_size <= 0:
+                            # Don't need this tile, skip
+                            continue
+                        tile_data = tile_data[abs(corrected_nav_origin):, ...]
+                        tile_slice_flat.shape = (corrected_nav_size,) + tile_slice_flat.shape.sig
+                    tile_slice_flat.origin = (max(0, corrected_nav_origin),) + raw_origin[1:]
+
+                # For any sync offset we may have to clip the data at the end of the dataset
+                # as either we push frames beyond the end of the nav_dim with -ve sync_offset
+                # or we reduce the nav_dim such that the final frame is beyond it (even for +ve s-o)
+                final_frame_idx = tile_slice_flat.origin[0] + tile_slice_flat.shape[0]
+                if final_frame_idx > ds_num_frames:
+                    # Drop frames at end of ds
+                    tile_data = tile_data[:ds_num_frames - final_frame_idx, ...]
+                    if tile_data.shape[0] == 0:
+                        # Empty tile after clip, skip
+                        # FIXME for certain cases it's easy to pre-compute this and skip the read
+                        continue
+                    tile_slice_flat.shape = (tile_data.shape[0],) + tile_slice_flat.shape.sig
+
                 self._preprocess(tile_data, tile_slice_flat)
                 yield DataTile(
                     tile_data,
@@ -672,28 +760,31 @@ class H5Partition(Partition):
         # NOTE Why is this ??
         assert len(tiling_scheme) == 1, "incompatible tiling scheme! (%r)" % (tiling_scheme)
 
-        flat_roi = roi.reshape((-1,))
-        # reshape roi into ds_raw form
-        roi = roi.reshape(self.meta['ds_raw_shape'].nav.to_tuple())
-
-        result_shape = Shape((1,) + tuple(self.meta.shape.sig), sig_dims=self.meta.shape.sig.dims)
-        sig_origin = tuple([0] * self.meta.shape.sig.dims)
-        frames_read = 0
+        flat_roi_nonzero = flat_nonzero(roi)
         start_at_frame = self.slice.origin[0]
-        frame_offset = count_nonzero(flat_roi[:start_at_frame])
-
-        indices = _roi_to_nd_indices(roi, self.slice_nd)
-
+        stop_at_frame = start_at_frame + self.slice.shape[0]
+        part_mask = np.logical_and(flat_roi_nonzero >= start_at_frame,
+                                   flat_roi_nonzero < stop_at_frame)
+        # Must yield tiles with tile_slice in compressed nav dimension for roi
+        frames_in_c_nav = np.arange(flat_roi_nonzero.size)[part_mask]
+        frames_in_part = flat_roi_nonzero[part_mask]
+        # -ve sync offset insert blank at beginning (skips at end)
+        # +ve sync offset skips frames at beginning (blank at end)
+        frames_in_raw = frames_in_part + self._sync_offset
+        raw_shape = self.meta['ds_raw_shape'].nav.to_tuple()
+        result_shape = Shape((1,) + tuple(self.meta.shape.sig), sig_dims=self.meta.shape.sig.dims)
+        sig_origin = (0,) * self.meta.shape.sig.dims
         tile_data = np.zeros(result_shape, dtype=dest_dtype)
 
         with self._get_h5ds() as h5ds:
             tile_data_raw = np.zeros(result_shape, dtype=h5ds.dtype)
-            for idx in indices:
+            for c_nav_idx, raw_idx in zip(frames_in_c_nav, frames_in_raw):
                 tile_slice = Slice(
-                    origin=(frames_read + frame_offset,) + sig_origin,
+                    origin=(c_nav_idx,) + sig_origin,
                     shape=result_shape,
                 )
-                h5ds.read_direct(tile_data_raw, source_sel=idx)
+                nav_coord = np.unravel_index(raw_idx, raw_shape)
+                h5ds.read_direct(tile_data_raw, source_sel=nav_coord)
                 tile_data[:] = tile_data_raw  # extra copy for dtype/endianess conversion
                 self._preprocess(tile_data, tile_slice)
                 yield DataTile(
@@ -703,7 +794,6 @@ class H5Partition(Partition):
                     # scheme_idx is constant 0
                     scheme_idx=0,
                 )
-                frames_read += 1
 
     def set_corrections(self, corrections: CorrectionSet):
         self._corrections = corrections

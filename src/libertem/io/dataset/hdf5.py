@@ -493,18 +493,6 @@ class H5DataSet(DataSet):
 
         # -ve sync offset insert blank at beginning (skips at end)
         # +ve sync offset skips frames at beginning (blank at end)
-        # h5_array is paritioned using chunk-aligned partitions (normal slice_nd
-        # generation ignoring sync_offset)
-        # each h5_ds_part is associated to a flat partition slice of HDF5Partition
-        # for -ve sync offset, all the start frames of the partitions start at +abs(sync_offset)
-        # partitions are clipped to the desired nav_size or actual (dataset size + sync_offset)
-        # for +ve sync offset, all the start frames/lengths of the partition slices are as-normal,
-        # but the first partition clips itself by discarding the initial frames
-        # NOTE handle case of shorter first slice_nd than sync_offset
-        # shorter desired nav_shape is handled by not yielding partitions which
-        # have slice_nd frame indexes which don't intersect the desired nav_size
-        # longer nav_shape handled by letting the partitions complete, blank frames automatic
-        # must be sure to handle data clipping to actual partition length
         sync_offset = self._sync_offset
         ds_flat_shape = self.shape.flatten_nav()
 
@@ -695,57 +683,63 @@ class H5Partition(Partition):
 
             for scheme_idx, tile_slice in subslices:
                 tile_slice_flat: Slice = tile_slice.flatten_nav(self.meta['ds_raw_shape'])
+                raw_origin = tile_slice_flat.origin
+                raw_shape = tile_slice_flat.shape
+
+                # The following block translates from tile_slice in the raw array
+                # to the partition coordinate system with sync_offset applied
+                # By doing this before reading we can avoid reading some tiles
+                # at the beginning/end of the dataset
+                # We will still read tiles which partially overlap the nav space
+                # and afterwards we drop the unecessary frames
+                corrected_nav_origin = raw_origin[0] - sync_offset
+                if corrected_nav_origin < 0:
+                    # positive sync_offset, drop frames at beginning of DS
+                    if abs(corrected_nav_origin) > tile_slice_flat.shape[0]:
+                        # tile is completely before the first partition, can skip it
+                        continue
+                    # Clip at the beginning so adjust the tile shape
+                    new_nav_size = tile_slice_flat.shape[0] + corrected_nav_origin
+                    tile_slice_flat.shape = (new_nav_size,) + tile_slice_flat.shape.sig
+                # Apply max(0, corrected_nav_origin) so we never provide negative nav coord
+                tile_slice_flat.origin = (max(0, corrected_nav_origin),) + raw_origin[1:]
+                # Now check for clipping at the end of the dataset
+                final_frame_idx = tile_slice_flat.origin[0] + tile_slice_flat.shape[0]
+                frames_beyond_end = final_frame_idx - ds_num_frames
+                # We want to skip any tiles which are completely past the end of the dataset
+                # and clip those which are only partially overlapping the final partition
+                if frames_beyond_end >= tile_slice_flat.shape[0]:
+                    # Empty tile after clip, skip
+                    continue
+                elif frames_beyond_end > 0:
+                    # tile partially overlaps end of dataset, adjust the shape
+                    new_nav_size = tile_slice_flat.shape[0] - frames_beyond_end
+                    tile_slice_flat.shape = (new_nav_size,) + tile_slice_flat.shape.sig
+
+                # Read the data in this block
                 # cut buffer into the right size
                 buf_size = tile_slice.shape.size
                 buf = data_flat[:buf_size].reshape(tile_slice.shape)
                 buf_res = data_flat_res[:buf_size].reshape(tile_slice.shape)
                 dataset.read_direct(buf, source_sel=tile_slice.get())
                 buf_res[:] = buf  # extra copy for faster dtype/endianess conversion
-                tile_data = buf_res.reshape(tile_slice_flat.shape)
+                tile_data = buf_res.reshape(raw_shape)
 
-                # Now correct tile_slice_flat (and tile_data) to match
-                # desired nav coordinate system, clipping data if necessary to fit
-                # Data is (flat_nav, *sig) corresponding to tile_slice_flat in raw coords
-                # Need to shift tile_slice_flat.origin[0] to match the sync_offset
-                # -ve sync offset insert blank at beginning (skips at end)
-                # +ve sync offset skips frames at beginning (blank at end)
-                raw_origin = tile_slice_flat.origin
-                if self._sync_offset <= 0:
-                    # clip at end of dataset unless nav_size increased
-                    # by at least abs(sync_offset)
-                    # tile_slice_flat.origin[0] shifted right
-                    tile_slice_flat.origin = (raw_origin[0] + abs(sync_offset),) + raw_origin[1:]
-                else:
-                    # positive s-o, shift left, clip at beginning
-                    corrected_nav_origin = raw_origin[0] - sync_offset
-                    # Special case for positive s-o is that we might need
-                    # to discard data at the beginning of the dataset
-                    # May need to do this multiple times if the tile stack depth
-                    # is greater than the sync offset
-                    # FIXME this can be pre-computed and skipped before read
-                    # Doesn't apply for negative s-o because we align:left
-                    # when reshaping up/down in nav_shape
-                    if corrected_nav_origin < 0:
-                        corrected_nav_size = tile_slice_flat.shape[0] + corrected_nav_origin
-                        if corrected_nav_size <= 0:
-                            # Don't need this tile, skip
-                            continue
-                        tile_data = tile_data[abs(corrected_nav_origin):, ...]
-                        tile_slice_flat.shape = (corrected_nav_size,) + tile_slice_flat.shape.sig
-                    tile_slice_flat.origin = (max(0, corrected_nav_origin),) + raw_origin[1:]
+                # If the true tile origin is before the start of the dataset, must drop frames
+                # This corresponds to the first raw tile which overlaps the first partition
+                # and can only occur when sync_offset > 0
+                if corrected_nav_origin < 0:
+                    tile_data = tile_data[abs(corrected_nav_origin):, ...]
 
-                # For any sync offset we may have to clip the data at the end of the dataset
-                # as either we push frames beyond the end of the nav_dim with -ve sync_offset
-                # or we reduce the nav_dim such that the final frame is beyond it (even for +ve s-o)
-                final_frame_idx = tile_slice_flat.origin[0] + tile_slice_flat.shape[0]
-                if final_frame_idx > ds_num_frames:
-                    # Drop frames at end of ds
-                    tile_data = tile_data[:ds_num_frames - final_frame_idx, ...]
-                    if tile_data.shape[0] == 0:
-                        # Empty tile after clip, skip
-                        # FIXME for certain cases it's easy to pre-compute this and skip the read
-                        continue
-                    tile_slice_flat.shape = (tile_data.shape[0],) + tile_slice_flat.shape.sig
+                # The final tiles in the dataset can partially overlap the final partition
+                # Drop frames at end to match the partition size
+                # we already verified if any frames will remain
+                # this can occur for both +ve and -ve sync_offset
+                if frames_beyond_end > 0:
+                    tile_data = tile_data[:-frames_beyond_end, ...]
+
+                # NOTE could the above two blocks ever apply simultaneously?
+                # would the two operations conflict ?
 
                 self._preprocess(tile_data, tile_slice_flat)
                 yield DataTile(

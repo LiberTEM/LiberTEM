@@ -109,6 +109,10 @@ const getInfoItemForDSPath = (ds_path: string, info?: DatasetInfoHDF5) => {
         [k: string]: DatasetInfoHDF5Item
     } = {};
     info?.datasets?.forEach(dsItem => dsItemsByPath[dsItem.path] = dsItem);
+    // I think this will fail if datasets is undefined or empty
+    // yet the only possible value for ds_path comes from the dropdown
+    // menu which is itself defined by info.datasets so by definition
+    // it is valid!
     return dsItemsByPath[ds_path]
 }
 

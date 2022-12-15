@@ -3,7 +3,7 @@ import * as React from "react";
 import { Button, Dropdown, DropdownProps, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
 import { DatasetInfoHDF5, DatasetInfoHDF5Item, DatasetParamsHDF5, DatasetTypes } from "../../messages";
-import { getInitial, getInitialName, adjustShapeWithBounds, parseShapeInCommaSeparatedString, withValidation } from "../helpers";
+import { getInitial, getInitialName, adjustShapeWithBounds, parseShapeInCommaSeparatedString, withValidation, validateSyncOffsetAndSigShape } from "../helpers";
 import { OpenFormProps } from "../types";
 import Reshape from "./Reshape";
 
@@ -104,6 +104,15 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     )
 }
 
+const getInfoItemForDSPath = (ds_path: string, info?: DatasetInfoHDF5) => {
+    const dsItemsByPath: {
+        [k: string]: DatasetInfoHDF5Item
+    } = {};
+    info?.datasets?.forEach(dsItem => dsItemsByPath[dsItem.path] = dsItem);
+    return dsItemsByPath[ds_path]
+}
+
+
 export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm, DatasetInfoHDF5>({
     mapPropsToValues: ({ path, initial }) => ({
         name: getInitialName("name", path, initial),
@@ -121,5 +130,15 @@ export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm, Datas
         sig_shape: parseShapeInCommaSeparatedString(values.sig_shape),
         sync_offset: values.sync_offset,
     }),
+    customValidation: (values, { info }) => {
+        const ds_info = getInfoItemForDSPath(values.ds_path, info)
+        return validateSyncOffsetAndSigShape(
+            ds_info.sig_shape,
+            values.sig_shape,
+            values.sync_offset,
+            ds_info.image_count,
+            true,
+        )
+    },
     type: DatasetTypes.HDF5,
 })(HDF5ParamsForm);

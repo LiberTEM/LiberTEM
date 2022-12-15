@@ -1,5 +1,6 @@
 import contextlib
-from typing import Optional
+import typing
+from typing import Optional, Tuple, List
 import warnings
 import logging
 import time
@@ -34,6 +35,19 @@ class HDF5DatasetParams(MessageConverter):
             "type": {"const": "HDF5"},
             "path": {"type": "string"},
             "ds_path": {"type": "string"},
+            "nav_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sig_shape": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 1},
+                "minItems": 2,
+                "maxItems": 2
+            },
+            "sync_offset": {"type": "number"},
         },
         "required": ["type", "path", "ds_path"]
     }
@@ -43,11 +57,42 @@ class HDF5DatasetParams(MessageConverter):
             k: raw_data[k]
             for k in ["path", "ds_path"]
         }
+        if "nav_shape" in raw_data:
+            data["nav_shape"] = tuple(raw_data["nav_shape"])
+        if "sig_shape" in raw_data:
+            data["sig_shape"] = tuple(raw_data["sig_shape"])
+        if "sync_offset" in raw_data:
+            data["sync_offset"] = raw_data["sync_offset"]
         return data
 
 
+def _ensure_2d_nav(nav_shape: Tuple[int, ...]) -> Tuple[int, int]:
+    # For any iterable shape, reduce or pad it to a 2-tuple
+    # with the same prod(shape). Reduction from left to right
+    # (final dimension preserved). Special case for empty
+    # nav_shape which is converted to (1, 1)
+    nav_shape = tuple(nav_shape)
+    if len(nav_shape) == 1:
+        nav_shape = (1,) + nav_shape
+    elif len(nav_shape) >= 2:
+        nav_shape = (prod(nav_shape[:-1]),) + nav_shape[-1:]
+    elif len(nav_shape) == 0:
+        return (1, 1)
+    else:
+        raise ValueError(f'Incompatible nav_shape {nav_shape}')
+    return nav_shape
+
+
+class HDF5ArrayDescriptor(typing.NamedTuple):
+    name: str
+    shape: Tuple[int]
+    dtype: np.dtype
+    compression: Optional[str]
+    chunks: Tuple[int]
+
+
 def _get_datasets(path):
-    datasets = []
+    datasets: List[HDF5ArrayDescriptor] = []
 
     timeout = 3
     t0 = current_time()
@@ -56,8 +101,11 @@ def _get_datasets(path):
         if current_time() - t0 > timeout:
             raise TimeoutError
         if hasattr(obj, 'size') and hasattr(obj, 'shape'):
+            if obj.ndim < 3:
+                # Can't process this dataset, skip
+                return
             datasets.append(
-                (name, obj.size, obj.shape, obj.dtype, obj.compression, obj.chunks)
+                HDF5ArrayDescriptor(name, obj.shape, obj.dtype, obj.compression, obj.chunks)
             )
 
     with h5py.File(path, 'r') as f:
@@ -162,7 +210,7 @@ class H5Reader:
         self._ds_path = ds_path
 
     @contextlib.contextmanager
-    def get_h5ds(self, cache_size=1024*1024):
+    def get_h5ds(self, cache_size=1024 * 1024):
         logger.debug("H5Reader.get_h5ds: cache_size=%dMiB", cache_size / 1024 / 1024)
         with h5py.File(self._path, 'r', rdcc_nbytes=cache_size, rdcc_nslots=19997) as f:
             yield f[self._ds_path]
@@ -273,10 +321,12 @@ class H5DataSet(DataSet):
 
     def _do_initialize(self):
         if self.ds_path is None:
-            datasets = _get_datasets(self.path)
-            datasets_list = sorted(datasets, key=lambda i: i[1], reverse=True)
-            name, size, shape, dtype, compression, chunks = datasets_list[0]
-            self.ds_path = name
+            try:
+                datasets = _get_datasets(self.path)
+                largest_ds = max(datasets, key=lambda x: prod(x.shape))
+            except (TimeoutError, ValueError):
+                raise DataSetException(f'Unable to infer dataset from file {self.path}')
+            self.ds_path = largest_ds.name
         with self.get_reader().get_h5ds() as h5ds:
             self._dtype = h5ds.dtype
             shape = h5ds.shape
@@ -339,35 +389,51 @@ class H5DataSet(DataSet):
             # not a h5py file or can't open for some reason:
             return False
 
-        # try to guess the hdf5 dataset path:
+        # Read the dataset info from the file
         try:
             datasets = executor.run_function(_get_datasets, path)
-            datasets_list = list(sorted(datasets, key=lambda i: i[1], reverse=True))
-            name, size, shape, dtype, compression, chunks = datasets_list[0]
-        # FIXME: excepting `SystemError` temporarily
-        # more info: https://github.com/h5py/h5py/issues/1740
-        except (IndexError, TimeoutError, SystemError):
+            if not datasets:
+                raise RuntimeError(f'Found no compatible datasets in the file {path}')
+        except (TimeoutError, RuntimeError):
             return {
                 "parameters": {
                     "path": path,
+                },
+                "info": {
+                    "datasets": [],
                 }
             }
 
+        # datasets contains at least one HDF5ArrayDescriptor
+        # sig_dims is implicitly two here (for web GUI)
+        sig_dims = 2
+        full_info = [
+            {
+                "path": ds_item.name,
+                "shape": ds_item.shape,
+                "compression": ds_item.compression,
+                "chunks": ds_item.chunks,
+                "raw_nav_shape": ds_item.shape[:-sig_dims],
+                "nav_shape": _ensure_2d_nav(ds_item.shape[:-sig_dims]),
+                "sig_shape": ds_item.shape[-sig_dims:],
+                "image_count": prod(ds_item.shape[:-sig_dims]),
+            } for ds_item in datasets
+        ]
+
+        # use the largest size array as initial hdf5 dataset path
+        # need to get info dict to access unpacked nav/sig shape
+        # next line implements argmax on ds_descriptor.size
+        ds_idx, _ = max(enumerate(datasets), key=lambda idx_x: prod(idx_x[1].shape))
+        largest_ds = full_info[ds_idx]
         return {
             "parameters": {
                 "path": path,
-                "ds_path": name,
+                "ds_path": largest_ds['path'],
+                "nav_shape": largest_ds['nav_shape'],
+                "sig_shape": largest_ds['sig_shape'],
             },
             "info": {
-                "datasets": [
-                    {
-                        "path": ds_item[0],
-                        "shape": ds_item[2],
-                        "compression": ds_item[4],
-                        "chunks": ds_item[5],
-                    }
-                    for ds_item in datasets_list
-                ]
+                "datasets": full_info
             }
         }
 
@@ -476,9 +542,9 @@ class H5DataSet(DataSet):
         target_size = self.target_size
         if target_size is None:
             if self._compression is None:
-                target_size = 512*1024*1024
+                target_size = 512 * 1024 * 1024
             else:
-                target_size = 256*1024*1024
+                target_size = 256 * 1024 * 1024
         partition_shape = self.partition_shape(
             target_size=target_size,
             dtype=self.dtype,
@@ -648,7 +714,7 @@ class H5Partition(Partition):
     def _get_read_cache_size(self) -> float:
         chunks = self._chunks
         if chunks is None:
-            return 1*1024*1024
+            return 1 * 1024 * 1024
         else:
             # heuristic on maximum chunk cache size based on number of cores
             # of the node this worker is running on, available memory, ...
@@ -658,7 +724,7 @@ class H5Partition(Partition):
             available: int = mem.available
             if num_cores is None:
                 num_cores = 2
-            cache_size: float = max(256*1024*1024, available * 0.8 / num_cores)
+            cache_size: float = max(256 * 1024 * 1024, available * 0.8 / num_cores)
             return cache_size
 
     def _get_h5ds(self):

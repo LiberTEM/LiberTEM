@@ -326,7 +326,9 @@ class H5DataSet(DataSet):
             try:
                 datasets = _get_datasets(self.path)
                 largest_ds = max(datasets, key=lambda x: prod(x.shape))
-            except (TimeoutError, ValueError):
+            # FIXME: excepting `SystemError` temporarily
+            # more info: https://github.com/h5py/h5py/issues/1740
+            except (ValueError, TimeoutError, SystemError):
                 raise DataSetException(f'Unable to infer dataset from file {self.path}')
             self.ds_path = largest_ds.name
         with self.get_reader().get_h5ds() as h5ds:
@@ -396,7 +398,9 @@ class H5DataSet(DataSet):
             datasets = executor.run_function(_get_datasets, path)
             if not datasets:
                 raise RuntimeError(f'Found no compatible datasets in the file {path}')
-        except (TimeoutError, RuntimeError):
+        # FIXME: excepting `SystemError` temporarily
+        # more info: https://github.com/h5py/h5py/issues/1740
+        except (RuntimeError, TimeoutError, SystemError):
             return {
                 "parameters": {
                     "path": path,
@@ -469,7 +473,9 @@ class H5DataSet(DataSet):
         with self.get_reader().get_h5ds() as ds:
             try:
                 datasets = _get_datasets(self.path)
-            except TimeoutError:
+            # FIXME: excepting `SystemError` temporarily
+            # more info: https://github.com/h5py/h5py/issues/1740
+            except (TimeoutError, SystemError):
                 datasets = []
             datasets = [
                 {"name": descriptor.name, "value": [

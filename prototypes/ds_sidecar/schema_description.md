@@ -111,6 +111,21 @@ files = './image*.bin'
 
 we use the JSON-schema path format `'#/path/to/key'` to specify external objects, always from the root of the file. This is necessary to reduce scope for ambiguity between a string value that could be interpreted as a true value, or a key in the tree.
 
+- The schema can specify simple defaults using the standard schema default key, and the parser will fill these defaults when missing from the config file.
+
+```json
+{
+  "type": "file",
+  "properties": {
+      "dtype": {
+          "type": "dtype",
+          "default": "float32"
+      },
+  },
+  "required": ["dtype"],
+}
+```
+
 - The consumer of the config is responsible for extracting the information it needs from the tree, once validated/interpreted under the provided schema.
 
 ## Features

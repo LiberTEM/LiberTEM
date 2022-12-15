@@ -467,18 +467,16 @@ class H5DataSet(DataSet):
         with self.get_reader().get_h5ds() as ds:
             try:
                 datasets = _get_datasets(self.path)
-            # FIXME: excepting `SystemError` temporarily
-            # more info: https://github.com/h5py/h5py/issues/1740
-            except (TimeoutError, SystemError):
+            except TimeoutError:
                 datasets = []
             datasets = [
-                {"name": name, "value": [
-                    {"name": "Size", "value": str(size)},
-                    {"name": "Shape", "value": str(shape)},
-                    {"name": "Datatype", "value": str(dtype)},
+                {"name": descriptor.name, "value": [
+                    {"name": "Size", "value": str(prod(descriptor.shape))},
+                    {"name": "Shape", "value": str(descriptor.shape)},
+                    {"name": "Datatype", "value": str(descriptor.dtype)},
                 ]}
-                for name, size, shape, dtype, compression, chunks in sorted(
-                    datasets, key=lambda i: i[1], reverse=True
+                for descriptor in sorted(
+                    datasets, key=lambda i: prod(i.shape), reverse=True
                 )
             ]
             return [

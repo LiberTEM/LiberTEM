@@ -61,10 +61,14 @@ export const validateSyncOffsetAndSigShape = (
     sigShape: string,
     syncOffset: number,
     imageCount: number | undefined,
+    strictSigShape = false,
 ): FormikErrors<FormikValues> => {
     const res: FormikErrors<FormikValues> = {};
     if (nativeSigShape && !isSigShapeValid(sigShape, nativeSigShape.toString())) {
         res.sig_shape = `must be of size: ${productOfShapeInCommaSeparatedString(nativeSigShape.toString())}`;
+    }
+    if (nativeSigShape && strictSigShape && (sigShape !== nativeSigShape.toString())) {
+        res.sig_shape = `sig_shape must be equal to: ${nativeSigShape.toString()}`;
     }
     if(imageCount && !isSyncOffsetValid(syncOffset, imageCount)) {
         res.sync_offset = `must be in (-${imageCount}, ${imageCount})`;

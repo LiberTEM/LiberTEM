@@ -61,7 +61,9 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
           const ds_path = value.toString()
           setFieldValue("ds_path", ds_path);
           setFieldValue("nav_shape", dsItemsByPath[ds_path].nav_shape.toString())
-          setFieldValue("sig_shape", dsItemsByPath[ds_path].sig_shape.toString())          
+          setFieldValue("sig_shape", dsItemsByPath[ds_path].sig_shape.toString())
+          setFieldTouched('nav_shape', false)
+          setFieldTouched('sig_shape', false)
       }
     };
 

@@ -1,7 +1,3 @@
-from file_spec import SpecTree
-from validation import get_validator
-
-
 toml_def = """
 [my_metadata_file]
 type = 'file'
@@ -125,6 +121,8 @@ tvips_schema = {
 }
 
 if __name__ == '__main__':
+    from parser import SpecTree
+    from utils import as_tree
     nest = SpecTree.from_string(toml_def)
-    validator = get_validator(tvips_schema)
-    validator.validate(nest['my_tvips_dataset'])
+    nest['my_tvips_dataset'].check_schema(tvips_schema)
+    as_tree(nest['my_tvips_dataset'])

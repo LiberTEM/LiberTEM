@@ -1,10 +1,8 @@
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 
-from file_spec import types
 
-
-def extend_check_required(validator_class):
+def extend_check_required(validator_class, types):
     validate_required = validator_class.VALIDATORS["required"]
 
     def check_required(validator, required, instance, schema):
@@ -25,7 +23,7 @@ def extend_check_required(validator_class):
     )
 
 
-def extend_coerce_types(validator_class):
+def extend_coerce_types(validator_class, types):
     validate_properties = validator_class.VALIDATORS["properties"]
 
     def coerce_types(validator, properties, instance, schema):
@@ -59,7 +57,7 @@ def extend_coerce_types(validator_class):
     )
 
 
-def get_validator(schema):
+def get_validator(schema, types):
     type_checker = validators.Draft202012Validator.TYPE_CHECKER.redefine_many(
         definitions={k: v.validate for k, v in types.items()}
     )
@@ -68,6 +66,6 @@ def get_validator(schema):
         validators.Draft202012Validator,
         type_checker=type_checker,
     )
-    Validator = extend_check_required(Validator)
-    Validator = extend_coerce_types(Validator)
+    Validator = extend_check_required(Validator, types)
+    Validator = extend_coerce_types(Validator, types)
     return Validator(schema=schema)

@@ -19,4 +19,4 @@ def test_detection_nonempty_hdf5(hdf5_ds_1):
     assert parameters["ds_path"] == "data"
     assert parameters["path"] == fn
     assert params["type"] == "hdf5"
-    assert list(parameters.keys()) == ["path", "ds_path"]
+    assert list(parameters.keys()) == ["path", "ds_path", "nav_shape", "sig_shape"]

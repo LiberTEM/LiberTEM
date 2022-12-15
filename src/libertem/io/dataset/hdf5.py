@@ -235,8 +235,6 @@ class H5DataSet(DataSet):
 
     nav_shape: tuple of int, optional
         A n-tuple that specifies the shape of the navigation / scan grid.
-        This must match the number of frames / size of the selected HDF5
-        dataset but can be used to change the shape and dimensionality.
         By default this is inferred from the HDF5 dataset.
 
     sig_shape: tuple of int, optional
@@ -249,6 +247,10 @@ class H5DataSet(DataSet):
     sig_dims: int
         Number of dimensions that should be considered part of the signal (for example
         2 when dealing with 2D image data)
+
+    sync_offset: int, optional, by default 0
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
 
     target_size: int
         Target partition size, in bytes. Usually doesn't need to be changed.

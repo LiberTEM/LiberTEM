@@ -154,6 +154,10 @@ export interface DatasetInfoHDF5Item {
     shape: number[],
     compression: null | string,
     chunks: null | number[],
+    raw_nav_shape: number[],
+    nav_shape: number[],
+    sig_shape: number[],
+    image_count: number,
 }
 
 export type DatasetInfoHDF5 = {

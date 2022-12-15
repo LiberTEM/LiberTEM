@@ -5,6 +5,7 @@ import { Omit } from "../../helpers/types";
 import { DatasetInfoHDF5, DatasetInfoHDF5Item, DatasetParamsHDF5, DatasetTypes } from "../../messages";
 import { getInitial, getInitialName, adjustShapeWithBounds, parseShapeInCommaSeparatedString, withValidation } from "../helpers";
 import { OpenFormProps } from "../types";
+import Reshape from "./Reshape";
 
 type DatasetParamsHDF5ForForm = Omit<DatasetParamsHDF5,
     "type"
@@ -25,6 +26,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     handleReset,
     onCancel,
     setFieldValue,
+    setFieldTouched,
 }) => {
     const dsItemsByPath: {
         [k: string]: DatasetInfoHDF5Item
@@ -32,7 +34,8 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     info?.datasets?.forEach(dsItem => dsItemsByPath[dsItem.path] = dsItem);
 
     const dsPathOptions = info?.datasets?.map(dsItem => {
-        const shape = dsItem.shape.join(",")
+        const raw_nav_shape = dsItem.raw_nav_shape.join(", ")
+        const sig_shape = dsItem.sig_shape.join(", ")
         const opts: string[] = [];
 
         if(dsItem.chunks !== null) {
@@ -43,7 +46,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
             opts.push(`compression: ${dsItem.compression}`);
         }
 
-        const text = `${dsItem.path} (shape: (${shape}), ${opts.join(", ")})`;
+        const text = `${dsItem.path} (nav_shape: (${raw_nav_shape}), sig_shape: (${sig_shape}) ${opts.join(", ")})`;
         return {
             text,
             key: dsItem.path,
@@ -55,7 +58,10 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
       const { value } = result;
       if (value) {
-        setFieldValue("ds_path", value.toString());
+          const ds_path = value.toString()
+          setFieldValue("ds_path", ds_path);
+          setFieldValue("nav_shape", dsItemsByPath[ds_path].nav_shape.toString())
+          setFieldValue("sig_shape", dsItemsByPath[ds_path].sig_shape.toString())          
       }
     };
 
@@ -90,6 +96,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
                 {dsPathInput}
             </Form.Field>
             {warning}
+            <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} hideInfo setFieldValue={setFieldValue} setFieldTouched={setFieldTouched} />
             <Button primary type="submit" disabled={isSubmitting}>Load Dataset</Button>
             <Button onClick={onCancel} >Cancel</Button>
             <Button type="button" onClick={handleReset}>Reset</Button>

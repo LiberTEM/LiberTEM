@@ -175,7 +175,7 @@ class ArraySpec(SpecBase):
 
     def resolve(self) -> np.ndarray:
         if self.read_as is not None:
-            return self.resolve_as(self.read_as)
+            return self.view(self.read_as).resolve()
         return self.array
 
     @classmethod
@@ -335,7 +335,7 @@ class ROISpec(SpecBase):
 
     def resolve(self) -> np.ndarray:
         if self.read_as is not None:
-            return self.resolve_as(self.read_as)
+            return self.view(self.read_as).resolve()
         return self.array
 
     @classmethod

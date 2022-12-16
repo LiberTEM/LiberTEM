@@ -54,6 +54,7 @@ class NestedDict(dict):
 
 class SpecBase(NestedDict):
     spec_type = 'base'
+    resolve_to = None
 
     def __init__(self, **kvals):
         super().__init__(self, **kvals)
@@ -171,19 +172,15 @@ class SpecBase(NestedDict):
         instance._set_parent(self.parent)
         return instance
 
-    def load(self):
-        # Try to load the oject defined by this spec
-        # Will call load on all sub-specs (assumed to be required)
-        raise NotImplementedError(f'No load method for {self.__class__.__name__}')
-
     def resolve(self):
-        raise NotImplementedError('Cannot resolve bare SpecBase')
+        """
+        Convert from SpecBase to an instance of the 'resolve_to'
+        property of the class
 
-    def resolve_as(self, spec_type):
-        if spec_type in self.readers():
-            return self.readers()[self.read_as](self)
-        raise ParserException(f'Unrecognized read_as "{self.read_as}" for '
-                              f'{self.__class__.__name__}')
+        e.g. convert from a SpecBase defining a file path
+        to an instance of pathlib.Path that points at that file
+        """
+        raise NotImplementedError('Cannot resolve bare SpecBase')
 
     @property
     def root(self) -> Optional[pathlib.Path]:

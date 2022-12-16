@@ -1,8 +1,12 @@
 import pathlib
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TYPE_CHECKING, Callable
 
 from utils import MissingKey, ParserException, find_tree_root, resolve_jsonpath
 from validation import get_validator
+
+
+if TYPE_CHECKING:
+    from jsonschema.validators import Draft202012Validator
 
 
 class NestedDict(dict):
@@ -56,21 +60,60 @@ class SpecBase(NestedDict):
         if not self.validate(None, self):
             raise ParserException(f'Invalid spec for {self}')
 
-    @property
-    def root(self) -> Optional[pathlib.Path]:
-        root = self.resolve_upwards('root')
-        try:
-            return pathlib.Path(root)
-        except TypeError:
-            return root
+    @classmethod
+    def validate(cls, checker: Optional['Draft202012Validator'], instance: 'SpecBase') -> bool:
+        """
+        Called both by SpecBase.__init__ and used
+        by an instance of a custom jsonschema.validators.Validator
+        to verify that the instance conforms to a schema
 
-    def load(self):
-        # Try to load the oject defined by this spec
-        # Will call load on all sub-specs (assumed to be required)
-        raise NotImplementedError(f'No load method for {self.__class__.__name__}')
+        It is expected that child Spec definitions call
+        this method with super() to confirm compliance with
+        any read_as key and that the instance is indeed of this class
+        """
+        if instance.read_as is not None and instance.read_as not in instance.readers():
+            return False
+        return isinstance(instance, cls)
+
+    def check_schema(self, schema: Dict[str, Any]):
+        """
+        Method to apply a schema to a SpecBase instance using
+        a custom jsonschema Validator
+
+        In applying the schema, keys will be resolved, types
+        will be coerced / inferred and defaults will be set inplace
+        """
+        from parser import spec_types, extra_types
+        validator = get_validator(schema, {**spec_types, **extra_types})
+        validator.validate(self)
 
     @classmethod
     def construct(cls, arg, parent=None):
+        """
+        Construct an instance of this SpecBase from an argument,
+        and set its parent as if it were in the tree
+
+        This implementation is the fallback where arg must be a dictionary
+        so that its components can be inserted directly into the Spec
+
+        Child SpecBase definitions should define their own constructors
+        for differents possible types of arg
+
+        This is used when applying a schema to a non-dict value
+        that should be interpreted as a SpecBase, e.g.:
+
+            files = '/*.jpg'
+
+        combined with the schema
+
+            {
+                properties: {
+                    'files': {'type': 'fileset'}
+                }
+            }
+
+        will call FileSetSpec.construct('/*.jpg')
+        """
         if isinstance(arg, dict):
             instance = cls(**arg)
             # Retain arg's parent while casting if it
@@ -84,21 +127,36 @@ class SpecBase(NestedDict):
         else:
             raise ParserException(f'Unrecognized spec {arg} for {cls.__name__}')
 
-    @classmethod
-    def validate(cls, checker, instance):
-        if instance.read_as is not None and instance.read_as not in instance.readers():
-            return False
-        return isinstance(instance, cls)
-
     @property
-    def read_as(self):
+    def read_as(self) -> Optional[str]:
+        """
+        Getter for the 'read_as' key, if present
+
+        If set, must match one key in cls.readers() in order
+        to pass cls.validate(..., instance)
+
+        Used to get a view of this instance as another SpecBase
+        so that we can use its methods to load data
+        """
         return self.get('read_as', None)
 
-    def view(self, spec_type: str, read_as: str = None):
+    @classmethod
+    def readers(cls) -> Dict[str, Callable]:
+        """
+        Dictionary of accepted read_as keys mapping to
+        methods used to interpret the current SpecBase
+        as another type
+
+        This method should ideally be a @classproperty but
+        that is hard to implement in Python
+        """
+        return {}
+
+    def view(self, spec_type: str, read_as: str = None) -> 'SpecBase':
         """
         Get a copy of this instance as another type
 
-        Removes the read_as key from the copy
+        Will removes the read_as key from the copy
         and sets 'type' to equal the new type
         """
         from parser import spec_types
@@ -113,14 +171,10 @@ class SpecBase(NestedDict):
         instance._set_parent(self.parent)
         return instance
 
-    def check_schema(self, schema: Dict[str, Any]):
-        from parser import spec_types, extra_types
-        validator = get_validator(schema, {**spec_types, **extra_types})
-        validator.validate(self)
-
-    @classmethod
-    def readers(cls):
-        return {}
+    def load(self):
+        # Try to load the oject defined by this spec
+        # Will call load on all sub-specs (assumed to be required)
+        raise NotImplementedError(f'No load method for {self.__class__.__name__}')
 
     def resolve(self):
         raise NotImplementedError('Cannot resolve bare SpecBase')
@@ -130,3 +184,24 @@ class SpecBase(NestedDict):
             return self.readers()[self.read_as](self)
         raise ParserException(f'Unrecognized read_as "{self.read_as}" for '
                               f'{self.__class__.__name__}')
+
+    @property
+    def root(self) -> Optional[pathlib.Path]:
+        """
+        Find the root path key upwards in the tree
+        in order to resolve relative paths
+
+        This key is either set in the config or set
+        by SpecTree to the config file parent directory
+        As a fallback the current Python working directory
+        is used.
+        """
+        try:
+            root = self.resolve_upwards('root')
+        except ParserException:
+            # Fallback, though this should have been set by SpecTree
+            root = '.'
+        try:
+            return pathlib.Path(root)
+        except TypeError:
+            return root

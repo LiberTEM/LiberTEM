@@ -211,8 +211,8 @@ class ArraySpec(SpecBase):
                 valid = False
         return valid
 
-    def _from_file(self):
-        file_form = self.view(self.read_as)
+    def _from_file(self) -> np.ndarray:
+        file_form: FileSpec = self.view(self.read_as)
         return file_form.load()
 
 
@@ -261,9 +261,6 @@ class CorrectionSetSpec(SpecBase):
             instance = instance.view('nparray', read_as='file')
         return instance
 
-    def load(self):
-        return CorrectionSet()
-
     @classmethod
     def validate(cls, checker, instance):
         valid = super().validate(checker, instance)
@@ -284,7 +281,7 @@ class CorrectionSetSpec(SpecBase):
             valid = valid and isinstance(instance[prop], types)
         return valid
 
-    def resolve(self) -> np.ndarray:
+    def resolve(self) -> CorrectionSet:
         kwargs = {}
         if self.dark_frame is not None:
             kwargs['dark'] = self.dark_frame.resolve()

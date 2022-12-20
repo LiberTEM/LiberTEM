@@ -53,7 +53,7 @@ class SpecTree(SpecBase):
             # set parent directory of config file
             struct['root'] = path.parent
 
-        return cls._get_tree(struct)
+        return cls.to_tree(struct)
 
     @classmethod
     def from_string(cls, string, format='toml'):
@@ -68,10 +68,10 @@ class SpecTree(SpecBase):
             # set cwd
             struct['root'] = pathlib.Path()
 
-        return cls._get_tree(struct)
+        return cls.to_tree(struct)
 
     @classmethod
-    def _get_tree(cls, struct: Dict[str, Any]):
+    def to_tree(cls, struct: Dict[str, Any]):
         return parse_spec(struct)
 
 

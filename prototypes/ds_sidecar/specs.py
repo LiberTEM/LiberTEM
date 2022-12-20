@@ -120,6 +120,9 @@ fileset_schema = {
         },
     },
     "required": ["files"],
+    "dependentRequired": {
+        "sort_options": ["sort"],
+    }
 }
 
 

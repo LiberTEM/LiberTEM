@@ -84,9 +84,10 @@ class SpecBase(NestedDict):
         In applying the schema, keys will be resolved, types
         will be coerced / inferred and defaults will be set inplace
         """
-        from parser import spec_types, extra_types
+        from spec_tree import spec_types, extra_types
         validator = get_validator(schema, {**spec_types, **extra_types})
         validator.validate(self)
+        return True
 
     @classmethod
     def construct(cls, arg, parent=None):

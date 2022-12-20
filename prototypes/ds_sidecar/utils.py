@@ -38,7 +38,7 @@ sort_methods = {
 
 
 sort_types = Literal['natsorted', 'humansorted', 'os_sorted']
-enum_names = tuple(en.name for en in natsort.ns)
+sort_enum_names = tuple(en.name for en in natsort.ns)
 
 
 def resolve_path_glob(path: pathlib.Path, root_dir: pathlib.Path) -> List[pathlib.Path]:

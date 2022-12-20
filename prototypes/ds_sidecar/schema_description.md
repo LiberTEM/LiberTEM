@@ -246,13 +246,15 @@ format_defs = {
 }
 ```
 
-using the file extension (or be read directly from a `format` key if present). Any further parameters can be passed through to the loader, for example:
+using the file extension (or be read directly from a `format` key if present). Any `load_options` are passed through to the loader, for example:
 
 ```toml
 [my_raw_array]
 type = 'file'
 format = 'raw'
 path = './data.raw'
+
+[my_raw_array.load_options]
 dtype = 'float32'
 shape = [64, 64]
 ```
@@ -330,3 +332,138 @@ toggle_px = [
 which would set the coordinates in `toggle_px` to False (relative to a `roi` which is otherwise True).
 
 It would also be possible to (later) allow the shape parameter to be filled using the dataset shape itself, or load coordinates to toggle from an `array` (e.g. from a text file).
+
+
+## Usage
+
+This section is the least-well-defined, and consists about ideas for potential usages of these config files.
+
+The most obvious usage is in the definition of DataSets:
+
+#### As the `path` argument for a dataset
+
+Both of the following are equivalent
+
+```python
+ctx.load('mib', path='./mib_ds_config.toml')
+```
+and implicitly:
+```python
+MIBDataSet('./mib_ds_config.toml')
+```
+
+In these cases, the dataset is responsible for loading and 
+interpreting the contents of the config file, and handling any 
+conflicts between values defined inside it and any other 
+potential arguments to its constructor, for example:
+
+```python
+ctx.load('mib', path='./mib_ds_config.toml', nav_shape=(50, 50))
+```
+where `mib_ds_config.toml` contains `nav_shape == (100, 100)`.
+
+To be consistent with past usage, the validation and checking
+would likely occur inside `ds.initialize()` rather than in the `__init__`.
+
+The basic usage would be a top-level config like the following:
+
+```toml
+path = '/path/to/file.hdr'
+nav_shape = [50, 50]
+sig_shape = [256, 256]
+sync_offset = 0
+```
+
+with specification of
+
+- `type = 'dataset'`
+- `format = 'mib'`
+
+at the top-level being completely optional, as long as `ctx.load` is 
+given the dataset type to try to load.
+
+The following should also be supported:
+
+```toml
+[my_dataset]
+type = 'dataset'
+format = 'mib'
+path = '/path/to/file.hdr'
+nav_shape = [50, 50]
+sig_shape = [256, 256]
+sync_offset = 0
+
+[my_other_object]
+...
+```
+
+when passed to `ctx.load('mib', ...)`, iff one `format='mib'` dataset type config is present in the file.
+
+An ambiguity arises when there is a top-level definition which is not 
+compatible with the dataset, but a child structure which is. In this 
+case the dataset should first try to use the top-level data, and only 
+search the children when this fails.
+
+
+#### As a parameter for `ctx.load('auto')`
+
+There are two ways to implement this:
+
+1. Using the normal 'auto' logic of trying every dataset in order of 
+definition until one matches, but with the config file path rather 
+than a dataset file path.
+2. Have `ctx.load` read the config file, and require a `format` key 
+at the top level or a single `type = 'dataset'` definition with 
+`format` key, to know where to dispatch the load command.
+
+
+#### As a parameter to a generic loader
+
+Fully explicit configs, i.e. those which include a `type` key 
+could be used to load objects without needing to use specific 
+methods like `ctx.load` for datasets.
+
+A generic loader could directly instantiate one-or-more elements
+from the config file. If only one element is found this could be 
+returned directly. If multiple elements are found they could be
+returned in a dict-like structure matching the config. This structure
+could have convenience methods allowing access to views of the data
+split by type, e.g.:
+
+```python
+loaded = generic_loader('config.toml')
+assert isinstance(loaded, dict)
+
+>>> loaded.datasets
+{
+  'my_mib': MIBDataSet(...),
+  'my_raw': RawFileDataSet(...),
+}
+>>> loaded.contexts
+...
+>>> loaded.analyses
+...
+```
+
+#### Support for pre-loaded configs / configs from string
+
+All of the above examples imply a real config file on disk, but it 
+would be useful to support in-memory configs, either as a string
+form of a serialization language, e.g.
+```python
+config_string = ('{"type: "dataset",'
+                  '"format": "mib",'
+                  '"path": "./file.hdr"}')
+dataset = generic_loader(config_string, config_format='json')
+```
+or from a Python object, e.g.:
+```python
+config = {
+  'type': 'dataset',
+  'format': 'mib',
+  'path': './file.hdr'
+}
+dataset = generic_loader(config)
+```
+
+This would be necessary to support a future job-processing server model.

@@ -11,7 +11,29 @@ import natsort
 import numpy.typing as nt
 
 from config_base import SpecBase, ParserException
-from utils import format_defs, sort_methods, sort_types, resolve_path_glob
+from utils import format_defs, sort_methods, sort_types, sort_enum_names, resolve_path_glob
+
+
+file_schema = {
+    "type": "file",
+    "title": "FileSpec",
+    "properties": {
+        "type": {
+            "const": "file",
+        },
+        "path": {
+            "type": "string",
+        },
+        "format": {
+            "type": "string",
+            "enum": [*format_defs.keys()]
+        },
+        "load_options": {
+            "type": "object",
+        },
+    },
+    "required": ["path"],
+}
 
 
 class FileSpec(SpecBase):
@@ -62,6 +84,43 @@ class FileSpec(SpecBase):
 
     def resolve(self):
         return self.path
+
+
+fileset_schema = {
+    "type": "fileset",
+    "title": "FileSetSpec",
+    "properties": {
+        "type": {
+            "const": "fileset",
+        },
+        "files": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    },
+                    "minLength": 1,
+                },
+            ]
+        },
+        "sort": {
+            "type": "string",
+            "enum": [*sort_methods.keys()]
+        },
+        "sort_options": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": [*sort_enum_names]
+            },
+        },
+    },
+    "required": ["files"],
+}
 
 
 class FileSetSpec(SpecBase):
@@ -146,6 +205,38 @@ class FileSetSpec(SpecBase):
         return self.filelist
 
 
+array_schema = {
+    "type": "nparray",
+    "title": "ArraySpec",
+    "properties": {
+        "type": {
+            "const": "nparray",
+        },
+        "read_as": {
+            "type": "string",
+            "enum": ["file"],
+        },
+        "data": {
+            "type": "array",
+        },
+        "shape": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minLength": 1,
+            },
+        },
+        "dtype": {
+            "type": "dtype",
+        },
+    },
+    "anyOf": [
+        {"required": ["data"]},
+        {"required": ["read_as"]},
+    ],
+}
+
+
 class ArraySpec(SpecBase):
     spec_type = 'nparray'
     resolve_to = np.ndarray
@@ -214,6 +305,43 @@ class ArraySpec(SpecBase):
     def _from_file(self) -> np.ndarray:
         file_form: FileSpec = self.view(self.read_as)
         return file_form.load()
+
+
+corrections_schema = {
+    "type": "correctionset",
+    "title": "CorrectionSetSpec",
+    "properties": {
+        "type": {
+            "const": "correctionset",
+        },
+        "dark_frame": {
+            "type": "nparray",
+        },
+        "gain_map": {
+            "type": "nparray",
+        },
+        "excluded_pixels": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "minLength": 1,
+                "items": {
+                    "type": "integer",
+                }
+            },
+            "minLength": 1,
+        },
+        "allow_empty": {
+            "type": "boolean",
+            "default": False,
+        }
+    },
+    "anyOf": [
+        {"required": ["dark_frame"]},
+        {"required": ["gain_map"]},
+        {"required": ["excluded_pixels"]},
+    ],
+}
 
 
 class CorrectionSetSpec(SpecBase):
@@ -300,6 +428,50 @@ class DataSetSpec(SpecBase):
     @property
     def format(self):
         return self.get('format', None)
+
+
+roi_schema = {
+    "type": "roi",
+    "title": "ROISpec",
+    "properties": {
+        "type": {
+            "const": "roi",
+        },
+        "read_as": {
+            "type": "string",
+            "enum": ["file", "nparray"],
+        },
+        "roi_base": {
+            "type": "boolean",
+        },
+        "shape": {
+            "type": "array",
+            "items": {
+                "type": "integer",
+                "minLength": 1,
+            },
+        },
+        "dtype": {
+            "type": "dtype",
+            "default": bool,
+        },
+        "toggle_px": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "minLength": 1,
+                "items": {
+                    "type": "integer",
+                }
+            },
+            "minLength": 1,
+        },
+    },
+    "anyOf": [
+        {"required": ["roi_base", "toggle_px", "shape"]},
+        {"required": ["read_as"]},
+    ],
+}
 
 
 class ROISpec(SpecBase):

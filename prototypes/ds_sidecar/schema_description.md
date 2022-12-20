@@ -128,6 +128,45 @@ we use the JSON-schema path format `'#/path/to/key'` to specify external objects
 
 - The consumer of the config is responsible for extracting the information it needs from the tree, once validated/interpreted under the provided schema.
 
+## Implementation
+
+TOML (like other formats such as YAML/JSON) is parsed to a top-level Python 
+dictionary with potentially nested child dictionaries.
+
+- Keys must be strings
+- TOML can encode values similarly to JSON, with the notable exception of a missing `Null` value (which would deserialize to `None` in Python).
+
+In practice, as all of the interpretation of the file content is after the 
+conversion to Python objects, the actual format of the file is not important
+and could be TOML, YAML, JSON, pkl etc as long as the top level is a dictionary.
+
+To allow parsing, we treat the nested dictionaries as a tree by subclassing 
+`dict` to define `NestedDict`, which gives a child dictionary a reference to 
+its parent. This allows us to create sub-configs which can point to elsewhere 
+in the tree.
+
+The parsing process:
+
+1. Read the config into a Python dictionary with `tomli`, for example.
+2. Traverse the tree to find any `dict` instances, if:
+    - The `dict` contains the key `'type'` matching a config we understand, convert it to a `NestedDict`-subclass implementing that `type`
+    - Otherwise, convert the `dict` instance to a bare `NestedDict` instance.
+3. To ready a config for consumption by `LiberTEM`, we can validate it 
+against a schema. This schema is used to validate compatibility, including 
+setting default values. It also is used to coerce the types of any values
+which did not specify their own type (i.e. bare values or bare `NestedDict`).
+4. Depending on the object type, the config can then be consumed by a constructor (e.g. `DataSet.initialize()`), or the config can self-construct
+into the object (e.g. `ArraySpec.resolve() -> np.ndarray`).
+
+### Reserved keys
+
+- `type`: identifies a structure as a type we should be able to interpret
+- `read_as`: a `type` identifier used to read the content of a structure as if
+it were another type, while retaining the identity of the original type.
+- `root`: a string defining an absolute directory path from which other, 
+relative paths should be resolved
+
+
 ## Features
 
 ### File paths

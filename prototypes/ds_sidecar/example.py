@@ -1,96 +1,24 @@
-toml_def = """
-[my_metadata_file]
-type = 'file'
-path = "/home/alex/Data/TVIPS/rec_20200623_080237_000.tvips"
-format = 'RAW'
-dtype = 'float32'
-shape = [64, 64]
+import tempfile
+import numpy as np
+import pathlib
+from jsonschema.exceptions import ValidationError
 
-[my_data_fileset]
-type='fileset'
-files = "./testfiles/file*.raw"
-sort = false
-sort_options = []
+import libertem.api as lt
+from libertem.io.dataset.raw import RawFileDataSet
 
-[my_data_fileset2]
-type='fileset'
-files = [
-    "./testfiles/file*.raw",
-    "./testfiles/file_other*.raw"
-]
-sort = false
-sort_options = []
+from utils import ParserException
+from spec_tree import SpecTree
 
-[my_tvips_dataset]
-type = "dataset"
-format = "tvips"
-meta = '#/my_metadata_file'
-data = '#/my_data_fileset'
-nav_shape = [32, 32]
-sig_shape = [32, 32]
-dtype = 'float32'
-sync_offset = 0
 
-[my_dark_frame]
-type = 'nparray'
-data = [
-   [5.0, 6.0, 7.0, 8.0],
-   [1.0, 2.0, 3.0, 4.0],
-   [5.0, 6.0, 7.0, 8.0],
-   [1.0, 2.0, 3.0, 4.0],
-]
-shape = [2, 8]
-
-[my_roi]
-type = 'roi'
-read_as = 'file'
-path = './test_roi.npy'
-
-[my_roi2]
-type = 'roi'
-read_as = 'nparray'
-data = [
-   [5.0, 6.0, 7.0, 8.0],
-   [1.0, 2.0, 3.0, 4.0],
-   [5.0, 6.0, 7.0, 8.0],
-   [1.0, 2.0, 3.0, 4.0],
-]
-shape = [2, 8]
-
-[my_corrections]
-type='correctionset'
-
-[my_corrections.dark_frame]
-type = 'nparray'
-data = [
-   [5.0, 6.0, 7.0, 8.0],
-   [1.0, 2.0, 3.0, 4.0],
-   [5.0, 6.0, 7.0, 8.0],
-   [1.0, 2.0, 3.0, 4.0],
-]
-shape = [2, 8]
-
-[my_corrections.gain_map]
-type = 'file'
-path = './test_roi.npy'
-"""
-
-tvips_schema = {
-    "type": "dataset",
-    "title": "TVIPS dataset",
+raw_ds_schema = {
+    # "type": "dataset",
+    "title": "RAW dataset",
     "properties": {
-        "meta": {
+        "path": {
             "type": "file",
-            "properties": {
-                "dtype": {
-                    "type": "dtype",
-                    "default": "float32"
-                },
-            },
-            "required": ["dtype"],
         },
-        "data": {
-            "type": "fileset",
+        "format": {
+            "enum": ["raw", "RAW"],
         },
         "nav_shape": {
             "$ref": "#/$defs/shape",
@@ -100,19 +28,18 @@ tvips_schema = {
         },
         "dtype": {
             "type": "dtype",
-            "default": "float32"
         },
         "sync_offset": {
             "type": "integer",
             "default": 0,
         },
     },
-    "required": ["meta"],
+    "required": ["path", "nav_shape", "sig_shape", "dtype"],
     "$defs": {
         "shape": {
             "type": "array",
             "items": {
-                "type": "number",
+                "type": "integer",
                 "minimum": 1
             },
             "minItems": 1,
@@ -120,9 +47,81 @@ tvips_schema = {
     }
 }
 
+class RawFileDataSetConfig(RawFileDataSet):
+    """
+    Subclass RawFileDataSet to add config file support
+    """
+    def initialize(self, executor):
+        if is_config_def(self._path):
+            ds_config = load_ds_config_with_schema(self._path, raw_ds_schema)
+            import pdb ; pdb.set_trace()
+            import traceback ; traceback.print_exc()
+            self._path = ds_config['path'].resolve()
+            self._dtype = ds_config['dtype']
+            self._nav_shape = tuple(ds_config['nav_shape'])
+            self._sig_shape = tuple(ds_config['sig_shape'])
+            self._sync_offset = ds_config['sync_offset']
+        return super().initialize(executor)
+
+
+def is_config_def(value) -> bool:
+    if isinstance(value, dict):
+        return True
+    elif isinstance(value, (str, pathlib.Path)):
+        value = pathlib.Path(value)
+        if value.is_file() and value.suffix in ('.toml', '.json'):
+            return True
+    return False
+
+
+def load_ds_config_with_schema(config, schema):
+    if isinstance(config, dict):
+        nest = SpecTree.to_tree(config)
+    else:
+        config_path = pathlib.Path(config)
+        nest = SpecTree.from_file(config_path)
+
+    raise NotImplementedError('Need a way of applying a schema without in-place modification')
+    raise NotImplementedError('The "path" key in ds_schema is converting the "path" key in the in-place modified FileSpec to a FileSpec')
+    raise NotImplementedError('Leads to infinite recursion, if we only searched')
+
+    def check_sub_configs(value):
+        try:
+            return value.check_schema(schema)
+        except ValidationError:
+            print('FAILED VALIDATION')
+            return False
+
+    ds_configs = tuple(nest.search(check_sub_configs))
+    if not ds_configs:
+        raise ParserException('No matching definitions for dataset')
+    elif len(ds_configs) > 1:
+        raise ParserException('Multiple matching definitions for dataset')
+    return ds_configs[0].check_schema(schema)
+
+
 if __name__ == '__main__':
-    from parser import SpecTree
-    from utils import as_tree
-    nest = SpecTree.from_string(toml_def)
-    nest['my_tvips_dataset'].check_schema(tvips_schema)
-    as_tree(nest['my_tvips_dataset'])
+    nav_shape = (8, 8)
+    sig_shape = (16, 16)
+    dtype = np.float32
+    data: np.ndarray = np.random.uniform(size=nav_shape + sig_shape).astype(dtype)
+
+    with tempfile.TemporaryDirectory() as td:
+        tempdir = pathlib.Path(td)
+        filepath = tempdir / 'data.raw'
+        data.tofile(filepath)
+
+        toml_def = f"""format = 'raw'
+path = '{filepath}'
+dtype = '{np.dtype(dtype)}'
+nav_shape = {list(nav_shape)}
+sig_shape = {list(sig_shape)}"""
+
+        toml_path = tempdir / 'config.toml'
+        with toml_path.open('w') as fp:
+            fp.write(toml_def)
+
+        # Required to provide nav/sig shape for this dataset, would need to change it!
+        ds = RawFileDataSetConfig(toml_path, None, nav_shape=(1, 1), sig_shape=(1, 1))
+        ctx = lt.Context.make_with('inline')
+        ds.initialize(ctx.executor)

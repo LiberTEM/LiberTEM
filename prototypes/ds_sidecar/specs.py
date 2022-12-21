@@ -42,7 +42,7 @@ class FileSpec(SpecBase):
 
     @property
     def path(self) -> pathlib.Path:
-        paths = resolve_path_glob(self['path'], self.root)
+        paths = resolve_path_glob(self['path'], self.path_root)
         if len(paths) != 1:
             raise ParserException(f'path {self["path"]} matched {len(paths)} files')
         return paths[0]
@@ -133,10 +133,10 @@ class FileSetSpec(SpecBase):
     @property
     def filelist(self):
         if isinstance(self.files, (str, pathlib.Path)):
-            filelist = resolve_path_glob(self.files, self.root)
+            filelist = resolve_path_glob(self.files, self.path_root)
         elif isinstance(self.files, (list, tuple)):
             # List of (potentially mixed) absolute, relative, or glob specifiers
-            filelist = [f for path in self.files for f in resolve_path_glob(path, self.root)]
+            filelist = [f for path in self.files for f in resolve_path_glob(path, self.path_root)]
         else:
             raise ParserException(f'Unrecognized files specifier {self.files}')
 

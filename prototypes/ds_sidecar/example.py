@@ -6,12 +6,14 @@ from jsonschema.exceptions import ValidationError
 import libertem.api as lt
 from libertem.io.dataset.raw import RawFileDataSet
 
+from specs import DataSetSpec
+from config_base import NestedDict
 from utils import ParserException
 from spec_tree import SpecTree
 
 
 raw_ds_schema = {
-    # "type": "dataset",
+    "type": "dataset",
     "title": "RAW dataset",
     "properties": {
         "path": {
@@ -54,8 +56,6 @@ class RawFileDataSetConfig(RawFileDataSet):
     def initialize(self, executor):
         if is_config_def(self._path):
             ds_config = load_ds_config_with_schema(self._path, raw_ds_schema)
-            import pdb ; pdb.set_trace()
-            import traceback ; traceback.print_exc()
             self._path = ds_config['path'].resolve()
             self._dtype = ds_config['dtype']
             self._nav_shape = tuple(ds_config['nav_shape'])
@@ -81,15 +81,15 @@ def load_ds_config_with_schema(config, schema):
         config_path = pathlib.Path(config)
         nest = SpecTree.from_file(config_path)
 
-    raise NotImplementedError('Need a way of applying a schema without in-place modification')
-    raise NotImplementedError('The "path" key in ds_schema is converting the "path" key in the in-place modified FileSpec to a FileSpec')
-    raise NotImplementedError('Leads to infinite recursion, if we only searched')
-
     def check_sub_configs(value):
         try:
-            return value.check_schema(schema)
-        except ValidationError:
-            print('FAILED VALIDATION')
+            # The validator checks the top-level type
+            # so we have to give it a DataSetSpec if it is ever going to pass
+            if isinstance(value, NestedDict) and not isinstance(value, DataSetSpec):
+                value = DataSetSpec.construct(value)
+            _ = value.apply_schema(schema)
+            return True
+        except (ValidationError, ParserException):
             return False
 
     ds_configs = tuple(nest.search(check_sub_configs))
@@ -97,7 +97,7 @@ def load_ds_config_with_schema(config, schema):
         raise ParserException('No matching definitions for dataset')
     elif len(ds_configs) > 1:
         raise ParserException('Multiple matching definitions for dataset')
-    return ds_configs[0].check_schema(schema)
+    return DataSetSpec.construct(ds_configs[0]).apply_schema(schema)
 
 
 if __name__ == '__main__':

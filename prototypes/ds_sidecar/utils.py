@@ -75,18 +75,13 @@ def _resolve_generic(struct: Dict, path: str, strip: str, split: str):
     if not isinstance(path, str):
         raise TypeError(f'Cannot resolve key {path}')
     components = path.strip().strip(strip).split(split)
+    components = list(c for c in components if len(c) > 0)
     view = struct
     for c in components:
         if not isinstance(view, dict) or c not in view:
             raise KeyError(f'Cannot resolve key {path}')
         view = view.get(c)
     return view
-
-
-def find_tree_root(struct: 'NestedDict'):
-    if struct.parent is None:
-        return struct
-    return find_tree_root(struct.parent)
 
 
 def as_tree(nest, level=0, name=None, do_print=True):

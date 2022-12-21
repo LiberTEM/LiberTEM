@@ -1,7 +1,7 @@
 import pathlib
 from typing import Dict, Any, Optional, TYPE_CHECKING, Callable, Generator
 
-from utils import MissingKey, ParserException, find_tree_root, resolve_jsonpath
+from utils import MissingKey, ParserException, resolve_jsonpath
 from validation import get_validator
 
 
@@ -30,6 +30,26 @@ class NestedDict(dict):
         except AttributeError:
             return None
 
+    @property
+    def root(self) -> 'NestedDict':
+        parent = self.parent
+        if parent is not None:
+            return parent.root
+        return self
+
+    @property
+    def where(self) -> str:
+        """
+        Get the JSON path #/ from root for this struct
+        """
+        parent = self.parent
+        if parent is not None:
+            me, = tuple(k for k, v in parent.items() if v is self)
+            me = f'{parent.where}/{me}'
+        else:
+            me = '#/'
+        return me
+
     def resolve_key(self, key: str):
         """
         Get key from tree in JSON path notation
@@ -37,10 +57,11 @@ class NestedDict(dict):
         starting from root
         If not available then raise
         """
-        if not isinstance(key, str) or not key.startswith('#'):
-            raise TypeError(f'Cannot resolve key {key}')
-        root = find_tree_root(self)
-        return resolve_jsonpath(root, key)
+        if not isinstance(key, str):
+            raise TypeError(f'Invalid key {key}')
+        if not key.startswith('#/'):
+            raise ValueError(f'Can only resolve keys in JSON-path syntax (#/), got {key}')
+        return resolve_jsonpath(self.root, key)
 
     def resolve_upwards(self, key):
         value = self.get(key, MissingKey())
@@ -50,6 +71,28 @@ class NestedDict(dict):
             else:
                 raise ParserException(f'Cannot resolve {key} in tree')
         return value
+
+    def copy(self):
+        """
+        Return a copy of this NestedDict instance where
+        all the .parent references also point to copies in a new tree
+        """
+        root = self.root
+        new_root = root._copy_down()
+        return new_root.resolve_key(self.where)
+
+    def _copy_down(self):
+        new = self.__class__(**self)
+        copy = {}
+        for key, value in self.items():
+            try:
+                value = value._copy_down()
+                value._set_parent(new)
+            except AttributeError:
+                pass
+            copy[key] = value
+        new.update(copy)
+        return new
 
     def search(self,
                predicate: Callable[['NestedDict'], bool]) -> Generator['NestedDict', None, None]:
@@ -87,18 +130,21 @@ class SpecBase(NestedDict):
             return False
         return isinstance(instance, cls)
 
-    def check_schema(self, schema: Dict[str, Any]):
+    def apply_schema(self, schema: Dict[str, Any]):
         """
         Method to apply a schema to a SpecBase instance using
         a custom jsonschema Validator
 
         In applying the schema, keys will be resolved, types
-        will be coerced / inferred and defaults will be set inplace
+        will be coerced / inferred and defaults will be set
         """
         from spec_tree import spec_types, extra_types
-        validator = get_validator(schema, {**spec_types, **extra_types})
-        validator.validate(self)
-        return True
+        all_types = {**spec_types, **extra_types}
+        new_instance = self.copy()
+        # The validator will check and coerce property types but not the root type
+        validator = get_validator(schema, all_types)
+        validator.validate(new_instance)
+        return new_instance
 
     @classmethod
     def construct(cls, arg, parent=None):
@@ -171,6 +217,8 @@ class SpecBase(NestedDict):
 
         Will removes the read_as key from the copy
         and sets 'type' to equal the new type
+
+        This does not modify the tree
         """
         from spec_tree import spec_types
         if spec_type not in spec_types:
@@ -195,7 +243,7 @@ class SpecBase(NestedDict):
         raise NotImplementedError('Cannot resolve bare SpecBase')
 
     @property
-    def root(self) -> Optional[pathlib.Path]:
+    def path_root(self) -> Optional[pathlib.Path]:
         """
         Find the root path key upwards in the tree
         in order to resolve relative paths

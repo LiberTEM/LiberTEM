@@ -27,7 +27,7 @@ def extend_check_required(validator_class, types):
     )
 
 
-def extend_coerce_types(validator_class, types):
+def extend_coerce_property_types(validator_class, types):
     validate_properties = validator_class.VALIDATORS["properties"]
 
     def coerce_types(validator, properties, instance, schema):
@@ -40,6 +40,10 @@ def extend_coerce_types(validator_class, types):
                 continue
             elif isinstance(property_value, str) and property_value.startswith('#/'):
                 # Relative path within spec, resolve it
+                # This will retain the parent reference of the resolved value
+                # FIXME in resolving the key we are actually copying a node
+                # in the tree and maintaining it's parent, which is kind of like
+                # a graph, but not quite, in any case this can be done more elegantly!
                 property_value = instance.resolve_key(property_value)
 
             spec_type = types.get(intended_type, None)
@@ -50,6 +54,10 @@ def extend_coerce_types(validator_class, types):
                 # or single values if the constructor accepts that
                 property_value = spec_type.construct(property_value,
                                                      parent=instance)
+                # FIXME what about the parent attribute of children ??
+                # In doing this we've changed the id of the parent in the tree
+                # this is probably not seen because the examples are not nested enough
+            # Set the (potentially new) value inplace in the instance
             instance[property] = property_value
 
         yield from validate_properties(
@@ -61,7 +69,7 @@ def extend_coerce_types(validator_class, types):
     )
 
 
-def get_validator(schema, types):
+def get_validator(schema, types) -> validators.Draft202012Validator:
     type_checker = validators.Draft202012Validator.TYPE_CHECKER.redefine_many(
         definitions={k: v.validate for k, v in types.items()}
     )
@@ -71,5 +79,5 @@ def get_validator(schema, types):
         type_checker=type_checker,
     )
     Validator = extend_check_required(Validator, types)
-    Validator = extend_coerce_types(Validator, types)
+    Validator = extend_coerce_property_types(Validator, types)
     return Validator(schema=schema)

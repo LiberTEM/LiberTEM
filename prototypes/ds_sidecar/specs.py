@@ -224,9 +224,9 @@ array_schema = {
         },
         "shape": {
             "type": "array",
+            "minLength": 1,
             "items": {
                 "type": "integer",
-                "minLength": 1,
             },
         },
         "dtype": {

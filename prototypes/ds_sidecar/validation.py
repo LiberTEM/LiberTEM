@@ -2,6 +2,10 @@ from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 
 
+class MissingValue:
+    ...
+
+
 def extend_check_required(validator_class, types):
     validate_required = validator_class.VALIDATORS["required"]
 
@@ -28,18 +32,18 @@ def extend_coerce_types(validator_class, types):
 
     def coerce_types(validator, properties, instance, schema):
         for property, subschema in properties.items():
-            default = subschema.get('default', None)
+            default = subschema.get('default', MissingValue())
             property_value = instance.get(property, default)
             intended_type = subschema.get('type')
-            if property_value is None or intended_type not in types.keys():
-                # Not present or specified, do nothing
+            if isinstance(property_value, MissingValue):
+                # Not present and no default, do nothing
                 continue
             elif isinstance(property_value, str) and property_value.startswith('#/'):
                 # Relative path within spec, resolve it
                 property_value = instance.resolve_key(property_value)
 
-            spec_type = types[intended_type]
-            if not isinstance(property_value, spec_type):
+            spec_type = types.get(intended_type, None)
+            if spec_type is not None and not isinstance(property_value, spec_type):
                 # If not already of the correct spec type
                 # try to coerce it using the class constructor
                 # This will cast generic NestedDict to SpecBase's

@@ -1,11 +1,12 @@
 graft src
-graft src/libertem/web/client/
+graft src/libertem/web/client
 include LICENSE
 include README.rst
-graft client
-prune client/node_modules
-prune client/build
-prune client/coverage
+graft client/src
+graft client/public
+graft client/types
+include client/*.*js*
+include client/README.md
 graft tests
 include conftest.py
 include pytest.ini

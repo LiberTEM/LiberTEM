@@ -1,5 +1,5 @@
 import pathlib
-from typing import Dict, Any, Optional, TYPE_CHECKING, Callable
+from typing import Dict, Any, Optional, TYPE_CHECKING, Callable, Generator
 
 from utils import MissingKey, ParserException, find_tree_root, resolve_jsonpath
 from validation import get_validator
@@ -50,6 +50,17 @@ class NestedDict(dict):
             else:
                 raise ParserException(f'Cannot resolve {key} in tree')
         return value
+
+    def search(self,
+               predicate: Callable[['NestedDict'], bool]) -> Generator['NestedDict', None, None]:
+        """
+        Depth-first search yielding items matching predicate
+        """
+        if predicate(self):
+            yield self
+        for value in self.values():
+            if isinstance(value, NestedDict):
+                yield from value.search(predicate)
 
 
 class SpecBase(NestedDict):
@@ -161,7 +172,7 @@ class SpecBase(NestedDict):
         Will removes the read_as key from the copy
         and sets 'type' to equal the new type
         """
-        from parser import spec_types
+        from spec_tree import spec_types
         if spec_type not in spec_types:
             raise ParserException(f'Cannot view {self.__class__.__name__} as {spec_type}')
         instance_props = {k: v for k, v in self.items() if k != 'read_as'}

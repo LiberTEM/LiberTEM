@@ -1,4 +1,4 @@
-import { ErrorMessage, Field, FormikProps } from "formik";
+import { ErrorMessage, Field, FormikProps, FormikErrors, FormikValues } from "formik";
 import * as React from "react";
 import { Button, Dropdown, DropdownProps, Form } from "semantic-ui-react";
 import { Omit } from "../../helpers/types";
@@ -34,8 +34,8 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     info?.datasets?.forEach(dsItem => dsItemsByPath[dsItem.path] = dsItem);
 
     const dsPathOptions = info?.datasets?.map(dsItem => {
-        const raw_nav_shape = dsItem.raw_nav_shape.join(", ")
-        const sig_shape = dsItem.sig_shape.join(", ")
+        const rawNavShape = dsItem.raw_nav_shape.join(", ")
+        const sigShape = dsItem.sig_shape.join(", ")
         const opts: string[] = [];
 
         if(dsItem.chunks !== null) {
@@ -46,7 +46,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
             opts.push(`compression: ${dsItem.compression}`);
         }
 
-        const text = `${dsItem.path} (nav_shape: (${raw_nav_shape}), sig_shape: (${sig_shape}) ${opts.join(", ")})`;
+        const text = `${dsItem.path} (nav_shape: (${rawNavShape}), sig_shape: (${sigShape}) ${opts.join(", ")})`;
         return {
             text,
             key: dsItem.path,
@@ -58,10 +58,16 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     const onDSPathChange = (e: React.SyntheticEvent, result: DropdownProps) => {
       const { value } = result;
       if (value) {
-          const ds_path = value.toString()
-          setFieldValue("ds_path", ds_path);
-          setFieldValue("nav_shape", dsItemsByPath[ds_path].nav_shape.toString())
-          setFieldValue("sig_shape", dsItemsByPath[ds_path].sig_shape.toString())
+          const dsPath = value.toString()
+          setFieldValue("ds_path", dsPath);
+          const dsInfo = dsItemsByPath[dsPath]
+          if (dsInfo === undefined) {
+              setFieldValue("nav_shape", "1,1")
+              setFieldValue("sig_shape", "1,1")
+          } else {
+              setFieldValue("nav_shape", dsInfo.nav_shape.toString())
+              setFieldValue("sig_shape", dsInfo.sig_shape.toString())
+          }
           setFieldTouched('nav_shape', false)
           setFieldTouched('sig_shape', false)
       }
@@ -106,7 +112,7 @@ const HDF5ParamsForm: React.FC<MergedProps> = ({
     )
 }
 
-const getInfoItemForDSPath = (ds_path: string, info?: DatasetInfoHDF5) => {
+const getInfoItemForDSPath = (dsPath: string, info?: DatasetInfoHDF5): DatasetInfoHDF5Item => {
     const dsItemsByPath: {
         [k: string]: DatasetInfoHDF5Item
     } = {};
@@ -115,7 +121,7 @@ const getInfoItemForDSPath = (ds_path: string, info?: DatasetInfoHDF5) => {
     // yet the only possible value for ds_path comes from the dropdown
     // menu which is itself defined by info.datasets so by definition
     // it is valid!
-    return dsItemsByPath[ds_path]
+    return dsItemsByPath[dsPath]
 }
 
 
@@ -137,12 +143,16 @@ export default withValidation<DatasetParamsHDF5, DatasetParamsHDF5ForForm, Datas
         sync_offset: values.sync_offset,
     }),
     customValidation: (values, { info }) => {
-        const ds_info = getInfoItemForDSPath(values.ds_path, info)
+        const dsInfo = getInfoItemForDSPath(values.ds_path, info)
+        if (dsInfo === undefined) {
+            const unknownErrors: FormikErrors<FormikValues> = {};
+            return unknownErrors
+        }
         return validateSyncOffsetAndSigShape(
-            ds_info.sig_shape,
+            dsInfo.sig_shape,
             values.sig_shape,
             values.sync_offset,
-            ds_info.image_count,
+            dsInfo.image_count,
             true,
         )
     },

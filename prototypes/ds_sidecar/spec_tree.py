@@ -2,11 +2,13 @@ import pathlib
 import tomli
 import json
 import os
+import numpy as np
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
+from typing_extensions import Literal
 
-from utils import ParserException
-from config_base import SpecBase, NestedDict
+from utils import ParserException, resolve_jsonpath
+from utils import format_defs, resolve_path_glob
 
 import specs
 import wrapped_types
@@ -33,7 +35,93 @@ all_types = {
 }
 
 
-class SpecTree(SpecBase):
+class NestedDict(dict):
+    """
+    Nested dictionary class with knowledge of its parent in the tree
+    Implements two features:
+
+    - the ability to resolve keys within the tree using JSON syntax
+      relative to the root
+            #/path/to/key
+      This could be extended to resolve using posix path semantics
+    - The ability to search upwards in the tree for a specific key
+    """
+    def _set_parent(self, parent: Dict[str, Any]):
+        self._parent = parent
+
+    @property
+    def parent(self):
+        try:
+            return self._parent
+        except AttributeError:
+            return None
+
+    @property
+    def root(self) -> 'NestedDict':
+        parent = self.parent
+        if parent is not None:
+            return parent.root
+        return self
+
+    def resolve_key(self, key: str):
+        """
+        Get key from tree in JSON path notation
+           i.e. #/key1/key2
+        starting from root
+        If not available then raise
+        """
+        if not isinstance(key, str):
+            raise TypeError(f'Invalid key {key}')
+        if not key.startswith('#/'):
+            raise KeyError(f'Can only resolve keys in JSON-path syntax (#/), got {key}')
+        return resolve_jsonpath(self.root, key)
+
+    def copy(self):
+        """
+        Return a copy of this NestedDict instance where
+        all the .parent references also point to copies in a new tree
+        """
+        root = self.root
+        new_root = root._copy_down()
+        return new_root.resolve_key(self.where)
+
+    def _copy_down(self):
+        new = self.__class__(**self)
+        copy = {}
+        for key, value in self.items():
+            try:
+                value = value._copy_down()
+                value._set_parent(new)
+            except AttributeError:
+                pass
+            copy[key] = value
+        new.update(copy)
+        return new
+
+    @property
+    def where(self) -> str:
+        """
+        Get the JSON path #/ from root for this struct
+        """
+        parent = self.parent
+        if parent is not None:
+            me, = tuple(k for k, v in parent.items() if v is self)
+            me = f'{parent.where}/{me}'
+        else:
+            me = '#/'
+        return me
+
+    def to_dict(self) -> Dict[str, Any]:
+        new = {}
+        for key, value in self.items():
+            if isinstance(value, self.__class__):
+                new[key] = value.to_dict()
+            else:
+                new[key] = value
+        return new
+
+
+class TreeFactory:
     spec_type = 'tree'
 
     @classmethod
@@ -56,9 +144,11 @@ class SpecTree(SpecBase):
 
         # if no top-level root set the parent directory of config file
         if root is None:
-            root = struct.get('root', path.parent)
+            struct.setdefault('root', path.parent)
+        else:
+            struct['root'] = root
 
-        return cls.to_tree(struct, root=root)
+        return cls.to_tree(struct)
 
     @classmethod
     def from_string(cls, string, format='toml', root: Optional[os.PathLike] = None):
@@ -68,71 +158,29 @@ class SpecTree(SpecBase):
             struct = json.loads(string)
         else:
             raise ParserException(f"Unrecognized format {format}")
-        return cls.to_tree(struct, root=root)
+
+        if root is None:
+            struct.setdefault('root', pathlib.Path())
+        else:
+            struct['root'] = root
+        return cls.to_tree(struct)
 
     @classmethod
-    def to_tree(cls, struct: Dict[str, Any], root: Optional[os.PathLike] = None):
-        # if no top-level root set the CWD
-        if root is None:
-            root = struct.get('root', pathlib.Path())
-        return build_tree(struct, root=root)
+    def to_tree(cls, struct: Dict[str, Any]):
+        if 'root' not in struct:
+            raise ValueError('Need a "root" key at top level to define relative paths')
+        return build_tree(struct)
 
 
-def build_tree(struct: Dict[str, Any], root=None, parent=None):
+def build_tree(struct: Dict[str, Any], parent=None):
     if not isinstance(struct, dict):
         return struct
     struct = NestedDict(**struct)
     struct._set_parent(parent)
-    # struct._set_path_root(root)
     for key, value in struct.items():
         if isinstance(value, dict):
             struct[key] = build_tree(value, parent=struct)
     return struct
-
-
-# def resolve_from_schema(tree: NestedDict, schema: Dict[str, Any]):
-#     """
-#     Use a schema to build a complete config from (some) elements of tree
-
-#     Will resolve references/json-paths within the tree
-#     Will set the path ._root on each config object in the tree
-#     unless the object has a 'root' key which takes precedence
-#     If an object has a 'type' key which differs from that required
-#     by the schema, raise ValidationError.
-#     Will ignore elements of tree which are not specified in the schema
-#     but children will be retained and resolved
-
-#     Will cast objects to the correct Types (which may cause a
-#     ValidationError to be raised as they may self-validate).
-#     This may involve constructing dict-like spec Types
-#     from previously single-value keys.
-#     The returned config will have no .parent attribute / tree behaviour
-
-#     Does not actually validate the schema, rather constructs the full config
-#     which can then be validated in the next step
-#     """
-#     schema_type = schema.get('type')
-#     if schema_type is None:
-#         raise ParserException('Need schema with top-level type to resolve')
-#     if schema_type not in spec_types:
-#         raise ParserException(f'Unrecognized schema type {schema_type}')
-#     tree_type = tree.get('type')
-#     if tree_type is not None and schema_type != tree_type:
-#         raise ParserException('Config defines type not matching schema')
-#     spec = spec_types[schema_type](**tree)
-#     # if root not in 
-#     spec._set_root(tree.path_root)
-
-
-# def as_type(self, spec_type):
-#     ...
-
-
-# def child_as_type(self, key, spec_type):
-#     ...
-
-
-
 
 
 def resolve_paths(tree: NestedDict):
@@ -148,7 +196,7 @@ def resolve_paths(tree: NestedDict):
 
     #FIXME Could get into an infinite loop if a set of paths form a cycle
 
-    Modifies the tree inplace
+    Modifies tree inplace
     """
     # First resolve relative keys at this level
     # By replacing at this level we keep any NestedDicts
@@ -169,94 +217,93 @@ def resolve_paths(tree: NestedDict):
     return tree
 
 
-def get_from_schema(schema, key):
-    _subschema = schema
-    for pos in key:
-        try:
-            _subschema = _subschema['properties'][pos]
-        except KeyError:
-            return None
-    return _subschema
+def freeze_tree(tree: NestedDict):
+    tree_copy = tree.copy()
+    tree_copy = resolve_paths(tree_copy)
+    if 'root' not in tree_copy:
+        tree_copy['root'] = tree.root.get('root', pathlib.Path())
+    return tree_copy.to_dict()
 
 
-def depth_traversal(tree, pos=None):
-    if pos is None:
-        pos = tuple()
-    for key, value in tree.items():
-        if isinstance(value, dict):
-            yield from depth_traversal(value, pos=pos + (key,))
+from pydantic import BaseModel, Extra, validator, Field
+
+
+class WithRootModel(BaseModel):
+    root: Optional[pathlib.Path] = Field(default=None, repr=False)
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+
+class FileConfig(WithRootModel):
+    config_type: Literal['file'] = 'file'
+    path: Union[pathlib.Path, str]
+    file_format: Optional[str] = None
+    load_options: Dict = Field(default_factory=lambda: {})
+
+    @validator('file_format', pre=True)
+    def format_clean(cls, v):
+        if isinstance(v, str):
+            return v.strip().lower()
+        return v
+
+    @validator('file_format')
+    def format_is_defined(cls, v):
+        if v not in format_defs:
+            raise ValueError(f'Format {v} unknown')
+        return v
+
+    @classmethod
+    def construct(cls, value: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+        if not isinstance(value, dict):
+            value = {'path': value}
+        return value
+
+    def resolve(self) -> pathlib.Path:
+        paths = resolve_path_glob(self.path, self.path_root)
+        if len(paths) != 1:
+            raise ValueError(f'path {self.path} matched {len(paths)} files')
+        return paths[0]
+
+    def load(self) -> np.ndarray:
+        if self.file_format is None:
+            format = self.resolve().suffix.lstrip('.').lower()
         else:
-            yield pos, value
+            format = self.file_format
+        if format not in format_defs.keys():
+            raise ParserException(f'Unrecognized file format {format}')
+        return format_defs[format](self.path, **self.load_options)
 
+class MIBDatasetConfig(WithRootModel):
+    config_type: Literal['dataset'] = Field(default='dataset', repr=False)
+    ds_format: Literal['mib'] = Field(repr=False)
+    mib_path: Union[FileConfig, pathlib.Path, str]
+    hdr_path: Union[FileConfig, pathlib.Path, str]
 
-def insert_in_tree(tree, key, value):
-    _tree = tree
-    for pos in key[:-1]:
-        _tree = tree[pos]
-    _tree[key[-1]] = value
-
-
-def interpret_with_schema(tree: NestedDict, schema: Dict[str, Any]):
-    for pos, value in depth_traversal(tree):
-        subschema = get_from_schema(schema, pos)
-        if subschema is None:
-            continue
-        schema_type = subschema.get('type')
-        if schema_type is None:
-            raise ParserException('Need schema with type to interpret config')
-        if isinstance(value, NestedDict):
-            value_type = value.get('type')
-            if value_type is not None and schema_type != value_type:
-                raise ParserException('Config defines type not matching schema')
-        if schema_type in all_types:
-            # Convert value to the intended type
-            spec_cls = all_types[schema_type]
-            # spec_cls.construct should do validation if needed
-            # and set the path root as a hard attribute on spec
-            cast_value = spec_cls.construct(value)
-            insert_in_tree(tree, pos, cast_value)
-
-
-# def interpret_with_schema(tree: NestedDict, schema: Dict[str, Any]):
-#     schema_type = schema.get('type')
-#     if schema_type is None:
-#         raise ParserException('Need schema with type key to interpret config')
-#     if isinstance(tree, NestedDict):
-#         tree_type = tree.get('type')
-#         if tree_type is not None and schema_type != tree_type:
-#             raise ParserException('Config defines type not matching schema')
-
-#     # properties must be of a simple form
-#     # cannot support conditional schemas
-#     properties = schema.get('properties')
-#     insertions = {}
-#     if properties is not None:
-#         for prop_name, prop_schema in properties.items():
-#             if prop_name in tree:
-#                 insertions[prop_name] = interpret_with_schema(tree[prop_name], prop_schema)
-#     tree.update(insertions)
-
-#     # Cast the outer tree to its type if we have a definition for it
-#     # else leave the tree / value untouched
-#     if schema_type in all_types:
-#         # Convert tree to the intended type
-#         spec_cls = all_types[schema_type]
-#         # spec_cls.construct should do validation if needed
-#         # and set the path root as a hard attribute on spec
-#         tree = spec_cls.construct(tree)
-
-#     return tree
+    _cast_file = validator(
+        'mib_path',
+        'hdr_path',
+        pre=True,
+        allow_reuse=True
+    )(FileConfig.construct)
 
 
 if __name__ == '__main__':
-    ...
+    config_str = R"""
+root='/home/mat/Data/ds1'
 
+[dataset_config]
+config_type='dataset'
+ds_format='mib'
+hdr_path = 'test.hdr'
+mib_path='#/my_mib_file'
 
+[my_mib_file]
+config_type='file'
+path='testpath.mib'
+"""
 
-
-
-
-
-    
-
-
+    nest = TreeFactory.from_string(config_str)
+    file_config = freeze_tree(nest['dataset_config'])
+    ds_model = MIBDatasetConfig(**file_config)

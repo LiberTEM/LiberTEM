@@ -2,12 +2,14 @@ import pathlib
 import tomli
 import json
 import os
+import math
 import numpy as np
+import numpy.typing as nt
 import natsort
 import functools
 import operator
 
-from typing import Dict, Any, Optional, Union, List
+from typing import Dict, Any, Optional, Type, Union, List, Tuple
 from typing_extensions import Literal
 
 from utils import ParserException, resolve_jsonpath
@@ -245,14 +247,16 @@ def freeze_tree(tree: NestedDict):
 
 
 from pydantic import BaseModel, Extra, validator, Field
+from pydantic import conlist, PositiveInt
 
-
-class WithRootModel(BaseModel):
-    root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
-
+class WithExtraModel(BaseModel):
     class Config:
         allow_population_by_field_name = True
         extra = Extra.allow
+
+
+class WithRootModel(WithExtraModel):
+    root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
 
 
 class FileConfig(WithRootModel):
@@ -365,6 +369,47 @@ class FileSetConfig(WithRootModel):
         return sort_fn(filelist, alg=alg_option)
 
 
+class ArrayConfig(WithExtraModel, arbitrary_types_allowed=True):
+    config_type: Literal['array'] = Field(default='array', repr=False)
+    data: np.ndarray
+    dtype: Optional[np.dtype] = None
+    shape: Optional[conlist(PositiveInt, min_items=1)] = None
+
+    @validator('data', pre=True)
+    def cast_data(cls, value):
+        try:
+            value = np.asarray(value)
+        except TypeError:
+            raise ValueError(f'Cannot convert {value} to array')
+        return value
+
+    @validator('dtype', pre=True)
+    def check_dtype(cls, value):
+        if value is not None:
+            try:
+                value = np.dtype(value)
+            except TypeError:
+                raise ValueError(f'Cannot cast {value} to dtype')
+        return value
+
+    @validator('shape')
+    def validate_shape_matches(cls, value, values):
+        value = tuple(value)
+        shape_size = math.prod(value)
+        if shape_size != values['data'].size:
+            raise ValueError('Array shape must have same size as data '
+                             f'got {value} for data shape {values["data"].shape}')
+        return value
+
+    def resolve(self):
+        array = np.asarray(self.data)
+        if self.dtype is not None:
+            array = array.astype(self.dtype)
+        if self.shape is not None:
+            array = array.reshape(self.shape)
+        return array
+
+
 class MIBDatasetConfig(WithRootModel):
     config_type: Literal['dataset'] = Field(default='dataset', repr=False)
     ds_format: Literal['mib'] = Field(repr=False)
@@ -398,10 +443,16 @@ config_type='fileset'
 files='yoyo'
 sort='natsorted'
 sort_options=['FLOAT']
+
+[my_array]
+config_type='array'
+data = [4, 5, 6, 7]
+dtype='float32'
+shape=[2, 2]
 """
 
     nest = TreeFactory.from_string(config_str)
     # file_config = freeze_tree(nest['dataset_config'])
     # ds_model = MIBDatasetConfig(**file_config)
-
-    fileset_model = FileSetConfig(**freeze_tree(nest['my_fileset']))
+    # fileset_model = FileSetConfig(**freeze_tree(nest['my_fileset']))
+    array_model = ArrayConfig(**freeze_tree(nest['my_array']))

@@ -1,3 +1,4 @@
+from ntpath import join
 import pathlib
 import tomli
 import json
@@ -11,7 +12,7 @@ import operator
 from typing import Dict, Any, Optional, Union, List
 from typing_extensions import Literal
 
-from utils import resolve_jsonpath, resolve_path_glob
+from utils import resolve_jsonpath, resolve_path_glob, join_if_relative
 from utils import format_defs, sort_methods, format_T
 
 
@@ -266,9 +267,11 @@ class FileConfig(WithRootModel):
         return path_or_config
 
     def resolve(self) -> pathlib.Path:
-        paths = resolve_path_glob(self.path, self.root)
-        if len(paths) != 1:
-            raise ValueError(f'Single path {self.path} matched {len(paths)} files')
+        search_path = join_if_relative(self.path, self.root)
+        paths = resolve_path_glob(search_path)
+        if len(paths) > 1:
+            raise RuntimeError(f'Path {search_path} matched {len(paths)} '
+                               'files, must match a single file')
         return paths[0]
 
     def load(self, path: Optional[pathlib.Path] = None) -> np.ndarray:
@@ -317,15 +320,14 @@ class FileSetConfig(WithRootModel):
 
     def resolve(self):
         if isinstance(self.files, (str, pathlib.Path)):
-            filelist = resolve_path_glob(self.files, self.root)
+            path = join_if_relative(self.files, self.root)
+            filelist = resolve_path_glob(path)
         elif isinstance(self.files, (list, tuple)):
             # List of (potentially mixed) absolute, relative, or glob specifiers
-            filelist = [f for path in self.files for f in resolve_path_glob(path, self.path_root)]
+            paths = [join_if_relative(path, self.root) for path in self.files]
+            filelist = [f for path in paths for f in resolve_path_glob(path)]
         else:
             raise ValueError(f'Unrecognized files specifier {self.files}')
-
-        if not filelist:
-            raise RuntimeError(f'Found no files with specifier {self.files}.')
 
         # It's possible that multiple globs together may match a file more than once
         # Could add some form of uniqueness check for resolved paths ?
@@ -483,7 +485,7 @@ sort_options=['FLOAT']
 
 [my_array]
 config_type='array'
-path = 'test.npy'
+path = 'test222.npy'
 dtype='uint8'
 shape=[6, 6]
 """

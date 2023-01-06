@@ -11,20 +11,17 @@ import operator
 from typing import Dict, Any, Optional, Union, List
 from typing_extensions import Literal
 
-from utils import ParserException, resolve_jsonpath
-from utils import format_defs, resolve_path_glob, sort_methods, format_T
+from utils import resolve_jsonpath, resolve_path_glob
+from utils import format_defs, sort_methods, format_T
 
 
 class NestedDict(dict):
     """
     Nested dictionary class with knowledge of its parent in the tree
-    Implements two features:
 
-    - the ability to resolve keys within the tree using JSON syntax
-      relative to the root
+    Implements the ability to resolve keys within the tree using
+    JSON syntax relative to the root
             #/path/to/key
-      This could be extended to resolve using posix path semantics
-    - The ability to search upwards in the tree for a specific key
     """
     def _set_parent(self, parent: Dict[str, Any]):
         self._parent = parent
@@ -109,7 +106,7 @@ class TreeFactory:
         path = pathlib.Path(path)
 
         if not path.is_file():
-            raise ParserException(f"Cannot find spec file {path}")
+            raise FileNotFoundError(f"Cannot find spec file {path}")
 
         if path.suffix == '.toml':
             with path.open('rb') as fp:
@@ -120,7 +117,7 @@ class TreeFactory:
         # elif path.suffix == '.yaml':
         #     ...
         else:
-            raise ParserException(f"Unrecognized format {path.suffix}")
+            raise ValueError(f"Unrecognized format {path.suffix}")
 
         # if no top-level root set the parent directory of config file
         if root is None:
@@ -137,7 +134,7 @@ class TreeFactory:
         elif format == 'json':
             struct = json.loads(string)
         else:
-            raise ParserException(f"Unrecognized format {format}")
+            raise ValueError(f"Unrecognized format {format}")
 
         if root is None:
             struct.setdefault('root', pathlib.Path())
@@ -169,7 +166,7 @@ def resolve_paths(tree: NestedDict):
     string #/ to the value found at that path
 
     If the referenced value is not a NestedDict raises
-    ParserException. This is required as we need to
+    TypeError. This is required as we need to
     retain the original parent to get the correct file
     root semantics. There is no easy way to give any
     arbitrary value a parent attribute.
@@ -186,7 +183,7 @@ def resolve_paths(tree: NestedDict):
         if isinstance(value, str) and value.startswith('#/'):
             insertions[key] = tree.resolve_key(value)
             if not isinstance(insertions[key], NestedDict):
-                raise ParserException('Cannot specify global path to non-dict values')
+                raise TypeError('Cannot specify global path to non-dict values')
     tree.update(insertions)
     # Go down one level and apply the resolution to any sub-dicts
     insertions = {}
@@ -484,8 +481,8 @@ sort_options=['FLOAT']
 [my_array]
 config_type='array'
 path = 'test.npy'
-dtype='float32'
-shape=[2, 2]
+dtype='uint8'
+shape=[6, 6]
 """
     nest = TreeFactory.from_string(config_str)
     # file_config = freeze_tree(nest['dataset_config'])

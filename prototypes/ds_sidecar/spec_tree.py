@@ -1,44 +1,18 @@
-from multiprocessing.sharedctypes import Value
 import pathlib
 import tomli
 import json
 import os
 import math
 import numpy as np
-import numpy.typing as nt
 import natsort
 import functools
 import operator
 
-from typing import Dict, Any, Optional, Type, Union, List, Tuple
+from typing import Dict, Any, Optional, Union, List
 from typing_extensions import Literal
 
 from utils import ParserException, resolve_jsonpath
 from utils import format_defs, resolve_path_glob, sort_methods, format_T
-
-import specs
-import wrapped_types
-
-
-spec_types = {
-    t.spec_type: t for t in (
-        specs.FileSpec,
-        specs.FileSetSpec,
-        specs.ArraySpec,
-        specs.ROISpec,
-        specs.CorrectionSetSpec,
-        specs.DataSetSpec,
-    )
-}
-extra_types = {
-    t.spec_type: t for t in (
-        wrapped_types.DType,
-    )
-}
-all_types = {
-    **spec_types,
-    **extra_types,
-}
 
 
 class NestedDict(dict):

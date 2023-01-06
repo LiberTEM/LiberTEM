@@ -1,14 +1,11 @@
 import pathlib
 import glob
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict
 from typing_extensions import Literal
 
 import numpy as np
 from skimage.io import imread
 import natsort
-
-if TYPE_CHECKING:
-    from config_base import NestedDict
 
 
 def load_raw(path, *, shape, dtype):

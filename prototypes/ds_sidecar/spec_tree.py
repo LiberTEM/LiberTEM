@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import pathlib
 import tomli
 import json
@@ -13,7 +14,7 @@ from typing import Dict, Any, Optional, Type, Union, List, Tuple
 from typing_extensions import Literal
 
 from utils import ParserException, resolve_jsonpath
-from utils import format_defs, resolve_path_glob, sort_methods
+from utils import format_defs, resolve_path_glob, sort_methods, format_T
 
 import specs
 import wrapped_types
@@ -246,8 +247,8 @@ def freeze_tree(tree: NestedDict):
     return tree_copy.to_dict()
 
 
-from pydantic import BaseModel, Extra, validator, Field
-from pydantic import conlist, PositiveInt
+from pydantic import BaseModel, Extra, validator, root_validator
+from pydantic import conlist, PositiveInt, Field
 
 class WithExtraModel(BaseModel):
     class Config:
@@ -261,8 +262,8 @@ class WithRootModel(WithExtraModel):
 
 class FileConfig(WithRootModel):
     config_type: Literal['file'] = Field(default='file', repr=False)
-    path: Union[pathlib.Path, str]
-    format: Optional[str] = None
+    path: pathlib.Path
+    format: Optional[format_T] = None
     load_options: Dict = Field(default_factory=lambda: {})
 
     @validator('format', pre=True)
@@ -296,8 +297,9 @@ class FileConfig(WithRootModel):
             raise ValueError(f'Single path {self.path} matched {len(paths)} files')
         return paths[0]
 
-    def load(self) -> np.ndarray:
-        path = self.resolve()
+    def load(self, path: Optional[pathlib.Path] = None) -> np.ndarray:
+        if path is None:
+            path = self.resolve()
         format = self.format
         if format is None:
             format = path.suffix.lstrip('.').lower()
@@ -369,7 +371,47 @@ class FileSetConfig(WithRootModel):
         return sort_fn(filelist, alg=alg_option)
 
 
-class ArrayConfig(WithExtraModel, arbitrary_types_allowed=True):
+class FileArrayConfig(FileConfig, arbitrary_types_allowed=True):
+    config_type: Literal['array'] = Field(default='array', repr=False)
+    dtype: Optional[np.dtype] = None
+    shape: Optional[conlist(PositiveInt, min_items=1)] = None
+
+    @validator('format')
+    def is_loadable(cls, value, values):
+        if value is None:
+            format = values['path'].suffix.strip().lower()
+            if format not in format_defs.keys():
+                raise ValueError('Need a loadable format to load array from file')
+
+    @validator('dtype', pre=True)
+    def check_dtype(cls, value):
+        """
+        Could do this with composition or re-use
+        """
+        if value is not None:
+            try:
+                value = np.dtype(value)
+            except TypeError:
+                raise ValueError(f'Cannot cast {value} to dtype')
+        return value
+
+    def resolve(self):
+        path = super().resolve()
+        # Explicit path needed to avoid recursion problem in FileConfig.load()
+        array = self.load(path=path)
+        if self.dtype is not None:
+            array = array.astype(self.dtype)
+        if self.shape is not None:
+            if math.prod(self.shape) != array.size:
+                raise RuntimeError(
+                    'Loaded array does not match config-supplied shape, '
+                    f'got array of shape {array.shape} for reshape of {tuple(self.shape)}'
+                )
+            array = array.reshape(self.shape)
+        return array
+
+
+class InlineArrayConfig(WithRootModel, arbitrary_types_allowed=True):
     config_type: Literal['array'] = Field(default='array', repr=False)
     data: np.ndarray
     dtype: Optional[np.dtype] = None
@@ -396,6 +438,8 @@ class ArrayConfig(WithExtraModel, arbitrary_types_allowed=True):
     def validate_shape_matches(cls, value, values):
         value = tuple(value)
         shape_size = math.prod(value)
+        if 'data' not in values:
+            raise ValueError('Cannot get data size')
         if shape_size != values['data'].size:
             raise ValueError('Array shape must have same size as data '
                              f'got {value} for data shape {values["data"].shape}')
@@ -408,6 +452,25 @@ class ArrayConfig(WithExtraModel, arbitrary_types_allowed=True):
         if self.shape is not None:
             array = array.reshape(self.shape)
         return array
+
+
+class ArrayConfig(WithExtraModel):
+    config_type: Literal['array'] = Field(default='array', repr=False)
+    array_config: Union[InlineArrayConfig, FileArrayConfig]
+
+    @root_validator(pre=True)
+    def wrap_config(cls, values):
+        if 'array_config' in values:
+            pass
+        else:
+            values = {
+                'config_type': values.get('config_type', 'array'),
+                'array_config': values,
+            }
+        return values
+
+    def resolve(self):
+        return self.array_config.resolve()
 
 
 class MIBDatasetConfig(WithRootModel):
@@ -446,11 +509,10 @@ sort_options=['FLOAT']
 
 [my_array]
 config_type='array'
-data = [4, 5, 6, 7]
+path = 'test.npy'
 dtype='float32'
 shape=[2, 2]
 """
-
     nest = TreeFactory.from_string(config_str)
     # file_config = freeze_tree(nest['dataset_config'])
     # ds_model = MIBDatasetConfig(**file_config)

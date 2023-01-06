@@ -28,6 +28,8 @@ format_defs = {
     'jpg': load_image,
     'png': load_image,
 }
+# Gotta do this better!
+format_T = Literal['raw', 'bin', 'npy', 'tiff', 'tif', 'jpg', 'jpeg', 'png']
 
 
 sort_methods = {

@@ -217,8 +217,24 @@ def resolve_paths(tree: NestedDict):
     return tree
 
 
+def propagate_path_root(tree: NestedDict) -> NestedDict:
+    tree_root = tree.root
+    if 'root' not in tree_root:
+        tree_root['root'] = pathlib.Path()
+    _propagate_path_root(tree_root, tree_root['root'])
+    return tree
+
+
+def _propagate_path_root(tree: NestedDict, parent_root: pathlib.Path):
+    tree.setdefault('root', parent_root)
+    for value in tree.values():
+        if isinstance(value, NestedDict):
+            _propagate_path_root(value, tree['root'])
+
+
 def freeze_tree(tree: NestedDict):
     tree_copy = tree.copy()
+    tree_copy = propagate_path_root(tree_copy)
     tree_copy = resolve_paths(tree_copy)
     if 'root' not in tree_copy:
         tree_copy['root'] = tree.root.get('root', pathlib.Path())
@@ -229,7 +245,7 @@ from pydantic import BaseModel, Extra, validator, Field
 
 
 class WithRootModel(BaseModel):
-    root: Optional[pathlib.Path] = Field(default=None, repr=False)
+    root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
 
     class Config:
         allow_population_by_field_name = True
@@ -239,41 +255,49 @@ class WithRootModel(BaseModel):
 class FileConfig(WithRootModel):
     config_type: Literal['file'] = 'file'
     path: Union[pathlib.Path, str]
-    file_format: Optional[str] = None
+    format: Optional[str] = None
     load_options: Dict = Field(default_factory=lambda: {})
 
-    @validator('file_format', pre=True)
+    @validator('format', pre=True)
     def format_clean(cls, v):
         if isinstance(v, str):
             return v.strip().lower()
         return v
 
-    @validator('file_format')
+    @validator('format')
     def format_is_defined(cls, v):
         if v not in format_defs:
             raise ValueError(f'Format {v} unknown')
         return v
 
     @classmethod
-    def construct(cls, value: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
-        if not isinstance(value, dict):
-            value = {'path': value}
+    def from_value(
+        cls,
+        path_or_config: Union[str, Dict[str, Any]],
+        **kwargs
+    ) -> Dict[str, Any]:
+        if not isinstance(path_or_config, dict):
+            value = {
+                'path': path_or_config,
+                'root': kwargs.get('values', {}).get('root', pathlib.Path())
+            }
         return value
 
     def resolve(self) -> pathlib.Path:
-        paths = resolve_path_glob(self.path, self.path_root)
+        paths = resolve_path_glob(self.path, self.root)
         if len(paths) != 1:
-            raise ValueError(f'path {self.path} matched {len(paths)} files')
+            raise ValueError(f'Single path {self.path} matched {len(paths)} files')
         return paths[0]
 
     def load(self) -> np.ndarray:
-        if self.file_format is None:
-            format = self.resolve().suffix.lstrip('.').lower()
-        else:
-            format = self.file_format
+        path = self.resolve()
+        format = self.format
+        if format is None:
+            format = path.suffix.lstrip('.').lower()
         if format not in format_defs.keys():
-            raise ParserException(f'Unrecognized file format {format}')
-        return format_defs[format](self.path, **self.load_options)
+            raise ValueError(f'Unrecognized file format {format}')
+        return format_defs[format](path, **self.load_options)
+
 
 class MIBDatasetConfig(WithRootModel):
     config_type: Literal['dataset'] = Field(default='dataset', repr=False)
@@ -286,7 +310,7 @@ class MIBDatasetConfig(WithRootModel):
         'hdr_path',
         pre=True,
         allow_reuse=True
-    )(FileConfig.construct)
+    )(FileConfig.from_value)
 
 
 if __name__ == '__main__':

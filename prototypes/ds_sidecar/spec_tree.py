@@ -97,6 +97,9 @@ class NestedDict(dict):
                 new[key] = value
         return new
 
+    def freeze(self) -> Dict[str, Any]:
+        return freeze_tree(self)
+
 
 class TreeFactory:
     spec_type = 'tree'
@@ -485,7 +488,6 @@ dtype='uint8'
 shape=[6, 6]
 """
     nest = TreeFactory.from_string(config_str)
-    # file_config = freeze_tree(nest['dataset_config'])
-    # ds_model = MIBDatasetConfig(**file_config)
-    # fileset_model = FileSetConfig(**freeze_tree(nest['my_fileset']))
-    array_model = ArrayConfig(**freeze_tree(nest['my_array']))
+    ds_model = MIBDatasetConfig(**nest['dataset_config'].freeze())
+    fileset_model = FileSetConfig(**nest['my_fileset'].freeze())
+    array_model = ArrayConfig(**nest['my_array'].freeze())

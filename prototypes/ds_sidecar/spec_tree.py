@@ -3,12 +3,15 @@ import tomli
 import json
 import os
 import numpy as np
+import natsort
+import functools
+import operator
 
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List
 from typing_extensions import Literal
 
 from utils import ParserException, resolve_jsonpath
-from utils import format_defs, resolve_path_glob
+from utils import format_defs, resolve_path_glob, sort_methods
 
 import specs
 import wrapped_types
@@ -253,7 +256,7 @@ class WithRootModel(BaseModel):
 
 
 class FileConfig(WithRootModel):
-    config_type: Literal['file'] = 'file'
+    config_type: Literal['file'] = Field(default='file', repr=False)
     path: Union[pathlib.Path, str]
     format: Optional[str] = None
     load_options: Dict = Field(default_factory=lambda: {})
@@ -277,11 +280,11 @@ class FileConfig(WithRootModel):
         **kwargs
     ) -> Dict[str, Any]:
         if not isinstance(path_or_config, dict):
-            value = {
+            path_or_config = {
                 'path': path_or_config,
                 'root': kwargs.get('values', {}).get('root', pathlib.Path())
             }
-        return value
+        return path_or_config
 
     def resolve(self) -> pathlib.Path:
         paths = resolve_path_glob(self.path, self.root)
@@ -297,6 +300,69 @@ class FileConfig(WithRootModel):
         if format not in format_defs.keys():
             raise ValueError(f'Unrecognized file format {format}')
         return format_defs[format](path, **self.load_options)
+
+
+class FileSetConfig(WithRootModel):
+    config_type: Literal['fileset'] = Field(default='fileset', repr=False)
+    files: Union[List[pathlib.Path], pathlib.Path]
+    sort: Optional[Literal['natsorted', 'os_sorted', 'humansorted', 'none']] = 'natsorted'
+    sort_options: Optional[List[natsort.ns]] = None
+
+    @validator('sort_options', pre=True, each_item=True)
+    def convert_sort_keys(cls, v):
+        try:
+            v = natsort.ns[v]
+        except KeyError:
+            raise ValueError(f'Unrecognized sort option {v}')
+        return v
+
+    @validator('sort_options')
+    def sort_options_no_sort(cls, value, values):
+        if value is not None and values.get('sort') is None:
+            raise ValueError('Cannot define sort options without sort method')
+        return value
+
+    @classmethod
+    def from_value(
+        cls,
+        files_or_config: Union[str, Dict[str, Any]],
+        **kwargs
+    ) -> Dict[str, Any]:
+        if not isinstance(files_or_config, dict):
+            files_or_config = {
+                'files': files_or_config,
+                'root': kwargs.get('values', {}).get('root', pathlib.Path())
+            }
+        return files_or_config
+
+    def resolve(self):
+        if isinstance(self.files, (str, pathlib.Path)):
+            filelist = resolve_path_glob(self.files, self.root)
+        elif isinstance(self.files, (list, tuple)):
+            # List of (potentially mixed) absolute, relative, or glob specifiers
+            filelist = [f for path in self.files for f in resolve_path_glob(path, self.path_root)]
+        else:
+            raise ValueError(f'Unrecognized files specifier {self.files}')
+
+        if not filelist:
+            raise RuntimeError(f'Found no files with specifier {self.files}.')
+
+        # It's possible that multiple globs together may match a file more than once
+        # Could add some form of uniqueness check for resolved paths ?
+        if self.sort:
+            filelist = self._sort(filelist)
+
+        return filelist
+
+    def _sort(self, filelist):
+        sort_fn = sort_methods.get(self.sort)
+        if sort_fn is None:
+            return filelist
+        alg_option = natsort.ns.DEFAULT
+        if self.sort_options:
+            alg_option = functools.reduce(operator.or_, self.sort_options)
+        # FIXME Ambiguity in sorting if we have are reading from multiple directories ?
+        return sort_fn(filelist, alg=alg_option)
 
 
 class MIBDatasetConfig(WithRootModel):
@@ -326,8 +392,16 @@ mib_path='#/my_mib_file'
 [my_mib_file]
 config_type='file'
 path='testpath.mib'
+
+[my_fileset]
+config_type='fileset'
+files='yoyo'
+sort='natsorted'
+sort_options=['FLOAT']
 """
 
     nest = TreeFactory.from_string(config_str)
-    file_config = freeze_tree(nest['dataset_config'])
-    ds_model = MIBDatasetConfig(**file_config)
+    # file_config = freeze_tree(nest['dataset_config'])
+    # ds_model = MIBDatasetConfig(**file_config)
+
+    fileset_model = FileSetConfig(**freeze_tree(nest['my_fileset']))

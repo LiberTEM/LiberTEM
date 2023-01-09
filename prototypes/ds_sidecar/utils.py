@@ -1,6 +1,6 @@
 import pathlib
 import glob
-from typing import List, Dict
+from typing import List
 from typing_extensions import Literal
 
 import numpy as np
@@ -72,50 +72,3 @@ def resolve_path_glob(path: pathlib.Path) -> List[pathlib.Path]:
     if not matches:
         raise FileNotFoundError(f'Found no files matching {path}')
     return matches
-
-
-class ParserException(Exception):
-    ...
-
-
-class MissingKey:
-    ...
-
-
-def resolve_jsonpath(struct: Dict, jsonpath: str):
-    return _resolve_generic(struct, jsonpath, '#/', '/')
-
-
-def _resolve_generic(struct: Dict, path: str, strip: str, split: str):
-    if not isinstance(path, str):
-        raise TypeError(f'Cannot resolve key {path}')
-    components = path.strip().strip(strip).split(split)
-    components = list(c for c in components if len(c) > 0)
-    view = struct
-    for c in components:
-        if not isinstance(view, dict) or c not in view:
-            raise KeyError(f'Cannot resolve key {path}')
-        view = view.get(c)
-    return view
-
-
-def as_tree(nest, level=0, name=None, do_print=True):
-    from config_base import SpecBase
-
-    ident = '  ' * level + f'{nest.__class__.__name__}'
-    if name is not None:
-        ident = ident + f'   [{name}]'
-    lines = [ident]
-    if name is not None:
-        lines[-1]
-    for key, value in nest.items():
-        if isinstance(value, SpecBase):
-            lines.extend(as_tree(value, level=level + 1, name=key))
-    if level == 0:
-        tree_string = '\n'.join(lines)
-        if do_print:
-            print(tree_string)
-        else:
-            return tree_string
-    else:
-        return lines

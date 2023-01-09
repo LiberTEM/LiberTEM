@@ -18,7 +18,7 @@
 parameters, should be expressible with minimal lines:
 
 ```toml
-format = 'raw'
+ds_format = 'raw'
 path = './data.bin'
 nav_shape = [100, 100]
 sig_shape = [256, 256]
@@ -31,30 +31,30 @@ The above snippet should function as a complete descriptor for a
 - Interpretation of the top-level contents of the file can either be:
   - **implicit**: only `ctx.load(toml_path)` will correctly interpret
   the top-level content in the above snippet as a dataset
-  - **explicit**: using a `type` key to let a generic loader read
+  - **explicit**: using a `config_type` key to let a generic loader read
   any specification, e.g.:
 
 ```toml
-type = 'dataset'
-format = 'mib'
+config_type = 'dataset'
+ds_format = 'mib'
 path = './data.hdr'
 ```
 
 - Inline definitions are better than requiring a particular structure:
 
 ```toml
-format = 'glob_dataset'
+ds_format = 'glob_dataset'
 files = './image*.bin'
 ```
 
 should be equivalent to:
 
 ```toml
-format = 'glob_dataset'
+ds_format = 'glob_dataset'
 files = '#/my_fileset'
 
 [my_fileset]
-type='fileset'
+config_type='fileset'
 files = './image*.bin'
 ```
 
@@ -65,45 +65,40 @@ options like controlling file sort order.
 
 - The object being constructed should have a mechanism to both
 validate and interpret the config file as it wants to, doing
-so via a JSON-schema specification, e.g.:
+so using a Pydantic Model, e.g.:
 
-```json
-{
-    "type": "dataset",
-    "title": "GLOB dataset",
-    "properties": {
-        "format": {
-            "const": "glob_dataset",
-        }
-        "files": {
-            "type": "fileset",
-        },
-    },
-    "required": ["files"],
-}
+```python
+class GlobDatasetModel(BaseModel):
+    ds_format: Optional[Literal['glob_dataset']] = 'glob_dataset'
+    files: Union[
+              FilesetConfig,
+              List[pathlib.Path],
+              List[str],
+              pathlib.Path,
+              str,
+          ]
 ```
 
-if the `files` property is present and points to a `fileset` object
-already, then the schema will validate (with optional validation
-of a subschema). If the `files` object does not point to a `fileset` object, then:
+if the `files` property is present and points to a `FilesetConfig` object
+already, then the schema will validate. Else:
 
-1. If `files` is itself dictionary-like but not a `fileset` then it
-will be cast to one and validated according to any subschema.
+1. If `files` is itself dictionary-like but not a `FilesetConfig` then it
+will be validated against the `FilesetConfig` model.
 2. If `files` is not dictionary-like (a string, for example) then
-   we will try to construct a `fileset` with this value, if `fileset`
-   supports such a construction. We then apply any subschema to validate the `fileset`.
+   we will try to construct a `FilesetConfig` with this value, if `fileset`
+   supports such a construction.
 
 - Defintions can be nested or can be referenced relative to the root
   of the config file from anywhere in the file:
 
 ```toml
 [my_dataset]
-type = 'dataset'
-format = 'glob_dataset'
+config_type = 'dataset'
+ds_format = 'glob_dataset'
 files = '#/my_fileset'
 
 [my_fileset]
-type='fileset'
+config_type='fileset'
 files = './image*.bin'
 ```
 
@@ -111,37 +106,22 @@ is interpreted equivalently to:
 
 ```toml
 [my_dataset]
-type = 'dataset'
-format = 'glob_dataset'
+config_type = 'dataset'
+ds_format = 'glob_dataset'
 
 [my_dataset.files]
-type='fileset'
+config_type='fileset'
 files = './image*.bin'
 ```
 
 we use the JSON-schema path format `'#/path/to/key'` to specify external
-objects, always from the root of the file. This is necessary to reduce
+paths, always from the root of the file. This is necessary to reduce
 scope for ambiguity between a string value that could be interpreted
-as a true value, or a key in the tree.
-
-- The schema can specify simple defaults using the standard schema default
-key, and the parser will fill these defaults when missing from the config file.
-
-```json
-{
-  "type": "file",
-  "properties": {
-      "dtype": {
-          "type": "dtype",
-          "default": "float32"
-      },
-  },
-  "required": ["dtype"],
-}
-```
+as a value itself, or a key in the tree.
 
 - The consumer of the config is responsible for extracting the information
 it needs from the tree, once validated/interpreted under the provided schema.
+- As the schema is a Pydantic Model and therefore a Python class, it can have both dot attributes `arrayconfig.dtype` read directly from the input data as well as methods, such as `file.path.resolve()` to resolve a path.
 
 ## Implementation
 
@@ -164,25 +144,14 @@ in the tree.
 The parsing process:
 
 1. Read the config into a Python dictionary with `tomli`, for example.
-2. Traverse the tree to find any `dict` instances, if:
-    - The `dict` contains the key `'type'` matching a config we understand,
-    convert it to a `NestedDict`-subclass implementing that `type`
-    - Otherwise, convert the `dict` instance to a bare `NestedDict` instance.
-3. To ready a config for consumption by `LiberTEM`, we can validate it 
-against a schema. This schema is used to validate compatibility, including 
-setting default values. It also is used to coerce the types of any values
-which did not specify their own type (i.e. bare values or bare `NestedDict`).
-4. Depending on the object type, the config can then be consumed by a
-constructor (e.g. `DataSet.initialize()`), or the config can self-construct
-into the object (e.g. `ArraySpec.resolve() -> np.ndarray`).
+2. Traverse the tree to find any `dict` instances and convert them to `NestedDict` instances.
+3. Consumers of the config supply the schema / model they want to validate against. They can apply this schema to all sub-trees as a search to get all valid configs, or the user can supply the unique (sub-)tree to check against the schema.
 
 ### Reserved keys
 
-- `type`: identifies a structure as a type we should be able to interpret
-- `read_as`: a `type` identifier used to read the content of a structure as if
-it were another type, while retaining the identity of the original type.
+- `config_type`: identifies a structure as a type we should be able to interpret
 - `root`: a string defining an absolute directory path from which other, 
-relative paths should be resolved
+relative paths should be resolved. If not specified at the top of the config file, this is automatically set to the location of the file. All sub-trees inherit the root of their parent (allowing roots to be hierarchical).
 
 
 ## Features
@@ -200,22 +169,22 @@ Some examples:
 
 ```toml
 root = '/path/to/dataset/'
-format = 'glob_dataset'
+ds_format = 'glob_dataset'
 # The glob is resolved relative to parent root /path/to/dataset/
 files = './image*.bin'
 
 [my_absolute_file]
-type = 'file'
+config_type = 'file'
 path = '/other/path/to/file.raw'
 
 [my_relative_file_parent]
-type = 'file'
+config_type = 'file'
 # Resovles relative to /path/to/dataset/
 path = './file.raw'
 
 [my_relative_file_self]
 root = '/other/path/to/'
-type = 'file'
+config_type = 'file'
 # Resovles relative to /other/path/to/
 path = './file.raw'
 ```
@@ -230,13 +199,13 @@ error will be raised.
 
 `glob` expansion does not guarantee anything about the order of
 the returned `fileset`, so to cover this case `fileset` objects
-support sorting with `natsorted`.
+support sorting with `natsorted`, which is the default.
 
 ```toml
 [my_fileset]
-type='fileset'
+config_type='fileset'
 files = './image*.bin'
-sort = 'natsorted' # or 'os_sorted' or 'humansorted'
+sort = 'natsorted' # or 'os_sorted' or 'humansorted' or 'none'
 # optional sort_options in the natsorted.ns enum
 sort_options = [
     "NUMAFTER",
@@ -279,7 +248,7 @@ loader, for example:
 
 ```toml
 [my_raw_array]
-type = 'file'
+config_type = 'file'
 format = 'raw'
 path = './data.raw'
 
@@ -299,78 +268,14 @@ Using the `array` type, we can specify array-like values inline:
 
 ```toml
 [my_list]
-type = 'array'
+config_type = 'array'
 data = [
     [5, 6, 7, 8],
     [1, 2, 3, 4],
 ]
 dtype = 'float32'
+shape = [1, 8]
 ```
-
-### Delegation of interpretation
-
-A spec can delegate how it should be interpreted with the `read_as` key.
-In this case we want to specify an `array` (to match a schema, for
-example), but we delegate how to load the data by using `read_as`
-as a `file` spec:
-
-```toml
-[my_image]
-type = 'array'
-read_as = 'file'
-path = './image.png'
-```
-
-This is useful if we want to define objects which should only be
-used in specific contexts, e.g.:
-
-```toml
-[my_roi]
-type = 'roi'
-read_as = 'file'
-path = './my_roi.npy'
-```
-
-which lets us state that the `my_roi` object should be available
-anywhere an `roi` is needed, but it should be loaded like a file object.
-
-A further example:
-
-```toml
-[my_roi]
-type = 'roi'
-read_as = 'array'
-data = [
-    [True, False, True],
-    [False, True, False],
-    [True, False, True],
-]
-dtype = 'bool'
-```
-
-which allows inline specification of an ROI, interpreted like an `array`.
-
-### Direct construction of ROI objects
-
-If all we need is to toggle a few pixels in an ROI, this
-can be done by specifying these directly:
-
-```toml
-[my_roi]
-type = 'roi'
-shape = [100, 200]
-roi_base = True
-toggle_px = [
-    [10, 56],
-    [78, 12],
-]
-```
-which would set the coordinates in `toggle_px` to False
-(relative to a `roi` which is otherwise True).
-
-It would also be possible to (later) allow the shape parameter
-to be filled using the dataset shape itself, or load coordinates
-to toggle from an `array` (e.g. from a text file).
 
 
 ## Usage
@@ -426,8 +331,8 @@ The following should also be supported:
 
 ```toml
 [my_dataset]
-type = 'dataset'
-format = 'mib'
+config_type = 'dataset'
+ds_format = 'mib'
 path = '/path/to/file.hdr'
 nav_shape = [50, 50]
 sig_shape = [256, 256]
@@ -453,14 +358,14 @@ There are two ways to implement this:
 1. Using the normal 'auto' logic of trying every dataset in order of 
 definition until one matches, but with the config file path rather 
 than a dataset file path.
-2. Have `ctx.load` read the config file, and require a `format` key 
-at the top level or a single `type = 'dataset'` definition with 
-`format` key, to know where to dispatch the load command.
+2. Have `ctx.load` read the config file, and require a `ds_format` key 
+at the top level or a single `config_type = 'dataset'` definition with 
+`ds_format` key, to know where to dispatch the load command.
 
 
 #### As a parameter to a generic loader
 
-Fully explicit configs, i.e. those which include a `type` key 
+Fully explicit configs, i.e. those which include `config_type` keys
 could be used to load objects without needing to use specific 
 methods like `ctx.load` for datasets.
 
@@ -492,16 +397,16 @@ All of the above examples imply a real config file on disk, but it
 would be useful to support in-memory configs, either as a string
 form of a serialization language, e.g.
 ```python
-config_string = ('{"type: "dataset",'
-                  '"format": "mib",'
+config_string = ('{"config_type: "dataset",'
+                  '"ds_format": "mib",'
                   '"path": "./file.hdr"}')
 dataset = generic_loader(config_string, config_format='json')
 ```
 or from a Python object, e.g.:
 ```python
 config = {
-  'type': 'dataset',
-  'format': 'mib',
+  'config_type': 'dataset',
+  'ds_format': 'mib',
   'path': './file.hdr'
 }
 dataset = generic_loader(config)

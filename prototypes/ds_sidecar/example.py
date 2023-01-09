@@ -6,11 +6,6 @@ from jsonschema.exceptions import ValidationError
 import libertem.api as lt
 from libertem.io.dataset.raw import RawFileDataSet
 
-from specs import DataSetSpec
-from config_base import NestedDict
-from utils import ParserException
-from spec_tree import SpecTree
-
 
 raw_ds_schema = {
     "type": "dataset",

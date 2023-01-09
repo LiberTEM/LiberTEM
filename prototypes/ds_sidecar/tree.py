@@ -3,7 +3,7 @@ import tomli
 import json
 import os
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union, Callable
 
 
 class NestedDict(dict):
@@ -226,3 +226,28 @@ def _resolve_generic(struct: Dict, path: str, strip: str, split: str):
             raise KeyError(f'Cannot resolve key {path}')
         view = view.get(c)
     return view
+
+
+def find_in_tree(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any], bool]]):
+    root = tree.root
+    yield from _find_in_tree(root, matches)
+
+
+def _find_in_tree(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any], bool]]):
+    if does_match(tree, matches):
+        yield tree
+    for v in tree.values():
+        if isinstance(v, NestedDict):
+            yield from _find_in_tree(v, matches)
+
+
+def does_match(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any], bool]]):
+    if isinstance(matches, dict):
+        if all(k in tree and tree[k] == v for k, v in matches.items()):
+            return True
+    elif callable(matches):
+        if matches(tree):
+            return True
+    else:
+        raise TypeError(f'Cannot use {type(matches)} type object to search tree')
+    return False

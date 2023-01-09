@@ -1,98 +1,102 @@
 import tempfile
 import numpy as np
 import pathlib
-from jsonschema.exceptions import ValidationError
-
 import libertem.api as lt
 from libertem.io.dataset.raw import RawFileDataSet
 
+from typing import Dict, Union, Any, Callable, Optional
+from typing_extensions import Literal
 
-raw_ds_schema = {
-    "type": "dataset",
-    "title": "RAW dataset",
-    "properties": {
-        "path": {
-            "type": "file",
-        },
-        "format": {
-            "enum": ["raw", "RAW"],
-        },
-        "nav_shape": {
-            "$ref": "#/$defs/shape",
-        },
-        "sig_shape": {
-            "$ref": "#/$defs/shape",
-        },
-        "dtype": {
-            "type": "dtype",
-        },
-        "sync_offset": {
-            "type": "integer",
-            "default": 0,
-        },
-    },
-    "required": ["path", "nav_shape", "sig_shape", "dtype"],
-    "$defs": {
-        "shape": {
-            "type": "array",
-            "items": {
-                "type": "integer",
-                "minimum": 1
-            },
-            "minItems": 1,
-        }
-    }
-}
+from models import StandardDatasetConfig
+from tree import TreeFactory, find_in_tree, does_match
+from pydantic import conlist, PositiveInt, ValidationError, BaseModel, validator
+
+
+class RawDataSetConfig(StandardDatasetConfig, arbitrary_types_allowed=True):
+    ds_format: Optional[Literal['raw']] = 'raw'
+    nav_shape: conlist(PositiveInt, min_items=1)
+    sig_shape: conlist(PositiveInt, min_items=1)
+    dtype: np.dtype
+
+    @validator('dtype', pre=True)
+    def check_dtype(cls, value):
+        if value is not None:
+            try:
+                value = np.dtype(value)
+            except TypeError:
+                raise ValueError(f'Cannot cast {value} to dtype')
+        return value
+
 
 class RawFileDataSetConfig(RawFileDataSet):
     """
     Subclass RawFileDataSet to add config file support
     """
     def initialize(self, executor):
-        if is_config_def(self._path):
-            ds_config = load_ds_config_with_schema(self._path, raw_ds_schema)
-            self._path = ds_config['path'].resolve()
-            self._dtype = ds_config['dtype']
-            self._nav_shape = tuple(ds_config['nav_shape'])
-            self._sig_shape = tuple(ds_config['sig_shape'])
-            self._sync_offset = ds_config['sync_offset']
+        if pathlib.Path(self._path).suffix in ('.toml', '.json'):
+            ds_config = get_config(
+                self._path,
+                RawDataSetConfig,
+                pred=dict(
+                    config_type='dataset',
+                    ds_format='raw'
+                )
+            )
+            self._path = ds_config.path.resolve()
+            self._dtype = ds_config.dtype
+            self._nav_shape = tuple(ds_config.nav_shape)
+            self._sig_shape = tuple(ds_config.sig_shape)
+            self._sync_offset = ds_config.sync_offset
         return super().initialize(executor)
 
 
-def is_config_def(value) -> bool:
-    if isinstance(value, dict):
-        return True
-    elif isinstance(value, (str, pathlib.Path)):
-        value = pathlib.Path(value)
-        if value.is_file() and value.suffix in ('.toml', '.json'):
-            return True
-    return False
+def get_config(
+    path: pathlib.Path,
+    schema: BaseModel,
+    pred: Optional[Union[Dict[str, Any], Callable[[Dict], bool]]] = None,
+    strict: bool = False,
+):
+    """
+    Load the config dictionary from file at path and search it
+    for configurations which validate against schema (including
+    the top level).
 
+    If multiple sub-trees match schema (or strict=True),
+    additionally check that the sub-trees match against pred
+    if pred is not None. Pred can be a callable to additionally
+    validate a sub-tree, or a dictionary of key/value pairs which *must*
+    be present in the sub-tree to validate it. This behaviour
+    allows us to discriminate against two sub-trees which can both
+    be interpreted under schema via casting/defaults, if one is more
+    strongly matching than the other.
 
-def load_ds_config_with_schema(config, schema):
-    if isinstance(config, dict):
-        nest = SpecTree.to_tree(config)
-    else:
-        config_path = pathlib.Path(config)
-        nest = SpecTree.from_file(config_path)
+    # FIXME it should be possible to use the Pydantic model itself to check if
+    an attribute of the model came from input data or from the default value
 
-    def check_sub_configs(value):
+    Raises RuntimeError if either no configs match or more than
+    one config matches schema/pred, else return the single valid
+    config interpreted using schema.
+    """
+    nest = TreeFactory.from_file(path)
+
+    def validates(_nest):
         try:
-            # The validator checks the top-level type
-            # so we have to give it a DataSetSpec if it is ever going to pass
-            if isinstance(value, NestedDict) and not isinstance(value, DataSetSpec):
-                value = DataSetSpec.construct(value)
-            _ = value.apply_schema(schema)
+            schema(**_nest.freeze())
             return True
-        except (ValidationError, ParserException):
+        except ValidationError:
             return False
 
-    ds_configs = tuple(nest.search(check_sub_configs))
-    if not ds_configs:
-        raise ParserException('No matching definitions for dataset')
-    elif len(ds_configs) > 1:
-        raise ParserException('Multiple matching definitions for dataset')
-    return DataSetSpec.construct(ds_configs[0]).apply_schema(schema)
+    compatible = tuple(find_in_tree(nest, validates))
+    if pred is not None and (strict or len(compatible) > 1):
+        compatible = tuple(v for v in compatible if does_match(v, pred))
+    if not compatible:
+        raise RuntimeError(f'Unable to find config in {path} '
+                           f'compatible with {schema.__class__.__name__}')
+    elif len(compatible) > 1:
+        raise RuntimeError(f'Multiple compatible configs found in {path}'
+                           f'compatible with {schema.__class__.__name__}')
+
+    return schema(**compatible[0].freeze())
 
 
 if __name__ == '__main__':

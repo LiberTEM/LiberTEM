@@ -239,15 +239,17 @@ class ArrayConfig(WithExtraModel):
         return self.array_config.resolve()
 
 
-class MIBDatasetConfig(WithRootModel):
+class StandardDatasetConfig(WithRootModel):
     config_type: Literal['dataset'] = Field(default='dataset', repr=False)
-    ds_format: Literal['mib'] = Field(repr=False)
-    mib_path: Union[FileConfig, pathlib.Path, str]
-    hdr_path: Union[FileConfig, pathlib.Path, str]
+    # This could be an enum of defined dataset keys
+    ds_format: Optional[str] = 'auto'
+    path: Union[FileConfig, pathlib.Path, str]
+    nav_shape: Optional[conlist(PositiveInt, min_items=1)] = None
+    sig_shape: Optional[conlist(PositiveInt, min_items=1)] = None
+    sync_offset: Optional[int] = 0
 
     _cast_file = validator(
-        'mib_path',
-        'hdr_path',
+        'path',
         pre=True,
         allow_reuse=True
     )(FileConfig.from_value)
@@ -262,8 +264,7 @@ root='/home/mat/Data/ds1'
 [dataset_config]
 config_type='dataset'
 ds_format='mib'
-hdr_path = 'test.hdr'
-mib_path='#/my_mib_file'
+path='#/my_mib_file'
 
 [my_mib_file]
 config_type='file'
@@ -277,11 +278,11 @@ sort_options=['FLOAT']
 
 [my_array]
 config_type='array'
-path = 'test222.npy'
+data = [5, 6, 7, 8]
 dtype='uint8'
-shape=[6, 6]
+shape=[3, 2]
 """
     nest = TreeFactory.from_string(config_str)
-    ds_model = MIBDatasetConfig(**nest['dataset_config'].freeze())
+    ds_model = StandardDatasetConfig(**nest['dataset_config'].freeze())
     fileset_model = FileSetConfig(**nest['my_fileset'].freeze())
     array_model = ArrayConfig(**nest['my_array'].freeze())

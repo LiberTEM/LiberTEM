@@ -241,7 +241,8 @@ def _find_in_tree(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any
             yield from _find_in_tree(v, matches)
 
 
-def does_match(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any], bool]]):
+def does_match(tree: NestedDict, matches: Union[Dict[str, Any],
+                                                Callable[[NestedDict], bool]]) -> bool:
     if isinstance(matches, dict):
         if all(k in tree and tree[k] == v for k, v in matches.items()):
             return True

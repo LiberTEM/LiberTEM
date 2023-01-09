@@ -7,26 +7,17 @@ from libertem.io.dataset.raw import RawFileDataSet
 from typing import Optional
 from typing_extensions import Literal
 
-from models import StandardDatasetConfig
+from models import StandardDatasetConfig, DType
 from utils import get_config
 
 from pydantic import conlist, PositiveInt, validator
 
 
-class RawDataSetConfig(StandardDatasetConfig, arbitrary_types_allowed=True):
+class RawDataSetConfig(StandardDatasetConfig):
     ds_format: Optional[Literal['raw']] = 'raw'
     nav_shape: conlist(PositiveInt, min_items=1)
     sig_shape: conlist(PositiveInt, min_items=1)
-    dtype: np.dtype
-
-    @validator('dtype', pre=True)
-    def check_dtype(cls, value):
-        if value is not None:
-            try:
-                value = np.dtype(value)
-            except TypeError:
-                raise ValueError(f'Cannot cast {value} to dtype')
-        return value
+    dtype: DType
 
 
 class RawFileDataSetConfig(RawFileDataSet):

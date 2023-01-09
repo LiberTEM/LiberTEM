@@ -25,6 +25,36 @@ class WithRootModel(WithExtraModel):
     root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
 
 
+class DType:
+    """Acts as type annotation/validator for np.dtype-like"""
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        try:
+            value = np.dtype(value)
+        except TypeError:
+            raise ValueError(f'Cannot cast {value} to dtype')
+        return value
+
+
+class NPArray:
+    """Acts as type annotation/validator for np.ndarray-like"""
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        try:
+            value = np.asarray(value)
+        except TypeError:
+            raise ValueError(f'Cannot convert {value} to array')
+        return value
+
+
 class FileConfig(WithRootModel):
     config_type: Literal['file'] = Field(default='file', repr=False)
     path: pathlib.Path
@@ -137,9 +167,9 @@ class FileSetConfig(WithRootModel):
         return sort_fn(filelist, alg=alg_option)
 
 
-class FileArrayConfig(FileConfig, arbitrary_types_allowed=True):
+class FileArrayConfig(FileConfig):
     config_type: Literal['array'] = Field(default='array', repr=False)
-    dtype: Optional[np.dtype] = None
+    dtype: Optional[DType] = None
     shape: Optional[conlist(PositiveInt, min_items=1)] = None
 
     @validator('format')
@@ -148,18 +178,6 @@ class FileArrayConfig(FileConfig, arbitrary_types_allowed=True):
             format = values['path'].suffix.strip().lower()
             if format not in format_defs.keys():
                 raise ValueError('Need a loadable format to load array from file')
-
-    @validator('dtype', pre=True)
-    def check_dtype(cls, value):
-        """
-        Could do this with composition or re-use
-        """
-        if value is not None:
-            try:
-                value = np.dtype(value)
-            except TypeError:
-                raise ValueError(f'Cannot cast {value} to dtype')
-        return value
 
     def resolve(self):
         path = super().resolve()
@@ -177,28 +195,11 @@ class FileArrayConfig(FileConfig, arbitrary_types_allowed=True):
         return array
 
 
-class InlineArrayConfig(WithRootModel, arbitrary_types_allowed=True):
+class InlineArrayConfig(WithRootModel):
     config_type: Literal['array'] = Field(default='array', repr=False)
-    data: np.ndarray
-    dtype: Optional[np.dtype] = None
+    data: NPArray
+    dtype: Optional[DType] = None
     shape: Optional[conlist(PositiveInt, min_items=1)] = None
-
-    @validator('data', pre=True)
-    def cast_data(cls, value):
-        try:
-            value = np.asarray(value)
-        except TypeError:
-            raise ValueError(f'Cannot convert {value} to array')
-        return value
-
-    @validator('dtype', pre=True)
-    def check_dtype(cls, value):
-        if value is not None:
-            try:
-                value = np.dtype(value)
-            except TypeError:
-                raise ValueError(f'Cannot cast {value} to dtype')
-        return value
 
     @validator('shape')
     def validate_shape_matches(cls, value, values):
@@ -280,7 +281,7 @@ sort_options=['FLOAT']
 config_type='array'
 data = [5, 6, 7, 8]
 dtype='uint8'
-shape=[3, 2]
+shape=[2, 2]
 """
     nest = TreeFactory.from_string(config_str)
     ds_model = StandardDatasetConfig(**nest['dataset_config'].freeze())

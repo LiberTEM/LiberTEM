@@ -256,6 +256,76 @@ class StandardDatasetConfig(WithRootModel):
     )(FileConfig.from_value)
 
 
+class ROIFileConfig(FileArrayConfig):
+    config_type: Literal['roi'] = Field(default='roi', repr=False)
+    dtype: Optional[DType] = bool
+
+    """
+    Get an ROI from a file, will be cast to bool after loading
+    """
+
+    @validator('dtype')
+    def check_dtype(cls, value):
+        if not np.issubdtype(value, bool):
+            raise ValueError('ROI dtype spec must be bool')
+        return value
+
+
+class ROIInlineConfig(WithRootModel):
+    config_type: Literal['roi'] = Field(default='roi', repr=False)
+    shape: conlist(PositiveInt, min_items=1)
+    base_value: bool
+    toggle_px: Optional[conlist(conlist(int, min_items=1))] = None
+    dtype: Optional[DType] = bool
+
+    @validator('toggle_px')
+    def check_valid_toggle(cls, value, values):
+        if not value:
+            # nothing to do
+            return
+        coords = value
+        containing_shape = tuple(values['shape'])
+        if not all(len(coord) == len(containing_shape) for coord in coords):
+            raise ValueError('Pixel coordinates must match dimension of containing shape')
+        for coord in coords:
+            if not all(-s <= c < s for c, s in zip(coord, containing_shape)):
+                raise ValueError(f'Invalid coordinate {coord} for shape {containing_shape}')
+        return value
+
+    def resolve(self):
+        roi = np.full(tuple(self.shape), self.base_value, dtype=self.dtype)
+        if self.toggle_px is None:
+            return roi
+        toggle_coords = np.asarray(self.toggle_px).reshape(-1, roi.ndim)
+        set_value = not self.base_value
+        flat_coords = np.ravel_multi_index(
+            np.split(toggle_coords, roi.ndim, axis=1),
+            roi.shape,
+            mode='wrap',
+        )
+        np.put(roi, flat_coords, set_value)
+        return roi
+
+
+class ROISpec(WithExtraModel):
+    config_type: Literal['roi'] = Field(default='roi', repr=False)
+    array_config: Union[ROIInlineConfig, ROIFileConfig]
+
+    @root_validator(pre=True)
+    def wrap_config(cls, values):
+        if 'array_config' in values:
+            pass
+        else:
+            values = {
+                'config_type': values.get('config_type', 'roi'),
+                'array_config': values,
+            }
+        return values
+
+    def resolve(self):
+        return self.array_config.resolve()
+
+
 if __name__ == '__main__':
     from tree import TreeFactory
 
@@ -282,8 +352,15 @@ config_type='array'
 data = [5, 6, 7, 8]
 dtype='uint8'
 shape=[2, 2]
+
+[my_roi]
+config_type='roi'
+shape=[5, 6]
+base_value=false
+toggle_px=[[0, 0], [2, 3], [4, 4]]
 """
     nest = TreeFactory.from_string(config_str)
     ds_model = StandardDatasetConfig(**nest['dataset_config'].freeze())
     fileset_model = FileSetConfig(**nest['my_fileset'].freeze())
     array_model = ArrayConfig(**nest['my_array'].freeze())
+    roi_model = ROISpec(**nest['my_roi'].freeze())

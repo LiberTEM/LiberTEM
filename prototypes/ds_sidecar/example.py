@@ -10,7 +10,7 @@ from typing_extensions import Literal
 from models import StandardDatasetConfig, DType
 from utils import get_config
 
-from pydantic import conlist, PositiveInt, validator
+from pydantic import conlist, PositiveInt
 
 
 class RawDataSetConfig(StandardDatasetConfig):

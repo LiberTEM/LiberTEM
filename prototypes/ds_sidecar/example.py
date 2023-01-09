@@ -26,7 +26,10 @@ class RawFileDataSetConfig(RawFileDataSet):
     """
     def initialize(self, executor):
         if pathlib.Path(self._path).suffix in ('.toml', '.json'):
-            ds_config = get_config(
+            # Search the config file for anything matching RawDataSetConfig
+            # If zero/multiple matches raise RuntimeError, unless only
+            # one contains exactly the k/v in pred
+            ds_config: RawDataSetConfig = get_config(
                 self._path,
                 RawDataSetConfig,
                 pred=dict(

@@ -15,16 +15,6 @@ from utils import resolve_path_glob, join_if_relative
 from utils import format_defs, sort_methods, format_T
 
 
-class WithExtraModel(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-        extra = Extra.allow
-
-
-class WithRootModel(WithExtraModel):
-    root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
-
-
 class DType:
     """Acts as type annotation/validator for np.dtype-like"""
     @classmethod
@@ -53,6 +43,16 @@ class NPArray:
         except TypeError:
             raise ValueError(f'Cannot convert {value} to array')
         return value
+
+
+class WithExtraModel(BaseModel):
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+
+class WithRootModel(WithExtraModel):
+    root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
 
 
 class FileConfig(WithRootModel):

@@ -1,11 +1,14 @@
 import pathlib
 import glob
-from typing import List
+from typing import Dict, Union, Any, Callable, List, Optional
 from typing_extensions import Literal
 
 import numpy as np
 from skimage.io import imread
 import natsort
+
+from tree import TreeFactory, find_in_tree, does_match
+from pydantic import ValidationError, BaseModel
 
 
 def load_raw(path, *, shape, dtype):
@@ -72,3 +75,52 @@ def resolve_path_glob(path: pathlib.Path) -> List[pathlib.Path]:
     if not matches:
         raise FileNotFoundError(f'Found no files matching {path}')
     return matches
+
+
+def get_config(
+    path: pathlib.Path,
+    schema: BaseModel,
+    pred: Optional[Union[Dict[str, Any], Callable[[Dict], bool]]] = None,
+    strict: bool = False,
+):
+    """
+    Load the config dictionary from file at path and search it
+    for configurations which validate against schema (including
+    the top level).
+
+    If multiple sub-trees match schema (or strict=True),
+    additionally check that the sub-trees match against pred
+    if pred is not None. Pred can be a callable to additionally
+    validate a sub-tree, or a dictionary of key/value pairs which *must*
+    be present in the sub-tree to validate it. This behaviour
+    allows us to discriminate against two sub-trees which can both
+    be interpreted under schema via casting/defaults, if one is more
+    strongly matching than the other.
+
+    # FIXME it should be possible to use the Pydantic model itself to check if
+    an attribute of the model came from input data or from the default value
+
+    Raises RuntimeError if either no configs match or more than
+    one config matches schema/pred, else return the single valid
+    config interpreted using schema.
+    """
+    nest = TreeFactory.from_file(path)
+
+    def validates(_nest):
+        try:
+            schema(**_nest.freeze())
+            return True
+        except ValidationError:
+            return False
+
+    compatible = tuple(find_in_tree(nest, validates))
+    if pred is not None and (strict or len(compatible) > 1):
+        compatible = tuple(v for v in compatible if does_match(v, pred))
+    if not compatible:
+        raise RuntimeError(f'Unable to find config in {path} '
+                           f'compatible with {schema.__class__.__name__}')
+    elif len(compatible) > 1:
+        raise RuntimeError(f'Multiple compatible configs found in {path}'
+                           f'compatible with {schema.__class__.__name__}')
+
+    return schema(**compatible[0].freeze())

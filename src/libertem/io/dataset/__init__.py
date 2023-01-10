@@ -1,4 +1,5 @@
 import typing
+import pathlib
 import importlib
 from typing_extensions import Literal
 
@@ -48,7 +49,7 @@ def _auto_load(
     ...
 
 
-def _auto_load(path,  *args, executor, **kwargs):
+def _auto_load(path, *args, executor, **kwargs):
     if path is None:
         raise DataSetException(
             "please specify the `path` argument to allow auto detection"
@@ -168,7 +169,20 @@ def detect(path: str, executor):
     Returns dataset's detected type, parameters and
     additional info.
     """
-    for filetype in filetypes.keys():
+    search_order = list(filetypes.keys())
+    try:
+        # This only uses the file suffix and the filetype keys defined above
+        # and not the actual supported extensions. To improve this would
+        # require either refactoring or importing all of the dataset classes
+        file_format = pathlib.Path(path).suffix.strip().lstrip('.').lower()
+        if file_format in search_order:
+            search_order.pop(search_order.index(file_format))
+            search_order = [file_format] + search_order
+    except (TypeError, ValueError):
+        # Let downstream code handle the fact that
+        # path cannot be cast to pathlib.Path or provide a suffix
+        pass
+    for filetype in search_order:
         try:
             cls = get_dataset_cls(filetype)
             params = cls.detect_params(path, executor)

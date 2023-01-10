@@ -267,7 +267,7 @@ def resolve_references(tree: NestedDict):
     return tree
 
 
-def propagate_key(tree: NestedDict, key: str) -> NestedDict:
+def propagate_key(tree: NestedDict, key: str):
     """
     Copy a key and its value down in tree to all child NestedDict
 
@@ -277,11 +277,10 @@ def propagate_key(tree: NestedDict, key: str) -> NestedDict:
     """
     if key not in tree:
         raise KeyError(f'Need key: {key} in tree to propagate down')
-    _propagate_key(tree, tree[key])
-    return tree
+    _propagate_key(tree, key, tree[key])
 
 
-def _propagate_key(tree: NestedDict, key: str, parent_value):
+def _propagate_key(tree: NestedDict, key: str, parent_value: Any):
     """
     Recurse into tree setting key to parent_value if not already present
     If present, set the new value on children
@@ -289,7 +288,7 @@ def _propagate_key(tree: NestedDict, key: str, parent_value):
     tree.setdefault(key, parent_value)
     for value in tree.values():
         if isinstance(value, NestedDict):
-            _propagate_key(value, tree[key])
+            _propagate_key(value, key, tree[key])
 
 
 def freeze_tree(tree: NestedDict) -> Dict[str, Any]:
@@ -298,7 +297,7 @@ def freeze_tree(tree: NestedDict) -> Dict[str, Any]:
     references resolved and the 'root' key propagated to all children
     """
     tree_copy = tree.copy()
-    tree_copy = propagate_key(tree_copy.root, 'root')
+    propagate_key(tree_copy.root, 'root')
     tree_copy = resolve_references(tree_copy)
     return tree_copy.to_dict()
 

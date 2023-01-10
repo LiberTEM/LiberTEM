@@ -42,7 +42,7 @@ const Reshape: React.FC<ReshapeProps> = ({
             <Form.Field width={4}>
                 <label htmlFor="id_sync_offset">Sync Offset (frames):</label>
                 <div style={{ color: 'red'}}><ErrorMessage name="sync_offset" /></div>
-                <Input type="number" required name="sync_offset" id="id_sync_offset" value={offsetValue} onChange={handleOffsetChange} />
+                <Input type="number" required name="sync_offset" id="id_sync_offset" value={syncOffset} onChange={handleOffsetChange} />
             </Form.Field>
             <Form.Field hidden={hideInfo}>
                 <label>Number of frames skipped at the beginning: {framesSkippedStart}</label>

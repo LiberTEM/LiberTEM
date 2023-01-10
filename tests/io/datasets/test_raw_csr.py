@@ -12,6 +12,7 @@ from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape, Slice
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.common.math import prod
 
 from utils import _mk_random, get_testdata_path
 
@@ -249,3 +250,29 @@ def test_exception_at_detect(tmpdir_factory, dask_executor):
 
     # exceptions should be properly caught and should be pickleable:
     assert RawCSRDataSet.detect_params(fn, executor=dask_executor) is False
+
+
+def test_sig_nav_shape(raw_csr_generated, lt_ctx):
+    assert len(tuple(raw_csr_generated.shape.nav)) > 1
+    assert len(tuple(raw_csr_generated.shape.sig)) > 1
+
+    flat_nav = [prod(tuple(raw_csr_generated.shape.nav))]
+    # throw in dict keys iterable for variety to test robustness for
+    # heterogeneous types
+    flat_sig = {
+        prod(tuple(raw_csr_generated.shape.sig)): None
+    }.keys()
+
+    # Confirm types are incompatible
+    with pytest.raises(TypeError):
+        flat_nav + flat_sig
+
+    ds = lt_ctx.load('auto', path=raw_csr_generated._path, nav_shape=flat_nav, sig_shape=flat_sig)
+    udf = SumSigUDF()
+    res = lt_ctx.run_udf(dataset=ds, udf=udf)
+    ref = lt_ctx.run_udf(dataset=raw_csr_generated, udf=udf)
+
+    assert np.allclose(
+        ref['intensity'].data,
+        res['intensity'].data.reshape(raw_csr_generated.shape.nav)
+    )

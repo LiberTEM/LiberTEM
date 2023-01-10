@@ -107,7 +107,11 @@ class RawCSRDataSet(DataSet):
             raise NotImplementedError()
         super().__init__(io_backend=io_backend)
         self._path = path
+        if nav_shape is not None:
+            nav_shape = tuple(nav_shape)
         self._nav_shape = nav_shape
+        if sig_shape is not None:
+            sig_shape = tuple(sig_shape)
         self._sig_shape = sig_shape
         self._sync_offset = sync_offset
         self._conf = None

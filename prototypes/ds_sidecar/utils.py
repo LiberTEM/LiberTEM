@@ -4,18 +4,18 @@ from typing import Dict, Union, Any, Callable, List, Optional
 from typing_extensions import Literal
 
 import numpy as np
-from skimage.io import imread
 import natsort
 
 from tree import TreeFactory, find_in_tree, does_match
 from pydantic import ValidationError, BaseModel
 
 
-def load_raw(path, *, shape, dtype):
+def load_raw(path, *, shape, dtype) -> np.ndarray:
     return np.fromfile(path, dtype=dtype).reshape(shape)
 
 
-def load_image(path, **kwargs):
+def load_image(path, **kwargs) -> np.ndarray:
+    from skimage.io import imread
     return imread(path, **kwargs)
 
 
@@ -39,11 +39,7 @@ sort_methods = {
 }
 
 
-sort_types = Literal['natsorted', 'humansorted', 'os_sorted']
-sort_enum_names = tuple(en.name for en in natsort.ns)
-
-
-def join_if_relative(path: pathlib.Path, root_dir: pathlib.Path):
+def join_if_relative(path: pathlib.Path, root_dir: pathlib.Path) -> pathlib.Path:
     """
     If path is relative concatenate path with root_dir.
     Otherwise return path in a normalized form.

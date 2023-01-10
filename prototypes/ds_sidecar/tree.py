@@ -3,7 +3,8 @@ import tomli
 import json
 import os
 
-from typing import Dict, Any, Optional, Union, Callable
+from typing import Dict, Any, Optional, Union, Callable, Tuple
+from typing_extensions import Literal
 
 
 class NestedDict(dict):
@@ -19,6 +20,9 @@ class NestedDict(dict):
 
     @property
     def parent(self):
+        """
+        Get the parent NestedDict of self or None if self is the root
+        """
         try:
             return self._parent
         except AttributeError:
@@ -26,6 +30,9 @@ class NestedDict(dict):
 
     @property
     def root(self) -> 'NestedDict':
+        """
+        Get the root of the tree in which self sits
+        """
         parent = self.parent
         if parent is not None:
             return parent.root
@@ -42,7 +49,7 @@ class NestedDict(dict):
             raise TypeError(f'Invalid key {key}')
         if not key.startswith('#/'):
             raise KeyError(f'Can only resolve keys in JSON-path syntax (#/), got {key}')
-        return resolve_jsonpath(self.root, key)
+        return get_from_jsonpath(self.root, key)
 
     def copy(self):
         """
@@ -80,6 +87,9 @@ class NestedDict(dict):
         return me
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Return a bare dict copy of self and all children
+        """
         new = {}
         for key, value in self.items():
             if isinstance(value, self.__class__):
@@ -89,13 +99,32 @@ class NestedDict(dict):
         return new
 
     def freeze(self) -> Dict[str, Any]:
+        """
+        Return a bare dict copy of self and all children
+
+        In doing so resolve any relative paths (#/path/to/key)
+        and propagate the 'path root' key from the top of the tree
+        """
         return freeze_tree(self)
 
 
 class TreeFactory:
 
     @classmethod
-    def from_file(cls, path, root: Optional[os.PathLike] = None):
+    def from_file(
+        cls,
+        path: os.PathLike,
+        root: Optional[os.PathLike] = None,
+    ) -> NestedDict:
+        """
+        Load the configuration data from path and return it as a tree
+
+        If the key 'root' is not present at the top of the config,
+        either the supplied root argument will be inserted or the path
+        to the config file itself if root is None.
+
+        Does not parse the config at this stage
+        """
         path = pathlib.Path(path)
 
         if not path.is_file():
@@ -121,7 +150,22 @@ class TreeFactory:
         return cls.to_tree(struct)
 
     @classmethod
-    def from_string(cls, string, format='toml', root: Optional[os.PathLike] = None):
+    def from_string(
+        cls,
+        string: str,
+        format: Literal['toml', 'json'] = 'toml',
+        root: Optional[os.PathLike] = None
+    ) -> NestedDict:
+        """
+        Load the configuration data from a string using a particular format
+        and return it as a tree
+
+        If the key 'root' is not present at the top of the config,
+        either the supplied root argument will be inserted or the current
+        working directory if root is None.
+
+        Does not parse the config at this stage
+        """
         if format == 'toml':
             struct = tomli.loads(string)
         elif format == 'json':
@@ -136,15 +180,22 @@ class TreeFactory:
         return cls.to_tree(struct)
 
     @classmethod
-    def to_tree(cls, struct: Dict[str, Any]):
+    def to_tree(cls, struct: Dict[str, Any]) -> NestedDict:
+        """
+        Convert the dict struct to NestedDict tree
+        """
+        if not isinstance(struct, dict):
+            raise TypeError('Can only convert dict-like to tree')
         if 'root' not in struct:
             raise ValueError('Need a "root" key at top level to define relative paths')
         return build_tree(struct)
 
 
 def build_tree(struct: Dict[str, Any], parent=None):
-    if not isinstance(struct, dict):
-        return struct
+    """
+    Recurse through struct converting any dict instances
+    to NestedDict while setting the parent attribute
+    """
     struct = NestedDict(**struct)
     struct._set_parent(parent)
     for key, value in struct.items():
@@ -153,9 +204,38 @@ def build_tree(struct: Dict[str, Any], parent=None):
     return struct
 
 
-def resolve_paths(tree: NestedDict):
+def get_from_jsonpath(struct: Dict[str, Any], jsonpath: str):
     """
-    Resolve JSON-type paths by converting from
+    Resolve a path in JSON notation #/path/to/key
+    down from struct and return the value found at that path
+    """
+    if not isinstance(jsonpath, str):
+        raise TypeError(f'Key to resolve must be string, got {jsonpath}')
+    components = jsonpath.strip().strip('#/').split('/')
+    components = list(c for c in components if len(c) > 0)
+    return get_in_struct(struct, components)
+
+
+def get_in_struct(struct: Dict[str, Any], components: Tuple[str]):
+    """
+    Generic function to resolve a path in nested struct using
+    keys sequentially taken from components
+
+    An empty components tuple will return struct
+    """
+    view = struct
+    for c in components:
+        if not isinstance(view, dict):
+            raise KeyError(f'Cannot access key {c} in {type(view)} from path {components}')
+        elif c not in view:
+            raise KeyError(f'Cannot resolve key {components} in struct, missing {c}')
+        view = view.get(c)
+    return view
+
+
+def resolve_references(tree: NestedDict):
+    """
+    Resolve JSON-path references by converting from
     string #/ to the value found at that path
 
     If the referenced value is not a NestedDict raises
@@ -166,11 +246,11 @@ def resolve_paths(tree: NestedDict):
 
     #FIXME Could get into an infinite loop if a set of paths form a cycle
 
-    Modifies tree inplace
+    Modifies tree inplace so should run on a copy
     """
     # First resolve relative keys at this level
     # By replacing at this level we keep any NestedDicts
-    # pointing at their original parents / root
+    # pointing at their original parents
     insertions = {}
     for key, value in tree.items():
         if isinstance(value, str) and value.startswith('#/'):
@@ -182,67 +262,70 @@ def resolve_paths(tree: NestedDict):
     insertions = {}
     for key, value in tree.items():
         if isinstance(value, NestedDict):
-            insertions[key] = resolve_paths(value)
+            insertions[key] = resolve_references(value)
     tree.update(insertions)
     return tree
 
 
-def propagate_path_root(tree: NestedDict) -> NestedDict:
-    tree_root = tree.root
-    if 'root' not in tree_root:
-        tree_root['root'] = pathlib.Path()
-    _propagate_path_root(tree_root, tree_root['root'])
+def propagate_key(tree: NestedDict, key: str) -> NestedDict:
+    """
+    Copy a key and its value down in tree to all child NestedDict
+
+    If a child defines its own key, propagate this to its children
+
+    Tree must contain key
+    """
+    if key not in tree:
+        raise KeyError(f'Need key: {key} in tree to propagate down')
+    _propagate_key(tree, tree[key])
     return tree
 
 
-def _propagate_path_root(tree: NestedDict, parent_root: pathlib.Path):
-    tree.setdefault('root', parent_root)
+def _propagate_key(tree: NestedDict, key: str, parent_value):
+    """
+    Recurse into tree setting key to parent_value if not already present
+    If present, set the new value on children
+    """
+    tree.setdefault(key, parent_value)
     for value in tree.values():
         if isinstance(value, NestedDict):
-            _propagate_path_root(value, tree['root'])
+            _propagate_key(value, tree[key])
 
 
-def freeze_tree(tree: NestedDict):
+def freeze_tree(tree: NestedDict) -> Dict[str, Any]:
+    """
+    Make a copy of tree as a plain dictionary with any JSON-path
+    references resolved and the 'root' key propagated to all children
+    """
     tree_copy = tree.copy()
-    tree_copy = propagate_path_root(tree_copy)
-    tree_copy = resolve_paths(tree_copy)
-    if 'root' not in tree_copy:
-        tree_copy['root'] = tree.root.get('root', pathlib.Path())
+    tree_copy = propagate_key(tree_copy.root, 'root')
+    tree_copy = resolve_references(tree_copy)
     return tree_copy.to_dict()
 
 
-def resolve_jsonpath(struct: Dict, jsonpath: str):
-    return _resolve_generic(struct, jsonpath, '#/', '/')
+def find_in_tree(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[NestedDict], bool]]):
+    """
+    Yield all sub-trees from tree satisfying matches
 
-
-def _resolve_generic(struct: Dict, path: str, strip: str, split: str):
-    if not isinstance(path, str):
-        raise TypeError(f'Cannot resolve key {path}')
-    components = path.strip().strip(strip).split(split)
-    components = list(c for c in components if len(c) > 0)
-    view = struct
-    for c in components:
-        if not isinstance(view, dict) or c not in view:
-            raise KeyError(f'Cannot resolve key {path}')
-        view = view.get(c)
-    return view
-
-
-def find_in_tree(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any], bool]]):
-    root = tree.root
-    yield from _find_in_tree(root, matches)
-
-
-def _find_in_tree(tree: NestedDict, matches: Union[Dict[str, Any], Callable[[Any], bool]]):
+    matches can either be a dictionary of key/value pairs
+    which must be present in the sub-tree to validate, or a callable
+    taking the sub-tree and returning bool to yield the sub-tree
+    """
     if does_match(tree, matches):
         yield tree
     for v in tree.values():
         if isinstance(v, NestedDict):
-            yield from _find_in_tree(v, matches)
+            yield from find_in_tree(v, matches)
 
 
 def does_match(tree: NestedDict, matches: Union[Dict[str, Any],
                                                 Callable[[NestedDict], bool]]) -> bool:
+    """
+    Checks tree against the matches argument
+
+    If matches is a dict of key/value pairs to check,
+    these must all support the equality operator
+    """
     if isinstance(matches, dict):
         if all(k in tree and tree[k] == v for k, v in matches.items()):
             return True

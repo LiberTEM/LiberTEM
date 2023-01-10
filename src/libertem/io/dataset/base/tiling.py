@@ -3,10 +3,9 @@ import logging
 import numba
 from numba.typed import List as NumbaList
 import numpy as np
+from sparseconverter import check_shape
 
 from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
-from .roi import _roi_to_indices
-from libertem.common.array_backends import check_shape
 
 
 log = logging.getLogger(__name__)

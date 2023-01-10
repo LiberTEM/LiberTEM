@@ -3,7 +3,7 @@ import pytest
 
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.array_backends import (
+from sparseconverter import (
     for_backend, get_device_class, SPARSE_BACKENDS, SPARSE_COO, NUMPY
 )
 

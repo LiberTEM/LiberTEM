@@ -1,7 +1,7 @@
 from enum import Enum
 from typing_extensions import Protocol, TypedDict, Literal
 from typing import Union
-from libertem.common.array_backends import (
+from sparseconverter import (
     CUDA, CUPY, CUPY_SCIPY_COO, CUPY_SCIPY_CSC, CUPY_SCIPY_CSR, NUMPY,
     SCIPY_COO, SCIPY_CSC, SCIPY_CSR, SPARSE_COO, SPARSE_DOK, SPARSE_GCXS
 )

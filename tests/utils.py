@@ -7,7 +7,7 @@ import numpy as np
 import sparse
 import pytest
 
-from libertem.common.array_backends import (
+from sparseconverter import (
     DENSE_BACKENDS, ND_BACKENDS, NUMPY, SPARSE_BACKENDS, SPARSE_GCXS, ArrayBackend, for_backend
 )
 from libertem.common.sparse import to_dense

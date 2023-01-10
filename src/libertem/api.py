@@ -646,7 +646,7 @@ class Context:
         if roi is None:
             roi = analysis.get_roi()
         else:
-            roi = sparse_to_coo(roi)
+            roi = sparse_to_coo(roi, analysis.dataset.shape.nav)
         udf_results: UDFResultDict = self.run_udf(  # type:ignore[assignment]
             dataset=analysis.dataset, udf=analysis.get_udf(), roi=roi,
             corrections=corrections, progress=progress,

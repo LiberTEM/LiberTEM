@@ -5,10 +5,10 @@ import scipy.sparse
 import numpy as np
 import numba
 import tomli
+from sparseconverter import SCIPY_CSR, ArrayBackend
 
 from libertem.common import Slice, Shape
 from libertem.common.math import prod
-from libertem.common.array_backends import SCIPY_CSR, ArrayBackend
 from libertem.io.corrections.corrset import CorrectionSet
 from libertem.io.dataset.base import (
     DataTile, DataSet

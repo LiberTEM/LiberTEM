@@ -6,6 +6,7 @@ import numpy as np
 import numba
 from numba.typed import Dict
 import contextlib
+from sparseconverter import CUDA, NUMPY, ArrayBackend
 
 from libertem.common.math import prod
 from libertem.io.dataset.base.backend import IOBackend, IOBackendImpl
@@ -13,7 +14,6 @@ from libertem.io.dataset.base.fileset import FileSet
 from libertem.common import Shape, Slice
 from libertem.common.buffers import BufferPool, ManagedBuffer
 from libertem.common.numba import cached_njit
-from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 from .tiling import DataTile
 from .decode import DtypeConversionDecoder
 

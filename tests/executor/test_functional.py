@@ -17,7 +17,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.common.array_backends import (
+from sparseconverter import (
     BACKENDS, CUPY, CUPY_BACKENDS, CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO
 )
 

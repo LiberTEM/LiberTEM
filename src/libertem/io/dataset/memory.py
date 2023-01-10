@@ -4,6 +4,7 @@ from typing import Optional, Sequence, Tuple
 
 import psutil
 import numpy as np
+from sparseconverter import BACKENDS, ArrayBackend, for_backend, get_backend
 
 from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.messageconverter import MessageConverter
@@ -14,7 +15,6 @@ from libertem.io.dataset.base import (
 from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import DataTile
-from libertem.common.array_backends import BACKENDS, ArrayBackend, for_backend, get_backend
 
 
 log = logging.getLogger(__name__)

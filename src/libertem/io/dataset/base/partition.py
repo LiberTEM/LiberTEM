@@ -2,6 +2,7 @@ import warnings
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
+from sparseconverter import ArrayBackend
 
 from libertem.common import Slice, Shape
 from libertem.common.math import count_nonzero
@@ -12,7 +13,6 @@ from .meta import DataSetMeta
 from .fileset import FileSet
 from . import IOBackend
 from .decode import Decoder
-from libertem.common.array_backends import ArrayBackend
 from .roi import roi_for_partition
 
 

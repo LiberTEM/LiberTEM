@@ -3,9 +3,9 @@ from typing import Dict, Optional, Type
 import contextlib
 
 import numpy as np
+from sparseconverter import ArrayBackend
 
 from .fileset import FileSet
-from libertem.common.array_backends import ArrayBackend
 
 log = logging.getLogger(__name__)
 

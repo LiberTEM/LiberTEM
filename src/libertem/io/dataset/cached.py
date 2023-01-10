@@ -12,7 +12,7 @@ from .base import (
     DataSet, Partition, PartitionStructure
 )
 from libertem.io.dataset.cluster import ClusterDataSet
-from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
+from sparseconverter import CUDA, NUMPY, ArrayBackend
 
 
 class VerboseRow(sqlite3.Row):

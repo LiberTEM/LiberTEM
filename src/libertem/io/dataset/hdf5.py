@@ -7,13 +7,13 @@ import time
 
 import numpy as np
 import h5py
+from sparseconverter import CUDA, NUMPY, ArrayBackend
 
 from libertem.common.math import prod, flat_nonzero
 from libertem.common import Slice, Shape
 from libertem.common.buffers import zeros_aligned
 from libertem.io.corrections import CorrectionSet
 from libertem.common.messageconverter import MessageConverter
-from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 from .base import (
     DataSet, Partition, DataTile, DataSetException, DataSetMeta,
     TilingScheme,

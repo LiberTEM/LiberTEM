@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
-from libertem.common.array_backends import NUMPY
+from sparseconverter import NUMPY
 from libertem.common.shape import Shape
 from libertem.common.slice import Slice
 from libertem.common.math import flat_nonzero

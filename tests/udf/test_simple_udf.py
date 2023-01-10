@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import cloudpickle
 
-from libertem.common.array_backends import BACKENDS
+from sparseconverter import BACKENDS
 from libertem.udf.base import UDF, NoOpUDF, UDFPartRunner, UDFParams, UDFMeta
 from libertem.common.executor import Environment
 from libertem.io.dataset.memory import MemoryDataSet

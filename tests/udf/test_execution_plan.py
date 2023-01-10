@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import pytest
 
-from libertem.common.array_backends import (
+from sparseconverter import (
     BACKENDS, CPU_BACKENDS, CUPY, CUPY_SCIPY_COO, NUMPY, SCIPY_COO, SCIPY_CSC, SCIPY_CSR,
     SPARSE_COO, SPARSE_GCXS, get_backend
 )

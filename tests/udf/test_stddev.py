@@ -1,11 +1,10 @@
 import pytest
 import numpy as np
 import numba
-from libertem.common.array_backends import SPARSE_BACKENDS, get_device_class
+from sparseconverter import NUMPY, SPARSE_COO, SPARSE_BACKENDS, get_device_class, for_backend
 
 from libertem.udf.stddev import StdDevUDF, run_stddev, process_tile, merge
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.sparse import SPARSE_COO, for_backend, NUMPY
 
 from utils import _mk_random, set_device_class
 

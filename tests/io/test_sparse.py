@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from libertem.udf.sum import SumUDF
-from libertem.common.array_backends import (
+from sparseconverter import (
     CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO, SPARSE_GCXS, get_backend, for_backend
 )
 

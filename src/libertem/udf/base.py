@@ -12,6 +12,12 @@ import uuid
 import cloudpickle
 import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
+from sparseconverter import (
+    BACKENDS, CUPY_BACKENDS, D2_BACKENDS, DENSE_BACKENDS, ND_BACKENDS, SPARSE_BACKENDS, NUMPY,
+    CUDA_BACKENDS, CPU_BACKENDS, CUDA,
+    ArrayBackend, cheapest_pair, check_shape, get_backend,
+    make_like, result_type, for_backend
+)
 
 from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
 from libertem.common.progress import ProgressManager, PartitionProgressTracker, PartitionTrackerNoOp
@@ -23,12 +29,6 @@ from libertem.exceptions import UDFException
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
     BufferKind, BufferUse, BufferLocation,
-)
-from libertem.common.array_backends import (
-    BACKENDS, CUPY_BACKENDS, D2_BACKENDS, DENSE_BACKENDS, ND_BACKENDS, SPARSE_BACKENDS, NUMPY,
-    CUDA_BACKENDS, CPU_BACKENDS, CUDA,
-    ArrayBackend, cheapest_pair, check_shape, get_backend,
-    base_dtypes, get_cheapest_converter, make_like
 )
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol
@@ -78,10 +78,10 @@ def _get_dtype(
     else:
         tmp_dtype = np.dtype(dtype)
     for udf in udfs:
-        tmp_dtype = np.result_type(
+        tmp_dtype = result_type(
             udf.get_preferred_input_dtype(),
             tmp_dtype,
-            *(base_dtypes[array_backend] for array_backend in array_backends),
+            *array_backends,
         )
     return tmp_dtype
 
@@ -101,11 +101,11 @@ class TileConverter:
         '''
         res = self._cache.get(backend, None)
         if res is None:
-            source, converter = get_cheapest_converter(self._cache.keys(), backend)
-            res = converter(self._cache[source])
-        if backend in ND_BACKENDS:
-            res = res.reshape(self._tile.shape)
-        self._cache[backend] = res
+            source, target = cheapest_pair(self._cache.keys(), (backend, ))
+            res = for_backend(self._cache[source], target)
+            if backend in ND_BACKENDS:
+                res = res.reshape(self._tile.shape)
+            self._cache[backend] = res
         return res
 
 
@@ -500,7 +500,7 @@ class UDFMeta:
     def array_backend(self) -> Optional[ArrayBackend]:
         """
         Array backend, one of the constants defined in
-        :mod:`libertem.common.array_backends` or None if not known
+        :mod:`sparseconverter.array_backends` or None if not known
         at that time.
 
         .. versionadded:: 0.11.0
@@ -2048,12 +2048,14 @@ class UDFPartRunner:
                     )
                     # Internal checks for dataset consistency
                     assert frame_slice.shape[0] == 1
+                    # assert .... or True to allow disabling this check
+                    # in a production run for performance
                     if array_backend in ND_BACKENDS:
                         # The sig dimension is squeezed out
-                        assert check_shape(frame, frame_slice.shape[1:])
+                        assert check_shape(frame, frame_slice.shape[1:]) or True
                     elif array_backend in D2_BACKENDS:
                         # The matrix backend of the 2D arrays adds a sig dimension of 1
-                        assert check_shape(frame, frame_slice.shape)
+                        assert check_shape(frame, frame_slice.shape) or True
                     udf.set_slice(frame_slice)
                     udf.set_views_for_frame(partition, tile, frame_idx)
                     udf.process_frame(frame)

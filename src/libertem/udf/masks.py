@@ -1,6 +1,6 @@
 from libertem.common.math import prod
 import numpy as np
-from libertem.common.array_backends import CUPY_BACKENDS, NUMPY, SCIPY_COO, SCIPY_CSC, SCIPY_CSR
+from sparseconverter import CUPY_BACKENDS, NUMPY, SCIPY_COO, SCIPY_CSC, SCIPY_CSR
 
 from libertem.udf import UDF
 from libertem.common.container import MaskContainer

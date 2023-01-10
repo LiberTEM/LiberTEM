@@ -6,6 +6,7 @@ import contextlib
 
 import numpy as np
 from ncempy.io.ser import fileSER
+from sparseconverter import CUDA, NUMPY, ArrayBackend
 
 from libertem.common.math import prod, flat_nonzero
 from libertem.common import Shape, Slice
@@ -15,7 +16,6 @@ from .base import (
     DataSet, FileSet, BasePartition, DataSetException, DataSetMeta,
     DataTile,
 )
-from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 
 log = logging.getLogger(__name__)
 

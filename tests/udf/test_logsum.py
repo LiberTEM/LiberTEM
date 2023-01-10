@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import libertem.udf.logsum as logsum
-from libertem.common.array_backends import (
+from sparseconverter import (
     SPARSE_BACKENDS, for_backend, NUMPY, SPARSE_COO, get_device_class
 )
 

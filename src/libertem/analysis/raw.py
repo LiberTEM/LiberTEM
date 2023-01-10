@@ -1,5 +1,8 @@
-import numpy as np
 import inspect
+
+import numpy as np
+import sparse
+
 from libertem.udf.raw import PickUDF
 from .base import BaseAnalysis, AnalysisResult, AnalysisResultSet
 from .helper import GeneratorHelper
@@ -111,8 +114,8 @@ class PickFrameAnalysis(BaseAnalysis, id_="PICK_FRAME"):
         return PickUDF()
 
     def get_roi(self):
-        roi = np.zeros(self.dataset.shape.nav, dtype=bool)
-        roi[self.get_origin()] = True
+        coords = np.array(self.get_origin())[:, np.newaxis]
+        roi = sparse.COO(coords=coords, data=True, fill_value=False, shape=self.dataset.shape.nav)
         return roi
 
     def get_udf_results(self, udf_results, roi, damage):

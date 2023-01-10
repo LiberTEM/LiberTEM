@@ -5,7 +5,7 @@ import sparse
 import scipy.sparse
 import numpy as np
 import cloudpickle
-from libertem.common.array_backends import (
+from sparseconverter import (
     CPU_BACKENDS, CUDA, CUPY_BACKENDS, for_backend
 )
 from libertem.io.dataset.base.tiling_scheme import TilingScheme

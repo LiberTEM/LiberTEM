@@ -7,7 +7,7 @@ import pytest
 from libertem.io.dataset.raw_csr import (
     read_tiles_straight, read_tiles_with_roi, CSRTriple, RawCSRDataSet
 )
-from libertem.common.array_backends import NUMPY, for_backend, SCIPY_CSR
+from sparseconverter import NUMPY, for_backend, SCIPY_CSR
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape, Slice
 from libertem.udf.sum import SumUDF

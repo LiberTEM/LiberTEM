@@ -2,9 +2,9 @@ from typing import Any, Optional, TYPE_CHECKING, Sequence
 
 import jsonschema
 import numpy as np
+from sparseconverter import CUDA, NUMPY, ArrayBackend
 
 from libertem.common import Shape
-from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 
 if TYPE_CHECKING:
     from numpy import typing as nt

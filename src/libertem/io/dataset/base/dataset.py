@@ -2,15 +2,15 @@ import typing
 from typing import Generator, Optional, Sequence, Tuple
 
 import numpy as np
-from libertem.common.shape import Shape
+from sparseconverter import CUDA, NUMPY, ArrayBackend
 
+from libertem.common.shape import Shape
 from libertem.common.math import prod
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition, Partition
-from libertem.common.array_backends import CUDA, NUMPY, ArrayBackend
 
 if typing.TYPE_CHECKING:
     from libertem.common.executor import JobExecutor, TaskCommHandler

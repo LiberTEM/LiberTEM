@@ -18,12 +18,12 @@ import aiohttp
 from dask import distributed as dd
 import dask
 from scipy.sparse import csr_matrix
+from sparseconverter import NUMPY, SCIPY_CSR, for_backend
 
 from distributed.scheduler import Scheduler
 import tornado.httpserver
 
 import libertem.api as lt
-from libertem.common.array_backends import NUMPY, SCIPY_CSR, for_backend
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.io.dataset.hdf5 import H5DataSet

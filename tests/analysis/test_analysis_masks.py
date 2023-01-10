@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import scipy.sparse as sp
 import sparse
-from libertem.common.array_backends import (
+from sparseconverter import (
     CUPY, CUPY_BACKENDS, NUMPY, SPARSE_BACKENDS, SPARSE_COO, get_device_class
 )
 

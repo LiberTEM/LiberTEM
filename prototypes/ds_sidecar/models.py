@@ -427,8 +427,9 @@ class ROISpec(WithExtraModel):
 if __name__ == '__main__':
     from tree import TreeFactory
 
-    config_str = R"""
-root='/home/mat/Data/ds1'
+    cwd = f"root='{pathlib.Path().absolute()}'"
+
+    config_str = cwd + R"""
 
 [dataset_config]
 config_type='dataset'
@@ -456,9 +457,14 @@ config_type='roi'
 shape=[5, 6]
 base_value=false
 toggle_px=[[0, 0], [2, 3], [4, 4]]
+
+[my_fileset_2]
+config_type='fileset'
+files='./testfiles/file*.raw'
 """
     nest = TreeFactory.from_string(config_str)
     ds_model = StandardDatasetConfig(**nest['dataset_config'].freeze())
     fileset_model = FileSetConfig(**nest['my_fileset'].freeze())
     array_model = ArrayConfig(**nest['my_array'].freeze())
     roi_model = ROISpec(**nest['my_roi'].freeze())
+    fileset2_model = FileSetConfig(**nest['my_fileset_2'].freeze())

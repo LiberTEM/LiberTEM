@@ -46,16 +46,39 @@ class NPArray:
 
 
 class WithExtraModel(BaseModel):
+    """
+    Any extra keys are inserted onto Model (unvalidated)
+    rather than being dropped
+    """
     class Config:
         allow_population_by_field_name = True
         extra = Extra.allow
 
 
 class WithRootModel(WithExtraModel):
+    """
+    Adds the root attribute for resolving relative file paths
+    This will not be shown in the repr and has a default value
+    of the current working directory
+    """
     root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
 
 
 class FileConfig(WithRootModel):
+    """
+    Config for a single file on disk
+
+    Has a .resolve() method to return the pathlib.Path object
+    pointing to the file on disk, potentially resolved relative
+    to a root path if the file path is not itself absolute
+
+    The specifier path can be a glob which must resolve to
+    only one file in the target directory
+
+    If format is specified and recognized, enables a .load()
+    method which will load the file directly using the associated
+    loader
+    """
     config_type: Literal['file'] = Field(default='file', repr=False)
     path: pathlib.Path
     format: Optional[format_T] = None
@@ -79,6 +102,14 @@ class FileConfig(WithRootModel):
         path_or_config: Union[str, Dict[str, Any]],
         **kwargs
     ) -> Dict[str, Any]:
+        """
+        Instantiate this config from a single value
+        which is assumed to be coercible to a pathlib.Path
+
+        Sets the directory 'root' on the config to the root
+        of the parent config (if called as such), else to
+        the current working directory
+        """
         if not isinstance(path_or_config, dict):
             path_or_config = {
                 'path': path_or_config,
@@ -106,6 +137,20 @@ class FileConfig(WithRootModel):
 
 
 class FileSetConfig(WithRootModel):
+    """
+    Config for a set of files on disk
+
+    Has a .resolve() method to return the list of pathlib.Path objects
+    pointing to the files on disk, potentially resolved relative
+    to a root path if the file paths are not absolute
+
+    The specifier can be one-or-more glob strings
+
+    By default the returned paths will be sorted using 'natsorted',
+    however the sort behaviour can be modified or disabled using options
+    on the config
+    """
+
     config_type: Literal['fileset'] = Field(default='fileset', repr=False)
     files: Union[List[pathlib.Path], pathlib.Path]
     sort: Optional[Literal['natsorted', 'os_sorted', 'humansorted', 'none']] = 'natsorted'
@@ -131,6 +176,15 @@ class FileSetConfig(WithRootModel):
         files_or_config: Union[str, Dict[str, Any]],
         **kwargs
     ) -> Dict[str, Any]:
+        """
+        Instantiate this config from a single value
+        which is assumed to be coercible to pathlib.Path
+        or List[pathlib.Path]
+
+        Sets the directory 'root' on the config to the root
+        of the parent config (if called as such), else to
+        the current working directory
+        """
         if not isinstance(files_or_config, dict):
             files_or_config = {
                 'files': files_or_config,
@@ -138,7 +192,15 @@ class FileSetConfig(WithRootModel):
             }
         return files_or_config
 
-    def resolve(self):
+    def resolve(self) -> List[pathlib.Path]:
+        """
+        Resolve the self.files attribute to a list of paths
+        taking into account glob expansion and the root directory
+        if necessary
+
+        If sorting is enabled (the default) return the list of paths
+        in their sorted form
+        """
         if isinstance(self.files, (str, pathlib.Path)):
             path = join_if_relative(self.files, self.root)
             filelist = resolve_path_glob(path)
@@ -156,18 +218,28 @@ class FileSetConfig(WithRootModel):
 
         return filelist
 
-    def _sort(self, filelist):
+    def _sort(self, filelist: List[pathlib.Path]) -> List[pathlib.Path]:
+        """
+        Sort filelist using the specified sort method and sort options (if any)
+        """
         sort_fn = sort_methods.get(self.sort)
         if sort_fn is None:
             return filelist
         alg_option = natsort.ns.DEFAULT
         if self.sort_options:
             alg_option = functools.reduce(operator.or_, self.sort_options)
-        # FIXME Ambiguity in sorting if we have are reading from multiple directories ?
+        # FIXME Ambiguity in sorting if we are reading from multiple directories ?
         return sort_fn(filelist, alg=alg_option)
 
 
 class FileArrayConfig(FileConfig):
+    """
+    Config for a numpy array loaded from file
+
+    Has the same behaviour / options as FileConfig, but
+    the file must be loadable, and .resolve() returns
+    np.ndarray rather than pathlib.Path
+    """
     config_type: Literal['array'] = Field(default='array', repr=False)
     dtype: Optional[DType] = None
     shape: Optional[conlist(PositiveInt, min_items=1)] = None
@@ -179,7 +251,7 @@ class FileArrayConfig(FileConfig):
             if format not in format_defs.keys():
                 raise ValueError('Need a loadable format to load array from file')
 
-    def resolve(self):
+    def resolve(self) -> np.ndarray:
         path = super().resolve()
         # Explicit path needed to avoid recursion problem in FileConfig.load()
         array = self.load(path=path)
@@ -196,6 +268,13 @@ class FileArrayConfig(FileConfig):
 
 
 class InlineArrayConfig(WithRootModel):
+    """
+    Specify an array of values inline, resolves to np.ndarray
+
+    The data key must be coercible to np.ndarray and
+    the shape key (if supplied) will be used to reshape
+    this data if it is compatible
+    """
     config_type: Literal['array'] = Field(default='array', repr=False)
     data: NPArray
     dtype: Optional[DType] = None
@@ -212,7 +291,7 @@ class InlineArrayConfig(WithRootModel):
                              f'got {value} for data shape {values["data"].shape}')
         return value
 
-    def resolve(self):
+    def resolve(self) -> np.ndarray:
         array = np.asarray(self.data)
         if self.dtype is not None:
             array = array.astype(self.dtype)
@@ -222,6 +301,10 @@ class InlineArrayConfig(WithRootModel):
 
 
 class ArrayConfig(WithExtraModel):
+    """
+    Wrapper around InlineArrayConfig and FileArrayConfig
+    to allow specifying an array from either a file or inline
+    """
     config_type: Literal['array'] = Field(default='array', repr=False)
     array_config: Union[InlineArrayConfig, FileArrayConfig]
 
@@ -236,11 +319,14 @@ class ArrayConfig(WithExtraModel):
             }
         return values
 
-    def resolve(self):
+    def resolve(self) -> np.ndarray:
         return self.array_config.resolve()
 
 
 class StandardDatasetConfig(WithRootModel):
+    """
+    Config for 'standard' LiberTEM dataset arguments
+    """
     config_type: Literal['dataset'] = Field(default='dataset', repr=False)
     # This could be an enum of defined dataset keys
     ds_format: Optional[str] = 'auto'
@@ -249,6 +335,8 @@ class StandardDatasetConfig(WithRootModel):
     sig_shape: Optional[conlist(PositiveInt, min_items=1)] = None
     sync_offset: Optional[int] = 0
 
+    # This validator is used to cast a path-like 'string'
+    # to a FileConfig object which can be resolved
     _cast_file = validator(
         'path',
         pre=True,
@@ -257,12 +345,12 @@ class StandardDatasetConfig(WithRootModel):
 
 
 class ROIFileConfig(FileArrayConfig):
+    """
+    A FileArrayConfig for loading ROIs from file
+    Data is cast to bool after loading by default
+    """
     config_type: Literal['roi'] = Field(default='roi', repr=False)
     dtype: Optional[DType] = bool
-
-    """
-    Get an ROI from a file, will be cast to bool after loading
-    """
 
     @validator('dtype')
     def check_dtype(cls, value):
@@ -272,6 +360,12 @@ class ROIFileConfig(FileArrayConfig):
 
 
 class ROIInlineConfig(WithRootModel):
+    """
+    Specify an ROI inline using a shape
+
+    The roi is initially constructed with base_value for all pixels,
+    and the coordinates in toggle_px are toggled
+    """
     config_type: Literal['roi'] = Field(default='roi', repr=False)
     shape: conlist(PositiveInt, min_items=1)
     base_value: bool
@@ -292,7 +386,7 @@ class ROIInlineConfig(WithRootModel):
                 raise ValueError(f'Invalid coordinate {coord} for shape {containing_shape}')
         return value
 
-    def resolve(self):
+    def resolve(self) -> np.ndarray:
         roi = np.full(tuple(self.shape), self.base_value, dtype=self.dtype)
         if self.toggle_px is None:
             return roi
@@ -308,6 +402,10 @@ class ROIInlineConfig(WithRootModel):
 
 
 class ROISpec(WithExtraModel):
+    """
+    Wrapper around ROIInlineConfig and ROIFileConfig allowing
+    roi specification either from file or inline
+    """
     config_type: Literal['roi'] = Field(default='roi', repr=False)
     array_config: Union[ROIInlineConfig, ROIFileConfig]
 
@@ -322,7 +420,7 @@ class ROISpec(WithExtraModel):
             }
         return values
 
-    def resolve(self):
+    def resolve(self) -> np.ndarray:
         return self.array_config.resolve()
 
 

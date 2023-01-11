@@ -87,7 +87,7 @@ class DataSet:
         partition_size_float_px = self.MAX_PARTITION_SIZE // 4
         dataset_size_px = prod(self.shape)
         num: int = max(self._cores, dataset_size_px // partition_size_float_px)
-        return max(4, num)
+        return num
 
     def get_slices(self):
         """

@@ -500,8 +500,9 @@ class UDFMeta:
     def array_backend(self) -> Optional[ArrayBackend]:
         """
         Array backend, one of the constants defined in
-        :mod:`sparseconverter.array_backends` or None if not known
-        at that time.
+        :mod:`sparseconverter` resp. :code:`BACKEND_*` constants
+        in :class:`libertem.udf.base.UDF`,
+        or None if not known at that time.
 
         .. versionadded:: 0.11.0
         """
@@ -986,6 +987,8 @@ class UDFBase(UDFProtocol):
         #TODO use another mechanism to distinguish between
         dataset and parititon-sized buffers when initializing,
         such that we can modify buffers in both cases.
+
+        :meta private:
         """
         self.results = UDFData(self.get_result_buffers())
         if executor is not None:

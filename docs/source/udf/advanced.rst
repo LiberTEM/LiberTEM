@@ -91,7 +91,7 @@ be calculated.
 
     def process_tile(self, tile):
         tile_slice = self.meta.slice
-        c = self.task_data['mask_container']
+        c = self.task_data.mask_container
         tile_t = np.zeros(
             (np.prod(tile.shape[1:]), tile.shape[0]),
             dtype=tile.dtype
@@ -303,7 +303,7 @@ This non-trivial example from
 :class:`libertem_blobfinder.udf.correlation.SparseCorrelationUDF` creates
 a :class:`~libertem.common.container.MaskContainer` based on the parameters in
 :code:`self.params`. This :class:`~libertem.common.container.MaskContainer` is then
-available as :code:`self.task_data['mask_container']` within the processing
+available as :code:`self.task_data.mask_container` within the processing
 functions.
 
 .. testsetup::
@@ -573,6 +573,114 @@ The :meth:`~libertem.api.Context.run_udf` method allows setting the
 restrict execution to CPU-only or CUDA-only on a hybrid cluster. This is mostly
 useful for testing.
 
+.. _`sparse`:
+
+Sparse arrays
+-------------
+
+.. versionadded:: 0.11.0
+
+As an extension of :ref:`udf cuda`, LiberTEM also supports supplying UDFs with
+tiles in sparse array formats for both CPU and GPU. A UDF specifies the
+supported array backends by overwriting
+:meth:`~libertem.udf.base.UDF.get_backends` to return an iterable with the
+supported formats in order of preference. Each array format is associated with a
+device class so that :ref:`udf cuda` works analogously for both dense and sparse
+formats. Dense CPU and GPU arrays are specified with the backends described in
+:ref:`udf cuda` so that the extension to sparse arrays is backwards-compatible.
+
+The possible backends supported by LiberTEM are available as the
+:code:`BACKEND_*` constants in :class:`libertem.udf.base.UDF`. Some array backends only
+support 2D matrices. The frame, tile or partition is supplied
+with flattened signal dimensions for these. Furthermore, frames include a nav dimension of
+1 with such 2D-only formats.
+
+The backend that is used for a partition is available through
+:attr:`libertem.udf.base.UDF.meta.array_backend` at runtime. Please note that it can be
+different between partitions.
+
+Internally, LiberTEM calculates an execution plan that matches the
+capabilities of all UDFs in a run with the capabilities of the dataset and the
+device class so that conversion overheads are minimized. LiberTEM can process
+data in sparse form from start to finish if a dataset that can produce tiles
+in a sparse format, such as :ref:`raw csr`, is combined with a set of UDFs that
+all support a sparse backend.
+
+Since operations on sparse arrays often use an API modelled after NumPy, but
+return data in various backends that may or may not allow direct assignment into
+a result buffer, the :meth:`libertem.udf.base.UDF.forbuf` method converts an
+array to a backend that is suitable for assigning into the specified result
+buffer. It also takes care of reshaping from 2D to nD as necessary.
+
+Simplified example implementation based on :class:`libertem.udf.sumsigudf.SumSigUDF` that
+demonstrates how support for all array formats can be implemented:
+
+.. testsetup::
+
+    from libertem.udf import UDF
+
+.. testcode::
+
+    class SumSigUDF(UDF):
+        def get_backends(self):
+            # Support all recommended array backends
+            # Please note that their APIs can differ so that comprehensive
+            # tests with all supported backends are required
+            return self.BACKEND_ALL
+
+        def get_result_buffers(self):
+            dtype = np.result_type(self.meta.input_dtype, np.float32)
+            return {
+                'intensity': self.buffer(
+                    kind="nav", dtype=dtype, where='device'
+                ),
+            }
+
+        def process_tile(self, tile):
+            # Show the backend that is currently used
+            print(self.meta.array_backend)
+
+            # Note the following points:
+            # * Using self.forbuf(arr, target) to make the result
+            #   compatible with the result buffer.
+            # * Preemptively flatten the sig dimensions so that
+            #   2D and nD arrays work the same.
+            # * Work around API peculiarities, such as the axis keyword
+            #   that is only partially supported in cupyx.scipy.sparse.
+            self.results.intensity[:] += self.forbuf(
+                np.sum(
+                    # Flatten and sum axis 1 for cupyx.scipy.sparse support
+                    tile.reshape((tile.shape[0], -1)),
+                    axis=1
+                ),
+                self.results.intensity
+            )
+
+    # Empty memory dataset for testing that returns SCIPY_CSR tiles
+    ds = ctx.load(
+        'memory',
+        datashape=(23, 42, 17, 4),
+        sig_dims=2,
+        array_backends=(UDF.BACKEND_SCIPY_CSR, ),
+        num_partitions=2,
+    )
+
+    ctx.run_udf(dataset=ds, udf=SumSigUDF())
+
+.. testoutput::
+
+    scipy.sparse.csr_matrix
+    scipy.sparse.csr_matrix
+
+See the implementation of :class:`libertem.udf.masks.ApplyMasksUDF` and
+:class:`libertem.udf.stddev.StdDevUDF` for non-trivial examples of UDFs
+that support a wide range of array formats!
+
+.. note::
+
+    The underlying library for array type detection and conversion is
+    available independent of LiberTEM at https://github.com/LiberTEM/sparseconverter/.
+
 .. _`threading`:
 
 Threading
@@ -584,9 +692,8 @@ In that scenario, UDFs should only use a single thread to avoid oversubscription
 
 However, when running with a single-process single-thread executor like
 :class:`~libertem.executor.inline.InlineJobExecutor`, multiple threads can be
-used. This is particularly relevant to optimize performance for live processing
-in `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_ since that may
-only be using a single process. The thread count for many common numerics
+used. In some cases this might be advantageous in combination with the inline executor.
+The thread count for many common numerics
 libraries is set automatically by LiberTEM, see
 :attr:`~libertem.udf.base.UDFMeta.threads_per_worker`. For other cases the
 thread count on a worker should be set by the user according to

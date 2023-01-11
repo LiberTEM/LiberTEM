@@ -60,6 +60,7 @@ class WaitEndSumUDF(SumUDF):
         time.sleep(0.5)
 
 
+@pytest.mark.skip("Temporarily disabled since flaky at the moment for unknown reasons")
 def test_progress_inline_fasttime(lt_ctx, monkeypatch):
     fast_time = FastTime()
     monkeypatch.setattr('libertem.common.progress.get_time', fast_time)

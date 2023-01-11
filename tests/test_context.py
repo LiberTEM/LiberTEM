@@ -228,8 +228,9 @@ roi_types = (
     int,
 )
 
-if sys.version_info >= (3, 7) and hasattr(scipy.sparse, 'csr_array'):
-    roi_types = roi_types + (scipy.sparse.csr_array,)  # not available in py36
+if sys.version_info >= (3, 8) and hasattr(scipy.sparse, 'csr_array'):
+    # csr_array was added ~scipy 1.8, which needs Python 3.8
+    roi_types = roi_types + (scipy.sparse.csr_array,)
 
 
 @pytest.mark.parametrize(

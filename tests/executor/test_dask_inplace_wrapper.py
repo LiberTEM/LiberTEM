@@ -1,4 +1,3 @@
-import sys
 import pytest
 
 import dask.array as da
@@ -6,10 +5,6 @@ import numpy as np
 
 from libertem.executor.utils.dask_inplace import DaskInplaceWrapper
 from utils import _mk_random
-
-
-pytestmark = pytest.mark.skipif(sys.version_info < (3, 7),
-                                reason="Cannot inplace assign for Dask on Python3.6")
 
 
 def get_wrapped_data(shape, dtype):

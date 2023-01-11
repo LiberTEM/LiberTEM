@@ -1,5 +1,4 @@
 from functools import partial
-import sys
 
 import numba
 import pytest
@@ -17,14 +16,12 @@ from libertem.executor.utils.dask_inplace import DaskInplaceWrapper
 from utils import _mk_random
 
 
-def test_inplace_python36():
+def test_inplace_wrapper():
     data = _mk_random((55, 55), dtype=np.float32)
     dask_wrapped = DaskInplaceWrapper(da.from_array(data.copy()))
-
     dask_wrapped.set_slice(np.s_[2, :])
-    if sys.version_info < (3, 7):
-        with pytest.raises(NotImplementedError):
-            dask_wrapped[np.s_[3]] = 55.
+    # this used to raise `NotImplementedError` but should now work everywhere:
+    dask_wrapped[np.s_[3]] = 55.
 
 
 class CountUDF(UDF):
@@ -403,7 +400,6 @@ def allclose_with_nan(array1, array2, tol=None):
     "use_roi", (True, False),
     ids=['w/ ROI', 'no ROI']
 )
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
     ds_dict = get_dataset(delayed_ctx, **ds_config, use_roi=use_roi)
     udf_dict = build_udf_dict(udf_config, ds_dict)
@@ -427,7 +423,6 @@ def test_udfs(delayed_ctx, ds_config, udf_config, use_roi):
             allclose_with_nan(result.data, direct_result, tol=udf_dict.get('tolerance', None))
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 def test_iterate(delayed_ctx, default_raw):
     udf = MySumUDF()
     res_noiter = delayed_ctx.run_udf(dataset=default_raw, udf=udf)
@@ -437,7 +432,6 @@ def test_iterate(delayed_ctx, default_raw):
     assert np.allclose(res_noiter['intensity'], res.buffers[0]['intensity'])
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 @pytest.mark.asyncio
 async def test_async(delayed_ctx, default_raw):
     udf = MySumUDF()
@@ -459,7 +453,6 @@ def test_map(delayed_ctx):
     assert np.allclose(wrapped_delayed, np.asarray(iterable)**2)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="Requires python3.7 or higher")
 def test_bare_compute(delayed_ctx):
     ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
     dataset = ds_dict['dataset']
@@ -487,7 +480,6 @@ def test_unwrap_null_case(delayed_ctx):
                 assert unwrapped[k][_i] == _v
 
 
-# Also tests with Python 3.6 since no assignment into Dask array required
 def test_only_dask(lt_ctx, delayed_ctx):
     ds_dict = get_dataset(delayed_ctx, (16, 8, 32, 32), (8, 32, 32), 4, 2)
     dataset = ds_dict['dataset']

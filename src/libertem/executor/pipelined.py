@@ -2,8 +2,6 @@ import itertools
 import os
 import gc
 import sys
-import signal
-import platform
 import logging
 import functools
 import contextlib
@@ -125,17 +123,7 @@ class WorkerPool:
         worker_info.process.terminate()
         worker_info.process.join(timeout)
         if worker_info.process.exitcode is None:
-            if hasattr(worker_info.process, 'kill'):
-                worker_info.process.kill()
-            else:
-                if platform.system() == 'Windows':
-                    import win32api
-                    import win32process
-                    handle = win32api.OpenProcess(1, False, worker_info.process.pid)
-                    win32process.TerminateProcess(handle, -1)
-                    win32api.CloseHandle(handle)
-                else:
-                    os.kill(worker_info.process.pid, signal.SIGKILL)
+            worker_info.process.kill()
             # reap the dead process:
             worker_info.process.join(30)
 

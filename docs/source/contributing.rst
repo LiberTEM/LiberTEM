@@ -137,7 +137,7 @@ Or specify a specific environment you want to run:
 
 .. code-block:: shell
 
-    $ tox -e py36
+    $ tox -e py39
 
 For faster iteration, you can also run only a part of the test suite, without
 using tox. To make this work, first install the test requirements into your
@@ -227,7 +227,7 @@ To run tests that require CuPy using tox, you can specify the CUDA version with 
 
 .. code-block:: shell
 
-    $ tox -e py36-cuda101
+    $ tox -e py39-cuda101
 
 Code coverage
 ~~~~~~~~~~~~~

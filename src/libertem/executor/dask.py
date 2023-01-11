@@ -563,6 +563,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
     def run_each_worker(self, fn, *args, **kwargs):
         # Client.run() creates issues on Windows and OS X with Python 3.6
+        # FIXME workaround may not be needed anymore for Python 3.7+
         available_workers = self.get_available_workers()
 
         future_map = {}

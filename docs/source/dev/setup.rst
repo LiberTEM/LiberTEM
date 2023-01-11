@@ -123,7 +123,7 @@ We are using tox to run our tests.
 On Windows with Anaconda, you have to create named aliases for the Python
 interpreter before you can run :literal:`tox` so that tox finds the python
 interpreter where it is expected. Assuming that you run LiberTEM with Python
-3.6, place the following file as :literal:`python3.6.bat` in your LiberTEM conda
+3.9, place the following file as :literal:`python3.9.bat` in your LiberTEM conda
 environment base folder, typically
 :literal:`%LOCALAPPDATA%\\conda\\conda\\envs\\libertem\\`, where the
 :literal:`python.exe` of that environment is located.
@@ -142,7 +142,7 @@ To execute tests with Python 3.7, you create a new environment with Python 3.7:
     > conda create -n libertem-3.7 python=3.7
 
 Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment
-alongside :literal:`python3.6.bat` and make it execute the Python interpreter of
+alongside :literal:`python3.9.bat` and make it execute the Python interpreter of
 your new libertem-3.7 environment:
 
 .. code-block:: bat

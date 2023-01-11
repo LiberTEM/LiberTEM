@@ -667,7 +667,7 @@ def event_loop():
     # the event policy here.
     # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
     # (this is probably fixed in the current version of pytest-asyncio,
-    # but we can't use that one on Python 3.6, which we still support)
+    # TODO check if still applicable for Python 3.7)
     asyncio.set_event_loop_policy(None)
     adjust_event_loop_policy()
 

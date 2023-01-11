@@ -64,7 +64,7 @@ cost-efficient system built from stock components. All CPU cores and CUDA
 devices in a system can be used in parallel.
 
 LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
-installation of Python 3.6+ and the required packages will likely work as well. The
+installation of Python 3.7+ and the required packages will likely work as well. The
 GUI is running in a web browser.
 
 Installation

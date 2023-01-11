@@ -86,11 +86,54 @@ class CSRTriple(typing.NamedTuple):
 
 class RawCSRDataSet(DataSet):
     """
-    Read sparse data in CSR format from a triple of files
-    that contain the index pointers, the coordinates and the values.
+    Read sparse data in compressed sparse row (CSR) format from a triple of files
+    that contain the index pointers, the coordinates and the values. See
+    https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)
+    for more information on the format.
 
-    Both the navigation and signal axis are flattened, such that existing
-    CSR libraries like scipy.sparse can be used.
+    The necessary parameters are specified in a TOML file like this:
+
+    .. code-block::
+
+        [params]
+
+        filetype = "raw_csr"
+        nav_shape = [512, 512]
+        sig_shape = [516, 516]
+
+        [raw_csr]
+
+        indptr_file = "rowind.dat"
+        indptr_dtype = "<i4"
+
+        indices_file = "coords.dat"
+        indices_dtype = "<i4"
+
+        data_file = "values.dat"
+        data_dtype = "<i4"`
+
+    Both the navigation and signal axis are flattened in the file, so that existing
+    CSR libraries like scipy.sparse can be used directly by memory-mapping or
+    reading the file contents.
+
+    Parameters
+    ----------
+
+    path : str
+        Path to the TOML file with file names and other parameters for the sparse dataset.
+    nav_shape : Tuple[int, int], optional
+        A nav_shape to apply to the dataset overriding the shape
+        value read from the TOML file, by default None. This can
+        be used to read a subset of the data, or reshape the
+        contained data.
+    sig_shape : Tuple[int, int], optional
+        A sig_shape to apply to the dataset overriding the shape
+        value read from the TOML file, by default None.
+    sync_offset : int, optional, by default 0
+        If positive, number of frames to skip from start
+        If negative, number of blank frames to insert at start
+    io_backend : IOBackend, optional
+        The I/O backend to use, see :ref:`io backends`, by default None.
     """
 
     def __init__(

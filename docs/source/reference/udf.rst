@@ -22,11 +22,12 @@ Mixins for processing methods
 .. autoclass:: libertem.udf.base.UDFPartitionMixin
     :members:
 
-Base UDF class
-##############
+Base UDF classes
+################
 
 .. autoclass:: libertem.udf.base.UDF
     :members:
+    :inherited-members:
 
 Alternative merging for Dask arrays
 ###################################

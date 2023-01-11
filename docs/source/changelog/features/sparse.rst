@@ -1,4 +1,6 @@
 [Feature] Sparse input data
 ===========================
 
-* Support datasets that generate :code:`sparse.COO` or :code:`sparse.GCXS` tiles (:pr:`1207`).
+* Datasets and UDFs support tiles in various array formats, in particular :ref:`sparse`.
+  (:issue:`1205`, :pr:`1207`)
+* Add support for :code:`raw_csr` file format (:issue:`1195`, :pr:`1207`).

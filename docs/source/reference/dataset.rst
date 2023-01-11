@@ -28,6 +28,13 @@ Raw binary files
 
 .. autoclass:: libertem.io.dataset.raw.RawFileDataSet
 
+.. _`raw csr`:
+
+Raw binary files in sparse CSR format
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: libertem.io.dataset.raw_csr.RawCSRDataSet
+
 .. _`npy format`:
 
 NumPy files (NPY)

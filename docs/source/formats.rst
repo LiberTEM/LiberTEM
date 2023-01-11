@@ -87,6 +87,7 @@ LiberTEM supports the following file formats out of the box, see links for detai
 
 * :ref:`mib`
 * :ref:`raw binary`
+* :ref:`raw csr`
 * :ref:`npy format`
 * :ref:`dm format`
 * :ref:`empad`

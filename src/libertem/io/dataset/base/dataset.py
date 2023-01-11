@@ -325,7 +325,7 @@ class DataSet:
     def save_as(
         self,
         path: os.PathLike,
-        format: Optional[Literal['raw', 'npy', 'hdf5']] = None,
+        format: Optional[Literal['raw', 'npy']] = None,
         progress: bool = False,
         save_dtype: Optional['nt.DTypeLike'] = None,
     ):
@@ -335,6 +335,10 @@ class DataSet:
         The written data will have any reshaping / sync_offset
         effectively hard coded into the new file.
 
+        Could be extended to support HDF5 or Zarr export but
+        would need a way to constrain partitions to be compatible
+        with regular chunking.
+
         This is currently processed sequentially by partition on
         the main node for simplicity, so could take some time,
         but could be paralellised if needed in the future
@@ -343,7 +347,7 @@ class DataSet:
         ----------
         path : os.PathLike
             The path to export to
-        format : Optional[Literal['raw', 'npy', 'hdf5']], optional
+        format : Optional[Literal['raw', 'npy']], optional
             The format to export in, by default None.
             When not specified this must be inferrable
             from the suffix of path.

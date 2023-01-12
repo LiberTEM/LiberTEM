@@ -1,11 +1,14 @@
 import time
 import pytest
 import typing
+from contextlib import contextmanager
 
 import libertem.api as lt
 from libertem.udf.sum import SumUDF
 from libertem.udf.base import UDFRunner
 from libertem.common.progress import TQDMProgressReporter, ProgressState
+from libertem.common.executor import TaskCommHandler, WorkerQueue, WorkerQueueEmpty
+from libertem.io.dataset.memory import MemoryDataSet
 
 import utils
 
@@ -35,6 +38,38 @@ class TrackingTQDM(TQDMProgressReporter):
             print(hist)
 
 
+class InlineProgressTaskCommHandler(TaskCommHandler):
+    @contextmanager
+    def monitor(self, queue: WorkerQueue):
+        """
+        Normally this would monitor the queue in the background
+        and set up callbacks for progress, but instead just save
+        a reference to the queue and wait, i.e. all messages received
+        will build up in the queue and not be consumed
+        """
+        self._progress_queue = queue
+        yield
+
+
+class MemoryDataSetMockComms(MemoryDataSet):
+    def get_task_comm_handler(self):
+        """
+        Save reference to patched comm handler so we can
+        access the filled queue after the call to run_udf
+        """
+        self._comms_handler = InlineProgressTaskCommHandler()
+        return self._comms_handler
+
+
+def drain_queue(queue):
+    while True:
+        try:
+            with queue.get(block=False) as ((topic, msg), _):
+                yield topic, msg
+        except WorkerQueueEmpty:
+            break
+
+
 class FastTime:
     """
     Time getter which increases by at least
@@ -58,26 +93,23 @@ class WaitEndSumUDF(SumUDF):
         time.sleep(0.5)
 
 
-@pytest.mark.skip("Temporarily disabled since flaky at the moment for unknown reasons")
 def test_progress_inline_fasttime(lt_ctx, monkeypatch):
+    """
+    Tests that a comms failure will still correctly report
+    Task completion, and that each partition sends signals
+    when it begins and for each tile by patching the get_time
+    function to increment quickly
+    """
     fast_time = FastTime()
     monkeypatch.setattr('libertem.common.progress.get_time', fast_time)
 
     data = utils._mk_random(size=(4, 4, 16, 16), dtype='float32')
-    ds = lt_ctx.load(
-        'memory',
+    ds = MemoryDataSetMockComms(
         data=data,
         num_partitions=2,
         tileshape=(4, 4, 16),
     )
-
-    # 1 setup message
-    # 1 message per partition start
-    # 8 tiles per partition
-    # first tile is never signalled
-    # final few tile messages might be skipped by partition end message
-    # 1 partition end message
-    # 1 teardown message
+    ds.initialize(lt_ctx)
 
     reporter = TrackingTQDM()
     udf = SumUDF()
@@ -91,18 +123,31 @@ def test_progress_inline_fasttime(lt_ctx, monkeypatch):
 
     assert reporter._bar.n == reporter._bar.total
 
+    # These are the states which are generated synchronously
+    # through a call to finalize_task() on the main thread
+    # This tests the fallback mechanism in case comms fail
     states = reporter._history
     start_progress = ProgressState(0., 16, 0, 0, 2)
     assert start_progress in states
+    part0_end_progress = ProgressState(8., 16, 1, 0, 2)
+    assert part0_end_progress in states
+    part1_end_progress = ProgressState(16., 16, 2, 0, 2)
+    assert part1_end_progress in states
 
-    # Check for errant values
-    assert {s.num_part_in_progress for s in states} == {0, 1}
-    assert {s.num_part_complete for s in states} == {0, 1, 2}
-    assert {s.num_part_total for s in states} == {2}
-    assert {s.num_frames_total for s in states} == {16}
-    # Possible updates excludes 1 and 9 because first tiles are never reported
-    possible_frames_complete = {float(r) for r in range(16 + 1)}.difference({1., 9.})
-    assert {s.num_frames_complete for s in states}.issubset(possible_frames_complete)
+    # Get the queue to read the intermediate messages
+    queue = ds._comms_handler._progress_queue
+    # We expect 7 tile messages per partition as the first is skipped
+    expected_order = ['partition_start'] + ['tile_complete'] * 7
+    # Two partitions in this dataset
+    expected_order = expected_order * 2
+
+    # Drain the queue of messages and check the order
+    current_part = None
+    for (topic, message), expected_topic in zip(drain_queue(queue), expected_order):
+        assert topic == expected_topic
+        if topic == 'partition_start':
+            current_part = message['ident']
+        assert message['ident'] == current_part
 
 
 class GoSlowSumUDF(WaitEndSumUDF):

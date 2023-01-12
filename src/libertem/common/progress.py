@@ -210,8 +210,8 @@ class ProgressManager:
         # For converting tiles to pseudo-frames
         self._sig_size = tasks[0].partition.shape.sig.size
         # Counters for part display
-        self._num_complete = 0
-        self._num_in_progress = 0
+        self._complete = set()
+        self._in_progress = set()
         self._num_total = len(self._counters)
         if reporter is None:
             reporter = TQDMProgressReporter()
@@ -231,8 +231,8 @@ class ProgressManager:
         return ProgressState(
             sum(self._counters.values()),
             self._total_frames,
-            self._num_complete,
-            self._num_in_progress,
+            len(self._complete),
+            len(self._in_progress),
             self._num_total,
         )
 
@@ -271,7 +271,13 @@ class ProgressManager:
         """
         if topic != 'partition_start':
             raise RuntimeError('Unrecognized topic')
-        self._num_in_progress += 1
+        t_id = message['ident']
+        if t_id not in self._complete:
+            # if not complete handles case task was completed
+            # before we can process its start message,
+            # completion is signalled in the main thread
+            # while start messages are processed in the background
+            self._in_progress.add(t_id)
         self.reporter.update(self.state)
 
     def handle_end_task(self, topic: str, message: Dict[str, Any]):
@@ -285,8 +291,8 @@ class ProgressManager:
         remain = self._task_max[t_id] - int(self._counters[t_id])
         if remain:
             self._counters[t_id] = self._task_max[t_id]
-        self._num_complete += 1
-        self._num_in_progress = max(0, self._num_in_progress - 1)
+        self._in_progress.discard(t_id)
+        self._complete.add(t_id)
         self.reporter.update(self.state)
 
     def handle_tile_update(self, topic: str, message: Dict[str, Any]):
@@ -341,10 +347,10 @@ class PartitionProgressTracker(PartitionTrackerNoOp):
         The minumum time between messages, by default 1 second.
     """
     def __init__(
-                self,
-                partition: 'Partition',
-                min_message_interval: float = 1.,
-            ):
+        self,
+        partition: 'Partition',
+        min_message_interval: float = 1.,
+    ):
         self._ident = partition.get_ident()
         try:
             self._worker_context = partition._worker_context

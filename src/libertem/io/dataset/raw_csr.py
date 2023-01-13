@@ -169,9 +169,6 @@ class RawCSRDataSet(DataSet):
         sig_shape = tuple(conf['params']['sig_shape'])
         if self._nav_shape is None:
             self._nav_shape = nav_shape
-        else:
-            if prod(self._nav_shape) != prod(nav_shape):
-                raise ValueError(f"Nav size mismatch between {self._nav_shape} and {nav_shape}.")
         if self._sig_shape is None:
             self._sig_shape = sig_shape
         else:
@@ -508,20 +505,28 @@ def read_tiles_with_roi(
 
     indptr = sliced_indptr(triple, partition_slice=partition_slice)
 
+    roi_overhang = max(0, len(part_roi) - len(indptr) + 1)
+    if roi_overhang:
+        real_part_roi = part_roi[:-roi_overhang]
+    else:
+        real_part_roi = part_roi
+
     sig_shape = tuple(partition_slice.shape.sig)
     sig_size = partition_slice.shape.sig.size
     sig_dims = len(sig_shape)
 
-    start_values = indptr[:-1][part_roi]
-    stop_values = indptr[1:][part_roi]
+    start_values = indptr[:-1][real_part_roi]
+    stop_values = indptr[1:][real_part_roi]
 
     # Implementing this "by hand" instead of fancy indexing to provide a template to use an
     # actual I/O backend here instead of memory mapping.
     # The native scipy.sparse.csr_matrix implementation of fancy indexing
     # with a boolean mask for nav is very fast.
 
-    for indptr_start in range(0, len(start_values), tiling_scheme.depth):
+    for indptr_start in range(0, len(part_roi), tiling_scheme.depth):
         indptr_stop = min(indptr_start + tiling_scheme.depth, len(start_values))
+        # read empty slices when going beyond the file
+        indptr_start = min(indptr_start, indptr_stop)
         indptr_tile_start = start_values[indptr_start:indptr_stop]
         indptr_tile_stop = stop_values[indptr_start:indptr_stop]
         size = sum(indptr_tile_stop - indptr_tile_start)

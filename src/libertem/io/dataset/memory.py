@@ -207,7 +207,7 @@ class MemoryDataSet(DataSet):
     >>> data = np.zeros((2, 2, 128, 128))
     >>> ds = MemoryDataSet(data=data)
     '''
-    def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=2,
+    def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=None,
                  check_cast=True, tiledelay=None, datashape=None, base_shape=None,
                  force_need_decode=False, io_backend=None,
                  nav_shape=None, sig_shape=None, sync_offset=0, array_backends=None):
@@ -229,31 +229,47 @@ class MemoryDataSet(DataSet):
         self.data = data
         self._base_shape = base_shape
         self.num_partitions = num_partitions
+
+        if sig_dims is None:
+            if sig_shape is not None:
+                sig_dims = len(sig_shape)
+            elif nav_shape is not None:
+                sig_dims = len(data.shape) - len(nav_shape)
+            else:
+                sig_dims = 2
+        else:
+            if sig_shape is not None and len(sig_shape) != sig_dims:
+                raise ValueError(
+                    f"Length of sig_shape {sig_shape} not matching sig_dims {sig_dims}."
+                )
+
         self.sig_dims = sig_dims
         if nav_shape is None:
-            self._nav_shape = self.shape.nav
+            nav_shape = data.shape[:-sig_dims]
         else:
-            self._nav_shape = tuple(nav_shape)
+            nav_shape = tuple(nav_shape)
         if sig_shape is None:
-            self._sig_shape = self.shape.sig
+            sig_shape = data.shape[-sig_dims:]
         else:
-            self._sig_shape = tuple(sig_shape)
-            self.sig_dims = len(self._sig_shape)
+            sig_shape = tuple(sig_shape)
+        reshaped_data = self.data.reshape((-1, *sig_shape))
+        self._nav_shape = nav_shape
+        self._sig_shape = sig_shape
         self._sync_offset = sync_offset
         self._array_backends = array_backends
         self._check_cast = check_cast
         self._tiledelay = tiledelay
         self._force_need_decode = force_need_decode
-        self._image_count = int(prod(self._nav_shape))
+        self._nav_shape_product = int(prod(nav_shape))
+        self._image_count = int(prod(reshaped_data.shape[:-sig_dims]))
         self._shape = Shape(
-            tuple(self._nav_shape) + tuple(self._sig_shape), sig_dims=self.sig_dims
+            nav_shape + sig_shape, sig_dims=self.sig_dims
         )
         if tileshape is None:
             self.tileshape = None
         else:
             assert len(tileshape) == self.sig_dims + 1
             self.tileshape = Shape(tileshape, sig_dims=self.sig_dims)
-        self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
         self._meta = DataSetMeta(
             shape=self._shape,
@@ -276,7 +292,7 @@ class MemoryDataSet(DataSet):
 
     @property
     def shape(self):
-        return Shape(self.data.shape, sig_dims=self.sig_dims)
+        return self._shape
 
     @property
     def array_backends(self) -> Optional[Sequence[ArrayBackend]]:
@@ -331,7 +347,7 @@ class MemoryDataSet(DataSet):
                 end_idx=self._image_count,
                 native_dtype=self.data.dtype,
                 sig_shape=self.shape.sig,
-                data=self.data.reshape(self.shape.flatten_nav()),
+                data=self.data.reshape((-1, *self.shape.sig)),
                 check_cast=self._check_cast,
             )
         ])

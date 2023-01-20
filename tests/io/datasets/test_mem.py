@@ -4,6 +4,7 @@ import pytest
 from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.stddev import StdDevUDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from sparseconverter import (
@@ -310,3 +311,70 @@ def test_scheme_too_large():
     tiles = p.get_tiles(tiling_scheme=tiling_scheme, array_backend=NUMPY)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + ds.shape.sig)
+
+
+@pytest.mark.parametrize(
+    'nav_shape', (None, (3, 7), (14*8 + 1, ), (13, 19, 23))
+)
+@pytest.mark.parametrize(
+    'sig_shape', (None, (19, 23), (19 * 23, ))
+)
+@pytest.mark.parametrize(
+    'sync_offset', (0, -3, 7, 13*7, -14*8)
+)
+@pytest.mark.parametrize(
+    'sig_dims', (None, 1, 2)
+)
+def test_sig_nav_dims_sync(nav_shape, sig_shape, sync_offset, sig_dims, prime_raw_data, lt_ctx):
+    if sig_shape is None and sig_dims is None and nav_shape is not None and len(nav_shape) < 2:
+        pytest.xfail("This one doesn't reshape nav as the test requires.")
+    print('nav_shape', nav_shape)
+    print('sig_shape', sig_shape)
+    print('sync_offset', sync_offset)
+    print('sig_dims', sig_dims)
+    throws_value_error = (
+        sig_shape is not None and sig_dims is not None and len(sig_shape) != sig_dims
+    )
+    if nav_shape is not None:
+        expected_nav_shape = nav_shape
+    elif sig_dims is not None:
+        expected_nav_shape = prime_raw_data.shape[:-sig_dims]
+    elif sig_shape is not None:
+        expected_nav_shape = prime_raw_data.shape[:-len(sig_shape)]
+    else:
+        expected_nav_shape = prime_raw_data.shape[:-2]
+
+    if sig_shape is not None:
+        expected_sig_shape = sig_shape
+    elif sig_dims is not None:
+        expected_sig_shape = prime_raw_data.shape[-sig_dims:]
+    elif nav_shape is not None:
+        expected_sig_shape = prime_raw_data.shape[len(nav_shape):]
+    else:
+        expected_sig_shape = prime_raw_data.shape[-2:]
+
+    if throws_value_error:
+        with pytest.raises(ValueError):
+            ds = lt_ctx.load(
+                'memory',
+                data=prime_raw_data,
+                nav_shape=nav_shape,
+                sig_shape=sig_shape,
+                sync_offset=sync_offset,
+                sig_dims=sig_dims
+            )
+    else:
+        ds = lt_ctx.load(
+            'memory',
+            data=prime_raw_data,
+            nav_shape=nav_shape,
+            sig_shape=sig_shape,
+            sync_offset=sync_offset,
+            sig_dims=sig_dims
+        )
+        assert tuple(ds.shape.sig) == expected_sig_shape
+        assert tuple(ds.shape.nav) == expected_nav_shape
+
+        # FIXME also check correctness of results
+        udf = StdDevUDF()
+        lt_ctx.run_udf(dataset=ds, udf=udf)

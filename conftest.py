@@ -261,6 +261,33 @@ def default_raw(tmpdir_factory, default_raw_data):
 
 
 @pytest.fixture(scope='session')
+def prime_raw_data():
+    return utils._mk_random(size=(13, 17, 19, 23), dtype='float32')
+
+
+@pytest.fixture(scope='session')
+def prime_raw(tmpdir_factory, prime_raw_data):
+    lt_ctx = lt.Context(executor=InlineJobExecutor())
+    datadir = tmpdir_factory.mktemp('data')
+    filename = datadir + '/raw-test-prime'
+    prime_raw_data.tofile(str(filename))
+    del prime_raw_data
+    ds = lt_ctx.load(
+        "raw",
+        path=str(filename),
+        dtype="float32",
+        nav_shape=(13, 17),
+        sig_shape=(19, 23),
+        io_backend=MMapBackend(),
+    )
+    ds.set_num_cores(2)
+    try:
+        yield ds
+    finally:
+        lt_ctx.close()
+
+
+@pytest.fixture(scope='session')
 def default_raw_asymm(tmpdir_factory, default_raw_data):
     lt_ctx = lt.Context(executor=InlineJobExecutor())
     datadir = tmpdir_factory.mktemp('data')

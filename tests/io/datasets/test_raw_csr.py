@@ -3,6 +3,7 @@ import os
 from scipy.sparse import csr_matrix
 import numpy as np
 import pytest
+from numpy.testing import assert_allclose
 
 from libertem.io.dataset.raw_csr import (
     read_tiles_straight, read_tiles_with_roi, CSRTriple, RawCSRDataSet
@@ -12,6 +13,8 @@ from libertem.io.dataset.base import TilingScheme
 from libertem.common import Shape, Slice
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
+from libertem.udf.masks import ApplyMasksUDF
+from libertem.udf.stddev import StdDevUDF
 from libertem.common.math import prod
 
 from utils import _mk_random, get_testdata_path
@@ -47,6 +50,7 @@ def test_get_tiles_straight():
             partition_slice=partition_slice,
             tiling_scheme=tiling_scheme,
             dest_dtype=res.dtype,
+            sync_offset=0
     ):
         res += np.sum(tile.data, axis=0)
         assert tile.shape[0] <= tuple(tileshape)[0]
@@ -87,6 +91,7 @@ def test_get_tiles_simple():
             partition_slice=partition_slice,
             tiling_scheme=tiling_scheme,
             dest_dtype=res.dtype,
+            sync_offset=0
     ):
         res += np.sum(tile.data, axis=0)
         assert tile.shape[0] <= tuple(tileshape)[0]
@@ -132,6 +137,7 @@ def test_get_tiles_simple_roi():
             tiling_scheme=tiling_scheme,
             roi=roi,
             dest_dtype=res.dtype,
+            sync_offset=0
     ):
         res += np.sum(tile.data, axis=0)
         assert tile.shape[0] <= tuple(tileshape)[0]
@@ -170,6 +176,7 @@ def test_get_tiles_roi():
             tiling_scheme=tiling_scheme,
             roi=roi,
             dest_dtype=res.dtype,
+            sync_offset=0
     ):
         res += np.sum(tile.data, axis=0)
 
@@ -275,4 +282,99 @@ def test_sig_nav_shape(raw_csr_generated, lt_ctx):
     assert np.allclose(
         ref['intensity'].data,
         res['intensity'].data.reshape(raw_csr_generated.shape.nav)
+    )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    'sync_offset', (
+        0, 1, -1, -10, 13, 13*15, -13*14,
+        np.random.randint(low=-13*18, high=13*18)
+    ),
+)
+@pytest.mark.parametrize(
+    'nav_shape', (
+        None, (14, 14), (47, 13),
+        (np.random.randint(low=1, high=13*18), ),
+        (np.random.randint(low=1, high=13*18), np.random.randint(low=1, high=13*18)),
+        (
+            np.random.randint(low=1, high=13*18),
+            np.random.randint(low=1, high=13*18),
+            np.random.randint(low=1, high=13*18)
+        ),
+    ),
+)
+@pytest.mark.parametrize(
+    'sig_shape', (
+        None, (24, 19), (24*19, )
+    ),
+)
+@pytest.mark.parametrize(
+    'use_roi', (False, True)
+)
+def test_reshape_sync_offset(
+        raw_csr_generated, mock_sparse_data, lt_ctx, sync_offset, nav_shape, sig_shape, use_roi):
+    orig, data_flat = mock_sparse_data
+    data = data_flat.reshape(raw_csr_generated.shape)
+    # Otherwise memory and raw_csr use different approach to determine shape
+    # that yields different results
+    if nav_shape is None and sig_shape is not None:
+        mem_nav_shape = raw_csr_generated.shape.nav
+    else:
+        mem_nav_shape = nav_shape
+    if sig_shape is None and nav_shape is not None:
+        mem_sig_shape = raw_csr_generated.shape.sig
+    else:
+        mem_sig_shape = sig_shape
+    ref_ds = lt_ctx.load(
+        'memory',
+        data=data,
+        nav_shape=mem_nav_shape,
+        sig_shape=mem_sig_shape,
+        sync_offset=sync_offset,
+    )
+
+    if use_roi:
+        roi = np.random.choice([True, False], size=ref_ds.shape.nav)
+    else:
+        roi = None
+
+    print('nav_shape', nav_shape)
+    print('sig_shape', sig_shape)
+    print('sync_offset', sync_offset)
+    print('roi', roi)
+
+    ds = lt_ctx.load(
+        'raw_csr', path=raw_csr_generated._path,
+        sync_offset=sync_offset, nav_shape=nav_shape, sig_shape=sig_shape
+    )
+
+    assert tuple(ref_ds.shape.sig) == tuple(ds.shape.sig)
+    assert tuple(ref_ds.shape.nav) == tuple(ds.shape.nav)
+
+    masks = np.random.random(size=(3, *ref_ds.shape.sig))
+    udf_masks = ApplyMasksUDF(mask_factories=lambda: masks)
+    udf_std = StdDevUDF()
+
+    ref_result = lt_ctx.run_udf(udf=(udf_masks, udf_std), dataset=ref_ds)
+    result = lt_ctx.run_udf(udf=(udf_masks, udf_std), dataset=ds)
+
+    r1 = ref_result[0]['intensity'].raw_data
+    r2 = result[0]['intensity'].raw_data
+
+    print(
+        np.max((r1 - r2) / np.maximum(0.00001, (np.abs(r1) + np.abs(r2))))
+    )
+
+    assert_allclose(
+        ref_result[0]['intensity'].raw_data,
+        result[0]['intensity'].raw_data
+    )
+    assert_allclose(
+        ref_result[1]['std'].raw_data,
+        result[1]['std'].raw_data
+    )
+    assert_allclose(
+        ref_result[1]['num_frames'].raw_data,
+        result[1]['num_frames'].raw_data
     )

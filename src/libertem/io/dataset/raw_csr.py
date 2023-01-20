@@ -144,8 +144,6 @@ class RawCSRDataSet(DataSet):
         sync_offset: int = 0,
         io_backend: typing.Optional["IOBackend"] = None
     ):
-        if sync_offset != 0:
-            raise NotImplementedError()
         if io_backend is not None:
             raise NotImplementedError()
         super().__init__(io_backend=io_backend)
@@ -180,8 +178,8 @@ class RawCSRDataSet(DataSet):
         executor.run_function(
             check,
             descriptor=descriptor,
-            nav_shape=nav_shape,
-            sig_shape=sig_shape
+            nav_shape=self._nav_shape,
+            sig_shape=self._sig_shape
         )
         image_count = executor.run_function(get_nav_size, descriptor=descriptor)
         self._image_count = image_count
@@ -336,18 +334,22 @@ class RawCSRPartition(Partition):
             raise NotImplementedError(
                 "corrections are not yet supported for raw CSR"
             )
-        # TODO: sync_offset
         if roi is None:
-            yield from read_tiles_straight(triple, self.slice, tiling_scheme, dest_dtype)
+            yield from read_tiles_straight(
+                triple, self.slice, self.meta.sync_offset, tiling_scheme, dest_dtype
+            )
         else:
-            yield from read_tiles_with_roi(triple, self.slice, tiling_scheme, roi, dest_dtype)
+            yield from read_tiles_with_roi(
+                triple, self.slice, self.meta.sync_offset, tiling_scheme, roi, dest_dtype
+            )
 
 
-def sliced_indptr(triple: CSRTriple, partition_slice: Slice):
+def sliced_indptr(triple: CSRTriple, partition_slice: Slice, sync_offset: int):
     assert len(partition_slice.shape.nav) == 1
-    indptr_start = partition_slice.origin[0]
-    indptr_stop = indptr_start + partition_slice.shape.nav[0] + 1
-    return triple.indptr[indptr_start:indptr_stop]
+    skip = min(0, partition_slice.origin[0] + sync_offset)
+    indptr_start = max(0, partition_slice.origin[0] + sync_offset)
+    indptr_stop = max(0, partition_slice.origin[0] + partition_slice.shape.nav[0] + 1 + sync_offset)
+    return skip, triple.indptr[indptr_start:indptr_stop]
 
 
 def get_triple(descriptor: CSRDescriptor) -> CSRTriple:
@@ -378,11 +380,6 @@ def check(descriptor: CSRDescriptor, nav_shape, sig_shape, debug=False):
     triple = get_triple(descriptor)
     if triple.indices.shape != triple.data.shape:
         raise RuntimeError('Shape mismatch between data and indices.')
-    if triple.indptr.shape != (prod(nav_shape) + 1, ):
-        raise RuntimeError(
-            f'Shape mismatch of indptr: File has {triple.indptr.shape}, '
-            f'expected is {(prod(nav_shape) + 1, )}.'
-        )
     if debug:
         assert np.min(triple.indices) >= 0
         assert np.max(triple.indices) < prod(sig_shape)
@@ -429,12 +426,17 @@ def get_nav_size(descriptor: CSRDescriptor) -> int:
 def read_tiles_straight(
     triple: CSRTriple,
     partition_slice: Slice,
+    sync_offset: int,
     tiling_scheme: TilingScheme,
     dest_dtype: np.dtype,
 ):
     assert len(tiling_scheme) == 1
 
-    indptr = sliced_indptr(triple, partition_slice=partition_slice)
+    skip, indptr = sliced_indptr(
+        triple,
+        partition_slice=partition_slice,
+        sync_offset=sync_offset
+    )
 
     sig_shape = tuple(partition_slice.shape.sig)
     sig_size = partition_slice.shape.sig.size
@@ -445,7 +447,12 @@ def read_tiles_straight(
     # Furthermore it provides a template to use an actual I/O backend here
     # instead of memory mapping.
     for indptr_start in range(0, len(indptr) - 1, tiling_scheme.depth):
+        tile_start = indptr_start - skip  # skip is a negative value or 0
         indptr_stop = min(indptr_start + tiling_scheme.depth, len(indptr) - 1)
+        if indptr_stop - indptr_start <= 0:
+            continue
+
+        indptr_slice = indptr[indptr_start:indptr_stop + 1]
 
         start = indptr[indptr_start]
         stop = indptr[indptr_stop]
@@ -453,15 +460,15 @@ def read_tiles_straight(
         if dest_dtype != data.dtype:
             data = data.astype(dest_dtype)
         indices = triple.indices[start:stop]
-        indptr_slice = indptr[indptr_start:indptr_stop + 1]
+
         indptr_slice = indptr_slice - indptr_slice[0]
         arr = scipy.sparse.csr_matrix(
             (data, indices, indptr_slice),
             shape=(indptr_stop - indptr_start, sig_size)
         )
         tile_slice = Slice(
-            origin=(partition_slice.origin[0] + indptr_start, ) + (0, ) * sig_dims,
-            shape=Shape((indptr_stop - indptr_start, ) + sig_shape, sig_dims=sig_dims),
+            origin=(partition_slice.origin[0] + tile_start, ) + (0, ) * sig_dims,
+            shape=Shape((arr.shape[0], ) + sig_shape, sig_dims=sig_dims),
         )
         yield DataTile(
             data=arr,
@@ -493,23 +500,29 @@ def populate_tile(
 def read_tiles_with_roi(
     triple: CSRTriple,
     partition_slice: Slice,
+    sync_offset: int,
     tiling_scheme: TilingScheme,
     roi: np.ndarray,
     dest_dtype: np.dtype,
 ):
     assert len(tiling_scheme) == 1
     roi = roi.reshape((-1, ))
-    part_start = partition_slice.origin[0]
+    part_start = max(0, partition_slice.origin[0])
     tile_offset = np.count_nonzero(roi[:part_start])
     part_roi = partition_slice.get(roi, nav_only=True)
 
-    indptr = sliced_indptr(triple, partition_slice=partition_slice)
+    skip, indptr = sliced_indptr(triple, partition_slice=partition_slice, sync_offset=sync_offset)
 
-    roi_overhang = max(0, len(part_roi) - len(indptr) + 1)
-    if roi_overhang:
-        real_part_roi = part_roi[:-roi_overhang]
+    if skip < 0:
+        skipped_part_roi = part_roi[-skip:]
     else:
-        real_part_roi = part_roi
+        skipped_part_roi = part_roi
+
+    roi_overhang = max(0, len(skipped_part_roi) - len(indptr) + 1)
+    if roi_overhang:
+        real_part_roi = skipped_part_roi[:-roi_overhang]
+    else:
+        real_part_roi = skipped_part_roi
 
     sig_shape = tuple(partition_slice.shape.sig)
     sig_size = partition_slice.shape.sig.size

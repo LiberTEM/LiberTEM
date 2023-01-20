@@ -25,8 +25,12 @@ const Reshape: React.FC<ReshapeProps> = ({
     
     const handleOffsetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
-        setOffset(value);
-        setFieldValue("sync_offset", parseInt(value, 10));
+        let parsed_value: number | string = parseInt(value.toString(), 10)
+        if (isNaN(parsed_value)){
+            parsed_value = value.toString()
+        }
+        setFieldValue("sync_offset", parsed_value);
+        setOffset(parsed_value.toString())
     };
 
     return (

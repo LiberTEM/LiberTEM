@@ -20,8 +20,7 @@ const Reshape: React.FC<ReshapeProps> = ({
 }) => {
     const navShapeProduct = productOfShapeInCommaSeparatedString(navShape);
 
-    const [offsetValue, setOffset] = React.useState(syncOffset.toString());
-    const { framesSkippedStart, framesIgnoredEnd, framesInsertedStart, framesInsertedEnd } = framesInfoAfterOffsetCorrection(parseInt(offsetValue, 10), navShapeProduct, imageCount);
+    const { framesSkippedStart, framesIgnoredEnd, framesInsertedStart, framesInsertedEnd } = framesInfoAfterOffsetCorrection(syncOffset, navShapeProduct, imageCount);
     
     const handleOffsetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -30,7 +29,6 @@ const Reshape: React.FC<ReshapeProps> = ({
             parsed_value = value.toString()
         }
         setFieldValue("sync_offset", parsed_value);
-        setOffset(parsed_value.toString())
     };
 
     return (

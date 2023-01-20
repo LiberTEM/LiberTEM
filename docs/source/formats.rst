@@ -71,12 +71,16 @@ There are some common parameters across data set types:
   when using the Python API, it can be of any dimensionality.
 `sync_offset`
   You can specify a `sync_offset` to handle synchronization or acquisition problems.
-  If it's positive, `sync_offset` number of frames will be skipped from start.
-  If it's negative, `abs(sync_offset)` number of blank frames will be inserted at start.
+  If it's positive, `sync_offset` number of frames will be skipped from the start of the input data.
+  If it's negative, the dataset will be padded by `abs(sync_offset)` number of frames at the beginning.
 `io_backend`
   Different methods for I/O are available in LiberTEM, which can influence performance. 
   See :ref:`io backends` for details.
-  
+
+.. note::
+  When using :code:`sync_offset` or a :code:`nav_shape` that exceeds the size of the input data
+  it is currently not well-defined if zero-filled frames are to be generated or if the missing data is skipped.
+  Most dataset implementations seem to skip the data. See :issue:`1384` for discussion, feedback welcome!
 
 .. _`supported formats`:
 

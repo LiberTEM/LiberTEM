@@ -105,6 +105,9 @@ def merge(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum, src_mean):
         dest_sum[:] = src_sum
         dest_varsum[:] = src_varsum
         return src_n
+    elif src_n == 0:
+        # Can happen from empty partitions due to sync offset
+        return dest_n
     else:
         n = dest_n + src_n
 
@@ -194,6 +197,8 @@ def merge_ndarray(dest_n, dest_sum, dest_varsum, src_n, src_sum, src_varsum, src
         dest_sum[:] = forbuf(src_sum, dest_sum)
         dest_varsum[:] = forbuf(src_varsum, dest_varsum)
         return src_n
+    elif src_n == 0:
+        return dest_n
     else:
         n = dest_n + src_n
         # compute mean for each partitions
@@ -431,7 +436,6 @@ class StdDevUDF(UDF):
         tile
             tile of the data
         """
-
         key = self.meta.tiling_scheme_idx
         n_0 = self.task_data.num_frames[key]
         n_1 = tile.shape[0]

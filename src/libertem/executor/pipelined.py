@@ -843,8 +843,6 @@ class PipelinedExecutor(BaseJobExecutor):
             # at the end, block to get the remaining results:
             while in_flight[0] > 0:
                 yield from yield_result_if_found(block=True, timeout=0.1)
-
-            task_comm_handler.done()
         except Exception as e:
             # In case of an exception, we need to drain the response queue,
             # so the next `run_tasks` call isn't polluted by old responses.
@@ -858,6 +856,8 @@ class PipelinedExecutor(BaseJobExecutor):
                 raise e2 from e
             # if from a worker, this is the first exception that got put into the queue
             raise
+        finally:
+            task_comm_handler.done()
 
     def _drain_response_queue(self, in_flight: int) -> None:
         """

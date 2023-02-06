@@ -2140,7 +2140,7 @@ class UDFRunner:
         ds_backend, execution_plan = _execution_plan(
             udfs=(udf, ),
             ds=dataset,
-            device_class='cuda',
+            device_class=None,
             # For the sake of dtype determination we'll assume all backends are available.
             # On the workers some might be missing. The cupyx.scipy.sparse backends might
             # trigger an up-conversion to float that may or may not happen in reality.

@@ -4,7 +4,10 @@ from typing import Optional, Sequence, Tuple
 
 import psutil
 import numpy as np
-from sparseconverter import BACKENDS, ArrayBackend, for_backend, get_backend
+from sparseconverter import (
+    BACKENDS, ArrayBackend, for_backend, get_backend, SPARSE_BACKENDS, get_device_class,
+    conversion_cost
+)
 
 from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.messageconverter import MessageConverter
@@ -303,8 +306,23 @@ class MemoryDataSet(DataSet):
         """
         if self._array_backends is None:
             native = get_backend(self.data)
-            # Indicate preference for the native backend
-            return (native, ) + tuple(BACKENDS - {native})
+            is_sparse = native in SPARSE_BACKENDS
+            native_device_class = get_device_class(native)
+            cost_metric = {}
+            # Sort by tuple (cost_override, conversion_cost),
+            # meaning preference for native backend, same sparsity
+            # and same device class take precedence over measured conversion cost
+            for backend in BACKENDS:
+                cost_metric[backend] = [5, conversion_cost(native, backend)]
+                if backend == native:
+                    cost_metric[backend][0] -= 2
+                # sparse==sparse or dense==dense
+                if (backend in SPARSE_BACKENDS) == is_sparse:
+                    cost_metric[backend][0] -= 2
+                # Same device class
+                if get_device_class(backend) == native_device_class:
+                    cost_metric[backend][0] -= 1
+            return tuple(sorted(BACKENDS, key=lambda k: cost_metric[k]))
         else:
             return self._array_backends
 

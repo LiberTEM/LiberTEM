@@ -3,6 +3,7 @@ import functools
 
 import numpy as np
 import numba
+from sparseconverter import SPARSE_BACKENDS
 
 from libertem.udf import UDF
 from libertem.common.buffers import reshaped_view
@@ -300,7 +301,10 @@ class StdDevUDF(UDF):
         super().__init__(dtype=dtype, use_numba=use_numba)
 
     def get_backends(self):
-        return self.BACKEND_ALL
+        # TODO supporting sparse backends efficiently requires a dedicated implementation
+        # since the generic one calculates the difference from a mean value,
+        # which can densify a sparse array.
+        return tuple(b for b in self.BACKEND_ALL if b not in SPARSE_BACKENDS)
 
     def get_result_buffers(self):
         """

@@ -298,7 +298,7 @@ class MemoryDataSet(DataSet):
         return self._shape
 
     @property
-    def array_backends(self) -> Optional[Sequence[ArrayBackend]]:
+    def array_backends(self) -> Sequence[ArrayBackend]:
         """
         All backends can be returned on request
 

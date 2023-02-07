@@ -1,7 +1,10 @@
 import typing
+from typing import Dict, List, Union
 import pathlib
+from functools import lru_cache
 import importlib
 from typing_extensions import Literal
+import numpy as np
 
 from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.common.async_utils import sync_to_async
@@ -18,14 +21,27 @@ filetypes = {
     "ser": "libertem.io.dataset.ser.SERDataSet",
     "frms6": "libertem.io.dataset.frms6.FRMS6DataSet",
     "empad": "libertem.io.dataset.empad.EMPADDataSet",
-    "memory": "libertem.io.dataset.memory.MemoryDataSet",
     "dm": "libertem.io.dataset.dm.DMDataSet",
     "seq": "libertem.io.dataset.seq.SEQDataSet",
     "mrc": "libertem.io.dataset.mrc.MRCDataSet",
     "tvips": "libertem.io.dataset.tvips.TVIPSDataSet",
-    "dask": "libertem.io.dataset.dask.DaskDataSet",
     "npy": "libertem.io.dataset.npy.NPYDataSet",
+    "dask": "libertem.io.dataset.dask.DaskDataSet",
+    "memory": "libertem.io.dataset.memory.MemoryDataSet",
 }
+
+
+@lru_cache()
+def build_extension_map() -> Dict[str, List[str]]:
+    ext_map = {}
+    for typ_ in filetypes:
+        cls = get_dataset_cls(typ_)
+        for ext in cls.get_supported_extensions():
+            try:
+                ext_map[ext].append(typ_)
+            except KeyError:
+                ext_map[ext] = [typ_]
+    return ext_map
 
 
 @typing.overload
@@ -164,20 +180,22 @@ def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
     return cls
 
 
-def detect(path: str, executor):
+def detect(path: Union[str, np.ndarray], executor):
     """
     Returns dataset's detected type, parameters and
     additional info.
     """
+    extension_map = build_extension_map()
     search_order = list(filetypes.keys())
     try:
-        # This only uses the file suffix and the filetype keys defined above
-        # and not the actual supported extensions. To improve this would
-        # require either refactoring or importing all of the dataset classes
+        # If the file format is registered, float the associated
+        # datasets to the top of the search order (maintaining
+        # the order in which they were first registered)
         file_format = pathlib.Path(path).suffix.strip().lstrip('.').lower()
-        if file_format in search_order:
-            search_order.pop(search_order.index(file_format))
-            search_order = [file_format] + search_order
+        if file_format in extension_map:
+            for ds_key in reversed(extension_map[file_format]):
+                search_order.pop(search_order.index(ds_key))
+                search_order = [ds_key] + search_order
     except (TypeError, ValueError):
         # Let downstream code handle the fact that
         # path cannot be cast to pathlib.Path or provide a suffix

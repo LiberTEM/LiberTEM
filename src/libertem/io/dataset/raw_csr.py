@@ -540,8 +540,10 @@ def read_tiles_with_roi(
 
     for indptr_start in range(0, len(part_roi), tiling_scheme.depth):
         indptr_stop = min(indptr_start + tiling_scheme.depth, len(start_values))
-        # read empty slices when going beyond the file
         indptr_start = min(indptr_start, indptr_stop)
+        # Don't read empty slices
+        if indptr_stop - indptr_start <= 0:
+            continue
         indptr_tile_start = start_values[indptr_start:indptr_stop]
         indptr_tile_stop = stop_values[indptr_start:indptr_stop]
         size = sum(indptr_tile_stop - indptr_tile_start)

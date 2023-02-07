@@ -2,7 +2,7 @@ import warnings
 from typing import Optional, TYPE_CHECKING
 
 import numpy as np
-from sparseconverter import ArrayBackend
+from sparseconverter import ArrayBackend, for_backend
 
 from libertem.common import Slice, Shape
 from libertem.common.math import count_nonzero
@@ -129,8 +129,38 @@ class Partition:
         """
         return self.slice.shape.flatten_nav()
 
-    def get_macrotile(self, dest_dtype="float32", roi=None):
-        raise NotImplementedError()
+    def get_macrotile(self, dest_dtype="float32", roi=None,
+            array_backend: Optional[ArrayBackend] = None):
+        '''
+        Return a single tile for the entire partition.
+
+        This is useful to support process_partiton() in UDFs and to construct dask arrays
+        from datasets.
+        '''
+
+        tiling_scheme = TilingScheme.make_for_shape(
+            tileshape=self.shape,
+            dataset_shape=self.meta.shape,
+        )
+
+        try:
+            return next(self.get_tiles(
+                tiling_scheme=tiling_scheme,
+                dest_dtype=dest_dtype,
+                roi=roi,
+                array_backend=array_backend,
+            ))
+        except StopIteration:
+            tile_slice = Slice(
+                origin=(self.slice.origin[0], 0, 0),
+                shape=Shape((0,) + tuple(self.slice.shape.sig), sig_dims=2),
+            )
+            empty = np.zeros(tile_slice.shape, dtype=dest_dtype)
+            return DataTile(
+                for_backend(empty, array_backend, strict=False),
+                tile_slice=tile_slice,
+                scheme_idx=0,
+            )
 
     def get_locations(self):
         raise NotImplementedError()
@@ -210,36 +240,6 @@ class BasePartition(Partition):
             return None  # default value is set in Negotiator
         io_backend = io_backend.get_impl()
         return io_backend.get_max_io_size()
-
-    def get_macrotile(self, dest_dtype="float32", roi=None):
-        '''
-        Return a single tile for the entire partition.
-
-        This is useful to support process_partiton() in UDFs and to construct dask arrays
-        from datasets.
-        '''
-
-        tiling_scheme = TilingScheme.make_for_shape(
-            tileshape=self.shape,
-            dataset_shape=self.meta.shape,
-        )
-
-        try:
-            return next(self.get_tiles(
-                tiling_scheme=tiling_scheme,
-                dest_dtype=dest_dtype,
-                roi=roi,
-            ))
-        except StopIteration:
-            tile_slice = Slice(
-                origin=(self.slice.origin[0], 0, 0),
-                shape=Shape((0,) + tuple(self.slice.shape.sig), sig_dims=2),
-            )
-            return DataTile(
-                np.zeros(tile_slice.shape, dtype=dest_dtype),
-                tile_slice=tile_slice,
-                scheme_idx=0,
-            )
 
     def _get_read_ranges(self, tiling_scheme, roi=None):
         return self._fileset.get_read_ranges(

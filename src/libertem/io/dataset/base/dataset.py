@@ -119,7 +119,7 @@ class DataSet:
         raise NotImplementedError()
 
     @property
-    def array_backends(self) -> Optional[Sequence[ArrayBackend]]:
+    def array_backends(self) -> Sequence[ArrayBackend]:
         """
         The array backends the dataset can return data as.
 

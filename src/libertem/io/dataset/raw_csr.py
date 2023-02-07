@@ -17,6 +17,7 @@ from libertem.io.dataset.base.meta import DataSetMeta
 from libertem.io.dataset.base.partition import Partition
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.common.messageconverter import MessageConverter
+from libertem.common.numba import numba_dtypes
 
 if typing.TYPE_CHECKING:
     from libertem.io.dataset.base.backend import IOBackend
@@ -477,7 +478,6 @@ def read_tiles_straight(
         )
 
 
-@numba.njit(cache=True)
 def populate_tile(
     indptr_tile_start: "np.ndarray",
     indptr_tile_stop: "np.ndarray",
@@ -495,6 +495,14 @@ def populate_tile(
         indices_out[offset:offset + chunk_size] = orig_indices[start:stop]
         offset += chunk_size
         indptr_out[i + 1] = offset
+
+
+populate_tile_numba = numba.njit(populate_tile)
+
+
+def can_use_numba(triple: CSRTriple) -> bool:
+    return all(d in numba_dtypes
+        for d in (triple.data.dtype, triple.indices.dtype, triple.indptr.dtype))
 
 
 def read_tiles_with_roi(
@@ -538,6 +546,11 @@ def read_tiles_with_roi(
     # The native scipy.sparse.csr_matrix implementation of fancy indexing
     # with a boolean mask for nav is very fast.
 
+    if can_use_numba(triple):
+        my_populate_tile = populate_tile_numba
+    else:
+        my_populate_tile = populate_tile
+
     for indptr_start in range(0, len(part_roi), tiling_scheme.depth):
         indptr_stop = min(indptr_start + tiling_scheme.depth, len(start_values))
         indptr_start = min(indptr_start, indptr_stop)
@@ -553,7 +566,7 @@ def read_tiles_with_roi(
         indptr_slice = np.zeros(
             dtype=indptr.dtype, shape=indptr_stop - indptr_start + 1
         )
-        populate_tile(
+        my_populate_tile(
             indptr_tile_start=indptr_tile_start,
             indptr_tile_stop=indptr_tile_stop,
             orig_data=triple.data,

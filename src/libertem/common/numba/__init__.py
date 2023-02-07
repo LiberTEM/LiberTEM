@@ -8,6 +8,29 @@ from .cache import cached_njit  # NOQA: F401
 
 logger = logging.getLogger(__name__)
 
+numba_dtypes = frozenset(np.dtype(t) for t in (
+    bool,
+    int,
+    float,
+    np.bool8,
+    np.uint8,
+    np.int8,
+    np.uint16,
+    np.int16,
+    np.uint32,
+    np.int32,
+    np.uint64,
+    np.int64,
+    np.float32,
+    np.float64,
+    np.complex64,
+    np.complex128,
+    np.intc,
+    np.intp,
+    np.uintc,
+    np.uintp
+))
+
 
 @numba.njit(boundscheck=True, nogil=True)
 def numba_ravel_multi_index_single(multi_index, dims):

@@ -7,8 +7,9 @@ import importlib
 import scipy.sparse
 import pytest
 import numpy as np
+import numba
 
-from libertem.common.numba import rmatmul
+from libertem.common.numba import rmatmul, numba_dtypes
 from libertem.common.numba.cache import _cached_njit_reg
 from libertem.web.dataset import prime_numba_cache
 
@@ -97,3 +98,18 @@ def test_numba_prime_hdf5_1(hdf5_ds_1):
 
 def test_numba_prime_hdf5_2(hdf5_ds_large_sig):
     prime_numba_cache(hdf5_ds_large_sig)
+
+
+@numba.njit
+def numba_sum(arr):
+    return arr.sum()
+
+
+@pytest.mark.parametrize(
+    'dtype', numba_dtypes
+)
+def test_numba_dtype(dtype):
+    arr = np.ones(42, dtype=dtype)
+    res = numba_sum(arr)
+    assert arr.dtype in numba_dtypes
+    assert res == len(arr)

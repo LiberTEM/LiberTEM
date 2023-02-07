@@ -5,10 +5,10 @@ import scipy.sparse
 import numpy as np
 import numba
 import tomli
-from sparseconverter import SCIPY_CSR, ArrayBackend
+from sparseconverter import SCIPY_CSR, ArrayBackend, for_backend, NUMPY
 
 from libertem.common import Slice, Shape
-from libertem.common.math import prod
+from libertem.common.math import prod, count_nonzero
 from libertem.io.corrections.corrset import CorrectionSet
 from libertem.io.dataset.base import (
     DataTile, DataSet
@@ -508,7 +508,7 @@ def read_tiles_with_roi(
     assert len(tiling_scheme) == 1
     roi = roi.reshape((-1, ))
     part_start = max(0, partition_slice.origin[0])
-    tile_offset = np.count_nonzero(roi[:part_start])
+    tile_offset = count_nonzero(roi[:part_start])
     part_roi = partition_slice.get(roi, nav_only=True)
 
     skip, indptr = sliced_indptr(triple, partition_slice=partition_slice, sync_offset=sync_offset)
@@ -523,6 +523,8 @@ def read_tiles_with_roi(
         real_part_roi = skipped_part_roi[:-roi_overhang]
     else:
         real_part_roi = skipped_part_roi
+
+    real_part_roi = for_backend(real_part_roi, NUMPY)
 
     sig_shape = tuple(partition_slice.shape.sig)
     sig_size = partition_slice.shape.sig.size

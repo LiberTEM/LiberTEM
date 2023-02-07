@@ -76,6 +76,12 @@ def _auto_load(path, *args, executor, **kwargs):
         raise DataSetException(
             "could not determine DataSet type for file '%s'" % path,
         )
+    if filetype_detected == 'memory' and 'data' in detected_params:
+        # Special case for memory dataset with no positional args and a data kwarg
+        if 'data' in kwargs:
+            raise DataSetException('Data argument specified twice')
+        kwargs.update({'data': detected_params['data']})
+        path = None  # this is implicitly passed to tileshape based on MemDS signature
     return load(
         filetype_detected, path, *args, executor=executor, **kwargs
     )
@@ -199,6 +205,16 @@ def detect(path: Union[str, np.ndarray], executor):
     except (TypeError, ValueError):
         # Let downstream code handle the fact that
         # path cannot be cast to pathlib.Path or provide a suffix
+        pass
+    try:
+        # If path has a shape attribute there is good chance
+        # it implements the array interface and as such we should
+        # check MemoryDataSet first
+        _ = path.shape
+        search_order.pop(search_order.index('memory'))
+        search_order = ['memory'] + search_order
+    except AttributeError:
+        # Cannot interpret as a memory dataset
         pass
     for filetype in search_order:
         try:

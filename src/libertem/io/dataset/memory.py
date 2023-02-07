@@ -1,6 +1,6 @@
 import time
 import logging
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence, Tuple, TYPE_CHECKING
 
 import psutil
 import numpy as np
@@ -13,12 +13,14 @@ from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
-    File, MMapBackend,
+    File, MMapBackend, DataSetException
 )
 from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 from libertem.common import Shape, Slice
 from libertem.io.dataset.base import DataTile
 
+if TYPE_CHECKING:
+    from libertem.common.executor import JobExecutor
 
 log = logging.getLogger(__name__)
 
@@ -289,6 +291,15 @@ class MemoryDataSet(DataSet):
     @classmethod
     def get_msg_converter(cls):
         return MemDatasetParams
+
+    @classmethod
+    def detect_params(cls, data: np.ndarray, executor: "JobExecutor"):
+        try:
+            _ = data.shape
+            return {'data': data}
+        except AttributeError:
+            pass
+        raise DataSetException(f'Cannot interpret {type(data)} as ndarray)')
 
     @property
     def dtype(self):

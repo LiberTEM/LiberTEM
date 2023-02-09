@@ -65,10 +65,38 @@ def _auto_load(
     ...
 
 
-def _auto_load(arg0, enable_async: bool, executor, **kwargs):
+def _auto_load(
+    *args,
+    enable_async: bool,
+    executor,
+    **kwargs
+):
     """
     Use DS.detect_params to infer dataset type
+
+    Accepts one positional argument, only, or one kwarg
+    in ('path', 'data') without positional arg. Ambiguous
+    cases are rejected for loading.
     """
+    autoload_keys = ('path', 'data')
+    if len(args) > 1:
+        raise DataSetException('0/1 positional arguments supported for ctx.load("auto"), '
+                               f'got {len(args)}')
+    elif not args:
+        possible_arg = tuple(k for k in kwargs if k in autoload_keys)
+        if len(possible_arg) != 1:
+            raise DataSetException(
+                "Require (only) one of 'path' or 'data' as kw-argument to auto loader"
+            )
+        arg0 = kwargs.pop(possible_arg[0])
+    else:
+        if any(p in autoload_keys for p in kwargs):
+            raise DataSetException(
+                f"Got one positional arg and additional keyword args "
+                f"{tuple(kwargs.keys())} for ctx.load('auto'), which is ambiguous."
+            )
+        arg0 = args[0]
+
     filetype_detected, detected_params = detect(arg0, executor=executor)
     if filetype_detected is None:
         raise DataSetException(
@@ -133,9 +161,6 @@ def load(
     additional parameters are passed to the concrete DataSet implementation
     """
     if filetype == "auto":
-        if len(args) != 1:
-            raise ValueError('Require one positional arg to auto-detect dataset '
-                             f'(typically filepath), got {len(args)}.')
         return _auto_load(*args, executor=executor, enable_async=enable_async, **kwargs)
 
     cls = get_dataset_cls(filetype)

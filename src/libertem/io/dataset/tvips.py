@@ -1,6 +1,7 @@
 from io import SEEK_SET
 import math
 import os
+import pathlib
 import re
 from typing import IO, TYPE_CHECKING, Dict, NamedTuple, List, Optional, Tuple
 import numpy as np
@@ -440,6 +441,11 @@ class TVIPSDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
+        try:
+            _ = pathlib.Path(path)
+            path = str(path)
+        except TypeError:
+            return False
         pathlow = path.lower()
         if pathlow.endswith(".tvips"):
             image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)

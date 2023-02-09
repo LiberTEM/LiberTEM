@@ -1,4 +1,5 @@
 import os
+import pathlib
 import warnings
 
 import defusedxml.ElementTree as ET
@@ -219,6 +220,11 @@ class EMPADDataSet(DataSet):
         set the nav_shape, otherwise we can't really detect if this is a EMPAD
         file or something else (maybe from the "trailer" after each frame?)
         """
+        try:
+            _ = pathlib.Path(path)
+            path = str(path)
+        except TypeError:
+            return False
         try:
             ds = cls(path)
             ds = ds.initialize(executor)

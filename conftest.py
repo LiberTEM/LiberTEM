@@ -557,6 +557,40 @@ data_dtype = "{str(orig.data.dtype)}"
     yield lt_ctx.load("raw_csr", path=name_sidecar)
 
 
+@pytest.fixture(scope="session")
+def raw_csr_generated_bigendian(
+        mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+    orig, data_flat = mock_sparse_data
+    dtype = np.dtype('>i4')
+    datadir = tmpdir_factory.mktemp('raw_csr')
+    name_indptr = str(datadir / 'indptr_bigendian.raw')
+    name_coords = str(datadir / 'coords_bigendian.raw')
+    name_values = str(datadir / 'values_bigendian.raw')
+    name_sidecar = str(datadir / 'sparse_bigendian.toml')
+    with open(name_sidecar, "w") as f:
+        f.write(f"""
+[params]
+filetype = "raw_csr"
+nav_shape = [13, 17]
+sig_shape = [24, 19]
+
+[raw_csr]
+indptr_file = "indptr_bigendian.raw"
+indptr_dtype = "{str(dtype)}"
+
+indices_file = "coords_bigendian.raw"
+indices_dtype = "{str(dtype)}"
+
+data_file = "values_bigendian.raw"
+data_dtype = "{str(dtype)}"
+""")
+    orig.indptr.astype(dtype).tofile(name_indptr)
+    orig.indices.astype(dtype).tofile(name_coords)
+    orig.data.astype(dtype).tofile(name_values)
+    lt_ctx = lt.Context.make_with('inline')
+    yield lt_ctx.load("raw_csr", path=name_sidecar)
+
+
 @pytest.fixture(scope='session')
 def npy_datadir(tmpdir_factory):
     yield tmpdir_factory.mktemp('data_npy')

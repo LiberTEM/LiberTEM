@@ -76,26 +76,32 @@ def _auto_load(
 
     Accepts one positional argument, only, or one kwarg
     in ('path', 'data') without positional arg. Ambiguous
-    cases are rejected for loading.
+    cases are rejected for loading with TypeError (matches test cases).
     """
     autoload_keys = ('path', 'data')
+    possible_arg = tuple(k for k in kwargs if k in autoload_keys)
+    if args and possible_arg:
+        raise TypeError(
+            f"Got positional args and additional keyword args "
+            f"{tuple(kwargs.keys())} for ctx.load('auto'), which is ambiguous."
+        )
+    if not args and not possible_arg:
+        raise TypeError('No arguments to auto-load dataset')
     if len(args) > 1:
-        raise DataSetException('0/1 positional arguments supported for ctx.load("auto"), '
-                               f'got {len(args)}')
-    elif not args:
-        possible_arg = tuple(k for k in kwargs if k in autoload_keys)
-        if len(possible_arg) != 1:
-            raise DataSetException(
-                "Require (only) one of 'path' or 'data' as kw-argument to auto loader"
-            )
-        arg0 = kwargs.pop(possible_arg[0])
-    else:
-        if any(p in autoload_keys for p in kwargs):
-            raise DataSetException(
-                f"Got one positional arg and additional keyword args "
-                f"{tuple(kwargs.keys())} for ctx.load('auto'), which is ambiguous."
-            )
+        raise TypeError('0/1 positional arguments supported for '
+                        f'ctx.load("auto"), got {len(args)}')
+    if not args and len(possible_arg) > 1:
+        raise TypeError(
+            "Need one of 'path' or 'data' as kw-argument to "
+            "auto loader, got both."
+        )
+
+    # Based on the above argument checking, either len(args) == 1
+    # or kwargs contains one of autoload_keys and len(args) == 0
+    if args:
         arg0 = args[0]
+    else:
+        arg0 = kwargs.pop(possible_arg[0])
 
     filetype_detected, detected_params = detect(arg0, executor=executor)
     if filetype_detected is None:

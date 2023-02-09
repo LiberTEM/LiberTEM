@@ -5,7 +5,9 @@ from libertem.executor.inline import InlineJobExecutor
 def test_detection_empty_hdf5(empty_hdf5):
     executor = InlineJobExecutor()
     fn = empty_hdf5.filename
-    filetype, params = detect(fn, executor=executor)["parameters"]
+    filetype, params = detect(fn, executor=executor)
+    assert filetype == "hdf5"
+    params = params["parameters"]
     assert params != {}
     assert list(params.keys()) == ["path"]
 

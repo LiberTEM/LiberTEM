@@ -1,4 +1,5 @@
 import io
+import pathlib
 import os
 import sys
 import typing
@@ -316,6 +317,11 @@ class NPYDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
+        try:
+            _ = pathlib.Path(path)
+            path = str(path)
+        except TypeError:
+            return False
         try:
             npy_info = executor.run_function(read_npy_info, path)
             # FIXME: assumption about number of sig dims

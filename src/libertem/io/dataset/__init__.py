@@ -1,5 +1,5 @@
 import typing
-from typing import Dict, List, Union, Optional, Tuple, Any
+from typing import Dict, List, Union, Any
 import pathlib
 from functools import lru_cache
 import importlib
@@ -103,7 +103,8 @@ def _auto_load(
     else:
         arg0 = kwargs.pop(possible_arg[0])
 
-    filetype_detected, detected_params = detect(arg0, executor=executor)
+    detected_params = detect(arg0, executor=executor)
+    filetype_detected = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
             f"could not determine DataSet type for argument '{arg0}'"
@@ -224,7 +225,7 @@ def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
     return cls
 
 
-def detect(path: Union[str, np.ndarray], executor) -> Tuple[Optional[str], Dict[str, Any]]:
+def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
     """
     Returns dataset's detected type, parameters and
     additional info.
@@ -262,8 +263,9 @@ def detect(path: Union[str, np.ndarray], executor) -> Tuple[Optional[str], Dict[
             continue
         if not params:
             continue
-        return filetype, params
-    return None, {}
+        params.update({"type": filetype})
+        return params
+    return {}
 
 
 def get_extensions() -> typing.Set[str]:

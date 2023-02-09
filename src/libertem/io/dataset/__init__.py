@@ -1,5 +1,5 @@
 import typing
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional, Tuple, Any
 import pathlib
 from functools import lru_cache
 import importlib
@@ -65,25 +65,25 @@ def _auto_load(
     ...
 
 
-def _auto_load(path, *args, executor, **kwargs):
-    if path is None:
-        raise DataSetException(
-            "please specify the `path` argument to allow auto detection"
-        )
-    detected_params = detect(path, executor=executor)
-    filetype_detected: typing.Optional[str] = detected_params.get('type', None)
+def _auto_load(arg0, enable_async: bool, executor, **kwargs):
+    """
+    Use DS.detect_params to infer dataset type
+    """
+    filetype_detected, detected_params = detect(arg0, executor=executor)
     if filetype_detected is None:
         raise DataSetException(
-            "could not determine DataSet type for file '%s'" % path,
+            f"could not determine DataSet type for argument '{arg0}'"
         )
-    if filetype_detected == 'memory' and 'data' in detected_params:
-        # Special case for memory dataset with no positional args and a data kwarg
-        if 'data' in kwargs:
-            raise DataSetException('Data argument specified twice')
-        kwargs.update({'data': detected_params['data']})
-        path = None  # this is implicitly passed to tileshape based on MemDS signature
+    # Explicit values from kwargs over-ride detected_params
+    # We expect detected_params to set the correct kwargs to
+    # map to the first positional argument
+    load_params = detected_params['parameters']
+    load_params.update(kwargs)
     return load(
-        filetype_detected, path, *args, executor=executor, **kwargs
+        filetype_detected,
+        enable_async=enable_async,
+        executor=executor,
+        **load_params,
     )
 
 
@@ -109,7 +109,11 @@ def load(
 
 
 def load(
-    filetype: str, *args, enable_async: bool = False, executor, **kwargs,
+    filetype: str,
+    *args,
+    enable_async: bool = False,
+    executor,
+    **kwargs,
 ):
     """
     Low-level method to load a dataset. Usually you will want
@@ -129,6 +133,9 @@ def load(
     additional parameters are passed to the concrete DataSet implementation
     """
     if filetype == "auto":
+        if len(args) != 1:
+            raise ValueError('Require one positional arg to auto-detect dataset '
+                             f'(typically filepath), got {len(args)}.')
         return _auto_load(*args, executor=executor, enable_async=enable_async, **kwargs)
 
     cls = get_dataset_cls(filetype)
@@ -186,7 +193,7 @@ def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
     return cls
 
 
-def detect(path: Union[str, np.ndarray], executor):
+def detect(path: Union[str, np.ndarray], executor) -> Tuple[Optional[str], Dict[str, Any]]:
     """
     Returns dataset's detected type, parameters and
     additional info.
@@ -224,9 +231,8 @@ def detect(path: Union[str, np.ndarray], executor):
             continue
         if not params:
             continue
-        params.update({"type": filetype})
-        return params
-    return {}
+        return filetype, params
+    return None, {}
 
 
 def get_extensions() -> typing.Set[str]:

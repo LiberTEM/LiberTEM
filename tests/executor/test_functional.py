@@ -81,7 +81,7 @@ def ctx(request, local_cluster_url):
             try:
                 ctx = Context(
                     executor=PipelinedExecutor(
-                        spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[], cuda_info={})
+                        spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
                     )
                 )
                 yield ctx

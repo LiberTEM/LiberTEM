@@ -29,8 +29,9 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     num_cores_ds = ctx.load('memory', data=np.zeros((2, 3, 4, 5)))
     workers = ctx.executor.get_available_workers()
     cpu_count = len(workers.has_cpu())
+    gpu_count = len(workers.has_cuda())
 
-    assert num_cores_ds._cores == cpu_count
+    assert num_cores_ds._cores == max(cpu_count, gpu_count)
 
     # Based on ApplyMasksUDF, which is CuPy-enabled
     hybrid = ctx.run(analysis)
@@ -48,7 +49,7 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
             cupy_only = ctx.run_udf(
                 udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
                 dataset=hdf5_ds_1,
-                backends=('cupy', 'cuda')
+                backends=('cupy',)
             )
         else:
             with pytest.raises(RuntimeError):
@@ -72,8 +73,7 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
         assert np.all(cuda_only['device_class'].data == 'cuda')
         if cupy_only is not None:
             assert np.all(cupy_only['device_class'].data == 'cuda')
-    np_only = numpy_only['device_class'].data
-    assert np.all((np_only == 'cpu') + (np_only == 'cuda'))
+    assert np.all(numpy_only['device_class'].data == 'cpu')
 
 
 @pytest.mark.slow
@@ -86,7 +86,7 @@ def test_start_local_cpuonly(hdf5_ds_1):
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    spec = cluster_spec(cpus=cpus, cudas=[], cuda_info={}, has_cupy=False)
+    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
         analysis = ctx.create_mask_analysis(
@@ -189,33 +189,14 @@ def test_start_local_cupyonly(hdf5_ds_1):
 
 
 def test_cluster_spec_cpu_int():
-    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True, cuda_info={})
-    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True, cuda_info={})
+    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True)
+    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True)
     assert range_spec == int_spec
 
 
 def test_cluster_spec_cudas_int():
     spec_n = 4
-    cuda_info = {
-        0: {
-            'mem_info': (10000000, 10000000),
-        },
-        1: {
-            'mem_info': (10000000, 10000000),
-        },
-        2: {
-            'mem_info': (10000000, 10000000),
-        },
-        3: {
-            'mem_info': (10000000, 10000000),
-        },
-    }
-    cuda_spec = cluster_spec(
-        cpus=tuple(),
-        cudas=spec_n,
-        has_cupy=True,
-        cuda_info=cuda_info
-    )
+    cuda_spec = cluster_spec(cpus=tuple(), cudas=spec_n, has_cupy=True)
     num_cudas = 0
     for spec in cuda_spec.values():
         num_cudas += spec.get('options', {}).get('resources', {}).get('CUDA', 0)
@@ -280,7 +261,7 @@ def test_preload(hdf5_ds_1):
         "import os; os.environ['LT_TEST_2'] = 'world'",
     )
 
-    spec = cluster_spec(cpus=cpus, cudas=[], cuda_info={}, has_cupy=False, preload=preloads)
+    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False, preload=preloads)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
         ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)

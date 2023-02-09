@@ -255,7 +255,9 @@ class MemoryDataSet(DataSet):
             sig_shape = data.shape[-sig_dims:]
         else:
             sig_shape = tuple(sig_shape)
-        reshaped_data = self.data.reshape((-1, *sig_shape))
+        if self.data.size % prod(sig_shape) != 0:
+            raise ValueError("Data size is not a multiple of sig shape")
+        self._image_count = self.data.size // prod(sig_shape)
         self._nav_shape = nav_shape
         self._sig_shape = sig_shape
         self._sync_offset = sync_offset
@@ -264,7 +266,6 @@ class MemoryDataSet(DataSet):
         self._tiledelay = tiledelay
         self._force_need_decode = force_need_decode
         self._nav_shape_product = int(prod(nav_shape))
-        self._image_count = int(prod(reshaped_data.shape[:-sig_dims]))
         self._shape = Shape(
             nav_shape + sig_shape, sig_dims=self.sig_dims
         )

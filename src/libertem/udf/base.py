@@ -1373,26 +1373,27 @@ class UDF(UDFBase):
         }
 
     def get_backends(self) -> BackendSpec:
-        # TODO see interaction with C++ CUDA modules requires a different type than CuPy
         '''
         Signal which computation back-ends the UDF can use.
 
-        :code:`numpy` is the default CPU-based computation.
-
-        :code:`cuda` is CUDA-based computation without CuPy.
-
-        :code:`cupy` is CUDA-based computation through CuPy.
+        Allowed are values in :attr:`libertem.udf.base.UDF.BACKEND_ALL`.
+        :code:`(UDF.BACKEND_NUMPY, )` is returned by default for CPU-based computation.
 
         .. versionadded:: 0.6.0
+
+        .. versionchanged:: 0.11.0
+            Extended from just NumPy vs. CuPy to include more generic specification of backends,
+            including sparse arrays. See :ref:`sparse` for details! The backend specifications are
+            backwards-compatible with the previously supported values.
 
         Returns
         -------
 
-        backend : Iterable[str]
-            An iterable containing possible values :code:`numpy` (default), :code:`'cuda'` and
-            :code:`cupy`
+        backends
+            A single value or iterable containing values from the supported backends
+            in :attr:`libertem.udf.base.UDF.BACKEND_ALL`
         '''
-        return ('numpy', )
+        return (UDF.BACKEND_NUMPY, )
 
     def forbuf(self, arr, target):
         '''
@@ -1402,8 +1403,8 @@ class UDF(UDFBase):
         This function should be wrapped around assignment to result buffers if
         the array :code:`arr` might be sparse and/or have a flattened sig
         dimension. It converts any of the supported sparse input formats into
-        the array format of the target buffer. If the argument is already a
-        NumPy array or not recognized, it is a no-op.
+        the array format of the target buffer. If the argument is already matching the buffer
+        array or is not recognized, it is a no-op.
 
         The result of array operations on a sparse input tile can't always be
         merged into dense result buffers directly since arrays from the

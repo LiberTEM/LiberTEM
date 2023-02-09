@@ -188,19 +188,45 @@ def test_get_tiles_roi():
     assert np.allclose(ref, res)
 
 
-def test_raw_csr_ds_sum(raw_csr_generated, mock_sparse_data, lt_ctx):
-    orig, data_flat = mock_sparse_data
+@pytest.mark.parametrize(
+    'endian', ('native', 'big')
+)
+def test_raw_csr_ds_sum(
+        endian, raw_csr_generated, mock_sparse_data,
+        raw_csr_generated_bigendian, lt_ctx):
+    if endian == 'native':
+        _, data_flat = mock_sparse_data
+        ds = raw_csr_generated
+    elif endian == 'big':
+        _, data_flat = mock_sparse_data
+        ds = raw_csr_generated_bigendian
+        assert ds.dtype == np.dtype('>i4')
+    else:
+        raise ValueError()
     udf = SumUDF()
-    res = lt_ctx.run_udf(udf=udf, dataset=raw_csr_generated)
+    res = lt_ctx.run_udf(udf=udf, dataset=ds)
     ref = for_backend(np.sum(data_flat, axis=0), NUMPY)
     assert np.allclose(ref, res['intensity'].data.reshape((-1,)))
 
 
-def test_raw_csr_ds_sum_roi(raw_csr_generated, mock_sparse_data, lt_ctx):
-    _, data_flat = mock_sparse_data
+@pytest.mark.parametrize(
+    'endian', ('native', 'big')
+)
+def test_raw_csr_ds_sum_roi(
+        endian, raw_csr_generated, mock_sparse_data,
+        raw_csr_generated_bigendian, lt_ctx):
+    if endian == 'native':
+        orig, data_flat = mock_sparse_data
+        ds = raw_csr_generated
+    elif endian == 'big':
+        orig, data_flat = mock_sparse_data
+        ds = raw_csr_generated_bigendian
+        assert ds.dtype == np.dtype('>i4')
+    else:
+        raise ValueError()
     udf = SumUDF()
     roi = np.random.choice([True, False], data_flat.shape[0])
-    res = lt_ctx.run_udf(udf=udf, dataset=raw_csr_generated, roi=roi)
+    res = lt_ctx.run_udf(udf=udf, dataset=ds, roi=roi)
     ref = for_backend(np.sum(data_flat[roi], axis=0), NUMPY)
     assert np.allclose(ref, res['intensity'].data.reshape((-1,)))
 

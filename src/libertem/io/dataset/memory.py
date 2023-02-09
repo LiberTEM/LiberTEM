@@ -13,7 +13,7 @@ from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
-    File, MMapBackend, DataSetException
+    File, MMapBackend
 )
 from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 from libertem.common import Shape, Slice
@@ -296,10 +296,14 @@ class MemoryDataSet(DataSet):
     def detect_params(cls, data: np.ndarray, executor: "JobExecutor"):
         try:
             _ = data.shape
-            return {'data': data}
+            return {
+                "parameters": {
+                    "data": data,
+                },
+                "info": {}
+            }
         except AttributeError:
-            pass
-        raise DataSetException(f'Cannot interpret {type(data)} as ndarray)')
+            return False
 
     @property
     def dtype(self):

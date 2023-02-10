@@ -1005,6 +1005,7 @@ def local_cluster_url():
         cudas=devices['cudas'][:1],
         has_cupy=devices['has_cupy'],
         cuda_info=devices['cuda_info'],
+        max_workers_per_cuda=1
     )
 
     cluster_kwargs = {

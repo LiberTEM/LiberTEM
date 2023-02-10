@@ -4,7 +4,6 @@ import functools
 import logging
 import signal
 from typing import Dict, Iterable, Any, Optional, Tuple, Union, Callable, List
-import warnings
 
 from dask import distributed as dd
 import dask
@@ -20,7 +19,7 @@ from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.async_utils import adjust_event_loop_policy
-from .utils import assign_cudas
+from .utils.gpu_plan import assign_cudas, DEFAULT_RAM_PER_WORKER
 
 log = logging.getLogger(__name__)
 
@@ -70,14 +69,14 @@ def worker_setup(resource, device):
 def cluster_spec(
     cpus: Union[int, Iterable[int]],
     cudas: Union[int, Iterable[int]],
-    cuda_info: Dict[int, Dict],
     has_cupy: bool,
     name: str = 'default',
     num_service: int = 1,
     options: Optional[dict] = None,
     preload: Optional[Tuple[str]] = None,
+    cuda_info: Optional[Dict[int, Dict]] = None,
     max_workers_per_cuda: int = 4,
-    ram_per_cuda_worker: int = 4*1024*1024*1024,
+    ram_per_cuda_worker: int = DEFAULT_RAM_PER_WORKER,
 ):
     '''
     Create a worker specification dictionary for a LiberTEM Dask cluster
@@ -165,10 +164,14 @@ def cluster_spec(
         "cls": dd.Nanny,
         "options": service_options
     }
+    if has_cupy:
+        # CUDA worker is a CPU worker with additional resource for CUDA
+        cuda_options = deepcopy(cpu_options)
+        cuda_options["resources"]["CUDA"] = 1
+    else:
+        cuda_options = deepcopy(options)
+        cuda_options["resources"] = {"CUDA": 1, "compute": 1}
 
-    # CUDA worker is a CPU worker with additional resource for CUDA
-    cuda_options = deepcopy(cpu_options)
-    cuda_options["resources"]["CUDA"] = 1
     cuda_base_spec = {
         "cls": dd.Nanny,
         "options": cuda_options
@@ -182,6 +185,7 @@ def cluster_spec(
 
     if isinstance(cpus, int):
         cpus = tuple(range(cpus))
+    cudas = assign_cudas(cudas)
 
     gpu_plan = make_gpu_plan(
         cudas=cudas,
@@ -191,35 +195,29 @@ def cluster_spec(
     )
 
     for cpu in cpus:
-        if gpu_plan:
+        if gpu_plan and has_cupy:
             cuda, i = gpu_plan.pop(0)
             worker_name = f'{name}-cpu-{cpu}-cuda-{cuda}'
-            if worker_name in workers_spec:
-                num_with_name = sum(n.startswith(worker_name) for n in workers_spec)
-                worker_name = f'{worker_name}-{num_with_name - 1}'
-            cuda_spec = deepcopy(cuda_base_spec)
-            cuda_spec['options']['preload'] = preload + (
+            worker_spec = deepcopy(cuda_base_spec)
+            worker_spec['options']['preload'] = preload + (
                 'from libertem.executor.dask import worker_setup; '
                 + f'worker_setup(resource="CUDA", device={cuda})',
                 _get_tracing_setup(worker_name, str(cuda)),
                 'libertem.preload',
             )
-            workers_spec[worker_name] = cuda_spec
         else:
             worker_name = f'{name}-cpu-{cpu}'
-            cpu_spec = deepcopy(cpu_base_spec)
-            cpu_spec['options']['preload'] = preload + (
+            worker_spec = deepcopy(cpu_base_spec)
+            worker_spec['options']['preload'] = preload + (
                 'from libertem.executor.dask import worker_setup; '
                 + f'worker_setup(resource="CPU", device={cpu})',
                 _get_tracing_setup(worker_name, str(cpu)),
                 'libertem.preload',
             )
-            workers_spec[worker_name] = cpu_spec
-
-    if gpu_plan:
-        warnings.warn(
-            f"Unable to create the following GPU workers for lack of CPU cores: {gpu_plan}."
-        )
+        if worker_name in workers_spec:
+            num_with_name = sum(n.startswith(worker_name) for n in workers_spec)
+            worker_name = f'{worker_name}-{num_with_name - 1}'
+        workers_spec[worker_name] = worker_spec
 
     for service in range(num_service):
         worker_name = f'{name}-service-{service}'
@@ -230,10 +228,12 @@ def cluster_spec(
         )
         workers_spec[worker_name] = service_spec
 
-    cudas = assign_cudas(cudas)
+    # We downgrade the remaining workers to CuPy-only
+    if has_cupy:
+        cuda_base_spec['options']['resources'] = {"CUDA": 1, "compute": 1, "ndarray": 1}
 
-    for cuda in cudas:
-        worker_name = f'{name}-cuda-{cuda}'
+    for cuda, number in gpu_plan:
+        worker_name = f'{name}-cuda-{cuda}-{number}'
         if worker_name in workers_spec:
             num_with_name = sum(n.startswith(worker_name) for n in workers_spec)
             worker_name = f'{worker_name}-{num_with_name - 1}'
@@ -773,8 +773,8 @@ class AsyncDaskJobExecutor(AsyncAdapter):
 
 
 def cli_worker(
-    scheduler, local_directory, cpus, cudas, cuda_info, has_cupy,
-    name, log_level, preload: Tuple[str]
+    scheduler, local_directory, cpus, cudas, has_cupy,
+    name, log_level, preload: Tuple[str], cuda_info=None
 ):
     import asyncio
 
@@ -784,8 +784,8 @@ def cli_worker(
     }
 
     spec = cluster_spec(
-        cpus=cpus, cudas=cudas, cuda_info=cuda_info, has_cupy=has_cupy,
-        name=name, options=options, preload=preload
+        cpus=cpus, cudas=cudas, has_cupy=has_cupy,
+        name=name, options=options, preload=preload, cuda_info=cuda_info
     )
 
     async def run(spec):

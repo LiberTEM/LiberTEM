@@ -25,7 +25,7 @@ from libertem.common.executor import (
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
-from libertem.executor.utils.gpu_plan import make_gpu_plan
+from libertem.executor.utils.gpu_plan import make_gpu_plan, assign_cudas
 
 from .base import BaseJobExecutor
 
@@ -544,8 +544,8 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 def _make_spec(
     cpus: Union[int, Iterable[int]],
     cudas: Union[int, Iterable[int]],
-    cuda_info: Optional[Dict[int, Dict]] = None,
     has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
+    cuda_info: Optional[Dict[int, Dict]] = None,
     max_workers_per_cuda: int = 4,
     ram_per_cuda_worker: int = 4*1024*1024*1024
 ) -> List[WorkerSpec]:
@@ -579,11 +579,10 @@ def _make_spec(
     """
     spec = []
 
-    if cuda_info is None:
-        cuda_info = {}
-
     if isinstance(cpus, int):
         cpus = tuple(range(cpus))
+
+    cudas = assign_cudas(cudas)
 
     gpu_plan = make_gpu_plan(
         cudas=cudas,

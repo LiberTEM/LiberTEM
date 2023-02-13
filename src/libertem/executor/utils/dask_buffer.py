@@ -1,9 +1,9 @@
 import dask.array as da
 import numpy as np
 
-from ...common.math import prod
-from ...common.slice import Slice
-from ...common.buffers import BufferWrapper
+from libertem.common.math import prod
+from libertem.common.slice import Slice
+from libertem.common.buffers import BufferWrapper
 from .dask_inplace import DaskInplaceWrapper
 
 

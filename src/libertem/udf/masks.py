@@ -1,9 +1,87 @@
 from libertem.common.math import prod
 import numpy as np
 
-from libertem.udf import UDF
+from libertem.udf import UDF, UDFMeta
 from libertem.common.container import MaskContainer
 from libertem.common.numba import rmatmul
+
+
+class ApplyMasksEngine:
+    def __init__(self, masks: MaskContainer, meta: UDFMeta, use_torch: bool):
+        self.masks = masks
+        self.meta = meta
+
+        try:
+            import torch
+        except ImportError:
+            torch = None
+        m = self.meta
+        use_torch
+        if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.masks.dtype
+                or self.meta.device_class != 'cpu' or self.masks.use_sparse
+                or self.meta.array_backend != UDF.BACKEND_NUMPY):
+            use_torch = False
+        backend = self.meta.array_backend
+        if use_torch:
+
+            def process_flat(flat_tile):
+                import torch
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=True
+                )
+                # CuPy back-end disables torch in get_task_data
+                # FIXME use GPU torch with CuPy array?
+                result = torch.mm(
+                    torch.from_numpy(flat_tile),
+                    torch.from_numpy(masks),
+                ).numpy()
+                return result
+
+        # Required due to https://github.com/scipy/scipy/issues/13211
+        elif (backend == UDF.BACKEND_NUMPY
+              and self.masks.use_sparse
+              and 'scipy.sparse' in self.masks.use_sparse):
+
+            def process_flat(flat_tile):
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=True
+                )
+                result = rmatmul(flat_tile, masks)
+                return result
+
+        elif (
+            backend in (UDF.BACKEND_SCIPY_COO, UDF.BACKEND_SCIPY_CSR, UDF.BACKEND_SCIPY_CSC)
+            and self.masks.use_sparse
+            and 'sparse.pydata' in self.masks.use_sparse
+        ):
+
+            def process_flat(flat_tile):
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=False
+                )
+                # Make sure the sparse.pydata mask comes first
+                # to choose the right multiplication method
+                result = (masks @ flat_tile.T).T
+                return result
+
+        else:
+
+            def process_flat(flat_tile):
+                masks = self.masks.get_for_sig_slice(
+                    self.meta.sig_slice, transpose=True
+                )
+
+                result = flat_tile @ masks
+                return result
+        self.use_torch = use_torch
+        self.process_flat = process_flat
+
+    def process_tile(self, tile):
+        flat_shape = (tile.shape[0], prod(tile.shape[1:]))
+        # Avoid reshape since older versions of scipy.sparse don't support it
+        flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
+
+        return self.process_flat(flat_data)
 
 
 class ApplyMasksUDF(UDF):
@@ -140,72 +218,9 @@ class ApplyMasksUDF(UDF):
 
     def get_task_data(self):
         ''
-        try:
-            import torch
-        except ImportError:
-            torch = None
-        m = self.meta
-        use_torch = self.params.use_torch
-        if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype()
-                or self.meta.device_class != 'cpu' or self.masks.use_sparse
-                or self.meta.array_backend != self.BACKEND_NUMPY):
-            use_torch = False
-        backend = self.meta.array_backend
-        if use_torch:
-
-            def process_flat(flat_tile):
-                import torch
-                masks = self.masks.get_for_sig_slice(
-                    self.meta.sig_slice, transpose=True
-                )
-                # CuPy back-end disables torch in get_task_data
-                # FIXME use GPU torch with CuPy array?
-                result = torch.mm(
-                    torch.from_numpy(flat_tile),
-                    torch.from_numpy(masks),
-                ).numpy()
-                return result
-
-        # Required due to https://github.com/scipy/scipy/issues/13211
-        elif (backend == self.BACKEND_NUMPY
-              and self.masks.use_sparse
-              and 'scipy.sparse' in self.masks.use_sparse):
-
-            def process_flat(flat_tile):
-                masks = self.masks.get_for_sig_slice(
-                    self.meta.sig_slice, transpose=True
-                )
-                result = rmatmul(flat_tile, masks)
-                return result
-
-        elif (
-            backend in (self.BACKEND_SCIPY_COO, self.BACKEND_SCIPY_CSR, self.BACKEND_SCIPY_CSC)
-            and self.masks.use_sparse
-            and 'sparse.pydata' in self.masks.use_sparse
-        ):
-
-            def process_flat(flat_tile):
-                masks = self.masks.get_for_sig_slice(
-                    self.meta.sig_slice, transpose=False
-                )
-                # Make sure the sparse.pydata mask comes first
-                # to choose the right multiplication method
-                result = (masks @ flat_tile.T).T
-                return result
-
-        else:
-
-            def process_flat(flat_tile):
-                masks = self.masks.get_for_sig_slice(
-                    self.meta.sig_slice, transpose=True
-                )
-
-                result = flat_tile @ masks
-                return result
-
+        engine = ApplyMasksEngine(self.masks, self.meta, self.params.use_torch)
         return {
-            'use_torch': use_torch,
-            'process_flat': process_flat,
+            'engine': engine,
         }
 
     def get_result_buffers(self):
@@ -224,11 +239,7 @@ class ApplyMasksUDF(UDF):
 
     def process_tile(self, tile):
         ''
-        flat_shape = (tile.shape[0], prod(tile.shape[1:]))
-        # Avoid reshape since older versions of scipy.sparse don't support it
-        flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
-        # '+' is the correct merge for dot product
         self.results.intensity[:] += self.forbuf(
-            self.task_data.process_flat(flat_data),
+            self.task_data.engine.process_tile(tile),
             self.results.intensity,
         )

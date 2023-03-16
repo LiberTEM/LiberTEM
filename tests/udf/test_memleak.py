@@ -123,6 +123,9 @@ def test_executor_memleak(local_cluster_ctx, lt_ctx_fast, default_raw, ctx_selec
 
         ctx.executor.run_each_worker(gc.collect)
 
+        # Allow to settle
+        time.sleep(1)
+
         executor_size_after = total_size(ctx)
         worker_mem_after = get_worker_mem(ctx)
 

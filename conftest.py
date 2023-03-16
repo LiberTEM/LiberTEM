@@ -1079,7 +1079,7 @@ def b():
     return np.array([1, 0])
 
 
-@pytest.mark.hookwrapper
+@pytest.hookimpl(hookwrapper=True)
 def pytest_benchmark_generate_json(config, benchmarks, include_data, machine_info, commit_info):
     machine_info["freeze"] = [(d.key, d.version) for d in pkg_resources.working_set]
     yield

@@ -29,7 +29,6 @@ class SumSigUDF(UDF):
 
     def process_tile(self, tile):
         ""
-        # import pdb; pdb.set_trace()
         self.results.intensity[:] += self.forbuf(
             np.sum(
                 # Flatten and sum axis 1 for cupyx.scipy.sparse support

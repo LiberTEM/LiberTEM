@@ -315,7 +315,9 @@ def test_sig_nav_shape(raw_csr_generated, lt_ctx):
 @pytest.mark.parametrize(
     'sync_offset', (
         0, 1, -1, -10, 13, 13*15, -13*14,
-        np.random.randint(low=-13*18, high=13*18)
+        np.random.randint(low=-13*17+1, high=13*17),
+        -13*17+1,
+        13*17-1,
     ),
 )
 @pytest.mark.parametrize(

@@ -212,6 +212,15 @@ class RawCSRDataSet(DataSet):
         assert self._meta is not None
         return self._meta.array_backends
 
+    def get_base_shape(self, roi):
+        return (1, ) + tuple(self.shape.sig)
+
+    def get_max_io_size(self):
+        # High value since referring to dense for the time being
+        # Compromise between memory use during densification and
+        # performance with native sparse
+        return int(1024*1024*20)
+
     def check_valid(self) -> bool:
         return True  # TODO
 

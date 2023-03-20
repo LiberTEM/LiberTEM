@@ -23,12 +23,12 @@ class TestUseSharedExecutor:
         "prefix", PREFIXES
     )
     @pytest.mark.parametrize(
-        "context", ("inline", "dist")
+        "context", ("dist", )
     )
     @pytest.mark.parametrize(
-        "udf_kind", ("stddev", )
+        "udf_kind", ("stddev", "mask")
     )
-    def test_mask(self, benchmark, prefix, shared_dist_ctx, lt_ctx, context, udf_kind):
+    def test_udfs(self, benchmark, prefix, shared_dist_ctx, lt_ctx_fast, context, udf_kind):
         print("prefix", prefix)
         print("context", context)
         print("udf_kind", udf_kind)
@@ -37,7 +37,7 @@ class TestUseSharedExecutor:
         if context == 'dist':
             ctx = shared_dist_ctx
         elif context == 'inline':
-            ctx = lt_ctx
+            ctx = lt_ctx_fast
         else:
             raise ValueError
 

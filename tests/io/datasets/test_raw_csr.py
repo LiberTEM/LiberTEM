@@ -256,11 +256,20 @@ def real_csr_data(lt_ctx):
 
 
 @pytest.mark.skipif(not HAVE_CSR_TESTDATA, reason="need raw CSR testdata")
-def test_sum_real_data(real_csr_data, lt_ctx):
+def test_sum_real_data(real_csr_data, local_cluster_ctx):
+    udf = SumUDF()
+
+    local_cluster_ctx.run_udf(udf=udf, dataset=real_csr_data)
+    # ref = for_backend(np.sum(data_flat[roi], axis=0), NUMPY)
+    # assert np.allclose(ref, res['intensity'].data.reshape((-1,)))
+
+
+@pytest.mark.skipif(not HAVE_CSR_TESTDATA, reason="need raw CSR testdata")
+def test_sum_real_data_roi(real_csr_data, local_cluster_ctx):
     udf = SumUDF()
 
     roi = np.random.choice([True, False], real_csr_data.shape.nav)
-    lt_ctx.run_udf(udf=udf, dataset=real_csr_data, roi=roi)
+    local_cluster_ctx.run_udf(udf=udf, dataset=real_csr_data, roi=roi)
     # ref = for_backend(np.sum(data_flat[roi], axis=0), NUMPY)
     # assert np.allclose(ref, res['intensity'].data.reshape((-1,)))
 

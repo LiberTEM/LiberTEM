@@ -1,6 +1,5 @@
 import itertools
 import os
-import gc
 import sys
 import logging
 import functools
@@ -211,7 +210,6 @@ def worker_run_task(
                 "libertem.task_size_pickled": len(header["task"]),
                 "libertem.os.pid": os.getpid(),
             })
-            gc.disable()
             task: TaskProtocol = cloudpickle.loads(header["task"])
             params_handle = header["params_handle"]
             params = work_mem[params_handle]
@@ -236,9 +234,7 @@ def worker_run_task(
                 "uuid": header["uuid"],
             })
         finally:
-            gc.enable()
-            with tracer.start_as_current_span("gc"):
-                gc.collect()
+            pass
 
 
 def worker_run_function(header, queues, worker_idx):

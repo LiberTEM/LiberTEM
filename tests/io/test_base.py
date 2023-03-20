@@ -109,4 +109,4 @@ def test_filetype_auto_fail_no_path(lt_ctx):
 def test_filetype_auto_fail_file_does_not_exist(lt_ctx):
     with pytest.raises(DataSetException) as e:
         lt_ctx.load("auto", path="/does/not/exist/believe_me")
-    assert e.match("could not determine DataSet type for argument")
+    assert e.match("could not determine DataSet type for file")

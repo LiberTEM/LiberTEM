@@ -3,6 +3,7 @@ from typing import Dict, List, Union, Any
 import pathlib
 from functools import lru_cache
 import importlib
+import warnings
 from typing_extensions import Literal
 import numpy as np
 
@@ -211,6 +212,8 @@ def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
         _ = path.shape
         search_order.pop(search_order.index('memory'))
         search_order = ['memory'] + search_order
+        warnings.warn('Auto-loading a MemoryDataSet is currently unsupported, '
+                      'use ctx.load("memory", data=array).')
     except AttributeError:
         # Cannot interpret as a memory dataset
         pass

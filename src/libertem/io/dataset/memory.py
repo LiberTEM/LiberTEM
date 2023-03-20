@@ -13,7 +13,7 @@ from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.messageconverter import MessageConverter
 from libertem.io.dataset.base import (
     FileSet, BasePartition, DataSet, DataSetMeta, TilingScheme,
-    File, MMapBackend
+    File, MMapBackend, DataSetException
 )
 from libertem.io.dataset.base.backend_mmap import MMapBackendImpl, MMapFile
 from libertem.common import Shape, Slice
@@ -221,7 +221,9 @@ class MemoryDataSet(DataSet):
             raise ValueError("MemoryDataSet currently doesn't support alternative I/O backends")
         # For HTTP API testing purposes: Allow to create empty dataset with given shape
         if data is None:
-            assert datashape is not None
+            if datashape is None:
+                raise DataSetException('MemoryDataSet can be created from either data [np.ndarray],'
+                                       ' or datashape [tuple | Shape], both arguments are None')
             data = np.zeros(datashape, dtype=np.float32)
         if num_partitions is None:
             num_partitions = psutil.cpu_count(logical=False)

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from libertem.io.dataset.base import TilingScheme
+from libertem.io.dataset.base import TilingScheme, DataSetException
 from libertem.common import Shape
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.stddev import StdDevUDF
@@ -378,3 +378,8 @@ def test_sig_nav_dims_sync(nav_shape, sig_shape, sync_offset, sig_dims, prime_ra
         # FIXME also check correctness of results
         udf = StdDevUDF()
         lt_ctx.run_udf(dataset=ds, udf=udf)
+
+
+def test_exception_no_datashape(lt_ctx_fast):
+    with pytest.raises(DataSetException):
+        lt_ctx_fast.load('memory', tileshape=(5, 6, 7))

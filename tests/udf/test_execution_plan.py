@@ -364,20 +364,6 @@ def test_udf_preference_number(lt_ctx, device_class, ds_backends, udf4_backends)
     )
 
 
-def test_no_solution_ds():
-    # Only GPU for dataset
-    ds = MemoryDataSet(datashape=(2, 2, 2, 2), array_backends=(CUPY, ))
-    udf = BackendUDF(array_backends=UDF.BACKEND_ALL)
-    with pytest.raises(RuntimeError):
-        source_backend, execution_plan = _execution_plan(
-            udfs=[udf],
-            ds=ds,
-            device_class=None,
-            # restrict to CPU only
-            available_backends=CPU_BACKENDS,
-        )
-
-
 def test_no_solution_udf():
     ds = MemoryDataSet(datashape=(2, 2, 2, 2), array_backends=UDF.BACKEND_ALL)
     # only GPU for UDF

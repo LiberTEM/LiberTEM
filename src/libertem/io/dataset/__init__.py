@@ -65,60 +65,19 @@ def _auto_load(
     ...
 
 
-def _auto_load(
-    *args,
-    enable_async: bool,
-    executor,
-    **kwargs
-):
-    """
-    Use DS.detect_params to infer dataset type
-
-    Accepts one positional argument, only, or one kwarg
-    in ('path', 'data') without positional arg. Ambiguous
-    cases are rejected for loading with TypeError (matches test cases).
-    """
-    autoload_keys = ('path', 'data')
-    possible_arg = tuple(k for k in kwargs if k in autoload_keys)
-    if args and possible_arg:
-        raise TypeError(
-            f"Got positional args and additional keyword args "
-            f"{tuple(kwargs.keys())} for ctx.load('auto'), which is ambiguous."
+def _auto_load(path, *args, executor, **kwargs):
+    if path is None:
+        raise DataSetException(
+            "please specify the `path` argument to allow auto detection"
         )
-    if not args and not possible_arg:
-        raise TypeError('No arguments to auto-load dataset')
-    if len(args) > 1:
-        raise TypeError('0/1 positional arguments supported for '
-                        f'ctx.load("auto"), got {len(args)}')
-    if not args and len(possible_arg) > 1:
-        raise TypeError(
-            "Need one of 'path' or 'data' as kw-argument to "
-            "auto loader, got both."
-        )
-
-    # Based on the above argument checking, either len(args) == 1
-    # or kwargs contains one of autoload_keys and len(args) == 0
-    if args:
-        arg0 = args[0]
-    else:
-        arg0 = kwargs.pop(possible_arg[0])
-
-    detected_params = detect(arg0, executor=executor)
-    filetype_detected = detected_params.get('type', None)
+    detected_params = detect(path, executor=executor)
+    filetype_detected: typing.Optional[str] = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
-            f"could not determine DataSet type for argument '{arg0}'"
+            "could not determine DataSet type for file '%s'" % path,
         )
-    # Explicit values from kwargs over-ride detected_params
-    # We expect detected_params to set the correct kwargs to
-    # map to the first positional argument
-    load_params = detected_params['parameters']
-    load_params.update(kwargs)
     return load(
-        filetype_detected,
-        enable_async=enable_async,
-        executor=executor,
-        **load_params,
+        filetype_detected, path, *args, executor=executor, **kwargs
     )
 
 

@@ -121,13 +121,9 @@ def _execution_plan(
     # preserve order
     if ds.array_backends is None:
         raise ValueError("Available dataset backends need to be known.")
-    ds_backends = tuple(d for d in ds.array_backends if d in available_backends)
+    ds_backends = tuple(ds.array_backends)
     available_backends = frozenset(available_backends)
-    if not ds_backends:
-        raise RuntimeError(
-            f"No overlap between dataset backends {ds.array_backends} and "
-            f"available backends {available_backends}."
-        )
+
     if device_class is None:
         # No preference, for example to prepare running for dataset
         native_backends = available_backends

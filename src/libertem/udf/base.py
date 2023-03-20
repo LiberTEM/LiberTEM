@@ -1397,20 +1397,44 @@ class UDF(UDFBase):
 
     def forbuf(self, arr, target):
         '''
-        Convert array to format that is compatible with result buffers and
+        Convert array to backend that is compatible with result buffers and
         reshape.
 
         This function should be wrapped around assignment to result buffers if
-        the array :code:`arr` might be sparse and/or have a flattened sig
-        dimension. It converts any of the supported sparse input formats into
-        the array format of the target buffer. If the argument is already matching the buffer
-        array or is not recognized, it is a no-op.
+        the array :code:`arr` might have an incompatible array backend and/or
+        have a flattened sig dimension. It converts any of the supported input
+        backends into the array backend of the target buffer. If the argument is
+        already matching the buffer or is not recognized, it is a no-op.
 
-        The result of array operations on a sparse input tile can't always be
-        merged into dense result buffers directly since arrays from the
-        :mod:`sparse` package are not converted to NumPy arrays automatically.
+        In particular, the result of array operations on a sparse input tile
+        can't always be merged into dense result buffers directly since arrays
+        from the :mod:`sparse` package are not converted to NumPy arrays
+        automatically.
 
         .. versionadded:: 0.11.0
+
+        Parameters
+        ----------
+
+        arr : array-like
+            Any array-like object that is supported by the `sparseconverter`
+            package or allows the desired operation with the result buffer at
+            hand.
+        target : array-like
+            The LiberTEM result buffer that the desired operation targets.
+
+        Examples
+        --------
+
+        >>> def process_tile(self, tile):
+        ...     res = ...  # Processing result from tile
+        ...     self.results.intensity[:] += self.forbuf(
+        ...         res,
+        ...         self.results.intensity
+        ...     )
+
+        See :ref:`sparse` for a complete example how to use this function in the
+        contaxt of a UDF!
         '''
         res = make_like(arr, target, strict=False)
         return res

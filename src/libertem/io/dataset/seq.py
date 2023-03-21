@@ -27,7 +27,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import pathlib
 import struct
 import warnings
 from typing import Tuple
@@ -624,11 +623,6 @@ class SEQDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         try:
             return executor.run_function(cls._do_detect_params, path)
         except Exception as e:

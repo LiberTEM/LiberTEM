@@ -1,5 +1,4 @@
 import os
-import pathlib
 import re
 import glob
 import math
@@ -880,11 +879,6 @@ class K2ISDataSet(DataSet):
         positives, for example if users name their binary files .bin and have 8 of them
         in a directory.
         """
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         try:
             files = executor.run_function(get_filenames, path)
             if len(files) != NUM_SECTORS:

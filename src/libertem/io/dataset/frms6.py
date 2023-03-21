@@ -1,5 +1,4 @@
 import os
-import pathlib
 import re
 import csv
 from glob import glob, escape
@@ -513,11 +512,6 @@ class FRMS6DataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         hdr_filename = "%s.hdr" % executor.run_function(_get_base_filename, path)
         try:
             hdr = executor.run_function(_read_dataset_hdr, hdr_filename)

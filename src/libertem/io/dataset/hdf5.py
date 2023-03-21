@@ -1,5 +1,4 @@
 import contextlib
-import pathlib
 import typing
 from typing import Optional, Tuple, List
 import warnings
@@ -389,11 +388,6 @@ class H5DataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         try:
             executor.run_function(cls._do_detect, path)
         except (OSError, KeyError, ValueError, TypeError, DataSetException):

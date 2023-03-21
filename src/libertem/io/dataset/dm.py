@@ -1,5 +1,4 @@
 import os
-import pathlib
 import typing
 import logging
 import warnings
@@ -252,11 +251,6 @@ class DMDataSet(DataSet):
     @classmethod
     def detect_params(cls, path, executor):
         # FIXME: this doesn't really make sense for file series
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         pl = path.lower()
         if pl.endswith(".dm3") or pl.endswith(".dm4"):
             return {

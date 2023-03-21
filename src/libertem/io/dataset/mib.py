@@ -1,6 +1,5 @@
 import re
 import os
-import pathlib
 from glob import glob, escape
 import logging
 from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
@@ -1121,12 +1120,7 @@ class MIBDataSet(DataSet):
         return {"mib", "hdr"}
 
     @classmethod
-    def detect_params(cls, path: str, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
+    def detect_params(cls, path, executor):
         pathlow = path.lower()
         if pathlow.endswith(".mib"):
             image_count, sig_shape = executor.run_function(get_image_count_and_sig_shape, path)

@@ -1,5 +1,4 @@
 import os
-import pathlib
 import logging
 from typing import Optional
 import warnings
@@ -188,11 +187,6 @@ class SERDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         if path.lower().endswith(".ser"):
             ds = cls(path)
             ds = ds.initialize(executor)

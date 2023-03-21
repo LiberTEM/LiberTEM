@@ -1,5 +1,4 @@
 import os
-import pathlib
 import warnings
 
 import numpy as np
@@ -168,11 +167,6 @@ class BloDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         try:
             ds = cls(path, endianess='<')
             ds = ds.initialize(executor)

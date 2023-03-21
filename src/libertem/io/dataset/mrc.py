@@ -1,5 +1,4 @@
 import os
-import pathlib
 import logging
 
 from ncempy.io.mrc import fileMRC
@@ -176,11 +175,6 @@ class MRCDataSet(DataSet):
 
     @classmethod
     def detect_params(cls, path, executor):
-        try:
-            _ = pathlib.Path(path)
-            path = str(path)
-        except TypeError:
-            return False
         if path.lower().endswith(".mrc"):
             f = fileMRC(path)
             data = f.getMemmap()

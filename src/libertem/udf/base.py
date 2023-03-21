@@ -2022,8 +2022,9 @@ class UDFPartRunner:
     ) -> "nt.DTypeLike":
         dtype = _get_dtype(self._udfs, partition.dtype, corrections, execution_plan.keys())
         for backend, udfs in execution_plan.items():
+            pslice_for_roi = partition.slice.adjust_for_roi(roi)
             meta = UDFMeta(
-                partition_slice=partition.slice.adjust_for_roi(roi),
+                partition_slice=pslice_for_roi,
                 dataset_shape=partition.meta.shape,
                 roi=roi,
                 dataset_dtype=partition.dtype,
@@ -2038,6 +2039,7 @@ class UDFPartRunner:
                 udf.set_backend(backend)
                 udf.get_method()  # validate that one of the `process_*` methods is implemented
                 udf.set_meta(meta)
+                udf.set_slice(pslice_for_roi)
                 udf.init_result_buffers()
                 udf.allocate_for_part(partition, roi)
                 udf.init_task_data()

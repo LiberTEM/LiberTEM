@@ -171,3 +171,43 @@ def test_tiles_with_roi(lt_ctx):
 
     test = SimpleTestByTileWithROIUDF()
     lt_ctx.run_udf(dataset=dataset, udf=test, roi=roi)
+
+
+class CoordsInGetTaskData(UDF):
+    def get_result_buffers(self):
+        return {
+            'counter': self.buffer(kind='single', dtype=np.int64),
+        }
+
+    def process_tile(self, tile):
+        pass
+
+    def get_task_data(self):
+        assert self.meta._slice is not None
+        assert self.meta.coordinates is not None
+        ps = np.zeros((self.meta.coordinates.shape[0],), dtype=bool)
+        return {
+            'ps': ps,
+        }
+
+    def postprocess(self):
+        self.results.counter[0] += self.task_data.ps.shape[0]
+
+    def merge(self, dest, src):
+        dest.counter += src.counter
+
+
+def test_coordinates_available(lt_ctx):
+    data = _mk_random(size=(16, 16, 16, 16), dtype="float32")
+    dataset = lt_ctx.load(
+        "memory",
+        data=data,
+        tileshape=(7, 16, 16),
+        num_partitions=2,
+        sig_dims=2
+    )
+    roi = np.random.choice([True, False], dataset.shape.nav)
+
+    udf = CoordsInGetTaskData()
+    res = lt_ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+    assert res['counter'].data[0] == np.count_nonzero(roi)

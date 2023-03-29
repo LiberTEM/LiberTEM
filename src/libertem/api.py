@@ -1385,9 +1385,9 @@ class Context:
         self.executor.close()
 
     def set_progress_reporter(
-            self,
-            reporter: Union['ProgressReporter', Type['ProgressReporter']]
-        ):
+                self,
+                reporter: Union['ProgressReporter', Type['ProgressReporter']]
+            ):
         self._progress_reporter = reporter
 
     def __enter__(self):

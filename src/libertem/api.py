@@ -1,6 +1,6 @@
 from typing import (
     TYPE_CHECKING, Any, List, Optional, Union, Iterable, Generator, Coroutine,
-    AsyncGenerator, overload, Tuple
+    AsyncGenerator, overload, Tuple, Type
 )
 from typing_extensions import Literal
 import warnings
@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     import numpy.typing as nt
     from sparse import SparseArray
     from scipy.sparse import spmatrix
+    from libertem.common.progress import ProgressReporter
 
 tracer = trace.get_tracer(__name__)
 
@@ -114,6 +115,7 @@ class Context:
             executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
+        self._progress_reporter = None
         self._register_at_exit()
 
     @classmethod
@@ -1023,7 +1025,10 @@ class Context:
 
         def _run_sync_wrap() -> Generator[UDFResults, None, None]:
             runner_cls = self.executor.get_udf_runner()
-            result_iter = runner_cls(udfs).run_for_dataset_sync(
+            result_iter = runner_cls(
+                udfs,
+                progress_reporter=self._progress_reporter,
+            ).run_for_dataset_sync(
                 dataset=dataset,
                 executor=self.executor,
                 roi=roi,
@@ -1378,6 +1383,12 @@ class Context:
 
     def close(self):
         self.executor.close()
+
+    def set_progress_reporter(
+            self,
+            reporter: Union['ProgressReporter', Type['ProgressReporter']]
+        ):
+        self._progress_reporter = reporter
 
     def __enter__(self):
         return self

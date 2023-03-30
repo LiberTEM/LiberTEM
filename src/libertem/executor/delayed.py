@@ -28,7 +28,7 @@ from .utils import delayed_unpack
 
 
 class DelayedUDFRunner(UDFRunner):
-    def __init__(self, udfs: List[UDF], debug: bool = False):
+    def __init__(self, udfs: List[UDF], debug: bool = False, progress_reporter: Any = None):
         self._part_results = defaultdict(lambda: {})
         super().__init__(udfs, debug=debug)
 

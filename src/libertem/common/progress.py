@@ -78,6 +78,7 @@ class ProgressState(NamedTuple):
     num_part_complete: int
     num_part_in_progress: int
     num_part_total: int
+    progress_id: str
 
 
 class ProgressReporter:
@@ -196,9 +197,15 @@ class ProgressManager:
     The bar will render in a Jupyter notebook as a JS widget
     automatically via tqdm.auto
     """
-    def __init__(self, tasks: Iterable['UDFTask'], reporter: Optional[ProgressReporter] = None):
+    def __init__(
+        self,
+        tasks: Iterable['UDFTask'],
+        progress_id: str,
+        reporter: Optional[ProgressReporter] = None,
+    ):
         if not tasks:
             raise ValueError('Cannot display progress for empty tasks')
+        self._progress_id = progress_id
         # the number of whole frames we expect each task to process
         self._task_max = {t.partition.get_ident(): t.task_frames
                           for t in tasks}
@@ -234,6 +241,7 @@ class ProgressManager:
             len(self._complete),
             len(self._in_progress),
             self._num_total,
+            self._progress_id,
         )
 
     def finalize_task(self, task: 'UDFTask'):

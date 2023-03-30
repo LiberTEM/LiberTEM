@@ -2342,7 +2342,7 @@ class UDFRunner:
 
         try:
             if progress and tasks:
-                pman = ProgressManager(tasks, reporter=self._progress_reporter)
+                pman = ProgressManager(tasks, cancel_id, reporter=self._progress_reporter)
                 pman.connect(task_comm_handler)
                 for task in tasks:
                     task.report_progress()

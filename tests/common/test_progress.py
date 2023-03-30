@@ -127,11 +127,12 @@ def test_progress_inline_fasttime(lt_ctx, monkeypatch):
     # through a call to finalize_task() on the main thread
     # This tests the fallback mechanism in case comms fail
     states = reporter._history
-    start_progress = ProgressState(0., 16, 0, 0, 2)
+    progress_id = states[0].progress_id
+    start_progress = ProgressState(0., 16, 0, 0, 2, progress_id)
     assert start_progress in states
-    part0_end_progress = ProgressState(8., 16, 1, 0, 2)
+    part0_end_progress = ProgressState(8., 16, 1, 0, 2, progress_id)
     assert part0_end_progress in states
-    part1_end_progress = ProgressState(16., 16, 2, 0, 2)
+    part1_end_progress = ProgressState(16., 16, 2, 0, 2, progress_id)
     assert part1_end_progress in states
 
     # Get the queue to read the intermediate messages

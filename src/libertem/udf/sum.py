@@ -25,9 +25,11 @@ class SumUDF(UDF):
         super().__init__(dtype=dtype)
 
     def get_preferred_input_dtype(self):
+        ''
         return self.params.dtype
 
     def get_backends(self):
+        ''
         return self.BACKEND_ALL
 
     def get_result_buffers(self):

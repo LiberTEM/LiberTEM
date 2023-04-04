@@ -16,6 +16,15 @@ class PickUDF(UDF):
     This UDF is meant for frame picking with a very small ROI, usually a single frame.
 
     .. versionadded:: 0.4.0
+
+    Examples
+    --------
+    >>> udf = PickUDF()
+    >>> roi = np.zeros(dataset.shape.nav, dtype=bool)
+    >>> roi[0] = True
+    >>> result = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
+    >>> result["intensity"].raw_data[0].shape
+    (32, 32)
     '''
     def __init__(self):
         super().__init__()

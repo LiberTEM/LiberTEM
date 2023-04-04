@@ -220,6 +220,7 @@ class ApplyMasksUDF(UDF):
         }
 
     def get_backends(self):
+        ''
         return self.params.backends
 
     def process_tile(self, tile):

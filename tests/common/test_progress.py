@@ -113,13 +113,7 @@ def test_progress_inline_fasttime(lt_ctx, monkeypatch):
 
     reporter = TrackingTQDM()
     udf = SumUDF()
-    runner = UDFRunner([udf], progress_reporter=reporter)
-    runner.run_for_dataset(
-        ds,
-        lt_ctx.executor,
-        roi=None,
-        progress=True
-    )
+    lt_ctx.run_udf(ds, udf, progress=reporter)
 
     assert reporter._bar.n == reporter._bar.total
 

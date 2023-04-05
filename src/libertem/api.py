@@ -1003,10 +1003,13 @@ class Context:
         enable_plotting = bool(plots)
 
         udf_is_list = isinstance(udf, Iterable)
-        if not isinstance(udf, Iterable):
+        if not udf_is_list:
             udfs = [udf]
         else:
             udfs = list(udf)
+
+        if len(udfs) == 0:
+            raise ValueError("empty list of UDFs - nothing to do!")
 
         if enable_plotting:
             with tracer.start_as_current_span("prepare_plots"):

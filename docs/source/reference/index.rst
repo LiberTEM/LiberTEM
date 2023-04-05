@@ -17,6 +17,7 @@ Python API reference
    dask
    corrections
    viz
+   progress
 
 Indices and tables
 ------------------

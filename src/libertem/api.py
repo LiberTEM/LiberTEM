@@ -1,6 +1,6 @@
 from typing import (
     TYPE_CHECKING, Any, List, Optional, Union, Iterable, Generator, Coroutine,
-    AsyncGenerator, overload, Tuple, Type
+    AsyncGenerator, overload, Tuple
 )
 from typing_extensions import Literal
 import warnings
@@ -21,6 +21,7 @@ from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.integration import get_dask_integration_executor
 from libertem.common.executor import JobExecutor
+from libertem.common.progress import ProgressReporter
 from libertem.masks import MaskFactoriesType
 from libertem.analysis.raw import PickFrameAnalysis
 from libertem.analysis.com import COMAnalysis
@@ -40,7 +41,6 @@ if TYPE_CHECKING:
     import numpy.typing as nt
     from sparse import SparseArray
     from scipy.sparse import spmatrix
-    from libertem.common.progress import ProgressReporter
 
 tracer = trace.get_tracer(__name__)
 
@@ -115,7 +115,6 @@ class Context:
             executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
-        self._progress_reporter = None
         self._register_at_exit()
 
     @classmethod
@@ -609,7 +608,7 @@ class Context:
     def run(
         self, job: Analysis,
         roi: RoiT = None,
-        progress: bool = False,
+        progress: Union[bool, ProgressReporter] = False,
         corrections: Optional[CorrectionSet] = None,
     ) -> Union[np.ndarray, AnalysisResultSet]:
         """
@@ -670,7 +669,7 @@ class Context:
         udf: Union[UDF, Iterable[UDF]],
         roi: RoiT = None,
         corrections: Optional[CorrectionSet] = None,
-        progress: bool = False,
+        progress: Union[bool, ProgressReporter] = False,
         backends=None,
         plots=None,
         sync=True,
@@ -802,7 +801,7 @@ class Context:
         udf: Union[UDF, Iterable[UDF]],
         roi: RoiT = None,
         corrections: CorrectionSet = None,
-        progress: bool = False,
+        progress: Union[bool, ProgressReporter] = False,
         backends=None,
         plots=None,
         sync=True,
@@ -900,7 +899,7 @@ class Context:
         udf: UDF,
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[False],
@@ -914,7 +913,7 @@ class Context:
         udf: UDF,
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[True],
@@ -927,7 +926,7 @@ class Context:
         udf: Iterable[UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[False],
@@ -940,7 +939,7 @@ class Context:
         udf: Iterable[UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[True],
@@ -953,7 +952,7 @@ class Context:
         udf: Union[Iterable[UDF], UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[True],
@@ -967,7 +966,7 @@ class Context:
         udf: Union[Iterable[UDF], UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: Literal[False],
@@ -981,7 +980,7 @@ class Context:
         udf: Union[Iterable[UDF], UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends: Optional[Any],
         plots: Optional[Any],
         iterate: bool,
@@ -993,7 +992,7 @@ class Context:
         udf: Union[UDF, Iterable[UDF]],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: bool,
@@ -1026,11 +1025,17 @@ class Context:
                 warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
                 roi = roi.astype(bool)
 
+        if isinstance(progress, ProgressReporter):
+            progress_reporter = progress
+            progress = True
+        else:
+            progress_reporter = None
+
         def _run_sync_wrap() -> Generator[UDFResults, None, None]:
             runner_cls = self.executor.get_udf_runner()
             result_iter = runner_cls(
                 udfs,
-                progress_reporter=self._progress_reporter,
+                progress_reporter=progress_reporter,
             ).run_for_dataset_sync(
                 dataset=dataset,
                 executor=self.executor,
@@ -1067,7 +1072,7 @@ class Context:
         udf: UDF,
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: Literal[False],
@@ -1080,7 +1085,7 @@ class Context:
         udf: Iterable[UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: Literal[False],
@@ -1093,7 +1098,7 @@ class Context:
         udf: UDF,
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: Literal[True],
@@ -1106,7 +1111,7 @@ class Context:
         udf: Iterable[UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: Literal[True],
@@ -1119,7 +1124,7 @@ class Context:
         udf: Union[UDF, Iterable[UDF]],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: Literal[True],
@@ -1132,7 +1137,7 @@ class Context:
         udf: Union[UDF, Iterable[UDF]],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: Literal[False],
@@ -1145,7 +1150,7 @@ class Context:
         udf: Union[Iterable[UDF], UDF],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: bool,
@@ -1157,7 +1162,7 @@ class Context:
         udf: Union[UDF, Iterable[UDF]],
         roi: RoiT,
         corrections: Optional[CorrectionSet],
-        progress: bool,
+        progress: Union[bool, ProgressReporter],
         backends,
         plots,
         iterate: bool,
@@ -1329,7 +1334,7 @@ class Context:
         )
 
     def map(self, dataset: DataSet, f, roi: RoiT = None,
-            progress: bool = False,
+            progress: Union[bool, ProgressReporter] = False,
             corrections: CorrectionSet = None,
             backends=None) -> BufferWrapper:
         '''
@@ -1386,12 +1391,6 @@ class Context:
 
     def close(self):
         self.executor.close()
-
-    def set_progress_reporter(
-                self,
-                reporter: Union['ProgressReporter', Type['ProgressReporter']]
-            ):
-        self._progress_reporter = reporter
 
     def __enter__(self):
         return self

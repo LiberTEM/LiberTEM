@@ -24,6 +24,19 @@ def test_ctx_load(lt_ctx, default_raw):
     )
 
 
+def test_run_empty_udf_list(lt_ctx, default_raw):
+    ds = lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        nav_shape=(16, 16),
+        dtype="float32",
+        sig_shape=(128, 128),
+    )
+    with pytest.raises(ValueError) as em:
+        lt_ctx.run_udf(dataset=ds, udf=[])
+    em.match("^empty list of UDFs - nothing to do!$")
+
+
 def test_run_udf_with_io_backend(lt_ctx, default_raw):
     io_backend = MMapBackend(enable_readahead_hints=True)
     lt_ctx.load(

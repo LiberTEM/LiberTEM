@@ -84,23 +84,56 @@ class ProgressState(NamedTuple):
 class ProgressReporter:
     """
     Interface for progress bar display / updating
+
+    This class will receive :class:`ProgressState`
+    instances to notify it about the start, progression
+    and end of a job submitted to the :code:`UDFRunner`.
+    The implementation should be adapted to display or
+    log the progress as required for the use case.
+
+    It is possible that multiple jobs are submitted
+    to a single executor at the same time and therefore
+    the implementation should ensure that concurrent instances
+    of the class display correctly, or that the same instance
+    of the class can handle updates from multiple threads
+    concurrently. Each :class:`ProgressState` message contains a field
+    :code:`progress_id` which is unique to each job, and therefore
+    the implementation can use this to distinguish updates from
+    multiple sources.
     """
     def __init__(self):
         raise NotImplementedError()
 
     def start(self, state: ProgressState):
+        """
+        Signal the creation of a new job with the expected
+        number of partitions and frames, and unique progress_id string.
+        """
         raise NotImplementedError()
 
     def update(self, state: ProgressState):
+        """
+        Signal an intermediate update to the progress of a job
+        """
         raise NotImplementedError()
 
     def end(self, state: ProgressState):
+        """
+        Signal the end of a given job
+
+        This method should always be called and any updates
+        recieved after this message should be ignored.
+        """
         raise NotImplementedError()
 
 
 class TQDMProgressReporter(ProgressReporter):
     """
     Progress bar display via tqdm
+
+    Supports concurrent usage of multiple instances of
+    this class, but does not handle multi-threaded use
+    of the same instance to report multiple jobs.
     """
     def __init__(self):
         self._bar = None

@@ -630,8 +630,10 @@ class Context:
             the analysis to run
         roi : numpy.ndarray, sparse array or coordinate tuple(s), optional
             Boolean mask of the navigation dimension. See :ref:`udf roi`.
-        progress : bool
-            Show progress bar
+        progress : bool | ProgressReporter
+            Show progress bar. Toggle with boolean flag or supply instance of
+            :class:`libertem.common.progress.ProgressReporter` for custom
+            handling of progress display.
         corrections
             Corrections to apply, i.e. dark frame substraction, applying a gain map, ...
 
@@ -699,8 +701,10 @@ class Context:
             Region of interest as bool mask over the navigation axes of the dataset.
             See :ref:`udf roi`.
 
-        progress : bool
-            Show progress bar
+        progress : bool | ProgressReporter
+            Show progress bar. Toggle with boolean flag or supply instance of
+            :class:`libertem.common.progress.ProgressReporter` for custom
+            handling of progress display.
 
         corrections
             Corrections to apply while running the UDF. If none are given,
@@ -824,8 +828,10 @@ class Context:
             Region of interest as bool mask over the navigation axes of the dataset.
             See :ref:`udf roi`.
 
-        progress : bool
-            Show progress bar
+        progress : bool | ProgressReporter
+            Show progress bar. Toggle with boolean flag or supply instance of
+            :class:`libertem.common.progress.ProgressReporter` for custom
+            handling of progress display.
 
         corrections
             Corrections to apply while running the UDF. If none are given,
@@ -1357,8 +1363,10 @@ class Context:
         roi : numpy.ndarray, sparse array or coordinate tuple(s), optional
             Region of interest as bool mask over the navigation axes of the dataset.
             See :ref:`udf roi`.
-        progress : bool
-            Show progress bar
+        progress : bool | ProgressReporter
+            Show progress bar. Toggle with boolean flag or supply instance of
+            :class:`libertem.common.progress.ProgressReporter` for custom
+            handling of progress display.
         corrections
             Corrections to apply while running the function. If none are given,
             the corrections that are part of the :code:`DataSet` are used,

@@ -5,7 +5,6 @@ from contextlib import contextmanager
 
 import libertem.api as lt
 from libertem.udf.sum import SumUDF
-from libertem.udf.base import UDFRunner
 from libertem.common.progress import TQDMProgressReporter, ProgressState
 from libertem.common.executor import TaskCommHandler, WorkerQueue, WorkerQueueEmpty
 from libertem.io.dataset.memory import MemoryDataSet
@@ -169,13 +168,7 @@ def _test_progress_slowudf(context: lt.Context):
 
     reporter = TrackingTQDM()
     udf = GoSlowSumUDF()
-    runner = UDFRunner([udf], progress_reporter=reporter)
-    runner.run_for_dataset(
-        ds,
-        context.executor,
-        roi=None,
-        progress=True
-    )
+    context.run_udf(ds, udf, progress=reporter)
 
     assert reporter._bar.n == reporter._bar.total
     num_part = ds.get_num_partitions()
@@ -201,7 +194,8 @@ def test_progress_concurrent_slowudf(concurrent_ctx):
 def test_progress_dask(dask_executor, default_raw):
     reporter = TrackingTQDM()
     udf = GoSlowSumUDF()
-    runner = UDFRunner([udf], progress_reporter=reporter)
+    runner_cls = dask_executor.get_udf_runner()
+    runner = runner_cls([udf], progress_reporter=reporter)
     runner.run_for_dataset(
         default_raw,
         dask_executor,
@@ -224,13 +218,7 @@ def test_progress_pipelined(default_raw):
     with lt.Context.make_with("pipelined") as ctx:
         reporter = TrackingTQDM()
         udf = GoSlowSumUDF()
-        runner = UDFRunner([udf], progress_reporter=reporter)
-        runner.run_for_dataset(
-            default_raw,
-            ctx.executor,
-            roi=None,
-            progress=True
-        )
+        ctx.run_udf(default_raw, udf, progress=reporter)
 
         assert reporter._bar.n == reporter._bar.total
         num_part = default_raw.get_num_partitions()

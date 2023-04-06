@@ -21,6 +21,7 @@ import SEQParamsForm from "./SEQParamsForm";
 import SERParamsForm from "./SERParamsForm";
 import TVIPSParamsForm from "./TVIPSParamsForm";
 import RawCSRParamsForm from "./RawCSRParamsForm";
+import DMParamsForm from "./DMParamsForm";
 
 /**
  * Get the initial selection for the dataset type dropdown. If we have a previous
@@ -229,6 +230,11 @@ const DatasetOpen = () => {
             const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
             const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
             return renderForm(<RawCSRParamsForm {...commonParams} initial={initial} info={info} />);
+        }        
+        case DatasetTypes.DM: {
+            const initial = formInitial && datasetType === formInitial.type ? formInitial : undefined;
+            const info = formInfo && datasetType === formInfo.type ? formInfo : undefined;
+            return renderForm(<DMParamsForm {...commonParams} initial={initial} info={info} />);
         }
     }
     return assertNotReached("unknown dataset type");

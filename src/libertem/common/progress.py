@@ -72,12 +72,18 @@ class ProgressState(NamedTuple):
     Container for progress state, used to communicate
     from ProgressManager to ProgressReporter
     """
-    # Float because we can complete partial frames (tiles)
+    #: float: Number of frames processed
     num_frames_complete: float
+    #: int: Total number of frames to process
     num_frames_total: int
+    #: int: Number of partitions completed
     num_part_complete: int
+    #: int: Number of partitions in-progress
     num_part_in_progress: int
+    #: int: Total number of partitions
     num_part_total: int
+    #: str: A unique string identifier for the job associated
+    #: with this progress message
     progress_id: str
 
 
@@ -121,7 +127,7 @@ class ProgressReporter:
         """
         Signal the end of a given job
 
-        This method should always be called and any updates
+        This method will always be called and any updates
         recieved after this message should be ignored.
         """
         raise NotImplementedError()

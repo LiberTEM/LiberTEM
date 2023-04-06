@@ -5,4 +5,4 @@
   :code:`ctx.run_udf()` and similar methods on :code:`Context`
   now accepts an instance of :code:`ProgressReporter`, added in
   :pr:`1341`, to allow redirecting progress messages to another
-  endpoint.
+  endpoint. (:pr:`1398`)

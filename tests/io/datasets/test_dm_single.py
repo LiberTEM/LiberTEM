@@ -102,7 +102,7 @@ def _make_mock_array(datadir, shape, dtype, c_order):
     return (array, filename), mock_fileDM
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dm4_mockfile_f(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     shape = Shape((4, 8, 16, 24), 2)
@@ -110,7 +110,7 @@ def dm4_mockfile_f(tmpdir_factory):
     return _make_mock_array(datadir, shape, dtype, False)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dm4_mockfile_c(tmpdir_factory):
     datadir = tmpdir_factory.mktemp('data')
     shape = Shape((4, 8, 16, 24), 2)
@@ -130,11 +130,8 @@ def test_f_order_raises(monkeypatch, dm4_mockfile_f, lt_ctx_fast):
         lt_ctx_fast.load('dm', filename)
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_comparison(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_comparison(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -144,11 +141,8 @@ def test_comparison(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     lt_ctx_fast.run_udf(udf=udf, dataset=ds)
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_comparison_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_comparison_roi(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -165,11 +159,8 @@ def test_comparison_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     lt_ctx_fast.run_udf(udf=udf, dataset=ds, roi=roi)
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_many_tiles(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_many_tiles(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -201,11 +192,8 @@ class SumFrameUDF(UDF):
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_process_frame(monkeypatch, dm4_mockfile_c, lt_ctx_fast, with_roi):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -227,11 +215,8 @@ def test_process_frame(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, request
 @pytest.mark.parametrize(
     "with_roi", (True, False)
 )
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_corrections_default(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_corrections_default(monkeypatch, dm4_mockfile_c, lt_ctx_fast, with_roi):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -245,11 +230,8 @@ def test_corrections_default(monkeypatch, dm4_mockfile, lt_ctx_fast, with_roi, r
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx_fast)
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_macrotile_normal(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_macrotile_normal(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -263,11 +245,8 @@ def test_macrotile_normal(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     assert macrotile.tile_slice.origin[0] == p2._start_frame
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_macrotile_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_macrotile_roi(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     ds = lt_ctx_fast.load('dm', filename)
@@ -280,11 +259,8 @@ def test_macrotile_roi(monkeypatch, dm4_mockfile, lt_ctx_fast, request):
     assert tuple(macrotile.tile_slice.shape) == (2, 16, 24)
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_positive_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_positive_sync_offset(monkeypatch, dm4_mockfile_c, lt_ctx):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     udf = SumSigUDF()
@@ -334,11 +310,8 @@ def test_positive_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
     assert np.allclose(result, result_with_offset)
 
 
-@pytest.mark.parametrize(
-    "dm4_mockfile", [("dm4_mockfile_c"),]
-)
-def test_negative_sync_offset(monkeypatch, dm4_mockfile, lt_ctx, request):
-    (array, filename), mock_fileDM = request.getfixturevalue(dm4_mockfile)
+def test_negative_sync_offset(monkeypatch, dm4_mockfile_c, lt_ctx):
+    (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
     udf = SumSigUDF()

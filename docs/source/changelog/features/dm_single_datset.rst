@@ -2,5 +2,6 @@
 =============================================================
 
 * Adds support for single-file Digital Micrograph datasets to
-  the existing :class:`~libertem.io.datasets.dm.DMDataSet` class.
-  (:pr:`1328`)
+  the existing :class:`~libertem.io.datasets.dm.DMDataSet` class
+  and to the web interface. At this time only new-style C-ordered
+  DM4 files are supported. (:pr:`1401`)

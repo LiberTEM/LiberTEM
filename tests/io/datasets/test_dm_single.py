@@ -12,7 +12,60 @@ from libertem.udf.base import UDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.dm_single import SingleDMDataSet
 
-from utils import ValidationUDF, _mk_random, dataset_correction_verification
+try:
+    import hyperspy.api as hs
+except ModuleNotFoundError:
+    hs = None
+
+from utils import ValidationUDF, _mk_random, dataset_correction_verification, get_testdata_path
+
+
+DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm4')
+HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
+
+
+@pytest.fixture(scope='module')
+def dm4_c_order_4d_path():
+    return os.path.join(DM_TESTDATA_PATH, '4d_data_c_order.dm4')
+
+
+@pytest.fixture(scope='module')
+def dm4_f_order_3d_path():
+    return os.path.join(DM_TESTDATA_PATH, '3d_data_f_order.dm4')
+
+
+@pytest.fixture(scope='module')
+def dm4_c_order_4d_raw(dm4_c_order_4d_path):
+    return hs.load(dm4_c_order_4d_path).data
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+def test_3d_f_order(lt_ctx_fast, dm4_f_order_3d_path):
+    with pytest.raises(DataSetException):
+        lt_ctx_fast.load('dm', dm4_f_order_3d_path)
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.slow
+def test_4d_c_order(lt_ctx_fast, dm4_c_order_4d_path, dm4_c_order_4d_raw):
+    ds = lt_ctx_fast.load('dm', dm4_c_order_4d_path)
+    assert isinstance(ds, SingleDMDataSet)
+    assert ds.shape.to_tuple() == (213, 342, 128, 128)
+    assert ds.dtype == np.uint8
+    res = lt_ctx_fast.run_udf(ds, SumSigUDF())
+    assert np.allclose(res['intensity'].data, dm4_c_order_4d_raw.sum(axis=(-2, -1)))
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.slow
+def test_comparison_raw(lt_ctx_fast, dm4_c_order_4d_path, dm4_c_order_4d_raw):
+    ds = lt_ctx_fast.load('dm', dm4_c_order_4d_path)
+    assert ds.meta.shape.to_tuple() == dm4_c_order_4d_raw.shape
+    flat_data = dm4_c_order_4d_raw.reshape(-1, *dm4_c_order_4d_raw.shape[-2:])
+    udf = ValidationUDF(reference=flat_data)
+    lt_ctx_fast.run_udf(udf=udf, dataset=ds)
 
 
 class MockFileDM:

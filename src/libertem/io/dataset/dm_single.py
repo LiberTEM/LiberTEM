@@ -141,7 +141,6 @@ class SingleDMDataSet(DMDataSet):
                 return False
             sync_offset = 0
             nav_shape, sig_shape = cls._modify_shape(array_meta['shape'],
-                                                    array_meta['c_order'],
                                                     sig_dims=sig_dims)
             if len(nav_shape) == 1:
                 nav_shape = (1,) + nav_shape

@@ -25,6 +25,8 @@ class SingleDMDataSet(DMDataSet):
     and TEM image stacks stored in a single-file format. Where possible
     the structure will be inferred from the file metadata.
 
+    .. versionadded:: 0.11.0
+
     Note
     ----
     Single-file DM data can be stored on disk using either normal C-ordering,

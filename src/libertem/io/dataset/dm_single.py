@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
     from numpy import typing as nt
-    from libertem.executor.base import JobExecutor
+    from libertem.common.executor import JobExecutor
 
 
 class SingleDMDataSet(DMDataSet):

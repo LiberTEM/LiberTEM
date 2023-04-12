@@ -281,6 +281,7 @@ export type DatasetInfoRawCSR = {
 export type DatasetParamsDM = {
     type: DatasetTypes.DM,
     path: string,
+    force_c_order: boolean,
 } & DatasetParamsCommon
 
 export type DatasetInfoDM = {

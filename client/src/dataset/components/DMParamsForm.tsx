@@ -48,6 +48,11 @@ const DMFileParamsForm: React.FC<MergedProps> = ({
                 datasetTypeInfo={datasetTypeInfo}
                 setFieldValue={setFieldValue} />
         </Form.Field>
+        <Form.Field>
+            <label htmlFor="id_force_c_order">Force C-order:{" "}
+            <Field name="force_c_order" id="id_force_c_order" type="checkbox"/>
+            </label>
+        </Form.Field>
         <Reshape navShape={values.nav_shape} sigShape={values.sig_shape} syncOffset={values.sync_offset} imageCount={info?.image_count} setFieldValue={setFieldValue} setFieldTouched={setFieldTouched} />
         <Button primary type="submit" disabled={isSubmitting || isValidating}>Load Dataset</Button>
         <Button type="button" onClick={onCancel}>Cancel</Button>
@@ -64,6 +69,7 @@ export default withValidation<DatasetParamsDM, DatasetParamsDMForForm, DatasetIn
         sig_shape: parseShapeInCommaSeparatedString(values.sig_shape),
         sync_offset: values.sync_offset,
         io_backend: values.io_backend,
+        force_c_order: values.force_c_order,
     }),
     mapPropsToValues: ({ path, initial }) => ({
         name: getInitialName("name", path, initial),
@@ -71,6 +77,7 @@ export default withValidation<DatasetParamsDM, DatasetParamsDMForForm, DatasetIn
         sig_shape: adjustShapeWithBounds(getInitial("sig_shape", "", initial).toString(), "sig"),
         sync_offset: getInitial("sync_offset", 0, initial),
         io_backend: getInitial("io_backend", undefined, initial),
+        force_c_order: getInitial("force_c_order", false, initial),
     }),
     customValidation: (values, { info }) => validateSyncOffsetAndSigShape(
         info?.native_sig_shape,

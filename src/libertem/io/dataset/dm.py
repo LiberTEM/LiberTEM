@@ -46,6 +46,7 @@ class SingleDMDatasetParams(MessageConverter):
             "io_backend": {
                 "enum": IOBackend.get_supported(),
             },
+            "force_c_order": {"type": "boolean"},
         },
         "required": ["type", "path"]
     }
@@ -55,7 +56,7 @@ class SingleDMDatasetParams(MessageConverter):
             k: raw_data[k]
             for k in ["path"]
         }
-        for k in ["nav_shape", "sig_shape", "sync_offset"]:
+        for k in ["nav_shape", "sig_shape", "sync_offset", "force_c_order"]:
             if k in raw_data:
                 data[k] = raw_data[k]
         return data

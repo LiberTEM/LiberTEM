@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "./static/static/css/main.6b1244d3.css",
-    "main.js": "./static/static/js/main.1e3865e8.js",
+    "main.js": "./static/static/js/main.c606ec48.js",
     "static/media/brand-icons.svg": "./static/static/media/brand-icons.6729d29753e000c17489.svg",
     "static/media/icons.svg": "./static/static/media/icons.62d9dae4e0040e81c980.svg",
     "static/media/outline-icons.svg": "./static/static/media/outline-icons.9c4845b4b41ef40a22fa.svg",
@@ -21,10 +21,10 @@
     "static/media/LiberTEM logo-medium.png": "./static/static/media/LiberTEM logo-medium.2765b438358114b8344a.png",
     "index.html": "./static/index.html",
     "main.6b1244d3.css.map": "./static/static/css/main.6b1244d3.css.map",
-    "main.1e3865e8.js.map": "./static/static/js/main.1e3865e8.js.map"
+    "main.c606ec48.js.map": "./static/static/js/main.c606ec48.js.map"
   },
   "entrypoints": [
     "static/css/main.6b1244d3.css",
-    "static/js/main.1e3865e8.js"
+    "static/js/main.c606ec48.js"
   ]
 }

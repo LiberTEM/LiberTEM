@@ -20,18 +20,28 @@ except ModuleNotFoundError:
 from utils import ValidationUDF, _mk_random, dataset_correction_verification, get_testdata_path
 
 
-DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm4')
+DM_TESTDATA_PATH = os.path.join(get_testdata_path(), 'dm')
 HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
 
 
 @pytest.fixture(scope='module')
 def dm4_c_order_4d_path():
-    return os.path.join(DM_TESTDATA_PATH, '4d_data_c_order.dm4')
+    return os.path.join(DM_TESTDATA_PATH, '4d_data_c_order_zen4307783.dm4')
 
 
 @pytest.fixture(scope='module')
 def dm4_f_order_3d_path():
-    return os.path.join(DM_TESTDATA_PATH, '3d_data_f_order.dm4')
+    return os.path.join(DM_TESTDATA_PATH, '3d_data_f_order_zen2580185.dm4')
+
+
+@pytest.fixture(scope='module')
+def dm3_3dstack_path():
+    return os.path.join(DM_TESTDATA_PATH, '3D', 'alpha-50_obj.dm3')
+
+
+@pytest.fixture(scope='module')
+def dm4_2dimage_path():
+    return os.path.join(DM_TESTDATA_PATH, '2018-7-17 15_29_0000.dm4')
 
 
 @pytest.fixture(scope='module')
@@ -39,10 +49,56 @@ def dm4_c_order_4d_raw(dm4_c_order_4d_path):
     return hs.load(dm4_c_order_4d_path).data
 
 
+@pytest.fixture(scope='module')
+def dm4_f_order_3d_raw(dm4_f_order_3d_path):
+    return hs.load(dm4_f_order_3d_path).data
+
+
+@pytest.fixture(scope='module')
+def dm3_3dstack_raw(dm3_3dstack_path):
+    return hs.load(dm3_3dstack_path).data
+
+
+@pytest.fixture(scope='module')
+def dm4_2dimage_raw(dm4_2dimage_path):
+    return hs.load(dm4_2dimage_path).data
+
+
 @pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
 def test_3d_f_order(lt_ctx_fast, dm4_f_order_3d_path):
     with pytest.raises(DataSetException):
         lt_ctx_fast.load('dm', dm4_f_order_3d_path)
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.slow
+def test_3d_f_order_force(lt_ctx_fast, dm4_f_order_3d_path, dm4_f_order_3d_raw):
+    ds = lt_ctx_fast.load('dm', dm4_f_order_3d_path, force_c_order=True)
+    assert ds.shape == Shape((3710, 146, 228), sig_dims=1)
+    res = lt_ctx_fast.run_udf(ds, SumSigUDF())
+    # best we can do!
+    assert np.allclose(res['intensity'].data.sum(), dm4_f_order_3d_raw.sum())
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.slow
+def test_3d_c_order(lt_ctx_fast, dm3_3dstack_path, dm3_3dstack_raw):
+    ds = lt_ctx_fast.load('dm', dm3_3dstack_path)
+    assert ds.shape == Shape((20, 3838, 3710), sig_dims=2)
+    res = lt_ctx_fast.run_udf(ds, SumSigUDF())
+    assert np.allclose(res['intensity'].data, dm3_3dstack_raw.sum(axis=(-2, -1)))
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.slow
+def test_2d_c_order(lt_ctx_fast, dm4_2dimage_path, dm4_2dimage_raw):
+    ds = lt_ctx_fast.load('dm', dm4_2dimage_path)
+    assert ds.shape == Shape((1, 3838, 3710), sig_dims=2)
+    res = lt_ctx_fast.run_udf(ds, SumSigUDF())
+    assert np.allclose(res['intensity'].data.squeeze(), dm4_2dimage_raw.sum(axis=(-2, -1)))
 
 
 @pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
@@ -66,6 +122,9 @@ def test_comparison_raw(lt_ctx_fast, dm4_c_order_4d_path, dm4_c_order_4d_raw):
     flat_data = dm4_c_order_4d_raw.reshape(-1, *dm4_c_order_4d_raw.shape[-2:])
     udf = ValidationUDF(reference=flat_data)
     lt_ctx_fast.run_udf(udf=udf, dataset=ds)
+
+
+# Remaining tests are on mockfile objects rather than the large, real files
 
 
 class MockFileDM:

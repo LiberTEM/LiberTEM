@@ -28,9 +28,19 @@ HAVE_DM_TESTDATA = os.path.exists(DM_TESTDATA_PATH)
 pytestmark = pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="need .dm4 testdata")  # NOQA
 
 
+@pytest.fixture(scope='module')
+def dm_stack_glob():
+    return glob(os.path.join(DM_TESTDATA_PATH, '2018-7-17*.dm4'))
+
+
+@pytest.fixture(scope='module')
+def dm_3d_glob():
+    return glob(os.path.join(DM_TESTDATA_PATH, '3D', '*.dm3'))
+
+
 @pytest.fixture
-def default_dm(lt_ctx):
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+def default_dm(lt_ctx, dm_stack_glob):
+    files = list(sorted(dm_stack_glob))
     ds = lt_ctx.load(
         "dm",
         files=files,
@@ -40,15 +50,15 @@ def default_dm(lt_ctx):
 
 
 @pytest.fixture(scope='module')
-def default_dm_raw():
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+def default_dm_raw(dm_stack_glob):
+    files = list(sorted(dm_stack_glob))
     return np.stack([hs.load(file).data for file in files])
 
 
 @pytest.fixture
-def buffered_dm(lt_ctx):
+def buffered_dm(lt_ctx, dm_stack_glob):
     buffered = BufferedBackend()
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+    files = list(sorted(dm_stack_glob))
     return lt_ctx.load(
         "dm",
         files=files,
@@ -57,9 +67,9 @@ def buffered_dm(lt_ctx):
 
 
 @pytest.fixture
-def direct_dm(lt_ctx):
-    buffered = DirectBackend()
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+def direct_dm(lt_ctx, dm_stack_glob):
+    buffered = DirectBackend(dm_stack_glob)
+    files = list(sorted(dm_stack_glob))
     return lt_ctx.load(
         "dm",
         files=files,
@@ -68,15 +78,15 @@ def direct_dm(lt_ctx):
 
 
 @pytest.fixture
-def dm_stack_of_3d(lt_ctx):
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '3D', '*.dm3'))))
+def dm_stack_of_3d(lt_ctx, dm_3d_glob):
+    files = list(sorted(dm_3d_glob))
     ds = lt_ctx.load("dm", files=files)
     return ds
 
 
 @pytest.fixture(scope='module')
-def default_dm_3d_raw():
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '3D', '*.dm3'))))
+def default_dm_3d_raw(dm_3d_glob):
+    files = list(sorted(dm_3d_glob))
     return np.concatenate([hs.load(file).data for file in files], axis=0)
 
 
@@ -178,8 +188,8 @@ def test_detect_2(lt_ctx):
     ) is False
 
 
-def test_same_offset(lt_ctx):
-    files = glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))
+def test_same_offset(lt_ctx, dm_stack_glob):
+    files = dm_stack_glob
     ds = lt_ctx.load("dm", files=files, same_offset=True)
     ds.check_valid()
 
@@ -189,10 +199,8 @@ def test_repr(default_dm):
 
 
 @pytest.mark.dist
-def test_dm_dist(dist_ctx):
-    files = dist_ctx.executor.run_function(lambda: list(sorted(glob(
-        os.path.join(DM_TESTDATA_PATH, "*.dm4")
-    ))))
+def test_dm_dist(dist_ctx, dm_stack_glob):
+    files = dist_ctx.executor.run_function(lambda: list(sorted(dm_stack_glob)))
     print(files)
     ds = DMDataSet(files=files)
     ds = ds.initialize(dist_ctx.executor)
@@ -223,13 +231,13 @@ def test_dm_stack_fileset_offsets(dm_stack_of_3d, lt_ctx):
         MMapBackend(),
     ),
 )
-def test_positive_sync_offset(lt_ctx, io_backend):
+def test_positive_sync_offset(lt_ctx, io_backend, dm_stack_glob):
     udf = SumSigUDF()
     sync_offset = 2
 
     ds = lt_ctx.load(
         "dm",
-        files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+        files=list(sorted(dm_stack_glob)),
         nav_shape=(4, 2),
         io_backend=io_backend,
     )
@@ -239,7 +247,7 @@ def test_positive_sync_offset(lt_ctx, io_backend):
 
     ds_with_offset = lt_ctx.load(
         "dm",
-        files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+        files=list(sorted(dm_stack_glob)),
         nav_shape=(4, 2),
         sync_offset=sync_offset,
         io_backend=io_backend,
@@ -259,13 +267,13 @@ def test_positive_sync_offset(lt_ctx, io_backend):
         MMapBackend(),
     ),
 )
-def test_negative_sync_offset(lt_ctx, io_backend):
+def test_negative_sync_offset(lt_ctx, io_backend, dm_stack_glob):
     udf = SumSigUDF()
     sync_offset = -2
 
     ds = lt_ctx.load(
         "dm",
-        files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+        files=list(sorted(dm_stack_glob)),
         nav_shape=(4, 2),
         io_backend=io_backend,
     )
@@ -275,7 +283,7 @@ def test_negative_sync_offset(lt_ctx, io_backend):
 
     ds_with_offset = lt_ctx.load(
         "dm",
-        files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+        files=list(sorted(dm_stack_glob)),
         nav_shape=(4, 2),
         sync_offset=sync_offset,
         io_backend=io_backend,
@@ -293,7 +301,7 @@ def test_negative_sync_offset(lt_ctx, io_backend):
         MMapBackend(),
     ),
 )
-def test_missing_frames(lt_ctx, io_backend):
+def test_missing_frames(lt_ctx, io_backend, dm_stack_glob):
     """
     there can be some frames missing at the end
     """
@@ -302,7 +310,7 @@ def test_missing_frames(lt_ctx, io_backend):
 
     ds = lt_ctx.load(
         "dm",
-        files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+        files=list(sorted(dm_stack_glob)),
         nav_shape=nav_shape,
         io_backend=io_backend,
     )
@@ -351,13 +359,13 @@ def test_scheme_too_large(default_dm):
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_dm.shape.sig)
 
 
-def test_offset_smaller_than_image_count(lt_ctx):
+def test_offset_smaller_than_image_count(lt_ctx, dm_stack_glob):
     sync_offset = -12
 
     with pytest.raises(Exception) as e:
         lt_ctx.load(
             "dm",
-            files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+            files=list(sorted(dm_stack_glob)),
             sync_offset=sync_offset
         )
     assert e.match(
@@ -365,13 +373,13 @@ def test_offset_smaller_than_image_count(lt_ctx):
     )
 
 
-def test_offset_greater_than_image_count(lt_ctx):
+def test_offset_greater_than_image_count(lt_ctx, dm_stack_glob):
     sync_offset = 12
 
     with pytest.raises(Exception) as e:
         lt_ctx.load(
             "dm",
-            files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+            files=list(sorted(dm_stack_glob)),
             sync_offset=sync_offset
         )
     assert e.match(
@@ -380,9 +388,9 @@ def test_offset_greater_than_image_count(lt_ctx):
 
 
 @pytest.mark.slow
-def test_reshape_nav(lt_ctx):
+def test_reshape_nav(lt_ctx, dm_stack_glob):
     udf = SumSigUDF()
-    files = list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4'))))
+    files = list(sorted(dm_stack_glob))
 
     ds_with_1d_nav = lt_ctx.load("dm", files=files, nav_shape=(8,))
     result_with_1d_nav = lt_ctx.run_udf(dataset=ds_with_1d_nav, udf=udf)
@@ -399,13 +407,13 @@ def test_reshape_nav(lt_ctx):
     assert np.allclose(result_with_1d_nav, result_with_2d_nav, result_with_3d_nav)
 
 
-def test_incorrect_sig_shape(lt_ctx):
+def test_incorrect_sig_shape(lt_ctx, dm_stack_glob):
     sig_shape = (5, 5)
 
     with pytest.raises(Exception) as e:
         lt_ctx.load(
             "dm",
-            files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+            files=list(sorted(dm_stack_glob)),
             sig_shape=sig_shape
         )
     assert e.match(
@@ -413,13 +421,13 @@ def test_incorrect_sig_shape(lt_ctx):
     )
 
 
-def test_scan_size_deprecation(lt_ctx):
+def test_scan_size_deprecation(lt_ctx, dm_stack_glob):
     scan_size = (2, 2)
 
     with pytest.warns(FutureWarning):
         ds = lt_ctx.load(
             "dm",
-            files=list(sorted(glob(os.path.join(DM_TESTDATA_PATH, '*.dm4')))),
+            files=list(sorted(dm_stack_glob)),
             scan_size=scan_size,
         )
     assert tuple(ds.shape) == (2, 2, 3838, 3710)

@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose
 
+from libertem.io.dataset import raw_csr
 from libertem.io.dataset.raw_csr import (
     read_tiles_straight, read_tiles_with_roi, CSRTriple, RawCSRDataSet
 )
@@ -415,3 +416,21 @@ def test_reshape_sync_offset(
         ref_result[1]['num_frames'].raw_data,
         result[1]['num_frames'].raw_data
     )
+
+
+def test_large_file_detect(monkeypatch, default_raw, inline_executor_fast):
+    # Use a mock load_toml function to check if we loaded a large file
+    # could do this with a real mock object...
+    load_called = False
+
+    def mock_load_toml(*args, **kwargs):
+        nonlocal load_called
+        load_called = True
+
+    monkeypatch.setattr(raw_csr, "load_toml", mock_load_toml)
+
+    # default_raw is a 16 MB file
+    filepath = default_raw._path
+    detects = RawCSRDataSet.detect_params(filepath, inline_executor_fast)
+    assert not detects
+    assert not load_called

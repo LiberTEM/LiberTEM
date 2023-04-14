@@ -230,6 +230,11 @@ class RawCSRDataSet(DataSet):
     @classmethod
     def detect_params(cls, path: str, executor: "JobExecutor"):
         try:
+            _, extension = os.path.splitext(path)
+            has_extension = extension.lstrip('.') in cls.get_supported_extensions()
+            under_size_lim = os.stat(path).st_size < 2**20  # 1 MB
+            if not (has_extension or under_size_lim):
+                return False
             conf = executor.run_function(load_toml, path)
             if "params" not in conf:
                 return False

@@ -185,10 +185,10 @@ def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
     return cls
 
 
-def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
+def get_search_order(path: Union[str, np.ndarray]) -> List[str]:
     """
-    Returns dataset's detected type, parameters and
-    additional info.
+    Return the keys from filetypes in an order which
+    is perhaps optimal for dataset auto-detection
     """
     extension_map = build_extension_map()
     search_order = list(filetypes.keys())
@@ -217,6 +217,15 @@ def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
     except AttributeError:
         # Cannot interpret as a memory dataset
         pass
+    return search_order
+
+
+def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
+    """
+    Returns dataset's detected type, parameters and
+    additional info.
+    """
+    search_order = get_search_order(path)
     for filetype in search_order:
         try:
             cls = get_dataset_cls(filetype)

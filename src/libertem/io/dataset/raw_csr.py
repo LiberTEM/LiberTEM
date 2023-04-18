@@ -232,7 +232,7 @@ class RawCSRDataSet(DataSet):
         try:
             _, extension = os.path.splitext(path)
             has_extension = extension.lstrip('.') in cls.get_supported_extensions()
-            under_size_lim = os.stat(path).st_size < 2**20  # 1 MB
+            under_size_lim = executor.run_function(os.stat, path).st_size < 2**20  # 1 MB
             if not (has_extension or under_size_lim):
                 return False
             conf = executor.run_function(load_toml, path)

@@ -124,6 +124,7 @@ class File:
                 (itemsize * frame_size) + self._frame_header + self._frame_footer
             )
             skip_end = (size - file_offset) - new_mmap_size
+        assert skip_end >= 0
 
         return OffsetsSizes(
             file_offset=file_offset,

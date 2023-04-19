@@ -505,4 +505,3 @@ def test_load_stack_dd(local_cluster_ctx, dm_stack_glob):
     files = dm_stack_glob
     ds = local_cluster_ctx.load("dm", files=files, same_offset=True)
     ds.check_valid()
-

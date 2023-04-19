@@ -142,7 +142,7 @@ def load_kwargs(request, hdf5, default_raw, default_npy, default_npy_filepath, r
                 'path': blo_path,
             }
     elif param == 'DM':
-        dm_files = list(sorted(glob(os.path.join(testdata_path, 'dm', '*.dm4'))))
+        dm_files = list(sorted(glob(os.path.join(testdata_path, 'dm', '2018-7-17*.dm4'))))
         if dm_files:
             return {
                 'filetype': 'dm',

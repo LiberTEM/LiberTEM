@@ -82,6 +82,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] For the GUI-related items, open in an incognito window to start from a clean slate
     * [ ] Correct version info displayed in info dialogue?
     * [ ] Link check in version info dialogue
+    * [ ] Test GUI without internet access
     * [ ] Make sure you have test files of all supported types available
         * [ ] Include floats, ints, big endian, little endian, complex raw data
     * [ ] Open each test file

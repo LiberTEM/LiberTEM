@@ -1,4 +1,0 @@
-[Obsolescence] Remove support for Python 3.6
-============================================
-
-* Remove support for Python 3.6. (:issue:`1369`, :pr:`1380`).

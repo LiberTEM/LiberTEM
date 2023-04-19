@@ -40,7 +40,7 @@ Clausen and Dieter Weber for their extensive work on sparse support.
 This release also marks the end of official support for Python 3.6
 (:issue:`1369`, :pr:`1380`). At this time the maximum supported Python 
 version remains 3.10 owing to usage of the
-`numba library <https://numba.pydata.org/>`_ within LiberTEM.
+`Numba library <https://numba.pydata.org/>`_ within LiberTEM.
 
 Sparse processing
 -----------------

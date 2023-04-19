@@ -234,6 +234,21 @@ class StackedDMDataSet(DMDataSet):
         self._z_sizes = {}
         self._offsets = {}
 
+    def __new__(cls, *args, **kwargs):
+        '''
+        Skip the superclasse's :code:`__new__()` method.
+
+        Instead, go straight to the grandparent. That disables the
+        :class:`DMDataSet` type determination magic. Otherwise unpickling will
+        always yield a :class:`SingleDMDataSet` since this class inherits the
+        parent's :code:`__new__()` method and unpickling calls it without
+        parameters, making it select :class:`SingleDMDataSet`.
+
+        It mimics calling the superclass :code:`__new__(cls)` without additional
+        parameters, just like the parent's method.
+        '''
+        return DataSet.__new__(cls)
+
     def _get_sig_shape_and_native_dtype(self):
         first_fn = self._get_files()[0]
         first_file = fileDM(first_fn, on_memory=True)

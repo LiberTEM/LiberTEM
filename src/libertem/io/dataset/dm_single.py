@@ -9,7 +9,7 @@ import numpy as np
 
 from libertem.common.math import prod
 from libertem.common import Shape
-from .base import BasePartition, DataSetException, DataSetMeta, File, IOBackend
+from .base import BasePartition, DataSetException, DataSetMeta, File, IOBackend, DataSet
 from .dm import DMDataSet, SingleDMDatasetParams, DMFileSet
 
 log = logging.getLogger(__name__)
@@ -106,6 +106,21 @@ class SingleDMDataSet(DMDataSet):
         self._sync_offset = sync_offset
         self._force_c_order = force_c_order
         self._dm_ds_index = dataset_index
+
+    def __new__(cls, *args, **kwargs):
+        '''
+        Skip the superclasse's :code:`__new__()` method.
+
+        Instead, go straight to the grandparent. That disables the
+        :class:`DMDataSet` type determination magic. Otherwise unpickling will
+        always yield a :class:`SingleDMDataSet` since this class inherits the
+        parent's :code:`__new__()` method and unpickling calls it without
+        parameters, making it select :class:`SingleDMDataSet`.
+
+        It mimics calling the superclass :code:`__new__(cls)` without additional
+        parameters, just like the parent's method.
+        '''
+        return DataSet.__new__(cls)
 
     def __repr__(self):
         try:

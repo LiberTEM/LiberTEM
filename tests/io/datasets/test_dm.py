@@ -492,3 +492,17 @@ def test_nonstack_files(lt_ctx):
             "dm",
             files=files,
         )
+
+
+def test_stack_in_an_inline_pickle(default_dm, lt_ctx):
+    # make sure the __new__ magic works with pickle
+    import cloudpickle
+    ds = cloudpickle.loads(cloudpickle.dumps(default_dm))
+    lt_ctx.run_udf(dataset=ds, udf=SumUDF())
+
+
+def test_load_stack_dd(local_cluster_ctx, dm_stack_glob):
+    files = dm_stack_glob
+    ds = local_cluster_ctx.load("dm", files=files, same_offset=True)
+    ds.check_valid()
+

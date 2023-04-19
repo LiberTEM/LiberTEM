@@ -164,6 +164,7 @@ information!
 - Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for `DE-Series <http://www.directelectron.com/de-series/>`_ detectors
 - `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
 - Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
+- Single-file Gatan DM4 scans when saved using C-ordering
 - FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - MRC (via `openNCEM <https://github.com/ercius/openNCEM>`_)

@@ -34,7 +34,13 @@ processing using sparse-compatible libraries, primarily oriented towards
 data from event-based detectors. This support is provided through the new
 `sparseconverter <https://github.com/LiberTEM/sparseconverter>`_ package,
 which was developed to enable efficient inter-conversion between different
-sparse formats and dense arrays.
+sparse formats and dense arrays. Many thanks in particular to Alexander
+Clausen and Dieter Weber for their extensive work on sparse support.
+
+This release also marks the end of official support for Python 3.6
+(:issue:`1369`, :pr:`1380`). At this time the maximum supported Python 
+version remains 3.10 owing to usage of the
+`numba library <https://numba.pydata.org/>`_ within LiberTEM.
 
 Sparse processing
 -----------------
@@ -96,6 +102,18 @@ Web interface
   will now use the file suffix as a hint to choose its search order.
   This may lead to faster responses in the web client when configuring
   a new dataset. (:pr:`1377`)
+
+Breaking changes
+----------------
+* Instead of :class:`~libertem.io.dataset.base.tiling.DataTile` objects, an UDF's
+  processing method will receive plain array objects, such as
+  :class:`numpy.ndarray`, :class:`sparse.SparseArray` etc. That means the
+  :code:`scheme_idx` and :code:`tile_slice` attributes are not available from
+  the tile anymore, but only from the corresponding
+  :attr:`libertem.udf.base.UDFMeta.tiling_scheme_idx` and
+  :attr:`libertem.udf.base.UDFMeta.slice`. This change makes handling different
+  array types such as sparse arrays or CuPy arrays easier. For CuPy arrays this
+  was already the previous behavior.
 
 .. _`v0-10-0`:
 

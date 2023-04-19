@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.11.0.dev0
+0.12.0.dev0
 ###########
 
 .. toctree::
@@ -20,6 +20,83 @@ Changelog
   changelog/*/*
 
 .. _latest:
+.. _`v0-11-0`:
+
+0.11.0 / in-preparation
+#######################
+
+.. TODO zenodo
+.. .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6927963.svg
+..    :target: https://doi.org/10.5281/zenodo.6927963
+
+This release introduces first-class support for sparse input data and
+processing using sparse-compatible libraries, primarily oriented towards
+data from event-based detectors. This support is provided through the new
+`sparseconverter <https://github.com/LiberTEM/sparseconverter>`_ package,
+which was developed to enable efficient inter-conversion between different
+sparse formats and dense arrays.
+
+Sparse processing
+-----------------
+* Datasets and UDFs now support tiles in various array formats, in
+  particular :ref:`sparse`. (:issue:`1205`, :pr:`1207`)
+* Add support for :code:`raw_csr` file format (:issue:`1195`, :pr:`1207`).
+* ROIs can now now be provided to :code:`ctx.run_udf` as sparse arrays or coordinate
+  tuples rather than as a dense boolean mask. (:pr:`1306`)
+
+Other features
+--------------
+
+* Single-file Gatan Digital Micrograph (DM3/DM4) STEM datasets are now supported
+  in the API and in the web interface. The files must use the newer C-style
+  ordering available in Digital Micrograph to be read correctly. (:pr:`1401`)
+* The information provided by the :code:`ctx.run_udf` progress bar has been improved
+  with framewise updates, allowing feedback on progress before a partition completes.
+  (:pr:`1341`)
+* HDF5 datasets can now perform on-the-fly reshaping of the scan grid and
+  can be adjusted using the `sync_offset` parameter. (:issue:`441`, :pr:`1364`)
+
+Bugfixes
+--------
+
+* Numerous bugs were fixed in the behaviour of the :code:`PipelinedExecutor`,
+  to avoid crashes and deadlocks throughout the lifecycle of the object,
+  particulary duing live processing.
+  (:pr:`1308`, :pr:`1311`, :pr:`1316`, :pr:`1318`, :pr:`1319`, :pr:`1342`)
+* The :code:`Context` object will now attempt to close itself cleanly at
+  process exit (:pr:`1343`).
+* The handling of :code:`sync_offset`, :code:`nav_shape`, :code:`sig_shape` and
+  :code:`sig_dims` in :class:`libertem.io.dataset.memory.MemoryDataSet` is now
+  consistent with other datasets. (:pr:`1207`)
+* Bugs were fixed in :class:`libertem.udf.stddev.StdDevUDF` for both complex
+  input data and when some partitions are empty.  (:pr:`1314`)
+
+Miscellaneous
+-------------
+
+* Make `self.meta.coordinates` available in `UDF.get_task_data` (:pr:`1397`).
+* The methods :meth:`libertem.executor.pipelined.PipelinedExecutor.make_spec` and
+  :func:`libertem.executor.dask.cluster_spec` both now accept integers for
+  their :code:`cpus` and :code:`cudas` arguments, in addition to the existing
+  iterable forms. (:issue:`1294`, :pr:`1336`).
+* Reduced the overhead of (re-)constructing :code:`Slice` and :code:`Shape`
+  objects when slicing tiles, in particular focused on the method
+  :code:`BufferWrapper.get_contiguous_view_for_tile()`. (:issue:`1313`, :pr:`1321`)
+
+Web interface
+-------------
+
+* Datasets which don't declare their nav shape will be interpreted as square
+  if their number of frames is a square number (:issue:`1309`, :pr:`1338`).
+* Raise if user input for :code:`numWorker` is non-positive integer
+  or other error is encountered in :code:`DaskJobExecutor` creation. (:pr:`1334`).
+* The dataset loader `Reset`` button now correctly resets the sync_offset
+  field, if present (:pr:`1378`).
+* The function :code:`detect` to automatically determine dataset type
+  will now use the file suffix as a hint to choose its search order.
+  This may lead to faster responses in the web client when configuring
+  a new dataset. (:pr:`1377`)
+
 .. _`v0-10-0`:
 
 0.10.0 / 2022-07-28

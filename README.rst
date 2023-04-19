@@ -170,6 +170,8 @@ information!
 - MRC (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as HyperSpy files, NeXus and EMD
 - TVIPS binary files
+- Sparse data in Raw CSR (compressed sparse row) format, as is possible
+  to generate from event-based detectors
 - Please contact us if you are interested in support for an additional format!
 
 Detectors (experimental)

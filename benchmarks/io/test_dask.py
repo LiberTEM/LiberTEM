@@ -20,14 +20,14 @@ _mk_dask_from_delayed = utils_dask._mk_dask_from_delayed
 
 
 # (100, 100, 1216, 1216) by default
-__nblock_params = ((100, 1, 1, 1),
-                   (50, 1, 1, 1),
-                   (25, 1, 1, 1),
-                   (10, 1, 1, 1),
-                   (4, 1, 1, 1),
-                   (100, 25, 1, 1),
-                   (100, 4, 1, 1),
-                   (20, 1, 2, 2))
+nblock_params = ((100, 1, 1, 1),
+                 (50, 1, 1, 1),
+                 (25, 1, 1, 1),
+                 (10, 1, 1, 1),
+                 (4, 1, 1, 1),
+                 (100, 25, 1, 1),
+                 (100, 4, 1, 1),
+                 (20, 1, 2, 2))
 
 
 # Make it a class to re-use the shared dist executor
@@ -37,8 +37,8 @@ class TestChunking:
     )
     @pytest.mark.parametrize(
         "nblocks",
-        __nblock_params,
-        ids=tuple(f'nblocks: {c}' for c in __nblock_params)
+        nblock_params,
+        ids=tuple(f'nblocks: {c}' for c in nblock_params)
     )
     def test_dask_nav_chunking(shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark):
         _run_benchmark(shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark,

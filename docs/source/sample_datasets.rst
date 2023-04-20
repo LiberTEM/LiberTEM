@@ -71,6 +71,19 @@ transmission electron microscopy, such as ptychography.
 :Size:
     14.2 GB
 
+
+Graphene simulated dataset
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Link:
+    https://zenodo.org/record/4476506 :cite:`t_pennycook_2021_4476506`
+:Format:
+    NPY (float32)
+:Dimension:
+    4D (64, 65, 256, 256)
+:Size:
+    1.1 GB
+
 Creating random data
 ~~~~~~~~~~~~~~~~~~~~~~~
 

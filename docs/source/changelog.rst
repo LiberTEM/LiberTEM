@@ -36,6 +36,8 @@ data from event-based detectors. This support is provided through the new
 which was developed to enable efficient inter-conversion between different
 sparse formats and dense arrays. Many thanks in particular to Alexander
 Clausen and Dieter Weber for their extensive work on sparse support.
+See :ref:`sparse` for details on how to use it in your UDFs, and :ref:`raw csr`
+for a sparse input file format!
 
 This release also marks the end of official support for Python 3.6
 (:issue:`1369`, :pr:`1380`). At this time the maximum supported Python 

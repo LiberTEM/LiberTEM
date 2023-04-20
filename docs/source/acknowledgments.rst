@@ -20,7 +20,7 @@ Notable upstream projects
 <https://matplotlib.org/>`_, `Pillow <https://pillow.readthedocs.io/>`_, `H5Py
 <https://www.h5py.org/>`_, `Numba <https://numba.pydata.org/>`_, `Psutil
 <https://psutil.readthedocs.io/>`_,
-`Ncempy`_
+`Ncempy <https://openncem.readthedocs.io/>`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React
 <https://reactjs.org/>`_, `React Window <https://react-window.vercel.app/>`_, `Redux

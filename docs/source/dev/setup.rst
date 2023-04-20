@@ -119,6 +119,10 @@ requirements for installed third-party packages have changed, you should re-run
 Setting up tox on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. note::
+  This doesn't seem to work on the newest tox major release 4.x anymore.
+  We are still figuring out how to make it work. Help is appreciated!
+
 We are using tox to run our tests.
 On Windows with Anaconda, you have to create named aliases for the Python
 interpreter before you can run :literal:`tox` so that tox finds the python
@@ -154,4 +158,4 @@ your new libertem-3.7 environment:
     @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
 
 See also:
-https://tox.wiki/en/latest/developers.html#multiple-python-versions-on-windows
+https://tox.wiki/en/3.0.0/developers.html#id2

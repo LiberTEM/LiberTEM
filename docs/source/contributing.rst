@@ -126,7 +126,7 @@ different Python versions and interpreter implementations.
 This makes sure that you can run the tests locally the same way as they are run
 in continuous integration.
 
-After `installing tox <https://tox.wiki/en/latest/install.html>`_, you
+After `installing tox <https://tox.wiki/en/latest/installation.html>`_, you
 can run the tests on all Python versions by simply running tox:
 
 .. code-block:: shell

@@ -89,7 +89,8 @@ class RawCSRDataSet(DataSet):
     """
     Read sparse data in compressed sparse row (CSR) format from a triple of files
     that contain the index pointers, the coordinates and the values. See
-    https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)
+    `Wikipedia article on the CSR format
+    <https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)>`_
     for more information on the format.
 
     The necessary parameters are specified in a TOML file like this:

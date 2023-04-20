@@ -174,17 +174,24 @@ information!
   to generate from event-based detectors
 - Please contact us if you are interested in support for an additional format!
 
-Detectors (experimental)
-------------------------
+Live processing and detectors (experimental)
+--------------------------------------------
 
-Currently the Quantum Detectors Merlin camera is supported for live processing.
-Support for DECTRIS cameras and the Gatan K2 IS camera are in a prototype state. Please
-`contact us <https://gitter.im/LiberTEM/Lobby>`_ if you are interested in this
-feature! See https://github.com/LiberTEM/LiberTEM-live for more details on live
-processing.
+See `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_!
 
 License
 -------
 
 LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT
 license, please see LICENSE files in the subdirectories for details.
+
+Acknowledgements
+----------------
+
+We are very grateful for your continuing support for LiberTEM!
+
+See `the acknowledgement page
+<https://libertem.github.io/acknowledgements.html>`_ for a list of authors and
+contributors to LiberTEM and its subprojects. See also our info on `funding
+<https://libertem.github.io/#funding>`_ and `industry partners
+<https://libertem.github.io/#industry-partners>`_.

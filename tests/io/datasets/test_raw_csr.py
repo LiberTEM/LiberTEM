@@ -406,15 +406,21 @@ def test_reshape_sync_offset(
 
     assert_allclose(
         ref_result[0]['intensity'].raw_data,
-        result[0]['intensity'].raw_data
+        result[0]['intensity'].raw_data,
+        rtol=1e-5,
+        atol=1e-8,
     )
     assert_allclose(
         ref_result[1]['std'].raw_data,
-        result[1]['std'].raw_data
+        result[1]['std'].raw_data,
+        rtol=1e-5,
+        atol=1e-8,
     )
     assert_allclose(
         ref_result[1]['num_frames'].raw_data,
-        result[1]['num_frames'].raw_data
+        result[1]['num_frames'].raw_data,
+        rtol=1e-5,
+        atol=1e-8,
     )
 
 

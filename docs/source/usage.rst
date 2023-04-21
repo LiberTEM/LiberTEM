@@ -38,7 +38,8 @@ all available resources are selected, though you can reduce this if needed.
 
 .. note::
 
-   Use of GPUs requires a working CuPy installation, see :ref:`cupy install`.
+   Use of GPUs requires a working CuPy installation, see :ref:`CuPy install <cupy install>`
+   for more information.
 
 Opening data
 ------------

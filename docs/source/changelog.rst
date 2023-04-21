@@ -22,12 +22,11 @@ Changelog
 .. _latest:
 .. _`v0-11-0`:
 
-0.11.0 / in-preparation
-#######################
+0.11.0 / 2023-04-21
+###################
 
-.. TODO zenodo
-.. .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6927963.svg
-..    :target: https://doi.org/10.5281/zenodo.6927963
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7853070.svg
+   :target: https://doi.org/10.5281/zenodo.7853070
 
 This release introduces first-class support for sparse input data and
 processing using sparse-compatible libraries, primarily oriented towards

@@ -106,6 +106,7 @@ class Context:
     >>> ctx = libertem.api.Context()  # doctest: +SKIP
 
     >>> # Create a Context using an inline executor for debugging
+    >>> # See also Context.make_with() for a more convenient interface!
     >>> from libertem.executor.inline import InlineJobExecutor
     >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
     """

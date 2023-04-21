@@ -24,7 +24,7 @@ BufferedBackend
 .. autoclass:: libertem.io.dataset.base.BufferedBackend
     :noindex:
 
-MmapBackend
+MMapBackend
 ~~~~~~~~~~~
 
 .. autoclass:: libertem.io.dataset.base.MMapBackend

@@ -294,7 +294,7 @@ class UDFMeta:
         :code:`tiling_scheme_idx` and `sig_slice` added
 
     .. versionchanged:: 0.11.0
-        :code:`array_format` added
+        :code:`array_backend` added
     """
 
     def __init__(
@@ -857,7 +857,7 @@ class UDFMergeAllMixin(Protocol):
                 self, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'
             ) -> Mapping[str, 'nt.ArrayLike']:
         """
-        Combine stack of ordered partial results `ordered_results` to form complete result.
+        Combine stack of ordered partial results :code:`ordered_results` to form complete result.
 
         Combining can be more efficient than direct merging into a result buffer
         for cases where the results are not NumPy arrays.
@@ -869,7 +869,7 @@ class UDFMergeAllMixin(Protocol):
 
         Data available in this method:
 
-        - `self.params` - the parameters of this UDF
+        - :code:`self.params` - the parameters of this UDF
 
         For UDFs with only :code:`kind='nav'` result buffers a default implementation
         is used automatically.

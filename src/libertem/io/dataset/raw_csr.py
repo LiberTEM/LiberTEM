@@ -136,6 +136,11 @@ class RawCSRDataSet(DataSet):
         If negative, number of blank frames to insert at start
     io_backend : IOBackend, optional
         The I/O backend to use, see :ref:`io backends`, by default None.
+
+    Examples
+    --------
+
+    >>> ds = ctx.load("raw_csr", path='./path_to.toml')
     """
 
     def __init__(

@@ -253,6 +253,11 @@ class NPYDataSet(DataSet):
         than the contents of the .npy file
     DataSetException
         If the .npy file is Fortran-ordered
+
+    Examples
+    --------
+
+    >>> ds = ctx.load("npy", path='./path_to_file.npy')
     """
     def __init__(
         self,

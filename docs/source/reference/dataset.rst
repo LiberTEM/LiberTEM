@@ -53,7 +53,13 @@ C-ordered `.dm4` nD-dataset, and :class:`~libertem.io.dataset.dm.StackedDMDataSe
 for a stack of individual `.dm3` or `.dm4` image files which altogether
 comprise a nD-dataset.
 
-Both forms can be created using :code:`ctx.load('dm', ...)`,
+Both forms can be created using the following call to the :code:`Context`:
+
+.. code-block::
+
+   ctx.load('dm', ...)
+
+
 and where possible the choice of reader (single-file or stacked) will
 be inferred from the parameters.
 

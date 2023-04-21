@@ -123,6 +123,11 @@ class EMPADDataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+
+    Examples
+    --------
+
+    >>> ds = ctx.load("empad", path='./path_to_file.xml', ...)
     """
     def __init__(self, path, scan_size=None, nav_shape=None,
                  sig_shape=None, sync_offset=0, io_backend=None):

@@ -125,11 +125,10 @@ class DaskDataSet(DataSet):
     Example
     --------
 
-    >>> from libertem.io.dataset.dask import DaskDataSet
     >>> import dask.array as da
     >>>
     >>> d_arr = da.ones((10, 100, 256, 256), chunks=(2, -1, -1, -1))
-    >>> ds = DaskDataSet(d_arr, sig_dims=2)
+    >>> ds = ctx.load('dask', dask_array=d_arr, sig_dims=2)
 
     Will create a dataset with 5 partitions split along the zeroth dimension.
     """

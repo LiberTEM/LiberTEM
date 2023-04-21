@@ -747,6 +747,11 @@ class K2ISDataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+
+    Examples
+    --------
+
+    >>> ds = ctx.load("k2is", path='./path_to_file.bin', ...)
     """
 
     def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=None, io_backend=None):

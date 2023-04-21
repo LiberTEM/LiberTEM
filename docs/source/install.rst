@@ -153,6 +153,8 @@ example from PyPI:
 
     (libertem) $ python -m pip install "libertem[torch]"
 
+.. _`cupy install`:
+
 CuPy
 ~~~~
 

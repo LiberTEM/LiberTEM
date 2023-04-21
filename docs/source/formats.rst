@@ -119,7 +119,7 @@ Dataset conversion
 ~~~~~~~~~~~~~~~~~~
 
 LiberTEM supports a mechanism to efficiently convert any supported dataset 
-into a Numpy binary file (:code:`.npy`, which can then be loaded into memory
+into a Numpy binary file (:code:`.npy`), which can then be loaded into memory
 independently of LiberTEM (or read as a :code:`npy` format dataset as above).
 At this time the support is provided by the :class:`libertem_live.udf.record.RecordUDF`
 found in the `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_ library,
@@ -135,3 +135,8 @@ which must be installed to allow the following to work:
 
 Developments are planned to better integrate this into the normal LiberTEM API
 and support conversion to other formats in addition to :code:`.npy` files.
+
+Alternatively, you can create Dask arrays from LiberTEM datasets via the :ref:`Dask integraton <daskarray>`.
+These arrays can then be stored with
+`Dask's built-in functions <https://docs.dask.org/en/stable/array-creation.html#store-dask-arrays>`_
+or through additional libraries such as `RosettaSciIO <https://rosettasciio.readthedocs.io/en/latest/index.html>`_.

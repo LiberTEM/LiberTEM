@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class BQLive2DPlot(Live2DPlot):
     """
-    bqplot-image-gl-based live plot (experimental).
+    bqplot-image-gl-based live plot.
 
     .. versionadded:: 0.7.0
 

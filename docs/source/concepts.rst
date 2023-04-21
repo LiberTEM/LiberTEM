@@ -20,16 +20,8 @@ Axis order
 We generally follow the numpy convention for axis order, so for a 4D data set,
 you could have a :code:`(ny, nx, sy, sx)` tuple describing the shape.
 
-MATLAB users should keep one thing in mind. The navigation axes in Python is the transpose of that of MATLAB. 
-In Python, the indices increase linearly with the row. A 3x3 Python matrix is represented in the following way:
- 
-.. code-block:: python
-
-    [[0,1,2],
-    [3,4,5],
-    [6,7,8]]
-	
-`The official "NumPy for Matlab users" documentation`_ might be helpful for Matlab users.
+MATLAB users should keep in mind that the navigation axes in Python are transposed compared to MATLAB.
+`The official "NumPy for Matlab users" documentation`_ might be helpful.
 
 Coordinate system
 -----------------
@@ -61,8 +53,8 @@ Multidimensional data
 While our GUI is currently limited to 2D visualizations, the Python API does not have that
 limitation. You can load data of arbitraty dimensionality and specify an application-specific shape
 using the GUI or the Python API, provided our I/O routines support the format. Most of our methods
-are currently built for 2D image data, so it should be no problem to load and process for
-example time series.
+are currently built for 2D image data, so it should be no problem to load and process, for
+example, time series.
 
 If you want to process data with, for example, 1D or 3D samples, you can write
 :ref:`UDFs <user-defined functions>`. Note that in that case, a "frame" is no longer 2D!

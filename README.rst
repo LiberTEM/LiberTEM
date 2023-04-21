@@ -137,9 +137,9 @@ applications, including live data streams. `Contact us
 
 LiberTEM is evolving rapidly and prioritizes features following user demand and
 contributions. Currently we are working on `live data processing
-<https://github.com/LiberTEM/LiberTEM-live>`_, `integration with Dask arrays and
-HyperSpy <https://github.com/LiberTEM/LiberTEM/issues/922>`_, support for sparse
-data, and implementing analysis methods for various applications of pixelated
+<https://github.com/LiberTEM/LiberTEM-live>`_, improving application support for sparse
+data and event-based detectors, performance improvements for GPU processing, and implementing
+analysis methods for various applications of pixelated
 STEM and other large-scale detector data. If you like to influence the direction
 this project is taking, or if you'd like to `contribute
 <https://libertem.github.io/LiberTEM/contributing.html>`_, please join our

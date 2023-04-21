@@ -207,10 +207,8 @@ class MemoryDataSet(DataSet):
     Examples
     --------
 
-    >>> from libertem.io.dataset.memory import MemoryDataSet
-    >>>
     >>> data = np.zeros((2, 2, 128, 128))
-    >>> ds = MemoryDataSet(data=data)
+    >>> ds = ctx.load('memory', data=data, ...)
     '''
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=None,
                  check_cast=True, tiledelay=None, datashape=None, base_shape=None,

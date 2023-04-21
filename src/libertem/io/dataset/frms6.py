@@ -433,6 +433,11 @@ class FRMS6DataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+
+            Examples
+    --------
+
+    >>> ds = ctx.load("frms6", path='./path_to_file.hdr', ...)
     """
 
     def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None,

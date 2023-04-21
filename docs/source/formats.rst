@@ -112,4 +112,26 @@ elsewhere in Python via other libraries:
 - a Dask data set can be constructed from a Dask array. Depending on the
   method used to construct the source array this can achieve good performance.
   See :ref:`daskds` for details.
-  
+
+.. _`data conversion`:
+
+Dataset conversion
+~~~~~~~~~~~~~~~~~~
+
+LiberTEM supports a mechanism to efficiently convert any supported dataset 
+into a Numpy binary file (:code:`.npy`, which can then be loaded into memory
+independently of LiberTEM (or read as a :code:`npy` format dataset as above).
+At this time the support is provided by the :class:`libertem_live.udf.record.RecordUDF`
+found in the `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_ library,
+which must be installed to allow the following to work:
+
+.. code-block:: python
+
+   from libertem_live.udf.record import RecordUDF
+   ctx = lt.Context()
+   dataset = ctx.load("typename", path="/path/to/some/file")
+   udf = RecordUDF('./output_path.npy')
+   ctx.run_udf(dataset, udf)
+
+Developments are planned to better integrate this into the normal LiberTEM API
+and support conversion to other formats in addition to :code:`.npy` files.

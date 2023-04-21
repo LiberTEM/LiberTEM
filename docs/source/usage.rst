@@ -6,6 +6,14 @@ GUI usage
 LiberTEM ships with a convenient web-based interface for quickly understanding a dataset
 through a selection of common analyses (virtual detectors, centre-of-mass, clustering etc).
 
+.. note::
+    Note that the GUI is currently limited to 2D visualizations, which makes it adapted
+    4D-STEM imagery but not spectrum imaging such as STEM-EELS. If you have a need for
+    display of 1D signals please `file an issue <https://github.com/liberTEM/LiberTEM/issues>`_.
+
+Starting the GUI
+----------------
+
 You can the start the interface from the command line after 
 activating the virtualenv or conda environment where LiberTEM is installed.
 
@@ -21,7 +29,7 @@ it by default at http://localhost:9000.
 
    The GUI is tested to work on Firefox and Chromium-based browsers for now. If you
    cannot use a compatible browser for some reason, please
-   `file an issue <https://github.com/liberTEM/LiberTEM/issues>`_!
+   `file an issue <https://github.com/liberTEM/LiberTEM/issues>`_.
 
 It is also possible to connect to a :code:`libertem-server` on a remote machine
 though this requires special configuration and depends on your network environment

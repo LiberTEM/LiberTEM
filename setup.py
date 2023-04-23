@@ -147,7 +147,7 @@ setup(
         # https://github.com/LiberTEM/LiberTEM/issues/763
         # https://github.com/LiberTEM/LiberTEM/issues/783
         "numba>=0.51",
-        "ncempy>=1.4",
+        "ncempy>=1.10",
         'pywin32!=226;platform_system=="Windows"',
         # FIXME pull request #259
         # https://github.com/LiberTEM/LiberTEM/pull/259#discussion_r251877431

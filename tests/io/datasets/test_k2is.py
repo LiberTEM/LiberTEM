@@ -128,6 +128,7 @@ def test_sync(default_k2is):
 
 
 @needsdata
+@pytest.mark.slow
 def test_read(default_k2is):
     partitions = default_k2is.get_partitions()
     p = next(partitions)
@@ -182,6 +183,7 @@ def test_comparison(default_k2is, default_k2is_raw, lt_ctx_fast):
 
 
 @needsdata
+@pytest.mark.slow
 @pytest.mark.skipif(not HAVE_K2IS_RAWDATA, reason="No K2 IS raw data reference found")
 def test_comparison_roi(default_k2is, default_k2is_raw, lt_ctx_fast):
     roi = np.random.choice(
@@ -259,25 +261,24 @@ def test_read_invalid_tileshape(default_k2is):
 
 @needsdata
 @pytest.mark.slow
-def test_apply_mask_analysis(default_k2is, lt_ctx):
+def test_apply_mask_analysis(default_k2is, local_cluster_ctx):
     mask = np.ones((1860, 2048))
-    analysis = lt_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_k2is)
-    results = lt_ctx.run(analysis)
+    analysis = local_cluster_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_k2is)
+    results = local_cluster_ctx.run(analysis)
     assert results[0].raw_data.shape == (34, 35)
 
 
 @needsdata
-@pytest.mark.slow
-def test_sum_analysis(default_k2is, lt_ctx):
-    analysis = lt_ctx.create_sum_analysis(dataset=default_k2is)
-    results = lt_ctx.run(analysis)
+def test_sum_analysis(default_k2is, local_cluster_ctx):
+    analysis = local_cluster_ctx.create_sum_analysis(dataset=default_k2is)
+    results = local_cluster_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
 
 
 @needsdata
-def test_pick_analysis(default_k2is, lt_ctx):
+def test_pick_analysis(default_k2is, local_cluster_ctx):
     analysis = PickFrameAnalysis(dataset=default_k2is, parameters={"x": 16, "y": 16})
-    results = lt_ctx.run(analysis)
+    results = local_cluster_ctx.run(analysis)
     assert results[0].raw_data.shape == (1860, 2048)
 
 

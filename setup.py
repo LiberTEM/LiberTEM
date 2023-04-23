@@ -162,7 +162,6 @@ setup(
         'autopep8',
         'empyre>=0.3.0',
         'defusedxml',
-        'async_generator',  # backwards-compat. for contextlib.asynccontextmanager
         'typing-extensions',  # backwards-compatibility for newer typing constructs
         'opentelemetry-api',
         'tblib',

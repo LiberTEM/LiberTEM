@@ -2,7 +2,7 @@ import functools
 import asyncio
 from typing import Callable, TYPE_CHECKING, Type, TypeVar
 
-from async_generator import asynccontextmanager
+from contextlib import asynccontextmanager
 
 from libertem.common.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager

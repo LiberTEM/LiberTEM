@@ -256,6 +256,7 @@ def real_csr_data(lt_ctx):
     yield lt_ctx.load("raw_csr", path=RAW_CSR_TESTDATA_PATH)
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not HAVE_CSR_TESTDATA, reason="need raw CSR testdata")
 def test_sum_real_data(real_csr_data, local_cluster_ctx):
     udf = SumUDF()
@@ -265,6 +266,7 @@ def test_sum_real_data(real_csr_data, local_cluster_ctx):
     # assert np.allclose(ref, res['intensity'].data.reshape((-1,)))
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not HAVE_CSR_TESTDATA, reason="need raw CSR testdata")
 def test_sum_real_data_roi(real_csr_data, local_cluster_ctx):
     udf = SumUDF()

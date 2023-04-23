@@ -237,7 +237,7 @@ def test_check_valid(default_frms6):
 
 
 @needsdata
-def test_sum_analysis(default_frms6, lt_ctx):
+def test_sum_analysis(default_frms6, local_cluster_ctx):
     roi = {
         "shape": "disk",
         "cx": 5,
@@ -248,7 +248,7 @@ def test_sum_analysis(default_frms6, lt_ctx):
         "roi": roi,
     })
     # not checking result yet, just making sure it doesn't crash:
-    lt_ctx.run(analysis)
+    local_cluster_ctx.run(analysis)
 
 
 @needsdata

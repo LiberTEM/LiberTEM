@@ -244,6 +244,7 @@ def test_encode_roundtrip_quad(encode, bits_per_pixel):
     assert_allclose(data, decoded)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     'encode,bits_per_pixel', [
         (encode_r1, 1),

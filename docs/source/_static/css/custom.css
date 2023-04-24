@@ -1,0 +1,11 @@
+.wy-side-nav-search {
+    background-color: hsla(0,0%,100%,.85);
+}
+
+.wy-side-nav-search > a {
+    color: #5c5c5c;
+}
+
+.wy-side-nav-search > div.version {
+    color: hsl(0deg 0% 0% / 30%);
+}

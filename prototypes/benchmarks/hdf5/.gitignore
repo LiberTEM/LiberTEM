@@ -1,5 +1,0 @@
-*.emd
-callgrind.out.*
-venv
-perf.data*
-test.raw

@@ -52,7 +52,7 @@ class VideoGenerateTrack(MediaStreamTrack):
                     break
             pts = int((now - self.start) / self.time_base)
         # Random data with some systematically changing and static features 
-        img = np.random.randint(low=0, high=255, size=(123, 456, 3), dtype=np.uint8)
+        img = np.random.randint(low=0, high=255, size=(4096, 4096, 3), dtype=np.uint8)
         
         img[:60, :30] = 0
         img[:60, :60, 2] = np.uint8(int(((now - self.start)/8*255) % 255))

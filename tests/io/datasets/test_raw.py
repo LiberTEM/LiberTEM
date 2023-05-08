@@ -427,14 +427,15 @@ def test_load_direct(lt_ctx, default_raw):
     reason="No support for direct I/O on Mac OS X"
 )
 def test_load_legacy_direct(lt_ctx, default_raw):
-    ds_direct = lt_ctx.load(
-        "raw",
-        path=default_raw._path,
-        nav_shape=(16, 16),
-        sig_shape=(16, 16),
-        dtype="float32",
-        enable_direct=True,
-    )
+    with pytest.warns(FutureWarning):
+        ds_direct = lt_ctx.load(
+            "raw",
+            path=default_raw._path,
+            nav_shape=(16, 16),
+            sig_shape=(16, 16),
+            dtype="float32",
+            enable_direct=True,
+        )
     analysis = lt_ctx.create_sum_analysis(dataset=ds_direct)
     lt_ctx.run(analysis)
 

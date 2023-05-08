@@ -263,7 +263,9 @@ def test_read_invalid_tileshape(default_k2is):
 @pytest.mark.slow
 def test_apply_mask_analysis(default_k2is, local_cluster_ctx):
     mask = np.ones((1860, 2048))
-    analysis = local_cluster_ctx.create_mask_analysis(factories=[lambda: mask], dataset=default_k2is)
+    analysis = local_cluster_ctx.create_mask_analysis(
+        factories=[lambda: mask], dataset=default_k2is,
+    )
     results = local_cluster_ctx.run(analysis)
     assert results[0].raw_data.shape == (34, 35)
 

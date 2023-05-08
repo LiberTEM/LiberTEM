@@ -12,7 +12,7 @@ numba_dtypes = frozenset(np.dtype(t) for t in (
     bool,
     int,
     float,
-    np.bool8,
+    np.bool_,
     np.uint8,
     np.int8,
     np.uint16,

@@ -415,7 +415,7 @@ def upload_to_github(verbose, files, token, release):
         rel.upload_asset(path=path, content_type='application/octet-stream')
 
 
-def build_appimage(verbose):
+def build_the_appimage(verbose):
     APPIMAGE_DIR = join(BASE_DIR, 'packaging', 'appimage')
 
     if verbose:
@@ -576,7 +576,7 @@ def upload(ctx, dry_run, build_appimage, pypi_user, pypi_password,
     release = get_release_kind()
 
     if build_appimage:
-        appimage_files = build_appimage(verbose=ctx.obj['verbose'])
+        appimage_files = build_the_appimage(verbose=ctx.obj['verbose'])
     else:
         appimage_files = []
     github_files = get_py_release_files()
@@ -626,7 +626,7 @@ def status(ctx):
 @cli.command()
 @click.pass_context
 def do_build_appimage(ctx):
-    appimage_files = build_appimage(verbose=ctx.obj['verbose'])
+    appimage_files = build_the_appimage(verbose=ctx.obj['verbose'])
     print("success, files=", appimage_files)
 
 

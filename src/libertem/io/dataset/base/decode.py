@@ -4,14 +4,14 @@ import numpy as np
 import numba
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def byteswap_2_straight(inp, out):
     for i in range(inp.shape[0] // 2):
         out[i * 2 + 0] = inp[i * 2 + 1]
         out[i * 2 + 1] = inp[i * 2 + 0]
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def byteswap_2_decode(inp, out):
     for i in range(inp.shape[0] // 2):
         o0 = inp[i * 2 + 0] << 8
@@ -19,7 +19,7 @@ def byteswap_2_decode(inp, out):
         out[i] = o0 | o1
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def byteswap_4_straight(inp, out):
     for i in range(inp.shape[0] // 4):
         out[i * 4 + 3] = inp[i * 4 + 0]
@@ -28,7 +28,7 @@ def byteswap_4_straight(inp, out):
         out[i * 4 + 0] = inp[i * 4 + 3]
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def byteswap_4_decode(inp, out):
     for i in range(inp.shape[0] // 4):
         o0 = inp[i * 4 + 0] << 24
@@ -38,7 +38,7 @@ def byteswap_4_decode(inp, out):
         out[i] = o0 + o1 + o2 + o3
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def byteswap_8_straight(inp, out):
     for i in range(inp.shape[0] // 8):
         out[i * 8 + 7] = inp[i * 8 + 0]
@@ -51,7 +51,7 @@ def byteswap_8_straight(inp, out):
         out[i * 8 + 0] = inp[i * 8 + 7]
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def byteswap_8_decode(inp, out):
     for i in range(inp.shape[0] // 8):
         o0 = inp[i * 8 + 0] << 56

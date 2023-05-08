@@ -155,7 +155,7 @@ def encode_u1(inp, out):
         out[y] = inp[y]
 
 
-@numba.jit(cache=True)
+@numba.njit(cache=True)
 def encode_u2(inp, out):
     for y in range(out.shape[0]):
         row_out = out[y]
@@ -595,7 +595,7 @@ mib_2x2_get_read_ranges = make_get_read_ranges(
 )
 
 
-@numba.jit(inline='always', cache=True)
+@numba.njit(inline='always', cache=True)
 def decode_r1_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
     """
     RAW 1bit format: each pixel is actually saved as a single bit. 64 bits

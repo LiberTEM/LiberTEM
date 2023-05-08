@@ -432,7 +432,7 @@ stages:
 #        displayName: 'cache pip packages'
       - bash: pip install -U tox && pip install -r scripts/requirements.txt
         displayName: 'install requirements'
-      - bash: python scripts/release --verbose upload --no-dry-run
+      - bash: python scripts/release --verbose upload --no-dry-run --build-appimage
         displayName: 'Upload packages / release'
         env:
           LT_RELEASE_UPLOAD_PYPI_PASSWORD: $(LT_RELEASE_UPLOAD_PYPI_PASSWORD)

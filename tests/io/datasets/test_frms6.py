@@ -416,8 +416,12 @@ def test_read_invalid_tileshape(default_frms6):
         dataset_shape=default_frms6.shape,
     )
 
+    tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     with pytest.raises(ValueError):
-        next(p.get_tiles(tiling_scheme=tiling_scheme))
+        next(tiles)
+
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -440,6 +444,9 @@ def test_scheme_too_large(default_frms6):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_frms6.shape.sig)
+
+    for _ in tiles:
+        pass
 
 
 @needsdata

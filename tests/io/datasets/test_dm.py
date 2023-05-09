@@ -357,6 +357,8 @@ def test_scheme_too_large(default_dm):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_dm.shape.sig)
+    for _ in tiles:
+        pass
 
 
 def test_offset_smaller_than_image_count(lt_ctx, dm_stack_glob):

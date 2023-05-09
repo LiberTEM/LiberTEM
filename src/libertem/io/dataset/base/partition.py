@@ -144,12 +144,18 @@ class Partition:
         )
 
         try:
-            return next(self.get_tiles(
+            tiles = self.get_tiles(
                 tiling_scheme=tiling_scheme,
                 dest_dtype=dest_dtype,
                 roi=roi,
                 array_backend=array_backend,
-            ))
+            )
+            tile = next(tiles)
+            # NOTE: run the generator to completion, but there must not be any
+            # more tiles than the one!
+            rest = list(tiles)
+            assert len(rest) == 0
+            return tile
         except StopIteration:
             tile_slice = Slice(
                 origin=(self.slice.origin[0], 0, 0),

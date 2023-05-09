@@ -3,6 +3,7 @@ import sys
 import json
 from unittest import mock
 import random
+import warnings
 
 import numpy as np
 import pytest
@@ -151,8 +152,11 @@ def test_positive_sync_offset(default_mib, lt_ctx):
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+    for t in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
@@ -197,8 +201,11 @@ def test_negative_sync_offset(default_mib, lt_ctx):
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+    for t in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
@@ -271,6 +278,8 @@ def test_read(default_mib):
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (3, 256, 256)
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -293,6 +302,8 @@ def test_scheme_too_large(default_mib):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_mib.shape.sig)
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -316,6 +327,8 @@ def test_read_ahead(default_mib_readahead):
     t = next(tiles)
     # we get 3D tiles here, because MIB partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (3, 256, 256)
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -456,10 +469,9 @@ def test_not_too_many_files(lt_ctx):
             "/a/%d.mib" % i
             for i in range(256)
     ]):
-        with pytest.warns(None) as record:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
             ds._filenames()
-
-    assert len(record) == 0
 
 
 @needsdata

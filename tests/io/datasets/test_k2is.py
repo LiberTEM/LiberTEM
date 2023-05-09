@@ -147,6 +147,8 @@ def test_read(default_k2is):
     t = next(tiles)
     # we get 3D tiles here, because K2IS partitions are inherently 3D
     assert tuple(t.tile_slice.shape) == (16, 930, 16)
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -169,6 +171,8 @@ def test_scheme_too_large(default_k2is):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_k2is.shape.sig)
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -519,7 +523,10 @@ def test_regression_simple_stride(lt_ctx, default_k2is):
     )
     print(ts)
     p = list(default_k2is.get_partitions())[-1]
-    next(p.get_tiles(tiling_scheme=ts))
+    tiles = p.get_tiles(tiling_scheme=ts)
+    next(tiles)
+    for _ in tiles:
+        pass
 
 
 @needsdata

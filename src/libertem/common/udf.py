@@ -44,7 +44,7 @@ class UDFProtocol(Protocol):
     BACKEND_CUPY_SCIPY_COO = CUPY_SCIPY_COO  #: cupyx.scipy.sparse.coo_matrix
     BACKEND_CUPY_SCIPY_CSR = CUPY_SCIPY_CSR  #: cupyx.scipy.sparse.csr_matrix
     BACKEND_CUPY_SCIPY_CSC = CUPY_SCIPY_CSC  #: cupyx.scipy.sparse.csc_matrix
-    # Excludes sparse.DOK and CUDA, prefers scipy.sparse and GPU
+    # Excludes sparse.DOK, numpy.matrix and CUDA, prefers scipy.sparse and GPU
     # Deprioritizes sparse.pydata.org due to their high call overhead
     #: Tuple with all backends in suggested priority
     BACKEND_ALL = (

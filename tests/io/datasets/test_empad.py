@@ -145,6 +145,9 @@ def test_read_random(random_empad):
     # ~1MB
     assert tuple(t.tile_slice.shape) == (16, 128, 128)
 
+    for _ in tiles:
+        pass
+
 
 def test_read(default_empad):
     partitions = default_empad.get_partitions()
@@ -160,6 +163,9 @@ def test_read(default_empad):
 
     # ~1MB
     assert tuple(t.tile_slice.shape) == (16, 128, 128)
+
+    for _ in tiles:
+        pass
 
 
 def test_scheme_too_large(default_empad):
@@ -181,6 +187,9 @@ def test_scheme_too_large(default_empad):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_empad.shape.sig)
+
+    for _ in tiles:
+        pass
 
 
 def test_pickle_is_small(default_empad):

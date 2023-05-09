@@ -5,7 +5,6 @@ import random
 
 import numpy as np
 import pytest
-import warnings
 import cloudpickle
 
 from libertem.udf.sum import SumUDF
@@ -75,6 +74,8 @@ def test_read(default_raw):
 
     # ~1MB
     assert tuple(t.tile_slice.shape) == (16, 128, 128)
+    for _ in tiles:
+        pass
 
 
 def test_scheme_too_large(default_raw):
@@ -96,6 +97,8 @@ def test_scheme_too_large(default_raw):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_raw.shape.sig)
+    for _ in tiles:
+        pass
 
 
 def test_comparison(default_raw, default_raw_data, lt_ctx_fast):
@@ -380,18 +383,20 @@ def test_sum_on_dist(raw_on_workers, dist_ctx):
     assert results[0].raw_data.shape == (128, 128)
 
 
-def test_ctx_load_old(lt_ctx, default_raw):
-    with warnings.catch_warnings(record=True) as w:
-        lt_ctx.load(
-            "raw",
-            path=default_raw._path,
-            nav_shape=(16, 16),
-            dtype="float32",
-            detector_size_raw=(128, 128),
-            crop_detector_to=(128, 128)
-        )
-        assert len(w) == 2
-        assert issubclass(w[0].category, FutureWarning)
+def test_ctx_load_old(lt_ctx, default_raw, recwarn):
+    lt_ctx.load(
+        "raw",
+        path=default_raw._path,
+        nav_shape=(16, 16),
+        dtype="float32",
+        detector_size_raw=(128, 128),
+        crop_detector_to=(128, 128)
+    )
+    assert len(recwarn) == 2
+    w0 = recwarn.pop(FutureWarning)
+    assert issubclass(w0.category, FutureWarning)
+    w1 = recwarn.pop(FutureWarning)
+    assert issubclass(w1.category, FutureWarning)
 
 
 def test_missing_sig_shape(lt_ctx, default_raw):
@@ -521,8 +526,11 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+    for _ in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
@@ -577,8 +585,11 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+    for _ in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):

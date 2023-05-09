@@ -161,8 +161,11 @@ def test_positive_sync_offset(default_tvips, lt_ctx):
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+    for _ in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
@@ -207,8 +210,11 @@ def test_negative_sync_offset(default_tvips, lt_ctx):
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+    for _ in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
@@ -280,6 +286,8 @@ def test_read(default_tvips):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (2, 512, 512)
+    for _ in tiles:
+        pass
 
 
 @needsdata
@@ -302,6 +310,8 @@ def test_scheme_too_large(default_tvips):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_tvips.shape.sig)
+    for _ in tiles:
+        pass
 
 
 @needsdata

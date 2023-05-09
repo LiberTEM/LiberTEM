@@ -100,6 +100,8 @@ def test_read(default_blo):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (8, 144, 144)
+    for _ in tiles:
+        pass
 
 
 def test_scheme_too_large(default_blo):
@@ -121,6 +123,8 @@ def test_scheme_too_large(default_blo):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == (depth, 144, 144)
+    for _ in tiles:
+        pass
 
 
 @pytest.mark.skipif(hs is None, reason="No HyperSpy found")

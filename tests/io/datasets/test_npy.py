@@ -276,8 +276,11 @@ def test_positive_sync_offset(lt_ctx, npy_8x8x8x8_ds, npy_8x8x8x8_path, io_backe
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (0, 0, 0)
+    for _ in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):
@@ -329,8 +332,11 @@ def test_negative_sync_offset(lt_ctx, npy_8x8x8x8_ds, npy_8x8x8x8_path, io_backe
         dataset_shape=ds_with_offset.shape,
     )
 
-    t0 = next(p0.get_tiles(tiling_scheme))
+    tiles = p0.get_tiles(tiling_scheme)
+    t0 = next(tiles)
     assert tuple(t0.tile_slice.origin) == (2, 0, 0)
+    for _ in tiles:
+        pass
 
     for p in ds_with_offset.get_partitions():
         for t in p.get_tiles(tiling_scheme=tiling_scheme):

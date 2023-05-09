@@ -8,9 +8,10 @@ from libertem.udf.stddev import StdDevUDF
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.utils.devices import detect
 from sparseconverter import (
-    BACKENDS, CUPY_SCIPY_CSC, NUMPY, SCIPY_CSR, SPARSE_COO, SPARSE_GCXS,
+    CUPY_SCIPY_CSC, NUMPY, SCIPY_CSR, SPARSE_COO, SPARSE_GCXS,
     CUPY, get_backend, get_device_class
 )
+from libertem.udf.base import UDFProtocol
 
 from utils import _mk_random, dataset_correction_verification, set_device_class, roi_as_sparse
 
@@ -20,7 +21,7 @@ has_cupy = d['cudas'] and d['has_cupy']
 
 
 @pytest.mark.parametrize(
-    'backend', (None, ) + tuple(BACKENDS)
+    'backend', (None, ) + tuple(UDFProtocol.BACKEND_ALL)
 )
 def test_get_macrotile(backend):
     with set_device_class(get_device_class(backend)):

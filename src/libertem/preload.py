@@ -22,3 +22,5 @@ try:
     import hdf5plugin
 except ImportError:
     pass
+
+import numba.cuda  # see also: #1432

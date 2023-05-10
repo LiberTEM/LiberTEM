@@ -387,6 +387,8 @@ class BufferWrapper:
             raise RuntimeError("cannot allocate: no shape set")
         if self._data is not None:
             raise RuntimeError("cannot allocate: data is already set")
+        if lib is None:
+            lib = np
         self._data = lib.zeros(self._shape, dtype=self._dtype)
 
     def has_data(self):

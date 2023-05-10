@@ -11,5 +11,8 @@ graft tests
 include conftest.py
 include pytest.ini
 include test_requirements.txt
+include override_requirements.txt
 include tox.ini
+recursive-exclude **/.mypy_cache *
+recursive-exclude **/__pycache__ *
 global-exclude *.pyc *.nbi *.nbc __pycache__

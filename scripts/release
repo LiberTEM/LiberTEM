@@ -93,7 +93,7 @@ def get_current_branch():
     return branch_by_rev.get(get_current_rev(), "HEAD")
 
 
-env = get_azure_env()
+env = get_github_actions_env()
 
 
 def render_version(version_file, new_version):

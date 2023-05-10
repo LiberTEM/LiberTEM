@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiberTEM executors &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Authorship policy" href="../authorship.html" />
+    <link rel="prev" title="How does I/O work in LiberTEM?" href="how-io-works.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">LiberTEM executors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-libertem.common.executor">Base classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dask-distributed">Dask.Distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-libertem.executor.inline">Inline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-libertem.executor.concurrent">Concurrent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dask-delayed">Dask.delayed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelined-executor">Pipelined executor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">LiberTEM executors</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev/executors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="libertem-executors">
+<span id="executor-api"></span><h1>LiberTEM executors<a class="headerlink" href="#libertem-executors" title="Permalink to this heading"></a></h1>
+<p>All access to data and processing is done by an executor that implements the
+<a class="reference internal" href="#libertem.common.executor.JobExecutor" title="libertem.common.executor.JobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobExecutor</span></code></a> interface to run functions and
+tasks. The executor specifies where and how processing is done, including
+running on a cluster or in a single thread, while being independent of other
+parts of LiberTEM. See <a class="reference internal" href="../api.html#executors"><span class="std std-ref">Executors</span></a> for an overview from a user’s perspective.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0: </span>The executor API is internal. Since choice and parameters of executors
+are important for integration with Dask and other frameworks,
+they are now documented. Only the names and creation methods for
+executors are reasonably stable. The rest of the API is subject to
+change without notice.</p>
+</div>
+<section id="module-libertem.common.executor">
+<span id="base-classes"></span><h2>Base classes<a class="headerlink" href="#module-libertem.common.executor" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.executor.</span></span><span class="sig-name descname"><span class="pre">AsyncJobExecutor</span></span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor" title="Permalink to this definition"></a></dt>
+<dd><p>Async version of <a class="reference internal" href="#libertem.common.executor.JobExecutor" title="libertem.common.executor.JobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobExecutor</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.cancel">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cancel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.cancel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.cancel" title="Permalink to this definition"></a></dt>
+<dd><p>cancel execution identified by <cite>cancel_id</cite></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.close">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.close" title="Permalink to this definition"></a></dt>
+<dd><p>Cleanup resources used by this executor, if any.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.ensure_async">
+<span class="sig-name descname"><span class="pre">ensure_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.ensure_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.ensure_async" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an asynchronous executor; by default just return <cite>self</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.map">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each item in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.run_each_worker">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>, <code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.run_function">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.AsyncJobExecutor.run_tasks">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#AsyncJobExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.AsyncJobExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Run a number of Tasks, yielding (result, task) tuples</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.executor.</span></span><span class="sig-name descname"><span class="pre">JobExecutor</span></span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor" title="Permalink to this definition"></a></dt>
+<dd><p>Interface to execute functions on workers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.close" title="Permalink to this definition"></a></dt>
+<dd><p>cleanup resources used by this executor, if any</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.ensure_async">
+<span class="sig-name descname"><span class="pre">ensure_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.ensure_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.ensure_async" title="Permalink to this definition"></a></dt>
+<dd><p>Returns an asynchronous executor; by default just wrap into
+<code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncAdapter</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.ensure_sync">
+<span class="sig-name descname"><span class="pre">ensure_sync</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.ensure_sync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.ensure_sync" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a synchronous executor. In case of a
+<a class="reference internal" href="#libertem.common.executor.JobExecutor" title="libertem.common.executor.JobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobExecutor</span></code></a> we just return
+<code class="code docutils literal notranslate"><span class="pre">self</span></code>; in case of
+<a class="reference internal" href="#libertem.common.executor.AsyncJobExecutor" title="libertem.common.executor.AsyncJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncJobExecutor</span></code></a> below more work is
+needed!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.get_available_workers">
+<span class="sig-name descname"><span class="pre">get_available_workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">WorkerSet</span></span></span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.get_available_workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.get_available_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a WorkerSet that contains the available workers</p>
+<p>Each worker should correspond to a “worker process”, so if the executor
+is using multiple processes or threads, each process/thread should be
+included in this list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.get_resource_details">
+<span class="sig-name descname"><span class="pre">get_resource_details</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.get_resource_details"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.get_resource_details" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a list of dicts with cluster details</p>
+<dl class="simple">
+<dt>key of the dictionary:</dt><dd><p>host: ip address or hostname where the worker is running</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">V</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">V</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each element in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.modify_buffer_type">
+<span class="sig-name descname"><span class="pre">modify_buffer_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.modify_buffer_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.modify_buffer_type" title="Permalink to this definition"></a></dt>
+<dd><p>Allow the executor to modify result buffers if necessary</p>
+<p>Currently only called for buffers on the main node</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.run_each_host">
+<span class="sig-name descname"><span class="pre">run_each_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.run_each_host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.run_each_host" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> once on each host, gathering all results into
+a dict host -&gt; result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.run_each_partition">
+<span class="sig-name descname"><span class="pre">run_each_partition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.run_each_partition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.run_each_partition" title="Permalink to this definition"></a></dt>
+<dd><p>Run <cite>fn</cite> for all partitions. Yields results in order of completion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>partitions</strong> (<em>List</em><em>[</em><a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.Partition" title="libertem.io.dataset.base.Partition"><em>Partition</em></a><em>]</em>) – List of relevant partitions.</p></li>
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call, will get the partition as first and only argument.</p></li>
+<li><p><strong>all_nodes</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If all_nodes is True, run the function on all nodes that have this partition,
+otherwise run on any node that has the partition. If a partition has no location,
+the function will not be run for that partition if <cite>all_nodes</cite> is True, otherwise
+it will be run on any node.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.run_each_worker">
+<span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return values keyed by worker name (executor-specific)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.run_function">
+<span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.run_tasks">
+<span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_comm_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskCommHandler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Run the tasks with the given parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tasks</strong> – The tasks to be run</p></li>
+<li><p><strong>params_handle</strong> (<em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#type" title="(in Python v3.10)"><em>type</em></a><em>]</em>) – A handle for the task parameters, as returned from <a class="reference internal" href="#libertem.common.executor.JobExecutor.scatter" title="libertem.common.executor.JobExecutor.scatter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scatter()</span></code></a></p></li>
+<li><p><strong>cancel_id</strong> – An identifier which can be used for cancelling all tasks together. The
+same identifier should be passed to <a class="reference internal" href="#libertem.common.executor.AsyncJobExecutor.cancel" title="libertem.common.executor.AsyncJobExecutor.cancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">AsyncJobExecutor.cancel()</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.executor.JobExecutor.scatter">
+<span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/executor.html#JobExecutor.scatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.executor.JobExecutor.scatter" title="Permalink to this definition"></a></dt>
+<dd><p>Scatter <code class="code docutils literal notranslate"><span class="pre">obj</span></code> throughout the cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> – Some kind of Python object or variable</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Handle for the scattered <code class="code docutils literal notranslate"><span class="pre">obj</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="dask-distributed">
+<span id="dask-executor"></span><h2>Dask.Distributed<a class="headerlink" href="#dask-distributed" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code></a> is the default executor
+when creating a <a class="reference internal" href="../reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> with no parameters.</p>
+<span class="target" id="module-libertem.executor.dask"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.dask.AsyncDaskJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.dask.</span></span><span class="sig-name descname"><span class="pre">AsyncDaskJobExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrapped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#AsyncDaskJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.AsyncDaskJobExecutor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.dask.</span></span><span class="sig-name descname"><span class="pre">DaskJobExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_local</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lt_resources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor" title="Permalink to this definition"></a></dt>
+<dd><p>Default LiberTEM executor that uses <a class="reference external" href="https://docs.dask.org/en/stable/futures.html">Dask futures</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> (<em>distributed.Client</em>) – </p></li>
+<li><p><strong>is_local</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Close the Client and cluster when the executor is closed.</p></li>
+<li><p><strong>lt_resources</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Specify if the cluster has LiberTEM resource tags and environment
+variables for GPU processing. Autodetected by default.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.close" title="Permalink to this definition"></a></dt>
+<dd><p>cleanup resources used by this executor, if any</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.connect">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler_uri</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.connect" title="Permalink to this definition"></a></dt>
+<dd><p>Connect to a remote dask scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheduler_uri</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Compatible with the <code class="code docutils literal notranslate"><span class="pre">address</span></code> parameter of <code class="xref py py-class docutils literal notranslate"><span class="pre">distributed.Client</span></code>.</p></li>
+<li><p><strong>client_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em> or </em><em>None</em>) – Passed as kwargs to <code class="xref py py-class docutils literal notranslate"><span class="pre">distributed.Client</span></code>.
+<code class="code docutils literal notranslate"><span class="pre">client_kwargs['set_as_default']</span></code> is set to <code class="code docutils literal notranslate"><span class="pre">False</span></code>
+unless specified otherwise to avoid interference with Dask-based workflows.
+Pass <code class="code docutils literal notranslate"><span class="pre">client_kwargs={'set_as_default':</span> <span class="pre">True}</span></code> to set the Client as the
+default Dask scheduler and keep it running when the Context closes.</p></li>
+<li><p><strong>*args</strong> (Passed to <a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code></a>.) – </p></li>
+<li><p><strong>**kwargs</strong> (Passed to <a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code></a>.) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the connected JobExecutor</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor">DaskJobExecutor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.make_local">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.make_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.make_local" title="Permalink to this definition"></a></dt>
+<dd><p>Spin up a local dask cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec</strong> – Dask cluster spec, see
+<a class="reference external" href="http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster">http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster</a>
+for more info.
+<a class="reference internal" href="../reference/internals.html#libertem.utils.devices.detect" title="libertem.utils.devices.detect"><code class="xref py py-func docutils literal notranslate"><span class="pre">libertem.utils.devices.detect()</span></code></a> allows to detect devices that can be used
+with LiberTEM, and <a class="reference internal" href="#libertem.executor.dask.cluster_spec" title="libertem.executor.dask.cluster_spec"><code class="xref py py-func docutils literal notranslate"><span class="pre">cluster_spec()</span></code></a> can be used to create a <code class="code docutils literal notranslate"><span class="pre">spec</span></code>
+with customized parameters.</p></li>
+<li><p><strong>cluster_kwargs</strong> – Passed to <code class="xref py py-class docutils literal notranslate"><span class="pre">distributed.SpecCluster</span></code>.</p></li>
+<li><p><strong>client_kwargs</strong> – Passed to <code class="xref py py-class docutils literal notranslate"><span class="pre">distributed.Client</span></code>. Pass
+<code class="code docutils literal notranslate"><span class="pre">client_kwargs={'set_as_default':</span> <span class="pre">True}</span></code> to set the Client as the
+default Dask scheduler.</p></li>
+<li><p><strong>preload</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>]</em><em>]</em>) – Passed to <a class="reference internal" href="#libertem.executor.dask.cluster_spec" title="libertem.executor.dask.cluster_spec"><code class="xref py py-func docutils literal notranslate"><span class="pre">cluster_spec()</span></code></a> if <code class="code docutils literal notranslate"><span class="pre">spec</span></code> is <code class="code docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the connected JobExecutor</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor">DaskJobExecutor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each element in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.run_each_host">
+<span class="sig-name descname"><span class="pre">run_each_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.run_each_host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.run_each_host" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> once on each host, gathering all results into
+a dict host -&gt; result</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.run_each_partition">
+<span class="sig-name descname"><span class="pre">run_each_partition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partitions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.run_each_partition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.run_each_partition" title="Permalink to this definition"></a></dt>
+<dd><p>Run <cite>fn</cite> for all partitions. Yields results in order of completion.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>partitions</strong> (<em>List</em><em>[</em><a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.Partition" title="libertem.io.dataset.base.Partition"><em>Partition</em></a><em>]</em>) – List of relevant partitions.</p></li>
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call, will get the partition as first and only argument.</p></li>
+<li><p><strong>all_nodes</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – If all_nodes is True, run the function on all nodes that have this partition,
+otherwise run on any node that has the partition. If a partition has no location,
+the function will not be run for that partition if <cite>all_nodes</cite> is True, otherwise
+it will be run on any node.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.run_each_worker">
+<span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return values keyed by worker name (executor-specific)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.run_function">
+<span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.run_tasks">
+<span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_comm_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskCommHandler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Run the tasks with the given parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tasks</strong> – The tasks to be run</p></li>
+<li><p><strong>params_handle</strong> (<em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#type" title="(in Python v3.10)"><em>type</em></a><em>]</em>) – A handle for the task parameters, as returned from <a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor.scatter" title="libertem.executor.dask.DaskJobExecutor.scatter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scatter()</span></code></a></p></li>
+<li><p><strong>cancel_id</strong> – An identifier which can be used for cancelling all tasks together. The
+same identifier should be passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">AsyncJobExecutor.cancel()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskJobExecutor.scatter">
+<span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskJobExecutor.scatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskJobExecutor.scatter" title="Permalink to this definition"></a></dt>
+<dd><p>Scatter <code class="code docutils literal notranslate"><span class="pre">obj</span></code> throughout the cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> – Some kind of Python object or variable</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Handle for the scattered <code class="code docutils literal notranslate"><span class="pre">obj</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.dask.DaskWorkerContext">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.dask.</span></span><span class="sig-name descname"><span class="pre">DaskWorkerContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comms_topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#DaskWorkerContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.DaskWorkerContext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.dask.cluster_spec">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.dask.</span></span><span class="sig-name descname"><span class="pre">cluster_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cudas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_cupy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_service</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><span class="pre">dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/dask.html#cluster_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.dask.cluster_spec" title="Permalink to this definition"></a></dt>
+<dd><p>Create a worker specification dictionary for a LiberTEM Dask cluster</p>
+<p>The return from this function can be passed to <code class="code docutils literal notranslate"><span class="pre">DaskJobExecutor.make_local(spec=spec)</span></code>.</p>
+<p>This creates a Dask cluster spec with special initializations and resource tags
+for CPU + GPU processing in LiberTEM.
+See <a class="reference internal" href="../api.html#cluster-spec"><span class="std std-ref">Customize CPUs and CUDA devices</span></a> for an example.
+See <a class="reference external" href="http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster">http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster</a>
+for more info on cluster specs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cpus</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – IDs for CPU workers as an iterable, or an integer number of workers to create.
+Currently no pinning is used, i.e. this specifies the total
+number and identification of workers, not the CPU cores that are used.</p></li>
+<li><p><strong>cudas</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> | </em><em>Iterable</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – IDs for CUDA device workers as an iterable, or an integer number of GPU workers to
+create. LiberTEM will use the IDs specified or assign round-robin to the available devices.
+In the iterable case these have to match CUDA device IDs on the system.
+Specify the same ID multiple times to spawn multiple workers on the same CUDA device.</p></li>
+<li><p><strong>has_cupy</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Specify if the cluster should signal that it supports GPU-based array programming using
+CuPy</p></li>
+<li><p><strong>name</strong> – Prefix for the worker names</p></li>
+<li><p><strong>num_service</strong> – Number of additional workers that are reserved for service tasks. Computation tasks
+will not be scheduled on these workers, which guarantees responsive behavior for file
+browsing etc.</p></li>
+<li><p><strong>options</strong> – Options to pass through to every worker. See Dask documentation for details</p></li>
+<li><p><strong>preload</strong> – Items to preload on workers in addition to LiberTEM-internal preloads.
+This can be used to load libraries, for example HDF5 filter plugins before h5py is used.
+See <a class="reference external" href="https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts">https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts</a>
+for more information.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../reference/internals.html#libertem.utils.devices.detect" title="libertem.utils.devices.detect"><code class="xref py py-func docutils literal notranslate"><span class="pre">libertem.utils.devices.detect()</span></code></a></p>
+</div>
+</dd></dl>
+
+<span class="target" id="module-libertem.executor.integration"></span><dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.integration.get_dask_integration_executor">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.integration.</span></span><span class="sig-name descname"><span class="pre">get_dask_integration_executor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/integration.html#get_dask_integration_executor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.integration.get_dask_integration_executor" title="Permalink to this definition"></a></dt>
+<dd><p>Query the current Dask scheduler and return a <a class="reference internal" href="#libertem.common.executor.JobExecutor" title="libertem.common.executor.JobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobExecutor</span></code></a>
+that is compatible with it. See <a class="reference external" href="https://docs.dask.org/en/stable/scheduling.html">https://docs.dask.org/en/stable/scheduling.html</a>
+for the meaning of the different scheduler types.</p>
+<p>This can be used to integrate LiberTEM in an existing Dask workflow. This
+may not achieve optimal LiberTEM performance and will usually not allow GPU
+processing with LiberTEM, but avoids potential compatibility issues from
+changing or duplicating the Dask scheduler in an existing workflow.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0.</span></p>
+</div>
+<p>If a <code class="code docutils literal notranslate"><span class="pre">dask.distributed.Client</span></code> is set as the scheduler, return a
+<a class="reference internal" href="#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code></a> using this <code class="code docutils literal notranslate"><span class="pre">Client</span></code>.</p>
+<p>If the Dask scheduler is <code class="code docutils literal notranslate"><span class="pre">'threads'</span></code>, return a
+<a class="reference internal" href="#libertem.executor.concurrent.ConcurrentJobExecutor" title="libertem.executor.concurrent.ConcurrentJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConcurrentJobExecutor</span></code></a> backed
+by the same thread pool as used by Dask.</p>
+<p>If the Dask scheduler is <code class="code docutils literal notranslate"><span class="pre">'synchronous'</span></code>, return an
+<a class="reference internal" href="#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a>
+which mimics the single-process, single-thread behaviour of Dask.</p>
+</dd></dl>
+
+</section>
+<section id="module-libertem.executor.inline">
+<span id="inline"></span><h2>Inline<a class="headerlink" href="#module-libertem.executor.inline" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.inline.</span></span><span class="sig-name descname"><span class="pre">InlineJobExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inline_threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor" title="Permalink to this definition"></a></dt>
+<dd><p>Naive JobExecutor that just iterates over partitions and processes them one after another</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>debug</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Set this to enable additional serializability checks</p></li>
+<li><p><strong>inline_threads</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – How many fine grained threads should be allowed? Leaving this <cite>None</cite> will
+allow one thread per CPU core</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.get_available_workers">
+<span class="sig-name descname"><span class="pre">get_available_workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.get_available_workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.get_available_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a WorkerSet that contains the available workers</p>
+<p>Each worker should correspond to a “worker process”, so if the executor
+is using multiple processes or threads, each process/thread should be
+included in this list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each element in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.run_each_host">
+<span class="sig-name descname"><span class="pre">run_each_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.run_each_host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.run_each_host" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> once on each host, gathering all results into
+a dict host -&gt; result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.run_each_worker">
+<span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return values keyed by worker name (executor-specific)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.run_function">
+<span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.run_tasks">
+<span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_comm_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskCommHandler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Run the tasks with the given parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tasks</strong> – The tasks to be run</p></li>
+<li><p><strong>params_handle</strong> (<em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#type" title="(in Python v3.10)"><em>type</em></a><em>]</em>) – A handle for the task parameters, as returned from <a class="reference internal" href="#libertem.executor.inline.InlineJobExecutor.scatter" title="libertem.executor.inline.InlineJobExecutor.scatter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scatter()</span></code></a></p></li>
+<li><p><strong>cancel_id</strong> – An identifier which can be used for cancelling all tasks together. The
+same identifier should be passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">AsyncJobExecutor.cancel()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineJobExecutor.scatter">
+<span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineJobExecutor.scatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineJobExecutor.scatter" title="Permalink to this definition"></a></dt>
+<dd><p>Scatter <code class="code docutils literal notranslate"><span class="pre">obj</span></code> throughout the cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> – Some kind of Python object or variable</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Handle for the scattered <code class="code docutils literal notranslate"><span class="pre">obj</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.inline.InlineWorkerContext">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.inline.</span></span><span class="sig-name descname"><span class="pre">InlineWorkerContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimpleWorkerQueue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SimpleWorkerQueue</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/inline.html#InlineWorkerContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.inline.InlineWorkerContext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-libertem.executor.concurrent">
+<span id="concurrent"></span><h2>Concurrent<a class="headerlink" href="#module-libertem.executor.concurrent" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.AsyncConcurrentJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.concurrent.</span></span><span class="sig-name descname"><span class="pre">AsyncConcurrentJobExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrapped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#AsyncConcurrentJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.AsyncConcurrentJobExecutor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.concurrent.</span></span><span class="sig-name descname"><span class="pre">ConcurrentJobExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Executor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_local</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor" title="Permalink to this definition"></a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">JobExecutor</span></code> that uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">python.concurrent.futures</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/concurrent.futures.html#concurrent.futures.Executor" title="(in Python v3.10)"><em>concurrent.futures.Executor</em></a>) – </p></li>
+<li><p><strong>is_local</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Shut the client down when the executor closes.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.close" title="Permalink to this definition"></a></dt>
+<dd><p>cleanup resources used by this executor, if any</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.get_available_workers">
+<span class="sig-name descname"><span class="pre">get_available_workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.get_available_workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.get_available_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a WorkerSet that contains the available workers</p>
+<p>Each worker should correspond to a “worker process”, so if the executor
+is using multiple processes or threads, each process/thread should be
+included in this list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.make_local">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_local</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.make_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.make_local" title="Permalink to this definition"></a></dt>
+<dd><p>Create a local ConcurrentJobExecutor backed by
+a <a class="reference external" href="https://docs.python.org/3.10/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">concurrent.futures.ThreadPoolExecutor</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the connected JobExecutor</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.executor.concurrent.ConcurrentJobExecutor" title="libertem.executor.concurrent.ConcurrentJobExecutor">ConcurrentJobExecutor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each element in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.run_each_host">
+<span class="sig-name descname"><span class="pre">run_each_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.run_each_host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.run_each_host" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> once on each host, gathering all results into
+a dict host -&gt; result</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.run_each_worker">
+<span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return values keyed by worker name (executor-specific)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.run_function">
+<span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.run_tasks">
+<span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_comm_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskCommHandler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Run the tasks with the given parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tasks</strong> – The tasks to be run</p></li>
+<li><p><strong>params_handle</strong> (<em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#type" title="(in Python v3.10)"><em>type</em></a><em>]</em>) – A handle for the task parameters, as returned from <a class="reference internal" href="#libertem.executor.concurrent.ConcurrentJobExecutor.scatter" title="libertem.executor.concurrent.ConcurrentJobExecutor.scatter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scatter()</span></code></a></p></li>
+<li><p><strong>cancel_id</strong> – An identifier which can be used for cancelling all tasks together. The
+same identifier should be passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">AsyncJobExecutor.cancel()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentJobExecutor.scatter">
+<span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentJobExecutor.scatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentJobExecutor.scatter" title="Permalink to this definition"></a></dt>
+<dd><p>Scatter <code class="code docutils literal notranslate"><span class="pre">obj</span></code> throughout the cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> – Some kind of Python object or variable</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Handle for the scattered <code class="code docutils literal notranslate"><span class="pre">obj</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.concurrent.ConcurrentWorkerContext">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.concurrent.</span></span><span class="sig-name descname"><span class="pre">ConcurrentWorkerContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">WorkerQueue</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/concurrent.html#ConcurrentWorkerContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.concurrent.ConcurrentWorkerContext" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="dask-delayed">
+<h2>Dask.delayed<a class="headerlink" href="#dask-delayed" title="Permalink to this heading"></a></h2>
+<p>See <a class="reference internal" href="../dask.html#delayed-udfs"><span class="std std-ref">Create Dask arrays with UDFs</span></a> for more information about
+<a class="reference internal" href="#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a>.</p>
+<span class="target" id="module-libertem.executor.delayed"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.delayed.</span></span><span class="sig-name descname"><span class="pre">DelayedJobExecutor</span></span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor" title="Permalink to this definition"></a></dt>
+<dd><p><a class="reference internal" href="#libertem.common.executor.JobExecutor" title="libertem.common.executor.JobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobExecutor</span></code></a> that uses dask.delayed to execute tasks.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0.</span></p>
+</div>
+<p>Highly experimental at this time!</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.get_available_workers">
+<span class="sig-name descname"><span class="pre">get_available_workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.get_available_workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.get_available_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a WorkerSet that contains the available workers</p>
+<p>Each worker should correspond to a “worker process”, so if the executor
+is using multiple processes or threads, each process/thread should be
+included in this list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_resources_from_udfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">udfs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_backends</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.get_resources_from_udfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the resources required by the udfs passed as
+argument, excluding those not in the tuple user_backends</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each element in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.run_each_host">
+<span class="sig-name descname"><span class="pre">run_each_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.run_each_host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.run_each_host" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> once on each host, gathering all results into
+a dict host -&gt; result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.run_each_worker">
+<span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return values keyed by worker name (executor-specific)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.run_function">
+<span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.run_tasks">
+<span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_comm_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskCommHandler</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Wraps the call task() such that it returns a flat list
+of results, then unpacks the Delayed return value into
+the normal</p>
+<blockquote>
+<div><p><code class="code docutils literal notranslate"><span class="pre">tuple(udf.results</span> <span class="pre">for</span> <span class="pre">udf</span> <span class="pre">in</span> <span class="pre">self._udfs)</span></code></p>
+</div></blockquote>
+<p>where the buffers inside udf.results are dask arrays instead
+of normal np.arrays</p>
+<p>Needs a reference to the udfs on the master node so
+that the results structure can be inferred. This reference is
+found in self._udfs, which is set with the method:</p>
+<blockquote>
+<div><p><code class="code docutils literal notranslate"><span class="pre">executor.register_master_udfs(udfs)</span></code></p>
+</div></blockquote>
+<p>called from <code class="xref py py-meth docutils literal notranslate"><span class="pre">DelayedUDFRunner.results_for_dataset_sync()</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.delayed.DelayedJobExecutor.scatter">
+<span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/delayed.html#DelayedJobExecutor.scatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.delayed.DelayedJobExecutor.scatter" title="Permalink to this definition"></a></dt>
+<dd><p>Scatter <code class="code docutils literal notranslate"><span class="pre">obj</span></code> throughout the cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> – Some kind of Python object or variable</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Handle for the scattered <code class="code docutils literal notranslate"><span class="pre">obj</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="pipelined-executor">
+<span id="id1"></span><h2>Pipelined executor<a class="headerlink" href="#pipelined-executor" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-libertem.executor.pipelined"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">PipelinedExecutor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.List" title="(in Python v3.10)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.executor.pipelined.WorkerSpec" title="libertem.executor.pipelined.WorkerSpec"><span class="pre">WorkerSpec</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_workers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startup_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cleanup_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_setup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor" title="Permalink to this definition"></a></dt>
+<dd><p>Multi-process pipelined executor. Useful for live processing using
+<a class="reference external" href="https://libertem.github.io/LiberTEM-live/">LiberTEM-live</a>
+if your processing function is not able to keep up with the incoming data
+stream in a single process, but also works for offline processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spec</strong> – Specification for the worker processes - can be generated
+by <code class="xref py py-meth docutils literal notranslate"><span class="pre">make_spec()</span></code>.</p></li>
+<li><p><strong>pin_workers</strong> – Pin each CPU worker to a specific CPU, as defined by <a class="reference external" href="https://docs.python.org/3.10/library/os.html#os.sched_setaffinity" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">os.sched_setaffinity()</span></code></a>.
+Only works on OSes that implement <a class="reference external" href="https://docs.python.org/3.10/library/os.html#os.sched_setaffinity" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">os.sched_setaffinity()</span></code></a>.</p></li>
+<li><p><strong>startup_timeout</strong> – Startup of the executor is cancelled if it doesn’t finish within
+this limit (in detail: each worker’s startup time is limited by this timeout).
+In seconds.</p></li>
+<li><p><strong>cleanup_timeout</strong> – When cleaning up using <a class="reference internal" href="#libertem.executor.pipelined.PipelinedExecutor.close" title="libertem.executor.pipelined.PipelinedExecutor.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">close()</span></code></a>, give up after
+this limit. In seconds.</p></li>
+<li><p><strong>early_setup</strong> – Callable that will be run as early as possible on each worker process.
+Useful for custom warmup code or testing.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This executor is not thread-safe - concurrent calls into <a class="reference internal" href="#libertem.executor.pipelined.PipelinedExecutor.run_tasks" title="libertem.executor.pipelined.PipelinedExecutor.run_tasks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_tasks()</span></code></a> or
+<a class="reference internal" href="#libertem.executor.pipelined.PipelinedExecutor.run_function" title="libertem.executor.pipelined.PipelinedExecutor.run_function"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_function()</span></code></a> are not supported.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.close" title="Permalink to this definition"></a></dt>
+<dd><p>cleanup resources used by this executor, if any</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.get_available_workers">
+<span class="sig-name descname"><span class="pre">get_available_workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">WorkerSet</span></span></span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.get_available_workers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.get_available_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a WorkerSet that contains the available workers</p>
+<p>Each worker should correspond to a “worker process”, so if the executor
+is using multiple processes or threads, each process/thread should be
+included in this list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.make_local">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_local</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.make_local"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.make_local" title="Permalink to this definition"></a></dt>
+<dd><p>Create a <code class="code docutils literal notranslate"><span class="pre">PipelinedExecutor</span></code> with the default spec.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.map">
+<span class="sig-name descname"><span class="pre">map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.map" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> for each element in <code class="code docutils literal notranslate"><span class="pre">iterable</span></code>, on arbitrary worker nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call. Should accept exactly one parameter.</p></li>
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – Which elements to call the function on.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.run_each_host">
+<span class="sig-name descname"><span class="pre">run_each_host</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.run_each_host"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.run_each_host" title="Permalink to this definition"></a></dt>
+<dd><p>Run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> once on each host, gathering all results into
+a dict host -&gt; result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.run_each_worker">
+<span class="sig-name descname"><span class="pre">run_each_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.run_each_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.run_each_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Run <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on each worker process, and pass <code class="code docutils literal notranslate"><span class="pre">*args</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">**kwargs</span></code> to it.</p>
+<p>Useful, for example, if you need to prepare the environment of
+each Python interpreter, warm up per-process caches etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>callable</em>) – Function to call</p></li>
+<li><p><strong>*args</strong> – Arguments for fn</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments for fn</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Return values keyed by worker name (executor-specific)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.run_function">
+<span class="sig-name descname"><span class="pre">run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.run_function" title="Permalink to this definition"></a></dt>
+<dd><p>run a callable <code class="code docutils literal notranslate"><span class="pre">fn</span></code> on any worker</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.run_tasks">
+<span class="sig-name descname"><span class="pre">run_tasks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tasks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Iterable" title="(in Python v3.10)"><span class="pre">Iterable</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">cancel_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_comm_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TaskCommHandler</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Generator" title="(in Python v3.10)"><span class="pre">Generator</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Any" title="(in Python v3.10)"><span class="pre">Any</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TaskProtocol</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.run_tasks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.run_tasks" title="Permalink to this definition"></a></dt>
+<dd><p>Run the tasks with the given parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tasks</strong> – The tasks to be run</p></li>
+<li><p><strong>params_handle</strong> (<em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#type" title="(in Python v3.10)"><em>type</em></a><em>]</em>) – A handle for the task parameters, as returned from <a class="reference internal" href="#libertem.executor.pipelined.PipelinedExecutor.scatter" title="libertem.executor.pipelined.PipelinedExecutor.scatter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">scatter()</span></code></a></p></li>
+<li><p><strong>cancel_id</strong> – An identifier which can be used for cancelling all tasks together. The
+same identifier should be passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">AsyncJobExecutor.cancel()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedExecutor.scatter">
+<span class="sig-name descname"><span class="pre">scatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedExecutor.scatter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedExecutor.scatter" title="Permalink to this definition"></a></dt>
+<dd><p>Scatter <code class="code docutils literal notranslate"><span class="pre">obj</span></code> throughout the cluster</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> – Some kind of Python object or variable</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Handle for the scattered <code class="code docutils literal notranslate"><span class="pre">obj</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PipelinedWorkerContext">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">PipelinedWorkerContext</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">WorkerQueue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">WorkerQueue</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PipelinedWorkerContext"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PipelinedWorkerContext" title="Permalink to this definition"></a></dt>
+<dd><p>A context object that is made available to the Partition
+for custom communication to its matching DataSet class
+(currently uni-directional)</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PoolWorkerInfo">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">PoolWorkerInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queues</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#PoolWorkerInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.PoolWorkerInfo" title="Permalink to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PoolWorkerInfo.process">
+<span class="sig-name descname"><span class="pre">process</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Process</span></em><a class="headerlink" href="#libertem.executor.pipelined.PoolWorkerInfo.process" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PoolWorkerInfo.queues">
+<span class="sig-name descname"><span class="pre">queues</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#libertem.executor.pipelined.WorkerQueues" title="libertem.executor.pipelined.WorkerQueues"><span class="pre">WorkerQueues</span></a></em><a class="headerlink" href="#libertem.executor.pipelined.PoolWorkerInfo.queues" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.PoolWorkerInfo.spec">
+<span class="sig-name descname"><span class="pre">spec</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#libertem.executor.pipelined.WorkerSpec" title="libertem.executor.pipelined.WorkerSpec"><span class="pre">WorkerSpec</span></a></em><a class="headerlink" href="#libertem.executor.pipelined.PoolWorkerInfo.spec" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.WorkerPool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">WorkerPool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">worker_fn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.List" title="(in Python v3.10)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.executor.pipelined.WorkerSpec" title="libertem.executor.pipelined.WorkerSpec"><span class="pre">WorkerSpec</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#WorkerPool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.WorkerPool" title="Permalink to this definition"></a></dt>
+<dd><p>Combination of worker processes and matching request queues,
+and a single response queue.</p>
+<p>Processes are started using the spawn method, so they need
+to use primitives that are compatible with spawn.</p>
+<p>Take care to properly close queues and join workers at shutdown.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We are not using the vanilla <code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocesing.Pool</span></code> here, because
+we need to coordinate the sending and receiving side for each task,
+and we need to keep state on the worker, pin processes to cores etc.</p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.WorkerQueues">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">WorkerQueues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#WorkerQueues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.WorkerQueues" title="Permalink to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.WorkerQueues.message">
+<span class="sig-name descname"><span class="pre">message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">WorkerQueue</span></em><a class="headerlink" href="#libertem.executor.pipelined.WorkerQueues.message" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.WorkerQueues.request">
+<span class="sig-name descname"><span class="pre">request</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">WorkerQueue</span></em><a class="headerlink" href="#libertem.executor.pipelined.WorkerQueues.request" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.WorkerQueues.response">
+<span class="sig-name descname"><span class="pre">response</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">WorkerQueue</span></em><a class="headerlink" href="#libertem.executor.pipelined.WorkerQueues.response" title="Permalink to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.WorkerSpec">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">WorkerSpec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#WorkerSpec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.WorkerSpec" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.pipelined_worker">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">pipelined_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.executor.pipelined.WorkerQueues" title="libertem.executor.pipelined.WorkerQueues"><span class="pre">WorkerQueues</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.executor.pipelined.WorkerSpec" title="libertem.executor.pipelined.WorkerSpec"><span class="pre">WorkerSpec</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SpanContext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_setup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Callable" title="(in Python v3.10)"><span class="pre">Callable</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#pipelined_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.pipelined_worker" title="Permalink to this definition"></a></dt>
+<dd><p>Main pipelined worker function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>queues</strong> – request and response queues</p></li>
+<li><p><strong>pin</strong> – Whether or not the CPU worker should be pinned to a specific CPU</p></li>
+<li><p><strong>spec</strong> – This worker’s spec, containing name, worker index, device kind etc.</p></li>
+<li><p><strong>span_context</strong> – The tracing span we should attach to for the setup code</p></li>
+<li><p><strong>early_setup</strong> – Function that will be called very early in the setup code,
+allowing to inject custom functionality or specific warmup code</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.set_thread_name">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">set_thread_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#set_thread_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.set_thread_name" title="Permalink to this definition"></a></dt>
+<dd><p>Set a thread name; mostly useful for using system tools for profiling</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The thread name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.worker_loop">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">worker_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.executor.pipelined.WorkerQueues" title="libertem.executor.pipelined.WorkerQueues"><span class="pre">WorkerQueues</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_mem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Dict" title="(in Python v3.10)"><span class="pre">Dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#worker_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.worker_loop" title="Permalink to this definition"></a></dt>
+<dd><p>The worker main loop, called when the worker setup is done.
+Waits for messages on the request queue until a SHUTDOWN message
+is received.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>work_mem</strong> – The worker’s working memory, for accessing scattered data</p></li>
+<li><p><strong>queues</strong> – request and response queues</p></li>
+<li><p><strong>worker_idx</strong> – This worker’s index</p></li>
+<li><p><strong>env</strong> – The Environment for preparing thread counts etc. for the UDF run</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.worker_run_function">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">worker_run_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#worker_run_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.worker_run_function" title="Permalink to this definition"></a></dt>
+<dd><p>Called from the worker main loop when a RUN_FUNCTION message is received</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>header</strong> – The header of the message that was received</p></li>
+<li><p><strong>queues</strong> – request and response queues</p></li>
+<li><p><strong>worker_idx</strong> – This worker’s index</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.executor.pipelined.worker_run_task">
+<span class="sig-prename descclassname"><span class="pre">libertem.executor.pipelined.</span></span><span class="sig-name descname"><span class="pre">worker_run_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Dict" title="(in Python v3.10)"><span class="pre">Dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_mem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Dict" title="(in Python v3.10)"><span class="pre">Dict</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">queues</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.executor.pipelined.WorkerQueues" title="libertem.executor.pipelined.WorkerQueues"><span class="pre">WorkerQueues</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Environment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/executor/pipelined.html#worker_run_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.executor.pipelined.worker_run_task" title="Permalink to this definition"></a></dt>
+<dd><p>Called from the worker main loop when a RUN_TASK message is received</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>header</strong> – The header of the message that was received</p></li>
+<li><p><strong>work_mem</strong> – The worker’s working memory, for accessing scattered data</p></li>
+<li><p><strong>queues</strong> – request and response queues</p></li>
+<li><p><strong>worker_idx</strong> – This worker’s index</p></li>
+<li><p><strong>env</strong> – The Environment for preparing thread counts etc. for the UDF run</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="how-io-works.html" class="btn btn-neutral float-left" title="How does I/O work in LiberTEM?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../authorship.html" class="btn btn-neutral float-right" title="Authorship policy" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

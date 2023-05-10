@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Off-axis electron holography &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Image processing" href="processing.html" />
+    <link rel="prev" title="Pipeline for phase change materials. Scripting example" href="pcmclustering.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../applications.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="phasecontrast.html">Phase contrast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amorphous.html">Amorphous materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="strain.html">Strain mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phasechange.html">Phase-change materials</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Off-axis electron holography</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#hologram-simulation">Hologram simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#hologram-reconstruction">Hologram reconstruction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html">Image processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../applications.html">Applications</a></li>
+      <li class="breadcrumb-item active">Off-axis electron holography</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/app/holography.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="off-axis-electron-holography">
+<span id="holography-app"></span><h1>Off-axis electron holography<a class="headerlink" href="#off-axis-electron-holography" title="Permalink to this heading"></a></h1>
+<p>LiberTEM has implementations for both <a class="reference internal" href="#holo-sim"><span class="std std-ref">hologram simulation</span></a> and
+<a class="reference internal" href="#holo-reconstruct"><span class="std std-ref">hologram reconstruction</span></a> for off-axis electron holography.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.3.0.</span></p>
+</div>
+<section id="hologram-simulation">
+<span id="holo-sim"></span><h2>Hologram simulation<a class="headerlink" href="#hologram-simulation" title="Permalink to this heading"></a></h2>
+<p>Holograms can be simulated using the method described by Lichte et al. <span id="id1">[<a class="reference internal" href="../index.html#id110" title="H. Lichte and M. Lehmann. Electron holography–basics and applications. Rep. Prog. Phys., 71:016102, 2008. doi:10.1088/0034-4885/71/1/016102.">LL08</a>]</span>
+The simulator includes simulation of holograms with Gaussian and Poisson noise, without effect of
+Fresnel fringes of the biprism. The simulator requires amplitude and phase images being provided. Those can be
+calculated as in example below in which for amplitude a sphere is assumed, the same sphere is used
+for the mean inner potential (MIP) contribution to the phase and in addition to the quadratic long-range
+phase shift originating from the centre of the sphere:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">libertem.utils.generate</span> <span class="kn">import</span> <span class="n">hologram_frame</span>
+
+<span class="c1"># Define grid</span>
+<span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+<span class="n">mx</span><span class="p">,</span> <span class="n">my</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">sx</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">sy</span><span class="p">))</span>
+<span class="c1"># Define sphere region</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="p">(</span><span class="n">mx</span> <span class="o">-</span> <span class="mf">33.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">my</span> <span class="o">-</span> <span class="mf">103.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;</span> <span class="mf">20.</span><span class="o">**</span><span class="mi">2</span>
+<span class="c1"># Calculate long-range contribution to the phase</span>
+<span class="n">phase</span> <span class="o">=</span> <span class="p">((</span><span class="n">mx</span> <span class="o">-</span> <span class="mf">33.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">my</span> <span class="o">-</span> <span class="mf">103.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sx</span> <span class="o">/</span> <span class="mf">40.</span>
+<span class="c1"># Add mean inner potential contribution to the phase</span>
+<span class="n">phase</span><span class="p">[</span><span class="n">sphere</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="p">((</span><span class="n">mx</span><span class="p">[</span><span class="n">sphere</span><span class="p">]</span> <span class="o">-</span> <span class="mf">33.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> \
+                   <span class="o">+</span> <span class="p">(</span><span class="n">my</span><span class="p">[</span><span class="n">sphere</span><span class="p">]</span> <span class="o">-</span> <span class="mf">103.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sx</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span>
+<span class="c1"># Calculate amplitude of the phase</span>
+<span class="n">amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">phase</span><span class="p">)</span>
+<span class="n">amp</span><span class="p">[</span><span class="n">sphere</span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="n">mx</span><span class="p">[</span><span class="n">sphere</span><span class="p">]</span> <span class="o">-</span> <span class="mf">33.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> \
+               <span class="o">+</span> <span class="p">(</span><span class="n">my</span><span class="p">[</span><span class="n">sphere</span><span class="p">]</span> <span class="o">-</span> <span class="mf">103.</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sx</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">+</span> <span class="mf">0.5</span>
+
+<span class="c1"># Plot</span>
+<span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Amplitude&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Phase&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../_images/amplitude_phase.png" src="../_images/amplitude_phase.png" />
+<p>To generate the object hologram, <code class="code docutils literal notranslate"><span class="pre">amp</span></code> and <code class="code docutils literal notranslate"><span class="pre">phase</span></code> should be passed to the <code class="code docutils literal notranslate"><span class="pre">holo_frame</span></code>
+function as follows:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">holo</span> <span class="o">=</span> <span class="n">hologram_frame</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">phase</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To generate the vacuum reference hologram, use an array of ones for amplitude and zero for phase:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">hologram_frame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">phase</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">phase</span><span class="p">))</span>
+
+<span class="c1"># Plot</span>
+<span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">holo</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Object hologram&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Reference hologram&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../_images/holograms.png" src="../_images/holograms.png" />
+</section>
+<section id="hologram-reconstruction">
+<span id="holo-reconstruct"></span><h2>Hologram reconstruction<a class="headerlink" href="#hologram-reconstruction" title="Permalink to this heading"></a></h2>
+<p>LiberTEM can be used to reconstruct off-axis electron holograms using the Fourier space method.
+The processing involves the following steps:</p>
+<ul class="simple">
+<li><p>Fast Fourier transform</p></li>
+<li><p>Filtering of the sideband in Fourier space and cropping (if applicable)</p></li>
+<li><p>Centering of the sideband</p></li>
+<li><p>Inverse Fourier transform.</p></li>
+</ul>
+<p>The reconstruction can be accessed through the <a class="reference internal" href="../reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoloReconstructUDF</span></code></a> class.
+To demonstrate the reconstruction capability, two datasets can be created from the holograms
+simulated above as follows:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.io.dataset.memory</span> <span class="kn">import</span> <span class="n">MemoryDataSet</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.holography</span> <span class="kn">import</span> <span class="n">HoloReconstructUDF</span>
+
+<span class="n">dataset_holo</span> <span class="o">=</span> <span class="n">MemoryDataSet</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">holo</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">)),</span>
+                             <span class="n">tileshape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">),</span>
+                             <span class="n">num_partitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">dataset_ref</span> <span class="o">=</span> <span class="n">MemoryDataSet</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">ref</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">)),</span>
+                            <span class="n">tileshape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">),</span>
+                            <span class="n">num_partitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The reconstruction requires knowledge about the position of the sideband and the size of the
+sideband filter which will be used in the reconstruction. The position of the sideband can be
+estimated from the Fourier transform of the vacuum reference hologram:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot FFT and the sideband position</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span><span class="n">ref</span><span class="p">))))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mf">26.</span><span class="p">,</span> <span class="mf">44.</span><span class="p">,</span> <span class="s1">&#39;+r&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;FFT of the reference hologram&#39;</span><span class="p">)</span>
+
+<span class="c1"># Define position</span>
+<span class="n">sb_position</span> <span class="o">=</span> <span class="p">[</span><span class="mi">44</span><span class="p">,</span> <span class="mi">26</span><span class="p">]</span>
+</pre></div>
+</div>
+<img alt="../_images/FFT_reference.png" src="../_images/FFT_reference.png" />
+<p>The radius of sideband filter is typically chosen as either half of the distance between the sideband and
+autocorrelation for strong phase objects or as one third of the distance for weak phase objects. Assuming
+a strong phase object, one can proceed as follows:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">sb_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">sb_position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sb_position</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span>
+</pre></div>
+</div>
+<p>Since in off-axis electron holography, the spatial resolution is determined by the interference
+fringe spacing rather than by the sampling of the original images, the reconstruction would typically
+involve changing the shape of the data.
+For medium magnification holography the size of the reconstructed images can be typically set to the size
+(diameter) of the sideband filter. (For high-resolution holography reconstruction, typically binning factors of
+1-4 are used.) Therefore, the output shape can be defined as follows:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">sb_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">sb_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Finally the <a class="reference internal" href="../reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoloReconstructUDF</span></code></a> class can be used to reconstruct the object and
+reference holograms:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create reconstruction UDF:</span>
+<span class="n">holo_udf</span> <span class="o">=</span> <span class="n">HoloReconstructUDF</span><span class="p">(</span><span class="n">out_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+                              <span class="n">sb_position</span><span class="o">=</span><span class="n">sb_position</span><span class="p">,</span>
+                              <span class="n">sb_size</span><span class="o">=</span><span class="n">sb_size</span><span class="p">)</span>
+
+<span class="c1"># Reconstruct holograms, access data directly</span>
+<span class="n">w_holo</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset_holo</span><span class="p">,</span>
+                     <span class="n">udf</span><span class="o">=</span><span class="n">holo_udf</span><span class="p">)[</span><span class="s1">&#39;wave&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">w_ref</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset_ref</span><span class="p">,</span>
+                    <span class="n">udf</span><span class="o">=</span><span class="n">holo_udf</span><span class="p">)[</span><span class="s1">&#39;wave&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+
+<span class="c1"># Correct object wave using reference wave</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">w_holo</span> <span class="o">/</span> <span class="n">w_ref</span>
+
+<span class="c1"># Calculate plot phase shift and amplitude</span>
+<span class="n">amp_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+<span class="n">phase_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+<span class="c1"># Plot amplitude</span>
+<span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">amp</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Input amplitude&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">amp_r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Reconstructed amplitude&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../_images/amp_comparison.png" src="../_images/amp_comparison.png" />
+<p>One sees that the reconstructed amplitude has artifacts due to digital Fourier processing. Those are typical for
+synthetic data. One of the ways to get synthetic data closer to the experimental would be adding noise.
+Comparing phase images, one should keep in mind that phase is typically wrapped in an interval <span class="math notranslate nohighlight">\([0; 2\pi)\)</span>.
+To unwrap phase one can do the following:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skimage.restoration</span> <span class="kn">import</span> <span class="n">unwrap_phase</span>
+
+<span class="c1"># Unwrap phase:</span>
+<span class="n">phase_unwrapped</span> <span class="o">=</span> <span class="n">unwrap_phase</span><span class="p">(</span><span class="n">phase_r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="c1"># Plot</span>
+<span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phase</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Input phase&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phase_r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Reconstructed phase&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">phase_unwrapped</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">set_text</span><span class="p">(</span><span class="s1">&#39;Reconstructed phase (unwrapped)&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+</pre></div>
+</div>
+<img alt="../_images/phase_comparison.png" src="../_images/phase_comparison.png" />
+<p>In addition to the capabilities demonstrated above, the <a class="reference internal" href="../reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoloReconstructUDF</span></code></a>
+class can take smoothness of sideband (SB) filter as fraction of the SB size (<code class="code docutils literal notranslate"><span class="pre">sb_smoothness=0.05</span></code> is default).
+Also, the <code class="code docutils literal notranslate"><span class="pre">precision</span></code> argument can be used (<code class="code docutils literal notranslate"><span class="pre">precision=False</span></code>) to reduce the calculation precision
+to <code class="code docutils literal notranslate"><span class="pre">float32</span></code> and <code class="code docutils literal notranslate"><span class="pre">complex64</span></code> for the output. Note that depending of NumPy backend, even with reduced
+precision the FFT function used in the reconstruction may internally calculate results with double
+precision. In this case reducing precision will only affect the size of the output rather than the
+speed of processing.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pcmclustering.html" class="btn btn-neutral float-left" title="Pipeline for phase change materials. Scripting example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="processing.html" class="btn btn-neutral float-right" title="Image processing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

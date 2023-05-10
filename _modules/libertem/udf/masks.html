@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.udf.masks &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.udf.masks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.udf.masks</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sparseconverter</span> <span class="kn">import</span> <span class="n">CUPY_BACKENDS</span><span class="p">,</span> <span class="n">NUMPY</span><span class="p">,</span> <span class="n">SCIPY_COO</span><span class="p">,</span> <span class="n">SCIPY_CSC</span><span class="p">,</span> <span class="n">SCIPY_CSR</span>
+
+<span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+<span class="kn">from</span> <span class="nn">libertem.common.container</span> <span class="kn">import</span> <span class="n">MaskContainer</span>
+<span class="kn">from</span> <span class="nn">libertem.common.numba</span> <span class="kn">import</span> <span class="n">rmatmul</span>
+
+
+<div class="viewcode-block" id="ApplyMasksUDF"><a class="viewcode-back" href="../../../reference/udf.html#libertem.udf.masks.ApplyMasksUDF">[docs]</a><span class="k">class</span> <span class="nc">ApplyMasksUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Apply masks to signals/frames in the dataset. This can not only be used to integrate</span>
+<span class="sd">    over regions with a binary mask - the integration can be weighted by using</span>
+<span class="sd">    float or complex valued masks.</span>
+
+<span class="sd">    The result will be returned in a single sig-shaped buffer called intensity.</span>
+<span class="sd">    Its shape will be :code:`(*nav_shape, len(masks))`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    mask_factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]</span>
+<span class="sd">        Function or list of functions that take no arguments and create masks. The returned</span>
+<span class="sd">        masks can be</span>
+<span class="sd">        numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask</span>
+<span class="sd">        factories should not reference large objects because they can create significant</span>
+<span class="sd">        overheads when they are pickled and unpickled. Each factory function should, when</span>
+<span class="sd">        called, return a numpy array with the same shape as frames in the dataset</span>
+<span class="sd">        (so dataset.shape.sig).</span>
+<span class="sd">    use_torch : bool, optional</span>
+<span class="sd">        Use pytorch back-end if available. Default True</span>
+<span class="sd">    use_sparse : Union[None, False, True, &#39;scipy.sparse&#39;, &#39;scipy.sparse.csc&#39;, \</span>
+<span class="sd">            &#39;sparse.pydata&#39;], optional</span>
+<span class="sd">        Which sparse back-end to use.</span>
+<span class="sd">        * None (default): Use sparse matrix multiplication if all factory functions return a \</span>
+<span class="sd">            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \</span>
+<span class="sd">            multiplication</span>
+<span class="sd">        * True: Convert all masks to sparse matrices and use default sparse back-end.</span>
+<span class="sd">        * False: Convert all masks to dense matrices.</span>
+<span class="sd">        * &#39;scipy.sparse&#39;: Use scipy.sparse.csr_matrix (default sparse)</span>
+<span class="sd">        * &#39;scipy.sparse.csc&#39;: Use scipy.sparse.csc_matrix</span>
+<span class="sd">        * &#39;sparse.pydata&#39;: Use sparse.pydata COO matrix</span>
+<span class="sd">    mask_count : int, optional</span>
+<span class="sd">        Specify the number of masks if a single factory function is used so that the</span>
+<span class="sd">        number of masks can be determined without calling the factory function.</span>
+<span class="sd">    mask_dtype : numpy.dtype, optional</span>
+<span class="sd">        Specify the dtype of the masks so that mask dtype</span>
+<span class="sd">        can be determined without calling the mask factory functions. This can be used to</span>
+<span class="sd">        override the mask dtype in the result dtype determination. As an example, setting</span>
+<span class="sd">        this to np.float32 means that masks of type float64 will not switch the calculation</span>
+<span class="sd">        and result dtype to float64 or complex128.</span>
+<span class="sd">    preferred_dtype : numpy.dtype, optional</span>
+<span class="sd">        Let :meth:`get_preferred_input_dtype` return the specified type instead of the</span>
+<span class="sd">        default `float32`. This can perform the calculation with integer types if both input</span>
+<span class="sd">        data and mask data are compatible with this.</span>
+<span class="sd">    backends : Iterable containing strings &quot;numpy&quot; and/or &quot;cupy&quot;, or None</span>
+<span class="sd">        Control which back-ends are used. Default is numpy and cupy</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; dataset.shape</span>
+<span class="sd">    (16, 16, 32, 32)</span>
+<span class="sd">    &gt;&gt;&gt; def my_masks():</span>
+<span class="sd">    ...     return [np.ones((32, 32)), np.zeros((32, 32))]</span>
+<span class="sd">    &gt;&gt;&gt; udf = ApplyMasksUDF(mask_factories=my_masks)</span>
+<span class="sd">    &gt;&gt;&gt; res = ctx.run_udf(dataset=dataset, udf=udf)[&#39;intensity&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; res.data.shape</span>
+<span class="sd">    (16, 16, 2)</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(res.data[..., 1], 0)  # same order as in the mask factory</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Mask factories can also return all masks as a single array, stacked on the first axis:</span>
+
+<span class="sd">    &gt;&gt;&gt; def my_masks_2():</span>
+<span class="sd">    ...     masks = np.zeros((2, 32, 32))</span>
+<span class="sd">    ...     masks[1, ...] = 1</span>
+<span class="sd">    ...     return masks</span>
+<span class="sd">    &gt;&gt;&gt; udf = ApplyMasksUDF(mask_factories=my_masks_2)</span>
+<span class="sd">    &gt;&gt;&gt; res_2 = ctx.run_udf(dataset=dataset, udf=udf)[&#39;intensity&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(res_2.data, res.data)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    .. versionadded:: 0.4.0</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_factories</span><span class="p">,</span> <span class="n">use_torch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">use_sparse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask_count</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">mask_dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preferred_dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backends</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">use_sparse</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">use_sparse</span> <span class="o">=</span> <span class="s1">&#39;scipy.sparse&#39;</span>
+
+        <span class="k">if</span> <span class="n">backends</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">backends</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BACKEND_ALL</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask_container</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">mask_factories</span><span class="o">=</span><span class="n">mask_factories</span><span class="p">,</span>
+            <span class="n">use_torch</span><span class="o">=</span><span class="n">use_torch</span><span class="p">,</span>
+            <span class="n">use_sparse</span><span class="o">=</span><span class="n">use_sparse</span><span class="p">,</span>
+            <span class="n">mask_count</span><span class="o">=</span><span class="n">mask_count</span><span class="p">,</span>
+            <span class="n">mask_dtype</span><span class="o">=</span><span class="n">mask_dtype</span><span class="p">,</span>
+            <span class="n">preferred_dtype</span><span class="o">=</span><span class="n">preferred_dtype</span><span class="p">,</span>
+            <span class="n">backends</span><span class="o">=</span><span class="n">backends</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_preferred_input_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">preferred_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_preferred_input_dtype</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">preferred_dtype</span>
+
+    <span class="k">def</span> <span class="nf">get_mask_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">mask_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">mask_dtype</span>
+
+    <span class="k">def</span> <span class="nf">get_mask_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">mask_count</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">mask_count</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">masks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_container</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mask_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_mask_container</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask_container</span>
+
+    <span class="k">def</span> <span class="nf">_make_mask_container</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">array_backend</span> <span class="ow">in</span> <span class="n">CUPY_BACKENDS</span><span class="p">:</span>
+            <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BACKEND_CUPY</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BACKEND_NUMPY</span>
+        <span class="k">return</span> <span class="n">MaskContainer</span><span class="p">(</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">mask_factories</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">mask_dtype</span><span class="p">,</span> <span class="n">use_sparse</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">use_sparse</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">p</span><span class="o">.</span><span class="n">mask_count</span><span class="p">,</span>
+            <span class="n">backend</span><span class="o">=</span><span class="n">backend</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_task_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">torch</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">torch</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span>
+        <span class="n">use_torch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">use_torch</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">torch</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">m</span><span class="o">.</span><span class="n">input_dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s1">&#39;f&#39;</span> <span class="ow">or</span> <span class="n">m</span><span class="o">.</span><span class="n">input_dtype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask_dtype</span><span class="p">()</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">device_class</span> <span class="o">!=</span> <span class="s1">&#39;cpu&#39;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">use_sparse</span>
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">array_backend</span> <span class="o">!=</span> <span class="n">NUMPY</span><span class="p">):</span>
+            <span class="n">use_torch</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">array_backend</span>
+        <span class="k">if</span> <span class="n">use_torch</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">process_flat</span><span class="p">(</span><span class="n">flat_tile</span><span class="p">):</span>
+                <span class="kn">import</span> <span class="nn">torch</span>
+                <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">get_for_sig_slice</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">sig_slice</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="c1"># CuPy back-end disables torch in get_task_data</span>
+                <span class="c1"># FIXME use GPU torch with CuPy array?</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mm</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">flat_tile</span><span class="p">),</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">masks</span><span class="p">),</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="c1"># Required due to https://github.com/scipy/scipy/issues/13211</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">backend</span> <span class="o">==</span> <span class="n">NUMPY</span>
+              <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">use_sparse</span>
+              <span class="ow">and</span> <span class="s1">&#39;scipy.sparse&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">use_sparse</span><span class="p">):</span>
+
+            <span class="k">def</span> <span class="nf">process_flat</span><span class="p">(</span><span class="n">flat_tile</span><span class="p">):</span>
+                <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">get_for_sig_slice</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">sig_slice</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">rmatmul</span><span class="p">(</span><span class="n">flat_tile</span><span class="p">,</span> <span class="n">masks</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="n">backend</span> <span class="ow">in</span> <span class="p">(</span><span class="n">SCIPY_COO</span><span class="p">,</span> <span class="n">SCIPY_CSR</span><span class="p">,</span> <span class="n">SCIPY_CSC</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">use_sparse</span>
+            <span class="ow">and</span> <span class="s1">&#39;sparse.pydata&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">use_sparse</span>
+        <span class="p">):</span>
+
+            <span class="k">def</span> <span class="nf">process_flat</span><span class="p">(</span><span class="n">flat_tile</span><span class="p">):</span>
+                <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">get_for_sig_slice</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">sig_slice</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">)</span>
+                <span class="c1"># Make sure the sparse.pydata mask comes first</span>
+                <span class="c1"># to choose the right multiplication method</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">masks</span> <span class="o">@</span> <span class="n">flat_tile</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">def</span> <span class="nf">process_flat</span><span class="p">(</span><span class="n">flat_tile</span><span class="p">):</span>
+                <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">get_for_sig_slice</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">sig_slice</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="n">flat_tile</span> <span class="o">@</span> <span class="n">masks</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;use_torch&#39;</span><span class="p">:</span> <span class="n">use_torch</span><span class="p">,</span>
+            <span class="s1">&#39;process_flat&#39;</span><span class="p">:</span> <span class="n">process_flat</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask_dtype</span><span class="p">())</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_mask_count</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;nav&#39;</span><span class="p">,</span> <span class="n">extra_shape</span><span class="o">=</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;device&#39;</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_backends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">backends</span>
+
+    <span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="n">flat_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prod</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+        <span class="c1"># Avoid reshape since older versions of scipy.sparse don&#39;t support it</span>
+        <span class="n">flat_data</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">flat_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">tile</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">flat_shape</span> <span class="k">else</span> <span class="n">tile</span>
+        <span class="c1"># &#39;+&#39; is the correct merge for dot product</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">[:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbuf</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_data</span><span class="o">.</span><span class="n">process_flat</span><span class="p">(</span><span class="n">flat_data</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

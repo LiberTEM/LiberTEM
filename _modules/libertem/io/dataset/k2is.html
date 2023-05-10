@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.k2is &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.k2is</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.k2is</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">numba.typed</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">ncempy.io</span> <span class="kn">import</span> <span class="n">dm</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span><span class="p">,</span> <span class="n">make_2D_square</span><span class="p">,</span> <span class="n">flat_nonzero</span>
+<span class="kn">from</span> <span class="nn">libertem.common.buffers</span> <span class="kn">import</span> <span class="n">zeros_aligned</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSet</span><span class="p">,</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span>
+    <span class="n">FileSet</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Decoder</span><span class="p">,</span> <span class="n">make_get_read_ranges</span><span class="p">,</span>
+    <span class="n">TilingScheme</span><span class="p">,</span> <span class="n">IOBackend</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.base.file</span> <span class="kn">import</span> <span class="n">OffsetsSizes</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">HEADER_SIZE</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">BLOCK_SIZE</span> <span class="o">=</span> <span class="mh">0x5758</span>
+<span class="n">DATA_SIZE</span> <span class="o">=</span> <span class="n">BLOCK_SIZE</span> <span class="o">-</span> <span class="n">HEADER_SIZE</span>
+<span class="n">BLOCK_SHAPE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">930</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">FIRST_FRAME_SCAN_SIZE</span> <span class="o">=</span> <span class="mi">400</span>
+<span class="n">NUM_SECTORS</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">SECTOR_SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mi">930</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+
+<span class="n">SHUTTER_ACTIVE_MASK</span> <span class="o">=</span> <span class="mh">0x1</span>
+
+
+<span class="k">class</span> <span class="nc">K2ISDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/K2ISDatasetParams.schema.json&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;K2ISDatasetParams&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;K2IS&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+              <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+              <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+              <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="p">},</span>
+          <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+              <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+              <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+              <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+          <span class="p">},</span>
+          <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+          <span class="s2">&quot;io_backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+              <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">IOBackend</span><span class="o">.</span><span class="n">get_supported</span><span class="p">(),</span>
+          <span class="p">},</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s2">&quot;nav_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sig_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sync_offset&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_uint12_le</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decode bytes from bytestring ``inp`` as 12 bit into ``out``</span>
+
+<span class="sd">    Based partially on https://stackoverflow.com/a/45070947/540644</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># assert np.mod(len(inp), 3) == 0</span>
+    <span class="c1"># assert len(out) &gt;= len(inp) * 2 / 3</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="n">fst_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="n">mid_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">lst_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="n">fst_uint8</span> <span class="o">|</span> <span class="p">(</span><span class="n">mid_uint8</span> <span class="o">&amp;</span> <span class="mh">0x0F</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">mid_uint8</span> <span class="o">&amp;</span> <span class="mh">0xF0</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">lst_uint8</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+
+
+<span class="c1"># @numba.njit(inline=&#39;always&#39;, boundscheck=True)</span>
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_k2is</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decode a single block, from a single read range, into a tile that may</span>
+<span class="sd">    contain multiple blocks in the signal dimensions. This function is called</span>
+<span class="sd">    multiple times for a single tile, for all read ranges that are part of this</span>
+<span class="sd">    tile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># blocks per tile (only in signal dimensions)</span>
+    <span class="n">blocks_per_tile</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="p">(</span><span class="n">BLOCK_SHAPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">BLOCK_SHAPE</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">n_blocks_y</span><span class="p">,</span> <span class="n">n_blocks_x</span><span class="p">,</span> <span class="n">block_y_i</span><span class="p">,</span> <span class="n">block_x_i</span> <span class="o">=</span> <span class="n">rr</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>
+
+    <span class="n">tile_idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">//</span> <span class="n">blocks_per_tile</span>
+
+    <span class="c1"># we take three bytes of the input to decode two numbers</span>
+    <span class="c1"># -&gt; as the blocks are 16 numbers wide, the two numbers</span>
+    <span class="c1"># will always be part of the same row, so the y-stride is the same</span>
+
+    <span class="c1"># the offset between two rows in the output (in indices, not bytes)</span>
+    <span class="n">stride_y</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># shortcut, in case we don&#39;t need to handle multiple</span>
+    <span class="c1"># blocks in x direction:</span>
+    <span class="k">if</span> <span class="n">stride_y</span> <span class="o">==</span> <span class="mi">16</span><span class="p">:</span>
+        <span class="n">block_out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">,</span> <span class="mi">16</span> <span class="o">*</span> <span class="mi">930</span> <span class="o">*</span> <span class="n">block_y_i</span><span class="p">:</span><span class="mi">16</span> <span class="o">*</span> <span class="mi">930</span> <span class="o">*</span> <span class="p">(</span><span class="n">block_y_i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">decode_uint12_le</span><span class="p">(</span><span class="n">inp</span><span class="o">=</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">block_out</span><span class="p">)</span>
+
+    <span class="c1"># starting offset of the current block:</span>
+    <span class="c1"># 930 * block_y_i:930 * (block_y_i + 1),</span>
+    <span class="c1"># 16 * block_x_i:16 * (block_x_i + 1),</span>
+    <span class="n">block_offset_y</span> <span class="o">=</span> <span class="n">block_y_i</span> <span class="o">*</span> <span class="n">BLOCK_SHAPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_blocks_x</span> <span class="o">*</span> <span class="n">BLOCK_SHAPE</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">block_offset</span> <span class="o">=</span> <span class="n">block_offset_y</span> <span class="o">+</span> <span class="n">block_x_i</span> <span class="o">*</span> <span class="n">BLOCK_SHAPE</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">out_z</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">tile_idx</span><span class="p">]</span>
+
+    <span class="c1"># decode_uint12_le(inp=inp, out=blockbuf) inlined here:</span>
+    <span class="c1"># inp is uint8, so the outer loop needs to jump 24 bytes each time.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="c1"># i is the output row index of a single block,</span>
+        <span class="c1"># so the beginning of the row in output coordinates:</span>
+        <span class="n">out_pos</span> <span class="o">=</span> <span class="n">block_offset</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">stride_y</span>
+
+        <span class="n">in_row_offset</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="mi">8</span>
+
+        <span class="c1"># loop for a single row:</span>
+        <span class="c1"># for each j, we process bytes of input into two output numbers</span>
+        <span class="c1"># -&gt; we consume 8*3 = 24 bytes and generate 8*2=16 numbers</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+            <span class="n">triplet_offset</span> <span class="o">=</span> <span class="n">in_row_offset</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="mi">3</span>
+            <span class="n">fst_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">triplet_offset</span><span class="p">])</span>
+            <span class="n">mid_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">triplet_offset</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">lst_uint8</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">triplet_offset</span> <span class="o">+</span> <span class="mi">2</span><span class="p">])</span>
+
+            <span class="n">a</span> <span class="o">=</span> <span class="n">fst_uint8</span> <span class="o">|</span> <span class="p">(</span><span class="n">mid_uint8</span> <span class="o">&amp;</span> <span class="mh">0x0F</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">mid_uint8</span> <span class="o">&amp;</span> <span class="mh">0xF0</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">4</span> <span class="o">|</span> <span class="n">lst_uint8</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span>
+
+            <span class="n">out_z</span><span class="p">[</span><span class="n">out_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="n">out_z</span><span class="p">[</span><span class="n">out_pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">b</span>
+
+            <span class="n">out_pos</span> <span class="o">+=</span> <span class="mi">2</span>
+
+
+<span class="k">class</span> <span class="nc">K2ISDecoder</span><span class="p">(</span><span class="n">Decoder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">decode_k2is</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_k2is_read_ranges_tile_block</span><span class="p">(</span>
+    <span class="n">slices_arr</span><span class="p">,</span> <span class="n">fileset_arr</span><span class="p">,</span> <span class="n">slice_sig_sizes</span><span class="p">,</span> <span class="n">sig_origins</span><span class="p">,</span>
+    <span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span>
+    <span class="n">px_to_bytes</span><span class="p">,</span> <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span> <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">file_idxs</span><span class="p">,</span>
+    <span class="n">slice_offset</span><span class="p">,</span> <span class="n">extra</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">List</span><span class="p">()</span>
+
+    <span class="c1"># positions in the signal dimensions:</span>
+    <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># (offset, size) arrays defining what data to read (in pixels)</span>
+        <span class="n">slice_origin</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">slice_shape</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">read_ranges</span> <span class="o">=</span> <span class="n">List</span><span class="p">()</span>
+
+        <span class="n">n_blocks_y</span> <span class="o">=</span> <span class="n">slice_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">930</span>
+        <span class="n">n_blocks_x</span> <span class="o">=</span> <span class="n">slice_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">16</span>
+
+        <span class="n">origin_block_y</span> <span class="o">=</span> <span class="n">slice_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">930</span>
+        <span class="n">origin_block_x</span> <span class="o">=</span> <span class="n">slice_origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">16</span>
+
+        <span class="c1"># inner &quot;depth&quot; loop along the (flat) navigation axis of a tile:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inner_frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">)):</span>
+            <span class="n">inner_frame</span> <span class="o">=</span> <span class="n">frame_indices</span><span class="p">[</span><span class="n">inner_frame_idx</span><span class="p">]</span>
+            <span class="n">frame_in_file_idx</span> <span class="o">=</span> <span class="n">inner_frame</span>  <span class="c1"># in k2is all files contain data from all frames</span>
+
+            <span class="k">for</span> <span class="n">block_y_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_blocks_y</span><span class="p">):</span>
+                <span class="n">sector_index_y</span> <span class="o">=</span> <span class="n">origin_block_y</span> <span class="o">+</span> <span class="n">block_y_i</span>
+                <span class="k">for</span> <span class="n">block_x_i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_blocks_x</span><span class="p">):</span>
+                    <span class="n">block_index_x</span> <span class="o">=</span> <span class="n">origin_block_x</span> <span class="o">+</span> <span class="n">block_x_i</span>
+                    <span class="n">sector_id</span> <span class="o">=</span> <span class="n">block_index_x</span> <span class="o">//</span> <span class="mi">16</span>
+                    <span class="n">sector_index_x</span> <span class="o">=</span> <span class="n">block_index_x</span> <span class="o">%</span> <span class="mi">16</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[</span><span class="n">sector_id</span><span class="p">]</span>
+                    <span class="n">file_header_bytes</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+                    <span class="c1"># &quot;linear&quot; block index per sector:</span>
+                    <span class="n">blockidx</span> <span class="o">=</span> <span class="p">(</span><span class="mi">15</span> <span class="o">-</span> <span class="n">sector_index_x</span><span class="p">)</span> <span class="o">+</span> <span class="n">sector_index_y</span> <span class="o">*</span> <span class="mi">16</span>
+                    <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">file_header_bytes</span>
+                        <span class="o">+</span> <span class="n">frame_in_file_idx</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span> <span class="o">*</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span>
+                        <span class="o">+</span> <span class="n">blockidx</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span>
+                    <span class="p">)</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">HEADER_SIZE</span>
+                    <span class="n">stop</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">HEADER_SIZE</span> <span class="o">+</span> <span class="n">DATA_SIZE</span>
+                    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">sector_id</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span>
+                         <span class="n">n_blocks_y</span><span class="p">,</span> <span class="n">n_blocks_x</span><span class="p">,</span>
+                         <span class="n">block_y_i</span><span class="p">,</span> <span class="n">block_x_i</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># the indices are compressed to the selected frames</span>
+        <span class="n">compressed_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="n">slice_offset</span> <span class="o">+</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_origin</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">inner_indices_stop</span> <span class="o">-</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_shape</span><span class="p">],</span>
+        <span class="p">])</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">slice_idx</span><span class="p">,</span> <span class="n">compressed_slice</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="n">k2is_get_read_ranges</span> <span class="o">=</span> <span class="n">make_get_read_ranges</span><span class="p">(</span>
+    <span class="n">read_ranges_tile_block</span><span class="o">=</span><span class="n">_k2is_read_ranges_tile_block</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_pattern</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.gtg&quot;</span><span class="p">:</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*.bin&quot;</span> <span class="o">%</span> <span class="n">glob</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.bin&quot;</span><span class="p">:</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*.bin&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">glob</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[0-9]+$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;unknown extension: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ext</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pattern</span>
+
+
+<span class="k">def</span> <span class="nf">get_filenames</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">disable_glob</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">disable_glob</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">path</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">_pattern</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_gtg_path</span><span class="p">(</span><span class="n">full_path</span><span class="p">):</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.gtg&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">full_path</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.bin&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.gtg&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[0-9]+$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_nav_shape</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">dm</span><span class="o">.</span><span class="n">fileDM</span><span class="p">(</span><span class="n">_get_gtg_path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">dm_file</span><span class="p">:</span>
+        <span class="n">nav_shape_y</span> <span class="o">=</span> <span class="n">dm_file</span><span class="o">.</span><span class="n">allTags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;.SI Dimensions.Size Y&#39;</span><span class="p">)</span>
+        <span class="n">nav_shape_x</span> <span class="o">=</span> <span class="n">dm_file</span><span class="o">.</span><span class="n">allTags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;.SI Dimensions.Size X&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nav_shape_y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nav_shape_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">nav_shape_y</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">nav_shape_x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_nav_shape_without_flyback</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">dm</span><span class="o">.</span><span class="n">fileDM</span><span class="p">(</span><span class="n">_get_gtg_path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">dm_file</span><span class="p">:</span>
+        <span class="n">nav_shape_y</span> <span class="o">=</span> <span class="n">dm_file</span><span class="o">.</span><span class="n">allTags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;.SI Image Tags.SI.Acquisition.Spatial Sampling.Height (pixels)&#39;</span>
+        <span class="p">)</span>
+        <span class="n">nav_shape_x</span> <span class="o">=</span> <span class="n">dm_file</span><span class="o">.</span><span class="n">allTags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;.SI Image Tags.SI.Acquisition.Spatial Sampling.Width (pixels)&#39;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">nav_shape_y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nav_shape_x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">nav_shape_y</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">nav_shape_x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_get_num_frames_w_shutter_active_flag_set</span><span class="p">(</span><span class="n">syncer</span><span class="p">):</span>
+    <span class="n">syncer</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">syncer</span><span class="o">.</span><span class="n">sectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">num_frames</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="o">+</span> <span class="n">BLOCK_SIZE</span>
+        <span class="p">)</span> <span class="o">//</span> <span class="n">BLOCK_SIZE</span> <span class="o">//</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span>
+    <span class="k">return</span> <span class="n">num_frames</span>
+
+
+<span class="k">def</span> <span class="nf">_get_num_frames</span><span class="p">(</span><span class="n">syncer</span><span class="p">):</span>
+    <span class="n">syncer</span><span class="o">.</span><span class="n">sync_sectors</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">syncer</span><span class="o">.</span><span class="n">sectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+        <span class="n">num_frames</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="o">+</span> <span class="n">BLOCK_SIZE</span>
+        <span class="p">)</span> <span class="o">//</span> <span class="n">BLOCK_SIZE</span> <span class="o">//</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span>
+    <span class="k">return</span> <span class="n">num_frames</span>
+
+
+<span class="k">def</span> <span class="nf">_get_syncer_for_detect_params</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">K2Syncer</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">K2Syncer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sync the 8 sectors of a K2IS data set. First, find the first complete frame and the</span>
+<span class="sd">    last complete frame. Next, sync to the first frame with the shutter_active flag set.</span>
+<span class="sd">    Finally, validate the first and last frames.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths: list of str</span>
+<span class="sd">        List of paths of the 8 .bin files</span>
+
+<span class="sd">    start_offsets: list of int, optional</span>
+<span class="sd">        List of first block offsets of the 8 sectors</span>
+
+<span class="sd">    last_offsets: list of int, optional</span>
+<span class="sd">        List of last block offsets of the 8 sectors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paths</span><span class="p">,</span> <span class="n">start_offsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">last_offsets</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paths</span> <span class="o">=</span> <span class="n">paths</span>
+        <span class="k">if</span> <span class="n">start_offsets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start_offsets</span> <span class="o">=</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">last_offsets</span> <span class="o">=</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">Sector</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">initial_offset</span><span class="o">=</span><span class="n">start_offset</span><span class="p">,</span> <span class="n">end_offset</span><span class="o">=</span><span class="n">last_offset</span><span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">fname</span><span class="p">),</span> <span class="n">start_offset</span><span class="p">,</span> <span class="n">last_offset</span>
+            <span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">paths</span><span class="p">),</span> <span class="n">start_offsets</span><span class="p">,</span> <span class="n">last_offsets</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">sync_sectors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_blocks</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span><span class="p">,</span> <span class="s2">&quot;first block is not valid!&quot;</span>
+        <span class="c1"># sync up all sectors to start with the same `block_count`</span>
+        <span class="n">block_with_max_idx</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_blocks</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;block_count&#39;</span><span class="p">])[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">start_blocks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">first_block_with</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;block_count&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">block_with_max_idx</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;block_count&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">start_blocks</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">set_first_block_offset</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;first_block_offsets #1: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">])</span>
+        <span class="c1"># skip incomplete frames:</span>
+        <span class="c1"># if the next 32 blocks of a sector don&#39;t have all the same frame id,</span>
+        <span class="c1"># the frame is incomplete</span>
+        <span class="n">have_overlap</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">({</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">(),</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span><span class="p">)</span>
+            <span class="p">})</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">have_overlap</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;have_overlap, finding next frame&quot;</span><span class="p">)</span>
+            <span class="n">frame_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_blocks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">first_block_with</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">frame_id</span><span class="p">)</span><span class="o">.</span><span class="n">offset</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">set_first_block_offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;first_block_offsets #2: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_blocks</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span>
+        <span class="c1"># find last_block_offsets</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span>
+            <span class="k">while</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">BLOCK_SIZE</span> <span class="o">&lt;=</span> <span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">BLOCK_SIZE</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">set_last_block_offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;last_block_offsets #1: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_blocks</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span><span class="p">,</span> <span class="s2">&quot;last block is not valid!&quot;</span>
+        <span class="c1"># end all sectors with the same `block_count`</span>
+        <span class="n">block_with_min_idx</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">last_blocks</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;block_count&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">end_blocks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">first_block_from_end_with</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;block_count&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">block_with_min_idx</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;block_count&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">end_blocks</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">set_last_block_offset</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;last_block_offsets #2: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">])</span>
+        <span class="c1"># skip incomplete frames:</span>
+        <span class="c1"># if the next 32 blocks from the end of a sector don&#39;t have all the same frame id,</span>
+        <span class="c1"># the frame is incomplete</span>
+        <span class="n">have_overlap_at_end</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">({</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_blocks_from_end</span><span class="p">(),</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span><span class="p">)</span>
+            <span class="p">})</span> <span class="o">&gt;</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">have_overlap_at_end</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;have_overlap, finding previous frame&quot;</span><span class="p">)</span>
+            <span class="n">frame_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_blocks</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">first_block_from_end_with</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">frame_id</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">offset</span>
+                <span class="n">s</span><span class="o">.</span><span class="n">set_last_block_offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;last_block_offsets #3: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_blocks</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span>
+
+    <span class="k">def</span> <span class="nf">sync_to_first_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;synchronizing to shutter_active flag...&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">first_block_with_search</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">shutter_active</span><span class="p">)</span><span class="o">.</span><span class="n">offset</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">set_first_block_offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;first_block_offsets #3: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">validate_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># first blocks should be valid:</span>
+        <span class="n">first_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_blocks</span><span class="p">()</span>
+        <span class="n">frame_id</span> <span class="o">=</span> <span class="n">first_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">first_blocks</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">frame_id</span>
+
+        <span class="c1"># in each sector, a whole frame should follow, and frame ids should match:</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">(),</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">frame_id</span>
+                       <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">)</span>
+
+        <span class="c1"># last blocks should be valid:</span>
+        <span class="n">last_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_blocks</span><span class="p">()</span>
+        <span class="n">frame_id</span> <span class="o">=</span> <span class="n">last_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">last_blocks</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">is_valid</span>
+            <span class="k">assert</span> <span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">frame_id</span>
+
+        <span class="c1"># each sector should end with a whole frame, and frame ids should match:</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_blocks_from_end</span><span class="p">(),</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">frame_id</span>
+                       <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sync_sectors</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sync_to_first_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_sync</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">first_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">last_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get_blocks_from_end</span><span class="p">())</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sectors</span><span class="p">:</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Sector</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">initial_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="o">=</span> <span class="n">initial_offset</span>
+        <span class="k">if</span> <span class="n">end_offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filesize</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="o">-</span> <span class="n">BLOCK_SIZE</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="o">=</span> <span class="n">end_offset</span>
+        <span class="c1"># FIXME: hardcoded sig_dims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sig_dims</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">seek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_block_by_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="o">+</span> <span class="n">idx</span> <span class="o">*</span> <span class="n">BLOCK_SIZE</span>
+        <span class="k">return</span> <span class="n">DataBlock</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">sector</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_block_offset</span>
+        <span class="k">while</span> <span class="n">offset</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_block_offset</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">DataBlock</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">sector</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">BLOCK_SIZE</span>
+
+    <span class="k">def</span> <span class="nf">get_blocks_from_end</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_block_offset</span>
+        <span class="k">while</span> <span class="n">offset</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_block_offset</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">DataBlock</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">sector</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">-=</span> <span class="n">BLOCK_SIZE</span>
+
+    <span class="k">def</span> <span class="nf">get_block_by_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DataBlock</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">sector</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_blocks_from_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="k">while</span> <span class="n">offset</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_block_offset</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">DataBlock</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">sector</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">BLOCK_SIZE</span>
+
+    <span class="k">def</span> <span class="nf">set_first_block_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_block_offset</span> <span class="o">=</span> <span class="n">offset</span>
+
+    <span class="k">def</span> <span class="nf">set_last_block_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_block_offset</span> <span class="o">=</span> <span class="n">offset</span>
+
+    <span class="k">def</span> <span class="nf">first_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">last_block</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_blocks_from_end</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">first_block_with</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">first_block_from_end_with</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_blocks_from_end</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">first_block_with_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predicate</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">*</span> <span class="mi">50</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Binary search variant of `first_block_with`, assuming that predicate is true</span>
+<span class="sd">        from some index on, and stays true (at least for 10 * step).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># find a rough upper bound:</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">step</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span> <span class="n">step</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_block_by_index</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="n">idx</span>
+                <span class="k">break</span>
+
+        <span class="c1"># the block is somewhere in [0, upper]</span>
+        <span class="k">def</span> <span class="nf">_rec</span><span class="p">(</span><span class="n">current_lower</span><span class="p">,</span> <span class="n">current_upper</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">current_upper</span> <span class="o">==</span> <span class="n">current_lower</span><span class="p">:</span>
+                <span class="c1"># we found our match, return block</span>
+                <span class="k">assert</span> <span class="n">predicate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_block_by_index</span><span class="p">(</span><span class="n">current_upper</span><span class="p">))</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_block_by_index</span><span class="p">(</span><span class="n">current_upper</span><span class="p">)</span>
+            <span class="n">mid</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">current_lower</span> <span class="o">+</span> <span class="n">current_upper</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_block_by_index</span><span class="p">(</span><span class="n">mid</span><span class="p">)):</span>
+                <span class="c1"># mid block has predicate=True, so result must be mid or lower:</span>
+                <span class="k">return</span> <span class="n">_rec</span><span class="p">(</span><span class="n">current_lower</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># mid block has predicate=False, so result must be mid + 1 or higher:</span>
+                <span class="k">return</span> <span class="n">_rec</span><span class="p">(</span><span class="n">mid</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">current_upper</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_rec</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;Sector </span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span>
+
+
+<span class="k">class</span> <span class="nc">DataBlock</span><span class="p">:</span>
+    <span class="n">header_dtype</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;sync&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u4&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;padding1&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u1&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;flags&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u1&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;padding2&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">6</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s1">&#39;block_count&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u4&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u2&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u2&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;frame_id&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u4&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;pixel_x_start&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u2&#39;</span><span class="p">),</span>  <span class="c1"># first pixel x coordinate within sector</span>
+        <span class="p">(</span><span class="s1">&#39;pixel_y_start&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u2&#39;</span><span class="p">),</span>  <span class="c1"># first pixel y coordinate within sector</span>
+        <span class="p">(</span><span class="s1">&#39;pixel_x_end&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u2&#39;</span><span class="p">),</span>  <span class="c1"># last pixel x coordinate within sector</span>
+        <span class="p">(</span><span class="s1">&#39;pixel_y_end&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u2&#39;</span><span class="p">),</span>  <span class="c1"># last pixel y coordinate within sector</span>
+        <span class="p">(</span><span class="s1">&#39;block_size&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;u4&#39;</span><span class="p">),</span>  <span class="c1"># should be fixed 0x5758</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">sector</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sector</span> <span class="o">=</span> <span class="n">sector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_raw</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_raw</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">filesize</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">+</span> <span class="n">BLOCK_SIZE</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">256</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1860</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;sync&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mh">0xFFFF0055</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_header_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">header_dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">header_dtype</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">header</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header_raw</span><span class="p">[</span><span class="n">field</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="k">return</span> <span class="n">header</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shutter_active</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;flags&#39;</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">SHUTTER_ACTIVE_MASK</span> <span class="o">==</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pixel_data_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">+</span> <span class="n">HEADER_SIZE</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data_raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">BLOCK_SIZE</span> <span class="o">-</span> <span class="n">HEADER_SIZE</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_raw</span>
+
+    <span class="k">def</span> <span class="nf">readinto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">930</span> <span class="o">*</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="n">decode_uint12_le</span><span class="p">(</span><span class="n">inp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_data_raw</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">930</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pixel_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid block: </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">zeros_aligned</span><span class="p">((</span><span class="mi">930</span> <span class="o">*</span> <span class="mi">16</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint16&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readinto</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">arr</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">930</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">copy_to_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="n">sector_width</span> <span class="o">=</span> <span class="mi">256</span>
+        <span class="n">x_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sector</span><span class="o">.</span><span class="n">idx</span> <span class="o">*</span> <span class="n">sector_width</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readinto</span><span class="p">(</span><span class="n">frame</span><span class="p">[</span>
+            <span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_y_start&#39;</span><span class="p">]:</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_y_end&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_x_start&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_offset</span><span class="p">:</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_x_end&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">x_offset</span><span class="p">,</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;DataBlock for frame=</span><span class="si">%d</span><span class="s2"> x=</span><span class="si">%d</span><span class="s2">:</span><span class="si">%d</span><span class="s2"> y=</span><span class="si">%d</span><span class="s2">:</span><span class="si">%d</span><span class="s2"> @ </span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">h</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">],</span>
+            <span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_x_start&#39;</span><span class="p">],</span> <span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_x_end&#39;</span><span class="p">],</span>
+            <span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_y_start&#39;</span><span class="p">],</span> <span class="n">h</span><span class="p">[</span><span class="s1">&#39;pixel_y_end&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">K2FileSet</span><span class="p">(</span><span class="n">FileSet</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_for_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        K2 files have a different mapping than other file formats, so we need</span>
+<span class="sd">        to override this to not filter in navigation axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">get_read_ranges</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start_at_frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stop_before_frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">:</span> <span class="n">TilingScheme</span><span class="p">,</span> <span class="n">sync_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">fileset_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_as_arr</span><span class="p">()</span>
+        <span class="n">roi_nonzero</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi_nonzero</span> <span class="o">=</span> <span class="n">flat_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">start_at_frame</span><span class="o">=</span><span class="n">start_at_frame</span><span class="p">,</span>
+            <span class="n">stop_before_frame</span><span class="o">=</span><span class="n">stop_before_frame</span><span class="p">,</span>
+            <span class="n">roi_nonzero</span><span class="o">=</span><span class="n">roi_nonzero</span><span class="p">,</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span>
+            <span class="n">slices_arr</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">slices_array</span><span class="p">,</span>
+            <span class="n">fileset_arr</span><span class="o">=</span><span class="n">fileset_arr</span><span class="p">,</span>
+            <span class="n">sig_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">dataset_shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="n">sync_offset</span><span class="p">,</span>
+            <span class="n">bpp</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="n">frame_header_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_header_bytes</span><span class="p">,</span>
+            <span class="n">frame_footer_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer_bytes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">k2is_get_read_ranges</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">K2ISFile</span><span class="p">(</span><span class="n">File</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_offsets_sizes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OffsetsSizes</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The simple &quot;offset/size/header/footer&quot; method doesn&#39;t</span>
+<span class="sd">        apply for the K2IS format, so we stub it out here:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OffsetsSizes</span><span class="p">(</span>
+            <span class="n">file_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_header</span><span class="p">,</span>
+            <span class="n">skip_end</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">frame_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">frame_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_array_from_memview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem</span><span class="p">:</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="n">slicing</span><span class="p">:</span> <span class="n">OffsetsSizes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">mem</span> <span class="o">=</span> <span class="n">mem</span><span class="p">[</span><span class="n">slicing</span><span class="o">.</span><span class="n">file_offset</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="K2ISDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.k2is.K2ISDataSet">[docs]</a><span class="k">class</span> <span class="nc">K2ISDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read raw K2IS data sets. They consist of 8 .bin files and one .gtg file.</span>
+<span class="sd">    Currently, data acquired using the STEMx unit is supported, metadata</span>
+<span class="sd">    about the nav_shape is read from the .gtg file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path: str</span>
+<span class="sd">        Path to one of the files of the data set (either one of the .bin files or the .gtg file)</span>
+
+<span class="sd">    nav_shape: tuple of int, optional</span>
+<span class="sd">        A n-tuple that specifies the size of the navigation region ((y, x), but</span>
+<span class="sd">        can also be of length 1 for example for a line scan, or length 3 for</span>
+<span class="sd">        a data cube, for example)</span>
+
+<span class="sd">    sig_shape: tuple of int, optional</span>
+<span class="sd">        Signal/detector size (height, width)</span>
+
+<span class="sd">    sync_offset: int, optional</span>
+<span class="sd">        If positive, number of frames to skip from start</span>
+<span class="sd">        If negative, number of blank frames to insert at start</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">nav_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sig_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync_offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_offsets</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="n">nav_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="n">sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_time_series</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_user_sync_offset</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_do_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_skip_frames_and_nav_shape</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sig_shape must be of size: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="p">))</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="n">_get_num_frames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">(</span><span class="n">do_sync</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_sync_offset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">(</span><span class="n">do_sync</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">)),</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;uint16&quot;</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_initialize</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_skip_frames_and_nav_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">_get_nav_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nav_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># the sync flag appears to be set one frame too late, so</span>
+            <span class="c1"># we compensate here by setting a negative _skip_frames value.</span>
+            <span class="c1"># skip_frames is applied after synchronization.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_time_series</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_skip_frames</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="n">nav_shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># data set is time series and does not have any frames with</span>
+            <span class="c1"># SHUTTER_ACTIVE_MASK not set. Hence skip_frames is not needed.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_time_series</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_skip_frames</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">_get_num_frames_w_shutter_active_flag_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">(</span><span class="n">do_sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)),</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_sync_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_frames_w_shutter_active_flag_set</span> <span class="o">=</span> <span class="n">_get_num_frames_w_shutter_active_flag_set</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">(</span><span class="n">do_sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_frames_w_shutter_active_flag_set</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sync_offset_info</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_time_series</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_skip_frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_skip_frames</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_sync_offset</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span>
+
+    <span class="k">def</span> <span class="nf">_get_sync_offset_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check sync_offset specified and returns number of frames skipped and inserted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sync_offset should be in (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">), which is (-image_count, image_count)&quot;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;frames_skipped_start&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span><span class="p">),</span>
+            <span class="s2">&quot;frames_ignored_end&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;frames_inserted_start&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span><span class="p">)),</span>
+            <span class="s2">&quot;frames_inserted_end&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">K2ISDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;gtg&quot;</span><span class="p">,</span> <span class="s2">&quot;bin&quot;</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        detect if path points to a file that is part of a k2is dataset.</span>
+<span class="sd">        extension needs to be bin or gtg, and number of files of the dataset needs to match</span>
+<span class="sd">        the number of sectors. no further checking is done yet. in certain cases there may be false</span>
+<span class="sd">        positives, for example if users name their binary files .bin and have 8 of them</span>
+<span class="sd">        in a directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">get_filenames</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">!=</span> <span class="n">NUM_SECTORS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">DataSetException</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_get_syncer_for_detect_params</span><span class="p">,</span> <span class="n">files</span><span class="p">)</span>
+        <span class="n">num_frames</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_get_num_frames</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">num_frames_w_shutter_active_flag_set</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span>
+            <span class="n">_get_num_frames_w_shutter_active_flag_set</span><span class="p">,</span> <span class="n">s</span>
+        <span class="p">)</span>
+        <span class="n">sync_offset</span> <span class="o">=</span> <span class="n">num_frames</span> <span class="o">-</span> <span class="n">num_frames_w_shutter_active_flag_set</span>
+        <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_get_nav_shape</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">make_2D_square</span><span class="p">((</span><span class="n">num_frames_w_shutter_active_flag_set</span><span class="p">,))</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="n">nav_shape</span><span class="p">,</span>
+                <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="n">sync_offset</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;image_count&quot;</span><span class="p">:</span> <span class="n">num_frames</span><span class="p">,</span>
+                <span class="s2">&quot;native_sig_shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">NUM_SECTORS</span> <span class="o">*</span> <span class="n">SECTOR_SIZE</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">syncer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">()</span>
+            <span class="n">syncer</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;failed to load dataset: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">get_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gtg</span> <span class="o">=</span> <span class="n">_get_gtg_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;gtg_path&quot;</span><span class="p">:</span> <span class="n">gtg</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">()</span><span class="o">.</span><span class="n">sectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">as</span> <span class="n">sector</span><span class="p">:</span>
+            <span class="n">first_block</span> <span class="o">=</span> <span class="n">sector</span><span class="o">.</span><span class="n">first_block</span><span class="p">()</span>
+            <span class="n">last_block</span> <span class="o">=</span> <span class="n">sector</span><span class="o">.</span><span class="n">last_block</span><span class="p">()</span>
+        <span class="n">fs_nosync</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_syncer</span><span class="p">(</span><span class="n">do_sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">sector_nosync</span> <span class="o">=</span> <span class="n">fs_nosync</span><span class="o">.</span><span class="n">sectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_block_nosync</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">sector_nosync</span><span class="o">.</span><span class="n">get_blocks</span><span class="p">())</span>
+        <span class="n">last_block_nosync</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">sector_nosync</span><span class="o">.</span><span class="n">get_blocks_from_end</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;first block offsets for all sectors&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span><span class="p">])},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;last block offsets for all sectors&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_offsets</span><span class="p">])},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;number of frames before sync (from first sector)&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">)},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;number of frames after sync (from first sector)&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_frames_w_shutter_active_flag_set</span><span class="p">)},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;first frame id before sync (from first sector)&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">first_block_nosync</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">])},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;first frame id after sync (from first sector)&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">first_block</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">])},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;last frame id before sync (from first sector)&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_block_nosync</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">])},</span>
+
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;last frame id after sync (from first sector)&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">last_block</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_id&#39;</span><span class="p">])},</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">get_filenames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">!=</span> <span class="n">NUM_SECTORS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;expected </span><span class="si">%d</span><span class="s2"> files at </span><span class="si">%s</span><span class="s2">, found </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">NUM_SECTORS</span><span class="p">,</span>
+                <span class="n">_pattern</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">),</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">files</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_cache_first_block_offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">first_block_offset</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">fs</span><span class="o">.</span><span class="n">sectors</span>
+        <span class="p">]</span>
+        <span class="c1"># apply skip_frames value to the start_offsets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="o">+</span> <span class="n">BLOCK_SIZE</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_frames</span> <span class="o">*</span> <span class="n">BLOCKS_PER_SECTOR_PER_FRAME</span>
+                               <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_cache_last_block_offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_offsets</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">last_block_offset</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">fs</span><span class="o">.</span><span class="n">sectors</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_cache_user_sync_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_sync_offset</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cached_user_sync_offset</span> <span class="o">=</span> <span class="n">user_sync_offset</span>
+
+    <span class="k">def</span> <span class="nf">_get_syncer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">do_sync</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">do_sync</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K2Syncer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cached_user_sync_offset</span><span class="p">:</span>
+            <span class="n">sy</span> <span class="o">=</span> <span class="n">K2Syncer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">)</span>
+            <span class="n">sy</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_first_block_offsets</span><span class="p">(</span><span class="n">sy</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_last_block_offsets</span><span class="p">(</span><span class="n">sy</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_user_sync_offset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_sync_offset</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sy</span> <span class="o">=</span> <span class="n">K2Syncer</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">,</span> <span class="n">start_offsets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span><span class="p">,</span> <span class="n">last_offsets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_last_offsets</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sy</span>
+
+    <span class="k">def</span> <span class="nf">get_decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Decoder</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K2ISDecoder</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_base_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">930</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">K2ISFile</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span>
+                <span class="n">file_header</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_offsets</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">K2FileSet</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">io_backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">()</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">K2ISPartition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">,</span>
+                <span class="n">decoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_decoder</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;K2ISDataSet for pattern=</span><span class="si">{}</span><span class="s2"> nav_shape=</span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">_pattern</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">K2ISPartition</span><span class="p">(</span><span class="n">BasePartition</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">validate_tiling_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">930</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">%</span> <span class="mi">16</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span> <span class="ow">and</span> <span class="n">b</span> <span class="ow">and</span> <span class="n">c</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid tiling scheme: needs to be aligned to blocksize (930, 16)&quot;</span>
+            <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

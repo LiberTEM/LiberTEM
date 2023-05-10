@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Implementing a UDF &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Live plotting for LiberTEM UDFs" href="liveplotting.html" />
+    <link rel="prev" title="LiberTEM UDFs" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#example-notebook">Example notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../udf.html#more-about-udfs">More about UDFs</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Implementing a UDF</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#declaring-buffers">Declaring buffers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#implementing-the-processing-function">Implementing the processing function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#merging-partial-results">Merging partial results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#passing-parameters">Passing parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#declaring-a-constructor">Declaring a constructor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initializing-result-buffers">Initializing result buffers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#running-udfs">Running UDFs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#regions-of-interest">Regions of interest</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#live-plotting">Live Plotting</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="liveplotting.html">Live plotting for LiberTEM UDFs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#partial-results">Partial results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#asynchronous-execution">Asynchronous execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="async.html">Synchronous and asynchronous UDF execution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html">User-defined functions: advanced topics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#tiled-processing">Tiled processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#partition-processing">Partition processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#precedence">Precedence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-of-partition-results">Post-processing of partition results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-after-merging">Post-processing after merging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#pre-processing">Pre-processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#aux-data">AUX data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#task-data">Task data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#meta-information">Meta information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#preferred-input-dtype">Preferred input dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#cupy-support">CuPy support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#sparse-arrays">Sparse arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#threading">Threading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#auto-udf">Auto UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#one-step-merge-merge-all">One-step merge (<cite>merge_all</cite>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="profiling.html">Profiling UDFs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../udf.html">User-defined functions (UDFs)</a></li>
+      <li class="breadcrumb-item active">Implementing a UDF</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/udf/basic.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="implementing-a-udf">
+<span id="implement-udf"></span><h1>Implementing a UDF<a class="headerlink" href="#implementing-a-udf" title="Permalink to this heading"></a></h1>
+<p>The workflow for implementing a UDF starts with subclassing
+<a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">UDF</span></code></a>. In the simplest case, you need to implement the
+<a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF.get_result_buffers" title="libertem.udf.base.UDF.get_result_buffers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_result_buffers()</span></code></a> method and
+<a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDFFrameMixin.process_frame" title="libertem.udf.base.UDFFrameMixin.process_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_frame()</span></code></a>.</p>
+<p>There are two very common patterns for reductions, reducing over the navigation axes
+into a common accumulator for all frames, keeping the shape of a single frame,
+or reducing over the signal axes and keeping the navigation axes.</p>
+<section id="declaring-buffers">
+<h2>Declaring buffers<a class="headerlink" href="#declaring-buffers" title="Permalink to this heading"></a></h2>
+<p>A UDF can implement one of these reductions or combinations. To handle indexing
+for you, LiberTEM needs to know about the structure of your reduction. You can
+build this structure in the <a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF.get_result_buffers" title="libertem.udf.base.UDF.get_result_buffers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_result_buffers()</span></code></a>
+method, by declaring one or more buffers.</p>
+<p>These buffers can have a <code class="code docutils literal notranslate"><span class="pre">kind</span></code> declared, which corresponds to the two
+reduction patterns above: <code class="code docutils literal notranslate"><span class="pre">kind=&quot;sig&quot;</span></code> for reducing over the navigation
+axes (and keeping the signal axes), and <code class="code docutils literal notranslate"><span class="pre">kind=&quot;nav&quot;</span></code> for reducing over the
+signal axes and keeping the navigation axes. There is a third,
+<code class="code docutils literal notranslate"><span class="pre">kind=&quot;single&quot;</span></code>, which allows to declare buffers with custom shapes that
+don’t correspond directly to the data set’s shape.</p>
+<p>It is also possible to append additional axes to the buffer’s shape using the
+<code class="code docutils literal notranslate"><span class="pre">extra_shape</span></code> parameter.</p>
+<p><a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF.get_result_buffers" title="libertem.udf.base.UDF.get_result_buffers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_result_buffers()</span></code></a> should return a <code class="code docutils literal notranslate"><span class="pre">dict</span></code> which maps
+buffer names to buffer declarations. You can create a buffer declaration by calling
+the <a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF.buffer" title="libertem.udf.base.UDF.buffer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">buffer()</span></code></a> method.</p>
+<p>The buffer name is later used to access the buffer via <code class="code docutils literal notranslate"><span class="pre">self.results.&lt;buffername&gt;</span></code>,
+which returns a view into a NumPy array. For this to work, the name has to be a valid Python
+identifier.</p>
+<p>Examples of buffer declarations:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+   <span class="c1"># Suppose our dataset has the shape (14, 14, 32, 32),</span>
+   <span class="c1"># where the first two dimensions represent the navigation</span>
+   <span class="c1"># dimension and the last two dimensions represent the signal</span>
+   <span class="c1"># dimension.</span>
+
+   <span class="n">buffers</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="c1"># same shape as navigation dimensions of dataset, plus two</span>
+      <span class="c1"># extra dimensions of shape (3, 2). The full shape is</span>
+      <span class="c1"># (14, 14, 3, 2) in this example. This means this buffer can</span>
+      <span class="c1"># store an array of shape (3, 2) for each frame in the dataset.</span>
+      <span class="s2">&quot;nav_buffer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;nav&quot;</span><span class="p">,</span>
+            <span class="n">extra_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span>
+      <span class="p">),</span>
+
+      <span class="c1"># same shape as signal dimensions of dataset, plus an extra</span>
+      <span class="c1"># dimension of shape (2,). Consequently, the full shape is</span>
+      <span class="c1"># (32, 32, 2) in this example. That means we can store two</span>
+      <span class="c1"># float32 values for each pixel of the signal dimensions.</span>
+      <span class="s2">&quot;sig_buffer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;sig&quot;</span><span class="p">,</span>
+            <span class="n">extra_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span>
+      <span class="p">),</span>
+
+      <span class="c1"># buffer of shape (16, 16); shape is unrelated to dataset shape</span>
+      <span class="s2">&quot;single_buffer&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;single&quot;</span><span class="p">,</span>
+            <span class="n">extra_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span>
+      <span class="p">),</span>
+
+   <span class="p">}</span>
+
+   <span class="k">return</span> <span class="n">buffers</span>
+</pre></div>
+</div>
+<p>See below for some more real-world examples.</p>
+<p>All NumPy dtypes are supported for buffers. That includes the <code class="code docutils literal notranslate"><span class="pre">object</span></code>
+dtype for arbitrary Python variables. The item just has to be pickleable with
+<code class="code docutils literal notranslate"><span class="pre">cloudpickle</span></code>.</p>
+<p>Note that buffers are only designed to pass lightweight intermediate results
+and thus, it is important that the size of the buffer remains small. Having too
+large buffers can lead to significant decline in performance.</p>
+</section>
+<section id="implementing-the-processing-function">
+<h2>Implementing the processing function<a class="headerlink" href="#implementing-the-processing-function" title="Permalink to this heading"></a></h2>
+<p>Now to the actual core of the processing: implementing
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">process_frame()</span></code>. The method signature looks like this:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExampleUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+   <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+      <span class="o">...</span>
+</pre></div>
+</div>
+<p>The general idea is that you get a single frame from the data set, do your processing,
+and write the results to one of the previously declared buffers, via <code class="code docutils literal notranslate"><span class="pre">self.results.&lt;buffername&gt;</span></code>.
+When accessing a <code class="code docutils literal notranslate"><span class="pre">kind=&quot;nav&quot;</span></code> buffer this way, you automatically get a view into the buffer
+that corresponds to the current frame that is being processed. In case of <code class="code docutils literal notranslate"><span class="pre">kind=&quot;sig&quot;</span></code>
+or <code class="code docutils literal notranslate"><span class="pre">kind=&quot;single&quot;</span></code>, you get the whole buffer.</p>
+<p>Intuitively, with <code class="code docutils literal notranslate"><span class="pre">kind=&quot;sig&quot;</span></code> (and <code class="code docutils literal notranslate"><span class="pre">kind=&quot;single&quot;</span></code>), you are most
+likely implementing an operation like <code class="code docutils literal notranslate"><span class="pre">buf</span> <span class="pre">=</span> <span class="pre">f(buf,</span> <span class="pre">frame)</span></code>. That is, you
+are computing a new result based on a single (new) frame and the results from all
+previous frames, and overwrite the results with the new value(s).</p>
+<p>With <code class="code docutils literal notranslate"><span class="pre">kind=&quot;nav&quot;</span></code>, you compute independent results for each frame,
+which are written to different positions in the result buffer. Because of the independence
+between frames, you don’t need to merge with a previous value; the result is simply written
+to the correct index in the result buffer (via the aforementioned view).</p>
+<p>As an easy example, let’s have a look at a function that simply sums up each frame
+to a single value. This is a <code class="code docutils literal notranslate"><span class="pre">kind=&quot;nav&quot;</span></code> reduction, as we sum over all values
+in the signal dimensions:</p>
+<div class="highlight-python3 notranslate" id="sumsig"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+
+
+<span class="k">class</span> <span class="nc">SumOverSig</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+   <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Describe the buffers we need to store our results:</span>
+<span class="sd">      kind=&quot;nav&quot; means we want to have a value for each coordinate</span>
+<span class="sd">      in the navigation dimensions. We name our buffer &#39;pixelsum&#39;.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="k">return</span> <span class="p">{</span>
+         <span class="s1">&#39;pixelsum&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;nav&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span>
+         <span class="p">)</span>
+      <span class="p">}</span>
+
+   <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Sum up all pixels in this frame and store the result in the</span>
+<span class="sd">      `pixelsum` buffer. `self.results.pixelsum` is a view into the</span>
+<span class="sd">      result buffer we defined above, and corresponds to the entry</span>
+<span class="sd">      for the current frame we work on. We don&#39;t have to take care</span>
+<span class="sd">      of finding the correct index for the frame we are processing</span>
+<span class="sd">      ourselves.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">pixelsum</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span>
+   <span class="n">udf</span><span class="o">=</span><span class="n">SumOverSig</span><span class="p">(),</span>
+   <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># to access the named buffer as a NumPy array:</span>
+<span class="n">res</span><span class="p">[</span><span class="s1">&#39;pixelsum&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+<p>On a 4D data set, this operation is roughly equivalent to <code class="code docutils literal notranslate"><span class="pre">np.sum(arr,</span> <span class="pre">axis=(2,</span> <span class="pre">3))</span></code>.</p>
+</section>
+<section id="merging-partial-results">
+<h2>Merging partial results<a class="headerlink" href="#merging-partial-results" title="Permalink to this heading"></a></h2>
+<p>As <a class="reference internal" href="../udf.html#how-udfs-work"><span class="std std-ref">described above</span></a>, data from multiple partitions is
+processed in parallel. That also means that we need a way of merging partial
+results into the final result. In the example above, we didn’t need to do anything:
+we only have a <code class="code docutils literal notranslate"><span class="pre">kind=&quot;nav&quot;</span></code> buffer, where merging just means assigning the
+result of one partition to the right slice in the final result. This is done by
+the default implementation of <a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF.merge" title="libertem.udf.base.UDF.merge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge()</span></code></a>.</p>
+<p>In case of <code class="code docutils literal notranslate"><span class="pre">kind=&quot;sig&quot;</span></code> buffers and the corresponding reduction, assignment would
+just overwrite the result from the previous partition with the one from the current partition,
+and is not the correct operation. So let’s have a look at the merge method:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ExampleUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+   <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+      <span class="k">pass</span>
+</pre></div>
+</div>
+<p><code class="code docutils literal notranslate"><span class="pre">dest</span></code> is the result of all previous merge calls, and <code class="code docutils literal notranslate"><span class="pre">src</span></code> is the
+result from a single new partition. Your <code class="code docutils literal notranslate"><span class="pre">merge</span></code> implementation should read from both
+<code class="code docutils literal notranslate"><span class="pre">dest</span></code> and <code class="code docutils literal notranslate"><span class="pre">src</span></code> and write the result back to <code class="code docutils literal notranslate"><span class="pre">dest</span></code>.</p>
+<p>Here is an example demonstrating <code class="code docutils literal notranslate"><span class="pre">kind=&quot;sig&quot;</span></code> buffers and the <code class="code docutils literal notranslate"><span class="pre">merge</span></code> function:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+
+
+<span class="k">class</span> <span class="nc">MaxUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+   <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Describe the buffers we need to store our results:</span>
+<span class="sd">      kind=&quot;sig&quot; means we want to have a value for each coordinate</span>
+<span class="sd">      in the signal dimensions (i.e. a value for each pixel of the</span>
+<span class="sd">      diffraction patterns). We name our buffer &#39;maxbuf&#39;.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="k">return</span> <span class="p">{</span>
+         <span class="s1">&#39;maxbuf&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+            <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;sig&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">input_dtype</span>
+         <span class="p">)</span>
+      <span class="p">}</span>
+
+   <span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Initialize buffer with neutral element for maximum.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">maxbuf</span><span class="p">[:]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+   <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      In this function, we have a frame and the buffer `maxbuf`</span>
+<span class="sd">      available, which we declared above. This function is called</span>
+<span class="sd">      for all frames / diffraction patterns in the data set. The</span>
+<span class="sd">      maxbuf is a partial result, and all partial results will</span>
+<span class="sd">      later be merged (see below).</span>
+
+<span class="sd">      In this case, we determine the maximum from the current</span>
+<span class="sd">      maximum and the current frame, for each pixel in the</span>
+<span class="sd">      diffraction pattern.</span>
+
+<span class="sd">      Notes:</span>
+
+<span class="sd">      - You cannot rely on any particular order of frames this function</span>
+<span class="sd">        is called in.</span>
+<span class="sd">      - Your function should be pure, that is, it should not have side</span>
+<span class="sd">        effects beyond modifying the content of result buffers or task data,</span>
+<span class="sd">        and should only depend on it&#39;s input parameters, including</span>
+<span class="sd">        the UDF object :code:`self`.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">maxbuf</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">maxbuf</span><span class="p">)</span>
+
+   <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      merge two partial results, from src into dest</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="n">dest</span><span class="o">.</span><span class="n">maxbuf</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">dest</span><span class="o">.</span><span class="n">maxbuf</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">maxbuf</span><span class="p">)</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span>
+   <span class="n">udf</span><span class="o">=</span><span class="n">MaxUDF</span><span class="p">(),</span>
+   <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># to access the named buffer as a NumPy array:</span>
+<span class="n">res</span><span class="p">[</span><span class="s1">&#39;maxbuf&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+<p>For more complete examples, you can also have a look at the functions
+implemented in the sub-modules of <code class="code docutils literal notranslate"><span class="pre">libertem.udf</span></code> and at our <a class="reference internal" href="../packages.html#packages"><span class="std std-ref">Package overview</span></a>.</p>
+</section>
+<section id="passing-parameters">
+<h2>Passing parameters<a class="headerlink" href="#passing-parameters" title="Permalink to this heading"></a></h2>
+<p>By default, keyword arguments that are passed to the constructor of a UDF are
+available as properties of <code class="code docutils literal notranslate"><span class="pre">self.params</span></code>. This allows clean handling and passing
+of parameters in distributed execution scenarios, see below.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">correlate_peaks</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">peaks</span><span class="p">)</span>
+        <span class="o">...</span>
+
+<span class="n">udf</span> <span class="o">=</span> <span class="n">MyUDF</span><span class="p">(</span><span class="n">peaks</span><span class="o">=</span><span class="n">peaks</span><span class="p">,</span> <span class="n">other</span><span class="o">=...</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="declaring-a-constructor">
+<h2>Declaring a constructor<a class="headerlink" href="#declaring-a-constructor" title="Permalink to this heading"></a></h2>
+<p>In order to document parameters of an UDF and avoid typos with parameter names,
+it is good practice to define a constructor for any UDF that will be re-used and
+shared. Since functions of an UDF are executed both on the main node and on
+worker processes, UDFs will be pickled and sent over the network in the process.
+To avoid transferring unwanted state or unnecessary or unpicklable member
+variables, a clean copy of an UDF is created before transfer. This clean copy is
+created by re-instantiating the UDF class with the parameters that were passed
+to the constructor of the UDF base class.</p>
+<p>That means a user-defined constructor has to fulfill two conditions:</p>
+<ol class="arabic simple">
+<li><p>It has to pass any parameters to the superclass constructor.</p></li>
+<li><p>It has to accept exactly the parameters that it passed to the superclass
+constructor whenever a clean copy is created and behave the same way as in the
+original call.</p></li>
+</ol>
+<p>That means modification of parameters other than assigning values for default parameters
+can lead to complications and should be avoided, if possible.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyParamUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This UDF demonstrates how to define a constructor for a UDF.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    my_param</span>
+<span class="sd">        A parameter that is passed into the UDF for demonstration purposes.</span>
+<span class="sd">        It is mirrored in the `demo` result buffer.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">my_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Assigning a default parameter works,</span>
+        <span class="c1"># provided the UDF accepts it in subsequent calls</span>
+        <span class="c1"># exactly as it passed it to the superclass:</span>
+        <span class="k">if</span> <span class="n">my_param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">my_param</span> <span class="o">=</span> <span class="s2">&quot;Eins, zwei drei!&quot;</span>
+
+        <span class="c1"># !!!DON&#39;T!!! self.my_param = my_param</span>
+        <span class="c1"># !!!DON&#39;T!!! super().__init__()</span>
+        <span class="c1"># We have to pass it to the superclass constructor instead.</span>
+        <span class="c1"># This makes sure it will be available via self.params and</span>
+        <span class="c1"># on clean copies.</span>
+
+        <span class="c1"># !!!DON&#39;T!!! super().__init__(other_param=my_param)</span>
+        <span class="c1"># This would trigger a TypeError when</span>
+        <span class="c1"># MyParamUDF(other_param=my_param) is called for a clean copy.</span>
+
+        <span class="c1"># DO pass all parameters to the superclass exactly as this</span>
+        <span class="c1"># class would accept them</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">my_param</span><span class="o">=</span><span class="n">my_param</span><span class="p">)</span>
+
+    <span class="c1"># The rest of this UDF just mirrors the parameter</span>
+    <span class="c1"># back in a result buffer for demonstration.</span>
+
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Declare a result buffer for the parameter</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;demo&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        We assign the parameter to the result buffer</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">demo</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">my_param</span>
+
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        We pass through the result buffer</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">demo</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">demo</span>
+
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">MyParamUDF</span><span class="p">())</span>
+<span class="k">assert</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;demo&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Eins, zwei drei!&quot;</span>
+
+<span class="n">res2</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">MyParamUDF</span><span class="p">(</span><span class="n">my_param</span><span class="o">=</span><span class="mi">42</span><span class="p">))</span>
+<span class="k">assert</span> <span class="n">res2</span><span class="p">[</span><span class="s1">&#39;demo&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">42</span>
+</pre></div>
+</div>
+</section>
+<section id="initializing-result-buffers">
+<h2>Initializing result buffers<a class="headerlink" href="#initializing-result-buffers" title="Permalink to this heading"></a></h2>
+<p>To allow a UDF to initialize a result buffer to the correct values,
+the method <a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDFPreprocessMixin.preprocess" title="libertem.udf.base.UDFPreprocessMixin.preprocess"><code class="xref py py-meth docutils literal notranslate"><span class="pre">preprocess()</span></code></a>
+can be implemented. It is run once per partition and assigning to
+<code class="code docutils literal notranslate"><span class="pre">kind=&quot;nav&quot;</span></code> result buffers will assign to the results of the
+whole partition. See <code class="code docutils literal notranslate"><span class="pre">MaxUDF</span></code> above for an example.</p>
+</section>
+</section>
+<section id="running-udfs">
+<span id="progress-bar"></span><h1>Running UDFs<a class="headerlink" href="#running-udfs" title="Permalink to this heading"></a></h1>
+<p>As shown in the examples above, the <a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> method
+of <a class="reference internal" href="../reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> is used to run UDFs. Usually, you only need to
+pass an instance of your UDF and the dataset you want to run on:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">udf</span> <span class="o">=</span> <span class="n">YourUDF</span><span class="p">(</span><span class="n">param1</span><span class="o">=</span><span class="s2">&quot;value1&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also enable a progress bar:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">udf</span> <span class="o">=</span> <span class="n">YourUDF</span><span class="p">(</span><span class="n">param1</span><span class="o">=</span><span class="s2">&quot;value1&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> returns a <code class="code docutils literal notranslate"><span class="pre">dict</span></code>, having the buffer
+names as keys (as defined in <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_result_buffers()</span></code>) and
+<a class="reference internal" href="../reference/udf.html#libertem.common.buffers.BufferWrapper" title="libertem.common.buffers.BufferWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BufferWrapper</span></code></a> instances as values. You
+can use these in any place you would use a NumPy array, for example as an argument to
+NumPy functions, or you can explicitly convert them to NumPy arrays by accessing
+the <code class="code docutils literal notranslate"><span class="pre">.data</span></code> attribute, or by calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">numpy.array()</span></code>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
+<span class="c1"># convert to NumPy array, assuming we declared a buffer</span>
+<span class="c1"># with name `buf1`:</span>
+<span class="n">arr</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="s1">&#39;buf1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+<span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;buf1&#39;</span><span class="p">])</span>
+
+<span class="c1"># or directly treat as array:</span>
+<span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;buf1&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>If you want to run multiple independent UDFs on a single <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code>,
+you can pass in a list of UDFs to <a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>. This can be faster
+than making two passes over the whole <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.udf.sum</span> <span class="kn">import</span> <span class="n">SumUDF</span>
+
+<span class="c1"># results are returned as a tuple, so we can unpack them here into</span>
+<span class="c1"># `res` and `res_sum`:</span>
+<span class="n">res</span><span class="p">,</span> <span class="n">res_sum</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="p">[</span><span class="n">udf</span><span class="p">,</span> <span class="n">SumUDF</span><span class="p">()],</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="regions-of-interest">
+<span id="udf-roi"></span><h2>Regions of interest<a class="headerlink" href="#regions-of-interest" title="Permalink to this heading"></a></h2>
+<p>In addition, you can pass the <code class="code docutils literal notranslate"><span class="pre">roi</span></code> (region of interest) parameter, to
+run your UDF on a selected subset of data. <code class="code docutils literal notranslate"><span class="pre">roi</span></code> can be specified in several ways:</p>
+<ul class="simple">
+<li><p>a single coordinate in the navigation dimensions, e.g. <code class="code docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">4)</span></code>
+which will restrict the analysis to this frame only</p></li>
+<li><p>a sequence of coordinates and their associated truth value, e.g.
+<code class="code docutils literal notranslate"><span class="pre">[((0,</span> <span class="pre">0),</span> <span class="pre">True),</span> <span class="pre">((2,</span> <span class="pre">3),</span> <span class="pre">True)]</span></code>. In this format all truth values
+must be identical, and the roi background value will be set to its opposite.
+This allows quick specification of a small number of pixels to include or exclude
+from the analysis.</p></li>
+<li><p>a NumPy array containing a bool mask, having the shape of the navigation
+axes of the dataset.</p></li>
+<li><p>any <code class="code docutils literal notranslate"><span class="pre">scipy.sparse</span></code> matrix or array or <code class="code docutils literal notranslate"><span class="pre">pydata.sparse.SparseArray</span></code> format,
+again having the same shape as the naivgation axes of the dataset</p></li>
+</ul>
+<p>For example, to process a random subset of a 4D-STEM dataset:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># If your dataset has shape `(14, 14, 32, 32)` with two signal</span>
+<span class="c1"># and two navigation dimensions, `dataset.shape.nav`</span>
+<span class="c1"># translates to `(14, 14)`.</span>
+<span class="n">roi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+<span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the result array only contains values for the selected indices, all
+other indices are set to <code class="code docutils literal notranslate"><span class="pre">nan</span></code> (or, if the dtype doesn’t support nan,
+some other, not further defined value). It is best to limit further processing
+to the same <code class="code docutils literal notranslate"><span class="pre">roi</span></code>.</p>
+<p>You can also access a flat array that is not filled up with <code class="code docutils literal notranslate"><span class="pre">nan</span></code> using
+<code class="code docutils literal notranslate"><span class="pre">.raw_data</span></code>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">)</span>
+<span class="n">res</span><span class="p">[</span><span class="s1">&#39;buf1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="live-plotting">
+<span id="plotting"></span><h1>Live Plotting<a class="headerlink" href="#live-plotting" title="Permalink to this heading"></a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.7.0.</span></p>
+</div>
+<p>LiberTEM can display a live plot of the UDF results. In the most simple case,
+this can be done by setting <code class="code docutils literal notranslate"><span class="pre">plots=True</span></code> in
+<a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">plots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the following items for a full demonstration, including setting up fully
+customized plots. The API reference can be found in <a class="reference internal" href="../reference/viz.html#viz-reference"><span class="std std-ref">Visualization</span></a>.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="liveplotting.html">Live plotting for LiberTEM UDFs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Plot-classes">Plot classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Demo-UDFs">Demo UDFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Plot-all-plottable-channels">Plot all plottable channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Select-specific-channels">Select specific channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Apply-a-function-to-a-channel">Apply a function to a channel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Custom-plot-setup">Custom plot setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Gridded-display">Gridded display</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="liveplotting.html#What-it-looks-like">What it looks like</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#User-defined-plotting">User-defined plotting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="liveplotting.html#Region-of-interest-(ROI)">Region of interest (ROI)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="partial-results">
+<span id="partial"></span><h1>Partial results<a class="headerlink" href="#partial-results" title="Permalink to this heading"></a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.7.0.</span></p>
+</div>
+<p>Instead of only getting the whole result after the UDF has finished running, you
+can also use <a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf_iter" title="libertem.api.Context.run_udf_iter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf_iter()</span></code></a> to get a generator for
+partial results:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">udf_results</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf_iter</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumUDF</span><span class="p">()):</span>
+    <span class="c1"># ... do something interesting with `udf_results`:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;intensity&#39;</span><span class="p">])</span>
+
+<span class="c1"># after the loop, `udf_results` contains the final results as usual</span>
+</pre></div>
+</div>
+<p>While the UDF execution is running, the UDF object should not be modified since
+that leads to undefined behavior. In particular, nested or concurrent execution
+of the same UDF objects must be avoided since it modifies the buffers that are
+allocated internally while a UDF is running.</p>
+</section>
+<section id="asynchronous-execution">
+<h1>Asynchronous execution<a class="headerlink" href="#asynchronous-execution" title="Permalink to this heading"></a></h1>
+<p>It is also possible to integrate LiberTEM into an async script or application by
+passing <code class="code docutils literal notranslate"><span class="pre">sync=False</span></code> to <a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf_iter" title="libertem.api.Context.run_udf_iter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf_iter()</span></code></a> or
+<a class="reference internal" href="../reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">for</span> <span class="n">udf_results</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf_iter</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># ... do something interesting with `udf_results`:</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">udf_results</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;intensity&#39;</span><span class="p">])</span>
+
+<span class="c1"># or the version without intermediate results:</span>
+<span class="n">udf_results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the items below for a more comprehensive demonstration and documentation:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="async.html">Synchronous and asynchronous UDF execution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="async.html#Synchronous-execution,-only-result">Synchronous execution, only result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async.html#Asynchronous-execution,-only-result">Asynchronous execution, only result</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async.html#Synchronous-execution-as-an-iterator">Synchronous execution as an iterator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async.html#Asynchronous-execution-as-an-iterator">Asynchronous execution as an iterator</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="introduction.html" class="btn btn-neutral float-left" title="LiberTEM UDFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="liveplotting.html" class="btn btn-neutral float-right" title="Live plotting for LiberTEM UDFs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

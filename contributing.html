@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contributing &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Releasing" href="releasing.html" />
+    <link rel="prev" title="Setting up a development environment" href="dev/setup.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development-principles">Development principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-contributions">Code contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-tests">Running the tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#example-notebooks">Example notebooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cuda">CUDA</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#code-coverage">Code coverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#benchmarking">Benchmarking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-tests-for-the-client">Running tests for the client</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#code-style">Code style</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mypy-type-annotations">Mypy type annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#docstrings">Docstrings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#building-the-documentation">Building the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-the-gui-client">Building the GUI (client)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced">Advanced</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="releasing.html">Releasing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dist_tests.html">Running distributed tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Contributing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/contributing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="contributing">
+<span id="id1"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading"></a></h1>
+<p>LiberTEM is intended and designed as a collaboratively developed platform for
+data analysis. That means all our development is coordinated openly, mostly on
+our <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/">GitHub repository</a> where our code
+is hosted. Any suggestions, Issues, bug reports, discussions and code
+contributions are highly appreciated! Please let us know if you think we can
+improve on something, be it code, communication or other aspects.</p>
+<section id="development-principles">
+<h2>Development principles<a class="headerlink" href="#development-principles" title="Permalink to this heading"></a></h2>
+<p>We have a <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues">rather extensive and growing list of things to work on</a> and therefore have to prioritize
+our limited resources to work on items with the largest benefit for our user
+base and project. Supporting users who contribute code is most important to us.
+Please contact us for help! Furthermore, we prioritize features that create
+direct benefits for many current users or open significant new applications.
+Generally, we follow user demand with our developments.</p>
+<p>For design of new features we roughly follow the <a class="reference external" href="https://en.wikipedia.org/wiki/Lead_user">lead user method</a>, which means that we develop new
+features closely along a non-trivial real-world application in order to make
+sure the developments are appropriate and easy to use in practice. The interface
+for <a class="reference internal" href="udf.html#user-defined-functions"><span class="std std-ref">User-defined functions (UDFs)</span></a>, as an example, follows the requirements
+around implementing and running complex algorithms like <a class="reference external" href="https://libertem.github.io/LiberTEM-blobfinder/examples.html">strain mapping</a> for distributed
+systems.</p>
+<p>Furthermore we value a systematic approach to development with requirements
+analysis and evaluation of design options as well as iterative design with fast
+test and review cycles.</p>
+</section>
+<section id="code-contributions">
+<h2>Code contributions<a class="headerlink" href="#code-contributions" title="Permalink to this heading"></a></h2>
+<p>We are using <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests">pull requests</a>
+to accept contributions. Each pull request should focus on a single issue, to
+keep the number of changes small and reviewable. To keep your changes organized
+and to prevent unrelated changes from disturbing your pull request, create a new
+branch for each pull request.</p>
+<p>All pull requests should come from a user’s personal fork since we don’t push to
+the main repository for development. See the <a class="reference external" href="https://docs.github.com/en/get-started/quickstart/fork-a-repo">GitHub documentation on how to
+create and manage forks</a>
+for details.</p>
+<p>Before creating a pull request, please make sure all tests still pass. See
+<a class="reference internal" href="#running-the-tests">Running the Tests</a> for more information. You should also update the test suite
+and add test cases for your contribution. See the section <a class="reference internal" href="#code-coverage">Code coverage</a> below
+on how to check if your new code is covered by tests.</p>
+<p>To make sure our code base stays readable and consistent, we follow a <a class="reference internal" href="#code-style">Code Style</a>.</p>
+<p>Please update <code class="docutils literal notranslate"><span class="pre">packaging/creators.json</span></code> with your author information when you
+contribute to LiberTEM for the first time. This helps us to keep track of all
+contributors and give credit where credit is due! Please let us know if you
+wouldn’t like to be credited. Our <a class="reference internal" href="authorship.html#authorship"><span class="std std-ref">Authorship policy</span></a> describes in more detail how
+we manage authorship of LiberTEM and related material.</p>
+<p>If you are changing parts of LiberTEM that are currently not covered by tests,
+please consider writing new tests! When changing example code, which is not run
+as part of the tests, make sure the example still runs.</p>
+<p>When adding or changing a feature, you should also update the corresponding
+documentation, or add a new section for your feature. Follow the current
+documentation structure, or ask the maintainers where your new documentation
+should end up. When introducing a feature, it is okay to start with a draft
+documentation in the first PR, if it will be completed later. Changes of APIs
+should update the corresponding docstrings.</p>
+<p>Please include version information if you add or change a feature in order to
+track and document changes. We use a rolling documentation that documents
+previous behavior as well, for example <em>This feature was added in Version
+0.3.0.dev0</em> or <em>This describes the behavior from Version 0.3.0.dev0 and onwards.
+The previous behavior was this and that</em>. If applicable, use
+<a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-versionadded">versionadded</a>
+and related directives.</p>
+<p>The changelog for the development branch is maintained as a collection of files
+in the <code class="code docutils literal notranslate"><span class="pre">docs/source/changelog/*/</span></code> folder structure. Each change should get
+a separate file to avoid merge conflicts. The files are merged into the
+master changelog when creating a release.</p>
+<p>The following items might require an
+update upon introducing or changing a feature:</p>
+<ul class="simple">
+<li><p>Changelog snippet in <code class="code docutils literal notranslate"><span class="pre">docs/source/changelog/*/</span></code></p></li>
+<li><p>Docstrings</p></li>
+<li><p>Examples</p></li>
+<li><p>Main Documentation</p></li>
+</ul>
+<p>When you have submitted your pull request, someone from the LiberTEM
+organization will review your pull request, and may add comments or ask
+questions.</p>
+<p>In case your PR touches I/O code, an organization member may run
+the I/O tests with access to test data sets on a separate Azure Agent,
+using the following comment on the PR:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/azp run libertem.libertem-data
+</pre></div>
+</div>
+<p>If everything is good to go, your changes will be merged and you can
+delete the branch you created for the pull request.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://docs.github.com/en/get-started/quickstart/github-flow">Guide on understanding the GitHub flow</a></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.youtube.com/watch?v=cysuuUtbC6E">How to make a simple GitHub PR (video)</a></p>
+</div>
+</section>
+<section id="running-the-tests">
+<span id="running-tests"></span><h2>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this heading"></a></h2>
+<p>Our tests are written using pytest. For running them in a repeatable manner, we
+are using tox. Tox automatically manages virtualenvs and allows testing on
+different Python versions and interpreter implementations.</p>
+<p>This makes sure that you can run the tests locally the same way as they are run
+in continuous integration.</p>
+<p>After <a class="reference external" href="https://tox.wiki/en/latest/installation.html">installing tox</a>, you
+can run the tests on all Python versions by simply running tox:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox
+</pre></div>
+</div>
+<p>Or specify a specific environment you want to run:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>py39
+</pre></div>
+</div>
+<p>For faster iteration, you can also run only a part of the test suite, without
+using tox. To make this work, first install the test requirements into your
+virtualenv:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>test_requirements.txt
+</pre></div>
+</div>
+<p>Now you can run pytest on a subset of tests, for example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>pytest<span class="w"> </span>tests/test_analysis_masks.py
+</pre></div>
+</div>
+<p>Or you can run tests in parallel, which may make sense if you have a beefy
+machine with many cores and a lot of RAM:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>pytest<span class="w"> </span>-n<span class="w"> </span>auto<span class="w"> </span>tests/
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="https://docs.pytest.org/en/latest/how-to/usage.html#specifying-which-tests-to-run">pytest documentation</a>
+for details on how to select which tests to run. Before submitting a pull
+request, you should always run the whole test suite.</p>
+<p>Some tests are marked with <a class="reference external" href="https://docs.pytest.org/en/latest/example/markers.html">custom markers</a>, for example we have
+some tests that take many seconds to complete. To select tests to run by these
+marks, you can use the <cite>-m</cite> switch. For example, to only run the slow tests:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>--<span class="w"> </span>-m<span class="w"> </span>slow
+</pre></div>
+</div>
+<p>By default, these slow tests are not run. If you want to run both slow and all
+other tests, you can use a boolean expression like this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>--<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;slow or not slow&quot;</span>
+</pre></div>
+</div>
+<p>Another example, to exclude both slow and dist tests:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>--<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;not dist and not slow&quot;</span>
+</pre></div>
+</div>
+<p>In these examples, <code class="docutils literal notranslate"><span class="pre">--</span></code> separates the the arguments of tox (left of <code class="docutils literal notranslate"><span class="pre">--</span></code>)
+from the arguments for pytest on the right. List of marks used in our test
+suite:</p>
+<ul class="simple">
+<li><p><cite>slow</cite>: tests that take much longer than 1 second to run</p></li>
+<li><p><cite>dist</cite>: tests that require a distributed Dask cluster setup</p></li>
+</ul>
+<section id="example-notebooks">
+<h3>Example notebooks<a class="headerlink" href="#example-notebooks" title="Permalink to this heading"></a></h3>
+<p>The example notebooks are also run as part of our test suite using <a class="reference external" href="https://nbval.readthedocs.io/en/latest/">nbval</a>. The
+output saved in the notebooks is compared to the output of re-running the
+notebook. When writing an example notebook, this sometimes requires some work,
+because certain things will change from run to run. Please check <a class="reference external" href="https://nbviewer.org/github/computationalmodelling/nbval/blob/master/docs/source/index.ipynb">the nbval
+documentation</a>
+to understand how to ignore such values. See also the <code class="code docutils literal notranslate"><span class="pre">nbval_sanitize.cfg</span></code>
+file for our currently ignored patterns.</p>
+<p>If your notebook outputs floating point values, you may get spurious failures
+from precision issues. You can set the precision using the <code class="code docutils literal notranslate"><span class="pre">%precision</span></code> ipython
+magic, which should be used <em>after</em> importing numpy.</p>
+<p>You can run the notebook tests as follows:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nv">TESTDATA_BASE_PATH</span><span class="o">=</span>/path/to/the/test/data<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>notebooks
+</pre></div>
+</div>
+<p>You will need access to certain sample data sets; as most of them are not
+published yet, please contact us to get access!</p>
+</section>
+<section id="cuda">
+<h3>CUDA<a class="headerlink" href="#cuda" title="Permalink to this heading"></a></h3>
+<p>To run tests that require CuPy using tox, you can specify the CUDA version with the test environment:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>py39-cuda101
+</pre></div>
+</div>
+</section>
+<section id="code-coverage">
+<h3>Code coverage<a class="headerlink" href="#code-coverage" title="Permalink to this heading"></a></h3>
+<p>After running the tests, you can inspect the test coverage by opening
+<code class="code docutils literal notranslate"><span class="pre">htmlcov/index.html</span></code> in a web browser. When creating a pull request, the change
+in coverage is also reported by the codecov bot. Ideally, the test coverage
+should go up with each pull request, at least it should stay the same.</p>
+</section>
+<section id="benchmarking">
+<span id="id2"></span><h3>Benchmarking<a class="headerlink" href="#benchmarking" title="Permalink to this heading"></a></h3>
+<p>LiberTEM uses <a class="reference external" href="https://pytest-benchmark.readthedocs.io/en/latest/usage.html">pytest-benchmark</a> to benchmark
+certain performance-critical parts of the code. You can run the benchmarks
+ad-hoc using</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pytest<span class="w"> </span>benchmarks/
+</pre></div>
+</div>
+<p>The benchmarks for Numba compilation time are disabled by default since Numba
+caches compilation results, i.e. one has to make sure that benchmarked functions
+were not previously run in the same interpreter. To run them, you can use</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span>compilation<span class="w"> </span>benchmarks/
+</pre></div>
+</div>
+<p>In order to record a complete benchmark run for later comparison, you can use</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This requires <code class="code docutils literal notranslate"><span class="pre">tox&gt;=3.15</span></code> since we are using generative section names
+in <code class="code docutils literal notranslate"><span class="pre">tox.ini</span></code>.</p>
+</div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>benchmark
+$<span class="w"> </span><span class="c1"># alternatively</span>
+$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>benchmark-cuda101
+$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>benchmark-cuda102
+</pre></div>
+</div>
+<p>This saves the benchmark data as a JSON file in a subfolder of
+<code class="code docutils literal notranslate"><span class="pre">benchmark_results</span></code>. A process to commit such results and report them in a
+convenient fashion is to be developed. See <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/198">#198</a>, feedback welcome!</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0: </span>First benchmarks included to help resolve <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/814">#814</a>, benchmark coverage will grow over time.</p>
+</div>
+</section>
+<section id="running-tests-for-the-client">
+<h3>Running tests for the client<a class="headerlink" href="#running-tests-for-the-client" title="Permalink to this heading"></a></h3>
+<p>To run the testsuite for the client, first install the JavaScript/TypeScript dependencies:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>client/
+$<span class="w"> </span>npm<span class="w"> </span>install
+</pre></div>
+</div>
+<p>Then, in the same directory, to run the tests execute:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--<span class="w"> </span>--coverage
+</pre></div>
+</div>
+<p>This will run all tests and report code coverage. If you want to run the tests
+while developing the client, you can run them in watch mode, which is the
+default:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>client/
+$<span class="w"> </span>npm<span class="w"> </span><span class="nb">test</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="code-style">
+<h2>Code style<a class="headerlink" href="#code-style" title="Permalink to this heading"></a></h2>
+<p>We try to keep our code <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>
+-compliant, with line-length relaxed to 100 chars, and some rules ignored. See
+the flake8 section in <code class="code docutils literal notranslate"><span class="pre">setup.cfg</span></code> for the current PEP8 settings. As a
+general rule, try to keep your changes in a similar style as the surrounding
+code.</p>
+<p>Before submitting a pull request, please check the code style by running:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pre-commit<span class="w"> </span>run
+</pre></div>
+</div>
+<p>You may need to install <a class="reference external" href="https://pre-commit.com/">pre-commit</a> into your
+Python environment first. You can use the following to automatically run
+the pre-commit hooks before each commit:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pre-commit<span class="w"> </span>install<span class="w"> </span>--install-hooks
+</pre></div>
+</div>
+<p>We recommend using an editor that can check code style on the fly, such as
+<a class="reference external" href="https://code.visualstudio.com/docs/python/linting">Visual Studio Code</a>.</p>
+<section id="mypy-type-annotations">
+<h3>Mypy type annotations<a class="headerlink" href="#mypy-type-annotations" title="Permalink to this heading"></a></h3>
+<p>We are starting to introduce type annotations and checking them in CI with
+<a class="reference external" href="http://mypy-lang.org/">mypy</a>.
+Adding type annotations improves developer experience, especially by improving
+auto completion and type information on hover in IDEs. Type checking is
+currently quite lax and opt-in. See the file
+<code class="code docutils literal notranslate"><span class="pre">.mypy-checked</span></code> for the list of Python files that currently opt in.
+When adding new code, please consider adding new modules to this list.</p>
+<p>The checks are run with pre-commit on changed files that opt in.
+You can run mypy locally on all files that opt in with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span>mypy
+</pre></div>
+</div>
+<p>Please note that in many cases the type for classes is specified with a string
+instead of the class itself. That allows to import classes for typing only if
+type checking is performed. See <a class="reference external" href="https://www.python.org/dev/peps/pep-0484/#forward-references">the section on forward references in PEP484</a> for more
+information.</p>
+<p>For general information on type annotations in Python, including best
+practices, please also see <a class="reference external" href="https://typing.readthedocs.io/en/latest/">Static Typing with Python</a>.</p>
+</section>
+<section id="docstrings">
+<h3>Docstrings<a class="headerlink" href="#docstrings" title="Permalink to this heading"></a></h3>
+<p>The <a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html#docstring-standard">NumPy docstring guide</a> is
+our guideline for formatting docstrings. We are testing docstring code examples
+in Continuous Integration using <a class="reference external" href="https://docs.python.org/3/library/doctest.html">doctest</a>. You can test files by hand
+by running <code class="code docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--doctest-modules</span> <span class="pre">&lt;pathspec&gt;</span></code>.</p>
+</section>
+</section>
+<section id="building-the-documentation">
+<h2>Building the documentation<a class="headerlink" href="#building-the-documentation" title="Permalink to this heading"></a></h2>
+<p>Documentation building is also done with tox, see above for the basics. It
+requires manual <a class="reference external" href="https://pandoc.org/installing.html">installation of pandoc</a>
+on the build system since pandoc can’t be installed reliably using pip. To start
+the live building process:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>docs
+</pre></div>
+</div>
+<p>You can then view the documentation at <a class="reference external" href="http://localhost:8008">http://localhost:8008</a>, which will
+be rebuilt every time a change to the documentation source code is detected.
+Note that changes to the Python source code don’t trigger a rebuild, so if
+you are working on docstrings, you may have to manually trigger a rebuild,
+for example by saving one of the <code class="code docutils literal notranslate"><span class="pre">.rst</span></code> files.</p>
+<p>You can include code samples with the <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/extensions/doctest.html">doctest sphinx extension</a> and test
+them with</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>docs-check
+</pre></div>
+</div>
+</section>
+<section id="building-the-gui-client">
+<span id="building-the-client"></span><h2>Building the GUI (client)<a class="headerlink" href="#building-the-gui-client" title="Permalink to this heading"></a></h2>
+<p>The LiberTEM GUI (also called the client) is written in TypeScript, using a combination of
+React/Redux/Redux-Saga. The client communicates with the Python API server using
+both HTTP and websockets. Because browsers can’t directly execute TypeScript,
+there is a build step involved, which translates the TypeScript code into
+JavaScript that is then understood by the browser. This build step is needed
+both for development and then again for building the production version.</p>
+<p>If you would like to contribute to the client, you first need to set up the
+development environment. For this, first install Node.js. On Linux, we recommend
+to <a class="reference external" href="https://nodejs.org/en/download/package-manager/">install via package manager</a>, on Windows <a class="reference external" href="https://nodejs.org/en/download/">the installer</a> should be fine. Choose the current LTS
+version.</p>
+<p>One you have Node.js installed, you should have the <code class="code docutils literal notranslate"><span class="pre">npm</span></code> command available
+in your path. You can then install the needed build tools and dependencies by
+changing to the client directory and running the install command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>client/
+$<span class="w"> </span>npm<span class="w"> </span>install
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is always a good idea to start development with installing the current
+dependencies with the above command. Having old versions of dependencies
+installed may cause the build to fail or cause unpredictable failures.</p>
+</div>
+<p>Once this command finished without errors, you can start a development server
+(also from the client directory):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>start
+</pre></div>
+</div>
+<p>This server watches all source files for changes and automatically starts the
+build process. The development server, which listens on port 3000, will only be
+able to serve requests for JavaScript and other static files. For handling HTTP
+API requests you still need to run the Python <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code> process on
+the default port (9000) alongside the development server:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>libertem-server<span class="w"> </span>--no-browser
+</pre></div>
+</div>
+<p>This allows proxying the HTTP API requests from the front-end server to the API
+server without opening an additional browser window that could interfere with
+the development server.</p>
+<p>To learn more about the build process, please see <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md">the README in the client
+directory</a>.</p>
+<p>You can then use any editor you like to change the client source files, in the
+<code class="code docutils literal notranslate"><span class="pre">client/src</span></code> directory. We recommend <a class="reference external" href="https://code.visualstudio.com/">Visual Studio Code</a> for its excellent TypeScript support.</p>
+<p>To simplify development and installing from a git checkout, we currently always
+ship a production build of the client in the git repository. Please always open
+your pull request for the client as WIP and include a rebuilt production build
+after the PR is approved and ready to merge. You can create it using a tox
+shortcut:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>build_client
+</pre></div>
+</div>
+<p>This will build an optimized production version of the client and copy it into
+<code class="code docutils literal notranslate"><span class="pre">src/libertem/web/client</span></code>. This version will then be used when you start a
+libertem-server without the client development proxy in front.</p>
+</section>
+<section id="advanced">
+<h2>Advanced<a class="headerlink" href="#advanced" title="Permalink to this heading"></a></h2>
+<p>See more:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="releasing.html">Releasing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="releasing.html#tagging-a-version">Tagging a version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="releasing.html#issue-template-release-checklist">Issue template: release checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dist_tests.html">Running distributed tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dist_tests.html#requirements">Requirements</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dev/setup.html" class="btn btn-neutral float-left" title="Setting up a development environment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="releasing.html" class="btn btn-neutral float-right" title="Releasing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

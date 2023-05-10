@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.base.decode &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.base.decode</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.base.decode</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">byteswap_2_straight</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">byteswap_2_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">o0</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="n">o1</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">o0</span> <span class="o">|</span> <span class="n">o1</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">byteswap_4_straight</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">byteswap_4_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span><span class="p">):</span>
+        <span class="n">o0</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="n">o1</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="n">o2</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="n">o3</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">o0</span> <span class="o">+</span> <span class="n">o1</span> <span class="o">+</span> <span class="n">o2</span> <span class="o">+</span> <span class="n">o3</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">byteswap_8_straight</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">6</span><span class="p">]</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">byteswap_8_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="n">o0</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">56</span>
+        <span class="n">o1</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">48</span>
+        <span class="n">o2</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">40</span>
+        <span class="n">o3</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">32</span>
+        <span class="n">o4</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span>
+        <span class="n">o5</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">5</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span>
+        <span class="n">o6</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">6</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span>
+        <span class="n">o7</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">o0</span> <span class="o">+</span> <span class="n">o1</span> <span class="o">+</span> <span class="n">o2</span> <span class="o">+</span> <span class="n">o3</span> <span class="o">+</span> <span class="n">o4</span> <span class="o">+</span> <span class="n">o5</span> <span class="o">+</span> <span class="n">o6</span> <span class="o">+</span> <span class="n">o7</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">default_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="decode_swap_2"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.decode_swap_2">[docs]</a><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_swap_2</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">byteswap_2_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="decode_swap_4"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.decode_swap_4">[docs]</a><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_swap_4</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">byteswap_4_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span></div>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_swap_8</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">byteswap_8_decode</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_swap_only_2</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">byteswap_2_straight</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_swap_only_4</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">byteswap_4_straight</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_swap_only_8</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+    <span class="n">byteswap_8_straight</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_byteorder_eq</span><span class="p">(</span><span class="n">order</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">order</span> <span class="o">!=</span> <span class="s1">&#39;=&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">order</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;little&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;big&#39;</span><span class="p">:</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">,</span>
+    <span class="p">}[</span><span class="n">sys</span><span class="o">.</span><span class="n">byteorder</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Decoder"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Decoder">[docs]</a><span class="k">class</span> <span class="nc">Decoder</span><span class="p">:</span>
+<div class="viewcode-block" id="Decoder.do_clear"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Decoder.do_clear">[docs]</a>    <span class="k">def</span> <span class="nf">do_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Decoder.get_native_dtype"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Decoder.get_native_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_native_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp_native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inp_native_dtype</span></div>
+
+<div class="viewcode-block" id="Decoder.get_decode"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.Decoder.get_decode">[docs]</a>    <span class="k">def</span> <span class="nf">get_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="DtypeConversionDecoder"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DtypeConversionDecoder">[docs]</a><span class="k">class</span> <span class="nc">DtypeConversionDecoder</span><span class="p">(</span><span class="n">Decoder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_need_byteswap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="n">native_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">)</span>
+        <span class="n">read_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">read_dtype</span><span class="p">)</span>
+        <span class="n">nd_order</span> <span class="o">=</span> <span class="n">_convert_byteorder_eq</span><span class="p">(</span><span class="n">native_dtype</span><span class="o">.</span><span class="n">byteorder</span><span class="p">)</span>
+        <span class="n">rd_order</span> <span class="o">=</span> <span class="n">_convert_byteorder_eq</span><span class="p">(</span><span class="n">read_dtype</span><span class="o">.</span><span class="n">byteorder</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nd_order</span> <span class="o">!=</span> <span class="n">rd_order</span> <span class="ow">and</span> <span class="n">native_dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_swapping_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="mi">2</span><span class="p">:</span> <span class="n">decode_swap_2</span><span class="p">,</span>
+            <span class="mi">4</span><span class="p">:</span> <span class="n">decode_swap_4</span><span class="p">,</span>
+            <span class="mi">8</span><span class="p">:</span> <span class="n">decode_swap_8</span><span class="p">,</span>
+        <span class="p">}[</span><span class="n">native_dtype</span><span class="o">.</span><span class="n">itemsize</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_swap_only_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="mi">2</span><span class="p">:</span> <span class="n">decode_swap_only_2</span><span class="p">,</span>
+            <span class="mi">4</span><span class="p">:</span> <span class="n">decode_swap_only_4</span><span class="p">,</span>
+            <span class="mi">8</span><span class="p">:</span> <span class="n">decode_swap_only_8</span><span class="p">,</span>
+        <span class="p">}[</span><span class="n">native_dtype</span><span class="o">.</span><span class="n">itemsize</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DtypeConversionDecoder.get_decode"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DtypeConversionDecoder.get_decode">[docs]</a>    <span class="k">def</span> <span class="nf">get_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="n">native_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">)</span>
+        <span class="n">read_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">read_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_need_byteswap</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">default_decode</span>
+
+        <span class="k">if</span> <span class="n">native_dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">):</span>
+            <span class="c1"># TODO: can implement f32-&gt;f32 and f64-&gt;f64 by straight swapping, and</span>
+            <span class="c1"># other conversions via a two-step decoding process</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;byte swapping for floats not implemented yet&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_swapping_decode</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DtypeConversionDecoder.get_native_dtype"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DtypeConversionDecoder.get_native_dtype">[docs]</a>    <span class="k">def</span> <span class="nf">get_native_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp_native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_need_byteswap</span><span class="p">(</span><span class="n">inp_native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">inp_native_dtype</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

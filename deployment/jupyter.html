@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jupyter integration &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Containers and clusters" href="clustercontainer.html" />
+    <link rel="prev" title="Installation" href="../install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../install.html">Installation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../install.html#the-short-version">The short version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#linux-and-mac-os-x">Linux and Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#docker-and-singularity">Docker and Singularity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../install.html#integration-and-deployment">Integration and deployment</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Jupyter integration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="clustercontainer.html">Containers and clusters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../install.html">Installation</a></li>
+      <li class="breadcrumb-item active">Jupyter integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/deployment/jupyter.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="jupyter-integration">
+<span id="id1"></span><h1>Jupyter integration<a class="headerlink" href="#jupyter-integration" title="Permalink to this heading"></a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.8.0.</span></p>
+</div>
+<p>The web-based LiberTEM GUI can be integrated into existing JupyterLab and
+JupyterHub installations. That way, the existing authentication and user
+management infrastructure of Jupyter can be re-used to offer LiberTEM as
+a service. The LiberTEM GUI will have access to the same data that is available
+to Jupyter notebooks.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, Jupyter integration is only supported on Unix, not on Windows
+because of outstanding issues in some dependencies. See <a class="reference external" href="https://github.com/jupyterhub/simpervisor/issues/6">simpervisor/6</a> and
+<a class="reference external" href="https://github.com/jupyterhub/jupyter-server-proxy/pull/181">jupyter-server-proxy/181</a> for more
+details.</p>
+</div>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently, a fork of <code class="code docutils literal notranslate"><span class="pre">jupyter-server-proxy</span></code> needs to be used, which
+includes a fix to allow restarting LiberTEM after a graceful shutdown, see
+also
+<a class="reference external" href="https://github.com/jupyterhub/jupyter-server-proxy/pull/215">jupyter-server-proxy/215</a>.
+The fork also includes other unreleased but necessary changes from the
+master branch of <code class="code docutils literal notranslate"><span class="pre">jupyter-server-proxy</span></code>.
+Installation can be done with the following commands, after having followed
+the installation instructions below:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>jupyter-venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:sk1p/jupyter-server-proxy.git
+<span class="o">(</span>jupyter-venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>jupyter-server-proxy<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>websocket-fix-plus-restart
+<span class="o">(</span>jupyter-venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>.
+</pre></div>
+</div>
+<p>Note that this needs to be done in the environment where
+<code class="code docutils literal notranslate"><span class="pre">libertem-jupyter-proxy</span></code> was installed.</p>
+</div>
+<p>As a first step, you will need to install
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM-jupyter-proxy">LiberTEM-jupyter-proxy</a>
+into the Python environment where JupyterHub or JupyterLab is installed. Then,
+you will also need an installation of LiberTEM, which can live in either the same
+Python environment, or in its own.</p>
+<p>In case of a separate Python environment for LiberTEM, you will need to tell
+LiberTEM-jupyter-proxy how to start the <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code>. This is done
+with a simple JSON configuration file. The configuration file needs to be saved in the
+Python environment where LiberTEM-jupyter-proxy is installed. If the virtualenv
+that contains the Jupyter installation is created at
+<code class="code docutils literal notranslate"><span class="pre">/opt/jupyter/venv/</span></code>, the configuration filename should be
+<code class="code docutils literal notranslate"><span class="pre">/opt/jupyter/venv/etc/libertem_jupyter_proxy.json</span></code>. The contents should
+look like this:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;libertem_server_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/opt/libertem/venv/bin/libertem-server&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>This allows to separate the Jupyter installation from the LiberTEM installation.
+The given path can also point to a wrapper script, for example for further environment
+preparations, like loading modules on an HPC system. The wrapper script should forward
+any arguments it reveices to the <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code> call.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
+<p>When the installation is finished, you can find the LiberTEM GUI as an entry
+in the <code class="code docutils literal notranslate"><span class="pre">New</span></code> menu in JupyterHub:</p>
+<figure class="align-default">
+<img alt="../_images/jupyter-hub.png" src="../_images/jupyter-hub.png" />
+</figure>
+<p>Or as a launcher icon in JupyterLab:</p>
+<figure class="align-default">
+<img alt="../_images/jupyter-lab.png" src="../_images/jupyter-lab.png" />
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../install.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="clustercontainer.html" class="btn btn-neutral float-right" title="Containers and clusters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.common.buffers &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.common.buffers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.common.buffers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">import</span> <span class="nn">mmap</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span><span class="p">,</span> <span class="n">count_nonzero</span><span class="p">,</span> <span class="n">flat_nonzero</span>
+<span class="kn">from</span> <span class="nn">libertem.common.slice</span> <span class="kn">import</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">.backend</span> <span class="kn">import</span> <span class="n">get_use_cuda</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">typing</span> <span class="k">as</span> <span class="n">nt</span>
+
+<span class="n">BufferKind</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;nav&#39;</span><span class="p">,</span> <span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="s1">&#39;single&#39;</span><span class="p">]</span>
+<span class="n">BufferLocation</span> <span class="o">=</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;device&#39;</span><span class="p">]]</span>
+<span class="n">BufferUse</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;private&#39;</span><span class="p">,</span> <span class="s1">&#39;result_only&#39;</span><span class="p">]</span>
+<span class="n">BufferSize</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
+
+
+<span class="k">def</span> <span class="nf">_alloc_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">blocksize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">:</span>
+    <span class="c1"># round up to (default 4k) blocks:</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="n">blocksize</span><span class="p">)</span>
+
+    <span class="c1"># flags are by default MAP_SHARED, which has to be set</span>
+    <span class="c1"># to prevent possible corruption (see open(2)). If you</span>
+    <span class="c1"># are adding flags here, make sure to include MAP_SHARED</span>
+    <span class="c1"># (and check for windows compat)</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">blocksize</span> <span class="o">*</span> <span class="n">blocks</span><span class="p">)</span>
+
+    <span class="c1"># FIXME: if `blocksize` &gt; PAGE_SIZE, we may have to align the start</span>
+    <span class="c1"># address here, too.</span>
+
+    <span class="k">return</span> <span class="n">buf</span>
+
+
+<div class="viewcode-block" id="bytes_aligned"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.bytes_aligned">[docs]</a><span class="k">def</span> <span class="nf">bytes_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">memoryview</span><span class="p">:</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">_alloc_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="c1"># _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:</span>
+    <span class="k">return</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">buf</span><span class="p">)[:</span><span class="n">size</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="empty_aligned"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.empty_aligned">[docs]</a><span class="k">def</span> <span class="nf">empty_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="n">BufferSize</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="n">size_flat</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">_alloc_aligned</span><span class="p">(</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">size_flat</span><span class="p">)</span>
+    <span class="c1"># _alloc_aligned may give us more memory (for alignment reasons), so crop it off the end:</span>
+    <span class="n">npbuf</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)[:</span><span class="n">size_flat</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">npbuf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">size</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="zeros_aligned"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.zeros_aligned">[docs]</a><span class="k">def</span> <span class="nf">zeros_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="n">BufferSize</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="nb">object</span> <span class="ow">or</span> <span class="n">prod</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">empty_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="n">res</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<span class="c1"># FIXME: type annotation for cupy.ndarray without importing?</span>
+<div class="viewcode-block" id="to_numpy"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.to_numpy">[docs]</a><span class="k">def</span> <span class="nf">to_numpy</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="c1"># .. versionadded:: 0.6.0</span>
+    <span class="n">cuda_device</span> <span class="o">=</span> <span class="n">get_use_cuda</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span>
+    <span class="k">elif</span> <span class="n">cuda_device</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Try to avoid importing unless necessary</span>
+        <span class="kn">import</span> <span class="nn">cupy</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">cupy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cupy</span><span class="o">.</span><span class="n">asnumpy</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="c1"># Falling through</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;I don&#39;t know how to convert </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="si">}</span><span class="s2"> here.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="reshaped_view"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.reshaped_view">[docs]</a><span class="k">def</span> <span class="nf">reshaped_view</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Like :meth:`numpy.ndarray.reshape`, just guaranteed to</span>
+<span class="sd">    return a view or throw an :class:`AttributeError` if</span>
+<span class="sd">    no view can be created.</span>
+
+<span class="sd">    .. versionadded:: 0.5.0</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    a : numpy.ndarray</span>
+<span class="sd">        Array to create a view of</span>
+<span class="sd">    shape : tuple</span>
+<span class="sd">        Shape of the view to create</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    view : numpy.ndarray</span>
+<span class="sd">        View into :code:`a` with shape :code:`shape`</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">view</span><span class="p">()</span>
+    <span class="n">res</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="disjoint"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.disjoint">[docs]</a><span class="k">def</span> <span class="nf">disjoint</span><span class="p">(</span><span class="n">sl</span><span class="p">:</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">slices</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Slice</span><span class="p">]):</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">sl</span><span class="o">.</span><span class="n">intersection_with</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span><span class="o">.</span><span class="n">is_null</span><span class="p">()</span> <span class="k">for</span> <span class="n">s2</span> <span class="ow">in</span> <span class="n">slices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BufferPool"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferPool">[docs]</a><span class="k">class</span> <span class="nc">BufferPool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    allocation pool for explicitly re-using (aligned) allocations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffers</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[])</span>
+
+<div class="viewcode-block" id="BufferPool.zeros"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferPool.zeros">[docs]</a>    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">zeros</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="mi">4096</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="nb">object</span> <span class="ow">or</span> <span class="n">prod</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)</span> <span class="k">as</span> <span class="n">res</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">yield</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="BufferPool.empty"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferPool.empty">[docs]</a>    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="mi">4096</span><span class="p">):</span>
+        <span class="n">size_flat</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytes</span><span class="p">(</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">size_flat</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)</span> <span class="k">as</span> <span class="n">buf</span><span class="p">:</span>
+            <span class="c1"># self.bytes may give us more memory (for alignment reasons), so</span>
+            <span class="c1"># crop it off the end:</span>
+            <span class="n">npbuf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)[:</span><span class="n">size_flat</span><span class="p">]</span>
+            <span class="k">yield</span> <span class="n">npbuf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BufferPool.bytes"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferPool.bytes">[docs]</a>    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="o">=</span><span class="mi">4096</span><span class="p">):</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkout_bytes</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">buf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checkin_bytes</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BufferPool.checkout_bytes"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferPool.checkout_bytes">[docs]</a>    <span class="k">def</span> <span class="nf">checkout_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">):</span>
+        <span class="n">buffers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffers</span><span class="p">[(</span><span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="n">buffers</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="n">buf</span> <span class="o">=</span> <span class="n">_alloc_aligned</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">blocksize</span><span class="o">=</span><span class="n">alignment</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">buf</span></div>
+
+<div class="viewcode-block" id="BufferPool.checkin_bytes"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferPool.checkin_bytes">[docs]</a>    <span class="k">def</span> <span class="nf">checkin_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffers</span><span class="p">[(</span><span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buf</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ManagedBuffer"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.ManagedBuffer">[docs]</a><span class="k">class</span> <span class="nc">ManagedBuffer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Allocate `size` bytes from `pool`, and return them to the pool once we are GC&#39;d</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pool</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">pool</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buf</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">checkout_bytes</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">alignment</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alignment</span> <span class="o">=</span> <span class="n">alignment</span>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">checkin_bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alignment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">buf</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BufferWrapper"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper">[docs]</a><span class="k">class</span> <span class="nc">BufferWrapper</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper class to automatically allocate buffers, either for partitions or</span>
+<span class="sd">    the whole dataset, and create views for partitions or single frames.</span>
+
+<span class="sd">    This is used as a helper to allow easy merging of results without needing</span>
+<span class="sd">    to manually handle indexing.</span>
+
+<span class="sd">    Usually, as a user, you only need to instantiate this class, specifying `kind`,</span>
+<span class="sd">    `dtype` and sometimes `extra_shape` parameters. Most methods are meant to be called</span>
+<span class="sd">    from LiberTEM-internal code, for example the UDF functionality.</span>
+
+<span class="sd">    This class is array_like, so you can directly use it, for example, as argument</span>
+<span class="sd">    for numpy functions.</span>
+
+<span class="sd">    .. versionchanged:: 0.6.0</span>
+<span class="sd">        Add option to specify backend, for example CuPy</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    kind : &quot;nav&quot;, &quot;sig&quot; or &quot;single&quot;</span>
+<span class="sd">        The abstract shape of the buffer, corresponding either to the navigation</span>
+<span class="sd">        or the signal dimensions of the dataset, or a single value.</span>
+
+<span class="sd">    extra_shape : optional, tuple of int or a Shape object</span>
+<span class="sd">        You can specify additional dimensions for your data. For example, if</span>
+<span class="sd">        you want to store 2D coords, you would specify (2,) here.</span>
+<span class="sd">        For a Shape object, sig_dims is discarded and the entire shape is used.</span>
+
+<span class="sd">    dtype : string or numpy dtype</span>
+<span class="sd">        The dtype of this buffer</span>
+
+<span class="sd">    where : string or None</span>
+<span class="sd">        :code:`None` means NumPy array, :code:`device` to use a back-end specified</span>
+<span class="sd">        in :meth:`allocate`.</span>
+
+<span class="sd">        .. versionadded:: 0.6.0</span>
+
+<span class="sd">    use : &quot;private&quot;, &quot;result_only&quot; or None</span>
+<span class="sd">        If you specify :code:`&quot;private&quot;` here, the result will only be made available</span>
+<span class="sd">        to internal functions, like :meth:`process_frame`, :meth:`merge` or</span>
+<span class="sd">        :meth:`get_results`. It will not be available to the user of the UDF, which means</span>
+<span class="sd">        you can use this to hide implementation details that are likely to change later.</span>
+
+<span class="sd">        Specify :code:`&quot;result_only&quot;` here if the buffer is only used in :meth:`get_results`,</span>
+<span class="sd">        this means we don&#39;t have to allocate and return it on the workers without actually</span>
+<span class="sd">        needing it.</span>
+
+<span class="sd">        :code:`None` means the buffer is used both as a final and intermediate result.</span>
+
+<span class="sd">        .. versionadded:: 0.7.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">extra_shape</span><span class="o">=</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">extra_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">kind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_where</span> <span class="o">=</span> <span class="n">where</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># set to True if the data coords are global ds coords</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_coords_global</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ds_partitions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roi_is_zero</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use</span> <span class="o">=</span> <span class="n">use</span>
+
+<div class="viewcode-block" id="BufferWrapper.set_roi"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.set_roi">[docs]</a>    <span class="k">def</span> <span class="nf">set_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span> <span class="o">=</span> <span class="n">roi</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.add_partitions"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.add_partitions">[docs]</a>    <span class="k">def</span> <span class="nf">add_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partitions</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a list of dataset partitions to the buffer such that</span>
+<span class="sd">        self.allocate() can make use of the structure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ds_partitions</span> <span class="o">=</span> <span class="n">partitions</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.set_shape_partition"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.set_shape_partition">[docs]</a>    <span class="k">def</span> <span class="nf">set_shape_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_roi</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">roi_count</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi_part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">[</span><span class="n">partition</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">nav_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+            <span class="n">roi_count</span> <span class="o">=</span> <span class="n">count_nonzero</span><span class="p">(</span><span class="n">roi_part</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">roi_count</span> <span class="o">&lt;=</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">roi_part</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">roi_count</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_roi_is_zero</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.set_shape_ds"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.set_shape_ds">[docs]</a>    <span class="k">def</span> <span class="nf">set_shape_ds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset_shape</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_roi</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="n">roi_count</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi_count</span> <span class="o">=</span> <span class="n">count_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="n">dataset_shape</span><span class="o">.</span><span class="n">flatten_nav</span><span class="p">(),</span> <span class="n">roi_count</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_roi_is_zero</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span> <span class="o">=</span> <span class="n">dataset_shape</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># precondition: _shape_for_kind has been called</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>
+
+    <span class="k">def</span> <span class="nf">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">orig_shape</span><span class="p">,</span> <span class="n">roi_count</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;nav&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">roi_count</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">orig_shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">roi_count</span><span class="p">,)</span>
+            <span class="k">return</span> <span class="n">nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">orig_shape</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown kind: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">kind</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the buffer contents in shape that corresponds to the</span>
+<span class="sd">        original dataset shape. If a ROI is set, embed the result into a new</span>
+<span class="sd">        array; unset values have NaN value for floating point types,</span>
+<span class="sd">        False for boolean, 0 for integer types and structs,</span>
+<span class="sd">        &#39;&#39; for string types and None for objects.</span>
+
+<span class="sd">        .. versionchanged:: 0.7.0</span>
+<span class="sd">            Better initialization values for dtypes other than floating point.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cache is not empty, has to be flushed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">!=</span> <span class="s1">&#39;nav&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="p">))</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="c1"># preallocated and already wrapped</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+        <span class="c1"># Integer types and &quot;void&quot; (structs and such)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">):</span>
+            <span class="n">fill</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Bytes and Unicode strings</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">):</span>
+            <span class="n">fill</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># &#39;b&#39; (boolean): False</span>
+            <span class="c1"># &#39;f&#39;, &#39;c&#39;: NaN</span>
+            <span class="c1"># &#39;m&#39;, &#39;M&#39; (datetime, timedelta): NaT</span>
+            <span class="c1"># &#39;O&#39; (object): None</span>
+            <span class="n">fill</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">flat_shape_with_extra</span> <span class="o">=</span> <span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">//</span> <span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">),)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="n">wrapper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">flat_shape_with_extra</span><span class="p">,</span> <span class="n">fill</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">)</span>
+        <span class="n">wrapper</span><span class="p">[</span><span class="n">flat_nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">),</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+        <span class="k">return</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the declared dtype of this buffer.</span>
+
+<span class="sd">        .. versionadded:: 0.7.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the raw data underlying this buffer, which is flattened and</span>
+<span class="sd">        may be even filtered to a ROI</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kind</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the kind of this buffer.</span>
+
+<span class="sd">        .. versionadded:: 0.5.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extra_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the :code:`extra_shape` of this buffer.</span>
+
+<span class="sd">        .. versionadded:: 0.5.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the place where this buffer is to be allocated.</span>
+
+<span class="sd">        .. versionadded:: 0.6.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_where</span>
+
+    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns the &quot;wrapped&quot;/reshaped array, see above</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+
+<div class="viewcode-block" id="BufferWrapper.allocate"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.allocate">[docs]</a>    <span class="k">def</span> <span class="nf">allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allocate a new buffer, in the shape previously set</span>
+<span class="sd">        via one of the `set_shape_*` methods.</span>
+
+<span class="sd">        .. versionchanged:: 0.6.0</span>
+<span class="sd">            Support for allocating on device</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;cannot allocate: no shape set&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;cannot allocate: data is already set&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_where</span> <span class="o">==</span> <span class="s1">&#39;device&#39;</span> <span class="ow">and</span> <span class="n">lib</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_z</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">zeros</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_z</span> <span class="o">=</span> <span class="n">zeros_aligned</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">_z</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.has_data"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.has_data">[docs]</a>    <span class="k">def</span> <span class="nf">has_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">roi_is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi_is_zero</span>
+
+    <span class="k">def</span> <span class="nf">_update_roi_is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roi_is_zero</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_slice_for_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a Slice into self._data for `partition`, taking the current ROI into account.</span>
+
+<span class="sd">        Because _data is &quot;compressed&quot; if a ROI is set, we can&#39;t directly index and must</span>
+<span class="sd">        calculate a new slice from the ROI.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">partition</span><span class="o">.</span><span class="n">slice</span>
+        <span class="k">return</span> <span class="n">partition</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">adjust_for_roi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BufferWrapper.get_view_for_dataset"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.get_view_for_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cache is not empty, has to be flushed&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">slice</span><span class="p">:</span> <span class="n">Slice</span><span class="p">):</span>
+        <span class="n">real_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_shape</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice_direct</span><span class="p">(</span><span class="n">real_slice</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_slice_direct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_slice</span><span class="p">:</span> <span class="nb">slice</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">real_slice</span><span class="p">]</span>
+        <span class="c1"># Defend against #1026 (internal bugs), allow deactivating in</span>
+        <span class="c1"># optimized builds for performance</span>
+        <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">shape</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="BufferWrapper.get_view_for_partition"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.get_view_for_partition">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get a view for a single partition in a whole-result-sized buffer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cache is not empty, has to be flushed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;nav&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice_for_partition</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice</span><span class="p">(</span><span class="n">partition</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.get_view_for_frame"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.get_view_for_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get a view for a single frame in a partition- or dataset-sized buffer</span>
+<span class="sd">        (partition-sized here means the reduced result for a whole partition,</span>
+<span class="sd">        not the partition itself!)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;partition shape should be flat, is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">partition</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cache is not empty, has to be flushed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;nav&quot;</span><span class="p">:</span>
+            <span class="n">partition_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_for_partition</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_coords_global</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">partition_slice</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Defense against #1026: if it is an int, there is no empty or out</span>
+            <span class="c1"># of range slice, but an index error</span>
+            <span class="n">result_idx</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">frame_idx</span> <span class="o">-</span> <span class="n">offset</span><span class="p">),)</span>
+            <span class="c1"># shape: (1,) + self._extra_shape</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">result_idx</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">result_idx</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,)]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.get_view_for_tile"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.get_view_for_tile">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        get a view for a single tile in a partition-sized buffer</span>
+<span class="sd">        (partition-sized here means the reduced result for a whole partition,</span>
+<span class="sd">        not the partition itself!)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cache is not empty, has to be flushed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi_is_zero</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot get view for tile with zero ROI&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;nav&quot;</span><span class="p">:</span>
+            <span class="n">partition_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_for_partition</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span>
+            <span class="n">tile_slice</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">tile_slice</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_coords_global</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="n">partition_slice</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">result_start</span> <span class="o">=</span> <span class="n">tile_slice</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">offset</span>
+            <span class="n">result_stop</span> <span class="o">=</span> <span class="n">result_start</span> <span class="o">+</span> <span class="n">tile_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Defend against #1026 (internal bugs), allow deactivating in</span>
+            <span class="c1"># optimized builds for performance</span>
+            <span class="k">assert</span> <span class="n">result_start</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">result_stop</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">result_start</span><span class="p">:</span><span class="n">result_stop</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;single&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.get_contiguous_view_for_tile"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.get_contiguous_view_for_tile">[docs]</a>    <span class="k">def</span> <span class="nf">get_contiguous_view_for_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Make a cached contiguous copy of the view for a single tile</span>
+<span class="sd">        if necessary.</span>
+
+<span class="sd">        Currently this is only necessary for :code:`kind=&quot;sig&quot;` buffers.</span>
+<span class="sd">        Use :meth:`flush` to write back the cache.</span>
+
+<span class="sd">        Boundary condition: :code:`tile.tile_slice.get(sig_only=True)`</span>
+<span class="sd">        does not overlap for different tiles while the cache is active,</span>
+<span class="sd">        i.e. the tiles follow LiberTEM slicing for</span>
+<span class="sd">        :meth:`libertem.udf.base.UDFTileMixing.process_tile()`.</span>
+
+<span class="sd">        .. versionadded:: 0.5.0</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        view : np.ndarray</span>
+<span class="sd">            View into data or contiguous copy if necessary</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">_discard_nav_key</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+                <span class="n">view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">real_slice</span><span class="p">,</span> <span class="n">expected_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_from_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_shape</span><span class="p">)</span>
+                <span class="n">view</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_slice_direct</span><span class="p">(</span><span class="n">real_slice</span><span class="p">,</span> <span class="n">expected_shape</span><span class="p">)</span>
+                <span class="c1"># See if the signal dimension can be flattened</span>
+                <span class="c1"># https://docs.scipy.org/doc/numpy/reference/generated/numpy.reshape.html</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">view</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">:</span>
+                    <span class="n">view</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">view</span>
+            <span class="k">return</span> <span class="n">view</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_view_for_tile</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@functools</span><span class="o">.</span><span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_slice_from_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">extra_shape</span><span class="p">):</span>
+        <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">expected_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="p">(</span><span class="n">o</span> <span class="o">+</span> <span class="n">s</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">origin</span><span class="p">[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:],</span> <span class="n">expected_shape</span><span class="p">)),</span>
+            <span class="n">expected_shape</span> <span class="o">+</span> <span class="n">extra_shape</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="BufferWrapper.flush"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Write back any cached contiguous copies</span>
+
+<span class="sd">        .. versionadded:: 0.5.0</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;sig&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">view</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">sl</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slice_from_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">())</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">key</span>
+                <span class="n">sl</span> <span class="o">=</span> <span class="n">sl</span><span class="p">[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">sl</span><span class="p">]</span> <span class="o">=</span> <span class="n">view</span>
+                <span class="c1"># FIXME disjoint() for tuple keys</span>
+                <span class="c1"># if debug and not disjoint(key, self._contiguous_cache.keys()):</span>
+                <span class="c1">#     raise RuntimeError(</span>
+                <span class="c1">#         &quot;`key` %r should be disjoint with existing keys&quot; % key</span>
+                <span class="c1">#     )</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Contiguous cache not implemented for kind </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.export"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Convert device array to NumPy array for pickling and merging</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;BufferWrapper kind=</span><span class="si">{}</span><span class="s2"> dtype=</span><span class="si">{}</span><span class="s2"> extra_shape=</span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="BufferWrapper.replace_array"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.replace_array">[docs]</a>    <span class="k">def</span> <span class="nf">replace_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="s2">&quot;nt.ArrayLike&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the data backing the BufferWrapper even if the BufferWrapper</span>
+<span class="sd">        already has self._data allocated</span>
+
+<span class="sd">        data should be any array-like object</span>
+
+<span class="sd">        Will perform checking for shape and dtype.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">dtype</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dtype mismatch: buffer is </span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2">, data is </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shape mismatch: buffer is </span><span class="si">{</span><span class="n">shape</span><span class="si">}</span><span class="s2">, data is </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="BufferWrapper.result_buffer_type"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.BufferWrapper.result_buffer_type">[docs]</a>    <span class="k">def</span> <span class="nf">result_buffer_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Define the type of Buffer used to return final UDF results</span>
+
+<span class="sd">        More specialised buffers can override this</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">PreallocBufferWrapper</span></div></div>
+
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper">[docs]</a><span class="k">class</span> <span class="nc">PlaceholderBufferWrapper</span><span class="p">(</span><span class="n">BufferWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A declaration-only version of :code:`BufferWrapper` that doesn&#39;t</span>
+<span class="sd">    actually allocate a buffer. Meant as a placeholder for results</span>
+<span class="sd">    that are only materialized in :code:`UDF.get_results`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PlaceholderBufferWrapper.allocate"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.allocate">[docs]</a>    <span class="k">def</span> <span class="nf">allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper.has_data"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.has_data">[docs]</a>    <span class="k">def</span> <span class="nf">has_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper.export"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper.get_view_for_partition"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.get_view_for_partition">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper.get_view_for_frame"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.get_view_for_frame">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">frame_idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper.get_view_for_tile"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.get_view_for_tile">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="PlaceholderBufferWrapper.get_contiguous_view_for_tile"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PlaceholderBufferWrapper.get_contiguous_view_for_tile">[docs]</a>    <span class="k">def</span> <span class="nf">get_contiguous_view_for_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;this BufferWrapper doesn&#39;t have a value associated with it&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;this BufferWrapper doesn&#39;t have a value associated with it&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PreallocBufferWrapper"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.PreallocBufferWrapper">[docs]</a><span class="k">class</span> <span class="nc">PreallocBufferWrapper</span><span class="p">(</span><span class="n">BufferWrapper</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="AuxBufferWrapper"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.AuxBufferWrapper">[docs]</a><span class="k">class</span> <span class="nc">AuxBufferWrapper</span><span class="p">(</span><span class="n">BufferWrapper</span><span class="p">):</span>
+<div class="viewcode-block" id="AuxBufferWrapper.new_for_partition"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.AuxBufferWrapper.new_for_partition">[docs]</a>    <span class="k">def</span> <span class="nf">new_for_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a new AuxBufferWrapper for a specific partition,</span>
+<span class="sd">        slicing the data accordingly and reducing it to the selected roi.</span>
+
+<span class="sd">        This assumes to be called on an AuxBufferWrapper that was not created</span>
+<span class="sd">        by this method, that is, it should have global coordinates without</span>
+<span class="sd">        having the ROI applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># FIXME: right now creates a view for the partition slice, which</span>
+        <span class="c1"># AFAIK means we serialize the whole array; we could optimize here</span>
+        <span class="c1"># and only send over the partition slice. But maybe, later, when we</span>
+        <span class="c1"># actually properly scatter and share data, this becomes obsolete anyways,</span>
+        <span class="c1"># as we would scatter most likely for all partitions (to be flexible in node</span>
+        <span class="c1"># assignment, for example for availability)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_coords_global</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">partition</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">nav_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi_part</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="n">ps</span><span class="p">]</span>
+            <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">ps</span><span class="p">][</span><span class="n">roi_part</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">ps</span><span class="p">]</span>
+        <span class="n">buf</span><span class="o">.</span><span class="n">set_buffer</span><span class="p">(</span><span class="n">new_data</span><span class="p">,</span> <span class="n">is_global</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">buf</span><span class="o">.</span><span class="n">set_roi</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">prod</span><span class="p">(</span><span class="n">new_data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">buf</span><span class="o">.</span><span class="n">_data_coords_global</span>
+        <span class="k">return</span> <span class="n">buf</span></div>
+
+<div class="viewcode-block" id="AuxBufferWrapper.get_view_for_dataset"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.AuxBufferWrapper.get_view_for_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">get_view_for_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="AuxBufferWrapper.set_buffer"><a class="viewcode-back" href="../../../reference/udf.html#libertem.common.buffers.AuxBufferWrapper.set_buffer">[docs]</a>    <span class="k">def</span> <span class="nf">set_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">is_global</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the underlying buffer to an existing numpy array.</span>
+
+<span class="sd">        If is_global is True, the shape must match with the shape of nav or sig</span>
+<span class="sd">        of the dataset, plus extra_shape, as determined by the `kind` and</span>
+<span class="sd">        `extra_shape` constructor arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="n">buf</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">extra</span> <span class="ow">and</span> <span class="n">extra</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,):</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">+</span> <span class="n">extra</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_coords_global</span> <span class="o">=</span> <span class="n">is_global</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;AuxBufferWrapper kind=</span><span class="si">{}</span><span class="s2"> dtype=</span><span class="si">{}</span><span class="s2"> extra_shape=</span><span class="si">{}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example of integration with HyperSpy lazy signals &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/nbsphinx-code-cells.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Changelog" href="changelog.html" />
+    <link rel="prev" title="Dask integration" href="dask.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="dask.html">Dask integration</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="dask.html#linking-with-hyperspy-lazy-signals">Linking with HyperSpy Lazy Signals</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Example of integration with HyperSpy lazy signals</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#From-HyperSpy-to-LiberTEM">From HyperSpy to LiberTEM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#From-LiberTEM-to-HyperSpy:-Dataset">From LiberTEM to HyperSpy: Dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#From-LiberTEM-to-HyperSpy:-UDF-computation-result">From LiberTEM to HyperSpy: UDF computation result</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#scheduler">Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#load-datasets-as-dask-arrays">Load datasets as Dask arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#load-dask-arrays-as-datasets">Load Dask arrays as datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#create-dask-arrays-with-udfs">Create Dask arrays with UDFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#merge-function-for-dask-array-results">Merge function for Dask array results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#cuda-and-scheduling">CUDA and scheduling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="dask.html">Dask integration</a></li>
+      <li class="breadcrumb-item active">Example of integration with HyperSpy lazy signals</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hyperspy-integration.nblink.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Example-of-integration-with-HyperSpy-lazy-signals">
+<h1>Example of integration with HyperSpy lazy signals<a class="headerlink" href="#Example-of-integration-with-HyperSpy-lazy-signals" title="Permalink to this heading"></a></h1>
+<p>This notebook shows the several ways in which LiberTEM can integrate with Dask and by extension HyperSpy <a class="reference external" href="http://hyperspy.org/hyperspy-doc/current/user_guide/big_data.html">lazy signals</a>. In particular:</p>
+<ul class="simple">
+<li><p>how to apply a LiberTEM UDF to a HyperSpy lazy signal</p></li>
+<li><p>how to create a HyperSpy lazy signal from a LiberTEM DataSet</p></li>
+<li><p>how to create a HyperSpy lazy signal from a LiberTEM computation.</p></li>
+</ul>
+<p>This notebook requires the <code class="docutils literal notranslate"><span class="pre">hdbscan</span></code> extra and uses PyXem for scanning diffraction data support in HyperSpy.</p>
+<p>Please note that these features are rather new and not well-tested yet (added in version 0.9.0). Bug reports and improvements are much appreciated!</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">dask</span>
+<span class="kn">import</span> <span class="nn">hyperspy.api</span> <span class="k">as</span> <span class="nn">hs</span>
+<span class="kn">import</span> <span class="nn">pyxem</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:silx.opencl.common:Unable to import pyOpenCl. Please install it from: https://pypi.org/project/pyopencl
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.api</span> <span class="kn">import</span> <span class="n">Context</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.sumsigudf</span> <span class="kn">import</span> <span class="n">SumSigUDF</span>
+<span class="kn">from</span> <span class="nn">libertem.contrib.daskadapter</span> <span class="kn">import</span> <span class="n">make_dask_array</span>
+<span class="kn">from</span> <span class="nn">libertem_blobfinder.common</span> <span class="kn">import</span> <span class="n">correlation</span><span class="p">,</span> <span class="n">patterns</span>
+<span class="kn">from</span> <span class="nn">libertem_blobfinder.udf</span> <span class="kn">import</span> <span class="n">refinement</span>
+<span class="kn">import</span> <span class="nn">libertem.analysis.fullmatch</span> <span class="k">as</span> <span class="nn">fm</span>
+</pre></div>
+</div>
+</div>
+<p>As always, we start with a LiberTEM Context object to act as interface to Dask. Here we use the <code class="docutils literal notranslate"><span class="pre">make_with</span></code> convenience method to create a <code class="docutils literal notranslate"><span class="pre">Context</span></code> which will integrate with any existing Dask scheduler, such as might have been instantiated by HyperSpy or other upstream computation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">make_with</span><span class="p">(</span><span class="s2">&quot;dask-integration&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Alternatively, we could create and set a LiberTEM Dask scheduler as the default Dask scheduler using <code class="docutils literal notranslate"><span class="pre">ctx</span> <span class="pre">=</span> <span class="pre">Context.make_with(&quot;dask-make-default&quot;)</span></code>.</p>
+<p>Unfortunately, the current BLO-file reader in HyperSpy is not fully compatible with the default distributed scheduler created by LiberTEM.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TESTDATA_BASE_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;/cachedata/users/clausen/libertem-test-data/&quot;</span><span class="p">)</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_base_path</span><span class="p">,</span> <span class="s2">&quot;default.blo&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<section id="From-HyperSpy-to-LiberTEM">
+<h2>From HyperSpy to LiberTEM<a class="headerlink" href="#From-HyperSpy-to-LiberTEM" title="Permalink to this heading"></a></h2>
+<section id="Load-data-as-HyperSpy-lazy-signal">
+<h3>Load data as HyperSpy lazy signal<a class="headerlink" href="#Load-data-as-HyperSpy-lazy-signal" title="Permalink to this heading"></a></h3>
+<p>First we demonstrate the normal HyperSpy lazy signal workflow, where the <code class="docutils literal notranslate"><span class="pre">.data</span></code> backing the Signal is in fact a <code class="docutils literal notranslate"><span class="pre">dask.array.Array</span></code> which will be evaluated only when passed to <code class="docutils literal notranslate"><span class="pre">dask.compute()</span></code>. In the case of reading data from file, the data can remain on disk until required, rather than being loaded into memory at the beginning.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lazy_4d</span> <span class="o">=</span> <span class="n">hs</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">lazy_4d</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<table>
+    <tr>
+        <td>
+            <table>
+                <thead>
+                    <tr>
+                        <th> Title: </th>
+                        <td>  </td>
+                    </tr>
+                    <tr>
+                        <th> SignalType: </th>
+                        <td> diffraction </td>
+                    </tr>
+                </thead>
+                <thead>
+                    <tr>
+                        <td>  </td>
+                        <th> Array </th>
+                        <th> Chunk </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <th> Bytes </th>
+                        <td> 215.35 MiB </td>
+                        <td> 36.49 MiB </td>
+                    </tr>
+
+                    <tr>
+                        <th> Shape </th>
+                        <td> (121, 90|144, 144) </td>
+                        <td> (41,45|<b>144</b>,<b>144</b>) </td>
+                    </tr>
+                    <tr>
+                        <th> Count </th>
+                        <td> 7 Tasks </td>
+                        <td> 6 Chunks </td>
+                    </tr>
+                    <tr>
+                    <th> Type </th>
+                    <td> uint8 </td>
+                    <td> numpy.ndarray </td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+        <td>
+            <table>
+                <thead>
+                    <tr>
+                        <th><p style="text-align:left;">Navigation Axes</p>  </th>
+                        <th> <p style="text-align:left;">Signal Axes</p> </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td> <svg width="170" height="139" style="stroke:rgb(0,0,0);stroke-width:1" >
+
+  <!-- Horizontal lines -->
+  <line x1="0" y1="0" x2="120" y2="0" style="stroke-width:2" />
+  <line x1="0" y1="44" x2="120" y2="44" />
+  <line x1="0" y1="89" x2="120" y2="89" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="0" y1="0" x2="0" y2="89" style="stroke-width:2" />
+  <line x1="40" y1="0" x2="40" y2="89" />
+  <line x1="80" y1="0" x2="80" y2="89" />
+  <line x1="120" y1="0" x2="120" y2="89" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="0.0,0.0 120.0,0.0 120.0,89.25619834710743 0.0,89.25619834710743" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Text -->
+  <text x="60.000000" y="109.256198" font-size="1.0rem" font-weight="100" text-anchor="middle" >121</text>
+  <text x="140.000000" y="44.628099" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(0,140.000000,44.628099)">90</text>
+</svg> </td>
+                        <td> <svg width="170" height="170" style="stroke:rgb(0,0,0);stroke-width:1" >
+
+  <!-- Horizontal lines -->
+  <line x1="0" y1="0" x2="120" y2="0" style="stroke-width:2" />
+  <line x1="0" y1="120" x2="120" y2="120" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="0" y1="0" x2="0" y2="120" style="stroke-width:2" />
+  <line x1="120" y1="0" x2="120" y2="120" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="0.0,0.0 120.0,0.0 120.0,120.0 0.0,120.0" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Text -->
+  <text x="60.000000" y="140.000000" font-size="1.0rem" font-weight="100" text-anchor="middle" >144</text>
+  <text x="140.000000" y="60.000000" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(-90,140.000000,60.000000)">144</text>
+</svg> </td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+</table></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="n">lazy_4d</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<table>
+    <tr>
+        <td>
+            <table style="border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <td> </td>
+                        <th> Array </th>
+                        <th> Chunk </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <th> Bytes </th>
+                        <td> 215.35 MiB </td>
+                        <td> 36.49 MiB </td>
+                    </tr>
+
+                    <tr>
+                        <th> Shape </th>
+                        <td> (90, 121, 144, 144) </td>
+                        <td> (45, 41, 144, 144) </td>
+                    </tr>
+                    <tr>
+                        <th> Dask graph </th>
+                        <td colspan="2"> 6 chunks in 2 graph layers </td>
+                    </tr>
+                    <tr>
+                        <th> Data type </th>
+                        <td colspan="2"> uint8 numpy.ndarray </td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+        <td>
+        <svg width="519" height="229" style="stroke:rgb(0,0,0);stroke-width:1" >
+
+  <!-- Horizontal lines -->
+  <line x1="0" y1="0" x2="75" y2="0" style="stroke-width:2" />
+  <line x1="0" y1="25" x2="75" y2="25" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="0" y1="0" x2="0" y2="25" style="stroke-width:2" />
+  <line x1="37" y1="0" x2="37" y2="25" />
+  <line x1="75" y1="0" x2="75" y2="25" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="0.0,0.0 75.0,0.0 75.0,25.412616514582485 0.0,25.412616514582485" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Text -->
+  <text x="37.500000" y="45.412617" font-size="1.0rem" font-weight="100" text-anchor="middle" >90</text>
+  <text x="95.000000" y="12.706308" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(0,95.000000,12.706308)">1</text>
+
+
+  <!-- Horizontal lines -->
+  <line x1="145" y1="0" x2="204" y2="59" style="stroke-width:2" />
+  <line x1="145" y1="120" x2="204" y2="179" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="145" y1="0" x2="145" y2="120" style="stroke-width:2" />
+  <line x1="165" y1="20" x2="165" y2="140" />
+  <line x1="184" y1="39" x2="184" y2="159" />
+  <line x1="204" y1="59" x2="204" y2="179" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="145.0,0.0 204.31372549019608,59.31372549019608 204.31372549019608,179.31372549019608 145.0,120.0" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Horizontal lines -->
+  <line x1="145" y1="0" x2="265" y2="0" style="stroke-width:2" />
+  <line x1="165" y1="20" x2="285" y2="20" />
+  <line x1="184" y1="39" x2="304" y2="39" />
+  <line x1="204" y1="59" x2="324" y2="59" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="145" y1="0" x2="204" y2="59" style="stroke-width:2" />
+  <line x1="265" y1="0" x2="324" y2="59" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="145.0,0.0 265.0,0.0 324.3137254901961,59.31372549019608 204.31372549019608,59.31372549019608" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Horizontal lines -->
+  <line x1="204" y1="59" x2="324" y2="59" style="stroke-width:2" />
+  <line x1="204" y1="179" x2="324" y2="179" style="stroke-width:2" />
+
+  <!-- Vertical lines -->
+  <line x1="204" y1="59" x2="204" y2="179" style="stroke-width:2" />
+  <line x1="324" y1="59" x2="324" y2="179" style="stroke-width:2" />
+
+  <!-- Colored Rectangle -->
+  <polygon points="204.31372549019608,59.31372549019608 324.3137254901961,59.31372549019608 324.3137254901961,179.31372549019608 204.31372549019608,179.31372549019608" style="fill:#ECB172A0;stroke-width:0"/>
+
+  <!-- Text -->
+  <text x="264.313725" y="199.313725" font-size="1.0rem" font-weight="100" text-anchor="middle" >144</text>
+  <text x="344.313725" y="119.313725" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(-90,344.313725,119.313725)">144</text>
+  <text x="164.656863" y="169.656863" font-size="1.0rem" font-weight="100" text-anchor="middle" transform="rotate(45,164.656863,169.656863)">121</text>
+</svg>
+        </td>
+    </tr>
+</table></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="n">lazy_4d</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[########################################] | 100% Completed | 102.17 ms
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_11_1.png" src="_images/hyperspy-integration_11_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_11_2.png" src="_images/hyperspy-integration_11_2.png" />
+</div>
+</div>
+</section>
+<section id="Load-the-HyperSpy-lazy-signal-as-a-LiberTEM-dataset">
+<h3>Load the HyperSpy lazy signal as a LiberTEM dataset<a class="headerlink" href="#Load-the-HyperSpy-lazy-signal-as-a-LiberTEM-dataset" title="Permalink to this heading"></a></h3>
+<p>Starting with version 0.9.0, it is possible to load a <code class="docutils literal notranslate"><span class="pre">dask.array.Array</span></code> as a LiberTEM <code class="docutils literal notranslate"><span class="pre">Dataset</span></code>, allowing processing using the existing LiberTEM UDF interface. This can be achieved by loading the dask array using the <code class="docutils literal notranslate"><span class="pre">Context.load</span></code> method and the <code class="docutils literal notranslate"><span class="pre">&quot;dask&quot;</span></code> file type.</p>
+<p>As before, no data is actually loaded into memory at this stage, it will only be read when computation is requested. When the data is eventually read, the HyperSpy BLO reader will be used by Dask to load the file.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dask_ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dask&quot;</span><span class="p">,</span> <span class="n">lazy_4d</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">64</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+WARNING:libertem.io.dataset.dask:Merging nav dimension chunks according to scheme {1: -1} as we cannot maintain continuity of frame indexing in the flattened navigation dimension. Original n_blocks: [2, 3, 1, 1]. New n_blocks: [2, 1, 1, 1].
+</pre></div></div>
+</div>
+<p>Due to differences in the design of Dask and LiberTEM, the <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> must sometimes modify the array chunking (i.e. how the data is organised in memory), leading to the above warning. This does not modify the data itself in any way, it only changes how the computation will be split over parts of the full dataset.</p>
+<p>We start by running some basic analyses on the dataset, loading a single diffraction frame with <code class="docutils literal notranslate"><span class="pre">create_pick_analysis</span></code> and summing over the signal dimensions with <code class="docutils literal notranslate"><span class="pre">SumSigUDF</span></code>. For both of these calls the data is loaded from disk at this point.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pick_a</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">create_pick_analysis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dask_ds</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pick_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">pick_a</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sum_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dask_ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumSigUDF</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>it
+<span class="c1"># NBVAL_SKIP</span>
+<span class="n">sum_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dask_ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumSigUDF</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+192 ms ± 1.19 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">pick_res</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Diffraction frame&#39;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">sum_res</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Sum over signal dimensions&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Sum over signal dimensions&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_18_1.png" src="_images/hyperspy-integration_18_1.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="From-LiberTEM-to-HyperSpy:-Dataset">
+<h2>From LiberTEM to HyperSpy: Dataset<a class="headerlink" href="#From-LiberTEM-to-HyperSpy:-Dataset" title="Permalink to this heading"></a></h2>
+<section id="Load-data-using-LiberTEM">
+<h3>Load data using LiberTEM<a class="headerlink" href="#Load-data-using-LiberTEM" title="Permalink to this heading"></a></h3>
+<p>LiberTEM posesses its own BLO-file reader (here with auto-detection of filetype). First we run the same analyses as above to demonstrate their equivalency.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">native_ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+<span class="n">native_ds</span><span class="o">.</span><span class="n">set_num_cores</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sum_res_lt</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">native_ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumSigUDF</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>it
+<span class="c1"># NBVAL_SKIP</span>
+<span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">native_ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumSigUDF</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+186 ms ± 2.23 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">sum_res_lt</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">sum_res</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+True
+</pre></div></div>
+</div>
+</section>
+<section id="Create-dask-array-from-LiberTEM-dataset">
+<h3>Create dask array from LiberTEM dataset<a class="headerlink" href="#Create-dask-array-from-LiberTEM-dataset" title="Permalink to this heading"></a></h3>
+<p>Using the method <code class="docutils literal notranslate"><span class="pre">make_dask_array</span></code>, we can convert any LiberTEM dataset into a chunked <code class="docutils literal notranslate"><span class="pre">dask.array</span></code>, such as those used for backing a HyperSpy lazy signal.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">dask</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;array.slicing.split_large_chunks&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}):</span>
+    <span class="n">dask_array</span><span class="p">,</span> <span class="n">workers</span> <span class="o">=</span> <span class="n">make_dask_array</span><span class="p">(</span><span class="n">native_ds</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">dask_array</span></code> is supplied with a dictionary of <code class="docutils literal notranslate"><span class="pre">workers</span></code>, which can be passed to <code class="docutils literal notranslate"><span class="pre">dask.compute()</span></code> at the moment of evaluation to ensure data locality, and avoid transferring chunks of the dataset between processes or over the network.</p>
+</section>
+<section id="Create-lazy-HyperSpy-signal-from-Dask-array">
+<h3>Create lazy HyperSpy signal from Dask array<a class="headerlink" href="#Create-lazy-HyperSpy-signal-from-Dask-array" title="Permalink to this heading"></a></h3>
+<p>We now create a HyperSpy signal from this <code class="docutils literal notranslate"><span class="pre">dask_array</span></code>, with the aid of <code class="docutils literal notranslate"><span class="pre">pyxem</span></code> to maintain its metadata as a diffraction dataset.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">libertem_4d</span> <span class="o">=</span> <span class="n">pyxem</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">LazyDiffraction2D</span><span class="p">(</span><span class="n">dask_array</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>This gives us access to the full range of HyperSpy interfaces on the LiberTEM dataset, such as <code class="docutils literal notranslate"><span class="pre">.plot()</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="n">libertem_4d</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[########################################] | 100% Completed | 513.08 ms
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_31_1.png" src="_images/hyperspy-integration_31_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_31_2.png" src="_images/hyperspy-integration_31_2.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="From-LiberTEM-to-HyperSpy:-UDF-computation-result">
+<h2>From LiberTEM to HyperSpy: UDF computation result<a class="headerlink" href="#From-LiberTEM-to-HyperSpy:-UDF-computation-result" title="Permalink to this heading"></a></h2>
+<p>Starting with version 0.9.0, it is possible to obtain Dask arrays as output from LiberTEM UDF computations. This remains experimental and requires use of a dedicated LiberTEM <code class="docutils literal notranslate"><span class="pre">Context</span></code>. The computation is carried out relying on <a class="reference external" href="https://docs.dask.org/en/stable/delayed.html">Dask.delayed</a>, which allows us to run normal Python code, such as a UDF, within a Dask task graph.</p>
+<p>As an example, this uses the LiberTEM blobfinder <a class="reference external" href="https://libertem.github.io/LiberTEM-blobfinder/">https://libertem.github.io/LiberTEM-blobfinder/</a> for diffraction disk finding and pattern matching.</p>
+<section id="Setup-the-pattern-analysis">
+<h3>Setup the pattern analysis<a class="headerlink" href="#Setup-the-pattern-analysis" title="Permalink to this heading"></a></h3>
+<p>To begin, we use the HyperSpy signal we created above and LiberTEM blobfinder to create a pattern analysis.</p>
+<p>First a reference frame on which we make initial guesses of the peak positions and lattice vectors:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">reference_frame</span> <span class="o">=</span> <span class="n">lazy_4d</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>Note we must <code class="docutils literal notranslate"><span class="pre">.compute()</span></code> the frame because the HyperSpy signal is lazily evaluated.</p>
+<p>We create a search pattern based on a disk radius measured in pixels:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="n">pattern</span> <span class="o">=</span> <span class="n">patterns</span><span class="o">.</span><span class="n">BackgroundSubtraction</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">r</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We evaluate the initial peak positions in the reference frame using correlation with our search pattern:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">peaks</span> <span class="o">=</span> <span class="n">correlation</span><span class="o">.</span><span class="n">get_peaks</span><span class="p">(</span><span class="n">sum_result</span><span class="o">=</span><span class="n">reference_frame</span><span class="p">,</span> <span class="n">match_pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span> <span class="n">num_peaks</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We interpret the detected disks as a diffraction pattern (with principal vectors etc). using the <code class="docutils literal notranslate"><span class="pre">.full_match</span></code> method, this requires us to identify the transmitted beam position in pixels (the zero position):</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">zero</span> <span class="o">=</span> <span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">71</span><span class="p">)</span>
+<span class="n">matcher</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">FullMatcher</span><span class="p">()</span>
+<span class="n">all_match</span> <span class="o">=</span> <span class="n">matcher</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">)</span>
+<span class="n">match</span> <span class="o">=</span> <span class="n">all_match</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<p>And finally we display the results on the reference frame:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+<span class="n">axes</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">reference_frame</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Points of significance and match in the reference frame&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">refineds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">calculated_refineds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">axes</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;g&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">zero</span><span class="p">),</span> <span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">a</span><span class="p">)),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">arrow</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">zero</span><span class="p">),</span> <span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">b</span><span class="p">)),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.patches.FancyArrow at 0x7f03eca40e20&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_42_1.png" src="_images/hyperspy-integration_42_1.png" />
+</div>
+</div>
+</section>
+<section id="Per-frame-refinement-of-the-parameters-we-found-above">
+<h3>Per-frame refinement of the parameters we found above<a class="headerlink" href="#Per-frame-refinement-of-the-parameters-we-found-above" title="Permalink to this heading"></a></h3>
+<p>All of the above was setup for the analysis of the whole dataset based on the detected pattern. For this we will use the special Delayed context, though the same analysis would run with any of the LiberTEM executors.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">delayed_ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">make_with</span><span class="p">(</span><span class="s1">&#39;delayed&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">refined</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">refinement</span><span class="o">.</span><span class="n">run_refine</span><span class="p">(</span><span class="n">ctx</span><span class="o">=</span><span class="n">delayed_ctx</span><span class="p">,</span>
+                                         <span class="n">dataset</span><span class="o">=</span><span class="n">native_ds</span><span class="p">,</span>
+                                         <span class="n">zero</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span>
+                                         <span class="n">a</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">a</span><span class="p">,</span>
+                                         <span class="n">b</span><span class="o">=</span><span class="n">match</span><span class="o">.</span><span class="n">b</span><span class="p">,</span>
+                                         <span class="n">matcher</span><span class="o">=</span><span class="n">matcher</span><span class="p">,</span>
+                                         <span class="n">match_pattern</span><span class="o">=</span><span class="n">pattern</span><span class="p">,</span>
+                                         <span class="n">indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">:</span><span class="mi">5</span><span class="p">])</span>
+<span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 7.91 ms, sys: 3.96 ms, total: 11.9 ms
+Wall time: 11.4 ms
+</pre></div></div>
+</div>
+<p>Note that the ‘analysis’ only takes a few milliseconds. As stated previously, the computation is specified lazily using a Dask task graph, so the actual work is only done when the result is requested; we have only told the system what we want to do in the future.</p>
+<p>The same applies to any computation after the refinement step, such as computing the lattice vector lengths or ratio:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">abs_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">refined</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">delayed_data</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">abs_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">refined</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">delayed_data</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">ratio</span> <span class="o">=</span> <span class="n">abs_a</span> <span class="o">/</span> <span class="n">abs_b</span>
+</pre></div>
+</div>
+</div>
+<p>We can then wrap the result in a HyperSpy signal to benefit from the many methods and interfaces the library provides:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ratio_hs</span> <span class="o">=</span> <span class="n">hs</span><span class="o">.</span><span class="n">signals</span><span class="o">.</span><span class="n">Signal2D</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span><span class="o">.</span><span class="n">as_lazy</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>For demonstration, we can visualize the dask task graph, showing the computation that will be performed when requested:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NBVAL_SKIP</span>
+<span class="n">ratio_hs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">visualize</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_51_0.png" src="_images/hyperspy-integration_51_0.png" />
+</div>
+</div>
+<p>Finally, we plot the result, which automatically triggers the computation behind-the-scenes:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">time</span> ratio_hs.plot(vmin=0.71, vmax=0.73)
+<span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+CPU times: user 13.1 s, sys: 4.61 s, total: 17.7 s
+Wall time: 11.6 s
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/hyperspy-integration_53_1.png" src="_images/hyperspy-integration_53_1.png" />
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dask.html" class="btn btn-neutral float-left" title="Dask integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="changelog.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

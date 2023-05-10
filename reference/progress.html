@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Progress bar support &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tips and tricks" href="../tips.html" />
+    <link rel="prev" title="Visualization" href="viz.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="application.html">Application-specific APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="viz.html">Visualization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Python API reference</a></li>
+      <li class="breadcrumb-item active">Progress bar support</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/progress.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="progress-bar-support">
+<span id="progress-reference"></span><h1>Progress bar support<a class="headerlink" href="#progress-bar-support" title="Permalink to this heading"></a></h1>
+<p>The <code class="code docutils literal notranslate"><span class="pre">ProgressReporter</span></code> is used to display the progress
+bar during calls to <a class="reference internal" href="api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.api.Context</span></code></a>. In normal
+usage there is no need to instantiate these classes directly,
+but they can be used to modify how progress is displayed in
+particular applications.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressReporter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.progress.</span></span><span class="sig-name descname"><span class="pre">ProgressReporter</span></span><a class="reference internal" href="../_modules/libertem/common/progress.html#ProgressReporter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.progress.ProgressReporter" title="Permalink to this definition"></a></dt>
+<dd><p>Interface for progress bar display / updating</p>
+<p>This class will receive <a class="reference internal" href="#libertem.common.progress.ProgressState" title="libertem.common.progress.ProgressState"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressState</span></code></a>
+instances to notify it about the start, progression
+and end of a job submitted to the <code class="code docutils literal notranslate"><span class="pre">UDFRunner</span></code>.
+The implementation should be adapted to display or
+log the progress as required for the use case.</p>
+<p>It is possible that multiple jobs are submitted
+to a single executor at the same time and therefore
+the implementation should ensure that concurrent instances
+of the class display correctly, or that the same instance
+of the class can handle updates from multiple threads
+concurrently. Each <a class="reference internal" href="#libertem.common.progress.ProgressState" title="libertem.common.progress.ProgressState"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProgressState</span></code></a> message contains a field
+<code class="code docutils literal notranslate"><span class="pre">progress_id</span></code> which is unique to each job, and therefore
+the implementation can use this to distinguish updates from
+multiple sources.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressReporter.end">
+<span class="sig-name descname"><span class="pre">end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.progress.ProgressState" title="libertem.common.progress.ProgressState"><span class="pre">ProgressState</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/progress.html#ProgressReporter.end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.progress.ProgressReporter.end" title="Permalink to this definition"></a></dt>
+<dd><p>Signal the end of a given job</p>
+<p>This method will always be called and any updates
+recieved after this message should be ignored.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressReporter.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.progress.ProgressState" title="libertem.common.progress.ProgressState"><span class="pre">ProgressState</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/progress.html#ProgressReporter.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.progress.ProgressReporter.start" title="Permalink to this definition"></a></dt>
+<dd><p>Signal the creation of a new job with the expected
+number of partitions and frames, and unique progress_id string.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressReporter.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.progress.ProgressState" title="libertem.common.progress.ProgressState"><span class="pre">ProgressState</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/progress.html#ProgressReporter.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.progress.ProgressReporter.update" title="Permalink to this definition"></a></dt>
+<dd><p>Signal an intermediate update to the progress of a job</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.progress.</span></span><span class="sig-name descname"><span class="pre">ProgressState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_frames_complete</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_frames_total</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part_complete</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part_in_progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_part_total</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/progress.html#ProgressState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.progress.ProgressState" title="Permalink to this definition"></a></dt>
+<dd><p>Container for progress state, used to communicate
+from ProgressManager to ProgressReporter</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState.num_frames_complete">
+<span class="sig-name descname"><span class="pre">num_frames_complete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><a class="headerlink" href="#libertem.common.progress.ProgressState.num_frames_complete" title="Permalink to this definition"></a></dt>
+<dd><p>Number of frames processed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState.num_frames_total">
+<span class="sig-name descname"><span class="pre">num_frames_total</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.progress.ProgressState.num_frames_total" title="Permalink to this definition"></a></dt>
+<dd><p>Total number of frames to process</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState.num_part_complete">
+<span class="sig-name descname"><span class="pre">num_part_complete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.progress.ProgressState.num_part_complete" title="Permalink to this definition"></a></dt>
+<dd><p>Number of partitions completed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState.num_part_in_progress">
+<span class="sig-name descname"><span class="pre">num_part_in_progress</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.progress.ProgressState.num_part_in_progress" title="Permalink to this definition"></a></dt>
+<dd><p>Number of partitions in-progress</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState.num_part_total">
+<span class="sig-name descname"><span class="pre">num_part_total</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.progress.ProgressState.num_part_total" title="Permalink to this definition"></a></dt>
+<dd><p>Total number of partitions</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.progress.ProgressState.progress_id">
+<span class="sig-name descname"><span class="pre">progress_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><a class="headerlink" href="#libertem.common.progress.ProgressState.progress_id" title="Permalink to this definition"></a></dt>
+<dd><p>A unique string identifier for the job associated
+with this progress message</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="viz.html" class="btn btn-neutral float-left" title="Visualization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tips.html" class="btn btn-neutral float-right" title="Tips and tricks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.executor.delayed &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.executor.delayed</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.executor.delayed</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">dask</span>
+<span class="kn">from</span> <span class="nn">dask</span> <span class="kn">import</span> <span class="n">delayed</span>
+<span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
+
+<span class="kn">from</span> <span class="nn">libertem.io.corrections</span> <span class="kn">import</span> <span class="n">CorrectionSet</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="n">DataSet</span>
+<span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseJobExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">TaskCommHandler</span><span class="p">,</span> <span class="n">TaskProtocol</span>
+<span class="kn">from</span> <span class="nn">libertem.common.scheduler</span> <span class="kn">import</span> <span class="n">Worker</span><span class="p">,</span> <span class="n">WorkerSet</span>
+
+<span class="kn">from</span> <span class="nn">..common.buffers</span> <span class="kn">import</span> <span class="n">BufferWrapper</span>
+<span class="kn">from</span> <span class="nn">..common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">..udf.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UDFMergeAllMixin</span><span class="p">,</span> <span class="n">UDFRunner</span><span class="p">,</span> <span class="n">UDF</span><span class="p">,</span> <span class="n">UDFData</span><span class="p">,</span> <span class="n">MergeAttrMapping</span><span class="p">,</span>
+    <span class="n">get_resources_for_backends</span><span class="p">,</span> <span class="n">UDFResults</span><span class="p">,</span> <span class="n">BackendSpec</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.utils.dask_buffer</span> <span class="kn">import</span> <span class="n">DaskBufferWrapper</span><span class="p">,</span> <span class="n">DaskPreallocBufferWrapper</span><span class="p">,</span> <span class="n">DaskResultBufferWrapper</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">delayed_unpack</span>
+
+
+<span class="k">class</span> <span class="nc">DelayedUDFRunner</span><span class="p">(</span><span class="n">UDFRunner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udfs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">progress_reporter</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_make_udf_result</span><span class="p">(</span><span class="n">udfs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">damage</span><span class="p">:</span> <span class="n">BufferWrapper</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;UDFResults&quot;</span><span class="p">:</span>
+        <span class="n">udf_results</span> <span class="o">=</span> <span class="n">UDFRunner</span><span class="o">.</span><span class="n">_make_udf_result</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">damage</span><span class="p">)</span>
+        <span class="n">buffers</span> <span class="o">=</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span>
+        <span class="n">damage</span> <span class="o">=</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">damage</span>
+        <span class="n">new_buffers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">DaskResultBufferWrapper</span><span class="o">.</span><span class="n">from_buffer_wrapper</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">bufs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">bufs</span> <span class="ow">in</span> <span class="n">buffers</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">UDFResults</span><span class="p">(</span>
+            <span class="n">buffers</span><span class="o">=</span><span class="n">new_buffers</span><span class="p">,</span>
+            <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_part_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udfs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">damage</span><span class="p">,</span> <span class="n">part_results</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">part_results_udf</span><span class="p">,</span> <span class="n">udf</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">part_results</span><span class="p">,</span> <span class="n">udfs</span><span class="p">):</span>
+            <span class="c1"># Allow user to define an alternative merge strategy</span>
+            <span class="c1"># using dask-compatible functions. In the Delayed case we</span>
+            <span class="c1"># won&#39;t be getting partial results with damage anyway.</span>
+            <span class="c1"># Currently there is no interface to provide all of the results</span>
+            <span class="c1"># to udf.merge at once and in the correct order, so I am accumulating</span>
+            <span class="c1"># results in self._part_results[udf] = {partition_slice_roi: part_results, ...}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">UDFMergeAllMixin</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">udf</span><span class="p">)</span><span class="o">.</span><span class="n">merge</span> <span class="ow">is</span> <span class="n">UDF</span><span class="o">.</span><span class="n">merge</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">udf</span><span class="o">.</span><span class="n">requires_custom_merge</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accumulate_part_results</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">part_results_udf</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">parts</span> <span class="o">=</span> <span class="p">{</span>
+                            <span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get_proxy</span><span class="p">()</span>
+                            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span><span class="p">[</span><span class="n">udf</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                        <span class="p">}</span>
+                        <span class="n">udf</span><span class="o">.</span><span class="n">_do_merge_all</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+                    <span class="k">finally</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># In principle we can requrire that sig merges are done sequentially</span>
+            <span class="c1"># by using dask.graph_manipulation.bind, this could improve thread</span>
+            <span class="c1"># safety on the sig buffer. In the current implem it&#39;s not necessary as</span>
+            <span class="c1"># we are calling delayed_apply_part_result sequentially on results</span>
+            <span class="c1"># and replacing all buffers with their partially merged versions</span>
+            <span class="c1"># on each call, so we are implicitly sequential when updating</span>
+            <span class="c1"># try:</span>
+            <span class="c1">#     bind_to = udf.prior_merge</span>
+            <span class="c1"># except AttributeError:</span>
+            <span class="c1">#     bind_to = None</span>
+
+            <span class="n">structure</span> <span class="o">=</span> <span class="n">structure_from_task</span><span class="p">([</span><span class="n">udf</span><span class="p">],</span> <span class="n">task</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">flat_structure</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">flatten_nested</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+            <span class="n">flat_mapping</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">build_mapping</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+
+            <span class="n">src</span> <span class="o">=</span> <span class="n">part_results_udf</span><span class="o">.</span><span class="n">get_proxy</span><span class="p">()</span>
+            <span class="n">src_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">b</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">src</span><span class="o">.</span><span class="n">_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+            <span class="n">dest_dict</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">udf</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">view</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">get_view_for_partition</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
+                <span class="c1"># Handle result-only buffers</span>
+                <span class="k">if</span> <span class="n">view</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">dest_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">unwrap_sliced</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                        <span class="c1"># Handle kind=&#39;single&#39; buffers</span>
+                        <span class="c1"># Could handle sig buffers this way too if we assert no chunking</span>
+                        <span class="n">dest_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">view</span>
+
+            <span class="c1"># Run the udf.merge function in a wrapper which flattens</span>
+            <span class="c1"># the results to a flat list which can be unpacked from the Delayed</span>
+            <span class="c1"># This step makes a copy of the buffer view inside the delayed</span>
+            <span class="c1"># call because this default Dask behaviour is to give a read-only</span>
+            <span class="c1"># view of the arguments to the delayed function</span>
+            <span class="n">merged_del</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">merge_wrap</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">flat_mapping</span><span class="p">))</span>
+            <span class="n">merged_del_result</span> <span class="o">=</span> <span class="n">merged_del</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">dest_dict</span><span class="p">,</span> <span class="n">src_dict</span><span class="p">)</span>
+
+            <span class="c1"># The following is needed when binding sequential updates on sig buffers</span>
+            <span class="c1"># if bind_to is not None:</span>
+            <span class="c1">#     merged_del = delayed_bind([*merged_del_result],</span>
+            <span class="c1">#                               [*bind_to])</span>
+            <span class="c1"># if any([b.kind != &#39;nav&#39; for _, b in udf.results.items()]):</span>
+            <span class="c1">#     # have sig result, gotta do a bind merge next time round</span>
+            <span class="c1">#     udf.prior_merge = merged_del_result</span>
+
+            <span class="c1"># We now build the result back into dask arrays and assign them</span>
+            <span class="c1"># into the appropriate slices of the full result buffers</span>
+            <span class="n">wrapped_res</span> <span class="o">=</span> <span class="n">delayed_to_buffer_wrappers</span><span class="p">(</span><span class="n">merged_del_result</span><span class="p">,</span> <span class="n">flat_structure</span><span class="p">,</span>
+                                                     <span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span> <span class="n">as_buffer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">renested</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">rebuild_nested</span><span class="p">(</span><span class="n">wrapped_res</span><span class="p">,</span> <span class="n">flat_mapping</span><span class="p">)</span>
+
+            <span class="c1"># Assign into the result buffers with the partially merged version</span>
+            <span class="c1"># This is OK because we are calling this part merge function sequentially</span>
+            <span class="c1"># so each new call gets the most recent version of the buffer in the</span>
+            <span class="c1"># dask task graph</span>
+            <span class="n">udf</span><span class="o">.</span><span class="n">set_views_for_partition</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
+            <span class="n">dest</span> <span class="o">=</span> <span class="n">udf</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">get_proxy</span><span class="p">()</span>
+            <span class="n">merged</span> <span class="o">=</span> <span class="n">MergeAttrMapping</span><span class="p">(</span><span class="n">renested</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dest</span><span class="p">:</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">k</span><span class="p">)[:]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">merged</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+        <span class="n">v</span> <span class="o">=</span> <span class="n">damage</span><span class="o">.</span><span class="n">get_view_for_partition</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
+        <span class="n">v</span><span class="p">[:]</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_accumulate_part_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf</span><span class="p">,</span> <span class="n">part_results</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If the udf has a merge_all method, this function is used</span>
+<span class="sd">        to accumulate dask array-backed partial results on the executor</span>
+<span class="sd">        so that the merge_all can be called on all of them at once</span>
+
+<span class="sd">        Ensures that the results are correctly ordered and complete</span>
+<span class="sd">        before allowing merge_all to be called</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">part_results</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>  <span class="c1"># get the first buffer</span>
+        <span class="n">slice_with_roi</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="n">_slice_for_partition</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span><span class="p">[</span><span class="n">udf</span><span class="p">][</span><span class="n">slice_with_roi</span><span class="p">]</span> <span class="o">=</span> <span class="n">part_results</span>
+
+        <span class="c1"># number of frames in dataset</span>
+        <span class="k">if</span> <span class="n">udf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">target_coverage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">udf</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">target_coverage</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+        <span class="c1"># number of frames we have results for</span>
+        <span class="n">current_coverage</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span><span class="p">[</span><span class="n">udf</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">target_coverage</span> <span class="o">==</span> <span class="n">current_coverage</span><span class="p">:</span>
+            <span class="n">ordered_results</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span><span class="p">[</span><span class="n">udf</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+                                     <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">kv</span><span class="p">:</span> <span class="n">kv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_part_results</span><span class="p">[</span><span class="n">udf</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">ordered_results</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">current_coverage</span> <span class="o">&gt;</span> <span class="n">target_coverage</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;More frames accumulated than ROI specifies - &#39;</span>
+                              <span class="sa">f</span><span class="s1">&#39;target </span><span class="si">{</span><span class="n">target_coverage</span><span class="si">}</span><span class="s1"> - processed </span><span class="si">{</span><span class="n">current_coverage</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">results_for_dataset_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="s1">&#39;DelayedJobExecutor&#39;</span><span class="p">,</span>
+            <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BackendSpec</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">dry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+
+        <span class="n">executor</span><span class="o">.</span><span class="n">register_master_udfs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_udfs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">results_for_dataset_sync</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="p">,</span> <span class="n">executor</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span> <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span> <span class="n">dry</span><span class="o">=</span><span class="n">dry</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="DelayedJobExecutor"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor">[docs]</a><span class="k">class</span> <span class="nc">DelayedJobExecutor</span><span class="p">(</span><span class="n">BaseJobExecutor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :class:`~libertem.common.executor.JobExecutor` that uses dask.delayed to execute tasks.</span>
+
+<span class="sd">    .. versionadded:: 0.9.0</span>
+
+<span class="sd">    Highly experimental at this time!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Only import if actually instantiated, i.e. will likely be used</span>
+        <span class="kn">import</span> <span class="nn">libertem.preload</span>  <span class="c1"># noqa: 401</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_udfs</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DelayedJobExecutor.scatter"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.scatter">[docs]</a>    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">delayed</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cancel_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="DelayedJobExecutor.run_tasks"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.run_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">run_tasks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tasks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TaskProtocol</span><span class="p">],</span>
+        <span class="n">params_handle</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">cancel_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">task_comm_handler</span><span class="p">:</span> <span class="n">TaskCommHandler</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps the call task() such that it returns a flat list</span>
+<span class="sd">        of results, then unpacks the Delayed return value into</span>
+<span class="sd">        the normal</span>
+
+<span class="sd">            :code:`tuple(udf.results for udf in self._udfs)`</span>
+
+<span class="sd">        where the buffers inside udf.results are dask arrays instead</span>
+<span class="sd">        of normal np.arrays</span>
+
+<span class="sd">        Needs a reference to the udfs on the master node so</span>
+<span class="sd">        that the results structure can be inferred. This reference is</span>
+<span class="sd">        found in self._udfs, which is set with the method:</span>
+
+<span class="sd">            :code:`executor.register_master_udfs(udfs)`</span>
+
+<span class="sd">        called from :meth:`DelayedUDFRunner.results_for_dataset_sync`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">threads_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">threaded_executor</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="n">structure</span> <span class="o">=</span> <span class="n">structure_from_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_udfs</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+            <span class="n">flat_structure</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">flatten_nested</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+            <span class="n">flat_mapping</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">build_mapping</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+            <span class="n">flat_result_task</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">task_wrap</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">flat_result_task</span><span class="p">,</span> <span class="n">nout</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">flat_structure</span><span class="p">))(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span>
+                                                                         <span class="n">params</span><span class="o">=</span><span class="n">params_handle</span><span class="p">)</span>
+            <span class="n">wrapped_res</span> <span class="o">=</span> <span class="n">delayed_to_buffer_wrappers</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">flat_structure</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span>
+                                                     <span class="n">roi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_udfs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">roi</span><span class="p">)</span>
+            <span class="n">renested</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">rebuild_nested</span><span class="p">(</span><span class="n">wrapped_res</span><span class="p">,</span> <span class="n">flat_mapping</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">UDFData</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">res</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">renested</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">result</span><span class="p">,</span> <span class="n">task</span></div>
+
+<div class="viewcode-block" id="DelayedJobExecutor.run_function"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.run_function">[docs]</a>    <span class="k">def</span> <span class="nf">run_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+    <span class="k">def</span> <span class="nf">run_delayed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">_delayed_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_delayed_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_delayed_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">**</span><span class="n">_delayed_kwargs</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="DelayedJobExecutor.map"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">fn</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iterable</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DelayedJobExecutor.run_each_host"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.run_each_host">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;localhost&quot;</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)}</span></div>
+
+<div class="viewcode-block" id="DelayedJobExecutor.run_each_worker"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.run_each_worker">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_worker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;delayed&quot;</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)}</span></div>
+
+<div class="viewcode-block" id="DelayedJobExecutor.get_available_workers"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.get_available_workers">[docs]</a>    <span class="k">def</span> <span class="nf">get_available_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;compute&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="c1"># We don&#39;t know at this time,</span>
+        <span class="c1"># but assume one worker per CPU</span>
+        <span class="n">devices</span> <span class="o">=</span> <span class="n">detect</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">WorkerSet</span><span class="p">([</span>
+            <span class="n">Worker</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s1">&#39;delayed&#39;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
+                <span class="n">resources</span><span class="o">=</span><span class="n">resources</span><span class="p">,</span>
+                <span class="n">nthreads</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">devices</span><span class="p">[</span><span class="s1">&#39;cpus&#39;</span><span class="p">]),</span>
+            <span class="p">)</span>
+        <span class="p">])</span></div>
+
+    <span class="k">def</span> <span class="nf">modify_buffer_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buf</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert existing buffers from BufferWrapper to DaskBufferWrapper</span>
+
+<span class="sd">        A refactoring of the UDF backend would remove the need for this method.</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DaskBufferWrapper</span><span class="o">.</span><span class="n">from_buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">register_master_udfs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udfs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Give the executor a reference to the udfs instantiated</span>
+<span class="sd">        on the main node, for introspection purposes</span>
+
+<span class="sd">        :meta private:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_udfs</span> <span class="o">=</span> <span class="n">udfs</span>
+
+    <span class="k">def</span> <span class="nf">_compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">udfs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">user_backends</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">traverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Acts as dask.compute(*args, **kwargs) but with knowledge</span>
+<span class="sd">        of Libertem data structures and compute resources</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;resources&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">udfs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Cannot specify both udfs for resources and resources to use&#39;</span><span class="p">)</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;resources&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">udfs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_resources</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">user_backends</span><span class="o">=</span><span class="n">user_backends</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;resources&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">resources</span>
+
+        <span class="n">to_unpack</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+        <span class="n">unwrapped_args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">unwrap_results</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">to_unpack</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">dask</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="o">*</span><span class="n">unwrapped_args</span><span class="p">,</span> <span class="n">traverse</span><span class="o">=</span><span class="n">traverse</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeWarning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unexpected number of results </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s1"> &#39;</span>
+                                     <span class="s1">&#39;from dask.compute, dropping extras&#39;</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+<div class="viewcode-block" id="DelayedJobExecutor.get_resources_from_udfs"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_resources_from_udfs</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">user_backends</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the resources required by the udfs passed as</span>
+<span class="sd">        argument, excluding those not in the tuple user_backends</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">user_backends</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">user_backends</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">UDF</span><span class="p">):</span>
+            <span class="n">udfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">udfs</span><span class="p">]</span>
+        <span class="n">backends</span> <span class="o">=</span> <span class="p">[</span><span class="n">udf</span><span class="o">.</span><span class="n">get_backends</span><span class="p">()</span> <span class="k">for</span> <span class="n">udf</span> <span class="ow">in</span> <span class="n">udfs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">get_resources_for_backends</span><span class="p">(</span><span class="n">backends</span><span class="p">,</span> <span class="n">user_backends</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">unwrap_results</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+        <span class="n">unpackable</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">delayed_unpack</span><span class="o">.</span><span class="n">default_unpackable</span><span class="p">(),</span>
+                      <span class="n">UDFData</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+                      <span class="n">DaskPreallocBufferWrapper</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">)],</span>
+                      <span class="n">DaskBufferWrapper</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">data</span><span class="p">)],</span>
+                      <span class="p">}</span>
+
+        <span class="n">res_unpack</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">flatten_nested</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">unpackable_types</span><span class="o">=</span><span class="n">unpackable</span><span class="p">)</span>
+        <span class="n">flat_mapping</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">build_mapping</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">unpackable_types</span><span class="o">=</span><span class="n">unpackable</span><span class="p">)</span>
+        <span class="n">flat_mapping_reduced</span> <span class="o">=</span> <span class="p">[</span><span class="n">el</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">el</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">BufferWrapper</span><span class="p">)</span> <span class="k">else</span> <span class="n">el</span>
+                                <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">flat_mapping</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">rebuild_nested</span><span class="p">(</span><span class="n">res_unpack</span><span class="p">,</span> <span class="n">flat_mapping_reduced</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_udf_runner</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="s1">&#39;UDFRunner&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DelayedUDFRunner</span></div>
+
+
+<span class="k">def</span> <span class="nf">make_copy</span><span class="p">(</span><span class="n">array_dict</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">array_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s1">&#39;WRITEABLE&#39;</span><span class="p">]:</span>
+            <span class="n">array_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">array_dict</span>
+
+
+<span class="k">def</span> <span class="nf">merge_wrap</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">dest_dict</span><span class="p">,</span> <span class="n">src_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The function called as delayed, acting as a wrapper</span>
+<span class="sd">    to return a flat list of results rather than a structure</span>
+<span class="sd">    of UDFData or MergeAttrMapping</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Have to make a copy of dest buffers because Dask brings</span>
+    <span class="c1"># data into the delayed function as read-only np arrays</span>
+    <span class="c1"># I experimented with setting WRITEABLE to True but this</span>
+    <span class="c1"># resulted in errors in the final array</span>
+    <span class="n">dest_dict</span> <span class="o">=</span> <span class="n">make_copy</span><span class="p">(</span><span class="n">dest_dict</span><span class="p">)</span>
+
+    <span class="n">dest</span> <span class="o">=</span> <span class="n">MergeAttrMapping</span><span class="p">(</span><span class="n">dest_dict</span><span class="p">)</span>
+    <span class="n">src</span> <span class="o">=</span> <span class="n">MergeAttrMapping</span><span class="p">(</span><span class="n">src_dict</span><span class="p">)</span>
+
+    <span class="c1"># In place merge into the copy of dest</span>
+    <span class="n">udf</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">)</span>
+    <span class="c1"># Return flat list of results so they can be unpacked later</span>
+    <span class="k">return</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">flatten_nested</span><span class="p">(</span><span class="n">dest</span><span class="o">.</span><span class="n">_dict</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">task_wrap</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flatten the structure tuple(udf.results for udf in self._udfs)</span>
+<span class="sd">    where udf.results is an instance of UDFData(data={&#39;name&#39;:BufferWrapper,...})</span>
+<span class="sd">    into a simple list [np.ndarray, np.ndarray, ...]</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">_data</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="p">)</span>
+    <span class="n">flat_res</span> <span class="o">=</span> <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">flatten_nested</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">_data</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">flat_res</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">structure_from_task</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">task</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Based on the instantiated whole dataset UDFs and the task</span>
+<span class="sd">    information, build a description of the expected UDF results</span>
+<span class="sd">    for the task&#39;s partition like:</span>
+
+<span class="sd">    :code:`({&#39;buffer_name&#39;: StructDescriptor(shape, dtype, extra_shape, buffer_kind), ...}, ...)`</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">structure</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">udf</span> <span class="ow">in</span> <span class="n">udfs</span><span class="p">:</span>
+        <span class="n">res_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">buffer_name</span><span class="p">,</span> <span class="n">buffer</span> <span class="ow">in</span> <span class="n">udf</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">part_buf_extra_shape</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">extra_shape</span>
+            <span class="n">buffer</span><span class="o">.</span><span class="n">set_shape_partition</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">_roi</span><span class="p">)</span>
+            <span class="n">part_buf_shape</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">part_buf_dtype</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="n">res_data</span><span class="p">[</span><span class="n">buffer_name</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">delayed_unpack</span><span class="o">.</span><span class="n">StructDescriptor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                                                <span class="n">shape</span><span class="o">=</span><span class="n">part_buf_shape</span><span class="p">,</span>
+                                                <span class="n">dtype</span><span class="o">=</span><span class="n">part_buf_dtype</span><span class="p">,</span>
+                                                <span class="n">kind</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+                                                <span class="n">extra_shape</span><span class="o">=</span><span class="n">part_buf_extra_shape</span><span class="p">)</span>
+        <span class="n">results_container</span> <span class="o">=</span> <span class="n">res_data</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">results_container</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">structure</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">delayed_to_buffer_wrappers</span><span class="p">(</span><span class="n">flat_delayed</span><span class="p">,</span> <span class="n">flat_structure</span><span class="p">,</span> <span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">as_buffer</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Take the iterable Delayed results object, and re-wrap each Delayed object</span>
+<span class="sd">    back into a BufferWrapper wrapping a dask.array of the correct shape and dtype</span>
+
+<span class="sd">    :meta private:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">wrapped_res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">el</span><span class="p">,</span> <span class="n">descriptor</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">flat_delayed</span><span class="p">,</span> <span class="n">flat_structure</span><span class="p">):</span>
+        <span class="n">buffer_kind</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;kind&#39;</span><span class="p">)</span>
+        <span class="n">extra_shape</span> <span class="o">=</span> <span class="n">descriptor</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;extra_shape&#39;</span><span class="p">)</span>
+        <span class="n">buffer_dask</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">from_delayed</span><span class="p">(</span><span class="n">el</span><span class="p">,</span> <span class="o">*</span><span class="n">descriptor</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">descriptor</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">as_buffer</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">DaskBufferWrapper</span><span class="p">(</span><span class="n">buffer_kind</span><span class="p">,</span>
+                                       <span class="n">extra_shape</span><span class="o">=</span><span class="n">extra_shape</span><span class="p">,</span>
+                                       <span class="n">dtype</span><span class="o">=</span><span class="n">descriptor</span><span class="o">.</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">])</span>
+            <span class="c1"># Need to test whether roi=None here is a problem</span>
+            <span class="n">buffer</span><span class="o">.</span><span class="n">set_shape_partition</span><span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">)</span>
+            <span class="n">buffer</span><span class="o">.</span><span class="n">replace_array</span><span class="p">(</span><span class="n">buffer_dask</span><span class="p">)</span>
+            <span class="n">wrapped_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wrapped_res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">buffer_dask</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">wrapped_res</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

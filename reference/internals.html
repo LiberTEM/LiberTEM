@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internal API &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dask API" href="dask.html" />
+    <link rel="prev" title="Sparse array utils" href="sparse.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="application.html">Application-specific APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Internal API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#maskcontainer">MaskContainer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shapes-and-slices">Shapes and slices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cpu-and-cuda-devices">CPU and CUDA devices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progress.html">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Python API reference</a></li>
+      <li class="breadcrumb-item active">Internal API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/internals.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="internal-api">
+<h1>Internal API<a class="headerlink" href="#internal-api" title="Permalink to this heading"></a></h1>
+<section id="maskcontainer">
+<h2>MaskContainer<a class="headerlink" href="#maskcontainer" title="Permalink to this heading"></a></h2>
+<p><a class="reference internal" href="#libertem.common.container.MaskContainer" title="libertem.common.container.MaskContainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.common.container.MaskContainer</span></code></a> helps to implement highly efficient
+mask application operations, such as virtual detector, center of mass or feature
+vector calculations.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.4.0: </span>Moved from <code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.job.masks</span></code> to <a class="reference internal" href="#module-libertem.common.container" title="libertem.common.container"><code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.common.container</span></code></a> to
+use it in UDFs and prepare deprecation of the Job interface.</p>
+</div>
+<span class="target" id="module-libertem.common.container"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.container.MaskContainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.container.</span></span><span class="sig-name descname"><span class="pre">MaskContainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mask_factories</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_sparse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/container.html#MaskContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.container.MaskContainer" title="Permalink to this definition"></a></dt>
+<dd><p>Container for mask stacks that are created from factory functions.</p>
+<p>It allows stacking, cached slicing, transposing and conversion
+to condition the masks for high-performance dot products.</p>
+<p>use_sparse can be None, ‘scipy.sparse’, ‘scipy.sparse.csc’ or ‘sparse.pydata’</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.container.MaskContainer.get_for_sig_slice">
+<span class="sig-name descname"><span class="pre">get_for_sig_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sig_slice</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/container.html#MaskContainer.get_for_sig_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.container.MaskContainer.get_for_sig_slice" title="Permalink to this definition"></a></dt>
+<dd><p>Same as <cite>get</cite>, but without calling <cite>discard_nav()</cite> on the slice</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="shapes-and-slices">
+<h2>Shapes and slices<a class="headerlink" href="#shapes-and-slices" title="Permalink to this heading"></a></h2>
+<p>These classes help to manipulate shapes and slices of n-dimensional binary data to
+facilitate the MapReduce-like processing of LiberTEM. See <a class="reference internal" href="../concepts.html#concepts"><span class="std std-ref">Concepts</span></a> for
+a high-level introduction.</p>
+<span class="target" id="module-libertem.common.shape"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.shape.NavOnlyShape">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.shape.</span></span><span class="sig-name descname"><span class="pre">NavOnlyShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/shape.html#NavOnlyShape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.NavOnlyShape" title="Permalink to this definition"></a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.NavOnlyShape.dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.NavOnlyShape.dims" title="Permalink to this definition"></a></dt>
+<dd><p>Number of dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span>  <span class="c1"># creates a new temporary Shape and accesses .dims on it</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.NavOnlyShape.flatten_sig">
+<span class="sig-name descname"><span class="pre">flatten_sig</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#NavOnlyShape.flatten_sig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.NavOnlyShape.flatten_sig" title="Permalink to this definition"></a></dt>
+<dd><p>Flatten in the signal dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">flatten_sig</span><span class="p">()</span>
+<span class="go">(5, 5, 256)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.NavOnlyShape.nav_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nav_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.NavOnlyShape.nav_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.NavOnlyShape.sig_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sig_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.NavOnlyShape.sig_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.NavOnlyShape.to_tuple">
+<span class="sig-name descname"><span class="pre">to_tuple</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#NavOnlyShape.to_tuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.NavOnlyShape.to_tuple" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.shape.</span></span><span class="sig-name descname"><span class="pre">Shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/shape.html#Shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.Shape" title="Permalink to this definition"></a></dt>
+<dd><p>Create a Shape that knows how many dimensions are part of navigation/signal.
+It is assumed that the signal is in the last <cite>sig_dims</cite> dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>tuple of int</em>) – the shape we want to work with, as n-tuple (like numpy array shapes)</p></li>
+<li><p><strong>sig_dims</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – the number of dimensions that are considered part of the signal</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.Shape.dims" title="Permalink to this definition"></a></dt>
+<dd><p>Number of dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span>  <span class="c1"># creates a new temporary Shape and accesses .dims on it</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.flatten_nav">
+<span class="sig-name descname"><span class="pre">flatten_nav</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#Shape.flatten_nav"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.Shape.flatten_nav" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a new Shape that is flat in the navigation dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">flatten_nav</span><span class="p">()</span>
+<span class="go">(25, 16, 16)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.flatten_sig">
+<span class="sig-name descname"><span class="pre">flatten_sig</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#Shape.flatten_sig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.Shape.flatten_sig" title="Permalink to this definition"></a></dt>
+<dd><p>Flatten in the signal dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">flatten_sig</span><span class="p">()</span>
+<span class="go">(5, 5, 256)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.nav">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nav</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></em><a class="headerlink" href="#libertem.common.shape.Shape.nav" title="Permalink to this definition"></a></dt>
+<dd><p>Crop to navigation dimensions</p>
+<p>#TODO Should be refactored with functools.cached_property when supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> – like this shape, but without the signal dimensions</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape">Shape</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">nav</span>
+<span class="go">(5, 5)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.nav_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nav_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.Shape.nav_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.sig">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sig</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></em><a class="headerlink" href="#libertem.common.shape.Shape.sig" title="Permalink to this definition"></a></dt>
+<dd><p>Crop to signal dimensions</p>
+<p>#TODO Should be refactored with functools.cached_property when supported</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> – like this shape, but without the navigation dimensions</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape">Shape</a></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">sig</span>
+<span class="go">(16, 16)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.sig_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sig_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.Shape.sig_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.Shape.size" title="Permalink to this definition"></a></dt>
+<dd><p>Number of elements covered by this shape</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">size</span>
+<span class="go">256</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.Shape.to_tuple">
+<span class="sig-name descname"><span class="pre">to_tuple</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#Shape.to_tuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.Shape.to_tuple" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.shape.SigOnlyShape">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.shape.</span></span><span class="sig-name descname"><span class="pre">SigOnlyShape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/shape.html#SigOnlyShape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.SigOnlyShape" title="Permalink to this definition"></a></dt>
+<dd><dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.SigOnlyShape.dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.SigOnlyShape.dims" title="Permalink to this definition"></a></dt>
+<dd><p>Number of dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span>  <span class="c1"># creates a new temporary Shape and accesses .dims on it</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.SigOnlyShape.flatten_nav">
+<span class="sig-name descname"><span class="pre">flatten_nav</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#SigOnlyShape.flatten_nav"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.SigOnlyShape.flatten_nav" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a new Shape that is flat in the navigation dimensions</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">flatten_nav</span><span class="p">()</span>
+<span class="go">(25, 16, 16)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.SigOnlyShape.nav_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nav_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.SigOnlyShape.nav_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.shape.SigOnlyShape.sig_dims">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sig_dims</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#libertem.common.shape.SigOnlyShape.sig_dims" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.shape.SigOnlyShape.to_tuple">
+<span class="sig-name descname"><span class="pre">to_tuple</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/shape.html#SigOnlyShape.to_tuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.shape.SigOnlyShape.to_tuple" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-libertem.common.slice"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.common.slice.</span></span><span class="sig-name descname"><span class="pre">Slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice" title="Permalink to this definition"></a></dt>
+<dd><p>A n-dimensional slice, defined by origin and shape</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>origin</strong> (<em>tuple of int</em>) – global “top-left” coordinates of this slice</p></li>
+<li><p><strong>shape</strong> (<em>Shape instance</em>) – the size of this slice</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.adjust_for_roi">
+<span class="sig-name descname"><span class="pre">adjust_for_roi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><span class="pre">ndarray</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.adjust_for_roi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.adjust_for_roi" title="Permalink to this definition"></a></dt>
+<dd><p>Make a new slice that has origin and shape modified according to <cite>roi</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.clip_to">
+<span class="sig-name descname"><span class="pre">clip_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.clip_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.clip_to" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.discard_nav">
+<span class="sig-name descname"><span class="pre">discard_nav</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.discard_nav"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.discard_nav" title="Permalink to this definition"></a></dt>
+<dd><p>returns a copy with the origin/shape zeroed in the nav dimensions</p>
+<p>this is used to create uniform cache keys</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.flatten_nav">
+<span class="sig-name descname"><span class="pre">flatten_nav</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">containing_shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.flatten_nav"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.flatten_nav" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.from_shape">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_dims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.from_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.from_shape" title="Permalink to this definition"></a></dt>
+<dd><p>Construct a <cite>Slice</cite> at zero-origin from <cite>shape</cite> and <cite>sig_dims</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Tuple" title="(in Python v3.10)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#slice" title="(in Python v3.10)"><span class="pre">slice</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.get" title="Permalink to this definition"></a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><span class="pre">ndarray</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nav_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><span class="pre">ndarray</span></a></span></span></dt>
+<dd><p>Get a standard python tuple-of-slice-object which can be used
+to slice any compatible numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arr</strong> – something implementing the slice interface. if given, returns arr[slice]</p></li>
+<li><p><strong>sig_only</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – get a signal-only slice for frames/masks</p></li>
+<li><p><strong>nav_only</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – get a nav-only slice, for example for indexing something that is shaped like
+the navigation dimensions of this Slice.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>returns standard python slices computed from
+our origin+shape model or arr indexed with this slicing
+if arr is given</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of slice objects</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">Shape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">((</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sig_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+<span class="go">array([[1., 1., 1., 1.],</span>
+<span class="go">       [1., 1., 1., 1.],</span>
+<span class="go">       [1., 1., 1., 1.],</span>
+<span class="go">       [1., 1., 1., 1.]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.intersection_with">
+<span class="sig-name descname"><span class="pre">intersection_with</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.intersection_with"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.intersection_with" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate the intersection between this slice and <cite>other</cite>. May result in
+dimensions that are zero, which means that there is no intersection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>slice</strong> – the intersection between this and the other slice</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice">Slice</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.is_null">
+<span class="sig-name descname"><span class="pre">is_null</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.is_null"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.is_null" title="Permalink to this definition"></a></dt>
+<dd><p>If any part of our shape is zero, this slice doesn’t span any data and is null / empty.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.nav">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nav</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></em><a class="headerlink" href="#libertem.common.slice.Slice.nav" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a new Slice, with sig_dims=0, limited to the nav part</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.origin">
+<span class="sig-name descname"><span class="pre">origin</span></span><a class="headerlink" href="#libertem.common.slice.Slice.origin" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.shape">
+<span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#libertem.common.slice.Slice.shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.shift">
+<span class="sig-name descname"><span class="pre">shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.shift" title="Permalink to this definition"></a></dt>
+<dd><p>make a new <code class="docutils literal notranslate"><span class="pre">Slice</span></code> with origin relative to <code class="docutils literal notranslate"><span class="pre">other.origin</span></code>
+and the same shape as this <code class="docutils literal notranslate"><span class="pre">Slice</span></code></p>
+<p>useful for translating to the local coordinate system of <code class="docutils literal notranslate"><span class="pre">other</span></code></p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.sig">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sig</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a></em><a class="headerlink" href="#libertem.common.slice.Slice.sig" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a new Slice, limited to the sig part</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.common.slice.Slice.subslices">
+<span class="sig-name descname"><span class="pre">subslices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Union" title="(in Python v3.10)"><span class="pre">Union</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><span class="pre">Shape</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Sequence" title="(in Python v3.10)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Generator" title="(in Python v3.10)"><span class="pre">Generator</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><span class="pre">Slice</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/slice.html#Slice.subslices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.slice.Slice.subslices" title="Permalink to this definition"></a></dt>
+<dd><p>Generator for all subslices of this slice with dimensions
+specified by <code class="docutils literal notranslate"><span class="pre">shape</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> (<em>tuple of int</em><em> or </em><a class="reference internal" href="#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><em>Shape</em></a>) – the shape of each sub-slice</p>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Slice</em> – all subslices, in fast-access order</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="cpu-and-cuda-devices">
+<h2>CPU and CUDA devices<a class="headerlink" href="#cpu-and-cuda-devices" title="Permalink to this heading"></a></h2>
+<p>These methods get and set information that controls on which devices a
+computation runs.</p>
+<span class="target" id="module-libertem.common.backend"></span><dl class="py function">
+<dt class="sig sig-object py" id="libertem.common.backend.get_device_class">
+<span class="sig-prename descclassname"><span class="pre">libertem.common.backend.</span></span><span class="sig-name descname"><span class="pre">get_device_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/backend.html#get_device_class"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.backend.get_device_class" title="Permalink to this definition"></a></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>class</strong> – Device class to use. Can be ‘cpu’ or ‘cuda’. Default is ‘cpu’ if
+no settings were applied before.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.common.backend.get_use_cpu">
+<span class="sig-prename descclassname"><span class="pre">libertem.common.backend.</span></span><span class="sig-name descname"><span class="pre">get_use_cpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/backend.html#get_use_cpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.backend.get_use_cpu" title="Permalink to this definition"></a></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id</strong> – CPU device ID to use. Currently there is no pinning, i.e. the value itself is
+ignored. <code class="code docutils literal notranslate"><span class="pre">None</span></code> means “don’t use CPU” and any integer means “use CPU”.
+Default is 0 if no settings were applied before.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)">int</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.common.backend.get_use_cuda">
+<span class="sig-prename descclassname"><span class="pre">libertem.common.backend.</span></span><span class="sig-name descname"><span class="pre">get_use_cuda</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/libertem/common/backend.html#get_use_cuda"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.backend.get_use_cuda" title="Permalink to this definition"></a></dt>
+<dd><div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id</strong> – CUDA device ID to use.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)">int</a> or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.common.backend.set_use_cpu">
+<span class="sig-prename descclassname"><span class="pre">libertem.common.backend.</span></span><span class="sig-name descname"><span class="pre">set_use_cpu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cpu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/backend.html#set_use_cpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.backend.set_use_cpu" title="Permalink to this definition"></a></dt>
+<dd><p>This sets a CPU device ID and unsets any CUDA ID</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cpu</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – CPU to use. The value is currently ignored, i.e. any CPU is used without pinning</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.common.backend.set_use_cuda">
+<span class="sig-prename descclassname"><span class="pre">libertem.common.backend.</span></span><span class="sig-name descname"><span class="pre">set_use_cuda</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cuda_device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/common/backend.html#set_use_cuda"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.backend.set_use_cuda" title="Permalink to this definition"></a></dt>
+<dd><p>This sets a CUDA device ID and unsets any CPU ID</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cuda_device</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – CUDA device ID to use</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-libertem.utils.devices"></span><dl class="py function">
+<dt class="sig sig-object py" id="libertem.utils.devices.detect">
+<span class="sig-prename descclassname"><span class="pre">libertem.utils.devices.</span></span><span class="sig-name descname"><span class="pre">detect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/utils/devices.html#detect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.utils.devices.detect" title="Permalink to this definition"></a></dt>
+<dd><p>Detect which devices are present</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary with keys <code class="code docutils literal notranslate"><span class="pre">'cpus'</span></code> and <code class="code docutils literal notranslate"><span class="pre">'cudas'</span></code>
+Each containing
+a list of devices. Only physical CPU cores are counted, i.e. no
+hyperthreading.
+Additionally it has the key <code class="code docutils literal notranslate"><span class="pre">'has_cupy'</span></code>, which signals
+if cupy is installed and available.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.utils.devices.has_cupy">
+<span class="sig-prename descclassname"><span class="pre">libertem.utils.devices.</span></span><span class="sig-name descname"><span class="pre">has_cupy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/utils/devices.html#has_cupy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.utils.devices.has_cupy" title="Permalink to this definition"></a></dt>
+<dd><p>Probe if <code class="code docutils literal notranslate"><span class="pre">cupy</span></code> was loaded successfully.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<p>CuPy is an optional dependency with special integration for UDFs. See
+<a class="reference internal" href="../udf/advanced.html#udf-cuda"><span class="std std-ref">CuPy support</span></a> for details.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sparse.html" class="btn btn-neutral float-left" title="Sparse array utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dask.html" class="btn btn-neutral float-right" title="Dask API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

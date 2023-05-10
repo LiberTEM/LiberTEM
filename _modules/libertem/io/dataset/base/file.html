@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.base.file &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.base.file</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.base.file</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+
+
+<span class="k">class</span> <span class="nc">OffsetsSizes</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General slicing for slicing the data out of a file</span>
+<span class="sd">    (removing file header and per-frame headers)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># whole-file slicing, in bytes</span>
+    <span class="n">file_offset</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># number of bytes to skip at the beginning of the file</span>
+    <span class="n">skip_end</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># how many bytes to skip at the end</span>
+
+    <span class="c1"># per-frame slicing, in number of items in native dtype</span>
+    <span class="n">frame_offset</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># number of items to skip at the beginning of each frame</span>
+    <span class="n">frame_size</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># number of items for each frame</span>
+
+
+<div class="viewcode-block" id="File"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.File">[docs]</a><span class="k">class</span> <span class="nc">File</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A description of a file that is part of a dataset. Contains</span>
+<span class="sd">    information about the internal structure, like sizes</span>
+<span class="sd">    of headers, frames, frame headers, frame footers, ...</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str</span>
+<span class="sd">        The path of the file. Interpretation may be backend-specific</span>
+
+<span class="sd">    start_idx : int</span>
+<span class="sd">        Start index of signal elements in this file (inclusive),</span>
+<span class="sd">        in the flattened navigation axis</span>
+
+<span class="sd">    end_idx : int</span>
+<span class="sd">        End index of signal elements in this file (exclusive),</span>
+<span class="sd">        in the flattened navigation axis</span>
+
+<span class="sd">    native_dtype : np.dtype</span>
+<span class="sd">        The dtype that is used for reading the data. This may</span>
+<span class="sd">        match the &quot;real&quot; dtype of data, or in some cases, when</span>
+<span class="sd">        no direct match is possible (decoding is necessary),</span>
+<span class="sd">        it falls back to bytes (np.uint8)</span>
+
+<span class="sd">    sig_shape : Shape | Tuple[int]</span>
+<span class="sd">        The shape of each signal element</span>
+
+<span class="sd">    file_header: int</span>
+<span class="sd">        Number of bytes to ignore at the beginning of the file</span>
+
+<span class="sd">    frame_header: int</span>
+<span class="sd">        Number of bytes to ignore before each frame</span>
+
+<span class="sd">    frame_footer: int</span>
+<span class="sd">        Number of bytes to ignore after each frame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span>
+                <span class="n">frame_footer</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">frame_header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">file_header</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_idx</span> <span class="o">=</span> <span class="n">start_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span> <span class="o">=</span> <span class="n">native_dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file_header</span> <span class="o">=</span> <span class="n">file_header</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_header</span> <span class="o">=</span> <span class="n">frame_header</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer</span> <span class="o">=</span> <span class="n">frame_footer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file_header_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_header</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">start_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_idx</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">end_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_idx</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_idx</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_idx</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sig_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">native_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+<div class="viewcode-block" id="File.get_offsets_sizes"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.File.get_offsets_sizes">[docs]</a>    <span class="k">def</span> <span class="nf">get_offsets_sizes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OffsetsSizes</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get file and frame offsets/sizes</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        size : int</span>
+<span class="sd">            len(memoryview) for the whole file</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        slicing</span>
+<span class="sd">            The file/frame slicing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">itemsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_header</span> <span class="o">%</span> <span class="n">itemsize</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer</span> <span class="o">%</span> <span class="n">itemsize</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">frame_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span>
+        <span class="n">frame_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_header</span> <span class="o">//</span> <span class="n">itemsize</span>
+        <span class="n">file_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_header</span>
+        <span class="n">skip_end</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># cut off any extra data at the end of the file:</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">)):</span>
+            <span class="n">new_mmap_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">itemsize</span> <span class="o">*</span> <span class="n">frame_size</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_header</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer</span>
+            <span class="p">)</span>
+            <span class="n">skip_end</span> <span class="o">=</span> <span class="p">(</span><span class="n">size</span> <span class="o">-</span> <span class="n">file_offset</span><span class="p">)</span> <span class="o">-</span> <span class="n">new_mmap_size</span>
+        <span class="k">assert</span> <span class="n">skip_end</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="n">OffsetsSizes</span><span class="p">(</span>
+            <span class="n">file_offset</span><span class="o">=</span><span class="n">file_offset</span><span class="p">,</span>
+            <span class="n">skip_end</span><span class="o">=</span><span class="n">skip_end</span><span class="p">,</span>
+            <span class="n">frame_offset</span><span class="o">=</span><span class="n">frame_offset</span><span class="p">,</span>
+            <span class="n">frame_size</span><span class="o">=</span><span class="n">frame_size</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="File.get_array_from_memview"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.File.get_array_from_memview">[docs]</a>    <span class="k">def</span> <span class="nf">get_array_from_memview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem</span><span class="p">:</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="n">slicing</span><span class="p">:</span> <span class="n">OffsetsSizes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a memoryview of the file&#39;s data into an ndarray, cutting away</span>
+<span class="sd">        frame headers and footers as defined by `start` and `stop` parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mem</span>
+<span class="sd">            The input memoryview</span>
+
+<span class="sd">        start</span>
+<span class="sd">            Cut off frame headers of this size; usually start = frame_header_bytes // itemsize</span>
+
+<span class="sd">        stop</span>
+<span class="sd">            End index; usually stop = start + prod(sig_shape)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            The output array. Should have shape (num_frames, prod(sig_shape)) and native dtype</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">slicing</span><span class="o">.</span><span class="n">skip_end</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">mem</span> <span class="o">=</span> <span class="n">mem</span><span class="p">[</span><span class="n">slicing</span><span class="o">.</span><span class="n">file_offset</span><span class="p">:</span><span class="o">-</span><span class="n">slicing</span><span class="o">.</span><span class="n">skip_end</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mem</span> <span class="o">=</span> <span class="n">mem</span><span class="p">[</span><span class="n">slicing</span><span class="o">.</span><span class="n">file_offset</span><span class="p">:]</span>
+        <span class="n">itemsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">mem</span><span class="p">)</span> <span class="o">%</span> <span class="n">itemsize</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>\
+            <span class="s2">&quot;len(mem) must fit the dtype&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">mem</span><span class="p">)</span> <span class="o">//</span> <span class="n">itemsize</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>\
+            <span class="s2">&quot;len(mem) must fit the number of frames&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">mem</span><span class="p">)</span> <span class="o">//</span> <span class="n">itemsize</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">slicing</span><span class="o">.</span><span class="n">frame_size</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_header</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer</span><span class="p">)</span> <span class="o">//</span> <span class="n">itemsize</span>
+        <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;len(mem) must fit the sig shape&quot;</span>
+        <span class="n">arr_uncut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">arr_uncut</span><span class="p">[:,</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_offset</span><span class="p">:</span><span class="n">slicing</span><span class="o">.</span><span class="n">frame_offset</span> <span class="o">+</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_size</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_size</span><span class="p">,</span>\
+            <span class="s2">&quot;array shape must fit the signal shape&quot;</span>
+        <span class="k">assert</span> <span class="n">arr</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">arr</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">:</span><span class="si">%d</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_idx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_end_idx</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

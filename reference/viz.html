@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visualization &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Progress bar support" href="progress.html" />
+    <link rel="prev" title="Corrections" href="corrections.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="application.html">Application-specific APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Visualization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.mpl">Matplotlib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.bqp">bqplot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.gms">GMS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.base">Base classes and functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="progress.html">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Python API reference</a></li>
+      <li class="breadcrumb-item active">Visualization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/reference/viz.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="visualization">
+<span id="viz-reference"></span><h1>Visualization<a class="headerlink" href="#visualization" title="Permalink to this heading"></a></h1>
+<p>See <a class="reference internal" href="../udf/basic.html#plotting"><span class="std std-ref">Live Plotting</span></a> for user documentation!</p>
+<section id="module-libertem.viz.mpl">
+<span id="matplotlib"></span><h2>Matplotlib<a class="headerlink" href="#module-libertem.viz.mpl" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.viz.mpl.MPLLive2DPlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.viz.mpl.</span></span><span class="sig-name descname"><span class="pre">MPLLive2DPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udfresult</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/mpl.html#MPLLive2DPlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.mpl.MPLLive2DPlot" title="Permalink to this definition"></a></dt>
+<dd><p>Matplotlib-based live plot</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.7.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference internal" href="dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><em>DataSet</em></a>) – The dataset on which the UDF will be run. This allows
+to determine the shape of the plots for initialization.</p></li>
+<li><p><strong>udf</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><em>UDF</em></a>) – The UDF instance this plot is associated to. This needs to be
+the same instance that is passed to
+<a class="reference internal" href="api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>.</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>None</em>) – Region of interest (ROI) that the UDF will
+be run on. This is necessary for UDFs where the <cite>extra_shape</cite>
+parameter of result buffers is a function of the ROI, such as
+<a class="reference internal" href="udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a>.</p></li>
+<li><p><strong>channel</strong> (<em>misc</em>) – <p>Indicate the channel to be plotted.</p>
+<ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">None</span></code>: The first plottable (2D) channel of the UDF is plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">str</span></code>: The UDF result buffer name that should be plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">tuple(str,</span> <span class="pre">function(ndarray)</span> <span class="pre">-&gt;</span> <span class="pre">ndarray)</span></code>: The UDF result buffer name that
+should be plotted together with a function that extracts a plottable result</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">function(udf_result,</span> <span class="pre">damage)</span> <span class="pre">-&gt;</span> <span class="pre">(ndarray,</span> <span class="pre">damage)</span></code>: Function that derives a
+plottable 2D ndarray and damage indicator from the full
+UDF results and the processed nav space. See <a class="reference internal" href="../udf/basic.html#plotting"><span class="std std-ref">Live Plotting</span></a> for more details!</p></li>
+</ul>
+</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The plot title. By default UDF class name and channel name.</p></li>
+<li><p><strong>min_delta</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum time span in seconds between updates to reduce overheads for slow plotting.</p></li>
+<li><p><strong>udfresult</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDFResults" title="libertem.udf.base.UDFResults"><em>UDFResults</em></a><em>, </em><em>optional</em>) – UDF result to initialize the plot data and determine plot shape. If None (default),
+this is determined using <code class="xref py py-meth docutils literal notranslate"><span class="pre">dry_run()</span></code> on the dataset,
+UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.</p></li>
+<li><p><strong>**kwargs</strong> – Passed on to <code class="code docutils literal notranslate"><span class="pre">imshow</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.mpl.MPLLive2DPlot.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/mpl.html#MPLLive2DPlot.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.mpl.MPLLive2DPlot.display" title="Permalink to this definition"></a></dt>
+<dd><p>Show the plot, for example in the current Jupyter cell.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.mpl.MPLLive2DPlot.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/mpl.html#MPLLive2DPlot.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.mpl.MPLLive2DPlot.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update the plot based on <cite>self.data</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Force an update, disabling any throttling mechanisms</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-libertem.viz.bqp">
+<span id="bqplot"></span><h2>bqplot<a class="headerlink" href="#module-libertem.viz.bqp" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.viz.bqp.BQLive2DPlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.viz.bqp.</span></span><span class="sig-name descname"><span class="pre">BQLive2DPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.016666666666666666</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udfresult</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/bqp.html#BQLive2DPlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.bqp.BQLive2DPlot" title="Permalink to this definition"></a></dt>
+<dd><p>bqplot-image-gl-based live plot.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.7.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference internal" href="dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><em>DataSet</em></a>) – The dataset on which the UDF will be run. This allows
+to determine the shape of the plots for initialization.</p></li>
+<li><p><strong>udf</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><em>UDF</em></a>) – The UDF instance this plot is associated to. This needs to be
+the same instance that is passed to
+<a class="reference internal" href="api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>.</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>None</em>) – Region of interest (ROI) that the UDF will
+be run on. This is necessary for UDFs where the <cite>extra_shape</cite>
+parameter of result buffers is a function of the ROI, such as
+<a class="reference internal" href="udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a>.</p></li>
+<li><p><strong>channel</strong> (<em>misc</em>) – <p>Indicate the channel to be plotted.</p>
+<ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">None</span></code>: The first plottable (2D) channel of the UDF is plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">str</span></code>: The UDF result buffer name that should be plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">tuple(str,</span> <span class="pre">function(ndarray)</span> <span class="pre">-&gt;</span> <span class="pre">ndarray)</span></code>: The UDF result buffer name that
+should be plotted together with a function that extracts a plottable result</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">function(udf_result,</span> <span class="pre">damage)</span> <span class="pre">-&gt;</span> <span class="pre">(ndarray,</span> <span class="pre">damage)</span></code>: Function that derives a
+plottable 2D ndarray and damage indicator from the full
+UDF results and the processed nav space. See <a class="reference internal" href="../udf/basic.html#plotting"><span class="std std-ref">Live Plotting</span></a> for more details!</p></li>
+</ul>
+</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The plot title. By default UDF class name and channel name.</p></li>
+<li><p><strong>min_delta</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum time span in seconds between updates to reduce overheads for slow plotting.</p></li>
+<li><p><strong>udfresult</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDFResults" title="libertem.udf.base.UDFResults"><em>UDFResults</em></a><em>, </em><em>optional</em>) – UDF result to initialize the plot data and determine plot shape. If None (default),
+this is determined using <code class="xref py py-meth docutils literal notranslate"><span class="pre">dry_run()</span></code> on the dataset,
+UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.bqp.BQLive2DPlot.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/bqp.html#BQLive2DPlot.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.bqp.BQLive2DPlot.display" title="Permalink to this definition"></a></dt>
+<dd><p>Show the plot, for example in the current Jupyter cell.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.bqp.BQLive2DPlot.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/bqp.html#BQLive2DPlot.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.bqp.BQLive2DPlot.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update the plot based on <cite>self.data</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>damage</strong> (<em>numpy.ndarray Boolean array with the shape of</em>) – <code class="code docutils literal notranslate"><span class="pre">self.data</span></code>. It is <code class="code docutils literal notranslate"><span class="pre">True</span></code> for all positions in
+<code class="code docutils literal notranslate"><span class="pre">self.data</span></code> that contain finite values and have potentially
+been touched by the UDF. This can be used to extract the correct
+plot range by ignoring invalid buffer portions.</p></li>
+<li><p><strong>force</strong> (<em>bool Force an update</em><em>, </em><em>disabling any throttling mechanisms</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-libertem.viz.gms">
+<span id="gms"></span><h2>GMS<a class="headerlink" href="#module-libertem.viz.gms" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.viz.gms.GMSLive2DPlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.viz.gms.</span></span><span class="sig-name descname"><span class="pre">GMSLive2DPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udfresult</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/gms.html#GMSLive2DPlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.gms.GMSLive2DPlot" title="Permalink to this definition"></a></dt>
+<dd><p>Live plot for Gatan Microscopy Suite, Digital Micrograph (experimental).</p>
+<p>This works with Python scripting within GMS</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.7.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference internal" href="dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><em>DataSet</em></a>) – The dataset on which the UDF will be run. This allows
+to determine the shape of the plots for initialization.</p></li>
+<li><p><strong>udf</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><em>UDF</em></a>) – The UDF instance this plot is associated to. This needs to be
+the same instance that is passed to
+<a class="reference internal" href="api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>.</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>None</em>) – Region of interest (ROI) that the UDF will
+be run on. This is necessary for UDFs where the <cite>extra_shape</cite>
+parameter of result buffers is a function of the ROI, such as
+<a class="reference internal" href="udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a>.</p></li>
+<li><p><strong>channel</strong> (<em>misc</em>) – <p>Indicate the channel to be plotted.</p>
+<ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">None</span></code>: The first plottable (2D) channel of the UDF is plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">str</span></code>: The UDF result buffer name that should be plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">tuple(str,</span> <span class="pre">function(ndarray)</span> <span class="pre">-&gt;</span> <span class="pre">ndarray)</span></code>: The UDF result buffer name that
+should be plotted together with a function that extracts a plottable result</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">function(udf_result,</span> <span class="pre">damage)</span> <span class="pre">-&gt;</span> <span class="pre">(ndarray,</span> <span class="pre">damage)</span></code>: Function that derives a
+plottable 2D ndarray and damage indicator from the full
+UDF results and the processed nav space. See <a class="reference internal" href="../udf/basic.html#plotting"><span class="std std-ref">Live Plotting</span></a> for more details!</p></li>
+</ul>
+</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The plot title. By default UDF class name and channel name.</p></li>
+<li><p><strong>min_delta</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum time span in seconds between updates to reduce overheads for slow plotting.</p></li>
+<li><p><strong>udfresult</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDFResults" title="libertem.udf.base.UDFResults"><em>UDFResults</em></a><em>, </em><em>optional</em>) – UDF result to initialize the plot data and determine plot shape. If None (default),
+this is determined using <code class="xref py py-meth docutils literal notranslate"><span class="pre">dry_run()</span></code> on the dataset,
+UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.gms.GMSLive2DPlot.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/gms.html#GMSLive2DPlot.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.gms.GMSLive2DPlot.display" title="Permalink to this definition"></a></dt>
+<dd><p>Use <code class="xref py py-meth docutils literal notranslate"><span class="pre">DM.ShowImage()</span></code> to create an image display.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.gms.GMSLive2DPlot.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/gms.html#GMSLive2DPlot.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.gms.GMSLive2DPlot.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update the plot based on <cite>self.data</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>damage</strong> (<em>numpy.ndarray Boolean array with the shape of</em>) – <code class="code docutils literal notranslate"><span class="pre">self.data</span></code>. It is <code class="code docutils literal notranslate"><span class="pre">True</span></code> for all positions in
+<code class="code docutils literal notranslate"><span class="pre">self.data</span></code> that contain finite values and have potentially
+been touched by the UDF. This can be used to extract the correct
+plot range by ignoring invalid buffer portions.</p></li>
+<li><p><strong>force</strong> (<em>bool Force an update</em><em>, </em><em>disabling any throttling mechanisms</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-libertem.viz.base">
+<span id="base-classes-and-functions"></span><h2>Base classes and functions<a class="headerlink" href="#module-libertem.viz.base" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.viz.base.Dummy2DPlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.viz.base.</span></span><span class="sig-name descname"><span class="pre">Dummy2DPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udfresult</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Dummy2DPlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Dummy2DPlot" title="Permalink to this definition"></a></dt>
+<dd><p>No-op plot. This is useful for test and example code to not
+attempt displaying <code class="code docutils literal notranslate"><span class="pre">matplotlib</span></code> plots in a headless environment
+or during batch operation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Dummy2DPlot.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Dummy2DPlot.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Dummy2DPlot.display" title="Permalink to this definition"></a></dt>
+<dd><p>Show the plot, for example in the current Jupyter cell.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Dummy2DPlot.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Dummy2DPlot.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Dummy2DPlot.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update the plot based on <cite>self.data</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>damage</strong> (<em>numpy.ndarray Boolean array with the shape of</em>) – <code class="code docutils literal notranslate"><span class="pre">self.data</span></code>. It is <code class="code docutils literal notranslate"><span class="pre">True</span></code> for all positions in
+<code class="code docutils literal notranslate"><span class="pre">self.data</span></code> that contain finite values and have potentially
+been touched by the UDF. This can be used to extract the correct
+plot range by ignoring invalid buffer portions.</p></li>
+<li><p><strong>force</strong> (<em>bool Force an update</em><em>, </em><em>disabling any throttling mechanisms</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.viz.base.Live2DPlot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.viz.base.</span></span><span class="sig-name descname"><span class="pre">Live2DPlot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">udfresult</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Live2DPlot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Live2DPlot" title="Permalink to this definition"></a></dt>
+<dd><p>Base plotting class for interactive use. Please see the subclasses for
+concrete details.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.7.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference internal" href="dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><em>DataSet</em></a>) – The dataset on which the UDF will be run. This allows
+to determine the shape of the plots for initialization.</p></li>
+<li><p><strong>udf</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><em>UDF</em></a>) – The UDF instance this plot is associated to. This needs to be
+the same instance that is passed to
+<a class="reference internal" href="api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a>.</p></li>
+<li><p><strong>roi</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a><em> or </em><em>None</em>) – Region of interest (ROI) that the UDF will
+be run on. This is necessary for UDFs where the <cite>extra_shape</cite>
+parameter of result buffers is a function of the ROI, such as
+<a class="reference internal" href="udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a>.</p></li>
+<li><p><strong>channel</strong> (<em>misc</em>) – <p>Indicate the channel to be plotted.</p>
+<ul>
+<li><p><code class="code docutils literal notranslate"><span class="pre">None</span></code>: The first plottable (2D) channel of the UDF is plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">str</span></code>: The UDF result buffer name that should be plotted.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">tuple(str,</span> <span class="pre">function(ndarray)</span> <span class="pre">-&gt;</span> <span class="pre">ndarray)</span></code>: The UDF result buffer name that
+should be plotted together with a function that extracts a plottable result</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">function(udf_result,</span> <span class="pre">damage)</span> <span class="pre">-&gt;</span> <span class="pre">(ndarray,</span> <span class="pre">damage)</span></code>: Function that derives a
+plottable 2D ndarray and damage indicator from the full
+UDF results and the processed nav space. See <a class="reference internal" href="../udf/basic.html#plotting"><span class="std std-ref">Live Plotting</span></a> for more details!</p></li>
+</ul>
+</p></li>
+<li><p><strong>title</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The plot title. By default UDF class name and channel name.</p></li>
+<li><p><strong>min_delta</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum time span in seconds between updates to reduce overheads for slow plotting.</p></li>
+<li><p><strong>udfresult</strong> (<a class="reference internal" href="udf.html#libertem.udf.base.UDFResults" title="libertem.udf.base.UDFResults"><em>UDFResults</em></a><em>, </em><em>optional</em>) – UDF result to initialize the plot data and determine plot shape. If None (default),
+this is determined using <code class="xref py py-meth docutils literal notranslate"><span class="pre">dry_run()</span></code> on the dataset,
+UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Live2DPlot.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Live2DPlot.display"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Live2DPlot.display" title="Permalink to this definition"></a></dt>
+<dd><p>Show the plot, for example in the current Jupyter cell.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Live2DPlot.extract">
+<span class="sig-name descname"><span class="pre">extract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">udf_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Live2DPlot.extract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Live2DPlot.extract" title="Permalink to this definition"></a></dt>
+<dd><p>Extract plotting data from UDF result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>udf_results</strong> (<em>UDF result</em>) – (Partial) UDF result</p></li>
+<li><p><strong>damage</strong> (<a class="reference internal" href="udf.html#libertem.common.buffers.BufferWrapper" title="libertem.common.buffers.BufferWrapper"><em>BufferWrapper</em></a>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">BufferWraper</span></code> with <code class="code docutils literal notranslate"><span class="pre">kind='nav'</span></code>
+and <code class="code docutils literal notranslate"><span class="pre">dtype=bool</span></code> that indicates the area of the nav dimension that
+has been processed by the UDF already.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>It returns the data and damage of a UDF result buffer indicated by <code class="code docutils literal notranslate"><span class="pre">channel</span></code>
+if that is a string, or a numpy.ndarray and damage derived from the UDF results by
+calling <code class="code docutils literal notranslate"><span class="pre">channel</span></code> with this method’s arguments if it is callable.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a>, damage)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Live2DPlot.get_udf">
+<span class="sig-name descname"><span class="pre">get_udf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Live2DPlot.get_udf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Live2DPlot.get_udf" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the associated UDF instance</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Live2DPlot.new_data">
+<span class="sig-name descname"><span class="pre">new_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">udf_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Live2DPlot.new_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Live2DPlot.new_data" title="Permalink to this definition"></a></dt>
+<dd><p>This method is called with the raw <cite>udf_results</cite> any time a new
+partition has finished processing.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">damage</span></code> parameter is filtered to only cover finite
+values of <code class="code docutils literal notranslate"><span class="pre">self.data</span></code> and passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">self.update()</span></code>,
+which should then be implemented by a subclass.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.viz.base.Live2DPlot.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">damage</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#Live2DPlot.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.Live2DPlot.update" title="Permalink to this definition"></a></dt>
+<dd><p>Update the plot based on <cite>self.data</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>damage</strong> (<em>numpy.ndarray Boolean array with the shape of</em>) – <code class="code docutils literal notranslate"><span class="pre">self.data</span></code>. It is <code class="code docutils literal notranslate"><span class="pre">True</span></code> for all positions in
+<code class="code docutils literal notranslate"><span class="pre">self.data</span></code> that contain finite values and have potentially
+been touched by the UDF. This can be used to extract the correct
+plot range by ignoring invalid buffer portions.</p></li>
+<li><p><strong>force</strong> (<em>bool Force an update</em><em>, </em><em>disabling any throttling mechanisms</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.viz.base.visualize_simple">
+<span class="sig-prename descclassname"><span class="pre">libertem.viz.base.</span></span><span class="sig-name descname"><span class="pre">visualize_simple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colormap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logarithmic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/libertem/viz/base.html#visualize_simple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.viz.base.visualize_simple" title="Permalink to this definition"></a></dt>
+<dd><p>Normalize and visualize <code class="docutils literal notranslate"><span class="pre">result</span></code> with <code class="docutils literal notranslate"><span class="pre">colormap</span></code> and return the
+resulting RGBA data as an array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – 2d array of intensity values</p></li>
+<li><p><strong>colormap</strong> (<em>matplotlib colormap</em><em> or </em><em>None</em>) – colormap used for visualizing intensity values, defaults to ColormapCubehelix()</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array of shape (Y, X, 4) containing RGBA data, suitable for
+passing to <cite>Image.fromarray</cite> in PIL.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-libertem.common.viz"></span><dl class="py function">
+<dt class="sig sig-object py" id="libertem.common.viz.encode_image">
+<span class="sig-prename descclassname"><span class="pre">libertem.common.viz.</span></span><span class="sig-name descname"><span class="pre">encode_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Dict" title="(in Python v3.10)"><span class="pre">Dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BytesIO</span></span></span><a class="reference internal" href="../_modules/libertem/common/viz.html#encode_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.viz.encode_image" title="Permalink to this definition"></a></dt>
+<dd><p>Save the RGBA data in <code class="docutils literal notranslate"><span class="pre">result</span></code> to an image with parameters <code class="docutils literal notranslate"><span class="pre">save_kwargs</span></code>
+passed to <code class="docutils literal notranslate"><span class="pre">PIL.Image.save</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Array of RGB values; shape (height, width, 3)</p></li>
+<li><p><strong>save_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)"><em>dict</em></a><em> or </em><em>None</em>) – dict of kwargs passed to Pillow when saving the image, can be used to set
+the file format, quality, …</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a buffer containing the result image (as PNG/JPG/… depending on save_kwargs)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>BytesIO</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="corrections.html" class="btn btn-neutral float-left" title="Corrections" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="progress.html" class="btn btn-neutral float-right" title="Progress bar support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

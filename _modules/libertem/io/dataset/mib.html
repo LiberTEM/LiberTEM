@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.mib &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.mib</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.mib</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span><span class="p">,</span> <span class="n">escape</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">TypedDict</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">numba.typed</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">NumbaList</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span><span class="p">,</span> <span class="n">make_2D_square</span><span class="p">,</span> <span class="n">flat_nonzero</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base.file</span> <span class="kn">import</span> <span class="n">OffsetsSizes</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSet</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span>
+    <span class="n">BasePartition</span><span class="p">,</span> <span class="n">FileSet</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">make_get_read_ranges</span><span class="p">,</span>
+    <span class="n">Decoder</span><span class="p">,</span> <span class="n">TilingScheme</span><span class="p">,</span> <span class="n">default_get_read_ranges</span><span class="p">,</span>
+    <span class="n">DtypeConversionDecoder</span><span class="p">,</span> <span class="n">IOBackend</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">nt</span>
+
+
+<span class="k">class</span> <span class="nc">MIBDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/MIBDatasetParams.schema.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;MIBDatasetParams&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;MIB&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;io_backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">IOBackend</span><span class="o">.</span><span class="n">get_supported</span><span class="p">(),</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s2">&quot;nav_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sig_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sync_offset&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span> <span class="nf">read_hdr_file</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># FIXME: do this open via the io backend!</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;HDR&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;End</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">is_valid_hdr</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="c1"># FIXME: do this open via the io backend!</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;HDR&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">nav_shape_from_hdr</span><span class="p">(</span><span class="n">hdr</span><span class="p">):</span>
+    <span class="n">num_frames</span><span class="p">,</span> <span class="n">scan_x</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;Frames in Acquisition (Number)&#39;</span><span class="p">]),</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;Frames per Trigger (Number)&#39;</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="n">nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_frames</span> <span class="o">//</span> <span class="n">scan_x</span><span class="p">,</span> <span class="n">scan_x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nav_shape</span>
+
+
+<span class="k">def</span> <span class="nf">_pattern</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;.mib&#39;</span><span class="p">:</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*.mib&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[0-9]+$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">escape</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;.hdr&#39;</span><span class="p">:</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*.mib&quot;</span> <span class="o">%</span> <span class="n">escape</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;unknown extension&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pattern</span>
+
+
+<span class="k">def</span> <span class="nf">get_filenames</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">disable_glob</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">disable_glob</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">path</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">glob</span><span class="p">(</span><span class="n">_pattern</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_sequence</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="s2">&quot;MIBHeaderReader&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sequence_first_image&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">get_image_count_and_sig_shape</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">disable_glob</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="n">fns</span> <span class="o">=</span> <span class="n">get_filenames</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">disable_glob</span><span class="o">=</span><span class="n">disable_glob</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">fns</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">MIBHeaderReader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;num_images&#39;</span><span class="p">]</span>
+        <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">first_file</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">_get_sequence</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">sig_shape</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;image_size&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">count</span><span class="p">,</span> <span class="n">sig_shape</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;no files found&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># These encoders takes 2D input/output data - this means we can use</span>
+<span class="c1"># strides to do slicing and reversing. 2D input data means one output</span>
+<span class="c1"># row (of bytes) corresponds to one input row (of pixels).</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">encode_u1</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">y</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">encode_u2</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">row_out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="n">row_in</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">row_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">in_value</span> <span class="o">=</span> <span class="n">row_in</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">row_out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mh">0xFF00</span> <span class="o">&amp;</span> <span class="n">in_value</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+            <span class="n">row_out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xFF</span> <span class="o">&amp;</span> <span class="n">in_value</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">encode_r1</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">row_out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="n">row_in</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">stripe</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">row_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                <span class="n">out_byte</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">bitpos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">row_in</span><span class="p">[</span><span class="mi">64</span> <span class="o">*</span> <span class="n">stripe</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">byte</span> <span class="o">+</span> <span class="n">bitpos</span><span class="p">]</span> <span class="o">&amp;</span> <span class="mi">1</span>
+                    <span class="n">out_byte</span> <span class="o">|=</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;&lt;</span> <span class="n">bitpos</span><span class="p">)</span>
+                <span class="n">row_out</span><span class="p">[(</span><span class="n">stripe</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="p">(</span><span class="n">byte</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">out_byte</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">encode_r6</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">row_out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="n">row_in</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">row_out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">8</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">8</span>
+            <span class="n">in_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">row_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_in</span><span class="p">[</span><span class="n">in_pos</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">encode_r12</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">row_out</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="n">row_in</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">y</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">row_in</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">4</span>
+            <span class="n">in_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">in_value</span> <span class="o">=</span> <span class="n">row_in</span><span class="p">[</span><span class="n">in_pos</span><span class="p">]</span>
+            <span class="n">row_out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mh">0xFF00</span> <span class="o">&amp;</span> <span class="n">in_value</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+            <span class="n">row_out</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xFF</span> <span class="o">&amp;</span> <span class="n">in_value</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_get_row_start_stop</span><span class="p">(</span><span class="n">offset_global</span><span class="p">,</span> <span class="n">offset_local</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">row_idx</span><span class="p">,</span> <span class="n">row_length</span><span class="p">):</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">offset_global</span> <span class="o">+</span> <span class="n">offset_local</span> <span class="o">+</span> <span class="n">row_idx</span> <span class="o">*</span> <span class="n">stride</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">row_length</span>
+    <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_mib_r24_px_to_bytes</span><span class="p">(</span>
+    <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_in_file_idx</span><span class="p">,</span> <span class="n">slice_sig_size</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span> <span class="n">sig_origin</span><span class="p">,</span>
+    <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span> <span class="n">file_header_bytes</span><span class="p">,</span>
+    <span class="n">file_idx</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="c1"># we are reading a part of a single frame, so we first need to find</span>
+    <span class="c1"># the offset caused by headers and footers:</span>
+    <span class="n">footer_offset</span> <span class="o">=</span> <span class="n">frame_footer_bytes</span> <span class="o">*</span> <span class="n">frame_in_file_idx</span>
+    <span class="n">header_offset</span> <span class="o">=</span> <span class="n">frame_header_bytes</span> <span class="o">*</span> <span class="p">(</span><span class="n">frame_in_file_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">byte_offset</span> <span class="o">=</span> <span class="n">footer_offset</span> <span class="o">+</span> <span class="n">header_offset</span>
+
+    <span class="c1"># now let&#39;s figure in the current frame index:</span>
+    <span class="c1"># (go down into the file by full frames; `sig_size`)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">file_header_bytes</span> <span class="o">+</span> <span class="n">byte_offset</span> <span class="o">+</span> <span class="n">frame_in_file_idx</span> <span class="o">*</span> <span class="n">sig_size</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+
+    <span class="c1"># offset in px in the current frame:</span>
+    <span class="n">sig_origin_bytes</span> <span class="o">=</span> <span class="n">sig_origin</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">sig_origin_bytes</span>
+
+    <span class="c1"># size of the sig part of the slice:</span>
+    <span class="n">sig_size_bytes</span> <span class="o">=</span> <span class="n">slice_sig_size</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+
+    <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">sig_size_bytes</span>
+    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">file_idx</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+
+    <span class="c1"># this is the addition for medipix 24bit raw:</span>
+    <span class="c1"># we read the part from the &quot;second 12bit frame&quot;</span>
+    <span class="n">second_frame_offset</span> <span class="o">=</span> <span class="n">sig_size</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">file_idx</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">second_frame_offset</span><span class="p">,</span> <span class="n">stop</span> <span class="o">+</span> <span class="n">second_frame_offset</span><span class="p">))</span>
+
+
+<span class="n">mib_r24_get_read_ranges</span> <span class="o">=</span> <span class="n">make_get_read_ranges</span><span class="p">(</span><span class="n">px_to_bytes</span><span class="o">=</span><span class="n">_mib_r24_px_to_bytes</span><span class="p">)</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s2">&quot;always&quot;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_mib_2x2_tile_block</span><span class="p">(</span>
+    <span class="n">slices_arr</span><span class="p">,</span> <span class="n">fileset_arr</span><span class="p">,</span> <span class="n">slice_sig_sizes</span><span class="p">,</span> <span class="n">sig_origins</span><span class="p">,</span>
+    <span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span>
+    <span class="n">px_to_bytes</span><span class="p">,</span> <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span> <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">file_idxs</span><span class="p">,</span>
+    <span class="n">slice_offset</span><span class="p">,</span> <span class="n">extra</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate read ranges for 2x2 Merlin Quad raw data.</span>
+
+<span class="sd">    The arrangement means that reading a contiguous block of data from the file,</span>
+<span class="sd">    we get data from all four quadrants. The arrangement, and thus resulting</span>
+<span class="sd">    array, looks like this:</span>
+
+<span class="sd">    _________</span>
+<span class="sd">    | 1 | 2 |</span>
+<span class="sd">    ---------</span>
+<span class="sd">    | 3 | 4 |</span>
+<span class="sd">    ---------</span>
+
+<span class="sd">    with the original data layed out like this:</span>
+
+<span class="sd">    [4 | 3 | 2 | 1]</span>
+
+<span class="sd">    (note that quadrants 3 and 4 are also flipped in x and y direction in the</span>
+<span class="sd">    resulting array, compared to the original data)</span>
+
+<span class="sd">    So if we read one row of raw data, we first get the bottom-most rows from 4</span>
+<span class="sd">    and 3 first, then the top-most rows from 2 and 1.</span>
+
+<span class="sd">    This is similar to how FRMS6 works, and we generate the read ranges in a</span>
+<span class="sd">    similar way here. In addition to the cut-and-flip from FRMS6, we also have</span>
+<span class="sd">    the split in x direction in quadrants.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">NumbaList</span><span class="p">()</span>
+
+    <span class="c1"># positions in the signal dimensions:</span>
+    <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># (offset, size) arrays defining what data to read (in pixels)</span>
+        <span class="c1"># NOTE: assumes contiguous tiling scheme</span>
+        <span class="c1"># (i.e. a shape like (1, 1, ..., 1, X1, ..., XN))</span>
+        <span class="c1"># where X1 is &lt;= the dataset shape at that index, and X2, ..., XN are</span>
+        <span class="c1"># equal to the dataset shape at that index</span>
+        <span class="n">slice_origin</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">slice_shape</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">read_ranges</span> <span class="o">=</span> <span class="n">NumbaList</span><span class="p">()</span>
+
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="n">slice_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">x_size</span> <span class="o">=</span> <span class="n">x_shape</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>  <span class="c1"># back in bytes</span>
+        <span class="n">x_size_half</span> <span class="o">=</span> <span class="n">x_size</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="n">x_size_half</span> <span class="o">*</span> <span class="mi">4</span>
+
+        <span class="n">sig_size_bytes</span> <span class="o">=</span> <span class="n">sig_size</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+
+        <span class="n">y_start</span> <span class="o">=</span> <span class="n">slice_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_stop</span> <span class="o">=</span> <span class="n">slice_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">slice_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">y_size_half</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">y_size</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># inner &quot;depth&quot; loop along the (flat) navigation axis of a tile:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inner_frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">)):</span>
+            <span class="n">inner_frame</span> <span class="o">=</span> <span class="n">frame_indices</span><span class="p">[</span><span class="n">inner_frame_idx</span><span class="p">]</span>
+            <span class="n">file_idx</span> <span class="o">=</span> <span class="n">file_idxs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[</span><span class="n">file_idx</span><span class="p">]</span>
+            <span class="n">frame_in_file_idx</span> <span class="o">=</span> <span class="n">inner_frame</span> <span class="o">-</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">file_header_bytes</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+            <span class="c1"># we are reading a part of a single frame, so we first need to find</span>
+            <span class="c1"># the offset caused by headers:</span>
+            <span class="n">header_offset</span> <span class="o">=</span> <span class="n">file_header_bytes</span> <span class="o">+</span> <span class="n">frame_header_bytes</span> <span class="o">*</span> <span class="p">(</span><span class="n">frame_in_file_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># now let&#39;s figure in the current frame index:</span>
+            <span class="c1"># (go down into the file by full frames; `sig_size`)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">header_offset</span> <span class="o">+</span> <span class="n">frame_in_file_idx</span> <span class="o">*</span> <span class="n">sig_size_bytes</span>
+
+            <span class="c1"># in total, we generate depth * 2 * (y_stop - y_start) read ranges per tile</span>
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y_start</span><span class="p">,</span> <span class="n">y_stop</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">y_size_half</span><span class="p">:</span>
+
+                    <span class="c1"># top: no y-flip, no x-flip</span>
+                    <span class="n">flip</span> <span class="o">=</span> <span class="mi">0</span>
+
+                    <span class="c1"># quadrant 1, left part of the result: we have the three other blocks</span>
+                    <span class="c1"># in the original data in front of us</span>
+                    <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">_get_row_start_stop</span><span class="p">(</span>
+                        <span class="n">offset</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">x_size_half</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_size_half</span>
+                    <span class="p">)</span>
+                    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                        <span class="n">file_idx</span><span class="p">,</span>
+                        <span class="n">start</span><span class="p">,</span>
+                        <span class="n">stop</span><span class="p">,</span>
+                        <span class="n">flip</span><span class="p">,</span>
+                    <span class="p">))</span>
+                    <span class="c1"># quadrant 2, right part of the result: we have the two other blocks</span>
+                    <span class="c1"># in the original data in front of us</span>
+                    <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">_get_row_start_stop</span><span class="p">(</span>
+                        <span class="n">offset</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x_size_half</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_size_half</span>
+                    <span class="p">)</span>
+                    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                        <span class="n">file_idx</span><span class="p">,</span>
+                        <span class="n">start</span><span class="p">,</span>
+                        <span class="n">stop</span><span class="p">,</span>
+                        <span class="n">flip</span><span class="p">,</span>
+                    <span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># bottom: both x and y flip</span>
+                    <span class="n">flip</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">y_size</span> <span class="o">-</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="c1"># quadrant 3, left part of the result: we have the one other block</span>
+                    <span class="c1"># in the original data in front of us</span>
+                    <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">_get_row_start_stop</span><span class="p">(</span>
+                        <span class="n">offset</span><span class="p">,</span> <span class="mi">1</span> <span class="o">*</span> <span class="n">x_size_half</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_size_half</span>
+                    <span class="p">)</span>
+                    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                        <span class="n">file_idx</span><span class="p">,</span>
+                        <span class="n">start</span><span class="p">,</span>
+                        <span class="n">stop</span><span class="p">,</span>
+                        <span class="n">flip</span><span class="p">,</span>
+                    <span class="p">))</span>
+                    <span class="c1"># quadrant 4, right part of the result: we have the no other blocks</span>
+                    <span class="c1"># in the original data in front of us</span>
+                    <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">_get_row_start_stop</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_size_half</span><span class="p">)</span>
+                    <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">((</span>
+                        <span class="n">file_idx</span><span class="p">,</span>
+                        <span class="n">start</span><span class="p">,</span>
+                        <span class="n">stop</span><span class="p">,</span>
+                        <span class="n">flip</span><span class="p">,</span>
+                    <span class="p">))</span>
+
+        <span class="c1"># the indices are compressed to the selected frames</span>
+        <span class="n">compressed_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="n">slice_offset</span> <span class="o">+</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_origin</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">inner_indices_stop</span> <span class="o">-</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_shape</span><span class="p">],</span>
+        <span class="p">])</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">slice_idx</span><span class="p">,</span> <span class="n">compressed_slice</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r1_swap_2x2</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 1bit format: each pixel is actually saved as a single bit. 64 bits</span>
+<span class="sd">    need to be unpacked together. This is the quad variant.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    inp : np.ndarray</span>
+
+<span class="sd">    out : np.ndarray</span>
+<span class="sd">        The output buffer, with the signal dimensions flattened</span>
+
+<span class="sd">    idx : int</span>
+<span class="sd">        The index in the read ranges array</span>
+
+<span class="sd">    native_dtype : nt.DtypeLike</span>
+<span class="sd">        The &quot;native&quot; dtype (format-specific)</span>
+
+<span class="sd">    rr : np.ndarray</span>
+<span class="sd">        A single entry from the read ranges array</span>
+
+<span class="sd">    origin : np.ndarray</span>
+<span class="sd">        The 3D origin of the tile, for example :code:`np.array([2, 0, 0])`</span>
+
+<span class="sd">    shape : np.ndarray</span>
+<span class="sd">        The 3D tileshape, for example :code:`np.array([2, 512, 512])`</span>
+
+<span class="sd">    ds_shape : np.ndarray</span>
+<span class="sd">        The complete ND dataset shape, for example :code:`np.array([32, 32, 512, 512])`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># in case of 2x2 quad, the index into `out` is not straight `idx`, but</span>
+    <span class="c1"># we have `2 * shape[1]` read ranges generated for one depth.</span>
+    <span class="n">num_rows_tile</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">out_3d</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># each line in the output array generates two entries in the</span>
+    <span class="c1"># read ranges. so `(idx // 2) % num_rows_tile` is the correct</span>
+    <span class="c1"># out_y:</span>
+    <span class="n">out_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_rows_tile</span>
+    <span class="n">out_x_start</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">//</span> <span class="p">(</span><span class="n">num_rows_tile</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">flip</span> <span class="o">=</span> <span class="n">rr</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">flip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">stripe</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                <span class="n">inp_byte</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[(</span><span class="n">stripe</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="p">(</span><span class="n">byte</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">bitpos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                    <span class="n">out_x</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">stripe</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">byte</span> <span class="o">+</span> <span class="n">bitpos</span>
+                    <span class="n">out_x</span> <span class="o">+=</span> <span class="n">out_x_start</span>
+                    <span class="n">out_3d</span><span class="p">[</span><span class="n">depth</span><span class="p">,</span> <span class="n">out_y</span><span class="p">,</span> <span class="n">out_x</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp_byte</span> <span class="o">&gt;&gt;</span> <span class="n">bitpos</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># flip in x direction:</span>
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">x_shape_half</span> <span class="o">=</span> <span class="n">x_shape</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">for</span> <span class="n">stripe</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                <span class="n">inp_byte</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[(</span><span class="n">stripe</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="p">(</span><span class="n">byte</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">bitpos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                    <span class="n">out_x</span> <span class="o">=</span> <span class="n">out_x_start</span> <span class="o">+</span> <span class="n">x_shape_half</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="n">stripe</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">byte</span> <span class="o">+</span> <span class="n">bitpos</span><span class="p">)</span>
+                    <span class="n">out_3d</span><span class="p">[</span><span class="n">depth</span><span class="p">,</span> <span class="n">out_y</span><span class="p">,</span> <span class="n">out_x</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp_byte</span> <span class="o">&gt;&gt;</span> <span class="n">bitpos</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r6_swap_2x2</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 6bit format: the pixels need to be re-ordered in groups of 8. `inp`</span>
+<span class="sd">    should have dtype uint8. This is the quad variant.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    inp : np.ndarray</span>
+
+<span class="sd">    out : np.ndarray</span>
+<span class="sd">        The output buffer, with the signal dimensions flattened</span>
+
+<span class="sd">    idx : int</span>
+<span class="sd">        The index in the read ranges array</span>
+
+<span class="sd">    native_dtype : nt.DtypeLike</span>
+<span class="sd">        The &quot;native&quot; dtype (format-specific)</span>
+
+<span class="sd">    rr : np.ndarray</span>
+<span class="sd">        A single entry from the read ranges array</span>
+
+<span class="sd">    origin : np.ndarray</span>
+<span class="sd">        The 3D origin of the tile, for example :code:`np.array([2, 0, 0])`</span>
+
+<span class="sd">    shape : np.ndarray</span>
+<span class="sd">        The 3D tileshape, for example :code:`np.array([2, 512, 512])`</span>
+
+<span class="sd">    ds_shape : np.ndarray</span>
+<span class="sd">        The complete ND dataset shape, for example :code:`np.array([32, 32, 512, 512])`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># in case of 2x2 quad, the index into `out` is not straight `idx`, but</span>
+    <span class="c1"># we have `2 * shape[1]` read ranges generated for one depth.</span>
+    <span class="n">num_rows_tile</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">out_3d</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># each line in the output array generates two entries in the</span>
+    <span class="c1"># read ranges. so `(idx // 2) % num_rows_tile` is the correct</span>
+    <span class="c1"># out_y:</span>
+    <span class="n">out_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_rows_tile</span>
+    <span class="n">out_x_start</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">//</span> <span class="p">(</span><span class="n">num_rows_tile</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">flip</span> <span class="o">=</span> <span class="n">rr</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="n">out_cut</span> <span class="o">=</span> <span class="n">out_3d</span><span class="p">[</span><span class="n">depth</span><span class="p">,</span> <span class="n">out_y</span><span class="p">,</span> <span class="n">out_x_start</span><span class="p">:</span><span class="n">out_x_start</span> <span class="o">+</span> <span class="n">out_3d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">flip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out_cut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">8</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">8</span>
+            <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">out_cut</span><span class="p">[</span><span class="n">out_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># flip in x direction:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out_cut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">8</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">8</span>
+            <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">out_cut</span><span class="p">[</span><span class="n">out_cut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">out_pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">boundscheck</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r12_swap_2x2</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 12bit format: the pixels need to be re-ordered in groups of 4. `inp`</span>
+<span class="sd">    should be an uint8 view on padded big endian 12bit data (&quot;&gt;u2&quot;).</span>
+<span class="sd">    This is the quad variant.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    inp : np.ndarray</span>
+
+<span class="sd">    out : np.ndarray</span>
+<span class="sd">        The output buffer, with the signal dimensions flattened</span>
+
+<span class="sd">    idx : int</span>
+<span class="sd">        The index in the read ranges array</span>
+
+<span class="sd">    native_dtype : nt.DtypeLike</span>
+<span class="sd">        The &quot;native&quot; dtype (format-specific)</span>
+
+<span class="sd">    rr : np.ndarray</span>
+<span class="sd">        A single entry from the read ranges array</span>
+
+<span class="sd">    origin : np.ndarray</span>
+<span class="sd">        The 3D origin of the tile, for example :code:`np.array([2, 0, 0])`</span>
+
+<span class="sd">    shape : np.ndarray</span>
+<span class="sd">        The 3D tileshape, for example :code:`np.array([2, 512, 512])`</span>
+
+<span class="sd">    ds_shape : np.ndarray</span>
+<span class="sd">        The complete ND dataset shape, for example :code:`np.array([32, 32, 512, 512])`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># in case of 2x2 quad, the index into `out` is not straight `idx`, but</span>
+    <span class="c1"># we have `2 * shape[1]` read ranges generated for one depth.</span>
+    <span class="n">num_rows_tile</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">out_3d</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># each line in the output array generates two entries in the</span>
+    <span class="c1"># read ranges. so `(idx // 2) % num_rows_tile` is the correct</span>
+    <span class="c1"># out_y:</span>
+    <span class="n">out_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_rows_tile</span>
+    <span class="n">out_x_start</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">//</span> <span class="p">(</span><span class="n">num_rows_tile</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">flip</span> <span class="o">=</span> <span class="n">rr</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="n">out_cut</span> <span class="o">=</span> <span class="n">out_3d</span><span class="p">[</span><span class="n">depth</span><span class="p">,</span> <span class="n">out_y</span><span class="p">,</span> <span class="n">out_x_start</span><span class="p">:</span><span class="n">out_x_start</span> <span class="o">+</span> <span class="n">out_3d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">flip</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out_cut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">4</span>
+            <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">out_cut</span><span class="p">[</span><span class="n">out_pos</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># flip in x direction:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out_cut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">4</span>
+            <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">out_cut</span><span class="p">[</span><span class="n">out_cut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">out_pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># reference non-quad impl:</span>
+    <span class="c1"># for i in range(out.shape[1]):</span>
+    <span class="c1">#     col = i % 4</span>
+    <span class="c1">#     pos = i // 4</span>
+    <span class="c1">#     out_pos = (pos + 1) * 4 - col - 1</span>
+    <span class="c1">#     out[idx, out_pos] = (inp[i * 2] &lt;&lt; 8) + (inp[i * 2 + 1] &lt;&lt; 0)</span>
+
+
+<span class="n">mib_2x2_get_read_ranges</span> <span class="o">=</span> <span class="n">make_get_read_ranges</span><span class="p">(</span>
+    <span class="n">read_ranges_tile_block</span><span class="o">=</span><span class="n">_mib_2x2_tile_block</span>
+<span class="p">)</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">jit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r1_swap</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 1bit format: each pixel is actually saved as a single bit. 64 bits</span>
+<span class="sd">    need to be unpacked together.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">stripe</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+            <span class="n">inp_byte</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[(</span><span class="n">stripe</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="p">(</span><span class="n">byte</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">bitpos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">stripe</span> <span class="o">+</span> <span class="mi">8</span> <span class="o">*</span> <span class="n">byte</span> <span class="o">+</span> <span class="n">bitpos</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp_byte</span> <span class="o">&gt;&gt;</span> <span class="n">bitpos</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r6_swap</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 6bit format: the pixels need to be re-ordered in groups of 8. `inp`</span>
+<span class="sd">    should have dtype uint8.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">8</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">8</span>
+        <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">out_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r12_swap</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 12bit format: the pixels need to be re-ordered in groups of 4. `inp`</span>
+<span class="sd">    should be an uint8 view on big endian 12bit data (&quot;&gt;u2&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="n">out_pos</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">decode_r24_swap</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RAW 24bit format: a single 24bit consists of two frames that are encoded</span>
+<span class="sd">    like the RAW 12bit format, the first contains the most significant bits.</span>
+
+<span class="sd">    So after a frame header, there are (512, 256) &gt;u2 values, which then</span>
+<span class="sd">    need to be shuffled like in `decode_r12_swap`.</span>
+
+<span class="sd">    This decoder function only works together with mib_r24_get_read_ranges</span>
+<span class="sd">    which generates twice as many read ranges than normally.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">4</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">i</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">out_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">-</span> <span class="n">col</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">out_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">((</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">inp</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># from first frame: most significant bits</span>
+            <span class="n">out_val</span> <span class="o">=</span> <span class="n">out_val</span> <span class="o">&lt;&lt;</span> <span class="mi">12</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">idx</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">out_pos</span><span class="p">]</span> <span class="o">+=</span> <span class="n">out_val</span>
+
+
+<span class="k">class</span> <span class="nc">MIBDecoder</span><span class="p">(</span><span class="n">Decoder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">:</span> <span class="s2">&quot;HeaderDict&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;mib_kind&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bit_depth</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;bits_per_pixel&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">header</span>
+
+    <span class="k">def</span> <span class="nf">do_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        In case of 24bit raw data, the output buffer needs to be cleared</span>
+<span class="sd">        before writing, as we can&#39;t decode the whole frame in a single call of the decoder.</span>
+<span class="sd">        The `decode_r24_swap` function needs to be able to add to the output</span>
+<span class="sd">        buffer, so at the beginning, it needs to be cleared.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s1">&#39;r&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bit_depth</span> <span class="o">==</span> <span class="mi">24</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_get_decode_r</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">bit_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bit_depth</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sensor_layout&#39;</span><span class="p">]</span>
+        <span class="n">num_chips</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;num_chips&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="n">num_chips</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">decode_r1_swap_2x2</span>
+            <span class="k">elif</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">decode_r6_swap_2x2</span>
+            <span class="k">elif</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">12</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">decode_r12_swap_2x2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;bit depth </span><span class="si">{</span><span class="n">bit_depth</span><span class="si">}</span><span class="s2"> not implemented for layout </span><span class="si">{</span><span class="n">layout</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">decode_r1_swap</span>
+        <span class="k">elif</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">decode_r6_swap</span>
+        <span class="k">elif</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">decode_r12_swap</span>
+        <span class="k">elif</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">24</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">decode_r24_swap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown raw bitdepth&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span>
+
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DtypeConversionDecoder</span><span class="p">()</span><span class="o">.</span><span class="n">get_decode</span><span class="p">(</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="n">native_dtype</span><span class="p">,</span>
+                <span class="n">read_dtype</span><span class="o">=</span><span class="n">read_dtype</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="c1"># FIXME: on big endian systems, these need to be implemented without byteswapping</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_decode_r</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;unknown type of MIB file&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_native_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp_native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="c1"># drop the byteswap from the dtype, if it is there</span>
+            <span class="k">return</span> <span class="n">inp_native_dtype</span><span class="o">.</span><span class="n">newbyteorder</span><span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># decode byte-by-byte</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;u1&quot;</span><span class="p">)</span>
+
+
+<span class="n">MIBKind</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">HeaderDict</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="n">header_size_bytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">dtype</span><span class="p">:</span> <span class="s2">&quot;nt.DTypeLike&quot;</span>
+    <span class="n">mib_dtype</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">mib_kind</span><span class="p">:</span> <span class="n">MIBKind</span>
+    <span class="n">bits_per_pixel</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">image_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="n">image_size_bytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sequence_first_image</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">filesize</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">num_images</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">num_chips</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">sensor_layout</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">MIBHeaderReader</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">HeaderDict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sequence_start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="k">if</span> <span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="n">fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequence_start</span> <span class="o">=</span> <span class="n">sequence_start</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;MIBHeaderReader: </span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="k">def</span> <span class="nf">_get_np_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bit_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">:</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">num_bits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dtype</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">dtype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="n">num_bytes</span> <span class="o">=</span> <span class="n">num_bits</span> <span class="o">//</span> <span class="mi">8</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;&gt;u</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">num_bytes</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">dtype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;uint64&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">bit_depth</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>  <span class="c1"># 24bit raw is two 12bit images after another</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;uint16&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;unknown bit depth: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">bit_depth</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown dtype: </span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">read_header</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HeaderDict</span><span class="p">:</span>
+        <span class="c1"># FIXME: do this read via the IO backend!</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+            <span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fstat</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span><span class="o">.</span><span class="n">st_size</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">header_size_bytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">header</span><span class="p">[:</span><span class="n">header_size_bytes</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header_parts</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">mib_kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">]</span>
+        <span class="c1"># To make mypy Literal check happy...</span>
+        <span class="k">if</span> <span class="n">dtype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="n">mib_kind</span> <span class="o">=</span> <span class="s2">&quot;r&quot;</span>
+        <span class="k">elif</span> <span class="n">dtype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="n">mib_kind</span> <span class="o">=</span> <span class="s2">&quot;u&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;unknown kind: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dtype</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">image_size</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+        <span class="c1"># FIXME: There can either be threshold values for all chips, or maybe also</span>
+        <span class="c1"># none. For now, we just make use of the fact that the bit depth is</span>
+        <span class="c1"># supposed to be the last value.</span>
+        <span class="n">bits_per_pixel_raw</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">mib_kind</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="n">bytes_per_pixel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span> <span class="o">//</span> <span class="mi">8</span>
+            <span class="n">image_size_bytes</span> <span class="o">=</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">bytes_per_pixel</span>
+            <span class="n">num_images</span> <span class="o">=</span> <span class="n">filesize</span> <span class="o">//</span> <span class="p">(</span>
+                <span class="n">image_size_bytes</span> <span class="o">+</span> <span class="n">header_size_bytes</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">mib_kind</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="n">size_factor</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="mi">1</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">,</span>
+                <span class="mi">6</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="mi">12</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="mi">24</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="p">}[</span><span class="n">bits_per_pixel_raw</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">bits_per_pixel_raw</span> <span class="o">==</span> <span class="mi">24</span><span class="p">:</span>
+                <span class="n">image_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">image_size_bytes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">size_factor</span><span class="p">)</span>
+            <span class="n">num_images</span> <span class="o">=</span> <span class="n">filesize</span> <span class="o">//</span> <span class="p">(</span>
+                <span class="n">image_size_bytes</span> <span class="o">+</span> <span class="n">header_size_bytes</span>
+            <span class="p">)</span>
+        <span class="n">num_chips</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="c1"># 2x2, Nx1, 2x2G, Nx1G -&gt; strip off the &#39;G&#39; suffix for now:</span>
+        <span class="c1"># Assumption: layout is width x height</span>
+
+        <span class="c1"># We currently only support 1x1 and 2x2 layouts, and support for raw</span>
+        <span class="c1"># files with 2x2 layout is limited to 1, 6 or 12 bits. Support for 24bit TBD.</span>
+        <span class="c1"># We don&#39;t yet support general Nx1 layouts, or arbitrary &quot;chip select&quot;</span>
+        <span class="c1"># values (2x2 layout, but only a subset of them is enabled).</span>
+        <span class="n">sensor_layout_str</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;G&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">sensor_layout</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">sensor_layout_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">sensor_layout_str</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mib_kind</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+            <span class="c1"># in raw data, the layout information is not decoded yet - we just get</span>
+            <span class="c1"># rows from different sensors after one another. The image size is</span>
+            <span class="c1"># accordingly also different.</span>
+
+            <span class="c1"># NOTE: this is still a bit hacky - individual sensors in a layout</span>
+            <span class="c1"># can be enabled or disabled; because we only support 1x1 and 2x2</span>
+            <span class="c1"># layouts for now, we just do the &quot;layout based reshaping&quot; only</span>
+            <span class="c1"># in the 2x2 case:</span>
+            <span class="k">if</span> <span class="n">num_chips</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">px_length</span> <span class="o">=</span> <span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">image_size_orig</span> <span class="o">=</span> <span class="n">image_size</span>
+                <span class="n">image_size</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">px_length</span> <span class="o">*</span> <span class="n">sensor_layout</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">px_length</span> <span class="o">*</span> <span class="n">sensor_layout</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">prod</span><span class="p">(</span><span class="n">image_size_orig</span><span class="p">)</span> <span class="o">!=</span> <span class="n">prod</span><span class="p">(</span><span class="n">image_size</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;invalid sensor layout </span><span class="si">{</span><span class="n">sensor_layout</span><span class="si">}</span><span class="s2"> &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;(original image size: </span><span class="si">{</span><span class="n">image_size_orig</span><span class="si">}</span><span class="s2">)&quot;</span>
+                    <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;header_size_bytes&#39;</span><span class="p">:</span> <span class="n">header_size_bytes</span><span class="p">,</span>
+            <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_np_dtype</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">bits_per_pixel_raw</span><span class="p">),</span>
+            <span class="s1">&#39;mib_dtype&#39;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">,</span>
+            <span class="s1">&#39;mib_kind&#39;</span><span class="p">:</span> <span class="n">mib_kind</span><span class="p">,</span>
+            <span class="s1">&#39;bits_per_pixel&#39;</span><span class="p">:</span> <span class="n">bits_per_pixel_raw</span><span class="p">,</span>
+            <span class="s1">&#39;image_size&#39;</span><span class="p">:</span> <span class="n">image_size</span><span class="p">,</span>
+            <span class="s1">&#39;image_size_bytes&#39;</span><span class="p">:</span> <span class="n">image_size_bytes</span><span class="p">,</span>
+            <span class="s1">&#39;sequence_first_image&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="s1">&#39;filesize&#39;</span><span class="p">:</span> <span class="n">filesize</span><span class="p">,</span>
+            <span class="s1">&#39;num_images&#39;</span><span class="p">:</span> <span class="n">num_images</span><span class="p">,</span>
+            <span class="s1">&#39;num_chips&#39;</span><span class="p">:</span> <span class="n">num_chips</span><span class="p">,</span>
+            <span class="s1">&#39;sensor_layout&#39;</span><span class="p">:</span> <span class="n">sensor_layout</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;num_images&#39;</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">start_idx</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sequence_first_image&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence_start</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HeaderDict</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_header</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
+
+
+<span class="k">class</span> <span class="nc">MIBFile</span><span class="p">(</span><span class="n">File</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_array_from_memview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem</span><span class="p">:</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="n">slicing</span><span class="p">:</span> <span class="n">OffsetsSizes</span><span class="p">):</span>
+        <span class="n">mem</span> <span class="o">=</span> <span class="n">mem</span><span class="p">[</span><span class="n">slicing</span><span class="o">.</span><span class="n">file_offset</span><span class="p">:</span><span class="o">-</span><span class="n">slicing</span><span class="o">.</span><span class="n">skip_end</span><span class="p">]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;num_images&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;image_size_bytes&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;header_size_bytes&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:</span><span class="n">cutoff</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)[:,</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_offset</span><span class="p">:</span><span class="n">slicing</span><span class="o">.</span><span class="n">frame_offset</span> <span class="o">+</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_size</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">MIBFileSet</span><span class="p">(</span><span class="n">FileSet</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">header</span><span class="p">:</span> <span class="n">HeaderDict</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_read_ranges</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start_at_frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stop_before_frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">:</span> <span class="n">TilingScheme</span><span class="p">,</span> <span class="n">sync_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">fileset_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_as_arr</span><span class="p">()</span>
+        <span class="n">bit_depth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;bits_per_pixel&#39;</span><span class="p">]</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;mib_kind&#39;</span><span class="p">]</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;sensor_layout&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span> <span class="ow">and</span> <span class="n">bit_depth</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># special case for bit-packed 1-bit format:</span>
+            <span class="n">bpp</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bpp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="mi">8</span>
+        <span class="n">roi_nonzero</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi_nonzero</span> <span class="o">=</span> <span class="n">flat_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">start_at_frame</span><span class="o">=</span><span class="n">start_at_frame</span><span class="p">,</span>
+            <span class="n">stop_before_frame</span><span class="o">=</span><span class="n">stop_before_frame</span><span class="p">,</span>
+            <span class="n">roi_nonzero</span><span class="o">=</span><span class="n">roi_nonzero</span><span class="p">,</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span>
+            <span class="n">slices_arr</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">slices_array</span><span class="p">,</span>
+            <span class="n">fileset_arr</span><span class="o">=</span><span class="n">fileset_arr</span><span class="p">,</span>
+            <span class="n">sig_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">dataset_shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="n">sync_offset</span><span class="p">,</span>
+            <span class="n">bpp</span><span class="o">=</span><span class="n">bpp</span><span class="p">,</span>
+            <span class="n">frame_header_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_header_bytes</span><span class="p">,</span>
+            <span class="n">frame_footer_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer_bytes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">layout</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;num_chips&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span> <span class="ow">and</span> <span class="n">bit_depth</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">24</span><span class="p">,):</span>
+                <span class="k">return</span> <span class="n">mib_r24_get_read_ranges</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">default_get_read_ranges</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">layout</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;r&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">mib_2x2_get_read_ranges</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">default_get_read_ranges</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No support for layout </span><span class="si">{</span><span class="n">layout</span><span class="si">}</span><span class="s2"> yet - please contact us!&quot;</span>
+            <span class="p">)</span>
+
+
+<div class="viewcode-block" id="MIBDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.mib.MIBDataSet">[docs]</a><span class="k">class</span> <span class="nc">MIBDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+    <span class="c1"># FIXME include sample file for doctest, see Issue #86</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MIB data sets consist of one or more `.mib` files, and optionally</span>
+<span class="sd">    a `.hdr` file. The HDR file is used to automatically set the</span>
+<span class="sd">    `nav_shape` parameter from the fields &quot;Frames per Trigger&quot; and &quot;Frames</span>
+<span class="sd">    in Acquisition.&quot; When loading a MIB data set, you can either specify</span>
+<span class="sd">    the path to the HDR file, or choose one of the MIB files. The MIB files</span>
+<span class="sd">    are assumed to follow a naming pattern of some non-numerical prefix,</span>
+<span class="sd">    and a sequential numerical suffix.</span>
+
+<span class="sd">    Note that if you are using a per-pixel or per-scan trigger setup, LiberTEM</span>
+<span class="sd">    won&#39;t be able to deduce the x scanning dimension - in that case, you will</span>
+<span class="sd">    need to specify the `nav_shape` yourself.</span>
+
+<span class="sd">    Currently, we support all integer formats, and most RAW formats. Especially,</span>
+<span class="sd">    the following configurations are not yet supported for RAW files:</span>
+
+<span class="sd">     * Non-2x2 layouts with more than one chip</span>
+<span class="sd">     * 24bit with more than one chip</span>
+
+<span class="sd">    .. versionadded:: 0.9.0</span>
+<span class="sd">        Support for the raw quad format was added</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; # both examples look for files matching /path/to/default*.mib:</span>
+<span class="sd">    &gt;&gt;&gt; ds1 = ctx.load(&quot;mib&quot;, path=&quot;/path/to/default.hdr&quot;)  # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; ds2 = ctx.load(&quot;mib&quot;, path=&quot;/path/to/default64.mib&quot;)  # doctest: +SKIP</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path: str</span>
+<span class="sd">        Path to either the .hdr file or one of the .mib files</span>
+
+<span class="sd">    nav_shape: tuple of int, optional</span>
+<span class="sd">        A n-tuple that specifies the size of the navigation region ((y, x), but</span>
+<span class="sd">        can also be of length 1 for example for a line scan, or length 3 for</span>
+<span class="sd">        a data cube, for example)</span>
+
+<span class="sd">    sig_shape: tuple of int, optional</span>
+<span class="sd">        Common case: (height, width); but can be any dimensionality</span>
+
+<span class="sd">    sync_offset: int, optional</span>
+<span class="sd">        If positive, number of frames to skip from start</span>
+<span class="sd">        If negative, number of blank frames to insert at start</span>
+
+<span class="sd">    disable_glob : bool, default False</span>
+<span class="sd">        Usually, MIB data sets are stored as a series of .mib files, and we can reliably</span>
+<span class="sd">        guess the whole set from a single path. If you instead save your data set into</span>
+<span class="sd">        a single .mib file, and have multiple of these in a single directory with the same prefix</span>
+<span class="sd">        (for example, a.mib, a1.mib and a2.mib), loading a.mib would include a1.mib and a2.mib</span>
+<span class="sd">        in the data set. Setting :code:`disable_glob` to :code:`True` will only load the single</span>
+<span class="sd">        .mib file specified as :code:`path`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">tileshape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scan_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">disable_glob</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">nav_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sig_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="n">nav_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="n">sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="c1"># handle backwards-compatibility:</span>
+        <span class="k">if</span> <span class="n">tileshape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;tileshape argument is ignored and will be removed after 0.6.0&quot;</span><span class="p">,</span>
+                <span class="ne">FutureWarning</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">scan_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;scan_size argument is deprecated. please specify nav_shape instead&quot;</span><span class="p">,</span>
+                <span class="ne">FutureWarning</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">nav_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot specify both scan_size and nav_shape&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scan_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.hdr&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;either nav_shape needs to be passed, or path needs to point to a .hdr file&quot;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filename_cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">MIBHeaderReader</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># ._preread_headers() calls ._files() which passes the cached headers down to</span>
+        <span class="c1"># MIBHeaderReader, if they exist. So we need to make sure to initialize self._headers</span>
+        <span class="c1"># before calling _preread_headers!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_filesize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequence_start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_disable_glob</span> <span class="o">=</span> <span class="n">disable_glob</span>
+
+    <span class="k">def</span> <span class="nf">_do_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preread_headers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">(),</span>
+                                         <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sequence_first_image&#39;</span><span class="p">]))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">first_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;no files found&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hdr</span> <span class="o">=</span> <span class="n">read_hdr_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="n">nav_shape_from_hdr</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;image_size&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;image_size&#39;</span><span class="p">])):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sig_shape must be of size: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;image_size&#39;</span><span class="p">]))</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">)</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_filesize</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filenames</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sequence_start</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sequence_first_image&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">(),</span>
+                                         <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;sequence_first_image&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_images</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sync_offset_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_initialize</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">first_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bits per pixel&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;bits_per_pixel&#39;</span><span class="p">])},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Data kind&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;mib_kind&#39;</span><span class="p">])},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Layout&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;sensor_layout&#39;</span><span class="p">])},</span>
+        <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MIBDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;mib&quot;</span><span class="p">,</span> <span class="s2">&quot;hdr&quot;</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="n">pathlow</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pathlow</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mib&quot;</span><span class="p">):</span>
+            <span class="n">image_count</span><span class="p">,</span> <span class="n">sig_shape</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">get_image_count_and_sig_shape</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">make_2D_square</span><span class="p">((</span><span class="n">image_count</span><span class="p">,))</span>
+        <span class="k">elif</span> <span class="n">pathlow</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.hdr&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">is_valid_hdr</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+            <span class="n">hdr</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">read_hdr_file</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">image_count</span><span class="p">,</span> <span class="n">sig_shape</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">get_image_count_and_sig_shape</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">nav_shape_from_hdr</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="n">nav_shape</span><span class="p">,</span>
+                <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;image_count&quot;</span><span class="p">:</span> <span class="n">image_count</span><span class="p">,</span>
+                <span class="s2">&quot;native_sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_preread_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">():</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">path</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">fields</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">_filenames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename_cache</span>
+        <span class="n">fns</span> <span class="o">=</span> <span class="n">get_filenames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">disable_glob</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_disable_glob</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">16384</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Saving data in many small files (here: </span><span class="si">%d</span><span class="s2">) is not efficient, please increase &quot;</span>
+                <span class="s2">&quot;the </span><span class="se">\&quot;</span><span class="s2">Images Per File</span><span class="se">\&quot;</span><span class="s2"> parameter when acquiring data&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filename_cache</span> <span class="o">=</span> <span class="n">fns</span>
+        <span class="k">return</span> <span class="n">fns</span>
+
+    <span class="k">def</span> <span class="nf">_files</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">MIBHeaderReader</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filenames</span><span class="p">():</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">MIBHeaderReader</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+                        <span class="n">sequence_start</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sequence_start</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">f</span>
+
+    <span class="k">def</span> <span class="nf">_num_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;num_images&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        the shape specified or imprinted by nav_shape from the HDR file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">get_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+            <span class="c1"># shape is included here because the structure will be invalid if you open</span>
+            <span class="c1"># the same .mib file with a different nav_shape; should be no issue if you</span>
+            <span class="c1"># open via the .hdr file</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Decoder</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">first_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">MIBDecoder</span><span class="p">(</span>
+            <span class="n">header</span><span class="o">=</span><span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sequence_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">first_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">header_size</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;header_size_bytes&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">MIBFileSet</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">MIBFile</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">start_idx</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">f</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">],</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+                <span class="n">frame_header</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;header_size_bytes&#39;</span><span class="p">],</span>
+                <span class="n">file_header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">header</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span>
+        <span class="p">],</span> <span class="n">header</span><span class="o">=</span><span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="o">=</span><span class="n">header_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_base_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="c1"># With R-mode files, we are constrained to tile sizes that are a</span>
+        <span class="c1"># multiple of 64px in the fastest dimension!</span>
+        <span class="c1"># If we make sure full &quot;x-lines&quot; are taken, we are fine (this is the</span>
+        <span class="c1"># case by default)</span>
+        <span class="n">base_shape</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_base_shape</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">base_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">base_shape</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">first_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;mib_kind&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">MIBPartition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="n">kind</span><span class="p">,</span>
+                <span class="n">bit_depth</span><span class="o">=</span><span class="n">first_file</span><span class="o">.</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;bits_per_pixel&#39;</span><span class="p">],</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+                <span class="n">decoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_decoder</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;MIBDataSet of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+
+
+<span class="k">class</span> <span class="nc">MIBPartition</span><span class="p">(</span><span class="n">BasePartition</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kind</span><span class="p">,</span> <span class="n">bit_depth</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">=</span> <span class="n">kind</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bit_depth</span> <span class="o">=</span> <span class="n">bit_depth</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

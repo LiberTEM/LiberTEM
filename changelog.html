@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="No changes yet" href="changelog/documentation/empty.html" />
+    <link rel="prev" title="Example of integration with HyperSpy lazy signals" href="hyperspy-integration.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dev0">0.12.0.dev0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="changelog/documentation/empty.html">No changes yet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-11-0">0.11.0 / 2023-04-21</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sparse-processing">Sparse processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-features">Other features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bugfixes">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#web-interface">Web interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#breaking-changes">Breaking changes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-10-0">0.10.0 / 2022-07-28</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-features">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Miscellaneous</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-9-2">0.9.2 / 2022-04-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-9-0">0.9.0 / 2022-02-17</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id7">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Miscellaneous</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-8-0">0.8.0 / 2021-10-04</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id12">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#misc">Misc</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-7-1">0.7.1 / 2021-07-08</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-7-0">0.7.0 / 2021-06-10</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id18">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id20">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id21">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#obsolescence">Obsolescence</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-6-0">0.6.0 / 2021-02-16</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id24">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id25">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id26">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id27">Misc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deprecations">Deprecations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-5-1">0.5.1 / 2020-08-12</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id29">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-5-0">0.5.0 / 2020-04-23</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id31">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id32">Bugfixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id33">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id34">Obsolescence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id35">Misc</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-4-1">0.4.1 / 2020-02-18</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id37">Bugfixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-4-0">0.4.0 / 2020-02-13</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id39">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug fixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id40">Obsolescence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id41">Misc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#job-api-deprecation">Job API deprecation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#from-applymasksjob-to-applymasksudf">From <code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksJob</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#from-pickframejob-to-pickudf">From <code class="xref py py-class docutils literal notranslate"><span class="pre">PickFrameJob</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#restructuring-into-sub-packages">Restructuring into sub-packages</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-3-0">0.3.0 / 2019-12-12</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id43">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id44">Bug fixes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id45">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id46">Obsolescence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id47">Misc</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-2-2">0.2.2 / 2019-10-14</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id49">Bug fixes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-2-1">0.2.1 / 2019-10-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-2-0">0.2.0 / 2019-10-07</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#user-defined-functions">User-defined functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#support-for-4d-stem-applications">Support for 4D STEM applications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#extended-documentation">Extended documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fully-automated-release-pipeline">Fully automated release pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basic-dask-distributed-array-integration">Basic dask.distributed array integration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#file-formats">File formats</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#v0-1-0">0.1.0 / 2018-11-06</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Changelog</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this heading"></a></h1>
+<section id="dev0">
+<span id="continuous"></span><h2>0.12.0.dev0<a class="headerlink" href="#dev0" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog/documentation/empty.html">No changes yet</a></li>
+</ul>
+</div>
+</section>
+<section id="v0-11-0">
+<span id="latest"></span><span id="id1"></span><h2>0.11.0 / 2023-04-21<a class="headerlink" href="#v0-11-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.7853070"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.7853070.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.7853070.svg" /></a>
+<p>This release introduces first-class support for sparse input data and
+processing using sparse-compatible libraries, primarily oriented towards
+data from event-based detectors. This support is provided through the new
+<a class="reference external" href="https://github.com/LiberTEM/sparseconverter">sparseconverter</a> package,
+which was developed to enable efficient inter-conversion between different
+sparse formats and dense arrays. Many thanks in particular to Alexander
+Clausen and Dieter Weber for their extensive work on sparse support.
+See <a class="reference internal" href="udf/advanced.html#sparse"><span class="std std-ref">Sparse arrays</span></a> for details on how to use it in your UDFs, and <a class="reference internal" href="reference/dataset.html#raw-csr"><span class="std std-ref">Raw binary files in sparse CSR format</span></a>
+for a sparse input file format!</p>
+<p>This release also marks the end of official support for Python 3.6
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1369">#1369</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1380">#1380</a>). At this time the maximum supported Python
+version remains 3.10 owing to usage of the
+<a class="reference external" href="https://numba.pydata.org/">Numba library</a> within LiberTEM.</p>
+<section id="sparse-processing">
+<h3>Sparse processing<a class="headerlink" href="#sparse-processing" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Datasets and UDFs now support tiles in various array formats, in
+particular <a class="reference internal" href="udf/advanced.html#sparse"><span class="std std-ref">Sparse arrays</span></a>. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1205">#1205</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1207">#1207</a>)</p></li>
+<li><p>Add support for <code class="code docutils literal notranslate"><span class="pre">raw_csr</span></code> file format (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1195">#1195</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1207">#1207</a>).</p></li>
+<li><p>ROIs can now now be provided to <code class="code docutils literal notranslate"><span class="pre">ctx.run_udf</span></code> as sparse arrays or coordinate
+tuples rather than as a dense boolean mask. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1306">#1306</a>)</p></li>
+</ul>
+</section>
+<section id="other-features">
+<h3>Other features<a class="headerlink" href="#other-features" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Single-file Gatan Digital Micrograph (DM3/DM4) STEM datasets are now supported
+in the API and in the web interface. The files must use the newer C-style
+ordering available in Digital Micrograph to be read correctly. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1401">#1401</a>)</p></li>
+<li><p>The information provided by the <code class="code docutils literal notranslate"><span class="pre">ctx.run_udf</span></code> progress bar has been improved
+with framewise updates, allowing feedback on progress before a partition completes.
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1341">#1341</a>)</p></li>
+<li><p>HDF5 datasets can now perform on-the-fly reshaping of the scan grid and
+can be adjusted using the <cite>sync_offset</cite> parameter. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/441">#441</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1364">#1364</a>)</p></li>
+</ul>
+</section>
+<section id="bugfixes">
+<h3>Bugfixes<a class="headerlink" href="#bugfixes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Numerous bugs were fixed in the behaviour of the <code class="code docutils literal notranslate"><span class="pre">PipelinedExecutor</span></code>,
+to avoid crashes and deadlocks throughout the lifecycle of the object,
+particulary duing live processing.
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1308">#1308</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1311">#1311</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1316">#1316</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1318">#1318</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1319">#1319</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1342">#1342</a>)</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">Context</span></code> object will now attempt to close itself cleanly at
+process exit (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1343">#1343</a>).</p></li>
+<li><p>The handling of <code class="code docutils literal notranslate"><span class="pre">sync_offset</span></code>, <code class="code docutils literal notranslate"><span class="pre">nav_shape</span></code>, <code class="code docutils literal notranslate"><span class="pre">sig_shape</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">sig_dims</span></code> in <a class="reference internal" href="reference/dataset.html#libertem.io.dataset.memory.MemoryDataSet" title="libertem.io.dataset.memory.MemoryDataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.io.dataset.memory.MemoryDataSet</span></code></a> is now
+consistent with other datasets. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1207">#1207</a>)</p></li>
+<li><p>Bugs were fixed in <a class="reference internal" href="reference/udf.html#libertem.udf.stddev.StdDevUDF" title="libertem.udf.stddev.StdDevUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.udf.stddev.StdDevUDF</span></code></a> for both complex
+input data and when some partitions are empty.  (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1314">#1314</a>)</p></li>
+</ul>
+</section>
+<section id="miscellaneous">
+<h3>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Make <cite>self.meta.coordinates</cite> available in <cite>UDF.get_task_data</cite> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1397">#1397</a>).</p></li>
+<li><p>The methods <code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.executor.pipelined.PipelinedExecutor.make_spec()</span></code> and
+<a class="reference internal" href="dev/executors.html#libertem.executor.dask.cluster_spec" title="libertem.executor.dask.cluster_spec"><code class="xref py py-func docutils literal notranslate"><span class="pre">libertem.executor.dask.cluster_spec()</span></code></a> both now accept integers for
+their <code class="code docutils literal notranslate"><span class="pre">cpus</span></code> and <code class="code docutils literal notranslate"><span class="pre">cudas</span></code> arguments, in addition to the existing
+iterable forms. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1294">#1294</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1336">#1336</a>).</p></li>
+<li><p>Reduced the overhead of (re-)constructing <code class="code docutils literal notranslate"><span class="pre">Slice</span></code> and <code class="code docutils literal notranslate"><span class="pre">Shape</span></code>
+objects when slicing tiles, in particular focused on the method
+<code class="code docutils literal notranslate"><span class="pre">BufferWrapper.get_contiguous_view_for_tile()</span></code>. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1313">#1313</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1321">#1321</a>)</p></li>
+</ul>
+</section>
+<section id="web-interface">
+<h3>Web interface<a class="headerlink" href="#web-interface" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Datasets which don’t declare their nav shape will be interpreted as square
+if their number of frames is a square number (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1309">#1309</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1338">#1338</a>).</p></li>
+<li><p>Raise if user input for <code class="code docutils literal notranslate"><span class="pre">numWorker</span></code> is non-positive integer
+or other error is encountered in <code class="code docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code> creation. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1334">#1334</a>).</p></li>
+<li><p>The dataset loader <cite>Reset`</cite> button now correctly resets the sync_offset
+field, if present (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1378">#1378</a>).</p></li>
+<li><p>The function <code class="code docutils literal notranslate"><span class="pre">detect</span></code> to automatically determine dataset type
+will now use the file suffix as a hint to choose its search order.
+This may lead to faster responses in the web client when configuring
+a new dataset. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1377">#1377</a>)</p></li>
+</ul>
+</section>
+<section id="breaking-changes">
+<h3>Breaking changes<a class="headerlink" href="#breaking-changes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Instead of <a class="reference internal" href="reference/dataset.html#libertem.io.dataset.base.DataTile" title="libertem.io.dataset.base.tiling.DataTile"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTile</span></code></a> objects, an UDF’s
+processing method will receive plain array objects, such as
+<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sparse.SparseArray</span></code> etc. That means the
+<code class="code docutils literal notranslate"><span class="pre">scheme_idx</span></code> and <code class="code docutils literal notranslate"><span class="pre">tile_slice</span></code> attributes are not available from
+the tile anymore, but only from the corresponding
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.tiling_scheme_idx" title="libertem.udf.base.UDFMeta.tiling_scheme_idx"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDFMeta.tiling_scheme_idx</span></code></a> and
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.slice" title="libertem.udf.base.UDFMeta.slice"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDFMeta.slice</span></code></a>. This change makes handling different
+array types such as sparse arrays or CuPy arrays easier. For CuPy arrays this
+was already the previous behavior.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-10-0">
+<span id="id2"></span><h2>0.10.0 / 2022-07-28<a class="headerlink" href="#v0-10-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.6927963"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.6927963.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.6927963.svg" /></a>
+<p>This release features the <a class="reference internal" href="api.html#pipelined"><span class="std std-ref">Pipelined executor</span></a> for parallel live data processing (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1267">#1267</a>).
+This change greatly improves the processing performance for live data, in
+particular to support detectors with high data rate. Many thanks to Alexander
+Clausen and Matthew Bryan for their work! The corresponding capabilities in the
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM-live/">LiberTEM-live</a> package will be
+released soon and announced separately.</p>
+<p>Other changes:</p>
+<section id="new-features">
+<h3>New features<a class="headerlink" href="#new-features" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Support for Python 3.10.</p></li>
+<li><p><a class="reference internal" href="reference/dataset.html#npy-format"><span class="std std-ref">NumPy files (NPY)</span></a> for reading NumPy .npy files (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/222">#222</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1249">#1249</a>).</p></li>
+<li><p>Support for updated EMPAD XML format, including series (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1259">#1259</a>,
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1260">#1260</a>).</p></li>
+<li><p>Integrate <a class="reference internal" href="debugging.html#tracing"><span class="std std-ref">Tracing using opentelemetry</span></a> that allows to debug and trace distribted operation
+of LiberTEM (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/691">#691</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1266">#1266</a>).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code> picks a free port if the default is in use and no port
+was specified (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1184">#1184</a>).</p></li>
+<li><p><a class="reference internal" href="dev/executors.html#libertem.executor.dask.cluster_spec" title="libertem.executor.dask.cluster_spec"><code class="xref py py-func docutils literal notranslate"><span class="pre">cluster_spec()</span></code></a> now accepts the same CUDA device
+ID multiple times to spawn multiple workers on the same GPU. This can help
+increase GPU resource utilisation for some workloads (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1270">#1270</a>).</p></li>
+</ul>
+</section>
+<section id="id3">
+<h3>Bugfixes<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Correct type determination in <code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUDF</span></code>
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1298">#1298</a>).</p></li>
+<li><p>Fix non-square plots (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1255">#1255</a>).</p></li>
+<li><p>Disable the Dask profiler due to <a class="reference external" href="https://github.com/dask/distributed/issues/6776">issues with the DM dataset</a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1289">#1289</a>).</p></li>
+<li><p>Fix GUI glitch in center of mass analysis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1278">#1278</a>).</p></li>
+</ul>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Example on <a class="reference internal" href="app/processing.html#binning"><span class="std std-ref">binning</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1250">#1250</a>).</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>Miscellaneous<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Include tests in PyPI release to prepare release on conda-forge, and exclude
+unneeded files. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1271">#1271</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1275">#1275</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1276">#1276</a>).</p></li>
+<li><p>Move some code around to make sure that <code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.io</span></code> and
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.common</span></code> only depend on code that is compatible with the MIT
+license. Moved items are re-imported at the same positions as before to keep
+backwards compatibility (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1031">#1031</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1245">#1245</a>).</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-9-2">
+<span id="id5"></span><h2>0.9.2 / 2022-04-28<a class="headerlink" href="#v0-9-2" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.6502282"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.6502282.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.6502282.svg" /></a>
+<p>This is a bugfix release with two small fixes:</p>
+<ul class="simple">
+<li><p>Example notebook: compatibility with HyperSpy 1.7.0 <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1242">#1242</a></p></li>
+<li><p>Compatibility of CoM auto button with Jupyter server proxy <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1220">#1220</a></p></li>
+</ul>
+</section>
+<section id="v0-9-0">
+<span id="id6"></span><h2>0.9.0 / 2022-02-17<a class="headerlink" href="#v0-9-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.6125247"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.6125247.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.6125247.svg" /></a>
+<p>We are most happy to announce <strong>full Dask array integration</strong> with this release!
+Many thanks to Matthew Bryan who implemented major parts of this non-trivial
+feature. Most notably, HyperSpy lazy signals and LiberTEM can now be combined
+seamlessly. See <a class="reference internal" href="dask.html#dask"><span class="std std-ref">Dask integration</span></a> for details and an example!</p>
+<p>This enables the following applications:</p>
+<ul class="simple">
+<li><p>Use HyperSpy file readers and other readers that create Dask arrays for
+LiberTEM.</p></li>
+<li><p>Create an ad-hoc file reader for LiberTEM by just building a Dask array. This
+is often simpler than implementing a native LiberTEM dataset, at the expense
+of performance.</p></li>
+<li><p>Use LiberTEM file readers for HyperSpy and other software that works with
+Dask arrays.</p></li>
+<li><p>Use the same implementation of an algorithm for live processing with LiberTEM,
+offline processing with LiberTEM, and offline processing with HyperSpy.</p></li>
+<li><p>Simplify implementation of complex processing routines on Dask arrays. That
+includes, for example, routines that are not purely implemented with NumPy
+array operations and produce complex output or are not compatible with all
+Dask array chunking schemes. Here, LiberTEM UDFs offer a more powerful and
+versatile interface than Dask’s native <a class="reference external" href="https://docs.dask.org/en/latest/generated/dask.array.map_blocks.html">map_blocks()</a>
+interface.</p></li>
+<li><p>Chain processing steps together using Dask arrays for intermediate results,
+including using the output of one UDF as input for another UDF. Dask arrays
+allow working with large intermediate results efficiently since they can
+remain on the workers.</p></li>
+</ul>
+<p>Specifically, the Dask integration encompasses the following features:</p>
+<ul class="simple">
+<li><p>Create LiberTEM datasets from Dask arrays via the <a class="reference internal" href="reference/dataset.html#daskds"><span class="std std-ref">Dask</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1137">#1137</a>).</p></li>
+<li><p>Create Dask arrays from LiberTEM UDF results using the
+<a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a>. A UDF can define a
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMergeAllMixin.merge_all" title="libertem.udf.base.UDFMergeAllMixin.merge_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge_all()</span></code></a> method in addition to
+the usual <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.merge" title="libertem.udf.base.UDF.merge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge()</span></code></a> to improve performance. See
+<a class="reference internal" href="dask.html#merge-all"><span class="std std-ref">Merge function for Dask array results</span></a> for details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1170">#1170</a>)!</p></li>
+<li><p>Create Dask arrays directly from LiberTEM datasets using
+<a class="reference internal" href="reference/dask.html#libertem.contrib.daskadapter.make_dask_array" title="libertem.contrib.daskadapter.make_dask_array"><code class="xref py py-func docutils literal notranslate"><span class="pre">libertem.contrib.daskadapter.make_dask_array()</span></code></a>, which is already
+possible since release 0.2.</p></li>
+<li><p>Executor options to improve integration, see <a class="reference internal" href="dask.html#scheduler"><span class="std std-ref">Scheduler</span></a> and
+<a class="reference internal" href="api.html#executors"><span class="std std-ref">Executors</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1170">#1170</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1146">#1146</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/922">#922</a>).</p></li>
+</ul>
+<p>Please note that these features are still experimental and cover a large space
+of possible uses and parameters. Expect the unexpected! Tests, feedback and
+improvements are highly appreciated.</p>
+<p>Other changes in this release:</p>
+<section id="id7">
+<h3>New features<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Experimental helper function <a class="reference internal" href="reference/api.html#libertem.analysis.com.guess_corrections" title="libertem.analysis.com.guess_corrections"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.analysis.com.guess_corrections()</span></code></a>
+to guess parameters for Center of Mass analysis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1111">#1111</a>).</p></li>
+<li><p>GUI interface for the COM analysis to call <a class="reference internal" href="reference/api.html#libertem.analysis.com.guess_corrections" title="libertem.analysis.com.guess_corrections"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.analysis.com.guess_corrections()</span></code></a>
+and update the GUI parameters from the result (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1172">#1172</a>).</p></li>
+<li><p>Support for some MIB Quad formats. All integer formats should be supported and
+were tested with <code class="code docutils literal notranslate"><span class="pre">1x1</span></code> and <code class="code docutils literal notranslate"><span class="pre">2x2</span></code> layouts. Raw formats with
+<code class="code docutils literal notranslate"><span class="pre">1x1</span></code> and <code class="code docutils literal notranslate"><span class="pre">2x2</span></code> layouts using 1 bit, 6 bit, and 12 bit counter
+depth are supported as well. Support for raw MIB data in other layouts and bit
+depths can be added on demand (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1169">#1169</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1135">#1135</a>).</p></li>
+<li><p>New attributes <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.sig_slice" title="libertem.udf.base.UDFMeta.sig_slice"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDFMeta.sig_slice</span></code></a> and
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.tiling_scheme_idx" title="libertem.udf.base.UDFMeta.tiling_scheme_idx"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDFMeta.tiling_scheme_idx</span></code></a>. These attributes can be used for performant
+access to the current signal slice - mostly important for throughput-limited
+analysis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1167">#1167</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1166">#1166</a>).</p></li>
+<li><p>New <code class="code docutils literal notranslate"><span class="pre">--preload</span></code> option to <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code> and <code class="code docutils literal notranslate"><span class="pre">libertem-worker</span></code>.
+That makes it work as documented in <a class="reference internal" href="reference/dataset.html#hdf5"><span class="std std-ref">HDF5</span></a>, following
+<a class="reference external" href="https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts">Dask worker preloading</a>
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1151">#1151</a>).</p></li>
+<li><p>Allow selection of I/O backend in GUI and Python API (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/753">#753</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/896">#896</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1129">#1129</a>).</p></li>
+<li><p>Re-add support for direct I/O. It was previously only supported as a special
+case for raw files on Linux. Now it is supported for all native dataset
+formats we support on Linux and Windows. Notable exceptions are the OS X
+platform or HDF5, MRC, and SER formats (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1129">#1129</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/753">#753</a>).</p></li>
+<li><p>Support for reading TVIPS binary files, i.e. <code class="code docutils literal notranslate"><span class="pre">*_NNN.tvips</span></code> files (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1179">#1179</a>).</p></li>
+</ul>
+</section>
+<section id="id8">
+<h3>Bugfixes<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Allow running CoM analysis on a linescan dataset by only returning divergence
+and curl if they are defined (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1138">#1138</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1139">#1139</a>).</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">make_dask_array</span></code> now works correctly when a <code class="code docutils literal notranslate"><span class="pre">roi</span></code> is specified
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/933">#933</a>).</p></li>
+<li><p>Correct shape of buffer views in <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFTileMixin.process_tile" title="libertem.udf.base.UDFTileMixin.process_tile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_tile()</span></code></a>
+when the tile has depth 1 (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1215">#1215</a>).</p></li>
+</ul>
+</section>
+<section id="id9">
+<h3>Documentation<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Information on multithreading added to UDF docs in <a class="reference internal" href="udf/advanced.html#threading"><span class="std std-ref">Threading</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1170">#1170</a>).</p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>Miscellaneous<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>A <a class="reference external" href="https://hub.docker.com/r/libertem/libertem/tags">Docker image with a LiberTEM installation</a> is available on DockerHub
+now. See <a class="reference internal" href="deployment/clustercontainer.html#containers"><span class="std std-ref">Containers</span></a> for details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1144">#1144</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/484">#484</a>).</p></li>
+<li><p>Improve performance with large UDF parameters (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1143">#1143</a>).</p></li>
+<li><p>Start using <code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.preload</span></code> again and import <code class="code docutils literal notranslate"><span class="pre">hdf5plugin</span></code> if
+present so that users don’t have to specify this common selection of HDF5
+filters as preload themselves (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1160">#1160</a>).</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-8-0">
+<span id="id11"></span><h2>0.8.0 / 2021-10-04<a class="headerlink" href="#v0-8-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.5547992"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.5547992.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.5547992.svg" /></a>
+<p>This release mainly contains improvements of center of mass / first moment
+analysis and support for starting the web GUI from JupyterHub or JupyterLab.</p>
+<section id="id12">
+<h3>New features<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Support for center of mass with annular masks in <a class="reference internal" href="reference/api.html#libertem.api.Context.create_com_analysis" title="libertem.api.Context.create_com_analysis"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_com_analysis()</span></code></a>,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">COMAnalysis</span></code> and the GUI (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/633">#633</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1089">#1089</a>).</p></li>
+<li><p>Support in the GUI for specifying rotation of scan against detector and
+flipping the detector y axis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1087">#1087</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/31">#31</a>). Previously this was only
+supported in the Python API.</p></li>
+<li><p>Tweaks and instructions for JupyterHub and JupyterLab integration in LiberTEM, see <a class="reference internal" href="deployment/jupyter.html#jupyter-integration"><span class="std std-ref">Jupyter integration</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1074">#1074</a>).
+New package <a class="reference external" href="https://github.com/LiberTEM/LiberTEM-jupyter-proxy">LiberTEM/LiberTEM-jupyter-proxy</a>
+for interfacing.</p></li>
+<li><p>In the web API, support was added to re-run visualization only, without
+re-running UDFs for an analysis. This allows for almost instant feedback
+for some operations, like changing CoM parameters.</p></li>
+<li><p>Added token-based authentication. For now, it is only usable via
+integrations like Jupyter. It will be extended to local/manual usage
+later (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1074">#1074</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1097">#1097</a>). Please comment on <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1097">#1097</a> if local/manual use
+would be beneficial for you so that it is prioritized accordingly.</p></li>
+<li><p>SEQ dataset: Added support for loading excluded pixels from XML (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/805">#805</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1077">#1077</a>).
+See <a class="reference internal" href="reference/dataset.html#libertem.io.dataset.seq.SEQDataSet" title="libertem.io.dataset.seq.SEQDataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SEQDataSet</span></code></a> for more information. Also
+support both <code class="code docutils literal notranslate"><span class="pre">*.seq.seq</span></code> and <code class="code docutils literal notranslate"><span class="pre">*.seq</span></code> as extension for the main SEQ file
+to find files with matching base name that contain correction data (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1120">#1120</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1121">#1121</a>).</p></li>
+</ul>
+</section>
+<section id="id13">
+<h3>Bugfixes<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Assert that the <code class="code docutils literal notranslate"><span class="pre">files</span></code> argument to <code class="xref py py-class docutils literal notranslate"><span class="pre">DMDataSet</span></code> is actually a list or tuple,
+to prevent iterating over a string path (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1058">#1058</a>).</p></li>
+<li><p>Escape globs to support special characters in file names for multi-file
+datasets (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1066">#1066</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1067">#1067</a>).</p></li>
+<li><p>Make sure multithreading in the main process still works properly after
+launching a <a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1053">#1053</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1100">#1100</a>).</p></li>
+<li><p>Allow custom plots to return RGB as plot data, for example a color
+wheel for vector fields (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1052">#1052</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1101">#1101</a>).</p></li>
+<li><p>Adjust partition count to match the number of CPU compute workers,
+not total workers to prevent residual partitions (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1086">#1086</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1103">#1103</a>).</p></li>
+<li><p>Correct partition shape for ROI in <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta" title="libertem.udf.base.UDFMeta"><code class="xref py py-class docutils literal notranslate"><span class="pre">UDFMeta</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1109">#1109</a>).</p></li>
+<li><p>Fix memory leak: Don’t submit dynamically generated callables directly to the distributed cluster,
+as they are cached in an unbounded cache (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/894">#894</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/964">#964</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1119">#1119</a>).</p></li>
+</ul>
+</section>
+<section id="id14">
+<h3>Documentation<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Note on handling HDF5 files with non-standard compression
+in <a class="reference internal" href="reference/dataset.html#libertem.io.dataset.hdf5.H5DataSet" title="libertem.io.dataset.hdf5.H5DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">H5DataSet</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1059">#1059</a>).</p></li>
+<li><p>Link to two more public datasets: <a class="reference internal" href="sample_datasets.html#hires-sto"><span class="std std-ref">High-resolution 4D STEM dataset of SrTiO3</span></a> and <a class="reference internal" href="sample_datasets.html#synthetic-sto"><span class="std std-ref">Synthetic 4D STEM dataset based on a SrTiO3 supercell</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1073">#1073</a>).</p></li>
+</ul>
+</section>
+<section id="misc">
+<h3>Misc<a class="headerlink" href="#misc" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Speed up coordinate calculation (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1108">#1108</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1109">#1109</a>).</p></li>
+<li><p>Make sure tasks are scheduled dynamically on available workers if they have uneven
+run time to benefit more from GPUs (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1107">#1107</a>).</p></li>
+<li><p>Cache loaded libraries to reduce overhead of setting the thread count (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1117">#1117</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1118">#1118</a>).</p></li>
+</ul>
+<p>Many thanks to our new contributors Levente Puskás for the excluded pixel loading and to
+Matthew Bryan for figuring non-standard compression in HDF5 and improving DM
+input validation. Congratulations to Alex for closing the long-standing CoM issue <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/31">#31</a>
+and for enabling easy and secure access to the web interface on shared IT infrastructure.</p>
+</section>
+</section>
+<section id="v0-7-1">
+<span id="id15"></span><h2>0.7.1 / 2021-07-08<a class="headerlink" href="#v0-7-1" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.5083032"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.5083032.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.5083032.svg" /></a>
+<p>This is a bugfix release that ensures compatibility with the upcoming numba 0.54
+release.</p>
+<p>Our custom numba caching makes some assumptions about numba internals, which
+have changed in numba 0.54. This fixes compatibility with numba 0.54, and also
+makes sure we fail gracefully for future changes (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1060">#1060</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1061">#1061</a>).</p>
+</section>
+<section id="v0-7-0">
+<span id="id16"></span><h2>0.7.0 / 2021-06-10<a class="headerlink" href="#v0-7-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.4923277"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.4923277.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.4923277.svg" /></a>
+<p>This release introduces features that are essential for live data processing,
+but can be used for offline processing as well: Live plotting, API for bundled
+execution of several UDFs in one run, iteration over partial UDF results, and
+asynchronous UDF execution. Features and infrastructure that are specific to
+live processing are included in the <a class="reference external" href="https://github.com/LiberTEM/LiberTEM-live/">LiberTEM-live</a> package, which will be released
+soon.</p>
+<section id="id18">
+<h3>New features<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Support for postprocessing of results on the main node after merging partial
+results. This adds <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.get_results" title="libertem.udf.base.UDF.get_results"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_results()</span></code></a> and the
+<code class="code docutils literal notranslate"><span class="pre">use</span></code> parameter to <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.buffer" title="libertem.udf.base.UDF.buffer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">buffer()</span></code></a>. See <a class="reference internal" href="udf/advanced.html#udf-final-post-processing"><span class="std std-ref">Post-processing after merging</span></a> for details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/994">#994</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1003">#1003</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1001">#1001</a>).</p></li>
+<li><p>Obtain partial results from each merge step iteratively as a generator
+using <a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf_iter" title="libertem.api.Context.run_udf_iter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf_iter()</span></code></a>. See <a class="reference internal" href="udf/basic.html#partial"><span class="std std-ref">Partial results</span></a> and an
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/blob/master/examples/async.ipynb">example</a> for
+details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>)!</p></li>
+<li><p>Run multiple UDFs in one pass over a single <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code> by passing a
+list of UDFs instead of one UDF in <a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> and
+<a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf_iter" title="libertem.api.Context.run_udf_iter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf_iter()</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>).</p></li>
+<li><p>Allow usage from an asynchronous context with the new <code class="code docutils literal notranslate"><span class="pre">sync=False</span></code>
+argument to <a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> and
+<a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf_iter" title="libertem.api.Context.run_udf_iter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf_iter()</span></code></a>. See <a class="reference internal" href="udf/basic.html#partial"><span class="std std-ref">Partial results</span></a> and an <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/blob/master/examples/async.ipynb">example</a> for
+details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/216">#216</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>)!</p></li>
+<li><p>Live plotting using the new <code class="code docutils literal notranslate"><span class="pre">plots</span></code> parameter for
+<a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> and
+<a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf_iter" title="libertem.api.Context.run_udf_iter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf_iter()</span></code></a>, as well as live plotting classes
+documented in <a class="reference internal" href="reference/viz.html#viz-reference"><span class="std std-ref">Visualization</span></a>. Pass <code class="code docutils literal notranslate"><span class="pre">plots=True</span></code> for simple usage.
+See <a class="reference internal" href="udf/basic.html#plotting"><span class="std std-ref">Live Plotting</span></a> as well as <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/blob/master/examples/live-plotting.ipynb">an example</a>
+for the various possibilities for advanced usage (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/980">#980</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>).</p></li>
+<li><p>Allow some UDF-internal threading. This is mostly
+interesting for ad-hoc parallelization on top of the
+<a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a> and live processing that
+currently relies on the <a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a>
+for simplicity, but could also be used for hybrid multiprocess/multithreaded
+workloads. Threads for numba, pyfftw, OMP/MKL are automatically
+controlled. The executor makes the number of allowed threads available as
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.threads_per_worker" title="libertem.udf.base.UDFMeta.threads_per_worker"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDFMeta.threads_per_worker</span></code></a> for other threading
+mechanisms that are not controlled automatically (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/993">#993</a>).</p></li>
+<li><p>K2IS: reshaping, sync offset and time series support. Users can now specify a
+<code class="code docutils literal notranslate"><span class="pre">nav_shape</span></code>, <code class="code docutils literal notranslate"><span class="pre">sig_shape</span></code> and <code class="code docutils literal notranslate"><span class="pre">sync_offset</span></code> for a K2IS data
+set, and load time series data (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1019">#1019</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/911">#911</a>). Many thanks to
+<a class="reference external" href="https://github.com/AnandBaburajan">&#64;AnandBaburajan</a> for implementing this
+feature!</p></li>
+<li><p>Support for Python &gt;=3.9.3, use Python 3.9 in AppImage (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/914">#914</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1037">#1037</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1039">#1039</a>).</p></li>
+</ul>
+</section>
+<section id="id20">
+<h3>Bugfixes<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>UDF: Consistently use attribute access in <code class="code docutils literal notranslate"><span class="pre">UDF.process_*()</span></code>, <code class="code docutils literal notranslate"><span class="pre">UDF.merge()</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">UDF.get_results()</span></code> etc. instead of mixing it with <code class="code docutils literal notranslate"><span class="pre">__getitem__()</span></code>
+dict-like access. The previous method still works, but triggers a <a class="reference external" href="https://docs.python.org/3.10/library/exceptions.html#UserWarning" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserWarning</span></code></a>
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1000">#1000</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1003">#1003</a>).</p></li>
+<li><p>Also allow non-sliced assignment, for example
+<code class="code docutils literal notranslate"><span class="pre">self.results.res</span> <span class="pre">+=</span> <span class="pre">frame</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/1000">#1000</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1003">#1003</a>).</p></li>
+<li><p>Better choice of <code class="code docutils literal notranslate"><span class="pre">kind='nav'</span></code> buffer fill value outside ROI.</p>
+<ul>
+<li><p>String : Was <code class="code docutils literal notranslate"><span class="pre">'n'</span></code>, now <code class="code docutils literal notranslate"><span class="pre">''</span></code></p></li>
+<li><p>bool : Was <code class="code docutils literal notranslate"><span class="pre">True</span></code>, now <code class="code docutils literal notranslate"><span class="pre">False</span></code></p></li>
+<li><p>integers : Was smallest possible value, now <code class="code docutils literal notranslate"><span class="pre">0</span></code></p></li>
+<li><p>objects : was <code class="code docutils literal notranslate"><span class="pre">np.nan</span></code>, now <code class="code docutils literal notranslate"><span class="pre">None</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>)</p></li>
+</ul>
+</li>
+<li><p>Improve performance for chunked HDF5 files, especially compressed HDF5 files
+which have a chunking in both navigation dimensions. They were causing
+excessive read amplification (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/984">#984</a>).</p></li>
+<li><p>Fix plot range if only zero and one other value are present
+in the result, most notably boolean values (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/944">#944</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>).</p></li>
+<li><p>Fix axes order in COM template: The components in the field are (x, y)
+while the template had them as (y, x) before (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1023">#1023</a>).</p></li>
+</ul>
+</section>
+<section id="id21">
+<h3>Documentation<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Update Gatan Digital Micrograph (GMS) examples to work with the current GMS and
+LiberTEM releases and demonstrate the new features. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/999">#999</a>,
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1002">#1002</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1004">#1004</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1011">#1011</a>). Many thanks to Winnie from Gatan for helping to work
+around a number of issues!</p></li>
+<li><p>Restructure UDF documentation (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1034">#1034</a>).</p></li>
+<li><p>Document coordinate meta information (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/928">#928</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/1034">#1034</a>).</p></li>
+</ul>
+</section>
+<section id="obsolescence">
+<h3>Obsolescence<a class="headerlink" href="#obsolescence" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Removed deprecated blobfinder and <code class="code docutils literal notranslate"><span class="pre">FeatureVecMakerUDF</span></code> as
+previously announced. Blobfinder is available as a separate package at
+<a class="reference external" href="https://github.com/liberTEM/LiberTEM-blobfinder">https://github.com/liberTEM/LiberTEM-blobfinder</a>. Instead of
+<code class="code docutils literal notranslate"><span class="pre">FeatureVecMakerUDF</span></code>, you can use a sparse matrix and
+<code class="code docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/979">#979</a>).</p></li>
+<li><p>Remove deprecated <code class="code docutils literal notranslate"><span class="pre">Job</span></code> interface as previously announced.
+The functionality was ported to the more capable UDF interface <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/978">#978</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-6-0">
+<span id="id22"></span><h2>0.6.0 / 2021-02-16<a class="headerlink" href="#v0-6-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.4543704"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.4543704.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.4543704.svg" /></a>
+<p>We are pleased to announce the latest LiberTEM release, with many improvements
+since 0.5. We would like to highlight the contributions of our GSoc 2020
+students <a class="reference external" href="https://github.com/AnandBaburajan">&#64;AnandBaburajan</a> (reshaping and
+sync offset correction) and <a class="reference external" href="https://github.com/twentyse7en">&#64;twentyse7en</a>,
+(Code generation to replicate GUI analyses in Jupyter notebooks) who implemented
+significant improvements in the areas of I/O and the user interface.</p>
+<p>Another highlight of this release is experimental support of NVidia GPUs, both
+via CuPy and via native libraries. The API is ready to be used, including support
+in the GUI. Performance optimization is still to be done (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/946">#946</a>).
+GPU support is activated for all mask-based analyses (virtual detector and
+Radial Fourier) for testing purposes, but will not bring a noticeable
+improvement of performance yet. GPU-based processing did show significant
+benefits for computationally heavy applications like the SSB implementation in
+<a class="reference external" href="https://github.com/Ptychography-4-0/ptychography">https://github.com/Ptychography-4-0/ptychography</a>.</p>
+<p>A lot of work was done to implement tiled reading, resulting in a
+new I/O system. This improves performance in many circumstances, especially
+when dealing with large detector frames. In addition, a correction module was
+integrated into the new I/O system, which can correct gain, subtract a dark
+reference, and patch pixel defects on the fly. See below for the full
+changelog!</p>
+<section id="id24">
+<h3>New features<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>I/O overhaul</p>
+<ul>
+<li><p>Implement tiled reading for most file formats
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/27">#27</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/331">#331</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/373">#373</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/435">#435</a>).</p></li>
+<li><p>Allow UDFs that implement <code class="code docutils literal notranslate"><span class="pre">process_tile</span></code> to influence the tile
+shape by overriding <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.get_tiling_preferences" title="libertem.udf.base.UDF.get_tiling_preferences"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.udf.base.UDF.get_tiling_preferences()</span></code></a>
+and make information about the tiling scheme available to the UDF through
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.tiling_scheme" title="libertem.udf.base.UDFMeta.tiling_scheme"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDFMeta.tiling_scheme</span></code></a>. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/554">#554</a>,
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/247">#247</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/635">#635</a>).</p></li>
+<li><p>Update <code class="code docutils literal notranslate"><span class="pre">MemoryDataSet</span></code> to allow testing with different
+tile shapes (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/634">#634</a>).</p></li>
+<li><p>Added I/O backend selection (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/896">#896</a>), which allows users to select the best-performing
+backend for their circumstance when loading via the new <code class="code docutils literal notranslate"><span class="pre">io_backend</span></code>
+parameter of <code class="code docutils literal notranslate"><span class="pre">Context.load</span></code>. This fixes a K2IS performance regression
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/814">#814</a>) by disabling any readahead hints by default. Additionaly, this fixes
+a performance regression (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/838">#838</a>) on slower media (like HDDs), by
+adding a buffered reading backend that tries its best to linearize I/O per-worker.
+GUI integration of backend selection is to be done.</p></li>
+<li><p>For now, direct I/O is no longer supported, please let us know if this is an
+important use-case for you (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/716">#716</a>)!</p></li>
+</ul>
+</li>
+<li><p>Support for specifying logging level from CLI (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/758">#758</a>).</p></li>
+<li><p>Support for Norpix SEQ files (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/153">#153</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/767">#767</a>).</p></li>
+<li><p>Support for MRC files, as supported by ncempy (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/152">#152</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/873">#873</a>).</p></li>
+<li><p>Support for loading stacks of 3D DM files (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/877">#877</a>). GUI integration still to be done.</p></li>
+<li><p>GUI: Filebrowser improvements: users can star directories in the file browser for easy navigation (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/772">#772</a>).</p></li>
+<li><p>Support for running multiple UDFs “at the same time”, not yet exposed in public APIs (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/788">#788</a>).</p></li>
+<li><p>GUI: Users can add or remove scan size dimensions according to the dataset’s shape (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/779">#779</a>).</p></li>
+<li><p>GUI: Shutdown button to stop server, useful for example for JupyterHub integration (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/786">#786</a>).</p></li>
+<li><p>Infrastructure for consistent coordinate transforms are added in
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.corrections.coordinates</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.utils</span></code>. See also a
+description of coordinate systems in <a class="reference internal" href="concepts.html#concepts"><span class="std std-ref">Concepts</span></a>.</p></li>
+<li><p><a class="reference internal" href="reference/api.html#libertem.api.Context.create_com_analysis" title="libertem.api.Context.create_com_analysis"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_com_analysis()</span></code></a> now allows to specify a <code class="code docutils literal notranslate"><span class="pre">flipped</span> <span class="pre">y</span> <span class="pre">axis</span></code>
+and a scan rotation angle to deal with MIB files and scan rotation correctly. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/325">#325</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/786">#786</a>).</p></li>
+<li><p>Corrections can now be specified by the user when running a UDF (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/778">#778</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/831">#831</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/939">#939</a>).</p></li>
+<li><p>Support for loading dark frame and gain map that are sometimes shipped with SEQ data sets.</p></li>
+<li><p>GPU support: process data on CPUs, CUDA devices or both (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/760">#760</a>, <a class="reference internal" href="udf/advanced.html#udf-cuda"><span class="std std-ref">CuPy support</span></a>).</p></li>
+<li><p>Spinning out holography to a separate package is in progress: <a class="reference external" href="https://github.com/LiberTEM/LiberTEM-holo/">https://github.com/LiberTEM/LiberTEM-holo/</a></p></li>
+<li><p>Implement CuPy support in <a class="reference internal" href="reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoloReconstructUDF</span></code></a>, currently deactivated due to <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/815">#815</a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/760">#760</a>).</p></li>
+<li><p>GUI: Allows the user to select the GPUs to use when creating a new local cluster (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/812">#812</a>).</p></li>
+<li><p>GUI: Support to download Jupyter notebook corresponding to an analysis
+made by a user in GUI (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/801">#801</a>).</p></li>
+<li><p>GUI: Copy the Jupyter notebook cells corresponding to the
+analysis directly from GUI, including cluster connection details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/862">#862</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/863">#863</a>)</p></li>
+<li><p>Allow reshaping datasets into a custom shape. The <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code> implementations (currently except HDF5 and K2IS)
+and GUI now allow specifying <code class="code docutils literal notranslate"><span class="pre">nav_shape</span></code> and <code class="code docutils literal notranslate"><span class="pre">sig_shape</span></code>
+parameters to set a different shape than the layout in the
+dataset (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/441">#441</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/793">#793</a>).</p></li>
+<li><p>All <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code> implementations handle missing data
+gracefully (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/256">#256</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/793">#793</a>).</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code> implementations (except HDF5 and K2IS)
+and GUI now allow specifying a <code class="code docutils literal notranslate"><span class="pre">sync_offset</span></code> to
+handle synchronization/acquisition problems (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/793">#793</a>).</p></li>
+<li><p>Users can access the coordinates of a tile/partition slice
+through <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMeta.coordinates" title="libertem.udf.base.UDFMeta.coordinates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">coordinates</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/553">#553</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/793">#793</a>).</p></li>
+<li><p>Cache warmup when opening a data set: Precompiles jit-ed functions on a single process per node, in a controlled manner,
+preventing CPU oversubscription. This improves further through implementing caching for functions which capture other functions
+in their closure (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/886">#886</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/798">#798</a>).</p></li>
+<li><p>Allow selecting lin and log scaled visualization for sum, stddev, pick and single mask analyses
+to handle data with large dynamic range. This adds key <code class="code docutils literal notranslate"><span class="pre">intensity_lin</span></code> to
+<a class="reference internal" href="reference/api.html#libertem.analysis.sum.SumResultSet" title="libertem.analysis.sum.SumResultSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumResultSet</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">PickResultSet</span></code>
+and the result of <code class="xref py py-class docutils literal notranslate"><span class="pre">SDAnalysis</span></code>.
+It adds key <code class="code docutils literal notranslate"><span class="pre">intensity_log</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">SingleMaskResultSet</span></code>.
+The new keys are chosen to not affect existing keys
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/925">#925</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/929">#929</a>).</p></li>
+<li><p>Tuples can be added directly to <code class="code docutils literal notranslate"><span class="pre">Shape</span></code> objects. Right
+addition adds to the signal dimensions of the <code class="code docutils literal notranslate"><span class="pre">Shape</span></code>
+object while left addition adds to the navigation
+dimensions (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/749">#749</a>)</p></li>
+</ul>
+</section>
+<section id="id25">
+<h3>Bugfixes<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fix an off-by-one error in sync offset for K2IS data (drive-by change in <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/706">#706</a>).</p></li>
+<li><p>Missing-directory error isn’t thrown if it’s due to last-recent-directory not being available (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/748">#748</a>).</p></li>
+<li><p>GUI: when cluster connection fails, reopen form with parameters user submitted (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/735">#735</a>).</p></li>
+<li><p>GUI: Fixed the glitch in file opening dialogue by disallowing parallel browsing before loading is concluded (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/752">#752</a>).</p></li>
+<li><p>Handle empty ROI and extra_shape with zero. Empty result buffers of the appropriate shape are returned if the ROI
+is empty or <code class="code docutils literal notranslate"><span class="pre">extra_shape</span></code> has a zero (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/765">#765</a>)</p></li>
+<li><p>Improve internals of <code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.io.corrections.detector</span></code> and
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.io.corrections.corrset</span></code> to better support correction
+of many dead pixels. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/890">#890</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/889">#889</a>)</p></li>
+<li><p>Handle single-frame partitions in combination with aux data.
+Instead of squeezing the aux buffer, reshape to the correct shape (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/791">#791</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/902">#902</a>).</p></li>
+<li><p>Libertem-server can now be started from Bash on Windows (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/731">#731</a>)</p></li>
+<li><p>Fix reading without a copy from multi-file datasets. The start offset of the file was
+not taken account when indexing into the memory maps (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/903">#903</a>).</p></li>
+<li><p>Improve performance and reduce memory consumption of point analysis.
+Custom right hand side matrix product to reduce memory consumption and
+improve performance of sparse masks, such as point analysis. See also
+<a class="reference external" href="https://github.com/scipy/scipy/issues/13211">scipy/13211</a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/917">#917</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/920">#920</a>).</p></li>
+<li><p>Fix stability issue with multiple dask clients. <code class="code docutils literal notranslate"><span class="pre">dd.as_completed</span></code> needs
+to specify the <code class="code docutils literal notranslate"><span class="pre">loop</span></code> to work with multiple <code class="code docutils literal notranslate"><span class="pre">dask.distributed</span></code> clients (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/921">#921</a>).</p></li>
+<li><p>GUI: Snap to pixels in point selection analysis. Consistency between point
+selection and picking (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/926">#926</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/927">#927</a>).</p></li>
+<li><p>Open datasets with autodetection, positional and keyword arguments.
+Handle keyword and positional arguments to <code class="code docutils literal notranslate"><span class="pre">Context.load('auto',</span> <span class="pre">...)</span></code>
+correctly (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/936">#936</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/938">#938</a>).</p></li>
+</ul>
+</section>
+<section id="id26">
+<h3>Documentation<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Switched to the readthedocs sphinx theme, improving the overall
+documentation structure. The developer documentation is now in
+a separate section from the user documentation.</p></li>
+</ul>
+</section>
+<section id="id27">
+<h3>Misc<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Command line options can also be accessed with shorter alternatives (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/757">#757</a>).</p></li>
+<li><p>Depend on Numba &gt;= 0.49.1 to support setting Numba thread count (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/783">#783</a>), bumped to 0.51
+to support caching improvements (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/886">#886</a>).</p></li>
+<li><p>libertem-server: Ask for confirmation if the user press ctrl+c. Can immediately stop using
+another ctrl+c (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/781">#781</a>).</p></li>
+<li><p>Included <a class="reference external" href="https://pytest-benchmark.readthedocs.io/en/latest/usage.html">pytest-benchmark</a>
+to integrate benchmarks in the test infrastructure. See <a class="reference internal" href="contributing.html#benchmarking"><span class="std std-ref">Benchmarking</span></a> for details (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/819">#819</a>).</p></li>
+<li><p>The X and Y components for the color wheel visualization in Center of
+Mass and Radial Fourier Analysis are swapped to match the axis convention in
+empyre. This just changes the color encoding in the visualization and not the
+result (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/851">#851</a>).</p></li>
+</ul>
+</section>
+<section id="deprecations">
+<h3>Deprecations<a class="headerlink" href="#deprecations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">tileshape</span></code> parameter of <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code> implementations is deprecated in
+favor of tileshape negotiation and will be ignored, if given (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/754">#754</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/777">#777</a>).</p></li>
+<li><p>Remove color wheel code from <code class="code docutils literal notranslate"><span class="pre">libertem.viz</span></code> and replace with imports from empyre.
+Note that these functions expect three vector components instead of two (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/851">#851</a>).</p></li>
+<li><p>The new and consistent <code class="code docutils literal notranslate"><span class="pre">nav_shape</span></code> and <code class="code docutils literal notranslate"><span class="pre">sig_shape</span></code> parameters should be used
+when loading data. The old <code class="code docutils literal notranslate"><span class="pre">scan_size</span></code> and <code class="code docutils literal notranslate"><span class="pre">detector_size</span></code> parameters,
+where they existed, are still recognized (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/793">#793</a>).</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-5-1">
+<span id="id28"></span><h2>0.5.1 / 2020-08-12<a class="headerlink" href="#v0-5-1" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3982290"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3982290.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3982290.svg" /></a>
+<section id="id29">
+<h3>Bugfixes<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Allow installation with latest dask distributed on Python 3.6 and 3.7</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-5-0">
+<span id="id30"></span><h2>0.5.0 / 2020-04-23<a class="headerlink" href="#v0-5-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3763313"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3763313.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3763313.svg" /></a>
+<section id="id31">
+<h3>New features<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>In addition to tuples, <a class="reference internal" href="reference/internals.html#libertem.common.shape.Shape" title="libertem.common.shape.Shape"><code class="xref py py-class docutils literal notranslate"><span class="pre">Shape</span></code></a> objects can be used as
+<code class="code docutils literal notranslate"><span class="pre">extra_shape</span></code> parameter for <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.buffer" title="libertem.udf.base.UDF.buffer"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.udf.base.UDF.buffer()</span></code></a> and
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.aux_data" title="libertem.udf.base.UDF.aux_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.udf.base.UDF.aux_data()</span></code></a> now. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/694">#694</a>)</p></li>
+<li><p>Progress bar support based on <code class="code docutils literal notranslate"><span class="pre">tqdm</span></code> that can be enabled by passing
+<code class="code docutils literal notranslate"><span class="pre">progress=True</span></code> to <a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.run_udf()</span></code></a>,
+<a class="reference internal" href="reference/api.html#libertem.api.Context.run" title="libertem.api.Context.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.run()</span></code></a> and <a class="reference internal" href="reference/api.html#libertem.api.Context.map" title="libertem.api.Context.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.map()</span></code></a>: <a class="reference internal" href="udf/basic.html#progress-bar"><span class="std std-ref">Running UDFs</span></a>. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/613">#613</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/670">#670</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/655">#655</a>)</p></li>
+<li><p>Include explicit support for Direct Electron’s DE5 format based on HDF5. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/704">#704</a>)</p></li>
+<li><p>GUI: Downloadable results as HDF5, NPZ, TIFF, and RAW. See
+<a class="reference internal" href="usage.html#download-results"><span class="std std-ref">Downloading results</span></a> for details. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/665">#665</a>)</p></li>
+<li><p><a class="reference internal" href="reference/api.html#libertem.api.Context.load" title="libertem.api.Context.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.load()</span></code></a> now automatically detects file
+type and parameters if <code class="code docutils literal notranslate"><span class="pre">filetype=&quot;auto&quot;</span></code> is passed. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/610">#610</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/621">#621</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/734">#734</a>)</p></li>
+<li><p>Relocatable GUI: Allow LiberTEM to run from different URL prefixes, allowing integration into,
+for example, JupyterLab. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/697">#697</a>)</p></li>
+<li><p>Run <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFPreprocessMixin.preprocess" title="libertem.udf.base.UDFPreprocessMixin.preprocess"><code class="xref py py-meth docutils literal notranslate"><span class="pre">preprocess()</span></code></a> also before merge on
+the main node to allocate or initialize buffers, in addition to running on the
+workers (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/624">#624</a>).</p></li>
+<li><p>No need to set thread count environment variables anymore since the thread count
+for OpenBLAS, OpenMP, Intel MKL and pyFFTW is now set on the workers at run-time.
+Numba support will be added as soon as Numba 0.49 is released. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/685">#685</a>).</p></li>
+</ul>
+</section>
+<section id="id32">
+<h3>Bugfixes<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>A large number of usability improvements (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/622">#622</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/639">#639</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/641">#641</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/642">#642</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/659">#659</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/666">#666</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/690">#690</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/699">#699</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/700">#700</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/704">#704</a>).
+Thanks and credit to many new contributors from GSoC!</p></li>
+<li><p>Fixed the buggy “enable Direct I/O” checkbox of the RAW dataset and
+handle unsupported operating systems gracefully. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/696">#696</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/659">#659</a>)</p></li>
+</ul>
+</section>
+<section id="id33">
+<h3>Documentation<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Added screenshots and description of ROI
+and stddev features in usage docs (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/669">#669</a>)</p></li>
+<li><p>Improved instructions for installing LiberTEM
+(general: <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/664">#664</a>; for development: <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/598">#598</a>)</p></li>
+<li><p>Add information for downloading and generating sample
+datasets: <a class="reference internal" href="sample_datasets.html#sample-data"><span class="std std-ref">Sample Datasets</span></a>. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/650">#650</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/670">#670</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/707">#707</a>)</p></li>
+</ul>
+</section>
+<section id="id34">
+<h3>Obsolescence<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Parameters <code class="code docutils literal notranslate"><span class="pre">crop_detector_to</span></code> and <code class="code docutils literal notranslate"><span class="pre">detector_size_raw</span></code> of
+<a class="reference internal" href="reference/dataset.html#libertem.io.dataset.raw.RawFileDataSet" title="libertem.io.dataset.raw.RawFileDataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.io.dataset.raw.RawFileDataSet</span></code></a> are deprecated and will be removed
+after 0.6.0. Please specify <code class="code docutils literal notranslate"><span class="pre">detector_size</span></code> instead or use a specialized DataSet, for example for EMPAD.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.udf.feature_vector_maker.FeatureVecMakerUDF</span></code> is deprecated
+and will be removed in 0.6.0. Use <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a>
+with a sparse stack of single pixel masks or a stack generated by
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem_blobfinder.common.patterns.feature_vector()</span></code> instead.
+(<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/618">#618</a>)</p></li>
+</ul>
+</section>
+<section id="id35">
+<h3>Misc<a class="headerlink" href="#id35" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Clustering analysis</p>
+<ul>
+<li><p>Use a connectivity matrix to only cluster neighboring pixels,
+reducing memory footprint while improving speed and quality (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/618">#618</a>).</p></li>
+<li><p>Use faster <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a> to generate feature
+vector (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/618">#618</a>).</p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="reference/udf.html#libertem.udf.stddev.StdDevUDF" title="libertem.udf.stddev.StdDevUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">StdDevUDF</span></code></a></p>
+<ul>
+<li><p>About 10x speed-up for large frames (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/625">#625</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/640">#640</a>)</p></li>
+<li><p>Rename result buffers of <a class="reference internal" href="reference/udf.html#libertem.udf.stddev.StdDevUDF" title="libertem.udf.stddev.StdDevUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">StdDevUDF</span></code></a>,
+<a class="reference internal" href="reference/udf.html#libertem.udf.stddev.run_stddev" title="libertem.udf.stddev.run_stddev"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_stddev()</span></code></a> and
+<a class="reference internal" href="reference/udf.html#libertem.udf.stddev.consolidate_result" title="libertem.udf.stddev.consolidate_result"><code class="xref py py-meth docutils literal notranslate"><span class="pre">consolidate_result()</span></code></a> from <code class="code docutils literal notranslate"><span class="pre">'sum_frame'</span></code> to
+<code class="code docutils literal notranslate"><span class="pre">'sum'</span></code>, <code class="code docutils literal notranslate"><span class="pre">'num_frame'</span></code> to <code class="code docutils literal notranslate"><span class="pre">'num_frames'</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/640">#640</a>)</p></li>
+<li><p>Resolve ambiguity between variance and sum of variances in result buffer names of
+<a class="reference internal" href="reference/udf.html#libertem.udf.stddev.StdDevUDF" title="libertem.udf.stddev.StdDevUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">StdDevUDF</span></code></a>,
+<a class="reference internal" href="reference/udf.html#libertem.udf.stddev.run_stddev" title="libertem.udf.stddev.run_stddev"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_stddev()</span></code></a> and
+<a class="reference internal" href="reference/udf.html#libertem.udf.stddev.consolidate_result" title="libertem.udf.stddev.consolidate_result"><code class="xref py py-meth docutils literal notranslate"><span class="pre">consolidate_result()</span></code></a>. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/640">#640</a>)</p></li>
+</ul>
+</li>
+<li><p>LiberTEM works with Python 3.8 for experimental use. A context using a remote Dask.Distributed cluster
+can lead to lock-ups or errors with Python 3.8. The default local Dask.Distributed context works.</p></li>
+<li><p>Improve performance with large tiles. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/649">#649</a>)</p></li>
+<li><p><a class="reference internal" href="reference/udf.html#libertem.udf.sum.SumUDF" title="libertem.udf.sum.SumUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumUDF</span></code></a> moved to the <code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.udf</span></code> folder (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/613">#613</a>).</p></li>
+<li><p>Make sure the signal dimension of result buffer slices can be
+flattened without creating an implicit copy (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/738">#738</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/739">#739</a>)</p></li>
+</ul>
+<p>Many thanks to the contributors to this release: <a class="reference external" href="https://github.com/AnandBaburajan">&#64;AnandBaburajan</a>,
+<a class="reference external" href="https://github.com/twentyse7en">&#64;twentyse7en</a>, <a class="reference external" href="https://github.com/sayandip18">&#64;sayandip18</a>, <a class="reference external" href="https://github.com/bdalevin">&#64;bdalevin</a>, <a class="reference external" href="https://github.com/saisunku">&#64;saisunku</a>,
+<a class="reference external" href="https://github.com/Iamshankhadeep">&#64;Iamshankhadeep</a>, <a class="reference external" href="https://github.com/abiB27">&#64;abiB27</a>, <a class="reference external" href="https://github.com/sk1p">&#64;sk1p</a>, <a class="reference external" href="https://github.com/uellue">&#64;uellue</a></p>
+</section>
+</section>
+<section id="v0-4-1">
+<span id="id36"></span><h2>0.4.1 / 2020-02-18<a class="headerlink" href="#v0-4-1" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3674003"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3674003.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3674003.svg" /></a>
+<p>This is a bugfix release, mainly constraining the <code class="code docutils literal notranslate"><span class="pre">msgpack</span></code> dependency,
+as distributed is not compatible to version 1.0 yet. It also contains
+important fixes in the HDF5 dataset.</p>
+<section id="id37">
+<h3>Bugfixes<a class="headerlink" href="#id37" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fix HDF5 with automatic tileshape (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/608">#608</a>)</p></li>
+<li><p>Fix reading from HDF5 with roi beyond the first partition (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/606">#606</a>)</p></li>
+<li><p>Add version constraint on msgpack</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-4-0">
+<span id="id38"></span><h2>0.4.0 / 2020-02-13<a class="headerlink" href="#v0-4-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3666686"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3666686.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3666686.svg" /></a>
+<p>The main points of this release are the <a class="reference internal" href="#job-deprecation"><span class="std std-ref">Job API deprecation</span></a> and restructuring
+of our packaging, namely <a class="reference internal" href="#restructuring-0-4"><span class="std std-ref">extracting the blobfinder module</span></a>.</p>
+<section id="id39">
+<h3>New features<a class="headerlink" href="#id39" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">dtype</span></code> support for UDFs <a class="reference internal" href="udf/advanced.html#udf-dtype"><span class="std std-ref">Preferred input dtype</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/549">#549</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/550">#550</a>)</p></li>
+<li><p>Dismiss error messages via keyboard: allows pressing the escape key to close all currently open error messages (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/437">#437</a>)</p></li>
+<li><p>ROI doesn’t have any effect if in pick mode, so we hide the dropdown in that case (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/511">#511</a>)</p></li>
+<li><p>Make tileshape parameter of HDF5 DataSet optional (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/578">#578</a>)</p></li>
+<li><p>Open browser after starting the server. Enabled by default, can be disabled using –no-browser (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/81">#81</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/580">#580</a>)</p></li>
+<li><p>Implement <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.udf.masks.ApplyMasksUDF</span></code></a> as a replacement of ApplyMasksJob (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/549">#549</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/550">#550</a>)</p></li>
+<li><p>Implement <a class="reference internal" href="reference/udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.udf.raw.PickUDF</span></code></a> as a replacement of PickFrameJob (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/549">#549</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/550">#550</a>)</p></li>
+</ul>
+</section>
+<section id="bug-fixes">
+<h3>Bug fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Fix FRMS6 in a distributed setting. We now make sure to only do I/O in methods that are running on worker nodes (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/531">#531</a>).</p></li>
+<li><p>Fixed loading of nD HDF5 files. Previously the HDF5 DataSet was hardcoded for
+4D data - now, arbitraty dimensions should be supported (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/574">#574</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/567">#567</a>)</p></li>
+<li><p>Fix <code class="code docutils literal notranslate"><span class="pre">DaskJobExecutor.run_each_host</span></code>. Need to pass <code class="code docutils literal notranslate"><span class="pre">pure=False</span></code> to ensure multiple runs of the function (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/528">#528</a>).</p></li>
+</ul>
+</section>
+<section id="id40">
+<h3>Obsolescence<a class="headerlink" href="#id40" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Because HDFS support is right now not tested (and to my knowledge also not
+used) and the upstream <code class="code docutils literal notranslate"><span class="pre">hdfs3</span></code> project is not actively maintained, remove
+support for HDFS. <code class="code docutils literal notranslate"><span class="pre">ClusterDataSet</span></code> or <code class="code docutils literal notranslate"><span class="pre">CachedDataSet</span></code> should be used
+instead (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/38">#38</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/534">#534</a>).</p></li>
+</ul>
+</section>
+<section id="id41">
+<h3>Misc<a class="headerlink" href="#id41" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Depend on distributed&gt;=2.2.0 because of an API change. (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/577">#577</a>)</p></li>
+<li><p>All analyses ported from Job to UDF back-end. The Job-related code remains for now for comparison purposes (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/549">#549</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/550">#550</a>)</p></li>
+</ul>
+</section>
+<section id="job-api-deprecation">
+<span id="job-deprecation"></span><h3>Job API deprecation<a class="headerlink" href="#job-api-deprecation" title="Permalink to this heading"></a></h3>
+<p>The original Job API of LiberTEM is superseded by the new <a class="reference internal" href="udf.html#user-defined-functions"><span class="std std-ref">User-defined functions (UDFs)</span></a> API with release 0.4.0. See <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/549">#549</a> for a detailed overview
+of the changes. The UDF API brings the following advantages:</p>
+<ul class="simple">
+<li><p>Support for regions of interest (ROIs).</p></li>
+<li><p>Easier to implement, extend and re-use UDFs compared to Jobs.</p></li>
+<li><p>Clean separation between back-end implementation details and application-specific code.</p></li>
+<li><p>Facilities to implement non-trivial operations, see <a class="reference internal" href="udf/advanced.html#advanced-udf"><span class="std std-ref">User-defined functions: advanced topics</span></a>.</p></li>
+<li><p>Performance is at least on par.</p></li>
+</ul>
+<p>For that reason, the Job API has become obsolete. The existing public
+interfaces, namely <code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.create_mask_job()</span></code> and
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.create_pick_job()</span></code>, will be supported in LiberTEM for
+two more releases after 0.4.0, i.e. including 0.6.0. Using the Job API will
+trigger deprecation warnings starting with this release. The new
+<a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a> replaces
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksJob</span></code>, and <a class="reference internal" href="reference/udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a>
+replaces <code class="xref py py-class docutils literal notranslate"><span class="pre">PickFrameJob</span></code>.</p>
+<p>The Analysis classes that relied on the Job API as a back-end are already ported
+to the corresponding UDF back-end. The new back-end may lead to minor
+differences in behavior, such as a change of returned dtype. The legacy code for
+using a Job back-end will remain until 0.6.0 and can be activated during the
+transition period by setting <code class="code docutils literal notranslate"><span class="pre">analysis.TYPE</span> <span class="pre">=</span> <span class="pre">'JOB'</span></code> before running.</p>
+<section id="from-applymasksjob-to-applymasksudf">
+<h4>From <code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksJob</span></code> to <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a><a class="headerlink" href="#from-applymasksjob-to-applymasksudf" title="Permalink to this heading"></a></h4>
+<p>Main differences:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a> returns the result with the first
+axes being the dataset’s navigation axes. The last dimension is the mask
+index. <code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksJob</span></code> used to return transposed
+data with flattened navigation dimension.</p></li>
+<li><p>Like all UDFs, running an <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a> returns a
+dictionary. The result data is accessible with key <code class="code docutils literal notranslate"><span class="pre">'intensity'</span></code> as a
+<a class="reference internal" href="reference/udf.html#libertem.common.buffers.BufferWrapper" title="libertem.common.buffers.BufferWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BufferWrapper</span></code></a> object.</p></li>
+<li><p>ROIs are supported now, like in all UDFs.</p></li>
+</ul>
+<p>Previously with <code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksJob</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Deprecated!</span>
+<span class="n">mask_job</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">create_mask_job</span><span class="p">(</span>
+  <span class="n">factories</span><span class="o">=</span><span class="p">[</span><span class="n">all_ones</span><span class="p">,</span> <span class="n">single_pixel</span><span class="p">],</span>
+  <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span>
+<span class="p">)</span>
+<span class="n">mask_job_result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">mask_job</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask_job_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Now with <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">mask_udf</span> <span class="o">=</span> <span class="n">libertem</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">ApplyMasksUDF</span><span class="p">(</span>
+  <span class="n">mask_factories</span><span class="o">=</span><span class="p">[</span><span class="n">all_ones</span><span class="p">,</span> <span class="n">single_pixel</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">mask_udf_result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">mask_udf</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask_udf_result</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="from-pickframejob-to-pickudf">
+<h4>From <code class="xref py py-class docutils literal notranslate"><span class="pre">PickFrameJob</span></code> to <a class="reference internal" href="reference/udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a><a class="headerlink" href="#from-pickframejob-to-pickudf" title="Permalink to this heading"></a></h4>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">PickFrameJob</span></code> allowed to pick arbitrary contiguous
+slices in both navigation and signal dimension. In practice, however, it was
+mostly used to extract single complete frames.
+<a class="reference internal" href="reference/udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a> allows to pick the <em>complete</em> signal
+dimension from an arbitrary non-contiguous region of interest in navigation
+space by specifying a ROI.</p>
+<p>If necessary, more complex subsets of a dataset can be extracted by constructing
+a suitable subset of an identity matrix for the signal dimension and using it
+with ApplyMasksUDF and the appropriate ROI for the navigation dimension.
+Alternatively, it is now easily possible to implement a custom UDF for this
+purpose. Performing the complete processing through an UDF on the worker nodes
+instead of loading the data to the central node may be a viable alternative as
+well.</p>
+<p><a class="reference internal" href="reference/udf.html#libertem.udf.raw.PickUDF" title="libertem.udf.raw.PickUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickUDF</span></code></a> now returns data in the native <code class="code docutils literal notranslate"><span class="pre">dtype</span></code>
+of the dataset. Previously, <code class="xref py py-class docutils literal notranslate"><span class="pre">PickFrameJob</span></code> converted to
+floats.</p>
+<p>Using <a class="reference internal" href="reference/api.html#libertem.api.Context.create_pick_analysis" title="libertem.api.Context.create_pick_analysis"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.create_pick_analysis()</span></code></a> continues to be the
+recommended convenience function to pick single frames.</p>
+</section>
+</section>
+<section id="restructuring-into-sub-packages">
+<span id="restructuring-0-4"></span><h3>Restructuring into sub-packages<a class="headerlink" href="#restructuring-into-sub-packages" title="Permalink to this heading"></a></h3>
+<p>We are currently restructuring LiberTEM into packages that can be installed and
+used independently, see <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/261">#261</a>. This will be a longer process and changes
+the import locations.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://libertem.github.io/LiberTEM-blobfinder/">Blobfinder</a> is the first
+module separated in 0.4.0.</p></li>
+<li><p>See <a class="reference internal" href="packages.html#packages"><span class="std std-ref">Package overview</span></a> for a current overview of sub-packages.</p></li>
+</ul>
+<p>For a transition period, importing from the previous locations is supported but
+will trigger a <code class="code docutils literal notranslate"><span class="pre">FutureWarning</span></code>. See <a class="reference internal" href="tips.html#show-warnings"><span class="std std-ref">Show deprecation warnings</span></a> on how to
+activate deprecation warning messages, which is strongly recommended while the
+restructuring is ongoing.</p>
+</section>
+</section>
+<section id="v0-3-0">
+<span id="id42"></span><h2>0.3.0 / 2019-12-12<a class="headerlink" href="#v0-3-0" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3572855"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3572855.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3572855.svg" /></a>
+<section id="id43">
+<h3>New features<a class="headerlink" href="#id43" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Make OOP based composition and subclassing easier for
+<code class="xref py py-class docutils literal notranslate"><span class="pre">CorrelationUDF</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/466">#466</a>)</p></li>
+<li><p>Introduce plain circular match pattern <code class="xref py py-class docutils literal notranslate"><span class="pre">Circular</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/469">#469</a>)</p></li>
+<li><p>Distributed sharded dataset <code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDataSet</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/136">#136</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/457">#457</a>)</p></li>
+<li><p>Support for caching data sets <code class="xref py py-class docutils literal notranslate"><span class="pre">CachedDataSet</span></code>
+from slower storage (NFS, spinning metal) on fast local storage (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/471">#471</a>)</p></li>
+<li><p><a class="reference internal" href="app/phasechange.html#clustering"><span class="std std-ref">Clustering</span></a> analysis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/401">#401</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/408">#408</a> by <a class="reference external" href="https://github.com/kruzaeva">&#64;kruzaeva</a>).</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.io.dataset.dm.DMDataSet</span></code> implementation based on ncempy (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/497">#497</a>)</p>
+<ul>
+<li><p>Adds a new <a class="reference internal" href="dev/executors.html#libertem.common.executor.JobExecutor.map" title="libertem.common.executor.JobExecutor.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code></a> executor primitive. Used to concurrently
+read the metadata for DM3/DM4 files on initialization.</p></li>
+<li><p>Note: no support for the web GUI yet, as the naming patterns for DM file series varies wildly. Needs
+changes in the file dialog.</p></li>
+</ul>
+</li>
+<li><p>Speed up of up to 150x for correlation-based peak refinement in
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.udf.blobfinder.correlation</span></code> with a Numba-based pipeline (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/468">#468</a>)</p></li>
+<li><p>Introduce <code class="xref py py-class docutils literal notranslate"><span class="pre">FullFrameCorrelationUDF</span></code> which
+correlates a large number (several hundred) of small peaks (10x10) on small
+frames (256x256) faster than
+<code class="xref py py-class docutils literal notranslate"><span class="pre">FastCorrelationUDF</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">SparseCorrelationUDF</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/468">#468</a>)</p></li>
+<li><p>Introduce <code class="xref py py-class docutils literal notranslate"><span class="pre">UDFPreprocessMixin</span></code> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/464">#464</a>)</p></li>
+<li><p>Implement iterator over <a class="reference internal" href="reference/api.html#libertem.analysis.base.AnalysisResultSet" title="libertem.analysis.base.AnalysisResultSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnalysisResultSet</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/496">#496</a>)</p></li>
+<li><p>Add hologram simulation
+<a class="reference internal" href="reference/app/holography.html#libertem.utils.generate.hologram_frame" title="libertem.utils.generate.hologram_frame"><code class="xref py py-func docutils literal notranslate"><span class="pre">libertem.utils.generate.hologram_frame()</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/475">#475</a>)</p></li>
+<li><p>Implement Hologram reconstruction UDF
+<a class="reference internal" href="reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.udf.holography.HoloReconstructUDF</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/475">#475</a>)</p></li>
+</ul>
+</section>
+<section id="id44">
+<h3>Bug fixes<a class="headerlink" href="#id44" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Improved error and validation handling when opening files with GUI (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/433">#433</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/442">#442</a>)</p></li>
+<li><p>Clean-up and improvements of <a class="reference internal" href="reference/app/strain.html#libertem.analysis.fullmatch.FullMatcher" title="libertem.analysis.fullmatch.FullMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.analysis.fullmatch.FullMatcher</span></code></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/463">#463</a>)</p></li>
+<li><p>Ensure that RAW dataset sizes are calculated as int64 to avoid integer overflows (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/495">#495</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/493">#493</a>)</p></li>
+<li><p>Resolve shape mismatch issue and simplify dominant order calculation in Radial Fourier Analysis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/502">#502</a>)</p></li>
+<li><p>Actually pass the <code class="code docutils literal notranslate"><span class="pre">enable_direct</span></code> parameter from web API to the DataSet</p></li>
+</ul>
+</section>
+<section id="id45">
+<h3>Documentation<a class="headerlink" href="#id45" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Created <a class="reference internal" href="authorship.html#authorship"><span class="std std-ref">Authorship policy</span></a> (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/460">#460</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/483">#483</a>)</p></li>
+<li><p>Change management process (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/443">#443</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/451">#451</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/453">#453</a>)</p></li>
+<li><p>Documentation for <a class="reference internal" href="app/phasechange.html#crystallinity-map"><span class="std std-ref">Crystallinity map</span></a> and <a class="reference internal" href="app/phasechange.html#clustering"><span class="std std-ref">Clustering</span></a> analysis (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/408">#408</a> by <a class="reference external" href="https://github.com/kruzaeva">&#64;kruzaeva</a>)</p></li>
+<li><p>Instructions for profiling slow tests (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/447">#447</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/448">#448</a>)</p></li>
+<li><p>Improve API reference on Analysis results (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/494">#494</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/496">#496</a>)</p></li>
+<li><p>Restructure and update the API reference for a number of UDFs and
+other application-specific code (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/503">#503</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/507">#507</a>, <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/508">#508</a>)</p></li>
+</ul>
+</section>
+<section id="id46">
+<h3>Obsolescence<a class="headerlink" href="#id46" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>The Job interface is planned to be replaced with an implementation based on UDFs in one of the upcoming releases.</p></li>
+</ul>
+</section>
+<section id="id47">
+<h3>Misc<a class="headerlink" href="#id47" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Split up the blobfinder code between several files to reduce file size (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/468">#468</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-2-2">
+<span id="id48"></span><h2>0.2.2 / 2019-10-14<a class="headerlink" href="#v0-2-2" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3489385"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3489385.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3489385.svg" /></a>
+<p>Point release to fix a number of minor issues, most notably PR <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/439">#439</a> that
+should have been merged for version 0.2.</p>
+<section id="id49">
+<h3>Bug fixes<a class="headerlink" href="#id49" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Trigger a timeout when guessing parameters for HDF5 takes too long (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/440">#440</a> , <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/449">#449</a>)</p></li>
+<li><p>Slightly improved error and validation handling when opening files with GUI (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/commit/ec74c1346d93eff58d9e2201a7ead5af7aa7cf44">&#64;ec74c13</a>)</p></li>
+<li><p>Recognize BLO file type (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/432">#432</a>)</p></li>
+<li><p>Fixed a glitch where negative peak elevations were possible (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/446">#446</a>)</p></li>
+<li><p>Update examples to match 0.2 release (<a class="reference external" href="https://github.com/LiberTEM/LiberTEM/pull/439">#439</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v0-2-1">
+<span id="id50"></span><h2>0.2.1 / 2019-10-07<a class="headerlink" href="#v0-2-1" title="Permalink to this heading"></a></h2>
+<a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.3474968"><img alt="https://zenodo.org/badge/DOI/10.5281/zenodo.3474968.svg" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3474968.svg" /></a>
+<p>Point release to fix a bug in the Zenodo upload for production releases.</p>
+</section>
+<section id="v0-2-0">
+<span id="id51"></span><h2>0.2.0 / 2019-10-07<a class="headerlink" href="#v0-2-0" title="Permalink to this heading"></a></h2>
+<p>This release constitutes a major update after almost a year of development.
+Systematic change management starts with this release.</p>
+<p>This is the <a class="reference external" href="https://groups.google.com/g/libertem/c/p7MVoVqXOs0/m/vP_tu6K7CwAJ">release message</a>:</p>
+<section id="user-defined-functions">
+<h3>User-defined functions<a class="headerlink" href="#user-defined-functions" title="Permalink to this heading"></a></h3>
+<p>LiberTEM 0.2 offers a new API to define a wide range of user-defined reduction
+functions (UDFs) on distributed data. The interface and implementation offers a
+number of unique features:</p>
+<ul class="simple">
+<li><p>Reductions are defined as functions that are executed on subsets of the data.
+That means they are equally suitable for distributed computing, for interactive
+display of results from a progressing calculation, and for handling live data¹.</p></li>
+<li><p>Interfaces adapted to both simple and complex use cases: From a simple map()
+functionality to complex multi-stage reductions.</p></li>
+<li><p>Rich options to define input and output data for the reduction functions, which
+helps to implement non-trivial operations efficiently within a single pass over
+the input data.</p></li>
+<li><p>Composition and extension through object oriented programming</p></li>
+<li><p>Interfaces that allow highly efficient processing: locality of reference, cache
+efficiency, memory handling</p></li>
+</ul>
+<p>Introduction: <a class="reference external" href="https://libertem.github.io/LiberTEM/udf.html">https://libertem.github.io/LiberTEM/udf.html</a></p>
+<p>Advanced features: <a class="reference external" href="https://libertem.github.io/LiberTEM/udf/advanced.html">https://libertem.github.io/LiberTEM/udf/advanced.html</a></p>
+<p>A big shoutout to Alex (<a class="reference external" href="https://github.com/sk1p">&#64;sk1p</a>) who developed it! 🏆</p>
+<p>¹User-defined functions will work on live data without modification as soon as
+LiberTEM implements back-end support for live data, expected in 2020.</p>
+</section>
+<section id="support-for-4d-stem-applications">
+<h3>Support for 4D STEM applications<a class="headerlink" href="#support-for-4d-stem-applications" title="Permalink to this heading"></a></h3>
+<p>In parallel to the UDF interface, we have implemented a number of applications
+that make use of the new facilities:</p>
+<ul class="simple">
+<li><p>Correlation-based peak finding and refinement for CBED (credit: Karina Ruzaeva <a class="reference external" href="https://github.com/kruzaeva">&#64;kruzaeva</a>)</p></li>
+<li><p>Strain mapping</p></li>
+<li><p>Clustering</p></li>
+<li><p>Fluctuation EM</p></li>
+<li><p>Radial Fourier Series (advanced Fluctuation EM)</p></li>
+</ul>
+<p>More details and examples: <a class="reference external" href="https://libertem.github.io/LiberTEM/applications.html">https://libertem.github.io/LiberTEM/applications.html</a></p>
+</section>
+<section id="extended-documentation">
+<h3>Extended documentation<a class="headerlink" href="#extended-documentation" title="Permalink to this heading"></a></h3>
+<p>We have greatly improved the coverage of our documentation:
+<a class="reference external" href="https://libertem.github.io/LiberTEM/index.html#documentation">https://libertem.github.io/LiberTEM/index.html#documentation</a></p>
+</section>
+<section id="fully-automated-release-pipeline">
+<h3>Fully automated release pipeline<a class="headerlink" href="#fully-automated-release-pipeline" title="Permalink to this heading"></a></h3>
+<p>Alex (<a class="reference external" href="https://github.com/sk1p">&#64;sk1p</a>) invested a great deal of effort into fully automating our release
+process. From now on, we will be able to release more often, including service
+releases. 🚀</p>
+</section>
+<section id="basic-dask-distributed-array-integration">
+<h3>Basic dask.distributed array integration<a class="headerlink" href="#basic-dask-distributed-array-integration" title="Permalink to this heading"></a></h3>
+<p>LiberTEM can generate efficient dask.distributed arrays from all supported
+dataset types with this release. That means it should be possible to use our high-performance file
+readers in applications outside of LiberTEM.</p>
+</section>
+<section id="file-formats">
+<h3>File formats<a class="headerlink" href="#file-formats" title="Permalink to this heading"></a></h3>
+<p>Support for various file formats has improved. More details:
+<a class="reference external" href="https://libertem.github.io/LiberTEM/formats.html">https://libertem.github.io/LiberTEM/formats.html</a></p>
+</section>
+</section>
+<section id="v0-1-0">
+<span id="id52"></span><h2>0.1.0 / 2018-11-06<a class="headerlink" href="#v0-1-0" title="Permalink to this heading"></a></h2>
+<p>Initial release of a minimum viable product and proof of concept.</p>
+<p>Support for applying masks with high throughput on distributed systems with
+interactive web GUI display and scripting capability.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hyperspy-integration.html" class="btn btn-neutral float-left" title="Example of integration with HyperSpy lazy signals" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="changelog/documentation/empty.html" class="btn btn-neutral float-right" title="No changes yet" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

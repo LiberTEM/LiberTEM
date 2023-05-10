@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.base.backend_mmap &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.base.backend_mmap</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.base.backend_mmap</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">mmap</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba.typed</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">sparseconverter</span> <span class="kn">import</span> <span class="n">CUDA</span><span class="p">,</span> <span class="n">NUMPY</span><span class="p">,</span> <span class="n">ArrayBackend</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base.backend</span> <span class="kn">import</span> <span class="n">IOBackend</span><span class="p">,</span> <span class="n">IOBackendImpl</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base.fileset</span> <span class="kn">import</span> <span class="n">FileSet</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">libertem.common.buffers</span> <span class="kn">import</span> <span class="n">BufferPool</span>
+<span class="kn">from</span> <span class="nn">libertem.common.numba</span> <span class="kn">import</span> <span class="n">cached_njit</span>
+<span class="kn">from</span> <span class="nn">.tiling</span> <span class="kn">import</span> <span class="n">DataTile</span>
+<span class="kn">from</span> <span class="nn">.decode</span> <span class="kn">import</span> <span class="n">DtypeConversionDecoder</span>
+
+
+<span class="n">_r_n_d_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<span class="k">def</span> <span class="nf">_make_mmap_reader_and_decoder</span><span class="p">(</span><span class="n">decode</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    decode: from inp, in bytes, possibly interpreted as native_dtype, to out_decoded.dtype</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@cached_njit</span><span class="p">(</span><span class="n">boundscheck</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_mmap_tilereader_w_copy</span><span class="p">(</span><span class="n">outer_idx</span><span class="p">,</span> <span class="n">mmaps</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">,</span> <span class="n">tile_read_ranges</span><span class="p">,</span>
+                           <span class="n">out_decoded</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">do_zero</span><span class="p">,</span>
+                           <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read and decode a single tile</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">do_zero</span><span class="p">:</span>
+            <span class="n">out_decoded</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">rr_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tile_read_ranges</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">rr</span> <span class="o">=</span> <span class="n">tile_read_ranges</span><span class="p">[</span><span class="n">rr_idx</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">rr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">rr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">memmap</span> <span class="o">=</span> <span class="n">mmaps</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">decode</span><span class="p">(</span>
+                <span class="n">inp</span><span class="o">=</span><span class="n">memmap</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">rr</span><span class="p">[</span><span class="mi">2</span><span class="p">]],</span>
+                <span class="n">out</span><span class="o">=</span><span class="n">out_decoded</span><span class="p">,</span>
+                <span class="n">idx</span><span class="o">=</span><span class="n">rr_idx</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="n">native_dtype</span><span class="p">,</span>
+                <span class="n">rr</span><span class="o">=</span><span class="n">rr</span><span class="p">,</span>
+                <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+                <span class="n">ds_shape</span><span class="o">=</span><span class="n">ds_shape</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">out_decoded</span>
+    <span class="k">return</span> <span class="n">_mmap_tilereader_w_copy</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_get_prefetch_ranges</span><span class="p">(</span><span class="n">num_files</span><span class="p">,</span> <span class="n">tile_ranges</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_files</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">rr_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">tile_ranges</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">rr</span> <span class="o">=</span> <span class="n">tile_ranges</span><span class="p">[</span><span class="n">rr_idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">rr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># if minimum is 0, pick first value</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span> <span class="n">rr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">],</span> <span class="n">rr</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">rr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<div class="viewcode-block" id="MMapBackend"><a class="viewcode-back" href="../../../../../reference/io_backends.html#libertem.io.dataset.base.MMapBackend">[docs]</a><span class="k">class</span> <span class="nc">MMapBackend</span><span class="p">(</span><span class="n">IOBackend</span><span class="p">,</span> <span class="n">id_</span><span class="o">=</span><span class="s2">&quot;mmap&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    I/O backend using memory mapped files. Used by default on non-Windows</span>
+<span class="sd">    systems.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    enable_readahead_hints : bool</span>
+<span class="sd">        Linux only. Try to influence readahead behavior (experimental).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_readahead_hints</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_readahead</span> <span class="o">=</span> <span class="n">enable_readahead_hints</span>
+
+<div class="viewcode-block" id="MMapBackend.get_impl"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.MMapBackend.get_impl">[docs]</a>    <span class="k">def</span> <span class="nf">get_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MMapBackendImpl</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_enable_readahead</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MMapBackend.from_json"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.MMapBackend.from_json">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct an instance from the already-decoded `msg`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO! implement me!&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">MMapFileBase</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mmap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">MMapFile</span><span class="p">(</span><span class="n">MMapFileBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># FIXME: maybe DO switch off buffering? because it means more copies, right?</span>
+        <span class="c1"># NOTE: for `readinto` to work, we must not switch off buffering here!</span>
+        <span class="c1"># otherwise, `readinto` may return partial results, which can be hard to handle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="o">=</span> <span class="n">mmap</span><span class="o">.</span><span class="n">mmap</span><span class="p">(</span>
+            <span class="n">fileno</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+            <span class="n">length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="c1"># can&#39;t use offset for cutting off file header, as it needs to be</span>
+            <span class="c1"># aligned to page size...</span>
+            <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">access</span><span class="o">=</span><span class="n">mmap</span><span class="o">.</span><span class="n">ACCESS_READ</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">slicing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">get_offsets_sizes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">get_array_from_memview</span><span class="p">(</span>
+            <span class="nb">memoryview</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span><span class="p">),</span>
+            <span class="n">slicing</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mmap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;trying to access a mmap for a closed file&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;trying to access array for a closed file&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;trying to access file handle of closed file&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span>
+
+
+<span class="k">class</span> <span class="nc">MMapBackendImpl</span><span class="p">(</span><span class="n">IOBackendImpl</span><span class="p">):</span>
+    <span class="n">FILE_CLS</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span> <span class="o">=</span> <span class="n">MMapFile</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_readahead_hints</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_readahead</span> <span class="o">=</span> <span class="n">enable_readahead_hints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_pool</span> <span class="o">=</span> <span class="n">BufferPool</span><span class="p">()</span>
+
+    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">open_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileset</span><span class="p">:</span> <span class="n">FileSet</span><span class="p">):</span>
+        <span class="n">mmap_files</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FILE_CLS</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fileset</span>
+        <span class="p">]</span>
+        <span class="k">yield</span> <span class="n">mmap_files</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">mmap_files</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_tiles_straight</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">,</span> <span class="n">open_files</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">MMapFile</span><span class="p">],</span> <span class="n">read_ranges</span><span class="p">,</span>
+        <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read straight from the file system cache, via memory mapping, without</span>
+<span class="sd">        any decoding step.</span>
+
+<span class="sd">        This method makes a few assumptions:</span>
+<span class="sd">         - no corrections are needed</span>
+<span class="sd">         - tiles don&#39;t span multiple files</span>
+<span class="sd">         - the `LocalFile` has already cut away headers and footers</span>
+<span class="sd">           (both per-file and per-frame) from the mmap</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        tiling_scheme : TilingScheme</span>
+
+<span class="sd">        open_files : List[MMapFile]</span>
+<span class="sd">            The list of files must correspond to the indices used in the `read_ranges`.</span>
+<span class="sd">            Usually, that means it is limited to the files that are part of the</span>
+<span class="sd">            current partition.</span>
+
+<span class="sd">        read_ranges : Tuple[np.ndarray, np.ndarray, np.ndarray]</span>
+<span class="sd">            As returned by `get_read_ranges`</span>
+
+<span class="sd">        sync_offset : int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ds_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">dataset_shape</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+        <span class="n">slices</span><span class="p">,</span> <span class="n">ranges</span><span class="p">,</span> <span class="n">scheme_indices</span> <span class="o">=</span> <span class="n">read_ranges</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">tile_ranges</span> <span class="o">=</span> <span class="n">ranges</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">scheme_idx</span> <span class="o">=</span> <span class="n">scheme_indices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+            <span class="c1"># NOTE: for straight mmap, read_ranges must not contain tiles</span>
+            <span class="c1"># that span multiple files. This is ensured in IOBackend.need_copy</span>
+            <span class="c1"># (that is, we force copying if files are smaller than tiles)</span>
+            <span class="n">file_idx</span> <span class="o">=</span> <span class="n">tile_ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="n">open_files</span><span class="p">[</span><span class="n">file_idx</span><span class="p">]</span>
+            <span class="n">arr</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">fh</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,)</span> <span class="o">+</span> <span class="n">ds_sig_shape</span><span class="p">)</span>
+            <span class="n">tile_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span>
+                <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="c1"># sync_offset is either zero or positive</span>
+            <span class="c1"># in case of negative sync_offset, _get_tiles_w_copy is used</span>
+            <span class="n">data_slice</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">slice</span><span class="p">(</span>
+                    <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fh</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">sync_offset</span><span class="p">,</span>
+                    <span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">fh</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">sync_offset</span>
+                <span class="p">),</span>
+            <span class="p">)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">slice</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="p">(</span><span class="n">o</span> <span class="o">+</span> <span class="n">s</span><span class="p">))</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">arr</span><span class="p">[</span><span class="n">data_slice</span><span class="p">]</span>
+            <span class="k">yield</span> <span class="n">DataTile</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span>
+                <span class="n">tile_slice</span><span class="o">=</span><span class="n">tile_slice</span><span class="p">,</span>
+                <span class="n">scheme_idx</span><span class="o">=</span><span class="n">scheme_idx</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_read_and_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decode</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">decode</span><span class="p">,</span> <span class="s2">&quot;mmap&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_r_n_d_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_r_n_d_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">r_n_d</span> <span class="o">=</span> <span class="n">_make_mmap_reader_and_decoder</span><span class="p">(</span><span class="n">decode</span><span class="o">=</span><span class="n">decode</span><span class="p">)</span>
+        <span class="n">_r_n_d_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">r_n_d</span>
+        <span class="k">return</span> <span class="n">r_n_d</span>
+
+    <span class="k">def</span> <span class="nf">_get_tiles_w_copy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">,</span> <span class="n">open_files</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span>
+        <span class="n">decoder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">corrections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">decoder</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">decoder</span> <span class="o">=</span> <span class="n">DtypeConversionDecoder</span><span class="p">()</span>
+        <span class="n">decode</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">get_decode</span><span class="p">(</span>
+            <span class="n">native_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">),</span>
+            <span class="n">read_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">read_dtype</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">r_n_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_n_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_read_and_decode</span><span class="p">(</span><span class="n">decode</span><span class="p">)</span>
+
+        <span class="n">native_dtype</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">get_native_dtype</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">)</span>
+        <span class="n">mmaps</span> <span class="o">=</span> <span class="n">List</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">fh</span> <span class="ow">in</span> <span class="n">open_files</span><span class="p">:</span>
+            <span class="n">mmaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">mmap</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">))</span>
+
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+        <span class="n">ds_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">dataset_shape</span><span class="p">)</span>
+
+        <span class="n">largest_slice</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span>
+            <span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">s_</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">s_</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">s_</span> <span class="ow">in</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">slices</span>
+        <span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">buf_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">depth</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">largest_slice</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">need_clear</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">do_clear</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_pool</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">buf_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">read_dtype</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_decoded</span><span class="p">:</span>
+            <span class="n">out_decoded</span> <span class="o">=</span> <span class="n">out_decoded</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="n">read_ranges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Use NumPy prod for multidimensional array and axis parameter</span>
+            <span class="n">shape_prods</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">slices</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+            <span class="n">ranges</span> <span class="o">=</span> <span class="n">read_ranges</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">scheme_indices</span> <span class="o">=</span> <span class="n">read_ranges</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">origin</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">tile_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span>
+                    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">tile_ranges</span> <span class="o">=</span> <span class="n">ranges</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">scheme_idx</span> <span class="o">=</span> <span class="n">scheme_indices</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="c1"># if idx &lt; slices.shape[0] - 1:</span>
+                <span class="c1">#     self._prefetch_for_tile(fileset, ranges[idx + 1])</span>
+                <span class="c1">#     pass</span>
+                <span class="n">out_cut</span> <span class="o">=</span> <span class="n">out_decoded</span><span class="p">[:</span><span class="n">shape_prods</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">r_n_d</span><span class="p">(</span>
+                    <span class="n">idx</span><span class="p">,</span>
+                    <span class="n">mmaps</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">,</span> <span class="n">tile_ranges</span><span class="p">,</span>
+                    <span class="n">out_cut</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">do_zero</span><span class="o">=</span><span class="n">need_clear</span><span class="p">,</span>
+                    <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="o">=</span><span class="n">ds_shape</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">preprocess</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tile_slice</span><span class="p">,</span> <span class="n">corrections</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">DataTile</span><span class="p">(</span>
+                    <span class="n">data</span><span class="p">,</span>
+                    <span class="n">tile_slice</span><span class="o">=</span><span class="n">tile_slice</span><span class="p">,</span>
+                    <span class="n">scheme_idx</span><span class="o">=</span><span class="n">scheme_idx</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_tiles</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">,</span> <span class="n">fileset</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">,</span> <span class="n">decoder</span><span class="p">,</span>
+        <span class="n">sync_offset</span><span class="p">,</span> <span class="n">corrections</span><span class="p">,</span> <span class="n">array_backend</span><span class="p">:</span> <span class="n">ArrayBackend</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># TODO: how would compression work?</span>
+        <span class="c1"># TODO: sparse input data? COO format? fill rate? → own pipeline! → later!</span>
+        <span class="c1"># strategy: assume low (20%?) fill rate, read whole partition and apply ROI in-memory</span>
+        <span class="c1">#           partitioning when opening the dataset, or by having one file per partition</span>
+        <span class="k">assert</span> <span class="n">array_backend</span> <span class="ow">in</span> <span class="p">(</span><span class="n">NUMPY</span><span class="p">,</span> <span class="n">CUDA</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">open_files</span><span class="p">(</span><span class="n">fileset</span><span class="p">)</span> <span class="k">as</span> <span class="n">open_files</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_readahead</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_set_readahead_hints</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">open_files</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">need_copy</span><span class="p">(</span>
+                <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span><span class="p">,</span>
+                <span class="n">tiling_scheme</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="n">native_dtype</span><span class="p">,</span>
+                <span class="n">read_dtype</span><span class="o">=</span><span class="n">read_dtype</span><span class="p">,</span>
+                <span class="n">sync_offset</span><span class="o">=</span><span class="n">sync_offset</span><span class="p">,</span>
+                <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_tiles_straight</span><span class="p">(</span>
+                    <span class="n">tiling_scheme</span><span class="p">,</span> <span class="n">open_files</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">,</span> <span class="n">sync_offset</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_tiles_w_copy</span><span class="p">(</span>
+                    <span class="n">tiling_scheme</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="p">,</span>
+                    <span class="n">open_files</span><span class="o">=</span><span class="n">open_files</span><span class="p">,</span>
+                    <span class="n">read_ranges</span><span class="o">=</span><span class="n">read_ranges</span><span class="p">,</span>
+                    <span class="n">read_dtype</span><span class="o">=</span><span class="n">read_dtype</span><span class="p">,</span>
+                    <span class="n">native_dtype</span><span class="o">=</span><span class="n">native_dtype</span><span class="p">,</span>
+                    <span class="n">decoder</span><span class="o">=</span><span class="n">decoder</span><span class="p">,</span>
+                    <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_prefetch_for_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fileset</span><span class="p">,</span> <span class="n">tile_ranges</span><span class="p">):</span>
+        <span class="n">prefr</span> <span class="o">=</span> <span class="n">_get_prefetch_ranges</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fileset</span><span class="p">),</span> <span class="n">tile_ranges</span><span class="p">)</span>
+        <span class="n">prefr</span> <span class="o">=</span> <span class="n">prefr</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">prefr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">mi</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">fidx</span> <span class="ow">in</span> <span class="n">prefr</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">fileset</span><span class="p">[</span><span class="n">fidx</span><span class="p">]</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">posix_fadvise</span><span class="p">(</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+                <span class="n">mi</span><span class="p">,</span>
+                <span class="n">ma</span> <span class="o">-</span> <span class="n">mi</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">POSIX_FADV_WILLNEED</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_readahead_hints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">open_files</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s1">&#39;posix_fadvise&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">fileno</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">open_files</span><span class="p">]):</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">open_files</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">posix_fadvise</span><span class="p">(</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">handle</span><span class="o">.</span><span class="n">fileno</span><span class="p">(),</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">POSIX_FADV_WILLNEED</span>
+            <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

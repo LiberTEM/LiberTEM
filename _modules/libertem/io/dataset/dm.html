@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.dm &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.dm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.dm</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">ncempy.io.dm</span> <span class="kn">import</span> <span class="n">fileDM</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base.file</span> <span class="kn">import</span> <span class="n">OffsetsSizes</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSet</span><span class="p">,</span> <span class="n">FileSet</span><span class="p">,</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span>
+    <span class="n">IOBackend</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">typing</span> <span class="k">as</span> <span class="n">nt</span>
+
+
+<span class="k">class</span> <span class="nc">SingleDMDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/DMDatasetParams.schema.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;DMDatasetParams&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;DM&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;io_backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">IOBackend</span><span class="o">.</span><span class="n">get_supported</span><span class="p">(),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;force_c_order&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;boolean&quot;</span><span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">,</span> <span class="s2">&quot;sig_shape&quot;</span><span class="p">,</span> <span class="s2">&quot;sync_offset&quot;</span><span class="p">,</span> <span class="s2">&quot;force_c_order&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">StackedDMDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">convert_from_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">convert_from_python</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">convert_to_python</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_metadata</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">fh</span> <span class="o">=</span> <span class="n">fileDM</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fh</span><span class="o">.</span><span class="n">numObjects</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;offset&#39;</span><span class="p">:</span> <span class="n">fh</span><span class="o">.</span><span class="n">dataOffset</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+        <span class="s1">&#39;zsize&#39;</span><span class="p">:</span> <span class="n">fh</span><span class="o">.</span><span class="n">zSize</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
+    <span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">StackedDMFile</span><span class="p">(</span><span class="n">File</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_array_from_memview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mem</span><span class="p">:</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="n">slicing</span><span class="p">:</span> <span class="n">OffsetsSizes</span><span class="p">):</span>
+        <span class="n">mem</span> <span class="o">=</span> <span class="n">mem</span><span class="p">[</span><span class="n">slicing</span><span class="o">.</span><span class="n">file_offset</span><span class="p">:</span><span class="o">-</span><span class="n">slicing</span><span class="o">.</span><span class="n">skip_end</span><span class="p">]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">mem</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+        <span class="n">itemsize</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="n">sigsize</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span>
+        <span class="n">cutoff</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cutoff</span> <span class="o">+=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">*</span> <span class="n">itemsize</span> <span class="o">*</span> <span class="n">sigsize</span>
+        <span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="p">[:</span><span class="n">cutoff</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">res</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_native_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">)[:,</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_offset</span><span class="p">:</span><span class="n">slicing</span><span class="o">.</span><span class="n">frame_offset</span> <span class="o">+</span> <span class="n">slicing</span><span class="o">.</span><span class="n">frame_size</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">DMFileSet</span><span class="p">(</span><span class="n">FileSet</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">DMDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factory class for DigitalMicrograph file datasets</span>
+
+<span class="sd">     - Passing either the :code:`files` kwarg or a tuple/list as first</span>
+<span class="sd">       argument will create an instance of :class:`StackedDMDataSet`</span>
+<span class="sd">     - Passing either the :code:`path` kwarg or any other object</span>
+<span class="sd">       as first argument will create a :class:`SingleDMDataSet`</span>
+
+<span class="sd">    This class is necessary to handle the difference in signatures and</span>
+<span class="sd">    behaviours of the two DM dataset implementations, but these may</span>
+<span class="sd">    later be fused if a markup format for multi-file datasets is implemented</span>
+
+<span class="sd">    This class implements the methods necessary to expose a DMDataSet in</span>
+<span class="sd">    the web GUI, which it does by deferring to SingleDMDataSet. At this</span>
+<span class="sd">    time multi-file datasets are not supported in the UI.</span>
+
+<span class="sd">    NOTE this way of generating the subclasses breaks deeper</span>
+<span class="sd">    subclassing, as this __new__ method will always instantiate</span>
+<span class="sd">    a SingleDMDataSet or StackedDMDataSet, and not a subclass of</span>
+<span class="sd">    either of these. This could potentially be improved by using</span>
+<span class="sd">    the .__instance_subclass__() staticmethod to register the</span>
+<span class="sd">    subclasses and what they inherit from.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># delayed here to avoid circular reference</span>
+        <span class="kn">from</span> <span class="nn">.dm_single</span> <span class="kn">import</span> <span class="n">SingleDMDataSet</span>
+        <span class="k">if</span> <span class="s1">&#39;path&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">subclass</span> <span class="o">=</span> <span class="n">SingleDMDataSet</span>
+        <span class="k">elif</span> <span class="s1">&#39;files&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">subclass</span> <span class="o">=</span> <span class="n">StackedDMDataSet</span>
+        <span class="k">elif</span> <span class="n">args</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">subclass</span> <span class="o">=</span> <span class="n">StackedDMDataSet</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">subclass</span> <span class="o">=</span> <span class="n">SingleDMDataSet</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">subclass</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;dm3&quot;</span><span class="p">,</span> <span class="s2">&quot;dm4&quot;</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SingleDMDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="c1"># delayed here to avoid circular reference</span>
+        <span class="kn">from</span> <span class="nn">.dm_single</span> <span class="kn">import</span> <span class="n">SingleDMDataSet</span>
+        <span class="k">return</span> <span class="n">SingleDMDataSet</span><span class="o">.</span><span class="n">detect_params</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="StackedDMDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.dm.StackedDMDataSet">[docs]</a><span class="k">class</span> <span class="nc">StackedDMDataSet</span><span class="p">(</span><span class="n">DMDataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reader for stacks of DM3/DM4 files.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    This DataSet is not supported in the GUI yet, as the file dialog needs to be</span>
+<span class="sd">    updated to `properly handle opening series</span>
+<span class="sd">    &lt;https://github.com/LiberTEM/LiberTEM/issues/498&gt;`_.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Single-file 3/4D DM datasets are supported through the</span>
+<span class="sd">    :class:`~libertem.io.datasets.dm_single.SingleDMDataSet` class.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    You can use the PyPI package `natsort &lt;https://pypi.org/project/natsort/&gt;`_</span>
+<span class="sd">    to sort the filenames by their numerical components, this is especially useful</span>
+<span class="sd">    for filenames without leading zeros.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    files : List[str]</span>
+<span class="sd">        List of paths to the files that should be loaded. The order is important,</span>
+<span class="sd">        as it determines the order in the navigation axis.</span>
+
+<span class="sd">    nav_shape : Tuple[int] or None</span>
+<span class="sd">        By default, the files are loaded as a 3D stack. You can change this</span>
+<span class="sd">        by specifying the nav_shape, which reshapes the navigation dimensions.</span>
+<span class="sd">        Raises a `DataSetException` if the shape is incompatible with the data</span>
+<span class="sd">        that is loaded.</span>
+
+<span class="sd">    sig_shape: Tuple[int], optional</span>
+<span class="sd">        Signal/detector size (height, width)</span>
+
+<span class="sd">    sync_offset: int, optional</span>
+<span class="sd">        If positive, number of frames to skip from start</span>
+<span class="sd">        If negative, number of blank frames to insert at start</span>
+
+<span class="sd">    same_offset : bool</span>
+<span class="sd">        When reading a stack of dm3/dm4 files, it can be expensive to read in</span>
+<span class="sd">        all the metadata from all files, which we currently only use for</span>
+<span class="sd">        getting the offsets and sizes of the main data in each file. If you</span>
+<span class="sd">        absolutely know that the offsets and sizes are the same for all files,</span>
+<span class="sd">        you can set this parameter and we will skip reading all metadata but</span>
+<span class="sd">        the one from the first file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scan_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">same_offset</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nav_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sig_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_same_offset</span> <span class="o">=</span> <span class="n">same_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="n">nav_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="n">sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="c1"># handle backwards-compatability:</span>
+        <span class="k">if</span> <span class="n">scan_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;scan_size argument is deprecated. please specify nav_shape instead&quot;</span><span class="p">,</span>
+                <span class="ne">FutureWarning</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">nav_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot specify both scan_size and nav_shape&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scan_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="n">files</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;files argument must be an iterable</span><span class="se">\</span>
+<span class="s2">                                    of file paths, recieved {type(files)}&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;need at least one file as input!&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fileset</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># per-file cached attributes:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_z_sizes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offsets</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Skip the superclasse&#39;s :code:`__new__()` method.</span>
+
+<span class="sd">        Instead, go straight to the grandparent. That disables the</span>
+<span class="sd">        :class:`DMDataSet` type determination magic. Otherwise unpickling will</span>
+<span class="sd">        always yield a :class:`SingleDMDataSet` since this class inherits the</span>
+<span class="sd">        parent&#39;s :code:`__new__()` method and unpickling calls it without</span>
+<span class="sd">        parameters, making it select :class:`SingleDMDataSet`.</span>
+
+<span class="sd">        It mimics calling the superclass :code:`__new__(cls)` without additional</span>
+<span class="sd">        parameters, just like the parent&#39;s method.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">DataSet</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_sig_shape_and_native_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">first_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">first_file</span> <span class="o">=</span> <span class="n">fileDM</span><span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">first_file</span><span class="o">.</span><span class="n">numObjects</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">raw_dtype</span> <span class="o">=</span> <span class="n">first_file</span><span class="o">.</span><span class="n">_DM2NPDataType</span><span class="p">(</span><span class="n">first_file</span><span class="o">.</span><span class="n">dataType</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+            <span class="n">native_sig_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">first_file</span><span class="o">.</span><span class="n">ySize</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">first_file</span><span class="o">.</span><span class="n">xSize</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;could not determine dtype or signal shape&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">return</span> <span class="n">native_sig_shape</span><span class="p">,</span> <span class="n">raw_dtype</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">():</span>
+            <span class="n">z_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_z_sizes</span><span class="p">[</span><span class="n">fn</span><span class="p">]</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">StackedDMFile</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">fn</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">z_size</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span><span class="p">,</span>
+                <span class="n">file_header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_offsets</span><span class="p">[</span><span class="n">fn</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">start_idx</span> <span class="o">+=</span> <span class="n">z_size</span>
+        <span class="k">return</span> <span class="n">DMFileSet</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span>
+
+    <span class="k">def</span> <span class="nf">_get_filesize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_filesize</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_same_offset</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_get_metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_offsets</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">fn</span><span class="p">:</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_z_sizes</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">fn</span><span class="p">:</span> <span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;zsize&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">(),</span>
+                <span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">_get_metadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()),</span>
+            <span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_offsets</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">fn</span><span class="p">:</span> <span class="n">metadata</span><span class="p">[</span><span class="n">fn</span><span class="p">][</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_z_sizes</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">fn</span><span class="p">:</span> <span class="n">metadata</span><span class="p">[</span><span class="n">fn</span><span class="p">][</span><span class="s1">&#39;zsize&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z_sizes</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_z_sizes</span><span class="o">.</span><span class="n">values</span><span class="p">()),)</span>
+        <span class="n">native_sig_shape</span><span class="p">,</span> <span class="n">native_dtype</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_sig_shape_and_native_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">native_sig_shape</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">native_sig_shape</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sig_shape must be of size: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">native_sig_shape</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sync_offset_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">)),</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">native_dtype</span><span class="p">,</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fileset</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;dm3&quot;</span><span class="p">,</span> <span class="s2">&quot;dm4&quot;</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="n">MessageConverter</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">StackedDMDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="c1"># FIXME: this doesn&#39;t really make sense for file series</span>
+        <span class="c1"># pl = path.lower()</span>
+        <span class="c1"># if pl.endswith(&quot;.dm3&quot;) or pl.endswith(&quot;.dm4&quot;):</span>
+        <span class="c1">#     return {</span>
+        <span class="c1">#         &quot;parameters&quot;: {</span>
+        <span class="c1">#             &quot;files&quot;: [path]</span>
+        <span class="c1">#         },</span>
+        <span class="c1">#     }</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">first_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">fileDM</span><span class="p">(</span><span class="n">first_fn</span><span class="p">,</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;invalid dataset: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">BasePartition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fileset</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;DMDataSet for a stack of </span><span class="si">%d</span><span class="s2"> files&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_files</span><span class="p">()),)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.empad &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.empad</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.empad</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">defusedxml.ElementTree</span> <span class="k">as</span> <span class="nn">ET</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">IOBackend</span>
+<span class="kn">from</span> <span class="nn">.raw</span> <span class="kn">import</span> <span class="n">RawFile</span><span class="p">,</span> <span class="n">RawFileSet</span>
+
+<span class="n">EMPAD_DETECTOR_SIZE</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+<span class="n">EMPAD_DETECTOR_SIZE_RAW</span> <span class="o">=</span> <span class="p">(</span><span class="mi">130</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_params_from_xml</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">em</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">em</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+    <span class="n">raw_filename</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;raw_file&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">)</span>
+    <span class="n">path_raw</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+        <span class="n">filename</span>
+    <span class="p">)</span>
+
+    <span class="n">typ</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">typ</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">typ</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;scan&#39;</span><span class="p">:</span>
+        <span class="c1"># assume &quot;scan&quot;:</span>
+        <span class="n">scan_parameters</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">elem</span>
+            <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;scan_parameters&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;acquire&quot;</span>
+        <span class="p">]</span>
+
+        <span class="n">node_scan_x</span> <span class="o">=</span> <span class="n">scan_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;scan_resolution_x&quot;</span><span class="p">)</span>
+        <span class="n">node_scan_y</span> <span class="o">=</span> <span class="n">scan_parameters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;scan_resolution_y&quot;</span><span class="p">)</span>
+        <span class="n">nav_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">node_scan_x</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">nav_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">node_scan_y</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">nav_y</span><span class="p">,</span> <span class="n">nav_x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">typ</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;series&#39;</span><span class="p">:</span>
+        <span class="n">nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">),)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown type: </span><span class="si">{</span><span class="n">typ</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">path_raw</span><span class="p">,</span> <span class="n">nav_shape</span>
+    <span class="c1"># TODO: read more metadata</span>
+
+
+<span class="k">class</span> <span class="nc">EMPADDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/EMPADDatasetParams.schema.json&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;EMPADDatasetParams&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;EMPAD&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;io_backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">IOBackend</span><span class="o">.</span><span class="n">get_supported</span><span class="p">(),</span>
+        <span class="p">},</span>
+      <span class="p">},</span>
+      <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s2">&quot;nav_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sig_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sync_offset&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">EMPADFileSet</span><span class="p">(</span><span class="n">RawFileSet</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s2">&quot;frame_footer_bytes&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="o">*</span><span class="mi">128</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EMPADDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.empad.EMPADDataSet">[docs]</a><span class="k">class</span> <span class="nc">EMPADDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read data from EMPAD detector. EMPAD data sets consist of two files,</span>
+<span class="sd">    one .raw and one .xml file. Note that the .xml file contains the file name</span>
+<span class="sd">    of the .raw file, so if the raw file was renamed at some point, opening using</span>
+<span class="sd">    the .xml file will fail.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path: str</span>
+<span class="sd">        Path to either the .xml or the .raw file. If the .xml file given,</span>
+<span class="sd">        the `nav_shape` parameter can be left out</span>
+
+<span class="sd">    nav_shape: tuple of int, optional</span>
+<span class="sd">        A tuple (y, x) or (num_images,) that specifies the size of the scanned</span>
+<span class="sd">        region or number of frames in the series. It is automatically read from</span>
+<span class="sd">        the .xml file if you specify one as `path`.</span>
+
+<span class="sd">    sig_shape: tuple of int, optional</span>
+<span class="sd">        Signal/detector size (height, width)</span>
+
+<span class="sd">    sync_offset: int, optional</span>
+<span class="sd">        If positive, number of frames to skip from start</span>
+<span class="sd">        If negative, number of blank frames to insert at start</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">scan_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nav_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sig_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="n">nav_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="n">sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="c1"># handle backwards-compatability:</span>
+        <span class="k">if</span> <span class="n">scan_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;scan_size argument is deprecated. please specify nav_shape instead&quot;</span><span class="p">,</span>
+                <span class="ne">FutureWarning</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">nav_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot specify both scan_size and nav_shape&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scan_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_init_from_xml</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_params_from_xml</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;could not initialize EMPAD file; error: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="n">nav_shape_from_XML</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">lowpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">lowpath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.xml&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span><span class="p">,</span> <span class="n">nav_shape_from_XML</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_init_from_xml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">lowpath</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.raw&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;path should either be .xml or .raw&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;need to set or detect nav_shape!&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_filesize</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;could not open file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">/</span> <span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="p">)</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span>
+                    <span class="n">prod</span><span class="p">(</span><span class="n">EMPAD_DETECTOR_SIZE_RAW</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nav_shape_from_XML</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="n">nav_shape_from_XML</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nav_shape_from_XML</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;either nav_shape needs to be passed, or path needs to point to the .xml file&quot;</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">nav_shape_from_XML</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">nav_shape_from_XML</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="n">EMPAD_DETECTOR_SIZE</span>
+        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">EMPAD_DETECTOR_SIZE</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sig_shape must be of size: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">EMPAD_DETECTOR_SIZE</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sync_offset_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">)),</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_get_filesize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">EMPADDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;xml&quot;</span><span class="p">,</span> <span class="s2">&quot;raw&quot;</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Detect parameters. If an `path` is an xml file, we try to automatically</span>
+<span class="sd">        set the nav_shape, otherwise we can&#39;t really detect if this is a EMPAD</span>
+<span class="sd">        file or something else (maybe from the &quot;trailer&quot; after each frame?)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">initialize</span><span class="p">(</span><span class="n">executor</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">check_valid</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                    <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">,</span>
+                    <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;image_count&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+                    <span class="s2">&quot;native_sig_shape&quot;</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">EMPADFileSet</span><span class="p">([</span>
+            <span class="n">RawFile</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span><span class="p">,</span>
+                <span class="n">frame_footer</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="mi">128</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+            <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">()</span><span class="o">.</span><span class="n">get_impl</span><span class="p">()</span>
+            <span class="k">with</span> <span class="n">backend</span><span class="o">.</span><span class="n">open_files</span><span class="p">(</span><span class="n">fileset</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;invalid dataset: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;path_raw&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_raw</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">BasePartition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;EMPADFileDataSet of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

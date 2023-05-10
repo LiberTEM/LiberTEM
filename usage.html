@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GUI usage &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Applications" href="applications.html" />
+    <link rel="prev" title="Containers and clusters" href="deployment/clustercontainer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">GUI usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#starting-the-gui">Starting the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-the-local-cluster">Create the local cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opening-data">Opening data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-analyses">Running analyses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#downloading-results">Downloading results</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#keyboard-controls">Keyboard controls</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application-specific-documentation">Application-specific documentation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-the-libertem-server-advanced">Configuring the LiberTEM server (Advanced)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">GUI usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gui-usage">
+<span id="usage-documentation"></span><h1>GUI usage<a class="headerlink" href="#gui-usage" title="Permalink to this heading"></a></h1>
+<p>LiberTEM ships with a convenient web-based interface for quickly understanding a dataset
+through a selection of common analyses (virtual detectors, centre-of-mass, clustering etc).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that the GUI is currently limited to 2D visualizations, which makes it adapted
+4D-STEM imagery but not spectrum imaging such as STEM-EELS. If you have a need for
+display of 1D signals please <a class="reference external" href="https://github.com/liberTEM/LiberTEM/issues">file an issue</a>.</p>
+</div>
+<section id="starting-the-gui">
+<h2>Starting the GUI<a class="headerlink" href="#starting-the-gui" title="Permalink to this heading"></a></h2>
+<p>You can the start the interface from the command line after
+activating the virtualenv or conda environment where LiberTEM is installed.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>libertem-server
+</pre></div>
+</div>
+<p>In most situations this will automatically launch a webpage in your browser to start
+loading data and running analyses. If it didn’t open automatically, you can access
+it by default at <a class="reference external" href="http://localhost:9000">http://localhost:9000</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The GUI is tested to work on Firefox and Chromium-based browsers for now. If you
+cannot use a compatible browser for some reason, please
+<a class="reference external" href="https://github.com/liberTEM/LiberTEM/issues">file an issue</a>.</p>
+</div>
+<p>It is also possible to connect to a <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code> on a remote machine
+though this requires special configuration and depends on your network environment
+(see <a class="reference internal" href="#server-config"><span class="std std-ref">Configuring the LiberTEM server (Advanced)</span></a>).</p>
+</section>
+<section id="create-the-local-cluster">
+<h2>Create the local cluster<a class="headerlink" href="#create-the-local-cluster" title="Permalink to this heading"></a></h2>
+<p>The first page in the GUI allows you to specify the compute resources
+the system will use to process your data (number of CPUs, GPUs etc). By default
+all available resources are selected, though you can reduce this if needed.</p>
+<figure class="align-default">
+<img alt="_images/create.png" src="_images/create.png" />
+</figure>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Use of GPUs requires a working CuPy installation, see <a class="reference internal" href="install.html#cupy-install"><span class="std std-ref">CuPy install</span></a>
+for more information.</p>
+</div>
+</section>
+<section id="opening-data">
+<h2>Opening data<a class="headerlink" href="#opening-data" title="Permalink to this heading"></a></h2>
+<p>Next, LiberTEM shows a button to start browsing for
+available files. On a local machine that’s simply the local filesystem.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference internal" href="sample_datasets.html#sample-data"><span class="std std-ref">Sample Datasets</span></a> for publicly available datasets.</p>
+</div>
+<figure class="align-default">
+<img alt="_images/browse.png" src="_images/browse.png" />
+</figure>
+<p>This opens the file browser dialogue. On top it shows the current directory,
+below it lists all files and subdirectories in that directory. You select an
+entry by clicking once on it. You can move up one directory with the “..” entry
+on top of the list. The file browser is still very basic. Possible improvements
+are discussed in <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/83">Issue #83</a>.
+Contributions are highly appreciated! This example opens an HDF5 file <span id="id2">[<a class="reference internal" href="index.html#id115" title="Steven E Zeltmann, Alexander Müller, Karen C Bustillo, Benjamin Savitzky, Lauren Hughes, Andrew M Minor, and Colin Ophus. Patterned probes for high precision 4D-STEM bragg measurements. Ultramicroscopy, 2019. arXiv:1907.05504v2, doi:10.1016/j.ultramic.2019.112890.">ZMB+19</a>]</span>.</p>
+<figure class="align-default">
+<img alt="_images/open.png" src="_images/open.png" />
+</figure>
+<p>You can also bookmark locations you frequently need to access, using the
+star icon. The bookmarks are then found under “Go to…”.</p>
+<figure class="align-default">
+<img alt="_images/star.png" src="_images/star.png" />
+</figure>
+<p>After selecting a file, you set the type in the drop-down menu at the top of the
+dialogue above the file name. After that you set the appropriate parameters that
+depend on the file type. Clicking on “Load Dataset” will open the file with the
+selected parameters. The interface and internal logic to find good presets based
+on file type and available metadata, validate the inputs and display helpful
+error messages is still work in progress. Contributions are highly appreciated!</p>
+<p>See <a class="reference internal" href="formats.html#loading-using-the-gui"><span class="std std-ref">Loading using the GUI</span></a> for more detailed instructions and
+format-specific information.</p>
+<figure class="align-default">
+<img alt="_images/type.png" src="_images/type.png" />
+</figure>
+</section>
+<section id="running-analyses">
+<h2>Running analyses<a class="headerlink" href="#running-analyses" title="Permalink to this heading"></a></h2>
+<p>Once a dataset is loaded, you can add analyses to it. As an example we choose a
+“Ring” analysis, which implements a ring-shaped virtual detector.</p>
+<figure class="align-default">
+<img alt="_images/add_analysis.png" src="_images/add_analysis.png" />
+</figure>
+<figure class="align-default">
+<img alt="_images/adjust.png" src="_images/adjust.png" />
+</figure>
+<p>This analysis shows two views on your data: the two detector dimensions on
+the left, the scanning dimensions on the right, assuming a 4D-STEM dataset.
+For the general case, we also call the detector dimensions the <em>signal
+dimensions</em>, and the scanning dimensions the <em>navigation dimensions</em>.
+See also <a class="reference internal" href="concepts.html#concepts"><span class="std std-ref">Concepts</span></a> for more information on axes and coordinate system.</p>
+<p>Directly after
+adding the analysis, LiberTEM starts calculating an average of all the detector
+frames. The average is overlaid with the mask representing the virtual detector. The view on the right
+will later show the result of applying the mask to the data. In the beginning it
+is empty. The first processing might take a while depending on file size and I/O
+performance. Fast SSDs and enough RAM to keep the working files in the file
+system cache are highly recommended for a good user experience.</p>
+<p>You can adjust the virtual detector by dragging the handles in the GUI. Below it
+shows the parameters in numerical form. This is useful to extract positions, for
+example for scripting.</p>
+<p>After clicking “Apply”, LiberTEM performs the calculation and shows the result
+in scan coordinates on the right side.</p>
+<figure class="align-default">
+<img alt="_images/apply.png" src="_images/apply.png" />
+</figure>
+<p>Instead of average, you can select “Standard Deviation”. This calculates
+standard deviation of all detector frames.</p>
+<figure class="align-default">
+<img alt="_images/std_dev.png" src="_images/std_dev.png" />
+</figure>
+<p>If you are interested in individual frames rather than the average, you can
+switch to “Pick” mode in the “Mode” drop-down menu directly below the detector
+window.</p>
+<figure class="align-default">
+<img alt="_images/pick.png" src="_images/pick.png" />
+</figure>
+<p>In “Pick” mode, a selector appears in the result frame on the right. You can
+drag it around with the mouse to see the frames live in the left window. The
+picked coordinates are displayed along with the virtual detector parameters
+below the frame window on the left.</p>
+<figure class="align-default">
+<img alt="_images/pick_frame.png" src="_images/pick_frame.png" />
+</figure>
+<p>If you are interested in a limited region, the ROI dropdown provides the option
+to select a rectangular region. For example if you select “Rect”, the
+average/standard deviation is calculated over all images that lie inside selected
+rectangle. You can adjust the rectangle by dragging the handles in the GUI.</p>
+<figure class="align-default">
+<img alt="_images/rect.png" src="_images/rect.png" />
+</figure>
+<p>Some analyses, such as the Center of Mass (COM) analysis, can render the result
+in different ways. You can select different result channels in the “Channel” drop-down menu
+below the right window.</p>
+<figure class="align-default">
+<img alt="_images/image.png" src="_images/image.png" />
+</figure>
+</section>
+<section id="downloading-results">
+<span id="download-results"></span><h2>Downloading results<a class="headerlink" href="#downloading-results" title="Permalink to this heading"></a></h2>
+<p>After an analysis has finished running, you can download the results. Clicking the download button
+below the analysis will open a dialog:</p>
+<figure class="align-default">
+<img alt="_images/download-btn.png" src="_images/download-btn.png" />
+</figure>
+<p>In the download dialog, you can choose between different file formats, and separately
+download the available results.</p>
+<figure class="align-default">
+<img alt="_images/download-modal.png" src="_images/download-modal.png" />
+</figure>
+<p>You can also download a Jupyter notebook corresponding to the analysis and
+continue working with the same parameters using scripting.</p>
+<figure class="align-default">
+<img alt="_images/download-jupyter.png" src="_images/download-jupyter.png" />
+</figure>
+<p>It’s also possible to copy individual cells of Jupyter notebook directly from GUI, with an option
+to copy the complete source code.</p>
+<figure class="align-default">
+<img alt="_images/copy-jupyter.png" src="_images/copy-jupyter.png" />
+</figure>
+<section id="keyboard-controls">
+<h3>Keyboard controls<a class="headerlink" href="#keyboard-controls" title="Permalink to this heading"></a></h3>
+<p>You can use arrow keys to change the coordinate parameters of any analysis. To
+do this, click on the handle you want to modify, and then use the arrow keys to
+move the handle. Hold shift to move in larger steps.</p>
+</section>
+<section id="application-specific-documentation">
+<h3>Application-specific documentation<a class="headerlink" href="#application-specific-documentation" title="Permalink to this heading"></a></h3>
+<p>For more applications, like strain mapping and crystallinity analysis, please
+see the <a class="reference internal" href="applications.html"><span class="doc">Applications</span></a> section.</p>
+</section>
+</section>
+<section id="configuring-the-libertem-server-advanced">
+<span id="server-config"></span><h2>Configuring the LiberTEM server (Advanced)<a class="headerlink" href="#configuring-the-libertem-server-advanced" title="Permalink to this heading"></a></h2>
+<p>The LiberTEM GUI is based on a client-server architecture. To use the LiberTEM GUI, you need to
+have the server running on the machine where your data is available. For using LiberTEM from
+Python scripts, this is not necessary, see <a class="reference internal" href="api.html#api-documentation"><span class="std std-ref">Python API</span></a>.</p>
+<p>By default, this starts the server on <a class="reference external" href="http://localhost:9000">http://localhost:9000</a>, which you can verify by the
+log output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">2018</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">08</span> <span class="mi">13</span><span class="p">:</span><span class="mi">57</span><span class="p">:</span><span class="mi">58</span><span class="p">,</span><span class="mi">266</span><span class="p">]</span> <span class="n">INFO</span> <span class="p">[</span><span class="n">libertem</span><span class="o">.</span><span class="n">web</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">main</span><span class="p">:</span><span class="mi">886</span><span class="p">]</span> <span class="n">listening</span> <span class="n">on</span> <span class="n">localhost</span><span class="p">:</span><span class="mi">9000</span>
+</pre></div>
+</div>
+<p>To modify the configuration of the server (address, port, autorization etc.), the
+<code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code> has a number of options available:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">libertem</span><span class="o">-</span><span class="n">server</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">host</span> <span class="n">TEXT</span>                 <span class="n">host</span> <span class="n">on</span> <span class="n">which</span> <span class="n">the</span> <span class="n">server</span> <span class="n">should</span> <span class="n">listen</span> <span class="n">on</span>
+                                  <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="n">localhost</span><span class="p">]</span>
+  <span class="o">-</span><span class="n">p</span><span class="p">,</span> <span class="o">--</span><span class="n">port</span> <span class="n">INTEGER</span>              <span class="n">port</span> <span class="n">on</span> <span class="n">which</span> <span class="n">the</span> <span class="n">server</span> <span class="n">should</span> <span class="n">listen</span> <span class="n">on</span><span class="p">,</span>
+                                  <span class="p">[</span><span class="n">default</span><span class="p">:</span> <span class="mi">9000</span><span class="p">]</span>
+  <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">local</span><span class="o">-</span><span class="n">directory</span> <span class="n">TEXT</span>      <span class="n">local</span> <span class="n">directory</span> <span class="n">to</span> <span class="n">manage</span> <span class="n">dask</span><span class="o">-</span><span class="n">worker</span><span class="o">-</span><span class="n">space</span>
+                                  <span class="n">files</span>
+  <span class="o">-</span><span class="n">b</span><span class="p">,</span> <span class="o">--</span><span class="n">browser</span> <span class="o">/</span> <span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">browser</span>
+                                  <span class="n">enable</span><span class="o">/</span><span class="n">disable</span> <span class="n">opening</span> <span class="n">the</span> <span class="n">browser</span>
+  <span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="n">TEXT</span>            <span class="nb">set</span> <span class="n">logging</span> <span class="n">level</span><span class="o">.</span> <span class="n">Default</span> <span class="ow">is</span> <span class="s1">&#39;info&#39;</span><span class="o">.</span>
+                                  <span class="n">Allowed</span> <span class="n">values</span> <span class="n">are</span> <span class="s1">&#39;critical&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span>
+                                  <span class="s1">&#39;warning&#39;</span><span class="p">,</span> <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="s1">&#39;debug&#39;</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">t</span><span class="p">,</span> <span class="o">--</span><span class="n">token</span><span class="o">-</span><span class="n">path</span> <span class="n">PATH</span>           <span class="n">path</span> <span class="n">to</span> <span class="n">a</span> <span class="n">file</span> <span class="n">containing</span> <span class="n">a</span> <span class="n">token</span> <span class="k">for</span>
+                                  <span class="n">authenticating</span> <span class="n">API</span> <span class="n">requests</span>
+  <span class="o">--</span><span class="n">preload</span> <span class="n">TEXT</span>                  <span class="n">Module</span><span class="p">,</span> <span class="n">file</span> <span class="ow">or</span> <span class="n">code</span> <span class="n">to</span> <span class="n">preload</span> <span class="n">on</span> <span class="n">workers</span><span class="p">,</span>
+                                  <span class="k">for</span> <span class="n">example</span> <span class="n">HDF5</span> <span class="n">plugins</span><span class="o">.</span> <span class="n">Can</span> <span class="n">be</span> <span class="n">specified</span>
+                                  <span class="n">multiple</span> <span class="n">times</span><span class="o">.</span> <span class="n">See</span> <span class="n">also</span>
+                                  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">docs</span><span class="o">.</span><span class="n">dask</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">stable</span><span class="o">/</span><span class="n">how</span><span class="o">-</span>
+                                  <span class="n">to</span><span class="o">/</span><span class="n">customize</span><span class="o">-</span><span class="n">initialization</span><span class="o">.</span><span class="n">html</span><span class="c1">#preload-</span>
+                                  <span class="n">scripts</span> <span class="k">for</span> <span class="n">the</span> <span class="n">behavior</span> <span class="k">with</span> <span class="n">Dask</span> <span class="n">workers</span>
+                                  <span class="p">(</span><span class="n">current</span> <span class="n">default</span><span class="p">)</span><span class="ow">and</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">libertem</span><span class="o">.</span><span class="n">github</span>
+                                  <span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">LiberTEM</span><span class="o">/</span><span class="n">reference</span><span class="o">/</span><span class="n">dataset</span><span class="o">.</span><span class="n">html</span><span class="c1">#hdf5 for</span>
+                                  <span class="n">information</span> <span class="n">on</span> <span class="n">loading</span> <span class="n">HDF5</span> <span class="n">files</span> <span class="n">that</span>
+                                  <span class="n">depend</span> <span class="n">on</span> <span class="n">custom</span> <span class="n">filters</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">insecure</span>                      <span class="n">allow</span> <span class="n">to</span> <span class="n">bind</span> <span class="n">to</span> <span class="n">non</span><span class="o">-</span><span class="n">localhost</span> <span class="n">without</span> <span class="n">token</span>
+                                  <span class="n">auth</span>
+  <span class="o">--</span><span class="n">help</span>                          <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.4.0: </span><code class="code docutils literal notranslate"><span class="pre">--browser</span></code> / <code class="code docutils literal notranslate"><span class="pre">--no-browser</span></code> option was added, open browser by default.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0: </span><code class="code docutils literal notranslate"><span class="pre">-l,</span> <span class="pre">--log-level</span></code> was added.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.8.0: </span><code class="code docutils literal notranslate"><span class="pre">-t,</span> <span class="pre">--token-path</span></code> was added and <code class="code docutils literal notranslate"><span class="pre">-h,</span> <span class="pre">--host</span></code> was re-enabled.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0: </span><code class="code docutils literal notranslate"><span class="pre">--preload</span></code> and <code class="code docutils literal notranslate"><span class="pre">--insecure</span></code> were added.</p>
+</div>
+<p>To access LiberTEM remotely, you can use <a class="reference internal" href="tips.html#ssh-forwarding"><span class="std std-ref">use SSH forwarding</span></a>
+or our <a class="reference internal" href="deployment/jupyter.html#jupyter-integration"><span class="std std-ref">Jupyter integration</span></a>, if you already have JupyterHub or JupyterLab
+set up on a server.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="deployment/clustercontainer.html" class="btn btn-neutral float-left" title="Containers and clusters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="applications.html" class="btn btn-neutral float-right" title="Applications" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

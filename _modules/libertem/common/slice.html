@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.common.slice &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.common.slice</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.common.slice</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">overload</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span><span class="p">,</span> <span class="n">count_nonzero</span>
+<span class="kn">from</span> <span class="nn">libertem.common.shape</span> <span class="kn">import</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">ShapeLike</span>
+
+
+<div class="viewcode-block" id="Slice"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice">[docs]</a><span class="k">class</span> <span class="nc">Slice</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A n-dimensional slice, defined by origin and shape</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    origin : tuple of int</span>
+<span class="sd">        global &quot;top-left&quot; coordinates of this slice</span>
+<span class="sd">    shape : Shape instance</span>
+<span class="sd">        the size of this slice</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;cannot build slice with dimensionality of shape/origin mismatch (</span><span class="si">%d</span><span class="s2"> vs </span><span class="si">%d</span><span class="s2">); &quot;</span>
+                 <span class="s2">&quot;origin=</span><span class="si">%r</span><span class="s2">, shape=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
+                     <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                 <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">Shape</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;please use libertem.common.Shape instance as shape parameter&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;Slice origin=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="si">!r}</span><span class="s2"> shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">!r}</span><span class="s2">&gt;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="c1"># enables using a Slice as a key in dict, an item in sets etc.</span>
+        <span class="c1"># in this case important for use as cache key for our mask container</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Slice</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Slice.from_shape"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.from_shape">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_shape</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">sig_dims</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a `Slice` at zero-origin from `shape` and `sig_dims`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Slice.intersection_with"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.intersection_with">[docs]</a>    <span class="k">def</span> <span class="nf">intersection_with</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Slice&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the intersection between this slice and `other`. May result in</span>
+<span class="sd">        dimensions that are zero, which means that there is no intersection.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        slice : Slice</span>
+<span class="sd">            the intersection between this and the other slice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;cannot intersect slices with different dimensionality (</span><span class="si">%s</span><span class="s2"> vs </span><span class="si">%s</span><span class="s2">); &quot;</span>
+                 <span class="s2">&quot;self.origin=</span><span class="si">%r</span><span class="s2">, other.origin=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;cannot intersect slices with different signal dimensionality (</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">new_origin</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">min</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">o1</span> <span class="o">+</span> <span class="n">s1</span><span class="p">)</span> <span class="o">-</span> <span class="n">no</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">o2</span> <span class="o">+</span> <span class="n">s2</span><span class="p">)</span> <span class="o">-</span> <span class="n">no</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">no</span><span class="p">,</span> <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">new_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span>
+            <span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">new_shape</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="n">new_origin</span><span class="p">,</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">new_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Slice.is_null"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.is_null">[docs]</a>    <span class="k">def</span> <span class="nf">is_null</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If any part of our shape is zero, this slice doesn&#39;t span any data and is null / empty.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Slice.shift"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Slice&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        make a new ``Slice`` with origin relative to ``other.origin``</span>
+<span class="sd">        and the same shape as this ``Slice``</span>
+
+<span class="sd">        useful for translating to the local coordinate system of ``other``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot shift slices with different dimensionality (</span><span class="si">{}</span><span class="s2"> vs </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">our_coord</span> <span class="o">-</span> <span class="n">their_coord</span>
+                                  <span class="k">for</span> <span class="p">(</span><span class="n">our_coord</span><span class="p">,</span> <span class="n">their_coord</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">)),</span>
+                     <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">arr</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">nav_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">slice</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">arr</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">sig_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">nav_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span> <span class="o">...</span>
+
+<div class="viewcode-block" id="Slice.get"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">arr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">nav_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a standard python tuple-of-slice-object which can be used</span>
+<span class="sd">        to slice any compatible numpy.ndarray</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr</span>
+<span class="sd">            something implementing the slice interface. if given, returns arr[slice]</span>
+<span class="sd">        sig_only : bool</span>
+<span class="sd">            get a signal-only slice for frames/masks</span>
+<span class="sd">        nav_only : bool</span>
+<span class="sd">            get a nav-only slice, for example for indexing something that is shaped like</span>
+<span class="sd">            the navigation dimensions of this Slice.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of slice objects</span>
+<span class="sd">            returns standard python slices computed from</span>
+<span class="sd">            our origin+shape model or arr indexed with this slicing</span>
+<span class="sd">            if arr is given</span>
+
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; from libertem.common import Slice, Shape</span>
+<span class="sd">        &gt;&gt;&gt; s = Slice(shape=Shape((16, 16, 4, 4), sig_dims=2), origin=(0, 0, 12, 12))</span>
+<span class="sd">        &gt;&gt;&gt; data = np.ones((16, 16))</span>
+<span class="sd">        &gt;&gt;&gt; data[s.get(sig_only=True)]</span>
+<span class="sd">        array([[1., 1., 1., 1.],</span>
+<span class="sd">               [1., 1., 1., 1.],</span>
+<span class="sd">               [1., 1., 1., 1.],</span>
+<span class="sd">               [1., 1., 1., 1.]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sig_only</span><span class="p">:</span>
+            <span class="n">o</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">slice_</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">slice</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">nav_only</span><span class="p">:</span>
+            <span class="n">o</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">slice_</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">slice</span><span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">o</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slice_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">arr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sig_only</span><span class="p">:</span>
+                <span class="c1"># Skip the supposed nav dimensions of the data</span>
+                <span class="k">return</span> <span class="n">arr</span><span class="p">[(</span><span class="bp">Ellipsis</span><span class="p">,</span> <span class="p">)</span> <span class="o">+</span> <span class="n">slice_</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># for nav_only, we return the full remaining dimensions anyway</span>
+                <span class="c1"># if arr has more dimensions than the slice</span>
+                <span class="k">return</span> <span class="n">arr</span><span class="p">[</span><span class="n">slice_</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">slice_</span></div>
+
+    <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Direct conversion from Slice to tuple(slice, ...) without options</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="p">(</span><span class="n">o</span> <span class="o">+</span> <span class="n">s</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Slice.discard_nav"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.discard_nav">[docs]</a>    <span class="k">def</span> <span class="nf">discard_nav</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns a copy with the origin/shape zeroed in the nav dimensions</span>
+
+<span class="sd">        this is used to create uniform cache keys</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">o</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">sig_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discard_nav_key</span><span class="p">()</span>
+        <span class="n">new_shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">o</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">new_shape</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_discard_nav_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a hashable tuple of the Slice with a zero-length nav dimensions</span>
+
+<span class="sd">        Functions as discard_nav but avoids Shape and Slice constructor overheads</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">o</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">nav_dims</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">nav_dims</span>
+        <span class="n">zero_nav</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span> <span class="o">*</span> <span class="n">nav_dims</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">zero_nav</span> <span class="o">+</span> <span class="n">o</span><span class="p">[</span><span class="n">nav_dims</span><span class="p">:],</span> <span class="n">zero_nav</span> <span class="o">+</span> <span class="n">s</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">sig_dims</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Slice.subslices"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.subslices">[docs]</a>    <span class="k">def</span> <span class="nf">subslices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">ShapeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="s2">&quot;Slice&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generator for all subslices of this slice with dimensions</span>
+<span class="sd">        specified by ``shape``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        shape : tuple of int or Shape</span>
+<span class="sd">            the shape of each sub-slice</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        Slice</span>
+<span class="sd">            all subslices, in fast-access order</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># example: self.shape=(3, 1, 1, 1), subslice shape=(2, 1, 1, 1)</span>
+        <span class="c1"># math.ceil(3/2) = math.ceil(1.5) = 2 -&gt; we need two subslices across the y dimension</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="n">shape</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot;cannot create subslices with different dimensionality (</span><span class="si">%d</span><span class="s2"> vs </span><span class="si">%d</span><span class="s2">); &quot;</span>
+                 <span class="s2">&quot;self.shape=</span><span class="si">%r</span><span class="s2">, shape=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">shape</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">ni</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">s1</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">_make_slice</span><span class="p">(</span><span class="n">origin</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">new_shape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Slice</span><span class="p">:</span>
+            <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">new_shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+            <span class="c1"># this makes sure that the border tiles have the correct shape set</span>
+            <span class="n">new_shape_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="nb">min</span><span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">so</span> <span class="o">+</span> <span class="n">s</span> <span class="o">-</span> <span class="n">o</span><span class="p">)</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">ns</span><span class="p">,</span> <span class="n">so</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">new_shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="n">new_shape_tuple</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">new_shape_tuple</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>\
+                    <span class="s2">&quot;invalid shape: </span><span class="si">{!r}</span><span class="s2"> while subslicing </span><span class="si">{!r}</span><span class="s2"> with </span><span class="si">{!r}</span><span class="s2"> (origin=</span><span class="si">{!r}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">new_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">origin</span>
+                    <span class="p">)</span>
+            <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span>
+                <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="n">new_shape</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">_make_slice</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span>
+                <span class="n">o</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">s</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+            <span class="p">),</span> <span class="n">new_shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">indexes</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="n">ni</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">nav</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a new Slice, with sig_dims=0, limited to the nav part</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span><span class="p">],</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sig</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a new Slice, limited to the sig part</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span><span class="p">:],</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Slice.flatten_nav"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.flatten_nav">[docs]</a>    <span class="k">def</span> <span class="nf">flatten_nav</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">containing_shape</span><span class="p">:</span> <span class="n">ShapeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+        <span class="n">nav_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dims</span> <span class="o">-</span> <span class="n">sig_dims</span>
+        <span class="n">containing_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">containing_shape</span><span class="p">)[:</span><span class="n">nav_dims</span><span class="p">]</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">[:</span><span class="n">nav_dims</span><span class="p">]</span>
+
+        <span class="c1"># validation for the nav_shape:</span>
+        <span class="c1"># what are the preconditions that allow flattening?</span>
+        <span class="c1">#</span>
+        <span class="c1"># - nav part of the shape: must be in the form of:</span>
+        <span class="c1">#</span>
+        <span class="c1">#   (1,  1,  ...,  N, M, M, ...)</span>
+        <span class="c1">#</span>
+        <span class="c1">#   where N&lt;=M and M is the corresponding part of</span>
+        <span class="c1">#   the shape of the dataset.</span>
+        <span class="c1">#</span>
+        <span class="c1"># - the origin must match the shape in the following way:</span>
+        <span class="c1">#</span>
+        <span class="c1">#   (o1, o2, ..., oi, 0, 0, ...)</span>
+        <span class="c1">#</span>
+        <span class="c1">#   where all oj are arbitraty (but in bounds)</span>
+        <span class="c1">#</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">cs</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">containing_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span> <span class="n">origin</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">state</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">assert</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">cs</span><span class="p">,</span> <span class="s2">&quot;invalid nav_shape #1&quot;</span>
+            <span class="k">elif</span> <span class="n">state</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">s</span> <span class="o">==</span> <span class="n">cs</span><span class="p">,</span> <span class="s2">&quot;invalid nav_shape #2&quot;</span>
+                <span class="k">assert</span> <span class="n">o</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;invalid origin&quot;</span>
+
+        <span class="n">nav_origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span>
+            <span class="n">origin</span><span class="p">,</span>
+            <span class="n">containing_shape</span>
+        <span class="p">)</span>
+        <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="n">nav_origin</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="n">nav_dims</span><span class="p">:],</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">((</span><span class="n">nav_shape</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Slice.adjust_for_roi"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.adjust_for_roi">[docs]</a>    <span class="k">def</span> <span class="nf">adjust_for_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Slice&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a new slice that has origin and shape modified according to `roi`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">s_o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">s_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># We need to find how many 1s there are for all previous partitions, to know</span>
+        <span class="c1"># the origin; then we count how many 1s there are in our partition</span>
+        <span class="c1"># to find our shape.</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">count_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="p">[:</span><span class="n">s_o</span><span class="p">])</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">count_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="p">[</span><span class="n">s_o</span><span class="p">:</span><span class="n">s_o</span> <span class="o">+</span> <span class="n">s_s</span><span class="p">])</span>
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span>
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="n">origin</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:],</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">((</span><span class="n">shape</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Slice.clip_to"><a class="viewcode-back" href="../../../reference/internals.html#libertem.common.slice.Slice.clip_to">[docs]</a>    <span class="k">def</span> <span class="nf">clip_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Shape</span><span class="p">):</span>
+        <span class="n">other_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">((</span><span class="mi">0</span><span class="p">,)</span> <span class="o">*</span> <span class="n">shape</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection_with</span><span class="p">(</span><span class="n">other_slice</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__slots__</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

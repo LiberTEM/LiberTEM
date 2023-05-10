@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.api &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.api</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.api</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Coroutine</span><span class="p">,</span>
+    <span class="n">AsyncGenerator</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">weakref</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.pipelined</span> <span class="kn">import</span> <span class="n">PipelinedExecutor</span>
+
+<span class="kn">from</span> <span class="nn">libertem.io.corrections</span> <span class="kn">import</span> <span class="n">CorrectionSet</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.concurrent</span> <span class="kn">import</span> <span class="n">ConcurrentJobExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.inline</span> <span class="kn">import</span> <span class="n">InlineJobExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset</span> <span class="kn">import</span> <span class="n">load</span><span class="p">,</span> <span class="n">filetypes</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="n">DataSet</span>
+<span class="kn">from</span> <span class="nn">libertem.common.buffers</span> <span class="kn">import</span> <span class="n">BufferWrapper</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.dask</span> <span class="kn">import</span> <span class="n">DaskJobExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.delayed</span> <span class="kn">import</span> <span class="n">DelayedJobExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.integration</span> <span class="kn">import</span> <span class="n">get_dask_integration_executor</span>
+<span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="n">JobExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.common.progress</span> <span class="kn">import</span> <span class="n">ProgressReporter</span>
+<span class="kn">from</span> <span class="nn">libertem.masks</span> <span class="kn">import</span> <span class="n">MaskFactoriesType</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.raw</span> <span class="kn">import</span> <span class="n">PickFrameAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.com</span> <span class="kn">import</span> <span class="n">COMAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.radialfourier</span> <span class="kn">import</span> <span class="n">RadialFourierAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.disk</span> <span class="kn">import</span> <span class="n">DiskMaskAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.ring</span> <span class="kn">import</span> <span class="n">RingMaskAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.sum</span> <span class="kn">import</span> <span class="n">SumAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.point</span> <span class="kn">import</span> <span class="n">PointMaskAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.masks</span> <span class="kn">import</span> <span class="n">MasksAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.base</span> <span class="kn">import</span> <span class="n">AnalysisResultSet</span><span class="p">,</span> <span class="n">Analysis</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.base</span> <span class="kn">import</span> <span class="n">UDFResultDict</span><span class="p">,</span> <span class="n">UDF</span><span class="p">,</span> <span class="n">UDFResults</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.auto</span> <span class="kn">import</span> <span class="n">AutoUDF</span>
+<span class="kn">from</span> <span class="nn">libertem.common.async_utils</span> <span class="kn">import</span> <span class="n">async_generator</span><span class="p">,</span> <span class="n">run_agen_get_last</span><span class="p">,</span> <span class="n">run_gen_get_last</span>
+<span class="kn">from</span> <span class="nn">libertem.common.sparse</span> <span class="kn">import</span> <span class="n">sparse_to_coo</span><span class="p">,</span> <span class="n">to_dense</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">nt</span>
+    <span class="kn">from</span> <span class="nn">sparse</span> <span class="kn">import</span> <span class="n">SparseArray</span>
+    <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">spmatrix</span>
+
+<span class="n">tracer</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">RunUDFResultType</span> <span class="o">=</span> <span class="n">UDFResultDict</span>
+<span class="n">RunUDFSyncL</span> <span class="o">=</span> <span class="n">List</span><span class="p">[</span><span class="n">UDFResultDict</span><span class="p">]</span>
+<span class="n">RunUDFAsync</span> <span class="o">=</span> <span class="n">Coroutine</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">UDFResultDict</span><span class="p">]</span>
+<span class="n">RunUDFAsyncL</span> <span class="o">=</span> <span class="n">Coroutine</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">UDFResultDict</span><span class="p">]]</span>
+<span class="n">RunUDFGenType</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">[</span><span class="n">UDFResults</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="n">RunUDFGenTypeL</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">[</span><span class="n">UDFResults</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="n">RunUDFAGenType</span> <span class="o">=</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">UDFResults</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="n">RunUDFAGenTypeL</span> <span class="o">=</span> <span class="n">AsyncGenerator</span><span class="p">[</span><span class="n">UDFResults</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="n">ExecutorSpecType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span>
+    <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;synchronous&#39;</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;inline&#39;</span><span class="p">],</span>
+    <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;threads&#39;</span><span class="p">],</span>
+    <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;dask-integration&#39;</span><span class="p">],</span>
+    <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;dask-make-default&#39;</span><span class="p">],</span>
+    <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;delayed&#39;</span><span class="p">],</span>
+    <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;pipelined&#39;</span><span class="p">],</span>
+<span class="p">]</span>
+<span class="n">IterableRoiT</span> <span class="o">=</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span>
+<span class="n">RoiT</span> <span class="o">=</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="s1">&#39;SparseArray&#39;</span><span class="p">,</span> <span class="s1">&#39;spmatrix&#39;</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">IterableRoiT</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="Context"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context">[docs]</a><span class="k">class</span> <span class="nc">Context</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Context is the main entry point of the LiberTEM API. It contains</span>
+<span class="sd">    methods for loading datasets, creating analyses on them and running</span>
+<span class="sd">    them. In the background, instantiating a Context creates a suitable</span>
+<span class="sd">    executor and spins up a local Dask cluster unless the executor is</span>
+<span class="sd">    passed to the constructor.</span>
+
+<span class="sd">    .. versionchanged:: 0.7.0</span>
+<span class="sd">        Removed deprecated methods :code:`create_mask_job`, :code:`create_pick_job`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    executor : ~libertem.common.executor.JobExecutor or None</span>
+<span class="sd">        If None, create a local dask.distributed cluster and client using</span>
+<span class="sd">        :meth:`~libertem.executor.dask.DaskJobExecutor.make_local` with optimal configuration</span>
+<span class="sd">        for LiberTEM. It uses all cores and compatible GPUs</span>
+<span class="sd">        on the local system, but is not set as default Dask scheduler to not interfere</span>
+<span class="sd">        with other uses of Dask.</span>
+
+<span class="sd">    plot_class : libertem.viz.base.Live2DPlot</span>
+<span class="sd">        Default plot class for live plotting.</span>
+<span class="sd">        Defaults to :class:`libertem.viz.mpl.MPLLive2DPlot`.</span>
+
+<span class="sd">        .. versionadded:: 0.7.0</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    plot_class : libertem.viz.base.Live2DPlot</span>
+<span class="sd">        Default plot class for live plotting.</span>
+<span class="sd">        Defaults to :class:`libertem.viz.mpl.MPLLive2DPlot`.</span>
+
+<span class="sd">        .. versionadded:: 0.7.0</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; ctx = libertem.api.Context()  # doctest: +SKIP</span>
+
+<span class="sd">    &gt;&gt;&gt; # Create a Context using an inline executor for debugging</span>
+<span class="sd">    &gt;&gt;&gt; # See also Context.make_with() for a more convenient interface!</span>
+<span class="sd">    &gt;&gt;&gt; from libertem.executor.inline import InlineJobExecutor</span>
+<span class="sd">    &gt;&gt;&gt; debug_ctx = libertem.api.Context(executor=InlineJobExecutor())</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">JobExecutor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">plot_class</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">executor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_local_executor</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span> <span class="o">=</span> <span class="n">executor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_class</span> <span class="o">=</span> <span class="n">plot_class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register_at_exit</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Context.make_with"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.make_with">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_with</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">executor_spec</span><span class="p">:</span> <span class="n">ExecutorSpecType</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Context&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create a Context with a specific kind of executor.</span>
+
+<span class="sd">        .. versionadded:: 0.9.0</span>
+
+<span class="sd">        This simplifies creating a :class:`Context` for a number of common executor</span>
+<span class="sd">        choices. See :ref:`executors` for general information on executors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        executor_spec:</span>
+<span class="sd">            A string identifier for executor variants:</span>
+
+<span class="sd">            &quot;synchronous&quot;, &quot;inline&quot;:</span>
+<span class="sd">                Use a single-process, single-threaded</span>
+<span class="sd">                :class:`~libertem.executor.inline.InlineJobExecutor`</span>
+<span class="sd">            &quot;threads&quot;:</span>
+<span class="sd">                Use a multi-threaded :class:`~libertem.executor.concurrent.ConcurrentJobExecutor`</span>
+<span class="sd">            &quot;dask-integration&quot;:</span>
+<span class="sd">                Use a JobExecutor that is compatible with the currently active Dask scheduler.</span>
+<span class="sd">                See :func:`~libertem.executor.integration.get_dask_integration_executor` for</span>
+<span class="sd">                more information.</span>
+<span class="sd">            &quot;dask-make-default&quot;:</span>
+<span class="sd">                Create a local :code:`dask.distributed` cluster and client</span>
+<span class="sd">                using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`, similar to</span>
+<span class="sd">                the default behaviour of :code:`Context()` called with no arguments.</span>
+<span class="sd">                However, the Client will be set as the default Dask scheduler and will</span>
+<span class="sd">                persist after the LiberTEM Context closes, which is suitable for downstream</span>
+<span class="sd">                computation using :code:`dask.distributed`.</span>
+<span class="sd">            &quot;delayed&quot;:</span>
+<span class="sd">                Create a :class:`~libertem.executor.delayed.DelayedJobExecutor` which performs</span>
+<span class="sd">                computation using `dask.delayed &lt;https://docs.dask.org/en/stable/delayed.html&gt;`_.</span>
+<span class="sd">                This functionality is highly experimental at this time, see</span>
+<span class="sd">                :ref:`delayed_udfs` for more information.</span>
+<span class="sd">            &quot;pipelined&quot;:</span>
+<span class="sd">                Create a :class:`~libertem.executor.pipelined.PipelinedExecutor`,</span>
+<span class="sd">                which is suitable for multi-process streaming live processing</span>
+<span class="sd">                using `LiberTEM-live &lt;https://libertem.github.io/LiberTEM-live/&gt;`_.</span>
+<span class="sd">        *args, **kwargs</span>
+<span class="sd">            Passed to :class:`Context`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Instance of :class:`Context` using a new instance of the specified executor.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">executor</span><span class="p">:</span> <span class="n">JobExecutor</span>
+        <span class="k">if</span> <span class="n">executor_spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;synchronous&#39;</span><span class="p">,</span> <span class="s1">&#39;inline&#39;</span><span class="p">):</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="n">InlineJobExecutor</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">executor_spec</span> <span class="o">==</span> <span class="s1">&#39;threads&#39;</span><span class="p">:</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="n">ConcurrentJobExecutor</span><span class="o">.</span><span class="n">make_local</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">executor_spec</span> <span class="o">==</span> <span class="s1">&#39;dask-integration&#39;</span><span class="p">:</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="n">get_dask_integration_executor</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">executor_spec</span> <span class="o">==</span> <span class="s1">&#39;dask-make-default&#39;</span><span class="p">:</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="n">DaskJobExecutor</span><span class="o">.</span><span class="n">make_local</span><span class="p">(</span><span class="n">client_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;set_as_default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="k">elif</span> <span class="n">executor_spec</span> <span class="o">==</span> <span class="s1">&#39;delayed&#39;</span><span class="p">:</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="n">DelayedJobExecutor</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">executor_spec</span> <span class="o">==</span> <span class="s1">&#39;pipelined&#39;</span><span class="p">:</span>
+            <span class="n">executor</span> <span class="o">=</span> <span class="n">PipelinedExecutor</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Argument `executor_spec` is </span><span class="si">{</span><span class="n">executor_spec</span><span class="si">}</span><span class="s1">. Allowed are &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;synchronous&quot;, &quot;inline&quot;, &quot;threads&quot;, &quot;dask-integration&quot;, &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;dask-make-default&quot; or &quot;pipelined&quot;.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">executor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">plot_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">libertem.viz.mpl</span> <span class="kn">import</span> <span class="n">MPLLive2DPlot</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot_class</span> <span class="o">=</span> <span class="n">MPLLive2DPlot</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plot_class</span>
+
+    <span class="nd">@plot_class</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">plot_class</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plot_class</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="Context.load"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filetype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataSet</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load a :class:`~libertem.io.dataset.base.DataSet`. As it doesn&#39;t load</span>
+<span class="sd">        the whole data into RAM at once, you can load and process datasets</span>
+<span class="sd">        that are bigger than your available RAM. Using fast storage (i.e.</span>
+<span class="sd">        SSD) is advisable.</span>
+
+<span class="sd">        .. versionchanged:: 0.5.0</span>
+<span class="sd">            Added support for filetype=&quot;auto&quot;</span>
+
+<span class="sd">        .. versionchanged:: 0.6.0</span>
+<span class="sd">            Added support for specifying the I/O backend</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filetype : str</span>
+<span class="sd">            one of: %(types)s; or use &quot;auto&quot; to automatically determine filetype and parameters</span>
+<span class="sd">        io_backend : IOBackend or None</span>
+<span class="sd">            Use a different I/O backend for this data set</span>
+<span class="sd">        args</span>
+<span class="sd">            passed on to the DataSet implementation</span>
+<span class="sd">        kwargs</span>
+<span class="sd">            passed on to the DataSet implementation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DataSet : libertem.io.dataset.base.DataSet</span>
+<span class="sd">            The loaded dataset</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+
+<span class="sd">        Additional parameters are passed to the concrete</span>
+<span class="sd">        :class:`~libertem.io.dataset.base.DataSet` implementation.</span>
+
+<span class="sd">        Note</span>
+<span class="sd">        ----</span>
+<span class="sd">        See :ref:`dataset api` for format-specific documentation.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        Load a data set from a given path, automatically determinig the type:</span>
+
+<span class="sd">        &gt;&gt;&gt; ds = ctx.load(&quot;auto&quot;, path=&quot;...&quot;)  # doctest: +SKIP</span>
+
+<span class="sd">        To configure an alternative I/O backend, in this case configuring</span>
+<span class="sd">        the mmap backend to enable readahead hints:</span>
+
+<span class="sd">        &gt;&gt;&gt; from libertem.io.dataset.base import MMapBackend</span>
+<span class="sd">        &gt;&gt;&gt; io_backend = MMapBackend(enable_readahead_hints=True)</span>
+<span class="sd">        &gt;&gt;&gt; ds = ctx.load(&quot;auto&quot;, path=&quot;...&quot;, io_backend=io_backend)  # doctest: +SKIP</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># delegate to libertem.io.dataset.load:</span>
+        <span class="k">return</span> <span class="n">load</span><span class="p">(</span>
+            <span class="n">filetype</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">,</span>
+            <span class="n">executor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="p">,</span>
+            <span class="n">enable_async</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="c1"># If people run with -OO, which strips docstrings, we must not</span>
+    <span class="c1"># try to treat load.__doc__ as `str`:</span>
+    <span class="k">if</span> <span class="n">load</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">load</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">%</span> <span class="p">{</span><span class="s2">&quot;types&quot;</span><span class="p">:</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filetypes</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
+
+<div class="viewcode-block" id="Context.create_mask_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_mask_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_mask_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">factories</span><span class="p">:</span> <span class="n">MaskFactoriesType</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+            <span class="n">use_sparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mask_dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MasksAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a mask application analysis. Each factory function should, when</span>
+<span class="sd">        called, return a numpy array with the same shape as frames in the</span>
+<span class="sd">        dataset (so :code:`dataset.shape.sig`).</span>
+
+<span class="sd">        This is a more high-level interface than</span>
+<span class="sd">        :class:`~libertem.udf.masks.ApplyMasksUDF` and differs in the way the</span>
+<span class="sd">        result is returned. With :class:`~libertem.udf.masks.ApplyMasksUDF`, it</span>
+<span class="sd">        is a single numpy array, here we split it up for each mask we apply,</span>
+<span class="sd">        make some default visualization available etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]</span>
+<span class="sd">            Function or list of functions that take no arguments</span>
+<span class="sd">            and create masks. The returned masks can be numpy arrays,</span>
+<span class="sd">            scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask</span>
+<span class="sd">            factories should not reference large objects because they can create</span>
+<span class="sd">            significant overheads when they are pickled and unpickled. If a</span>
+<span class="sd">            single function is specified, the first dimension is interpreted as</span>
+<span class="sd">            the mask index.</span>
+<span class="sd">        dataset : libertem.io.dataset.base.DataSet</span>
+<span class="sd">            dataset to work on</span>
+<span class="sd">        use_sparse : bool or None</span>
+<span class="sd">            * None (default): Use sparse matrix multiplication if all factory functions return a \</span>
+<span class="sd">            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \</span>
+<span class="sd">            multiplication</span>
+<span class="sd">            * True: Convert all masks to sparse matrices.</span>
+<span class="sd">            * False: Convert all masks to dense matrices.</span>
+<span class="sd">        mask_count : int, optional</span>
+<span class="sd">            Specify the number of masks if a single factory function is</span>
+<span class="sd">            used so that the number of masks can be determined without calling</span>
+<span class="sd">            the factory function.</span>
+<span class="sd">        mask_dtype : numpy.dtype, optional</span>
+<span class="sd">            Specify the dtype of the masks so that mask dtype can be determined without</span>
+<span class="sd">            calling the mask factory functions. This can be used to override the</span>
+<span class="sd">            mask dtype in the result dtype determination. As an example, setting</span>
+<span class="sd">            this to :code:`np.float32` means that returning masks of type float64 will not switch</span>
+<span class="sd">            the calculation and result dtype to float64 or complex128.</span>
+<span class="sd">        dtype : numpy.dtype, optional</span>
+<span class="sd">            Specify the dtype to do the calculation in.</span>
+<span class="sd">            Integer dtypes are possible if the numpy casting rules allow this</span>
+<span class="sd">            for source and mask data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MasksAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.masks.MasksResultSet`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; # Use intermediate variables instead of referencing</span>
+<span class="sd">        &gt;&gt;&gt; # large complex objects like a dataset within the</span>
+<span class="sd">        &gt;&gt;&gt; # factory function</span>
+<span class="sd">        &gt;&gt;&gt; shape = dataset.shape.sig</span>
+<span class="sd">        &gt;&gt;&gt; analysis = ctx.create_mask_analysis(</span>
+<span class="sd">        ...     factories=[lambda: np.ones(shape)],</span>
+<span class="sd">        ...     dataset=dataset</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; result = ctx.run(analysis)</span>
+<span class="sd">        &gt;&gt;&gt; result.mask_0.raw_data.shape</span>
+<span class="sd">        (16, 16)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">MasksAnalysis</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="n">parameters</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;factories&quot;</span><span class="p">:</span> <span class="n">factories</span><span class="p">,</span>
+                <span class="s2">&quot;use_sparse&quot;</span><span class="p">:</span> <span class="n">use_sparse</span><span class="p">,</span>
+                <span class="s2">&quot;mask_count&quot;</span><span class="p">:</span> <span class="n">mask_count</span><span class="p">,</span>
+                <span class="s2">&quot;mask_dtype&quot;</span><span class="p">:</span> <span class="n">mask_dtype</span><span class="p">,</span>
+                <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">dtype</span><span class="p">},</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.create_com_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_com_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_com_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">mask_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">flip_y</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                            <span class="n">mask_radius_inner</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">scan_rotation</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">COMAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a center-of-mass (first moment) analysis, possibly masked.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            the dataset to work on</span>
+<span class="sd">        cx</span>
+<span class="sd">            reference center x value</span>
+<span class="sd">        cy</span>
+<span class="sd">            reference center y value</span>
+<span class="sd">        mask_radius</span>
+<span class="sd">            mask out intensity outside of `mask_radius` from `(cy, cx)`</span>
+<span class="sd">        mask_radius_inner</span>
+<span class="sd">            mask out intensity except for the ring between `mask_radius_inner` and</span>
+<span class="sd">            `mask_radius`, centered around `(cy, cx)`</span>
+
+<span class="sd">            .. versionadded:: 0.8.0</span>
+<span class="sd">        flip_y : bool</span>
+<span class="sd">            Flip the Y coordinate. Some detectors, namely Quantum Detectors Merlin,</span>
+<span class="sd">            may have pixel (0, 0) at the lower left corner. This has to be corrected</span>
+<span class="sd">            to get the sign of the y shift as well as curl and divergence right.</span>
+
+<span class="sd">            .. versionadded:: 0.6.0</span>
+
+<span class="sd">        scan_rotation : float</span>
+<span class="sd">            Scan rotation in degrees.</span>
+<span class="sd">            The optics of an electron microscope can rotate the image. Furthermore, scan</span>
+<span class="sd">            generators may allow scanning in arbitrary directions. This means that the x and y</span>
+<span class="sd">            coordinates of the detector image are usually not parallel to the x and y scan</span>
+<span class="sd">            coordinates. For interpretation of center of mass shifts, however, the shift vector</span>
+<span class="sd">            in detector coordinates has to be put in relation to the position on the sample.</span>
+<span class="sd">            The :code:`scan_rotation` parameter can be used to rotate the detector coordinates</span>
+<span class="sd">            to match the scan coordinate system. A positive value rotates the displacement</span>
+<span class="sd">            vector clock-wise. That means if the detector seems rotated to the right relative</span>
+<span class="sd">            to the scan, this value should be negative to counteract this rotation.</span>
+
+<span class="sd">            .. versionadded:: 0.6.0</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        COMAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.com.COMResultSet`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible dataset: need two navigation dimensions&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible dataset: need two signal dimensions&quot;</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="s1">&#39;flip_y&#39;</span><span class="p">,</span> <span class="s1">&#39;scan_rotation&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">mask_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_radius</span>
+        <span class="k">if</span> <span class="n">mask_radius_inner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mask_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;incompatible parameters: must pass both `mask_radius` and &quot;</span>
+                    <span class="s2">&quot;`mask_radius_inner` for annular CoM&quot;</span>
+                <span class="p">)</span>
+            <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;ri&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_radius_inner</span>
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">COMAnalysis</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">analysis</span></div>
+
+<div class="viewcode-block" id="Context.create_radial_fourier_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_radial_fourier_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_radial_fourier_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cy</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ri</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ro</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">use_sparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RadialFourierAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Analysis that calculates the Fourier transform of rings around the center.</span>
+
+<span class="sd">        See :ref:`radialfourier app` for details on the method!</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            the dataset to work on</span>
+<span class="sd">        cx</span>
+<span class="sd">            center x value</span>
+<span class="sd">        cy</span>
+<span class="sd">            center y value</span>
+<span class="sd">        ri</span>
+<span class="sd">            inner radius</span>
+<span class="sd">        ro</span>
+<span class="sd">            outer radius</span>
+<span class="sd">        n_bins</span>
+<span class="sd">            number of bins</span>
+<span class="sd">        max_order</span>
+<span class="sd">            maximum order of calculated Fourier component</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        RadialFourierAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.radialfourier.RadialFourierResultSet`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible dataset: need two signal dimensions&quot;</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="s1">&#39;ri&#39;</span><span class="p">,</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="s1">&#39;n_bins&#39;</span><span class="p">,</span> <span class="s1">&#39;max_order&#39;</span><span class="p">,</span> <span class="s1">&#39;use_sparse&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">RadialFourierAnalysis</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">analysis</span></div>
+
+<div class="viewcode-block" id="Context.create_disk_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_disk_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_disk_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">r</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DiskMaskAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Analysis that integrates over a disk (i.e. filled circle).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            the dataset to work on</span>
+<span class="sd">        cx</span>
+<span class="sd">            center x value</span>
+<span class="sd">        cy</span>
+<span class="sd">            center y value</span>
+<span class="sd">        r</span>
+<span class="sd">            radius of the disk</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DiskMaskAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.masks.SingleMaskResultSet`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible dataset: need two signal dimensions&quot;</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">DiskMaskAnalysis</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.create_ring_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_ring_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_ring_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">cx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cy</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">ri</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ro</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RingMaskAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Analysis that integrates over a ring.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            the dataset to work on</span>
+<span class="sd">        cx</span>
+<span class="sd">            center x value</span>
+<span class="sd">        cy</span>
+<span class="sd">            center y value</span>
+<span class="sd">        ri</span>
+<span class="sd">            inner radius</span>
+<span class="sd">        ro</span>
+<span class="sd">            outer radius</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        RingMaskAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.masks.SingleMaskResultSet`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible dataset: need two signal dimensions&quot;</span><span class="p">)</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="s1">&#39;ri&#39;</span><span class="p">,</span> <span class="s1">&#39;ro&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">RingMaskAnalysis</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.create_point_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_point_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_point_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                              <span class="n">y</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PointMaskAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Analysis that selects the pixel with coords (y, x) from each frame</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        PointMaskAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.masks.SingleMaskResultSet`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="o">.</span><span class="n">dims</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;incompatible dataset: need at most two navigation dimensions&quot;</span><span class="p">)</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;cx&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+            <span class="s1">&#39;cy&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">PointMaskAnalysis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.create_sum_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_sum_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_sum_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SumAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Analysis that sums all signal elements along the navigation</span>
+<span class="sd">        dimension, preserving the signal dimension.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            the dataset to work on</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SumAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.sum.SumResultSet`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SumAnalysis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{})</span></div>
+
+<div class="viewcode-block" id="Context.create_pick_analysis"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.create_pick_analysis">[docs]</a>    <span class="k">def</span> <span class="nf">create_pick_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                             <span class="n">z</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PickFrameAnalysis</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create an Analysis that picks a single frame / signal element from (z, y, x).</span>
+<span class="sd">        The number of parameters must match number of navigation dimensions in the dataset,</span>
+<span class="sd">        for example if you have a 4D dataset with two signal dimensions and two navigation</span>
+<span class="sd">        dimensions, you need to specify x and y.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            The dataset to work on</span>
+<span class="sd">        x</span>
+<span class="sd">            x coordinate</span>
+<span class="sd">        y</span>
+<span class="sd">            y coordinate</span>
+<span class="sd">        z</span>
+<span class="sd">            z coordinate</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        PickFrameAnalysis : libertem.analysis.base.Analysis</span>
+<span class="sd">            When run by the Context, this Analysis generates a</span>
+<span class="sd">            :class:`libertem.analysis.raw.PickResultSet`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; dataset = ctx.load(</span>
+<span class="sd">        ...     filetype=&quot;memory&quot;,</span>
+<span class="sd">        ...     data=np.zeros([16, 16, 16, 16, 16], dtype=np.float32),</span>
+<span class="sd">        ...     sig_dims=2</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; analysis = ctx.create_pick_analysis(dataset=dataset, x=9, y=8, z=7)</span>
+<span class="sd">        &gt;&gt;&gt; result = ctx.run(analysis)</span>
+<span class="sd">        &gt;&gt;&gt; assert result.intensity.raw_data.shape == tuple(dataset.shape.sig)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">loc</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">PickFrameAnalysis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="n">parameters</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.run"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">job</span><span class="p">:</span> <span class="n">Analysis</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">AnalysisResultSet</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the given :class:`~libertem.analysis.base.Analysis`</span>
+<span class="sd">        and return the result data.</span>
+
+<span class="sd">        .. versionchanged:: 0.5.0</span>
+<span class="sd">            Added the :code:`progress` parameter</span>
+
+<span class="sd">        .. versionchanged:: 0.6.0</span>
+<span class="sd">            Added the :code:`corrections` parameter</span>
+
+<span class="sd">        .. versionchanged:: 0.7.0</span>
+<span class="sd">            Removed deprecated Job support, now only UDF-based analyses are supported</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        job</span>
+<span class="sd">            the analysis to run</span>
+<span class="sd">        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional</span>
+<span class="sd">            Boolean mask of the navigation dimension. See :ref:`udf roi`.</span>
+<span class="sd">        progress : bool | ProgressReporter</span>
+<span class="sd">            Show progress bar. Toggle with boolean flag or supply instance of</span>
+<span class="sd">            :class:`libertem.common.progress.ProgressReporter` for custom</span>
+<span class="sd">            handling of progress display.</span>
+<span class="sd">        corrections</span>
+<span class="sd">            Corrections to apply, i.e. dark frame substraction, applying a gain map, ...</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : libertem.analysis.base.AnalysisResultSet</span>
+<span class="sd">            Running an Analysis returns a :class:`libertem.analysis.base.AnalysisResultSet`.</span>
+<span class="sd">            See the matching :code:`create_*_analysis` function for documentation</span>
+<span class="sd">            of the specific :code:`AnalysisResultSet` subclass or :class:`numpy.ndarray` that</span>
+<span class="sd">            is being returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">job</span>  <span class="c1"># keep the old kwarg name for backward-compat.</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">analysis</span><span class="o">.</span><span class="n">get_roi</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">sparse_to_coo</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">analysis</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+        <span class="n">udf_results</span><span class="p">:</span> <span class="n">UDFResultDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span>  <span class="c1"># type:ignore[assignment]</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">analysis</span><span class="o">.</span><span class="n">get_udf</span><span class="p">(),</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Here we plot only after the computation is completed, meaning the damage should be</span>
+        <span class="c1"># the ROI or the entire nav dimension.</span>
+        <span class="c1"># TODO live plotting following libertem.web.jobs.JobDetailHandler.run_udf</span>
+        <span class="c1"># Current Analysis interface possibly made obsolete by #1013, so deferred</span>
+        <span class="n">damage</span><span class="p">:</span> <span class="s2">&quot;nt.ArrayLike&quot;</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">damage</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">damage</span> <span class="o">=</span> <span class="n">to_dense</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">analysis</span><span class="o">.</span><span class="n">get_udf_results</span><span class="p">(</span><span class="n">udf_results</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.run_udf"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.run_udf">[docs]</a>    <span class="k">def</span> <span class="nf">run_udf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDF</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">]],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">backends</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">plots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sync</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RunUDFResultType</span><span class="p">,</span> <span class="n">RunUDFSyncL</span><span class="p">,</span> <span class="n">RunUDFAsync</span><span class="p">,</span> <span class="n">RunUDFAsyncL</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.</span>
+
+<span class="sd">        .. versionchanged:: 0.5.0</span>
+<span class="sd">            Added the :code:`progress` parameter</span>
+
+<span class="sd">        .. versionchanged:: 0.6.0</span>
+<span class="sd">            Added the :code:`corrections` and :code:`backends` parameter</span>
+
+<span class="sd">        .. versionchanged:: 0.7.0</span>
+<span class="sd">            Added the :code:`plots` and :code:`sync` parameters,</span>
+<span class="sd">            and the ability to run multiple UDFs on the same data in a single pass.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            The dataset to work on</span>
+
+<span class="sd">        udf</span>
+<span class="sd">            UDF instance you want to run, or a list of UDF instances</span>
+
+<span class="sd">        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional</span>
+<span class="sd">            Region of interest as bool mask over the navigation axes of the dataset.</span>
+<span class="sd">            See :ref:`udf roi`.</span>
+
+<span class="sd">        progress : bool | ProgressReporter</span>
+<span class="sd">            Show progress bar. Toggle with boolean flag or supply instance of</span>
+<span class="sd">            :class:`libertem.common.progress.ProgressReporter` for custom</span>
+<span class="sd">            handling of progress display.</span>
+
+<span class="sd">        corrections</span>
+<span class="sd">            Corrections to apply while running the UDF. If none are given,</span>
+<span class="sd">            the corrections that are part of the :code:`DataSet` are used,</span>
+<span class="sd">            if there are any. See also :ref:`corrections`.</span>
+
+<span class="sd">        backends : None or iterable containing &#39;numpy&#39;, &#39;cupy&#39; and/or &#39;cuda&#39;</span>
+<span class="sd">            Restrict the back-end to a subset of the capabilities of the UDF.</span>
+<span class="sd">            This can be useful for testing hybrid UDFs.</span>
+
+<span class="sd">        plots : None or True or List[List[Union[str, Tuple[str, Callable]]]] or List[LivePlot]</span>
+<span class="sd">            - :code:`None`: don&#39;t plot anything (default)</span>
+<span class="sd">            - :code:`True`: plot all 2D UDF result buffers</span>
+<span class="sd">            - :code:`List[List[...]]`: plot the named UDF buffers. Pass a list of names or</span>
+<span class="sd">              (name, callable) tuples for each UDF you want to plot. If the callable is specified,</span>
+<span class="sd">              it is applied to the UDF buffer before plotting.</span>
+<span class="sd">            - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each</span>
+<span class="sd">              channel you want to plot</span>
+
+<span class="sd">            .. versionadded:: 0.7.0</span>
+
+<span class="sd">        sync : bool</span>
+<span class="sd">            By default, `run_udf` is a synchronous method. If `sync` is set to `False`,</span>
+<span class="sd">            it is awaitable instead.</span>
+
+<span class="sd">            .. versionadded:: 0.7.0</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict or Tuple[dict]</span>
+<span class="sd">            Return value of the UDF containing the result buffers of</span>
+<span class="sd">            type :class:`libertem.common.buffers.BufferWrapper`. Note that a</span>
+<span class="sd">            :class:`~libertem.common.buffers.BufferWrapper` can be used like</span>
+<span class="sd">            a :class:`numpy.ndarray` in many cases because it implements</span>
+<span class="sd">            :meth:`__array__`. You can access the underlying numpy array using the</span>
+<span class="sd">            :attr:`~libertem.common.buffers.BufferWrapper.data` property.</span>
+
+<span class="sd">            If a list of UDFs was passed in, the returned type is</span>
+<span class="sd">            a Tuple[dict[str,BufferWrapper]].</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Run the :class:`~libertem.udf.sum.SumUDF` on a data set:</span>
+
+<span class="sd">        &gt;&gt;&gt; from libertem.udf.sum import SumUDF</span>
+<span class="sd">        &gt;&gt;&gt; result = ctx.run_udf(dataset=dataset, udf=SumUDF())</span>
+<span class="sd">        &gt;&gt;&gt; np.array(result[&quot;intensity&quot;]).shape</span>
+<span class="sd">        (32, 32)</span>
+<span class="sd">        &gt;&gt;&gt; # intensity is the name of the result buffer, defined in the SumUDF</span>
+
+<span class="sd">        Running a UDF on a subset of data:</span>
+
+<span class="sd">        &gt;&gt;&gt; from libertem.udf.sumsigudf import SumSigUDF</span>
+<span class="sd">        &gt;&gt;&gt; roi = np.zeros(dataset.shape.nav, dtype=bool)</span>
+<span class="sd">        &gt;&gt;&gt; roi[0, 0] = True</span>
+<span class="sd">        &gt;&gt;&gt; result = ctx.run_udf(dataset=dataset, udf=SumSigUDF(), roi=roi)</span>
+<span class="sd">        &gt;&gt;&gt; # to get the full navigation-shaped results, with NaNs where the `roi` was False:</span>
+<span class="sd">        &gt;&gt;&gt; np.array(result[&quot;intensity&quot;]).shape</span>
+<span class="sd">        (16, 16)</span>
+<span class="sd">        &gt;&gt;&gt; # to only get the selected results as a flat array:</span>
+<span class="sd">        &gt;&gt;&gt; result[&quot;intensity&quot;].raw_data.shape</span>
+<span class="sd">        (1,)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: add a more narrow type signature - instead of a Union[...], we should</span>
+        <span class="c1"># have overloads depending on both the type of `udf` and the `Literal[...]` value</span>
+        <span class="c1"># of `iterate`. This was not yet added because of</span>
+        <span class="c1"># https://github.com/python/mypy/issues/6580</span>
+        <span class="c1"># In short, we can&#39;t have an overload `run_udf(..., plots=None, sync: Literal[True])`</span>
+        <span class="c1"># because either we have a non-default argument after a default argument, or we have</span>
+        <span class="c1"># `Literal[True] = ...` which overlaps with `Literal[False] = ...``</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;Context.run_udf&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">sync</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sync</span><span class="p">(</span>
+                    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                    <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+                    <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+                    <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                    <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+                    <span class="n">plots</span><span class="o">=</span><span class="n">plots</span><span class="p">,</span>
+                    <span class="n">iterate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_async</span><span class="p">(</span>
+                    <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                    <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+                    <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+                    <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                    <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+                    <span class="n">plots</span><span class="o">=</span><span class="n">plots</span><span class="p">,</span>
+                    <span class="n">iterate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.run_udf_iter"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.run_udf_iter">[docs]</a>    <span class="k">def</span> <span class="nf">run_udf_iter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDF</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">]],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">CorrectionSet</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">backends</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">plots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sync</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RunUDFGenType</span><span class="p">,</span> <span class="n">RunUDFAGenType</span><span class="p">,</span> <span class="n">RunUDFGenTypeL</span><span class="p">,</span> <span class="n">RunUDFAGenTypeL</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.</span>
+<span class="sd">        Yields partial results after each merge operation.</span>
+
+<span class="sd">        .. versionadded:: 0.7.0</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset</span>
+<span class="sd">            The dataset to work on</span>
+
+<span class="sd">        udf</span>
+<span class="sd">            UDF instance you want to run, or a list of UDF instances</span>
+
+<span class="sd">        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional</span>
+<span class="sd">            Region of interest as bool mask over the navigation axes of the dataset.</span>
+<span class="sd">            See :ref:`udf roi`.</span>
+
+<span class="sd">        progress : bool | ProgressReporter</span>
+<span class="sd">            Show progress bar. Toggle with boolean flag or supply instance of</span>
+<span class="sd">            :class:`libertem.common.progress.ProgressReporter` for custom</span>
+<span class="sd">            handling of progress display.</span>
+
+<span class="sd">        corrections</span>
+<span class="sd">            Corrections to apply while running the UDF. If none are given,</span>
+<span class="sd">            the corrections that are part of the :code:`DataSet` are used,</span>
+<span class="sd">            if there are any. See also :ref:`corrections`.</span>
+
+<span class="sd">        backends : None or iterable containing &#39;numpy&#39;, &#39;cupy&#39; and/or &#39;cuda&#39;</span>
+<span class="sd">            Restrict the back-end to a subset of the capabilities of the UDF.</span>
+<span class="sd">            This can be useful for testing hybrid UDFs.</span>
+
+<span class="sd">        plots : None or True or List[List[Union[str, Tuple[str, Callable]]]] or List[LivePlot]</span>
+<span class="sd">            - :code:`None`: don&#39;t plot anything (default)</span>
+<span class="sd">            - :code:`True`: plot all 2D UDF result buffers</span>
+<span class="sd">            - :code:`List[List[...]]`: plot the named UDF buffers. Pass a list of names or</span>
+<span class="sd">              (name, callable) tuples for each UDF you want to plot. If the callable is specified,</span>
+<span class="sd">              it is applied to the UDF buffer before plotting.</span>
+<span class="sd">            - :code:`List[LivePlot]`: :class:`~libertem.viz.base.LivePlot` instance for each</span>
+<span class="sd">              channel you want to plot</span>
+
+<span class="sd">        sync : bool</span>
+<span class="sd">            By default, `run_udf_iter` is a synchronous method. If `sync` is set to `False`,</span>
+<span class="sd">            an async generator will be returned instead.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Generator[UDFResults]</span>
+<span class="sd">            Generator of :class:`~libertem.udf.base.UDFResults` container objects.</span>
+<span class="sd">            Their attribute :code:`buffers` is the list of result buffer dictionaries for the UDFs.</span>
+<span class="sd">            Attribute :code:`damage` is a :class:`~libertem.common.buffers.BufferWrapper`</span>
+<span class="sd">            of :code:`kind=&#39;nav&#39;`, :code:`dtype=bool` indicating the positions</span>
+<span class="sd">            in nav space that have been processed already.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Run the :class:`~libertem.udf.sum.SumUDF` on a data set:</span>
+
+<span class="sd">        &gt;&gt;&gt; from libertem.udf.sum import SumUDF</span>
+<span class="sd">        &gt;&gt;&gt; for result in ctx.run_udf_iter(dataset=dataset, udf=SumUDF()):</span>
+<span class="sd">        ...     assert np.array(result.buffers[0][&quot;intensity&quot;]).shape == (32, 32)</span>
+<span class="sd">        &gt;&gt;&gt; np.array(result.buffers[0][&quot;intensity&quot;]).shape</span>
+<span class="sd">        (32, 32)</span>
+<span class="sd">        &gt;&gt;&gt; # intensity is the name of the result buffer, defined in the SumUDF</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sync</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sync</span><span class="p">(</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+                <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+                <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+                <span class="n">plots</span><span class="o">=</span><span class="n">plots</span><span class="p">,</span>
+                <span class="n">iterate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_async</span><span class="p">(</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+                <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+                <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+                <span class="n">plots</span><span class="o">=</span><span class="n">plots</span><span class="p">,</span>
+                <span class="n">iterate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">UDF</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UDFResultDict</span><span class="p">:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">UDF</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFGenType</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFSyncL</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFGenTypeL</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RunUDFGenType</span><span class="p">,</span> <span class="n">RunUDFGenTypeL</span><span class="p">]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDFResultDict</span><span class="p">,</span> <span class="n">RunUDFSyncL</span><span class="p">]:</span>
+        <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">plots</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDFResultDict</span><span class="p">,</span> <span class="n">RunUDFSyncL</span><span class="p">,</span> <span class="n">RunUDFGenType</span><span class="p">,</span> <span class="n">RunUDFGenTypeL</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">_run_sync</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDF</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">]],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the given UDF(s), either returning the final result (when</span>
+<span class="sd">        :code:`iterate=False` is given), or a generator that yields partial results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">enable_plotting</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">plots</span><span class="p">)</span>
+
+        <span class="n">udf_is_list</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">udf_is_list</span><span class="p">:</span>
+            <span class="n">udfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">udf</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">udfs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">udf</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">udfs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;empty list of UDFs - nothing to do!&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">enable_plotting</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;prepare_plots&quot;</span><span class="p">):</span>
+                <span class="n">plots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_plots</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">plots</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">corrections</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">corrections</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">get_correction_data</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">sparse_to_coo</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">roi</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">bool</span><span class="p">):</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ROI dtype is </span><span class="si">{</span><span class="n">roi</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">, expected bool. Attempting cast to bool.&quot;</span><span class="p">)</span>
+                <span class="n">roi</span> <span class="o">=</span> <span class="n">roi</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">progress</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">):</span>
+            <span class="n">progress_reporter</span> <span class="o">=</span> <span class="n">progress</span>
+            <span class="n">progress</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">progress_reporter</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">def</span> <span class="nf">_run_sync_wrap</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">UDFResults</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+            <span class="n">runner_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">get_udf_runner</span><span class="p">()</span>
+            <span class="n">result_iter</span> <span class="o">=</span> <span class="n">runner_cls</span><span class="p">(</span>
+                <span class="n">udfs</span><span class="p">,</span>
+                <span class="n">progress_reporter</span><span class="o">=</span><span class="n">progress_reporter</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">run_for_dataset_sync</span><span class="p">(</span>
+                <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+                <span class="n">executor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="p">,</span>
+                <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+                <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+                <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+                <span class="n">iterate</span><span class="o">=</span><span class="p">(</span><span class="n">iterate</span> <span class="ow">or</span> <span class="n">enable_plotting</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">udf_results</span> <span class="ow">in</span> <span class="n">result_iter</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">udf_results</span>
+                <span class="k">if</span> <span class="n">enable_plotting</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_update_plots</span><span class="p">(</span>
+                        <span class="n">plots</span><span class="p">,</span> <span class="n">udfs</span><span class="p">,</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">,</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">damage</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="p">)</span>
+            <span class="k">if</span> <span class="n">enable_plotting</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_plots</span><span class="p">(</span>
+                    <span class="n">plots</span><span class="p">,</span> <span class="n">udfs</span><span class="p">,</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">,</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">damage</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">iterate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_run_sync_wrap</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">udf_results</span> <span class="o">=</span> <span class="n">run_gen_get_last</span><span class="p">(</span><span class="n">_run_sync_wrap</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">udf_is_list</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">UDF</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFAsync</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFAsyncL</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">UDF</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFAGenType</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunUDFAGenTypeL</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDF</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">]],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RunUDFAGenTypeL</span><span class="p">,</span> <span class="n">RunUDFAGenType</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDF</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">]],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RunUDFAsync</span><span class="p">,</span> <span class="n">RunUDFAsyncL</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">],</span> <span class="n">UDF</span><span class="p">],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RunUDFAsync</span><span class="p">,</span> <span class="n">RunUDFAsyncL</span><span class="p">,</span> <span class="n">RunUDFAGenType</span><span class="p">,</span> <span class="n">RunUDFAGenTypeL</span><span class="p">]:</span> <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">_run_async</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span>
+        <span class="n">udf</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">UDF</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UDF</span><span class="p">]],</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span><span class="p">,</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+        <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">],</span>
+        <span class="n">backends</span><span class="p">,</span>
+        <span class="n">plots</span><span class="p">,</span>
+        <span class="n">iterate</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps :code:`_run_sync` into an asynchronous generator,</span>
+<span class="sd">        and either returns the generator itself, or the end result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sync_generator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_sync</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+            <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+            <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+            <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+            <span class="n">plots</span><span class="o">=</span><span class="n">plots</span><span class="p">,</span>
+            <span class="n">iterate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">udfres_iter</span> <span class="o">=</span> <span class="n">async_generator</span><span class="p">(</span><span class="n">sync_generator</span><span class="p">)</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_run_async_wrap</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">UDFResultDict</span><span class="p">:</span>
+            <span class="n">udf_results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">run_agen_get_last</span><span class="p">(</span><span class="n">udfres_iter</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">_run_async_wrap_l</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UDFResultDict</span><span class="p">]:</span>
+            <span class="n">udf_results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">run_agen_get_last</span><span class="p">(</span><span class="n">udfres_iter</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">udf_results</span><span class="o">.</span><span class="n">buffers</span>
+
+        <span class="k">if</span> <span class="n">iterate</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">udfres_iter</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">_run_async_wrap_l</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_run_async_wrap</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_default_plot_chans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffers</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.viz</span> <span class="kn">import</span> <span class="n">get_plottable_2D_channels</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">get_plottable_2D_channels</span><span class="p">(</span><span class="n">bufferset</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">bufferset</span> <span class="ow">in</span> <span class="n">buffers</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udfs</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">plots</span><span class="p">):</span>
+        <span class="n">runner_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">get_udf_runner</span><span class="p">()</span>
+        <span class="n">dry_results</span> <span class="o">=</span> <span class="n">runner_cls</span><span class="o">.</span><span class="n">dry_run</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
+
+        <span class="c1"># cases to consider:</span>
+        <span class="c1"># 1) plots is `True`: default plots of all eligible channels</span>
+        <span class="c1"># 2) plots is List[List[str]] or List[List[(str, callable)]]: set channels from `plots`</span>
+        <span class="c1"># 3) plots is List[LivePlot]: use customized plots as they are</span>
+
+        <span class="n">channels</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># 1) plots is `True`: default plots of all eligible channels</span>
+        <span class="k">if</span> <span class="n">plots</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_default_plot_chans</span><span class="p">(</span><span class="n">dry_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">udf</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">udfs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">channels</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;No plottable channels found for UDF &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;#</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">udf</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, not plotting.&quot;</span>
+                    <span class="p">)</span>
+        <span class="c1"># 2) plots is List[List[str]] or List[List[(str, callable)]]: set channels from `plots`</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">plots</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
+                <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plots</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">pp</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">plots</span><span class="p">)):</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">plots</span>
+        <span class="c1"># 3) plots is probably List[LivePlot]: use customized plots as they are</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">plots</span>
+
+        <span class="n">plots</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">udf_channels</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">udfs</span><span class="p">,</span> <span class="n">channels</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">udf_channels</span><span class="p">:</span>
+                <span class="n">p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_class</span><span class="p">(</span>
+                    <span class="n">dataset</span><span class="p">,</span>
+                    <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+                    <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+                    <span class="n">channel</span><span class="o">=</span><span class="n">channel</span><span class="p">,</span>
+                    <span class="c1"># Create an UDFResult from this single UDF</span>
+                    <span class="n">udfresult</span><span class="o">=</span><span class="n">UDFResults</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">dry_results</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="n">idx</span><span class="p">],),</span>
+                        <span class="n">dry_results</span><span class="o">.</span><span class="n">damage</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">p0</span><span class="o">.</span><span class="n">display</span><span class="p">()</span>
+                <span class="n">plots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">plots</span>
+
+    <span class="k">def</span> <span class="nf">_update_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plots</span><span class="p">,</span> <span class="n">udfs</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">plot</span> <span class="ow">in</span> <span class="n">plots</span><span class="p">:</span>
+            <span class="n">udf</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">get_udf</span><span class="p">()</span>
+            <span class="n">udf_index</span> <span class="o">=</span> <span class="n">udfs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">udf</span><span class="p">)</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">new_data</span><span class="p">(</span><span class="n">udf_results</span><span class="p">[</span><span class="n">udf_index</span><span class="p">],</span> <span class="n">damage</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Context.display"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">udf</span><span class="p">:</span> <span class="n">UDF</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show information about the UDF in combination with the given DataSet.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">html</span>
+
+        <span class="k">class</span> <span class="nc">_UDFInfo</span><span class="p">:</span>
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">buffers</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">buffers</span> <span class="o">=</span> <span class="n">buffers</span>
+
+            <span class="k">def</span> <span class="nf">_repr_html_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">_e</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+                <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s2">&quot;&lt;tr&gt;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">extra_shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;&lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/td&gt;&quot;</span>
+                    <span class="s2">&quot;&lt;/tr&gt;&quot;</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">buf</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffers</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">buf</span><span class="o">.</span><span class="n">use</span> <span class="o">!=</span> <span class="s2">&quot;private&quot;</span>
+                <span class="p">]</span>
+                <span class="n">rows</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+                <span class="n">general</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                &lt;table&gt;</span>
+<span class="s2">                    &lt;tbody&gt;</span>
+<span class="s2">                        &lt;tr&gt;</span>
+<span class="s2">                            &lt;th&gt;Processing method&lt;/th&gt;</span>
+<span class="s2">                            &lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">udf</span><span class="o">.</span><span class="n">get_method</span><span class="p">())</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">                        &lt;/tr&gt;</span>
+<span class="s2">                        &lt;tr&gt;</span>
+<span class="s2">                            &lt;th&gt;Compute Backends&lt;/th&gt;</span>
+<span class="s2">                            &lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="s2">&quot; ,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">udf</span><span class="o">.</span><span class="n">get_backends</span><span class="p">()))</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">                        &lt;/tr&gt;</span>
+<span class="s2">                        &lt;tr&gt;</span>
+<span class="s2">                            &lt;th&gt;Preferred input dtype&lt;/th&gt;</span>
+<span class="s2">                            &lt;td&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">udf</span><span class="o">.</span><span class="n">get_preferred_input_dtype</span><span class="p">()))</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">                        &lt;/tr&gt;</span>
+<span class="s2">                    &lt;/tbody&gt;</span>
+<span class="s2">                &lt;/table&gt;</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                &lt;h2&gt;</span><span class="si">{</span><span class="n">_e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span><span class="si">}</span><span class="s2">&lt;/h2&gt;</span>
+<span class="s2">                &lt;h3&gt;General&lt;/h3&gt;</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">general</span><span class="si">}</span>
+<span class="s2">                &lt;h3&gt;Result types&lt;/h3&gt;</span>
+<span class="s2">                &lt;p&gt;Note: these may vary with different data sets&lt;/p&gt;</span>
+<span class="s2">                &lt;table&gt;</span>
+<span class="s2">                    &lt;thead&gt;</span>
+<span class="s2">                        &lt;th&gt;Name&lt;/th&gt;</span>
+<span class="s2">                        &lt;th&gt;Kind&lt;/th&gt;</span>
+<span class="s2">                        &lt;th&gt;Extra Shape&lt;/th&gt;</span>
+<span class="s2">                        &lt;th&gt;Concrete Shape&lt;/th&gt;</span>
+<span class="s2">                        &lt;th&gt;dtype&lt;/th&gt;</span>
+<span class="s2">                    &lt;/thead&gt;</span>
+<span class="s2">                    &lt;tbody&gt;</span>
+<span class="s2">                    </span><span class="si">{</span><span class="n">rows</span><span class="si">}</span>
+<span class="s2">                    &lt;/tbody&gt;</span>
+<span class="s2">                &lt;/table&gt;</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+        <span class="n">runner_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">get_udf_runner</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi</span> <span class="o">=</span> <span class="n">sparse_to_coo</span><span class="p">(</span><span class="n">roi</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_UDFInfo</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">udf</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="n">buffers</span><span class="o">=</span><span class="n">runner_cls</span><span class="o">.</span><span class="n">inspect_udf</span><span class="p">(</span><span class="n">udf</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Context.map"><a class="viewcode-back" href="../../reference/api.html#libertem.api.Context.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">RoiT</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">progress</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">ProgressReporter</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="p">:</span> <span class="n">CorrectionSet</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">backends</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BufferWrapper</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Create an :class:`AutoUDF` with function :meth:`f` and run it on :code:`dataset`</span>
+
+<span class="sd">        .. versionchanged:: 0.5.0</span>
+<span class="sd">            Added the :code:`progress` parameter</span>
+
+<span class="sd">        .. versionchanged:: 0.6.0</span>
+<span class="sd">            Added the :code:`corrections` and :code:`backends` parameter</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        dataset:</span>
+<span class="sd">            The dataset to work on</span>
+<span class="sd">        f:</span>
+<span class="sd">            Function that accepts a frame as the only parameter. It should return a strongly</span>
+<span class="sd">            reduced output compared to the size of a frame.</span>
+<span class="sd">        roi : numpy.ndarray, sparse array or coordinate tuple(s), optional</span>
+<span class="sd">            Region of interest as bool mask over the navigation axes of the dataset.</span>
+<span class="sd">            See :ref:`udf roi`.</span>
+<span class="sd">        progress : bool | ProgressReporter</span>
+<span class="sd">            Show progress bar. Toggle with boolean flag or supply instance of</span>
+<span class="sd">            :class:`libertem.common.progress.ProgressReporter` for custom</span>
+<span class="sd">            handling of progress display.</span>
+<span class="sd">        corrections</span>
+<span class="sd">            Corrections to apply while running the function. If none are given,</span>
+<span class="sd">            the corrections that are part of the :code:`DataSet` are used,</span>
+<span class="sd">            if there are any. See also :ref:`corrections`.</span>
+<span class="sd">        backends : None or iterable containing &#39;numpy&#39;, &#39;cupy&#39; and/or &#39;cuda&#39;</span>
+<span class="sd">            Restrict the back-end to a subset of the capabilities of the UDF.</span>
+<span class="sd">            This can be useful for testing hybrid UDFs.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        BufferWrapper : libertem.common.buffers.BufferWrapper</span>
+<span class="sd">            The result of the UDF. Access the underlying numpy array using the</span>
+<span class="sd">            :attr:`~libertem.common.buffers.BufferWrapper.data` property.</span>
+<span class="sd">            Shape and dtype is inferred automatically from :code:`f`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">udf</span> <span class="o">=</span> <span class="n">AutoUDF</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">UDFResultDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span>  <span class="c1"># type:ignore[assignment]</span>
+            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span>
+            <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+            <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+            <span class="n">backends</span><span class="o">=</span><span class="n">backends</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="s1">&#39;result&#39;</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_local_executor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DaskJobExecutor</span><span class="o">.</span><span class="n">make_local</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">executor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_register_at_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register at-exit handler, to make sure the executor is closed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weak_ctx</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_exit</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">weak_ctx</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">weak_ctx</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">_exit</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

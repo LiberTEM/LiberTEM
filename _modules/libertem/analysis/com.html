@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.analysis.com &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.analysis.com</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.analysis.com</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">masks</span>
+<span class="kn">from</span> <span class="nn">libertem.web.rpc</span> <span class="kn">import</span> <span class="n">ProcedureProtocol</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">AnalysisResult</span><span class="p">,</span> <span class="n">AnalysisResultSet</span>
+<span class="kn">from</span> <span class="nn">.masks</span> <span class="kn">import</span> <span class="n">BaseMasksAnalysis</span>
+<span class="kn">from</span> <span class="nn">libertem.corrections</span> <span class="kn">import</span> <span class="n">coordinates</span>
+<span class="kn">from</span> <span class="nn">.helper</span> <span class="kn">import</span> <span class="n">GeneratorHelper</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">libertem.web.rpc</span> <span class="kn">import</span> <span class="n">RPCContext</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ComTemplate</span><span class="p">(</span><span class="n">GeneratorHelper</span><span class="p">):</span>
+    <span class="n">short_name</span> <span class="o">=</span> <span class="s2">&quot;com&quot;</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="s2">&quot;create_com_analysis&quot;</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">GeneratorHelper</span><span class="o">.</span><span class="n">temp_analysis</span>
+    <span class="n">temp_analysis</span> <span class="o">=</span> <span class="n">temp</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;print(com_result)&quot;</span><span class="p">]</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;field&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;magnitude&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;divergence&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;curl&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;x&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;y&quot;</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+
+    <span class="k">def</span> <span class="nf">get_dependency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="s2">&quot;from empyre.vis.colors import ColormapCubehelix&quot;</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_docs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;COM Analysis&quot;</span>
+        <span class="kn">from</span> <span class="nn">libertem.api</span> <span class="kn">import</span> <span class="n">Context</span>
+        <span class="n">docs_rst</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getdoc</span><span class="p">(</span><span class="n">Context</span><span class="o">.</span><span class="n">create_com_analysis</span><span class="p">)</span>
+        <span class="n">docs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_docs</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">docs_rst</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">docs</span>
+
+    <span class="k">def</span> <span class="nf">convert_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dataset=ds&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="s1">&#39;cy&#39;</span><span class="p">]:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mask_radius=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flip_y&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;flip_y=True&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scan_rotation&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;scan_rotation=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;scan_rotation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ri&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mask_radius_inner=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ri&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">plot</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;fig, axes = plt.subplots()&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;axes.set_title(&quot;field&quot;)&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;x_centers, y_centers = com_result.field.raw_data&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;axes.imshow(ch.rgb_from_vector((x_centers, y_centers, 0)))&quot;</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;fig, axes = plt.subplots()&quot;</span><span class="p">)</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;axes.set_title(&quot;</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s1">&quot;)&#39;</span><span class="p">)</span>
+            <span class="n">plot</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;axes.imshow(com_result.</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s1">.raw_data)&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">plot</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">get_save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">save</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">:</span>
+            <span class="n">save</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;np.save(&#39;com_result_</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">.npy&#39;, com_result[&#39;</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">&#39;].raw_data)&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">com_masks_factory</span><span class="p">(</span><span class="n">detector_y</span><span class="p">,</span> <span class="n">detector_x</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cx</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">disk_mask</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">masks</span><span class="o">.</span><span class="n">circular</span><span class="p">(</span>
+            <span class="n">centerX</span><span class="o">=</span><span class="n">cx</span><span class="p">,</span> <span class="n">centerY</span><span class="o">=</span><span class="n">cy</span><span class="p">,</span>
+            <span class="n">imageSizeX</span><span class="o">=</span><span class="n">detector_x</span><span class="p">,</span>
+            <span class="n">imageSizeY</span><span class="o">=</span><span class="n">detector_y</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">disk_mask</span><span class="p">,</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">masks</span><span class="o">.</span><span class="n">gradient_y</span><span class="p">(</span>
+            <span class="n">imageSizeX</span><span class="o">=</span><span class="n">detector_x</span><span class="p">,</span>
+            <span class="n">imageSizeY</span><span class="o">=</span><span class="n">detector_y</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">disk_mask</span><span class="p">(),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">masks</span><span class="o">.</span><span class="n">gradient_x</span><span class="p">(</span>
+            <span class="n">imageSizeX</span><span class="o">=</span><span class="n">detector_x</span><span class="p">,</span>
+            <span class="n">imageSizeY</span><span class="o">=</span><span class="n">detector_y</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">disk_mask</span><span class="p">(),</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">com_masks_generic</span><span class="p">(</span><span class="n">detector_y</span><span class="p">,</span> <span class="n">detector_x</span><span class="p">,</span> <span class="n">base_mask_factory</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a CoM mask stack with a generic selection mask factory</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    detector_y : int</span>
+<span class="sd">        The detector height</span>
+<span class="sd">    detector_x : int</span>
+<span class="sd">        The detector width</span>
+<span class="sd">    base_mask_factory : () -&gt; np.array</span>
+<span class="sd">        A factory function for creating the selection mask</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    List[Function]</span>
+<span class="sd">        The mask stack as a list of factory functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">base_mask_factory</span><span class="p">,</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">masks</span><span class="o">.</span><span class="n">gradient_y</span><span class="p">(</span>
+            <span class="n">imageSizeX</span><span class="o">=</span><span class="n">detector_x</span><span class="p">,</span>
+            <span class="n">imageSizeY</span><span class="o">=</span><span class="n">detector_y</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">base_mask_factory</span><span class="p">(),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">masks</span><span class="o">.</span><span class="n">gradient_x</span><span class="p">(</span>
+            <span class="n">imageSizeX</span><span class="o">=</span><span class="n">detector_x</span><span class="p">,</span>
+            <span class="n">imageSizeY</span><span class="o">=</span><span class="n">detector_y</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">base_mask_factory</span><span class="p">(),</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">center_shifts</span><span class="p">(</span><span class="n">img_sum</span><span class="p">,</span> <span class="n">img_y</span><span class="p">,</span> <span class="n">img_x</span><span class="p">,</span> <span class="n">ref_y</span><span class="p">,</span> <span class="n">ref_x</span><span class="p">):</span>
+    <span class="n">x_centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">img_x</span><span class="p">,</span> <span class="n">img_sum</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">img_sum</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">y_centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">img_y</span><span class="p">,</span> <span class="n">img_sum</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">img_sum</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">x_centers</span><span class="p">[</span><span class="n">img_sum</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref_x</span>
+    <span class="n">y_centers</span><span class="p">[</span><span class="n">img_sum</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref_y</span>
+    <span class="n">x_centers</span> <span class="o">-=</span> <span class="n">ref_x</span>
+    <span class="n">y_centers</span> <span class="o">-=</span> <span class="n">ref_y</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">apply_correction</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">,</span> <span class="n">scan_rotation</span><span class="p">,</span> <span class="n">flip_y</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">y_centers</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">flip_y</span><span class="p">:</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">flip_y</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">identity</span><span class="p">()</span>
+    <span class="c1"># Transformations are applied right to left</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">coordinates</span><span class="o">.</span><span class="n">rotate_deg</span><span class="p">(</span><span class="n">scan_rotation</span><span class="p">)</span> <span class="o">@</span> <span class="n">transform</span>
+    <span class="n">y_centers</span> <span class="o">=</span> <span class="n">y_centers</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_centers</span> <span class="o">=</span> <span class="n">x_centers</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">forward</span><span class="p">:</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
+    <span class="n">y_transformed</span><span class="p">,</span> <span class="n">x_transformed</span> <span class="o">=</span> <span class="n">transform</span> <span class="o">@</span> <span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">)</span>
+    <span class="n">y_transformed</span> <span class="o">=</span> <span class="n">y_transformed</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">x_transformed</span> <span class="o">=</span> <span class="n">x_transformed</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">y_transformed</span><span class="p">,</span> <span class="n">x_transformed</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">divergence</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">curl_2d</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">):</span>
+    <span class="c1"># https://en.wikipedia.org/wiki/Curl_(mathematics)#Usage</span>
+    <span class="c1"># DFy/dx - dFx/dy</span>
+    <span class="c1"># axis 0 is y, axis 1 is x</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">magnitude</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y_centers</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x_centers</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">coordinate_check</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate the RMS curl as a function of :code:`scan_rotation` and :code:`flip_y`.</span>
+
+<span class="sd">    The curl for a purely electrostatic field is zero. That means</span>
+<span class="sd">    the correct settings for :code:`scan_rotation` and :code:`flip_y` should</span>
+<span class="sd">    minimize the RMS curl for atomic resolution STEM of non-magnetic specimens</span>
+<span class="sd">    along a high-symmetry zone axis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_centers, x_centers : numpy.ndarray</span>
+<span class="sd">        2D arrays with y and x component of the center of mass shift for each</span>
+<span class="sd">        scan position, as returned by :meth:`center_shifts` or</span>
+<span class="sd">        :meth:`apply_correction`</span>
+<span class="sd">    roi : Optional[numpy.ndarray]</span>
+<span class="sd">        Selector for values to consider in the statistics, compatible</span>
+<span class="sd">        with indexing an array with the shape of y_centers and x_centers.</span>
+<span class="sd">        By default, everything except the last row and last column are used</span>
+<span class="sd">        since these contain artefacts.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (straight, flipped)</span>
+<span class="sd">        Root mean square of the curl as a function of :code:`scan_rotation` from</span>
+<span class="sd">        0 to 359 degrees in steps of one, with :code:`flip_y=False` (straight)</span>
+<span class="sd">        and code:`flip_y=True` (flipped).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">straight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">360</span><span class="p">)</span>
+    <span class="n">flipped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">360</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The last row and column contain artifacts</span>
+        <span class="n">roi</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">angle</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">360</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">flip_y</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">y_transformed</span><span class="p">,</span> <span class="n">x_transformed</span> <span class="o">=</span> <span class="n">apply_correction</span><span class="p">(</span>
+                <span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">,</span> <span class="n">scan_rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span> <span class="n">flip_y</span><span class="o">=</span><span class="n">flip_y</span>
+            <span class="p">)</span>
+            <span class="n">curl</span> <span class="o">=</span> <span class="n">curl_2d</span><span class="p">(</span><span class="n">y_transformed</span><span class="p">,</span> <span class="n">x_transformed</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">curl</span><span class="p">[</span><span class="n">roi</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">flip_y</span><span class="p">:</span>
+                <span class="n">flipped</span><span class="p">[</span><span class="n">angle</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">straight</span><span class="p">[</span><span class="n">angle</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">straight</span><span class="p">,</span> <span class="n">flipped</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GuessResult"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.com.GuessResult">[docs]</a><span class="k">class</span> <span class="nc">GuessResult</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">scan_rotation</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">flip_y</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">cy</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">cx</span><span class="p">:</span> <span class="nb">float</span></div>
+
+
+<div class="viewcode-block" id="guess_corrections"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.com.guess_corrections">[docs]</a><span class="k">def</span> <span class="nf">guess_corrections</span><span class="p">(</span>
+    <span class="n">y_centers</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">x_centers</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">slice</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GuessResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Guess corrections for center shift, :code:`scan_rotation` and :code:`flip_y` from CoM data</span>
+
+<span class="sd">    This function can generate a CoM parameter guess for atomic resolution 4D STEM data</span>
+<span class="sd">    by using the following assumptions:</span>
+
+<span class="sd">    * The field is purely electrostatic, i.e. the RMS curl should be minimized</span>
+<span class="sd">    * There is no net field over the field of view and no descan error,</span>
+<span class="sd">      i.e. the mean deflection is zero.</span>
+<span class="sd">    * Atomic resolution STEM means that the divergence will be negative at atom columns</span>
+<span class="sd">      and consequently the histogram of divergence will have a stronger tail towards</span>
+<span class="sd">      negative values than towards positive values.</span>
+
+<span class="sd">    If any corrections were applied when generating the input data, please note that the corrections</span>
+<span class="sd">    should be applied relative to these previous value. In particular, the</span>
+<span class="sd">    center corrections returned by this function have to be back-transformed to the uncorrected</span>
+<span class="sd">    coordinate system, for example with :code:`apply_correction(..., forward=False)`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_centers, x_centers : numpy.ndarray</span>
+<span class="sd">        2D arrays with y and x component of the center of mass shift for each</span>
+<span class="sd">        scan position, as returned by :meth:`center_shifts` or</span>
+<span class="sd">        :meth:`apply_correction`</span>
+<span class="sd">    roi : Optional[numpy.ndarray]</span>
+<span class="sd">        Selector for values to consider in the statistics, compatible</span>
+<span class="sd">        with indexing an array with the shape of y_centers and x_centers.</span>
+<span class="sd">        By default, everything except the last row and last column are used</span>
+<span class="sd">        since these contain artefacts.</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GuessResult : relative to current values</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The last row and column contain artefacts</span>
+        <span class="n">roi</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">straight</span><span class="p">,</span> <span class="n">flipped</span> <span class="o">=</span> <span class="n">coordinate_check</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">)</span>
+    <span class="c1"># The one with lower minima is the correct one</span>
+    <span class="n">flip_y</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">flipped</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">straight</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">flip_y</span><span class="p">:</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">flipped</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">straight</span><span class="p">)</span>
+
+    <span class="n">corrected_y</span><span class="p">,</span> <span class="n">corrected_x</span> <span class="o">=</span> <span class="n">apply_correction</span><span class="p">(</span>
+        <span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">,</span> <span class="n">scan_rotation</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span> <span class="n">flip_y</span><span class="o">=</span><span class="n">flip_y</span>
+    <span class="p">)</span>
+    <span class="c1"># There are two equivalent angles that minimize RMS curl since a 180°</span>
+    <span class="c1"># rotation inverts the coordinates and just flips the sign for divergence</span>
+    <span class="c1"># and curl. To distinguish the two, the distribution of the divergence is</span>
+    <span class="c1"># analyzed. With negative electrons and positive nuclei, the beam is</span>
+    <span class="c1"># deflected towards the nuclei and the divergence is negative there. Since</span>
+    <span class="c1"># the beam is deflected most strongly near the nuclei, the histogram should</span>
+    <span class="c1"># have more values at the negative end of the range than at the positive</span>
+    <span class="c1"># end.</span>
+    <span class="n">div</span> <span class="o">=</span> <span class="n">divergence</span><span class="p">(</span><span class="n">corrected_y</span><span class="p">,</span> <span class="n">corrected_x</span><span class="p">)[</span><span class="n">roi</span><span class="p">]</span>
+    <span class="n">all_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">div</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">div</span><span class="p">))</span>
+    <span class="n">hist</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">div</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">all_range</span><span class="p">,</span> <span class="n">all_range</span><span class="p">),</span> <span class="n">bins</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">polarity_off</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[:</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">if</span> <span class="n">polarity_off</span><span class="p">:</span>
+        <span class="n">angle</span> <span class="o">+=</span> <span class="mi">180</span>
+    <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
+        <span class="n">angle</span> <span class="o">-=</span> <span class="mi">360</span>
+    <span class="k">return</span> <span class="n">GuessResult</span><span class="p">(</span>
+        <span class="n">scan_rotation</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span>
+        <span class="n">flip_y</span><span class="o">=</span><span class="n">flip_y</span><span class="p">,</span>
+        <span class="n">cy</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y_centers</span><span class="p">[</span><span class="n">roi</span><span class="p">]),</span>
+        <span class="n">cx</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x_centers</span><span class="p">[</span><span class="n">roi</span><span class="p">])</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="COMResultSet"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.com.COMResultSet">[docs]</a><span class="k">class</span> <span class="nc">COMResultSet</span><span class="p">(</span><span class="n">AnalysisResultSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Running a :class:`COMAnalysis` via :meth:`libertem.api.Context.run` on a dataset</span>
+<span class="sd">    returns an instance of this class.</span>
+
+<span class="sd">    This analysis is usually applied to datasets with real values. If the dataset contains</span>
+<span class="sd">    complex numbers, this result contains the keys :attr:`x_real`, :attr:`y_real`,</span>
+<span class="sd">    :attr:`x_imag`, :attr:`y_imag` instead of the vector field.</span>
+
+<span class="sd">    By default, the shift is given in pixel coordinates, i.e. positive x shift goes to the right</span>
+<span class="sd">    and positive y shift goes to the bottom. See also :ref:`concepts`.</span>
+
+<span class="sd">    .. versionchanged:: 0.6.0</span>
+<span class="sd">        The COM analysis now supports flipping the y axis and rotating the vectors.</span>
+
+<span class="sd">    .. versionadded:: 0.3.0</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    field : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Center of mass shift relative to the center given to the analysis within the given radius</span>
+<span class="sd">        as a vector field with components (x, y). The visualized result uses a</span>
+<span class="sd">        cubehelix color wheel.</span>
+<span class="sd">    magnitude : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Magnitude of the center of mass shift.</span>
+<span class="sd">    divergence : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Divergence of the center of mass vector field at a given point</span>
+<span class="sd">    curl : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Curl of the center of mass 2D vector field at a given point.</span>
+
+<span class="sd">        .. versionadded:: 0.6.0</span>
+
+<span class="sd">    x : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        X component of the center of mass shift</span>
+<span class="sd">    y : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Y component of the center of mass shift</span>
+<span class="sd">    x_real : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Real part of the x component of the center of mass shift (complex dataset only)</span>
+<span class="sd">    y_real : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Real part of y component of the center of mass shift (complex dataset only)</span>
+<span class="sd">    x_imag : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Imaginary part of the x component of the center of mass shift (complex dataset only)</span>
+<span class="sd">    y_imag : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Imaginary part of y component of the center of mass shift (complex dataset only)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<span class="k">class</span> <span class="nc">ParameterGuessProc</span><span class="p">:</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rpc_context</span><span class="p">:</span> <span class="s2">&quot;RPCContext&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="n">comp_ana</span> <span class="o">=</span> <span class="n">rpc_context</span><span class="o">.</span><span class="n">get_compound_analysis</span><span class="p">()</span>
+        <span class="n">analyses</span> <span class="o">=</span> <span class="n">comp_ana</span><span class="p">[</span><span class="s2">&quot;details&quot;</span><span class="p">][</span><span class="s2">&quot;analyses&quot;</span><span class="p">]</span>
+        <span class="n">analysis_details</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">rpc_context</span><span class="o">.</span><span class="n">get_analysis_details</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">analyses</span>
+        <span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">com_analysis</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">a</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">analysis_details</span>
+                <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;details&quot;</span><span class="p">][</span><span class="s2">&quot;analysisType&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;CENTER_OF_MASS&quot;</span>
+            <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;no CoM analysis found&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="n">com_analysis_id</span> <span class="o">=</span> <span class="n">com_analysis</span><span class="p">[</span><span class="s2">&quot;analysis&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rpc_context</span><span class="o">.</span><span class="n">have_analysis_results</span><span class="p">(</span><span class="n">com_analysis_id</span><span class="p">):</span>
+            <span class="c1"># run with the current analysis parameters as set in the GUI:</span>
+            <span class="k">await</span> <span class="n">rpc_context</span><span class="o">.</span><span class="n">run_analysis</span><span class="p">(</span><span class="n">com_analysis_id</span><span class="p">)</span>
+        <span class="n">result_info</span> <span class="o">=</span> <span class="n">rpc_context</span><span class="o">.</span><span class="n">get_analysis_results</span><span class="p">(</span><span class="n">com_analysis_id</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">result_info</span><span class="o">.</span><span class="n">results</span>
+        <span class="n">old_params</span> <span class="o">=</span> <span class="n">result_info</span><span class="o">.</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;parameters&quot;</span><span class="p">]</span>
+        <span class="n">guess</span> <span class="o">=</span> <span class="k">await</span> <span class="n">rpc_context</span><span class="o">.</span><span class="n">run_sync</span><span class="p">(</span><span class="n">guess_corrections</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">raw_data</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+        <span class="c1"># NOTE: convert guess results to absolute values to make sure we don&#39;t</span>
+        <span class="c1"># run into any nasty synchronization issues, for example, if state goes</span>
+        <span class="c1"># stale after the guess button was clicked.</span>
+        <span class="n">flip_y</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">old_params</span><span class="p">[</span><span class="s2">&quot;flip_y&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">guess</span><span class="o">.</span><span class="n">flip_y</span><span class="p">)</span>
+        <span class="n">backtransformed</span> <span class="o">=</span> <span class="n">apply_correction</span><span class="p">(</span>
+            <span class="n">y_centers</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">guess</span><span class="o">.</span><span class="n">cy</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="n">x_centers</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">guess</span><span class="o">.</span><span class="n">cx</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="n">scan_rotation</span><span class="o">=</span><span class="n">old_params</span><span class="p">[</span><span class="s2">&quot;scan_rotation&quot;</span><span class="p">],</span>
+            <span class="n">flip_y</span><span class="o">=</span><span class="n">old_params</span><span class="p">[</span><span class="s2">&quot;flip_y&quot;</span><span class="p">],</span>
+            <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;guess&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;cx&#39;</span><span class="p">:</span> <span class="n">backtransformed</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">old_params</span><span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;cy&#39;</span><span class="p">:</span> <span class="n">backtransformed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">old_params</span><span class="p">[</span><span class="s2">&quot;cy&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;scan_rotation&#39;</span><span class="p">:</span> <span class="n">guess</span><span class="o">.</span><span class="n">scan_rotation</span> <span class="o">+</span> <span class="n">old_params</span><span class="p">[</span><span class="s2">&quot;scan_rotation&quot;</span><span class="p">],</span>
+                <span class="s1">&#39;flip_y&#39;</span><span class="p">:</span> <span class="n">flip_y</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">COMAnalysis</span><span class="p">(</span><span class="n">BaseMasksAnalysis</span><span class="p">,</span> <span class="n">id_</span><span class="o">=</span><span class="s2">&quot;CENTER_OF_MASS&quot;</span><span class="p">):</span>
+    <span class="n">TYPE</span> <span class="o">=</span> <span class="s1">&#39;UDF&#39;</span>
+
+    <span class="k">def</span> <span class="nf">get_udf_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">udf_results</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">img_sum</span><span class="p">,</span> <span class="n">img_y</span><span class="p">,</span> <span class="n">img_x</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_generic_results</span><span class="p">(</span><span class="n">img_sum</span><span class="p">,</span> <span class="n">img_y</span><span class="p">,</span> <span class="n">img_x</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_generic_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_sum</span><span class="p">,</span> <span class="n">img_y</span><span class="p">,</span> <span class="n">img_x</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.viz</span> <span class="kn">import</span> <span class="n">CMAP_CIRCULAR_DEFAULT</span><span class="p">,</span> <span class="n">visualize_simple</span>
+        <span class="n">ref_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">]</span>
+        <span class="n">ref_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;cy&quot;</span><span class="p">]</span>
+        <span class="n">y_centers_raw</span><span class="p">,</span> <span class="n">x_centers_raw</span> <span class="o">=</span> <span class="n">center_shifts</span><span class="p">(</span><span class="n">img_sum</span><span class="p">,</span> <span class="n">img_y</span><span class="p">,</span> <span class="n">img_x</span><span class="p">,</span> <span class="n">ref_y</span><span class="p">,</span> <span class="n">ref_x</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">y_centers_raw</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span> <span class="o">=</span> <span class="n">apply_correction</span><span class="p">(</span>
+            <span class="n">y_centers_raw</span><span class="p">,</span> <span class="n">x_centers_raw</span><span class="p">,</span>
+            <span class="n">scan_rotation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;scan_rotation&quot;</span><span class="p">],</span>
+            <span class="n">flip_y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;flip_y&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">img_sum</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+            <span class="n">x_real</span><span class="p">,</span> <span class="n">x_imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">x_centers</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">x_centers</span><span class="p">)</span>
+            <span class="n">y_real</span><span class="p">,</span> <span class="n">y_imag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">y_centers</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">y_centers</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">COMResultSet</span><span class="p">([</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span><span class="n">raw_data</span><span class="o">=</span><span class="n">x_real</span><span class="p">,</span> <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">x_real</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                       <span class="n">key</span><span class="o">=</span><span class="s2">&quot;x_real&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;x [real]&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;x component of the center&quot;</span><span class="p">),</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span><span class="n">raw_data</span><span class="o">=</span><span class="n">y_real</span><span class="p">,</span> <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">y_real</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                       <span class="n">key</span><span class="o">=</span><span class="s2">&quot;y_real&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;y [real]&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;y component of the center&quot;</span><span class="p">),</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span><span class="n">raw_data</span><span class="o">=</span><span class="n">x_imag</span><span class="p">,</span> <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">x_imag</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                       <span class="n">key</span><span class="o">=</span><span class="s2">&quot;x_imag&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;x [imag]&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;x component of the center&quot;</span><span class="p">),</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span><span class="n">raw_data</span><span class="o">=</span><span class="n">y_imag</span><span class="p">,</span> <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">y_imag</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                       <span class="n">key</span><span class="o">=</span><span class="s2">&quot;y_imag&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;y [imag]&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;y component of the center&quot;</span><span class="p">),</span>
+            <span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">damage</span> <span class="o">=</span> <span class="n">damage</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x_centers</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">y_centers</span><span class="p">)</span>
+            <span class="c1"># Make sure that an all-False `damage` is handled since np.max()</span>
+            <span class="c1"># trips on an empty array.</span>
+            <span class="c1"># As a remark -- the NumPy error message</span>
+            <span class="c1"># &quot;zero-size array to reduction operation maximum which has no identity&quot;</span>
+            <span class="c1"># is probably wrong since -np.inf is the identity element for maximum on</span>
+            <span class="c1"># floating point numbers and should be returned here.</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">damage</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x_centers</span><span class="p">[</span><span class="n">damage</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y_centers</span><span class="p">[</span><span class="n">damage</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">vmax</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">CMAP_CIRCULAR_DEFAULT</span><span class="o">.</span><span class="n">rgb_from_vector</span><span class="p">((</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">y_centers</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">magnitude</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">)</span>
+            <span class="c1"># Create results which are valid for any nav_shape</span>
+            <span class="n">results_list</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">raw_data</span><span class="o">=</span><span class="p">(</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">y_centers</span><span class="p">),</span>
+                    <span class="n">visualized</span><span class="o">=</span><span class="n">f</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;field&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;field&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;cubehelix colorwheel visualization&quot;</span><span class="p">,</span>
+                    <span class="n">include_in_download</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">),</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">raw_data</span><span class="o">=</span><span class="n">m</span><span class="p">,</span>
+                    <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;magnitude&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;magnitude&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;magnitude of the vector field&quot;</span>
+                <span class="p">),</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">raw_data</span><span class="o">=</span><span class="n">x_centers</span><span class="p">,</span>
+                    <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;x component of the center&quot;</span>
+                <span class="p">),</span>
+                <span class="n">AnalysisResult</span><span class="p">(</span>
+                    <span class="n">raw_data</span><span class="o">=</span><span class="n">y_centers</span><span class="p">,</span>
+                    <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;y component of the center&quot;</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
+            <span class="c1"># Add results which depend on np.gradient, i.e. all(nav_shape) &gt; 1</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">s</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]):</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">divergence</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">curl_2d</span><span class="p">(</span><span class="n">y_centers</span><span class="p">,</span> <span class="n">x_centers</span><span class="p">)</span>
+                <span class="n">extra_results</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">AnalysisResult</span><span class="p">(</span>
+                        <span class="n">raw_data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                        <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;divergence&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;divergence&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;divergence of the vector field&quot;</span>
+                    <span class="p">),</span>
+                    <span class="n">AnalysisResult</span><span class="p">(</span>
+                        <span class="n">raw_data</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+                        <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                        <span class="n">key</span><span class="o">=</span><span class="s2">&quot;curl&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;curl&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;curl of the 2D vector field&quot;</span>
+                    <span class="p">),</span>
+                <span class="p">]</span>
+                <span class="c1"># Insert the results at position 2 for backwards compatibility/tests</span>
+                <span class="c1"># This could later be replaced with results_list.extend(extra_results)</span>
+                <span class="n">results_list</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">extra_results</span>
+
+        <span class="k">return</span> <span class="n">COMResultSet</span><span class="p">(</span><span class="n">results_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_mask_factories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;can only handle 2D signals currently&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ri&#39;</span><span class="p">):</span>
+            <span class="c1"># annular CoM:</span>
+            <span class="k">return</span> <span class="n">com_masks_generic</span><span class="p">(</span>
+                <span class="n">detector_y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">detector_x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">base_mask_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">masks</span><span class="o">.</span><span class="n">ring</span><span class="p">(</span>
+                    <span class="n">imageSizeY</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">imageSizeX</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">centerY</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;cy&#39;</span><span class="p">],</span>
+                    <span class="n">centerX</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">],</span>
+                    <span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span>
+                    <span class="n">radius_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;ri&#39;</span><span class="p">],</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># CoM with radius cut-off:</span>
+            <span class="k">return</span> <span class="n">com_masks_factory</span><span class="p">(</span>
+                <span class="n">detector_y</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">detector_x</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">cx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;cx&#39;</span><span class="p">],</span>
+                <span class="n">cy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;cy&#39;</span><span class="p">],</span>
+                <span class="n">r</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">detector_y</span><span class="p">,</span> <span class="n">detector_x</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span>
+
+        <span class="n">cx</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span> <span class="n">detector_x</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">cy</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cy&#39;</span><span class="p">,</span> <span class="n">detector_y</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">))</span>
+        <span class="n">ri</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ri&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">scan_rotation</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scan_rotation&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+        <span class="n">flip_y</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flip_y&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">use_sparse</span> <span class="o">=</span> <span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_sparse&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;cx&#39;</span><span class="p">:</span> <span class="n">cx</span><span class="p">,</span>
+            <span class="s1">&#39;cy&#39;</span><span class="p">:</span> <span class="n">cy</span><span class="p">,</span>
+            <span class="s1">&#39;r&#39;</span><span class="p">:</span> <span class="n">r</span><span class="p">,</span>
+            <span class="s1">&#39;ri&#39;</span><span class="p">:</span> <span class="n">ri</span><span class="p">,</span>
+            <span class="s1">&#39;scan_rotation&#39;</span><span class="p">:</span> <span class="n">scan_rotation</span><span class="p">,</span>
+            <span class="s1">&#39;flip_y&#39;</span><span class="p">:</span> <span class="n">flip_y</span><span class="p">,</span>
+            <span class="s1">&#39;use_sparse&#39;</span><span class="p">:</span> <span class="n">use_sparse</span><span class="p">,</span>
+            <span class="s1">&#39;mask_count&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s1">&#39;mask_dtype&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_template_helper</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">GeneratorHelper</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">ComTemplate</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_rpc_definitions</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">ProcedureProtocol</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;guess_parameters&quot;</span><span class="p">:</span> <span class="n">ParameterGuessProc</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">need_rerun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">new_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Don&#39;t need to re-run UDF if only `flip_y` or `scan_rotation`</span>
+<span class="sd">        have changed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ignore_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;flip_y&quot;</span><span class="p">,</span> <span class="s2">&quot;scan_rotation&quot;</span><span class="p">}</span>
+        <span class="n">old_without_ignored</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">old_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_keys</span>
+        <span class="p">}</span>
+        <span class="n">new_without_ignored</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_params</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ignore_keys</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">old_without_ignored</span> <span class="o">!=</span> <span class="n">new_without_ignored</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

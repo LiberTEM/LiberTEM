@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.executor.dask &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.executor.dask</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.executor.dask</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">dask</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">dd</span>
+<span class="kn">import</span> <span class="nn">dask</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.threading</span> <span class="kn">import</span> <span class="n">set_num_threads_env</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseJobExecutor</span><span class="p">,</span> <span class="n">AsyncAdapter</span>
+<span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">JobCancelledError</span><span class="p">,</span> <span class="n">TaskCommHandler</span><span class="p">,</span> <span class="n">TaskProtocol</span><span class="p">,</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">WorkerContext</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">libertem.common.async_utils</span> <span class="kn">import</span> <span class="n">sync_to_async</span>
+<span class="kn">from</span> <span class="nn">libertem.common.scheduler</span> <span class="kn">import</span> <span class="n">Worker</span><span class="p">,</span> <span class="n">WorkerSet</span>
+<span class="kn">from</span> <span class="nn">libertem.common.backend</span> <span class="kn">import</span> <span class="n">set_use_cpu</span><span class="p">,</span> <span class="n">set_use_cuda</span>
+<span class="kn">from</span> <span class="nn">libertem.common.async_utils</span> <span class="kn">import</span> <span class="n">adjust_event_loop_policy</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">assign_cudas</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DaskWorkerContext"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskWorkerContext">[docs]</a><span class="k">class</span> <span class="nc">DaskWorkerContext</span><span class="p">(</span><span class="n">WorkerContext</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comms_topic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="c1"># DaskWorkerContext sends all messages via a single unique topic id</span>
+        <span class="c1"># which are later unpacked on the client node; this allows us to handle</span>
+        <span class="c1"># concurrent runs using the same executor with separate comms channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_comms_topic</span> <span class="o">=</span> <span class="n">comms_topic</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dask_worker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_worker</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_worker</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">get_worker</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_worker</span>
+
+    <span class="k">def</span> <span class="nf">signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">msg_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_comms_topic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Scheduler Dask does not have comms so don&#39;t send</span>
+            <span class="k">return</span>
+        <span class="n">msg_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;ident&#39;</span><span class="p">:</span> <span class="n">ident</span><span class="p">,</span> <span class="s1">&#39;topic&#39;</span><span class="p">:</span> <span class="n">topic</span><span class="p">})</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dask_worker</span><span class="o">.</span><span class="n">log_event</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_comms_topic</span><span class="p">,</span> <span class="n">msg_dict</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># No structured logs available in this Dask</span>
+            <span class="c1"># Catch the exception here just in case there is</span>
+            <span class="c1"># version / API mismatch</span>
+            <span class="k">pass</span></div>
+
+
+<span class="k">def</span> <span class="nf">worker_setup</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+    <span class="c1"># Disable handling Ctrl-C on the workers for a local cluster</span>
+    <span class="c1"># since the nanny restarts workers in that case and that gets mixed</span>
+    <span class="c1"># with Ctrl-C handling of the main process, at least on Windows</span>
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resource</span> <span class="o">==</span> <span class="s2">&quot;CUDA&quot;</span><span class="p">:</span>
+        <span class="n">set_use_cuda</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">resource</span> <span class="o">==</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span>
+        <span class="n">set_use_cpu</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown resource </span><span class="si">%s</span><span class="s2">, use &#39;CUDA&#39; or &#39;CPU&#39;&quot;</span><span class="p">,</span> <span class="n">resource</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cluster_spec"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.cluster_spec">[docs]</a><span class="k">def</span> <span class="nf">cluster_spec</span><span class="p">(</span>
+    <span class="n">cpus</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">cudas</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">has_cupy</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+    <span class="n">num_service</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">preload</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a worker specification dictionary for a LiberTEM Dask cluster</span>
+
+<span class="sd">    The return from this function can be passed to :code:`DaskJobExecutor.make_local(spec=spec)`.</span>
+
+<span class="sd">    This creates a Dask cluster spec with special initializations and resource tags</span>
+<span class="sd">    for CPU + GPU processing in LiberTEM.</span>
+<span class="sd">    See :ref:`cluster spec` for an example.</span>
+<span class="sd">    See http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster</span>
+<span class="sd">    for more info on cluster specs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cpus: int | Iterable[int]</span>
+<span class="sd">        IDs for CPU workers as an iterable, or an integer number of workers to create.</span>
+<span class="sd">        Currently no pinning is used, i.e. this specifies the total</span>
+<span class="sd">        number and identification of workers, not the CPU cores that are used.</span>
+<span class="sd">    cudas: int | Iterable[int]</span>
+<span class="sd">        IDs for CUDA device workers as an iterable, or an integer number of GPU workers to</span>
+<span class="sd">        create. LiberTEM will use the IDs specified or assign round-robin to the available devices.</span>
+<span class="sd">        In the iterable case these have to match CUDA device IDs on the system.</span>
+<span class="sd">        Specify the same ID multiple times to spawn multiple workers on the same CUDA device.</span>
+<span class="sd">    has_cupy: bool</span>
+<span class="sd">        Specify if the cluster should signal that it supports GPU-based array programming using</span>
+<span class="sd">        CuPy</span>
+<span class="sd">    name</span>
+<span class="sd">        Prefix for the worker names</span>
+<span class="sd">    num_service</span>
+<span class="sd">        Number of additional workers that are reserved for service tasks. Computation tasks</span>
+<span class="sd">        will not be scheduled on these workers, which guarantees responsive behavior for file</span>
+<span class="sd">        browsing etc.</span>
+<span class="sd">    options</span>
+<span class="sd">        Options to pass through to every worker. See Dask documentation for details</span>
+<span class="sd">    preload</span>
+<span class="sd">        Items to preload on workers in addition to LiberTEM-internal preloads.</span>
+<span class="sd">        This can be used to load libraries, for example HDF5 filter plugins before h5py is used.</span>
+<span class="sd">        See https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts</span>
+<span class="sd">        for more information.</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    :func:`libertem.utils.devices.detect`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">preload</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">preload</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nthreads&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s2">&quot;nthreads&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;silence_logs&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s2">&quot;silence_logs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARN</span>
+
+    <span class="n">workers_spec</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">cpu_options</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">cpu_options</span><span class="p">[</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;CPU&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;compute&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;ndarray&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="n">cpu_base_spec</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;cls&quot;</span><span class="p">:</span> <span class="n">dd</span><span class="o">.</span><span class="n">Nanny</span><span class="p">,</span>
+        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="n">cpu_options</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Service workers not for computation</span>
+
+    <span class="n">service_options</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">service_options</span><span class="p">[</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">service_base_spec</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;cls&quot;</span><span class="p">:</span> <span class="n">dd</span><span class="o">.</span><span class="n">Nanny</span><span class="p">,</span>
+        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="n">service_options</span>
+    <span class="p">}</span>
+
+    <span class="n">cuda_options</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">cuda_options</span><span class="p">[</span><span class="s2">&quot;resources&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;CUDA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;compute&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">has_cupy</span><span class="p">:</span>
+        <span class="n">cuda_options</span><span class="p">[</span><span class="s2">&quot;resources&quot;</span><span class="p">][</span><span class="s2">&quot;ndarray&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">cuda_base_spec</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;cls&quot;</span><span class="p">:</span> <span class="n">dd</span><span class="o">.</span><span class="n">Nanny</span><span class="p">,</span>
+        <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="n">cuda_options</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_tracing_setup</span><span class="p">(</span><span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">service_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;from libertem.common.tracing import maybe_setup_tracing; &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;maybe_setup_tracing(service_name=&#39;</span><span class="si">{</span><span class="n">service_name</span><span class="si">}</span><span class="s2">&#39;, service_id=&#39;</span><span class="si">{</span><span class="n">service_id</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cpus</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">cpus</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">cpus</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">cpu</span> <span class="ow">in</span> <span class="n">cpus</span><span class="p">:</span>
+        <span class="n">worker_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">-cpu-</span><span class="si">{</span><span class="n">cpu</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">cpu_spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">cpu_base_spec</span><span class="p">)</span>
+        <span class="n">cpu_spec</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">][</span><span class="s1">&#39;preload&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preload</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="s1">&#39;from libertem.executor.dask import worker_setup; &#39;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;worker_setup(resource=&quot;CPU&quot;, device=</span><span class="si">{</span><span class="n">cpu</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span>
+            <span class="n">_get_tracing_setup</span><span class="p">(</span><span class="n">worker_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cpu</span><span class="p">)),</span>
+            <span class="s1">&#39;libertem.preload&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">workers_spec</span><span class="p">[</span><span class="n">worker_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cpu_spec</span>
+
+    <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_service</span><span class="p">):</span>
+        <span class="n">worker_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">-service-</span><span class="si">{</span><span class="n">service</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">service_spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">service_base_spec</span><span class="p">)</span>
+        <span class="n">service_spec</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">][</span><span class="s1">&#39;preload&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preload</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="n">_get_tracing_setup</span><span class="p">(</span><span class="n">worker_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">service</span><span class="p">)),</span>
+            <span class="s1">&#39;libertem.preload&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">workers_spec</span><span class="p">[</span><span class="n">worker_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">service_spec</span>
+
+    <span class="n">cudas</span> <span class="o">=</span> <span class="n">assign_cudas</span><span class="p">(</span><span class="n">cudas</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">cuda</span> <span class="ow">in</span> <span class="n">cudas</span><span class="p">:</span>
+        <span class="n">worker_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">-cuda-</span><span class="si">{</span><span class="n">cuda</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">worker_name</span> <span class="ow">in</span> <span class="n">workers_spec</span><span class="p">:</span>
+            <span class="n">num_with_name</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">worker_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">workers_spec</span><span class="p">)</span>
+            <span class="n">worker_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">worker_name</span><span class="si">}</span><span class="s1">-</span><span class="si">{</span><span class="n">num_with_name</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">cuda_spec</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">cuda_base_spec</span><span class="p">)</span>
+        <span class="n">cuda_spec</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">][</span><span class="s1">&#39;preload&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preload</span> <span class="o">+</span> <span class="p">(</span>
+            <span class="s1">&#39;from libertem.executor.dask import worker_setup; &#39;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39;worker_setup(resource=&quot;CUDA&quot;, device=</span><span class="si">{</span><span class="n">cuda</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span>
+            <span class="n">_get_tracing_setup</span><span class="p">(</span><span class="n">worker_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">cuda</span><span class="p">)),</span>
+            <span class="s1">&#39;libertem.preload&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">workers_spec</span><span class="p">[</span><span class="n">worker_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cuda_spec</span>
+
+    <span class="k">return</span> <span class="n">workers_spec</span></div>
+
+
+<span class="k">def</span> <span class="nf">_run_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">task_id</span><span class="p">,</span> <span class="n">threaded_executor</span><span class="p">,</span> <span class="n">comms_topic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Very simple wrapper function. As dask internally caches functions that are</span>
+<span class="sd">    submitted to the cluster in various ways, we need to make sure to</span>
+<span class="sd">    consistently use the same function, and not build one on the fly.</span>
+
+<span class="sd">    Without this function, UDFTask-&gt;UDF-&gt;UDFData ends up in the</span>
+<span class="sd">    cache, which blows up memory usage over time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">worker_context</span> <span class="o">=</span> <span class="n">DaskWorkerContext</span><span class="p">(</span><span class="n">comms_topic</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">threads_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                      <span class="n">threaded_executor</span><span class="o">=</span><span class="n">threaded_executor</span><span class="p">,</span>
+                      <span class="n">worker_context</span><span class="o">=</span><span class="n">worker_context</span><span class="p">)</span>
+    <span class="n">task_result</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span><span class="n">env</span><span class="o">=</span><span class="n">env</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;task_result&quot;</span><span class="p">:</span> <span class="n">task_result</span><span class="p">,</span>
+        <span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="n">task_id</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">_simple_run_task</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">task</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">CommonDaskMixin</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_task_idx_to_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="n">hosts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">workers</span><span class="o">.</span><span class="n">hosts</span><span class="p">()))</span>
+        <span class="n">host_idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">hosts</span><span class="p">)</span>
+        <span class="n">host</span> <span class="o">=</span> <span class="n">hosts</span><span class="p">[</span><span class="n">host_idx</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">workers</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span><span class="o">.</span><span class="n">host</span> <span class="o">==</span> <span class="n">host</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_future_for_location</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">locations</span><span class="p">,</span> <span class="n">resources</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">task_args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wrap_fn</span><span class="o">=</span><span class="n">_run_task</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Submit tasks and return the resulting futures</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        task:</span>
+<span class="sd">            callable</span>
+<span class="sd">        locations:</span>
+<span class="sd">            potential locations to run the task</span>
+<span class="sd">        resources:</span>
+<span class="sd">            required resources for the task</span>
+<span class="sd">        workers : WorkerSet</span>
+<span class="sd">            Available workers in the cluster</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">submit_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">task_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">task_args</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">locations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">locations</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;no workers found for task&quot;</span><span class="p">)</span>
+            <span class="n">locations</span> <span class="o">=</span> <span class="n">locations</span><span class="o">.</span><span class="n">names</span><span class="p">()</span>
+        <span class="n">submit_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_resources</span><span class="p">(</span><span class="n">workers</span><span class="p">,</span> <span class="n">resources</span><span class="p">),</span>
+            <span class="s1">&#39;workers&#39;</span><span class="p">:</span> <span class="n">locations</span><span class="p">,</span>
+            <span class="s1">&#39;pure&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+            <span class="n">wrap_fn</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="o">*</span><span class="n">task_args</span><span class="p">,</span> <span class="o">**</span><span class="n">submit_kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">resources</span><span class="p">):</span>
+        <span class="c1"># This is set in the constructor of DaskJobExecutor</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lt_resources</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resources_available</span><span class="p">(</span><span class="n">workers</span><span class="p">,</span> <span class="n">resources</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Requested resources not available in cluster:&quot;</span><span class="p">,</span> <span class="n">resources</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">resources</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;CUDA&#39;</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Requesting CUDA resource on a cluster without resource management.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">_resources_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">resources</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">filter_fn</span><span class="p">(</span><span class="n">worker</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">worker</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">resources</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">resources</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">workers</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">filter_fn</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">has_libertem_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available_workers</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">has_resources</span><span class="p">(</span><span class="n">worker</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">worker</span><span class="o">.</span><span class="n">resources</span>
+            <span class="k">return</span> <span class="s1">&#39;compute&#39;</span> <span class="ow">in</span> <span class="n">r</span> <span class="ow">and</span> <span class="p">((</span><span class="s1">&#39;CPU&#39;</span> <span class="ow">in</span> <span class="n">r</span> <span class="ow">and</span> <span class="s1">&#39;ndarray&#39;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;CUDA&#39;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">workers</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">has_resources</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_get_future</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">params_handle</span><span class="p">,</span>
+                    <span class="n">threaded_executor</span><span class="p">,</span> <span class="n">comms_topic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">workers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;no workers available!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_future_for_location</span><span class="p">(</span>
+            <span class="n">task</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">get_locations</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_idx_to_workers</span><span class="p">(</span>
+                <span class="n">workers</span><span class="p">,</span> <span class="n">idx</span>
+            <span class="p">),</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">get_resources</span><span class="p">(),</span>
+            <span class="n">workers</span><span class="p">,</span>
+            <span class="n">task_args</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">params_handle</span><span class="p">,</span>
+                <span class="n">idx</span><span class="p">,</span>
+                <span class="n">threaded_executor</span><span class="p">,</span>
+                <span class="n">comms_topic</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_available_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WorkerSet</span><span class="p">:</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">scheduler_info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">WorkerSet</span><span class="p">([</span>
+            <span class="n">Worker</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">worker</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                <span class="n">host</span><span class="o">=</span><span class="n">worker</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">],</span>
+                <span class="n">resources</span><span class="o">=</span><span class="n">worker</span><span class="p">[</span><span class="s1">&#39;resources&#39;</span><span class="p">],</span>
+                <span class="n">nthreads</span><span class="o">=</span><span class="n">worker</span><span class="p">[</span><span class="s1">&#39;nthreads&#39;</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s1">&#39;workers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_resource_details</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available_workers</span><span class="p">()</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">workers</span><span class="p">:</span>
+            <span class="n">host_name</span> <span class="o">=</span> <span class="n">worker</span><span class="o">.</span><span class="n">host</span>
+            <span class="k">if</span> <span class="n">worker</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;tcp&quot;</span><span class="p">):</span>
+                <span class="c1"># for handling `dask-worker`</span>
+                <span class="c1"># `dask-worker` name starts with &quot;tcp&quot;</span>
+                <span class="c1">#  only supports CPU</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="s1">&#39;cpu&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># for handling `libertem-worker`</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">worker</span><span class="o">.</span><span class="n">resources</span>
+                <span class="k">if</span> <span class="s2">&quot;CPU&quot;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+                    <span class="n">resource</span> <span class="o">=</span> <span class="s1">&#39;cpu&#39;</span>
+                <span class="k">elif</span> <span class="s2">&quot;CUDA&quot;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+                    <span class="n">resource</span> <span class="o">=</span> <span class="s1">&#39;cuda&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">resource</span> <span class="o">=</span> <span class="s1">&#39;service&#39;</span>
+
+            <span class="k">if</span> <span class="n">host_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">details</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">details</span><span class="p">[</span><span class="n">host_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                                 <span class="s1">&#39;host&#39;</span><span class="p">:</span> <span class="n">host_name</span><span class="p">,</span>
+                                 <span class="s1">&#39;cpu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                                 <span class="s1">&#39;cuda&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                                 <span class="s1">&#39;service&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                            <span class="p">}</span>
+            <span class="n">details</span><span class="p">[</span><span class="n">host_name</span><span class="p">][</span><span class="n">resource</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">details_sorted</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">details</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">details_sorted</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="n">host</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">details_sorted</span>
+
+
+<span class="k">def</span> <span class="nf">_dispatch_messages</span><span class="p">(</span><span class="n">subscribers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]],</span> <span class="n">dask_message</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unpacks the Dask message format and forwards the message</span>
+<span class="sd">    to all subscribed callbacks for that topic (if any)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timestamp</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">dask_message</span>
+    <span class="n">true_topic</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;topic&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">subscribers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">true_topic</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">handler</span><span class="p">(</span><span class="n">true_topic</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DaskJobExecutor"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor">[docs]</a><span class="k">class</span> <span class="nc">DaskJobExecutor</span><span class="p">(</span><span class="n">CommonDaskMixin</span><span class="p">,</span> <span class="n">BaseJobExecutor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Default LiberTEM executor that uses `Dask futures</span>
+<span class="sd">    &lt;https://docs.dask.org/en/stable/futures.html&gt;`_.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    client : distributed.Client</span>
+<span class="sd">    is_local : bool</span>
+<span class="sd">        Close the Client and cluster when the executor is closed.</span>
+<span class="sd">    lt_resources : bool</span>
+<span class="sd">        Specify if the cluster has LiberTEM resource tags and environment</span>
+<span class="sd">        variables for GPU processing. Autodetected by default.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">dd</span><span class="o">.</span><span class="n">Client</span><span class="p">,</span> <span class="n">is_local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">lt_resources</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_local</span> <span class="o">=</span> <span class="n">is_local</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="k">if</span> <span class="n">lt_resources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">lt_resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_libertem_resources</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lt_resources</span> <span class="o">=</span> <span class="n">lt_resources</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="DaskJobExecutor.scatter"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.scatter">[docs]</a>    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">broadcast</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.run_tasks"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.run_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">run_tasks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tasks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TaskProtocol</span><span class="p">],</span>
+        <span class="n">params_handle</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">cancel_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">task_comm_handler</span><span class="p">:</span> <span class="n">TaskCommHandler</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+        <span class="n">tasks_w_index</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">tasks</span><span class="p">))</span>
+
+        <span class="k">def</span> <span class="nf">_id_to_task</span><span class="p">(</span><span class="n">task_id</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">tasks</span><span class="p">[</span><span class="n">task_id</span><span class="p">]</span>
+
+        <span class="n">workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available_workers</span><span class="p">()</span>
+        <span class="n">threaded_executor</span> <span class="o">=</span> <span class="n">workers</span><span class="o">.</span><span class="n">has_threaded_workers</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">[</span><span class="n">cancel_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">initial</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">topic_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;topic-</span><span class="si">{</span><span class="n">cancel_id</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="c1"># Wrap all subscriptions into single unique topic</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">subscribe_topic</span><span class="p">(</span>
+                <span class="n">topic_id</span><span class="p">,</span>
+                <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">_dispatch_messages</span><span class="p">,</span>
+                                  <span class="n">task_comm_handler</span><span class="o">.</span><span class="n">subscriptions</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># Dask version does not support structured logs</span>
+            <span class="c1"># Fall back to partition-level progress updates only</span>
+            <span class="n">topic_id</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">workers</span><span class="p">))):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">tasks_w_index</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">idx</span><span class="p">,</span> <span class="n">wrapped_task</span> <span class="o">=</span> <span class="n">tasks_w_index</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_future</span><span class="p">(</span><span class="n">wrapped_task</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">params_handle</span><span class="p">,</span>
+                                      <span class="n">threaded_executor</span><span class="p">,</span> <span class="n">topic_id</span><span class="p">)</span>
+            <span class="n">initial</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">[</span><span class="n">cancel_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">as_completed</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="n">with_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">future</span><span class="p">,</span> <span class="n">result_wrap</span> <span class="ow">in</span> <span class="n">as_completed</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">future</span><span class="o">.</span><span class="n">cancelled</span><span class="p">():</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">[</span><span class="n">cancel_id</span><span class="p">]</span>
+                    <span class="k">raise</span> <span class="n">JobCancelledError</span><span class="p">()</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result_wrap</span><span class="p">[</span><span class="s1">&#39;task_result&#39;</span><span class="p">]</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">_id_to_task</span><span class="p">(</span><span class="n">result_wrap</span><span class="p">[</span><span class="s1">&#39;task_id&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">tasks_w_index</span><span class="p">:</span>
+                    <span class="n">idx</span><span class="p">,</span> <span class="n">wrapped_task</span> <span class="o">=</span> <span class="n">tasks_w_index</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                    <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_future</span><span class="p">(</span>
+                        <span class="n">wrapped_task</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">params_handle</span><span class="p">,</span> <span class="n">threaded_executor</span><span class="p">,</span> <span class="n">topic_id</span>
+                    <span class="p">)</span>
+                    <span class="n">as_completed</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">[</span><span class="n">cancel_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">future</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">result</span><span class="p">,</span> <span class="n">task</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cancel_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">[</span><span class="n">cancel_id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">topic_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">unsubscribe_topic</span><span class="p">(</span><span class="n">topic_id</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cancel_id</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cancel_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">:</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_futures</span><span class="p">[</span><span class="n">cancel_id</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="n">futures</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DaskJobExecutor.run_each_partition"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.run_each_partition">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partitions</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">all_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run `fn` for all partitions. Yields results in order of completion.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        partitions : List[Partition]</span>
+<span class="sd">            List of relevant partitions.</span>
+
+<span class="sd">        fn : callable</span>
+<span class="sd">            Function to call, will get the partition as first and only argument.</span>
+
+<span class="sd">        all_nodes : bool</span>
+<span class="sd">            If all_nodes is True, run the function on all nodes that have this partition,</span>
+<span class="sd">            otherwise run on any node that has the partition. If a partition has no location,</span>
+<span class="sd">            the function will not be run for that partition if `all_nodes` is True, otherwise</span>
+<span class="sd">            it will be run on any node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_make_items_all</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">:</span>
+                <span class="n">locs</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get_locations</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">locs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">workers</span> <span class="ow">in</span> <span class="n">locs</span><span class="o">.</span><span class="n">group_by_host</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">workers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">all_nodes</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">_make_items_all</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># TODO check if we should request a compute resource</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">((</span><span class="k">lambda</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">get_locations</span><span class="p">(),</span> <span class="p">{})</span>
+                     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">)</span>
+        <span class="n">workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available_workers</span><span class="p">()</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_future_for_location</span><span class="p">(</span><span class="o">*</span><span class="n">item</span><span class="p">,</span> <span class="n">workers</span><span class="p">,</span> <span class="n">wrap_fn</span><span class="o">=</span><span class="n">_simple_run_task</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span>
+        <span class="p">]</span>
+        <span class="c1"># TODO: do we need cancellation and all that good stuff?</span>
+        <span class="k">for</span> <span class="n">future</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">dd</span><span class="o">.</span><span class="n">as_completed</span><span class="p">(</span><span class="n">futures</span><span class="p">,</span> <span class="n">with_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">loop</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">loop</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">future</span><span class="o">.</span><span class="n">cancelled</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="n">JobCancelledError</span><span class="p">()</span>
+            <span class="k">yield</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.run_function"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.run_function">[docs]</a>    <span class="k">def</span> <span class="nf">run_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        run a callable :code:`fn` on any worker</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fn_with_args</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">future</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">fn_with_args</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pure</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.map"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a callable :code:`fn` for each element in :code:`iterable`, on arbitrary worker nodes.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        fn : callable</span>
+<span class="sd">            Function to call. Should accept exactly one parameter.</span>
+
+<span class="sd">        iterable : Iterable</span>
+<span class="sd">            Which elements to call the function on.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">pure</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.run_each_host"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.run_each_host">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run a callable :code:`fn` once on each host, gathering all results into</span>
+<span class="sd">        a dict host -&gt; result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: any cancellation/errors to handle?</span>
+        <span class="n">available_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available_workers</span><span class="p">()</span>
+
+        <span class="n">future_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">worker_set</span> <span class="ow">in</span> <span class="n">available_workers</span><span class="o">.</span><span class="n">group_by_host</span><span class="p">():</span>
+            <span class="n">future_map</span><span class="p">[</span><span class="n">worker_set</span><span class="o">.</span><span class="n">example</span><span class="p">()</span><span class="o">.</span><span class="n">host</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                <span class="n">priority</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">workers</span><span class="o">=</span><span class="n">worker_set</span><span class="o">.</span><span class="n">names</span><span class="p">(),</span>
+                <span class="c1"># NOTE: need pure=False, otherwise the functions will all map to the same</span>
+                <span class="c1"># scheduler key and will only run once</span>
+                <span class="n">pure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">result_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">host</span><span class="p">:</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">host</span><span class="p">,</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">future_map</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">result_map</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.run_each_worker"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.run_each_worker">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_worker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Client.run() creates issues on Windows and OS X with Python 3.6</span>
+        <span class="c1"># FIXME workaround may not be needed anymore for Python 3.7+</span>
+        <span class="n">available_workers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_available_workers</span><span class="p">()</span>
+
+        <span class="n">future_map</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="n">available_workers</span><span class="p">:</span>
+            <span class="n">future_map</span><span class="p">[</span><span class="n">worker</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span>
+                <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                <span class="n">priority</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">workers</span><span class="o">=</span><span class="p">[</span><span class="n">worker</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+                <span class="c1"># NOTE: need pure=False, otherwise the functions will all map to the same</span>
+                <span class="c1"># scheduler key and will only run once</span>
+                <span class="n">pure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">result_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">future_map</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">result_map</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.close"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_local</span><span class="p">:</span>
+            <span class="c1"># Client.close won&#39;t close the Cluster itself because</span>
+            <span class="c1"># we provided an external dd.SpecCluster</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="c1"># Manually close the cluster if not yet torn down</span>
+            <span class="c1"># use getattr just in case cluster is already gone</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="s1">&#39;cluster&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">cluster</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span></div>
+        <span class="c1"># NOTE: distributed already registers atexit handlers for</span>
+        <span class="c1"># both clients and clusters, this is here to allow manual closure</span>
+        <span class="c1"># followed by creation of a new Executor without accumulating clusters</span>
+
+<div class="viewcode-block" id="DaskJobExecutor.connect"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.connect">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scheduler_uri</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">client_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Connect to a remote dask scheduler.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scheduler_uri: str</span>
+<span class="sd">            Compatible with the :code:`address` parameter of :class:`distributed.Client`.</span>
+<span class="sd">        client_kwargs: dict or None</span>
+<span class="sd">            Passed as kwargs to :class:`distributed.Client`.</span>
+<span class="sd">            :code:`client_kwargs[&#39;set_as_default&#39;]` is set to :code:`False`</span>
+<span class="sd">            unless specified otherwise to avoid interference with Dask-based workflows.</span>
+<span class="sd">            Pass :code:`client_kwargs={&#39;set_as_default&#39;: True}` to set the Client as the</span>
+<span class="sd">            default Dask scheduler and keep it running when the Context closes.</span>
+<span class="sd">        *args, **kwargs: Passed to :class:`DaskJobExecutor`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DaskJobExecutor</span>
+<span class="sd">            the connected JobExecutor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">client_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">client_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;set_as_default&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">client_kwargs</span><span class="p">[</span><span class="s1">&#39;set_as_default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">is_local</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">client_kwargs</span><span class="p">[</span><span class="s1">&#39;set_as_default&#39;</span><span class="p">]</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="n">scheduler_uri</span><span class="p">,</span> <span class="o">**</span><span class="n">client_kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">is_local</span><span class="o">=</span><span class="n">is_local</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DaskJobExecutor.make_local"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.DaskJobExecutor.make_local">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_local</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cluster_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">client_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Spin up a local dask cluster</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec</span>
+<span class="sd">            Dask cluster spec, see</span>
+<span class="sd">            http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster</span>
+<span class="sd">            for more info.</span>
+<span class="sd">            :func:`libertem.utils.devices.detect` allows to detect devices that can be used</span>
+<span class="sd">            with LiberTEM, and :func:`cluster_spec` can be used to create a :code:`spec`</span>
+<span class="sd">            with customized parameters.</span>
+<span class="sd">        cluster_kwargs</span>
+<span class="sd">            Passed to :class:`distributed.SpecCluster`.</span>
+<span class="sd">        client_kwargs</span>
+<span class="sd">            Passed to :class:`distributed.Client`. Pass</span>
+<span class="sd">            :code:`client_kwargs={&#39;set_as_default&#39;: True}` to set the Client as the</span>
+<span class="sd">            default Dask scheduler.</span>
+<span class="sd">        preload: Optional[Tuple[str]]</span>
+<span class="sd">            Passed to :func:`cluster_spec` if :code:`spec` is :code:`None`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DaskJobExecutor</span>
+<span class="sd">            the connected JobExecutor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Distributed doesn&#39;t adjust the event loop policy when being run</span>
+        <span class="c1"># from within pytest as of version 2.21.0. For that reason we</span>
+        <span class="c1"># adjust the policy ourselves here.</span>
+        <span class="n">adjust_event_loop_policy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">cluster_spec</span><span class="p">(</span><span class="o">**</span><span class="n">detect</span><span class="p">(),</span> <span class="n">preload</span><span class="o">=</span><span class="n">preload</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">preload</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Passing both spec and preload is not supported. &quot;</span>
+                    <span class="s2">&quot;Instead, include preloading specification in the spec&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">client_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">client_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">client_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;set_as_default&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">client_kwargs</span><span class="p">[</span><span class="s1">&#39;set_as_default&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">cluster_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cluster_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">cluster_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;silence_logs&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cluster_kwargs</span><span class="p">[</span><span class="s1">&#39;silence_logs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARN</span>
+
+        <span class="k">with</span> <span class="n">set_num_threads_env</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># Mitigation for https://github.com/dask/distributed/issues/6776</span>
+            <span class="k">with</span> <span class="n">dask</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;distributed.worker.profile.enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}):</span>
+                <span class="n">cluster</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">SpecCluster</span><span class="p">(</span><span class="n">workers</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">cluster_kwargs</span> <span class="ow">or</span> <span class="p">{}))</span>
+                <span class="n">client</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">cluster</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="n">client_kwargs</span> <span class="ow">or</span> <span class="p">{}))</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">wait_for_workers</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+
+        <span class="n">is_local</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">client_kwargs</span><span class="p">[</span><span class="s1">&#39;set_as_default&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">is_local</span><span class="o">=</span><span class="n">is_local</span><span class="p">,</span> <span class="n">lt_resources</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="AsyncDaskJobExecutor"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.dask.AsyncDaskJobExecutor">[docs]</a><span class="k">class</span> <span class="nc">AsyncDaskJobExecutor</span><span class="p">(</span><span class="n">AsyncAdapter</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapped</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wrapped</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wrapped</span> <span class="o">=</span> <span class="n">DaskJobExecutor</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">wrapped</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">scheduler_uri</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">executor</span> <span class="o">=</span> <span class="k">await</span> <span class="n">sync_to_async</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+            <span class="n">DaskJobExecutor</span><span class="o">.</span><span class="n">connect</span><span class="p">,</span>
+            <span class="n">scheduler_uri</span><span class="o">=</span><span class="n">scheduler_uri</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">))</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">wrapped</span><span class="o">=</span><span class="n">executor</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">make_local</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cluster_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">client_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">executor</span> <span class="o">=</span> <span class="k">await</span> <span class="n">sync_to_async</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+            <span class="n">DaskJobExecutor</span><span class="o">.</span><span class="n">make_local</span><span class="p">,</span>
+            <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span>
+            <span class="n">cluster_kwargs</span><span class="o">=</span><span class="n">cluster_kwargs</span><span class="p">,</span>
+            <span class="n">client_kwargs</span><span class="o">=</span><span class="n">client_kwargs</span><span class="p">,</span>
+        <span class="p">))</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">wrapped</span><span class="o">=</span><span class="n">executor</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">cli_worker</span><span class="p">(</span>
+        <span class="n">scheduler</span><span class="p">,</span> <span class="n">local_directory</span><span class="p">,</span> <span class="n">cpus</span><span class="p">,</span> <span class="n">cudas</span><span class="p">,</span> <span class="n">has_cupy</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">preload</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+    <span class="kn">import</span> <span class="nn">asyncio</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;silence_logs&quot;</span><span class="p">:</span> <span class="n">log_level</span><span class="p">,</span>
+        <span class="s2">&quot;local_directory&quot;</span><span class="p">:</span> <span class="n">local_directory</span>
+
+    <span class="p">}</span>
+
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">cluster_spec</span><span class="p">(</span>
+        <span class="n">cpus</span><span class="o">=</span><span class="n">cpus</span><span class="p">,</span> <span class="n">cudas</span><span class="o">=</span><span class="n">cudas</span><span class="p">,</span> <span class="n">has_cupy</span><span class="o">=</span><span class="n">has_cupy</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="n">preload</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+        <span class="c1"># Mitigation for https://github.com/dask/distributed/issues/6776</span>
+        <span class="k">with</span> <span class="n">dask</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">({</span><span class="s2">&quot;distributed.worker.profile.enabled&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}):</span>
+            <span class="n">workers</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">cls</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;cls&#39;</span><span class="p">]</span>
+                <span class="n">workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="bp">cls</span><span class="p">(</span><span class="n">scheduler</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;options&#39;</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="kn">import</span> <span class="nn">asyncio</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">workers</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">workers</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">w</span><span class="o">.</span><span class="n">finished</span><span class="p">()</span>
+
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">run</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

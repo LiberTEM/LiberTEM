@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debugging &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Architecture" href="architecture.html" />
+    <link rel="prev" title="Running distributed tests" href="dist_tests.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#debugging-the-web-gui">Debugging the Web GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging-the-api-server">Debugging the API server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging-udfs-or-other-python-code">Debugging UDFs or other Python code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging-failing-test-cases">Debugging failing test cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracing-using-opentelemetry">Tracing using opentelemetry</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#getting-tracing-running">Getting tracing running</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#on-windows">On Windows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#adding-your-own-instrumentation">Adding your own instrumentation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Debugging</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/debugging.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="debugging">
+<h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this heading"></a></h1>
+<p>There are different parts of LiberTEM which can be debugged with different tools and methods.</p>
+<section id="debugging-the-web-gui">
+<h2>Debugging the Web GUI<a class="headerlink" href="#debugging-the-web-gui" title="Permalink to this heading"></a></h2>
+<p>For debugging the GUI, you can use all standard debugging tools for web development. Most useful
+in this context are the <a class="reference external" href="https://developer.chrome.com/docs/devtools/">Chrome DevTools</a>
+or <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Tools">Firefox Developer Tools</a>, which can be
+accessed by pressing F12. You can extend these with additional panels
+<a class="reference external" href="https://reactjs.org/blog/2019/08/15/new-react-devtools.html">for React</a>
+and <a class="reference external" href="https://github.com/reduxjs/redux-devtools">for Redux</a>.</p>
+<p>These tools can be used for inspecting all frontend-related processes, from network traffic
+up to rendering behavior. Take note of the <code class="code docutils literal notranslate"><span class="pre">/api/events/</span></code> websocket connection, where all
+asynchronous notification and results will be transferred.</p>
+<p>Note that you should always debug using the development build of the GUI, using <code class="code docutils literal notranslate"><span class="pre">npm</span> <span class="pre">start</span></code>,
+as described in <a class="reference internal" href="contributing.html#building-the-client"><span class="std std-ref">the contributing section</span></a>. Otherwise the debugging
+experience may be painful, for example worse error output from react, minified source and
+minified component names, …</p>
+</section>
+<section id="debugging-the-api-server">
+<h2>Debugging the API server<a class="headerlink" href="#debugging-the-api-server" title="Permalink to this heading"></a></h2>
+<p>If the API server returns a server error (500), the detailed exception should be logged
+in the output of <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code>. You can also try
+<a class="reference external" href="https://www.tornadoweb.org/en/stable/guide/running.html#debug-mode-and-automatic-reloading">enabling the debug mode of tornado</a>
+(there is currently no command line flag for this, so you need to change
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">libertem.web.server</span></code> accordingly.)</p>
+<p>If an analysis based on the exception alone is inconclusive,
+you can try to reproduce the problem using the Python API and follow the instructions below.</p>
+</section>
+<section id="debugging-udfs-or-other-python-code">
+<span id="debugging-udfs"></span><h2>Debugging UDFs or other Python code<a class="headerlink" href="#debugging-udfs-or-other-python-code" title="Permalink to this heading"></a></h2>
+<p>If you are trying to write a UDF, or debug other Python parts of LiberTEM, you can
+instruct LiberTEM to use simple single-threaded execution using the
+<a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a>.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">lt</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">make_with</span><span class="p">(</span><span class="s1">&#39;inline&#39;</span><span class="p">)</span>
+
+<span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can then use all usual debugging facilities, including
+<a class="reference external" href="https://docs.python.org/3.7/library/pdb.html">pdb</a> and
+<a class="reference external" href="https://ipython.org/ipython-doc/3/interactive/magics.html#magic-pdb">the %pdb magic of ipython/Jupyter</a>.</p>
+<p>The <a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.executor.inline.InlineJobExecutor</span></code></a> uses a single CPU core
+by default. It can be switched to GPU processing to test CuPy-enabled UDFs by
+calling <a class="reference internal" href="reference/internals.html#libertem.common.backend.set_use_cuda" title="libertem.common.backend.set_use_cuda"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.common.backend.set_use_cuda()</span></code></a> with the device ID to use.
+<code class="code docutils literal notranslate"><span class="pre">libertem.common.backend.set_use_cpu(0)</span></code> switches back to CPU processing.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">lt</span>
+<span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
+<span class="kn">from</span> <span class="nn">libertem.common.backend</span> <span class="kn">import</span> <span class="n">set_use_cpu</span><span class="p">,</span> <span class="n">set_use_cuda</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">make_with</span><span class="p">(</span><span class="s1">&#39;inline&#39;</span><span class="p">)</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">detect</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;cudas&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">d</span><span class="p">[</span><span class="s1">&#39;has_cupy&#39;</span><span class="p">]:</span>
+    <span class="n">set_use_cuda</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="s1">&#39;cudas&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">)</span>
+<span class="n">set_use_cpu</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If a problem is only reproducible using the default executor, you will have to follow the
+<a class="reference external" href="https://docs.dask.org/en/latest/debugging.html">debugging instructions of dask-distributed</a>.
+As the API server can’t use the synchronous <a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a>,
+this is also the case when debugging problems that only occur in context of the API server.</p>
+</section>
+<section id="debugging-failing-test-cases">
+<h2>Debugging failing test cases<a class="headerlink" href="#debugging-failing-test-cases" title="Permalink to this heading"></a></h2>
+<p>When a test case fails, there are some options to find the root cause:</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">--pdb</span></code> command line switch of pytest can be used to automatically
+drop you into a <a class="reference external" href="https://docs.python.org/3.10/library/pdb.html#module-pdb" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">pdb</span></code></a> prompt in the failing test case, where you will either land
+on the failing <code class="code docutils literal notranslate"><span class="pre">assert</span></code> statement, or the place in the code where an
+exception was raised.</p>
+<p>This does not help if the test case only fails in CI. Here, it may be easier to
+use logging. Because we call pytest with the <code class="code docutils literal notranslate"><span class="pre">--log-level=DEBUG</span></code>
+parameter, the failing test case output will have a section containing the
+captured logging output.</p>
+<p>You can sprinkle the code with <cite>log.debug(…)</cite> calls that output the relevant
+variables. In some cases you may also leave the logging statements in the code
+even after the problem is fixed, depending on the overhead.</p>
+</section>
+<section id="tracing-using-opentelemetry">
+<span id="tracing"></span><h2>Tracing using opentelemetry<a class="headerlink" href="#tracing-using-opentelemetry" title="Permalink to this heading"></a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.10.0: </span>Tracing support using opentelemetry was added in version 0.10.0</p>
+</div>
+<p>Instead of sprinkling logging or print statements into your code,
+it is also possible to diagnose issues or gain insight into the runtime
+behavior of LiberTEM using opentelemetry tracing. This is also based on
+adding instrumentation to the code, but follows a more structured approach.</p>
+<p>Using tracing, instead of relatively unstructured “log lines”,
+rich and structured information can be logged as traces, which are organized
+into spans. These traces can then be visualized, inspected, searched, …
+using different tools and databases, here for example using
+<a class="reference external" href="https://www.jaegertracing.io/">Jaeger</a>:</p>
+<img alt="_images/jaeger-tracing-visualization.png" src="_images/jaeger-tracing-visualization.png" />
+<p>This becomes more interesting once your code goes beyond a single thread or
+process, when it is important to see the temporal relation between different
+events and functions executing concurrently. Crucially, it is possible to
+gather traces in distributed systems, from different nodes.</p>
+<p>For an overview of opentelemetry, please see <a class="reference external" href="https://opentelemetry.io/docs/reference/specification/overview/">the official opentelemetry documentation</a> - here, we
+will document the practical setup and usage. For the Python API docs, please
+see the <a class="reference external" href="https://opentelemetry-python.readthedocs.io/en/latest/">opentelemetry Python API docs</a>.</p>
+<section id="getting-tracing-running">
+<h3>Getting tracing running<a class="headerlink" href="#getting-tracing-running" title="Permalink to this heading"></a></h3>
+<p>Some external services are needed to gather traces. We include
+<code class="code docutils literal notranslate"><span class="pre">docker-compose</span></code> configuration for getting these up and running quickly
+in the <code class="code docutils literal notranslate"><span class="pre">tracing</span></code> directory. Please note that this configuration
+by default opens some ports, so be careful, as this may circumvent your
+device’s firewall!</p>
+<p>To get these running, start <code class="code docutils literal notranslate"><span class="pre">docker-compose</span> <span class="pre">up</span></code> in said directory. This will
+pull in all required docker images and start the required services, until they
+are stopped using <code class="code docutils literal notranslate"><span class="pre">Ctrl+C</span></code>.</p>
+<p>The Jaeger UI, as shown above, is then available on <a class="reference external" href="http://localhost:16686">localhost:16686</a>. An alternative UI, called Zipkin, is available on
+<a class="reference external" href="http://localhost:9411">localhost:9411</a>. Both of these should now be viewable
+by your browser.
+The actual trace collection API endpoint is started on port 4317, but is only
+used under the hood.</p>
+<p>In your LiberTEM virtual environment, you need to install the <code class="code docutils literal notranslate"><span class="pre">tracing</span></code>
+extra, for example via <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[tracing]</span></code>.</p>
+<p>The Python code then needs to be told to enable tracing, and how to connect to
+the trace collection API endpoint. The easiest way is to set environment variables,
+for example, in a notebook:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">env</span> <span class="n">OTEL_ENABLE</span><span class="o">=</span><span class="mi">1</span>
+<span class="o">%</span><span class="n">env</span> <span class="n">OTEL_EXPORTER_OTLP_ENDPOINT</span><span class="o">=</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">4317</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.tracing</span> <span class="kn">import</span> <span class="n">maybe_setup_tracing</span>
+<span class="n">maybe_setup_tracing</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="s2">&quot;notebook-main&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Or, for intrumenting the <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">OTEL_ENABLE</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">OTEL_EXPORTER_OTLP_ENDPOINT</span><span class="o">=</span>http://localhost:4317<span class="w"> </span>libertem-server
+</pre></div>
+</div>
+<p>The same works for bringing up <code class="code docutils literal notranslate"><span class="pre">libertem-worker</span></code> processes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">OTEL_ENABLE</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">OTEL_EXPORTER_OTLP_ENDPOINT</span><span class="o">=</span>http://localhost:4317<span class="w"> </span>libertem-worker
+</pre></div>
+</div>
+<p>Be sure to change the endpoint URL to whatever is the correct one from the
+perspective of the worker process in the distributed case.</p>
+<p>Support for setting up tracing on workers is already integrated
+in the Dask and pipelined executors. The inline executor doesn’t need any
+additional setup for tracing to work.</p>
+<p>For enabling tracing across multiple Python processes in other scenarios,
+possibly on multiple nodes, set the environment variables for each of these
+processes, and also call the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">maybe_setup_tracing()</span></code> function on each.</p>
+</section>
+<section id="on-windows">
+<h3>On Windows<a class="headerlink" href="#on-windows" title="Permalink to this heading"></a></h3>
+<p>The easiest way to get the tracing services up and running is using
+<a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/install">Windows Subsystem for Linux</a>
+to install Linux and Docker. This allows to run the tracing services as described above.
+Alternatively, <a class="reference external" href="https://docs.docker.com/desktop/windows/install/">Docker Desktop for Windows</a>
+could be an option.</p>
+<p>Clients running natively on Windows can then connect to these services:</p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="k">set</span> <span class="nv">OTEL_ENABLE</span><span class="p">=</span>1
+<span class="k">set</span> <span class="nv">OTEL_EXPORTER_OTLP_ENDPOINT</span><span class="p">=</span>http://localhost:4317
+libertem-server
+</pre></div>
+</div>
+</section>
+<section id="adding-your-own-instrumentation">
+<h3>Adding your own instrumentation<a class="headerlink" href="#adding-your-own-instrumentation" title="Permalink to this heading"></a></h3>
+<p>By default, a minimal set of functions is already annotated with tracing
+information, to be able to understand how UDFs are executed across multiple
+processes. Adding tracing instrumentation to your code is similar to setting
+up logging using the <code class="code docutils literal notranslate"><span class="pre">logging</span></code> module. At the top of your Python module,
+you create and use a <code class="code docutils literal notranslate"><span class="pre">Tracer</span></code> object like this:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
+
+<span class="n">tracer</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;span-name&quot;</span><span class="p">):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># do some real work here</span>
+
+<span class="n">some_function</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also add some more information to a span, for example events with attributes:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;span-name&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># do some real work here</span>
+            <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;work item done&quot;</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;item_id&quot;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>  <span class="c1"># you can add attributes to events</span>
+            <span class="p">})</span>
+
+<span class="n">some_function</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Attributes can also be added to spans themselves:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;span-name&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># do some real work here</span>
+        <span class="n">span</span><span class="o">.</span><span class="n">set_attributes</span><span class="p">({</span>
+            <span class="s2">&quot;attribute-name&quot;</span><span class="p">:</span> <span class="s2">&quot;attribute-value-here&quot;</span><span class="p">,</span>
+        <span class="p">})</span>
+
+<span class="n">some_function</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Note that, while the tracing is quite lightweight, it is probably a good idea
+to not add spans and events in the innermost loops of your processing, like
+<code class="code docutils literal notranslate"><span class="pre">UDF.process_frame</span></code>, but spans for per-partition operations
+should be fine. In the future, metrics could also be collected to gain
+further insight into the performance characteristics.</p>
+<p>For more details, please also see the <a class="reference external" href="https://opentelemetry-python.readthedocs.io/en/latest/">opentelemetry Python API docs</a>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dist_tests.html" class="btn btn-neutral float-left" title="Running distributed tests" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="architecture.html" class="btn btn-neutral float-right" title="Architecture" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Releasing &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running distributed tests" href="dist_tests.html" />
+    <link rel="prev" title="Contributing" href="contributing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributing.html">Contributing</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#development-principles">Development principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-contributions">Code contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#running-the-tests">Running the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-style">Code style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#building-the-documentation">Building the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#building-the-gui-client">Building the GUI (client)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="contributing.html#advanced">Advanced</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Releasing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#tagging-a-version">Tagging a version</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#issue-template-release-checklist">Issue template: release checklist</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dist_tests.html">Running distributed tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="contributing.html">Contributing</a></li>
+      <li class="breadcrumb-item active">Releasing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/releasing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="releasing">
+<h1>Releasing<a class="headerlink" href="#releasing" title="Permalink to this heading"></a></h1>
+<p>This document describes release procedures and infrastructure that is relevant
+for advanced contributors. See <a class="reference internal" href="contributing.html#contributing"><span class="std std-ref">Contributing</span></a> for information on regular
+contributions.</p>
+<section id="tagging-a-version">
+<h2>Tagging a version<a class="headerlink" href="#tagging-a-version" title="Permalink to this heading"></a></h2>
+<p>Install dependencies from <code class="code docutils literal notranslate"><span class="pre">scripts/requirements.txt</span></code>,
+which are used by <code class="code docutils literal notranslate"><span class="pre">scripts/release</span></code>. Then call the script with
+the <code class="code docutils literal notranslate"><span class="pre">bump</span></code> command, with the new version as parameter:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./scripts/release<span class="w"> </span>bump<span class="w"> </span>v0.3.0rc0<span class="w"> </span>--tag
+</pre></div>
+</div>
+<p>If you are bumping to a .dev0 suffix, omit <code class="code docutils literal notranslate"><span class="pre">--tag</span></code> and only pass <code class="code docutils literal notranslate"><span class="pre">--commit</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>./scripts/release<span class="w"> </span>bump<span class="w"> </span>v0.4.0.dev0<span class="w"> </span>--commit
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In normal development, the version in the master branch will be x.y.z.dev0,
+if the next expected version is x.y.z. When starting the release process, it
+will be bumped up to x.y.zrc0 (note: no dot before rc!) and possibly
+additional release candidates afterwards (rc1, …, rcN). These release candidates
+are done mostly to assure our release scripts work as expected and for doing
+additional QA. See below for our QA process.</p>
+</div>
+</section>
+<section id="issue-template-release-checklist">
+<h2>Issue template: release checklist<a class="headerlink" href="#issue-template-release-checklist" title="Permalink to this heading"></a></h2>
+<p>When planning a release, create a new issue with the following checklist:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span># Release checklist
+
+Issues and pull requests to be considered for this release:
+
+* #XXX
+* #YYY
+* #ZZZ
+
+## Before (using a release candidate package)
+
+* [ ] Review open issues and pull requests
+* [ ] License review: no import of GPL code from MIT code
+      `pydeps --only &quot;libertem&quot; --show-deps --noshow src\libertem | python scripts\licensecheck.py`
+* [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3)
+* [ ] Run tests for related packages w/ new LiberTEM version
+    * [ ] LiberTEM-live
+    * [ ] LiberTEM-holo
+    * [ ] LiberTEM-blobfinder
+    * [ ] ptychography40
+* [ ] Handle deprecation, search the code base for `DeprecationWarning`
+      that are supposed to be removed in that release.
+* [ ] GUI dependency update with `npm install`
+* [ ] Review https://github.com/LiberTEM/LiberTEM/security/dependabot and update dependencies
+* [ ] Full documentation review and update, including link check using
+      ``sphinx-build -b linkcheck &quot;docs/source&quot; &quot;docs/build/html&quot;``
+* [ ] Run complete test suite, including slow tests that are deactivated by default
+      and tests that require sample files.
+* [ ] Update the expected version in notes on changes, i.e. from `0.3.0.dev0`
+      to `0.3.0` when releasing version 0.3.0.
+* [ ] Update and review change log in `docs/source/changelog.rst`, merging
+      snippets in `docs/source/changelog/*/` as appropriate.
+* [ ] Update the JSON files in the ``packaging/`` folder with author and project information
+* [ ] Edit `pytest.ini` to exclude flaky tests temporarily from release builds
+* [ ] Create a release candidate using `scripts/release`. See `scripts/release --help` for details.
+* [ ] `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
+      GitHub &lt;https://github.com/LiberTEM/LiberTEM/releases&gt;`_
+* [ ] Confirm that a new version with the most recent release candidate is created in the
+      `Zenodo.org sandbox &lt;https://sandbox.zenodo.org/record/367108&gt;`_ that is ready for submission.
+* [ ] Install release candidate packages in a clean environment
+      (for example:
+      `python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple &#39;libertem==0.2.0rc11&#39;`)
+* [ ] Test the release candidate docker image
+* [ ] For the GUI-related items, open in an incognito window to start from a clean slate
+* [ ] Correct version info displayed in info dialogue?
+* [ ] Link check in version info dialogue
+* [ ] Test GUI without internet access
+* [ ] Make sure you have test files of all supported types available
+    * [ ] Include floats, ints, big endian, little endian, complex raw data
+* [ ] Open each test file
+    * [ ] Are parameters recognized correctly, as far as implemented?
+    * [ ] Any bad default values?
+    * [ ] Does the file open correctly?
+    * [ ] Have a look at the dataset info dialogue. Reasonable values?
+* [ ] Perform all analyses on each test file.
+    * [ ] Does the result change when the input parameters are changed?
+    * [ ] All display channels present and looking reasonable?
+    * [ ] Reasonable performance?
+    * [ ] Use pick mode.
+* [ ] Re-open all the files
+    * [ ] Are the files listed in &quot;recent files&quot;?
+    * [ ] Are the parameters filled from the cache correctly?
+* [ ] Try opening all file types with wrong parameters
+    * [ ] Proper understandable error messages?
+* [ ] Pick one file and confirm keyboard and mouse interaction for all analyses
+    * [ ] Correct bounds check for keyboard and mouse?
+* [ ] Check what happens when trying to open non-existent files or directories in the GUI.
+    * [ ] Proper understandable error message?
+    * [ ] Possible to continue working?
+* [ ] Shut down libertem-server while analysis is running
+    * [ ] Shut down within a few seconds?
+    * [ ] All workers reaped?
+* [ ] Check what happens when trying to open non-existent files by scripting.
+    * [ ] Proper understandable error message? TODO automate?
+* [ ] Check what happens when opening all file types with bad parameters by scripting
+    * [ ] Proper understandable error message? TODO automate?
+* [ ] Run libertem-server on Windows, connect to a remote dask cluster running on Linux,
+  open all file types and perform an analysis for each file type.
+* [ ] Use the GUI while a long-running analysis is running
+    * [ ] Still usable, decent response times?
+* [ ] Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
+  in appropriate branch.
+* [ ] Final version bump: `./scripts/release bump v0.3.0 --tag`, push to github
+* [ ] After pipeline finishes, write minimal release notes for the [release](https://github.com/liberTEM/LiberTEM/releases) and publish the GitHub release
+
+## After releasing on GitHub
+
+* [ ] Confirm that all release packages are built and release notes are up-to-date
+* [ ] Install release package
+* [ ] Confirm correct version info
+* [ ] Confirm package upload to PyPI
+* [ ] Confirm images and tags on https://hub.docker.com/r/libertem/libertem
+* [ ] Publish new version on zenodo.org
+* [ ] Update documentation with new links, if necessary
+    * [ ] Add zenodo badge for the new release to Changelog page
+* [ ] Send announcement message on mailing list
+* [ ] Edit `pytest.ini` to include flaky tests again
+* [ ] Bump version in master branch to next .dev0 (`./scripts/release bump v0.X.0.dev0 --commit`)
+* [ ] Add to institutional publication databases
+* [ ] Add the current LiberTEM version to [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software&gt;) - add both the singularity and the .desktop file!
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dist_tests.html" class="btn btn-neutral float-right" title="Running distributed tests" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

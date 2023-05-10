@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.executor.utils.dask_buffer &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.executor.utils.dask_buffer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.executor.utils.dask_buffer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">...common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">...common.slice</span> <span class="kn">import</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">...common.buffers</span> <span class="kn">import</span> <span class="n">BufferWrapper</span>
+<span class="kn">from</span> <span class="nn">.dask_inplace</span> <span class="kn">import</span> <span class="n">DaskInplaceWrapper</span>
+
+
+<span class="k">class</span> <span class="nc">DaskBufferWrapper</span><span class="p">(</span><span class="n">BufferWrapper</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_buffer</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buffer</span><span class="p">:</span> <span class="n">BufferWrapper</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert an existing BufferWrapper into a DaskBufferWrapper</span>
+<span class="sd">        without copying its data, only its parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">buffer</span><span class="o">.</span><span class="n">has_data</span><span class="p">():</span>
+            <span class="ne">RuntimeWarning</span><span class="p">(</span><span class="s1">&#39;Buffer is already allocated, not copying current contents or view&#39;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+                   <span class="n">extra_shape</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">extra_shape</span><span class="p">,</span>
+                   <span class="n">dtype</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                   <span class="n">where</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">where</span><span class="p">,</span>
+                   <span class="n">use</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">use</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_shape</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_ds_shape</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_ds_shape</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_ds_partitions</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_ds_partitions</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_roi</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_roi</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_roi_is_zero</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_roi_is_zero</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_extra_chunking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">s</span><span class="p">,)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">allocate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lib</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allocate a buffer as a dask array</span>
+
+<span class="sd">        nav buffer chunking is made identical to the partition structure</span>
+<span class="sd">        in the flat nav dimension via the attribute self._ds_partitions</span>
+<span class="sd">        sig buffers are currently unchunked as there is no mechanism</span>
+<span class="sd">        to have partitions which cover part of the signal dimension</span>
+
+<span class="sd">        extra_shape dimensions are currently unchunked</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># self._ds_partitions set in UDFData.allocate_for_full()</span>
+        <span class="n">nav_chunking</span> <span class="o">=</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice_for_partition</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                              <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_partitions</span><span class="p">),)</span>
+
+        <span class="c1"># At this time there is no interest in chunking the sig dimension</span>
+        <span class="c1"># This could be modified in the future if partitions are more flexible</span>
+        <span class="n">sig_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="o">.</span><span class="n">sig</span>
+        <span class="n">sig_chunking</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_chunking</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s1">&#39;nav&#39;</span><span class="p">:</span>
+            <span class="n">flat_nav_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span> <span class="o">==</span> <span class="p">(</span><span class="n">flat_nav_shape</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">:</span>
+                <span class="n">_buf_chunking</span> <span class="o">=</span> <span class="n">nav_chunking</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_chunking</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">nav_chunking</span><span class="p">:</span>
+                <span class="c1"># This branch should never be taken if we are only allocating</span>
+                <span class="c1"># with dask on the main node and not inside UDFTasks</span>
+                <span class="n">_buf_chunking</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unrecognized buffer size relative to ds/chunk globals&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s1">&#39;sig&#39;</span><span class="p">:</span>
+            <span class="n">_buf_chunking</span> <span class="o">=</span> <span class="n">sig_chunking</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">==</span> <span class="s1">&#39;single&#39;</span><span class="p">:</span>
+            <span class="n">_buf_chunking</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Unrecognized buffer kind&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">_buf_chunking</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the buffer contents in shape that corresponds to the</span>
+<span class="sd">        original dataset shape, using a lazy Dask array.</span>
+
+<span class="sd">        Copied largely from BufferWrapper with modifications to ensure</span>
+<span class="sd">        Dask arrays are correctly unpacked into the result array.</span>
+
+<span class="sd">        #TODO consider if this needs to be cached to avoid creating</span>
+<span class="sd">        multiple copies in the task graph ?</span>
+
+<span class="sd">        If a ROI is set, embed the result into a new</span>
+<span class="sd">        array; unset values have NaN value for floating point types,</span>
+<span class="sd">        False for boolean, 0 for integer types and structs,</span>
+<span class="sd">        &#39;&#39; for string types and None for objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">DaskInplaceWrapper</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contiguous_cache</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Cache is not empty, has to be flushed&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roi</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kind</span> <span class="o">!=</span> <span class="s1">&#39;nav&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="p">))</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shape_for_kind</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="c1"># preallocated and already wrapped</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+        <span class="c1"># Integer types and &quot;void&quot; (structs and such)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;V&#39;</span><span class="p">):</span>
+            <span class="n">fill</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1"># Bytes and Unicode strings</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;S&#39;</span><span class="p">,</span> <span class="s1">&#39;U&#39;</span><span class="p">):</span>
+            <span class="n">fill</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># &#39;b&#39; (boolean): False</span>
+            <span class="c1"># &#39;f&#39;, &#39;c&#39;: NaN</span>
+            <span class="c1"># &#39;m&#39;, &#39;M&#39; (datetime, timedelta): NaT</span>
+            <span class="c1"># &#39;O&#39; (object): None</span>
+            <span class="n">fill</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">flat_chunking</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ds_partitions</span><span class="p">)</span>
+        <span class="n">flat_chunking</span> <span class="o">=</span> <span class="p">(</span><span class="n">flat_chunking</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_chunking</span>
+        <span class="n">flat_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="o">.</span><span class="n">nav</span><span class="p">),)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span>
+        <span class="n">flat_wrapper</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">flat_shape</span><span class="p">,</span> <span class="n">fill</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span> <span class="n">chunks</span><span class="o">=</span><span class="n">flat_chunking</span><span class="p">)</span>
+        <span class="n">flat_wrapper</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_roi</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+        <span class="n">wrapper</span> <span class="o">=</span> <span class="n">flat_wrapper</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds_shape</span><span class="o">.</span><span class="n">nav</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="k">def</span> <span class="nf">_get_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">slice</span><span class="p">:</span> <span class="n">Slice</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a view of the buffer which enable inplace assignment</span>
+<span class="sd">        to the underlying Dask array, for simple inplace assignments</span>
+
+<span class="sd">        This is not robust to doing complex operations on the</span>
+<span class="sd">        buffer such as changing its shape</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">real_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="n">inplace_wrapper</span> <span class="o">=</span> <span class="n">DaskInplaceWrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
+        <span class="n">inplace_wrapper</span><span class="o">.</span><span class="n">set_slice</span><span class="p">(</span><span class="n">real_slice</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inplace_wrapper</span>
+
+    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        No requirement to move dask arrays between devices</span>
+<span class="sd">        This functionality is embedded in the .compute() call</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> kind=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_kind</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;extra_shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_shape</span><span class="si">}</span><span class="s2"> backing=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="si">}</span><span class="s2">&gt;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">result_buffer_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_as_prealloc</span>
+
+    <span class="k">def</span> <span class="nf">new_as_prealloc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">DaskPreallocBufferWrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">buffer</span><span class="o">.</span><span class="n">add_partitions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ds_partitions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">buffer</span>
+
+
+<span class="k">class</span> <span class="nc">DaskPreallocBufferWrapper</span><span class="p">(</span><span class="n">DaskBufferWrapper</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">data</span>
+
+
+<div class="viewcode-block" id="DaskResultBufferWrapper"><a class="viewcode-back" href="../../../../reference/dask.html#libertem.executor.utils.dask_buffer.DaskResultBufferWrapper">[docs]</a><span class="k">class</span> <span class="nc">DaskResultBufferWrapper</span><span class="p">(</span><span class="n">DaskPreallocBufferWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A DaskBufferWrapper that is meant to be used for results.</span>
+
+<span class="sd">    In the LiberTEM internals, we need to make sure everything is still lazy/delayed.</span>
+
+<span class="sd">    Once we leave LiberTEM internals, the external interface is used, where</span>
+<span class="sd">    both :meth:`data` and :meth:`raw_data` eagerly return numpy array-like</span>
+<span class="sd">    objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DaskResultBufferWrapper.from_buffer_wrapper"><a class="viewcode-back" href="../../../../reference/dask.html#libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.from_buffer_wrapper">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_buffer_wrapper</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">buffer</span><span class="p">:</span> <span class="n">BufferWrapper</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">buffer</span><span class="o">.</span><span class="n">has_data</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span>
+            <span class="n">kind</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">kind</span><span class="p">,</span>
+            <span class="n">extra_shape</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">extra_shape</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">where</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">where</span><span class="p">,</span>
+            <span class="n">use</span><span class="o">=</span><span class="n">buffer</span><span class="o">.</span><span class="n">use</span>
+        <span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_shape</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_shape</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_ds_shape</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_ds_shape</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_ds_partitions</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_ds_partitions</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_roi</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_roi</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">_roi_is_zero</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">_roi_is_zero</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__array__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Eager version of :meth:`delayed_raw_data`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">delayed_raw_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">raw_data</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Eager version of :meth:`delayed_data`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">delayed_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">data</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

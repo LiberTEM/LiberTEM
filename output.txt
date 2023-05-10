@@ -1,0 +1,136 @@
+Results of doctest builder run on 2023-05-10 14:41:50
+=====================================================
+
+Document: reference/corrections
+-------------------------------
+1 items passed all tests:
+   2 tests in default
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: udf/profiling
+-----------------------
+1 items passed all tests:
+   1 tests in default
+1 tests in 1 items.
+1 passed and 0 failed.
+Test passed.
+
+Document: dask
+--------------
+4 items passed all tests:
+   1 tests in from_dask
+   1 tests in make_dask_array
+   2 tests in merge_all
+   1 tests in to_dask
+5 tests in 4 items.
+5 passed and 0 failed.
+Test passed.
+1 items passed all tests:
+   1 tests in merge_all (cleanup code)
+1 tests in 1 items.
+1 passed and 0 failed.
+Test passed.
+
+Document: debugging
+-------------------
+3 items passed all tests:
+   2 tests in default
+   1 tests in nosetup
+   2 tests in tracing
+5 tests in 3 items.
+5 passed and 0 failed.
+Test passed.
+
+Document: app/holography
+------------------------
+1 items passed all tests:
+   9 tests in default
+9 tests in 1 items.
+9 passed and 0 failed.
+Test passed.
+
+Document: udf/basic
+-------------------
+10 items passed all tests:
+   1 tests in constructor
+   1 tests in getresultbuffers
+   1 tests in live
+   1 tests in merge
+   1 tests in params
+   1 tests in partial
+   1 tests in processing
+   1 tests in realmerge
+   6 tests in run
+   1 tests in sumsig
+15 tests in 10 items.
+15 passed and 0 failed.
+Test passed.
+4 items passed all tests:
+   1 tests in getresultbuffers (cleanup code)
+   1 tests in merge (cleanup code)
+   1 tests in params (cleanup code)
+   1 tests in processing (cleanup code)
+4 tests in 4 items.
+4 passed and 0 failed.
+Test passed.
+
+Document: udf/advanced
+----------------------
+1 items passed all tests:
+   8 tests in default
+8 tests in 1 items.
+8 passed and 0 failed.
+Test passed.
+1 items passed all tests:
+   2 tests in default (cleanup code)
+2 tests in 1 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: tips
+--------------
+1 items passed all tests:
+   5 tests in default
+5 tests in 1 items.
+5 passed and 0 failed.
+Test passed.
+
+Document: sample_datasets
+-------------------------
+2 items passed all tests:
+   2 tests in sampledatahdf5
+   2 tests in sampledataraw
+4 tests in 2 items.
+4 passed and 0 failed.
+Test passed.
+2 items passed all tests:
+   1 tests in sampledatahdf5 (cleanup code)
+   1 tests in sampledataraw (cleanup code)
+2 tests in 2 items.
+2 passed and 0 failed.
+Test passed.
+
+Document: changelog
+-------------------
+1 items passed all tests:
+   1 tests in jobdeprecation
+1 tests in 1 items.
+1 passed and 0 failed.
+Test passed.
+
+Document: udf
+-------------
+1 items passed all tests:
+   1 tests in autoudf
+1 tests in 1 items.
+1 passed and 0 failed.
+Test passed.
+
+Doctest summary
+===============
+   56 tests
+    0 failures in tests
+    0 failures in setup code
+    0 failures in cleanup code

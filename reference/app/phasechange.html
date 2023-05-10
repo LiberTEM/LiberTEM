@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase-change materials reference &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Off-axis electron holography" href="holography.html" />
+    <link rel="prev" title="Correlation-based peak finding and strain mapping reference" href="strain.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../application.html">Application-specific APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="amorphous.html">Amorphous materials reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="strain.html">Correlation-based peak finding and strain mapping reference</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Phase-change materials reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-libertem.udf.crystallinity">Crystallinity map</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="holography.html">Off-axis electron holography</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../progress.html">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Python API reference</a></li>
+          <li class="breadcrumb-item"><a href="../application.html">Application-specific APIs</a></li>
+      <li class="breadcrumb-item active">Phase-change materials reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/app/phasechange.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="phase-change-materials-reference">
+<span id="phasechange"></span><h1>Phase-change materials reference<a class="headerlink" href="#phase-change-materials-reference" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference internal" href="../../app/phasechange.html#phasechange-app"><span class="std std-ref">Phase-change materials</span></a> for an overview and description of these UDFs.</p>
+</div>
+<section id="module-libertem.udf.crystallinity">
+<span id="crystallinity-map"></span><h2>Crystallinity map<a class="headerlink" href="#module-libertem.udf.crystallinity" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.udf.crystallinity.CrystallinityUDF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.udf.crystallinity.</span></span><span class="sig-name descname"><span class="pre">CrystallinityUDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rad_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_center</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_rad</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/crystallinity.html#CrystallinityUDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.crystallinity.CrystallinityUDF" title="Permalink to this definition"></a></dt>
+<dd><p>Determine crystallinity by integration over a ring in the fourier spectrum of each frame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rad_in</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Inner radius in pixels of a ring mask for the integration in Fourier space</p></li>
+<li><p><strong>rad_out</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Outer radius in pixels of a ring mask for the integration in Fourier space</p></li>
+<li><p><strong>real_center</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
+in real space.</p></li>
+<li><p><strong>real_rad</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Radius in pixels of circle for a masking out zero-order peak in real space.
+If one of real_center or real_rad is missing: the integration will be done without
+masking zero-order peak out.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cryst_udf</span> <span class="o">=</span> <span class="n">CrystallinityUDF</span><span class="p">(</span><span class="n">rad_in</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">rad_out</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">real_center</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">real_rad</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">cryst_udf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;intensity&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(16, 16)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.udf.crystallinity.run_analysis_crystall">
+<span class="sig-prename descclassname"><span class="pre">libertem.udf.crystallinity.</span></span><span class="sig-name descname"><span class="pre">run_analysis_crystall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_rad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">roi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/crystallinity.html#run_analysis_crystall"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.crystallinity.run_analysis_crystall" title="Permalink to this definition"></a></dt>
+<dd><p>Return a value after integration of Fourier spectrum for each frame over ring.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ctx</strong> (<a class="reference internal" href="../api.html#libertem.api.Context" title="libertem.api.Context"><em>libertem.api.Context</em></a>) – </p></li>
+<li><p><strong>dataset</strong> (<em>libertem.io.dataset.DataSet</em>) – A dataset with 1- or 2-D scan dimensions and 2-D frame dimensions</p></li>
+<li><p><strong>rad_in</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Inner radius in pixels of a ring mask for the integration in Fourier space</p></li>
+<li><p><strong>rad_out</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Outer radius in pixels of a ring mask for the integration in Fourier space</p></li>
+<li><p><strong>real_center</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – (y,x) - pixels, coordinates of a center of a circle for a masking out zero-order peak
+in real space.</p></li>
+<li><p><strong>real_rad</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Radius in pixels of circle for a masking out zero-order peak in real space.
+If one of real_center or real_rad is missing: the integration will be done without
+masking zero-order peak out.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pass_results</strong> – Returns a “crystallinity” value for each frame.
+To return 2-D array use pass_results[‘intensity’].data</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="strain.html" class="btn btn-neutral float-left" title="Correlation-based peak finding and strain mapping reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="holography.html" class="btn btn-neutral float-right" title="Off-axis electron holography" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

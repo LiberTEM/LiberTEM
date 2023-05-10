@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profiling UDFs &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dask integration" href="../dask.html" />
+    <link rel="prev" title="User-defined functions: advanced topics" href="advanced.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#example-notebook">Example notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../udf.html#more-about-udfs">More about UDFs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic.html">Implementing a UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#running-udfs">Running UDFs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#live-plotting">Live Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#partial-results">Partial results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#asynchronous-execution">Asynchronous execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html">User-defined functions: advanced topics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#tiled-processing">Tiled processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#partition-processing">Partition processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#precedence">Precedence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-of-partition-results">Post-processing of partition results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-after-merging">Post-processing after merging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#pre-processing">Pre-processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#aux-data">AUX data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#task-data">Task data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#meta-information">Meta information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#preferred-input-dtype">Preferred input dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#cupy-support">CuPy support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#sparse-arrays">Sparse arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#threading">Threading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#auto-udf">Auto UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#one-step-merge-merge-all">One-step merge (<cite>merge_all</cite>)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Profiling UDFs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisite-inlinejobexecutor">Prerequisite: <code class="code docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#using-progress-bar">Using progress bar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#line-profiling-using-line-profiler">Line profiling using <cite>line_profiler</cite></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../udf.html">User-defined functions (UDFs)</a></li>
+      <li class="breadcrumb-item active">Profiling UDFs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/udf/profiling.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <span class="target" id="udf-profiling"></span><section id="profiling-udfs">
+<h1>Profiling UDFs<a class="headerlink" href="#profiling-udfs" title="Permalink to this heading"></a></h1>
+<p>To bring your UDF to production, it may be necessary to look into the performance and
+efficiency of your function. There may be some low-hanging fruit to optimize away, but
+they only really become visible once you profile your code. Just looking at code and guessing
+which parts are expensive can be misleading and cause you to spend time optimizing the wrong part
+of your code. Always measure!</p>
+<p>Profiling means instrumenting the execution of a program and finding out which parts
+of your code use how much of a given resource (for example, CPU time, or memory).</p>
+<section id="prerequisite-inlinejobexecutor">
+<h2>Prerequisite: <code class="code docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code><a class="headerlink" href="#prerequisite-inlinejobexecutor" title="Permalink to this heading"></a></h2>
+<p>By default, your UDF will be run in a multi-process or multi-threaded
+environment. This makes profiling a challenge, since the usual profiling tools
+will only capture information on the main process that performs the final
+reduction and not the processes that do most of the work.</p>
+<p>So, in order to use the default Python profiling mechanisms, all parts of the UDF
+should be executed in the same single thread. LiberTEM provides what it calls
+<a class="reference internal" href="../dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a> for this purpose. Improving
+the execution time in a single-threaded executor will almost always improve the
+multi-process execution time. Nevertheless, you should confirm the impact of
+changes in your production environment.</p>
+<p>To use the <a class="reference internal" href="../dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a>, pass it to the
+<a class="reference internal" href="../reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> on construction:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.executor.inline</span> <span class="kn">import</span> <span class="n">InlineJobExecutor</span>
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">InlineJobExecutor</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Then, you can continue as usual, loading data, executing your UDF, etc.</p>
+</section>
+<section id="using-progress-bar">
+<h2>Using progress bar<a class="headerlink" href="#using-progress-bar" title="Permalink to this heading"></a></h2>
+<p>A progress bar is a graphical tool that shows a far a process has progressed.
+It can be used to assess the partitioning of data, since the progress is
+indicated on a per partition basis in the following way:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>res = ctx.run_udf(udf=fit_udf, dataset=ds, roi=roi, progress=True)
+&gt; 100%|██████████| 18/18 [01:17&lt;00:00,  4.29s/it]
+</pre></div>
+</div>
+<p>This run is using 18 partitions, and took 4.29s per partition.</p>
+</section>
+<section id="line-profiling-using-line-profiler">
+<h2>Line profiling using <cite>line_profiler</cite><a class="headerlink" href="#line-profiling-using-line-profiler" title="Permalink to this heading"></a></h2>
+<p>Profiling comes in different forms, some will show you how much time each function
+of a whole program took, others can give you a line-by-line overview for functions
+you are interested in, like <cite>line_profiler</cite>. For most UDFs this will be sufficient
+for performance analysis.</p>
+<p>First, you need to install the <cite>line_profiler</cite> package via pip, having your
+conda environment or virtualenv activated:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>line_profiler
+</pre></div>
+</div>
+<p>Then the easiest way to get started is to use the IPython/Jupyter integration of
+<cite>line_profiler</cite>. Put <code class="code docutils literal notranslate"><span class="pre">%load_ext</span> <span class="pre">line_profiler</span></code> somewhere in your notebook,
+then you can use the <code class="code docutils literal notranslate"><span class="pre">%lprun</span></code> magic command to run your UDF while profiling:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>%lprun -f YourUDF.get_task_data -f YourUDF.process_frame ctx.run_udf(dataset=dataset, YourUDF())
+</pre></div>
+</div>
+<p>Note the repeated <code class="code docutils literal notranslate"><span class="pre">-f</span></code> arguments - you can list any methods of your UDF you are
+interested in, or even other Python functions you are directly or indirectly using. If you
+had some complicated code in <code class="code docutils literal notranslate"><span class="pre">YourUDF.merge</span></code>, you would include <code class="code docutils literal notranslate"><span class="pre">-f</span> <span class="pre">YourUDF.merge</span></code>
+in the <code class="code docutils literal notranslate"><span class="pre">%lprun</span></code> call.</p>
+<p>This is how the output could look like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Timer unit: 1e-06 s
+
+Total time: 0.002283 s
+File: /home/clausen/source/libertem/src/libertem/udf/holography.py
+Function: get_task_data at line 145
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   145                                               def get_task_data(self):
+   146                                                   &quot;&quot;&quot;
+   147                                                   Updates `task_data`
+   148
+   149                                                   Returns
+   150                                                   -------
+   151                                                   kwargs : dict
+   152                                                   A dictionary with the following keys:
+   153                                                       kwargs[&#39;aperture&#39;] : array-like
+   154                                                       Side band filter aperture (mask)
+   155                                                       kwargs[&#39;slice&#39;] : slice
+   156                                                       Slice for slicing FFT of the hologram
+   157                                                   &quot;&quot;&quot;
+   158
+   159         2         48.0     24.0      2.1          out_shape = self.params.out_shape
+   160         2         51.0     25.5      2.2          sy, sx = self.meta.partition_shape.sig
+   161         2          5.0      2.5      0.2          oy, ox = out_shape
+   162         2          7.0      3.5      0.3          f_sampling = (1. / oy, 1. / ox)
+   163         2        292.0    146.0     12.8          sb_size = self.params.sb_size * np.mean(f_sampling)
+   164         2        261.0    130.5     11.4          sb_smoothness = sb_size * self.params.sb_smoothness * np.mean(f_sampling)
+   165
+   166         2       1172.0    586.0     51.3          f_freq = freq_array(out_shape)
+   167         2        263.0    131.5     11.5          aperture = aperture_function(f_freq, sb_size, sb_smoothness)
+   168
+   169         2         64.0     32.0      2.8          y_min = int(sy / 2 - oy / 2)
+   170         2         37.0     18.5      1.6          y_max = int(sy / 2 + oy / 2)
+   171         2         32.0     16.0      1.4          x_min = int(sx / 2 - ox / 2)
+   172         2         30.0     15.0      1.3          x_max = int(sx / 2 + oy / 2)
+   173         2          8.0      4.0      0.4          slice_fft = (slice(y_min, y_max), slice(x_min, x_max))
+   174
+   175                                                   kwargs = {
+   176         2          4.0      2.0      0.2              &#39;aperture&#39;: aperture,
+   177         2          6.0      3.0      0.3              &#39;slice&#39;: slice_fft
+   178                                                   }
+   179         2          3.0      1.5      0.1          return kwargs
+
+Total time: 63.748 s
+File: /home/clausen/source/libertem/src/libertem/udf/holography.py
+Function: process_frame at line 181
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   181                                               def process_frame(self, frame):
+   182                                                   &quot;&quot;&quot;
+   183                                                   Reconstructs holograms outputting results into &#39;wave&#39;
+   184
+   185                                                   Parameters
+   186                                                   ----------
+   187                                                   frame
+   188                                                      single frame (hologram) of the data
+   189                                                   &quot;&quot;&quot;
+   190        16        154.0      9.6      0.0          if not self.params.precision:
+   191                                                       frame = frame.astype(np.float32)
+   192                                                   # size_x, size_y = self.params.out_shape
+   193        16         81.0      5.1      0.0          frame_size = self.meta.partition_shape.sig
+   194        16         58.0      3.6      0.0          sb_pos = self.params.sb_position
+   195        16         66.0      4.1      0.0          aperture = self.task_data.aperture
+   196        16         52.0      3.2      0.0          slice_fft = self.task_data.slice
+   197
+   198        16   59291808.0 3705738.0     93.0          fft_frame = fft2(frame) / np.prod(frame_size)
+   199        16    2189960.0 136872.5      3.4          fft_frame = np.roll(fft_frame, sb_pos, axis=(0, 1))
+   200
+   201        16    2258700.0 141168.8      3.5          fft_frame = fftshift(fftshift(fft_frame)[slice_fft])
+   202
+   203        16        816.0     51.0      0.0          fft_frame = fft_frame * aperture
+   204
+   205        16       5957.0    372.3      0.0          wav = ifft2(fft_frame) * np.prod(frame_size)
+   206        16        364.0     22.8      0.0          self.results.wave[:] = wav
+</pre></div>
+</div>
+<p>Things to note:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">get_task_data</span></code> takes a very small amount of time, compared to <code class="code docutils literal notranslate"><span class="pre">process_frame</span></code>. It does
+not make sense to concentrate on optimizing <code class="code docutils literal notranslate"><span class="pre">get_task_data</span></code> at all, in this case!</p></li>
+<li><p>In <code class="code docutils literal notranslate"><span class="pre">process_frame</span></code>, the <code class="code docutils literal notranslate"><span class="pre">fft2</span></code> call takes up most time, so that is where
+we should direct our efforts. Improving, for example, the calls to <code class="code docutils literal notranslate"><span class="pre">fftshift</span></code> would give us
+a max speed-up of a few percent - and only, if we manage to dramatically improve their execution time!</p></li>
+<li><p><cite>line_profiler</cite> doesn’t give information about individual expressions - sometimes you have to
+put expressions on their own line to see their individual contributions to the execution time. See
+the <code class="code docutils literal notranslate"><span class="pre">fft2</span></code> and <code class="code docutils literal notranslate"><span class="pre">np.prod</span></code> calls on the hottest line in the profile!</p></li>
+<li><p>After successfully improving on the profiled times, always re-run with profiling disabled and without
+<a class="reference internal" href="../dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a> and measure the total time, for example using
+<code class="code docutils literal notranslate"><span class="pre">%%time</span></code>. This makes sure that your optimizations actually work in a production environment!</p></li>
+<li><p>The usual benchmarking rules apply - for example, try to run the profiling on an otherwise idle system,
+otherwise you can get noisy results.</p></li>
+<li><p>Single-threaded execution can be quite slow compared to using LiberTEM in production - if it is too slow
+for your taste, you can run your UDF on a subset of your data using a <a class="reference internal" href="basic.html#udf-roi"><span class="std std-ref">region of interest</span></a>.</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://jakevdp.github.io/PythonDataScienceHandbook/01.07-timing-and-profiling.html#Line-By-Line-Profiling-with-%lprun">Python Data Science Handbook</a></dt><dd><p>The Python Data Science Handbook has a section on profiling and timing, including <cite>line_profiler</cite>.</p>
+</dd>
+<dt><a class="reference external" href="https://github.com/rkern/line_profiler">Official documentation for line_profiler</a></dt><dd><p>All information on how to use <cite>line_profiler</cite>, including using it from different contexts.</p>
+</dd>
+<dt><a class="reference internal" href="../tips.html#profiling-tests"><span class="std std-ref">Profiling long-running tests</span></a></dt><dd><p>Information on how to profile the execution time of test cases.</p>
+</dd>
+<dt><a class="reference internal" href="../debugging.html#debugging-udfs"><span class="std std-ref">Debugging UDFs or other Python code</span></a></dt><dd><p>Using the <code class="code docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code> to debug problems in your UDF.</p>
+</dd>
+</dl>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="advanced.html" class="btn btn-neutral float-left" title="User-defined functions: advanced topics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../dask.html" class="btn btn-neutral float-right" title="Dask integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

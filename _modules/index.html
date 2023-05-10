@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview: module code &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Overview: module code</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>All modules for which code is available</h1>
+<ul><li><a href="builtins.html">builtins</a></li>
+<li><a href="libertem/analysis/base.html">libertem.analysis.base</a></li>
+<li><a href="libertem/analysis/com.html">libertem.analysis.com</a></li>
+<li><a href="libertem/analysis/fullmatch.html">libertem.analysis.fullmatch</a></li>
+<li><a href="libertem/analysis/gridmatching.html">libertem.analysis.gridmatching</a></li>
+<li><a href="libertem/analysis/masks.html">libertem.analysis.masks</a></li>
+<li><a href="libertem/analysis/radialfourier.html">libertem.analysis.radialfourier</a></li>
+<li><a href="libertem/analysis/raw.html">libertem.analysis.raw</a></li>
+<li><a href="libertem/analysis/sum.html">libertem.analysis.sum</a></li>
+<li><a href="libertem/api.html">libertem.api</a></li>
+<li><a href="libertem/common/analysis.html">libertem.common.analysis</a></li>
+<li><a href="libertem/common/backend.html">libertem.common.backend</a></li>
+<li><a href="libertem/common/buffers.html">libertem.common.buffers</a></li>
+<li><a href="libertem/common/container.html">libertem.common.container</a></li>
+<li><a href="libertem/common/executor.html">libertem.common.executor</a></li>
+<li><a href="libertem/common/progress.html">libertem.common.progress</a></li>
+<li><a href="libertem/common/shape.html">libertem.common.shape</a></li>
+<li><a href="libertem/common/slice.html">libertem.common.slice</a></li>
+<li><a href="libertem/common/sparse.html">libertem.common.sparse</a></li>
+<li><a href="libertem/common/viz.html">libertem.common.viz</a></li>
+<li><a href="libertem/contrib/daskadapter.html">libertem.contrib.daskadapter</a></li>
+<li><a href="libertem/executor/concurrent.html">libertem.executor.concurrent</a></li>
+<li><a href="libertem/executor/dask.html">libertem.executor.dask</a></li>
+<li><a href="libertem/executor/delayed.html">libertem.executor.delayed</a></li>
+<li><a href="libertem/executor/inline.html">libertem.executor.inline</a></li>
+<li><a href="libertem/executor/integration.html">libertem.executor.integration</a></li>
+<li><a href="libertem/executor/pipelined.html">libertem.executor.pipelined</a></li>
+<li><a href="libertem/executor/utils/dask_buffer.html">libertem.executor.utils.dask_buffer</a></li>
+<li><a href="libertem/io/corrections/corrset.html">libertem.io.corrections.corrset</a></li>
+<li><a href="libertem/io/dataset/base/backend.html">libertem.io.dataset.base.backend</a></li>
+<li><a href="libertem/io/dataset/base/backend_buffered.html">libertem.io.dataset.base.backend_buffered</a></li>
+<li><a href="libertem/io/dataset/base/backend_direct.html">libertem.io.dataset.base.backend_direct</a></li>
+<li><a href="libertem/io/dataset/base/backend_mmap.html">libertem.io.dataset.base.backend_mmap</a></li>
+<li><a href="libertem/io/dataset/base/coordinates.html">libertem.io.dataset.base.coordinates</a></li>
+<li><a href="libertem/io/dataset/base/dataset.html">libertem.io.dataset.base.dataset</a></li>
+<li><a href="libertem/io/dataset/base/decode.html">libertem.io.dataset.base.decode</a></li>
+<li><a href="libertem/io/dataset/base/exceptions.html">libertem.io.dataset.base.exceptions</a></li>
+<li><a href="libertem/io/dataset/base/file.html">libertem.io.dataset.base.file</a></li>
+<li><a href="libertem/io/dataset/base/fileset.html">libertem.io.dataset.base.fileset</a></li>
+<li><a href="libertem/io/dataset/base/meta.html">libertem.io.dataset.base.meta</a></li>
+<li><a href="libertem/io/dataset/base/partition.html">libertem.io.dataset.base.partition</a></li>
+<li><a href="libertem/io/dataset/base/tiling.html">libertem.io.dataset.base.tiling</a></li>
+<li><a href="libertem/io/dataset/base/tiling_scheme.html">libertem.io.dataset.base.tiling_scheme</a></li>
+<li><a href="libertem/io/dataset/base/utils.html">libertem.io.dataset.base.utils</a></li>
+<li><a href="libertem/io/dataset/blo.html">libertem.io.dataset.blo</a></li>
+<li><a href="libertem/io/dataset/dask.html">libertem.io.dataset.dask</a></li>
+<li><a href="libertem/io/dataset/dm.html">libertem.io.dataset.dm</a></li>
+<li><a href="libertem/io/dataset/dm_single.html">libertem.io.dataset.dm_single</a></li>
+<li><a href="libertem/io/dataset/empad.html">libertem.io.dataset.empad</a></li>
+<li><a href="libertem/io/dataset/frms6.html">libertem.io.dataset.frms6</a></li>
+<li><a href="libertem/io/dataset/hdf5.html">libertem.io.dataset.hdf5</a></li>
+<li><a href="libertem/io/dataset/k2is.html">libertem.io.dataset.k2is</a></li>
+<li><a href="libertem/io/dataset/memory.html">libertem.io.dataset.memory</a></li>
+<li><a href="libertem/io/dataset/mib.html">libertem.io.dataset.mib</a></li>
+<li><a href="libertem/io/dataset/mrc.html">libertem.io.dataset.mrc</a></li>
+<li><a href="libertem/io/dataset/npy.html">libertem.io.dataset.npy</a></li>
+<li><a href="libertem/io/dataset/raw.html">libertem.io.dataset.raw</a></li>
+<li><a href="libertem/io/dataset/raw_csr.html">libertem.io.dataset.raw_csr</a></li>
+<li><a href="libertem/io/dataset/seq.html">libertem.io.dataset.seq</a></li>
+<li><a href="libertem/io/dataset/ser.html">libertem.io.dataset.ser</a></li>
+<li><a href="libertem/io/dataset/tvips.html">libertem.io.dataset.tvips</a></li>
+<li><a href="libertem/masks.html">libertem.masks</a></li>
+<li><a href="libertem/udf/FEM.html">libertem.udf.FEM</a></li>
+<li><a href="libertem/udf/base.html">libertem.udf.base</a></li>
+<li><a href="libertem/udf/crystallinity.html">libertem.udf.crystallinity</a></li>
+<li><a href="libertem/udf/holography.html">libertem.udf.holography</a></li>
+<li><a href="libertem/udf/logsum.html">libertem.udf.logsum</a></li>
+<li><a href="libertem/udf/masks.html">libertem.udf.masks</a></li>
+<li><a href="libertem/udf/raw.html">libertem.udf.raw</a></li>
+<li><a href="libertem/udf/stddev.html">libertem.udf.stddev</a></li>
+<li><a href="libertem/udf/sum.html">libertem.udf.sum</a></li>
+<li><a href="libertem/udf/sumsigudf.html">libertem.udf.sumsigudf</a></li>
+<li><a href="libertem/utils/devices.html">libertem.utils.devices</a></li>
+<li><a href="libertem/utils/generate.html">libertem.utils.generate</a></li>
+<li><a href="libertem/viz/base.html">libertem.viz.base</a></li>
+<li><a href="libertem/viz/bqp.html">libertem.viz.bqp</a></li>
+<li><a href="libertem/viz/gms.html">libertem.viz.gms</a></li>
+<li><a href="libertem/viz/mpl.html">libertem.viz.mpl</a></li>
+</ul>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

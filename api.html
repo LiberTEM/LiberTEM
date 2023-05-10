@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python API &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User-defined functions (UDFs)" href="udf.html" />
+    <link rel="prev" title="Sample Datasets" href="sample_datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#context">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#basic-example">Basic example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-processing-routines">Custom processing routines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reference">Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#executors">Executors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#common-executor-choices">Common executor choices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connect-to-a-cluster">Connect to a cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#customize-cpus-and-cuda-devices">Customize CPUs and CUDA devices</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelined-executor">Pipelined executor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Python API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-api">
+<span id="api-documentation"></span><h1>Python API<a class="headerlink" href="#python-api" title="Permalink to this heading"></a></h1>
+<p>The Python API is a concise API for using LiberTEM from Python code. It is suitable both
+for interactive scripting, for example from Jupyter notebooks, and for usage
+from within a Python application or script.</p>
+<section id="context">
+<span id="id1"></span><h2>Context<a class="headerlink" href="#context" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.api.Context</span></code></a> object is the entry-point for most interaction
+and processing with LiberTEM. It is used to load datasets, specify and run analyses.
+The following snippet initializes a <a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> ready-for-use
+with default parameters and backing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">libertem.api</span> <span class="k">as</span> <span class="nn">lt</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See the <a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">API</span> <span class="pre">documentation</span></code></a> for the full capabilities
+exposed by the <a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a>.</p>
+</section>
+<section id="basic-example">
+<h2>Basic example<a class="headerlink" href="#basic-example" title="Permalink to this heading"></a></h2>
+<p>This is a basic example to load the API, create a local cluster, load a file and
+run an analysis. For complete examples on how to use the Python API, please see the
+Jupyter notebooks in <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/tree/master/examples">the example directory</a>.</p>
+<p>For more details, please see <a class="reference internal" href="formats.html#loading-data"><span class="std std-ref">Loading data</span></a>, <a class="reference internal" href="reference/dataset.html#dataset-api"><span class="std std-ref">Data Set API</span></a> and
+<a class="reference internal" href="reference/dataset.html#formats"><span class="std std-ref">format-specific reference</span></a>. See <a class="reference internal" href="sample_datasets.html#sample-data"><span class="std std-ref">Sample Datasets</span></a> for publicly available datasets.</p>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="c1"># Changed in 0.5.0: The thread count is set dynamically</span>
+<span class="c1"># on the workers. No need for setting environment variables anymore.</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+
+
+<span class="c1"># Protect the entry point.</span>
+<span class="c1"># LiberTEM uses dask, which uses multiprocessing to</span>
+<span class="c1"># start worker processes.</span>
+<span class="c1"># https://docs.python.org/3/library/multiprocessing.html</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1"># api.Context() starts a new local cluster.</span>
+    <span class="c1"># The &quot;with&quot; clause makes sure we shut it down in the end.</span>
+    <span class="k">with</span> <span class="n">api</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span> <span class="k">as</span> <span class="n">ctx</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="s1">&#39;auto&#39;</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;C:/Users/weber/Nextcloud/Projects/&#39;</span>
+                    <span class="s1">&#39;Open Pixelated STEM framework/Data/EMPAD/&#39;</span>
+                    <span class="s1">&#39;scan_11_x256_y256.emd&#39;</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="s1">&#39;hdf5&#39;</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                <span class="n">ds_path</span><span class="o">=</span><span class="s1">&#39;experimental/science_data/data&#39;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="p">(</span><span class="n">scan_y</span><span class="p">,</span> <span class="n">scan_x</span><span class="p">,</span> <span class="n">detector_y</span><span class="p">,</span> <span class="n">detector_x</span><span class="p">)</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">mask_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">detector_y</span><span class="p">,</span> <span class="n">detector_x</span><span class="p">)</span>
+
+        <span class="c1"># LiberTEM sends functions that create the masks</span>
+        <span class="c1"># rather than mask data to the workers in order</span>
+        <span class="c1"># to reduce transfers in the cluster.</span>
+        <span class="k">def</span> <span class="nf">mask</span><span class="p">():</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">mask_shape</span><span class="p">)</span>
+
+        <span class="n">analysis</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">create_mask_analysis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">factories</span><span class="o">=</span><span class="p">[</span><span class="n">mask</span><span class="p">])</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">analysis</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Do something useful with the result:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mask_0</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+
+        <span class="c1"># For each mask, one channel is present in the result.</span>
+        <span class="c1"># This may be different for other analyses.</span>
+        <span class="c1"># You can access the result channels by their key on</span>
+        <span class="c1"># the result object:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mask_0</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="c1"># Otherwise, results handle like lists.</span>
+        <span class="c1"># For example, you can iterate over the result channels:</span>
+        <span class="n">raw_result_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">channel</span><span class="o">.</span><span class="n">raw_data</span> <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-processing-routines">
+<h2>Custom processing routines<a class="headerlink" href="#custom-processing-routines" title="Permalink to this heading"></a></h2>
+<p>To go beyond the included capabilities of LiberTEM, you can implement your own
+using <a class="reference internal" href="udf.html#user-defined-functions"><span class="std std-ref">User-defined functions (UDFs)</span></a>.</p>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="Permalink to this heading"></a></h2>
+<p>For a full reference, please see <a class="reference internal" href="reference/index.html#reference"><span class="std std-ref">Python API reference</span></a>.</p>
+</section>
+<section id="executors">
+<span id="id2"></span><h2>Executors<a class="headerlink" href="#executors" title="Permalink to this heading"></a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0: </span>The executor API is internal. Since choice and parameters of executors
+are important for integration with Dask and other frameworks,
+they are now documented. Only the names and creation methods for
+executors are reasonably stable. The rest of the API is subject to
+change without notice. For that reason it is documented in the developer
+section and not in the API reference.</p>
+</div>
+<p>The default executor is <a class="reference internal" href="dev/executors.html#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code></a> that
+uses the <code class="code docutils literal notranslate"><span class="pre">dask.distributed</span></code> scheduler. To support all LiberTEM features and
+achieve optimal performance, the methods provided by LiberTEM to start a
+<code class="code docutils literal notranslate"><span class="pre">dask.distributed</span></code> cluster should be used. However, LiberTEM can also run on a
+“vanilla” <code class="code docutils literal notranslate"><span class="pre">dask.distributed</span></code> cluster. Please note that <code class="code docutils literal notranslate"><span class="pre">dask.distributed</span></code>
+clusters that are not created by LiberTEM might use threading or a mixture of threads
+and processes, and therefore might behave or perform differently to a
+LiberTEM-instantiated cluster.</p>
+<p>The <a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a> runs all tasks
+synchronously in the current thread. This is useful for debugging and for
+special applications such as running UDFs that perform their own multithreading
+efficiently or for other non-standard use that requires tasks to be executed
+sequentially and in order.</p>
+<p>See also <a class="reference internal" href="udf/advanced.html#threading"><span class="std std-ref">Threading</span></a> for more information on multithreading in UDFs.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0.</span></p>
+</div>
+<p>The <a class="reference internal" href="dev/executors.html#libertem.executor.concurrent.ConcurrentJobExecutor" title="libertem.executor.concurrent.ConcurrentJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConcurrentJobExecutor</span></code></a> runs all tasks
+using <a class="reference external" href="https://docs.python.org/3.10/library/concurrent.futures.html#module-concurrent.futures" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">concurrent.futures</span></code></a>. Using a
+<a class="reference external" href="https://docs.python.org/3.10/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">concurrent.futures.ThreadPoolExecutor</span></code></a>, which is the deafult behaviour,
+allows sharing large amounts of data as well as other resources between the
+main thread and workers efficiently, but is severely slowed down by the
+Python <a class="reference external" href="https://wiki.python.org/moin/GlobalInterpreterLock">global interpreter lock</a>
+under many circumstances. Furthermore, it can create thread safety issues such as
+<a class="reference external" href="https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35">https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35</a>.</p>
+<p>It is also in principle possible to use a <a class="reference external" href="https://docs.python.org/3.10/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor" title="(in Python v3.10)"><code class="docutils literal notranslate"><span class="pre">concurrent.futures.ProcessPoolExecutor</span></code></a>
+as backing for the <a class="reference internal" href="dev/executors.html#libertem.executor.concurrent.ConcurrentJobExecutor" title="libertem.executor.concurrent.ConcurrentJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConcurrentJobExecutor</span></code></a>,
+though this is untested and is likely to lead to worse performance than the
+LiberTEM default <a class="reference internal" href="dev/executors.html#libertem.executor.dask.DaskJobExecutor" title="libertem.executor.dask.DaskJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DaskJobExecutor</span></code></a>.</p>
+<p>For special applications, the
+<a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a> can use <a class="reference external" href="https://docs.dask.org/en/stable/delayed.html">dask.delayed</a> to delay the processing. This
+is experimental, see <a class="reference internal" href="dask.html#dask"><span class="std std-ref">Dask integration</span></a> for more details. It might use threading as
+well, depending on the Dask scheduler that is used by <code class="code docutils literal notranslate"><span class="pre">compute()</span></code>.</p>
+<section id="common-executor-choices">
+<h3>Common executor choices<a class="headerlink" href="#common-executor-choices" title="Permalink to this heading"></a></h3>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0.</span></p>
+</div>
+<p><a class="reference internal" href="reference/api.html#libertem.api.Context.make_with" title="libertem.api.Context.make_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.make_with()</span></code></a> provides a convenient shortcut to start a
+<a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> with common executor choices. See the
+<a class="reference internal" href="reference/api.html#libertem.api.Context.make_with" title="libertem.api.Context.make_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">API</span> <span class="pre">documentation</span></code></a>
+for available options!</p>
+</section>
+<section id="connect-to-a-cluster">
+<h3>Connect to a cluster<a class="headerlink" href="#connect-to-a-cluster" title="Permalink to this heading"></a></h3>
+<p>See <a class="reference internal" href="deployment/clustercontainer.html#cluster"><span class="std std-ref">Starting a custom cluster</span></a> on how to start a scheduler and workers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.dask</span> <span class="kn">import</span> <span class="n">DaskJobExecutor</span>
+
+<span class="c1"># Connect to a Dask.Distributed scheduler at &#39;tcp://localhost:8786&#39;</span>
+<span class="k">with</span> <span class="n">DaskJobExecutor</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;tcp://localhost:8786&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">Context</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">executor</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="customize-cpus-and-cuda-devices">
+<span id="cluster-spec"></span><h3>Customize CPUs and CUDA devices<a class="headerlink" href="#customize-cpus-and-cuda-devices" title="Permalink to this heading"></a></h3>
+<p>To control how many CPUs and which CUDA devices are used, you can specify them as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.dask</span> <span class="kn">import</span> <span class="n">DaskJobExecutor</span><span class="p">,</span> <span class="n">cluster_spec</span>
+<span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
+
+<span class="c1"># Find out what would be used, if you like</span>
+<span class="c1"># returns dictionary with keys &quot;cpus&quot; and &quot;cudas&quot;, each with a list of device ids</span>
+<span class="n">devices</span> <span class="o">=</span> <span class="n">detect</span><span class="p">()</span>
+
+<span class="c1"># Example: Deactivate CUDA devices by removing them from the device dictionary</span>
+<span class="n">devices</span><span class="p">[</span><span class="s1">&#39;cudas&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># Example: Deactivate CuPy integration</span>
+<span class="n">devices</span><span class="p">[</span><span class="s1">&#39;has_cupy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="c1"># Example: Use 3 CPUs. The IDs are ignored at the moment, i.e. no CPU pinning</span>
+<span class="n">devices</span><span class="p">[</span><span class="s1">&#39;cpus&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Generate a spec for a Dask.distributed SpecCluster</span>
+<span class="c1"># Relevant kwargs match the dictionary entries</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">cluster_spec</span><span class="p">(</span><span class="o">**</span><span class="n">devices</span><span class="p">)</span>
+<span class="c1"># Start a local cluster with the custom spec</span>
+<span class="k">with</span> <span class="n">DaskJobExecutor</span><span class="o">.</span><span class="n">make_local</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+    <span class="n">ctx</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">Context</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">executor</span><span class="p">)</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>Please see <a class="reference internal" href="dev/executors.html#dask-executor"><span class="std std-ref">Dask.Distributed</span></a> for a reference of the Dask-based executor.</p>
+</section>
+</section>
+<section id="pipelined-executor">
+<span id="pipelined"></span><h2>Pipelined executor<a class="headerlink" href="#pipelined-executor" title="Permalink to this heading"></a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.10.0.</span></p>
+</div>
+<p>For live data processing using
+<a class="reference external" href="https://libertem.github.io/LiberTEM-live/">LiberTEM-live</a>, the
+<a class="reference internal" href="dev/executors.html#libertem.executor.pipelined.PipelinedExecutor" title="libertem.executor.pipelined.PipelinedExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">PipelinedExecutor</span></code></a>
+provides a multiprocessing executor that routes the live data source in a round-robin
+fashion to worker processes. This is important to support processing that cannot keep
+up with the detector speed on a single CPU core. This executor also works for offline
+data sets in principle, but is not optimized for that use case.</p>
+<p>Similar to the Dask-based executor, it is possible to customize the devices
+used for computation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.pipelined</span> <span class="kn">import</span> <span class="n">PipelinedExecutor</span>
+<span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
+
+<span class="n">spec</span> <span class="o">=</span> <span class="n">PipelinedExecutor</span><span class="o">.</span><span class="n">make_spec</span><span class="p">(</span><span class="n">cpus</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">cudas</span><span class="o">=</span><span class="p">[])</span>
+<span class="n">executor</span> <span class="o">=</span> <span class="n">PipelinedExecutor</span><span class="p">(</span>
+    <span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span>
+    <span class="n">pin_workers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># set to True to keep worker processes pinned to specific CPU cores or CPUs</span>
+<span class="p">)</span>
+<span class="o">...</span>
+<span class="n">executor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># you can also use the `detect` function as above:</span>
+<span class="n">spec2</span> <span class="o">=</span> <span class="n">PipelinedExecutor</span><span class="o">.</span><span class="n">make_spec</span><span class="p">(</span><span class="o">**</span><span class="n">detect</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Please see <a class="reference internal" href="dev/executors.html#pipelined-executor"><span class="std std-ref">Pipelined executor</span></a> for a reference of the pipelined executor,
+and <a class="reference external" href="https://libertem.github.io/LiberTEM-live/">the LiberTEM-live documentation</a>
+for details on live processing.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sample_datasets.html" class="btn btn-neutral float-left" title="Sample Datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="udf.html" class="btn btn-neutral float-right" title="User-defined functions (UDFs)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

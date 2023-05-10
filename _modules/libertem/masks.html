@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.masks &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.masks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.masks</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">sparse</span>
+
+<span class="kn">from</span> <span class="nn">libertem.utils</span> <span class="kn">import</span> <span class="n">make_polar</span>
+
+<span class="c1"># Import here for backwards compatibility, refs #1031</span>
+<span class="kn">from</span> <span class="nn">libertem.common.sparse</span> <span class="kn">import</span> <span class="n">to_dense</span><span class="p">,</span> <span class="n">to_sparse</span><span class="p">,</span> <span class="n">is_sparse</span>  <span class="c1"># NOQA: F401</span>
+
+<span class="n">MaskArrayType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">dok_matrix</span><span class="p">]</span>
+<span class="n">MaskFactoriesType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">MaskArrayType</span><span class="p">],</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">MaskArrayType</span><span class="p">]]]</span>
+
+
+<span class="k">def</span> <span class="nf">_make_circular_mask</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">antialiased</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a circular mask in a bool array for masking a region in an image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centerX, centerY : float</span>
+<span class="sd">        Centre point of the mask.</span>
+<span class="sd">    imageSizeX, imageSizeY : int</span>
+<span class="sd">        Size of the image to be masked.</span>
+<span class="sd">    radius : float</span>
+<span class="sd">        Radius of the mask.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Boolean Numpy 2D Array</span>
+<span class="sd">        Array with the shape (imageSizeX, imageSizeY) with the mask.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; image = np.ones((9, 9))</span>
+<span class="sd">    &gt;&gt;&gt; mask = _make_circular_mask(4, 4, 9, 9, 2)</span>
+<span class="sd">    &gt;&gt;&gt; image_masked = image*mask</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; cax = plt.imshow(image_masked)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">antialiased</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">radial_bins</span><span class="p">(</span>
+            <span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_sparse</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ogrid</span><span class="p">[</span><span class="o">-</span><span class="n">centerY</span><span class="p">:</span><span class="n">imageSizeY</span><span class="o">-</span><span class="n">centerY</span><span class="p">,</span> <span class="o">-</span><span class="n">centerX</span><span class="p">:</span><span class="n">imageSizeX</span><span class="o">-</span><span class="n">centerX</span><span class="p">]</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span> <span class="o">&lt;=</span> <span class="n">radius</span><span class="o">*</span><span class="n">radius</span>
+    <span class="k">return</span> <span class="n">mask</span>
+
+
+<div class="viewcode-block" id="sparse_template_multi_stack"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.sparse_template_multi_stack">[docs]</a><span class="k">def</span> <span class="nf">sparse_template_multi_stack</span><span class="p">(</span><span class="n">mask_index</span><span class="p">,</span> <span class="n">offsetX</span><span class="p">,</span> <span class="n">offsetY</span><span class="p">,</span> <span class="n">template</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Stamp the template in a multi-mask 3D stack at the positions indicated by</span>
+<span class="sd">    mask_index, offsetY, offsetX. The function clips the bounding box as necessary.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">num_templates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mask_index</span><span class="p">)</span>
+    <span class="n">fy</span><span class="p">,</span> <span class="n">fx</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">area</span> <span class="o">=</span> <span class="n">fy</span> <span class="o">*</span> <span class="n">fx</span>
+    <span class="n">total_index_size</span> <span class="o">=</span> <span class="n">num_templates</span> <span class="o">*</span> <span class="n">area</span>
+    <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">fy</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">fx</span><span class="p">]</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">total_index_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">coord_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">total_index_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">coord_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">total_index_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">coord_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">total_index_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mask_index</span><span class="p">)):</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">area</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">area</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">coord_mask</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_index</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">coord_y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">+</span> <span class="n">offsetY</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">coord_x</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="o">+</span> <span class="n">offsetX</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+    <span class="n">selector</span> <span class="o">=</span> <span class="p">(</span><span class="n">coord_y</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">coord_y</span> <span class="o">&lt;</span> <span class="n">imageSizeY</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">coord_x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">coord_x</span> <span class="o">&lt;</span> <span class="n">imageSizeX</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sparse</span><span class="o">.</span><span class="n">COO</span><span class="p">(</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="n">selector</span><span class="p">],</span>
+        <span class="n">coords</span><span class="o">=</span><span class="p">(</span><span class="n">coord_mask</span><span class="p">[</span><span class="n">selector</span><span class="p">],</span> <span class="n">coord_y</span><span class="p">[</span><span class="n">selector</span><span class="p">],</span> <span class="n">coord_x</span><span class="p">[</span><span class="n">selector</span><span class="p">]),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">mask_index</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="sparse_circular_multi_stack"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.sparse_circular_multi_stack">[docs]</a><span class="k">def</span> <span class="nf">sparse_circular_multi_stack</span><span class="p">(</span><span class="n">mask_index</span><span class="p">,</span> <span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+    <span class="c1"># we make sure it is odd</span>
+    <span class="n">bbox</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">bbox_center</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">bbox</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">circular</span><span class="p">(</span>
+        <span class="n">centerX</span><span class="o">=</span><span class="n">bbox_center</span><span class="p">,</span>
+        <span class="n">centerY</span><span class="o">=</span><span class="n">bbox_center</span><span class="p">,</span>
+        <span class="n">imageSizeX</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+        <span class="n">imageSizeY</span><span class="o">=</span><span class="n">bbox</span><span class="p">,</span>
+        <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sparse_template_multi_stack</span><span class="p">(</span>
+        <span class="n">mask_index</span><span class="o">=</span><span class="n">mask_index</span><span class="p">,</span>
+        <span class="n">offsetX</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="n">bbox_center</span><span class="p">,</span>
+        <span class="n">offsetY</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">centerY</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span> <span class="o">-</span> <span class="n">bbox_center</span><span class="p">,</span>
+        <span class="n">template</span><span class="o">=</span><span class="n">template</span><span class="p">,</span>
+        <span class="n">imageSizeX</span><span class="o">=</span><span class="n">imageSizeX</span><span class="p">,</span>
+        <span class="n">imageSizeY</span><span class="o">=</span><span class="n">imageSizeY</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="circular"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.circular">[docs]</a><span class="k">def</span> <span class="nf">circular</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">antialiased</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a circular mask as a 2D array</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centreX, centreY : float</span>
+<span class="sd">        Centre point of the mask.</span>
+<span class="sd">    imageSizeX, imageSizeY : int</span>
+<span class="sd">        Size of the image to be masked.</span>
+<span class="sd">    radius : float</span>
+<span class="sd">        Radius of the mask.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Numpy 2D Array</span>
+<span class="sd">        Array with the shape (imageSizeX, imageSizeY) with the mask.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">_make_circular_mask</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">antialiased</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="ring"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.ring">[docs]</a><span class="k">def</span> <span class="nf">ring</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">radius_inner</span><span class="p">,</span> <span class="n">antialiased</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a ring mask as a double array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centreX, centreY : float</span>
+<span class="sd">        Centre point of the mask.</span>
+<span class="sd">    imageSizeX, imageSizeY : int</span>
+<span class="sd">        Size of the image to be masked.</span>
+<span class="sd">    radius : float</span>
+<span class="sd">        Outer radius of the ring.</span>
+<span class="sd">    radius_inner : float</span>
+<span class="sd">        Inner radius of the ring.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Numpy 2D Array</span>
+<span class="sd">        Array with the shape (imageSizeX, imageSizeY) with the mask.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">antialiased</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">radial_bins</span><span class="p">(</span>
+            <span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span>
+            <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius_inner</span><span class="o">=</span><span class="n">radius_inner</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_sparse</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">outer</span> <span class="o">=</span> <span class="n">_make_circular_mask</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">)</span>
+        <span class="n">inner</span> <span class="o">=</span> <span class="n">_make_circular_mask</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius_inner</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">outer</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">inner</span>
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="radial_gradient"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.radial_gradient">[docs]</a><span class="k">def</span> <span class="nf">radial_gradient</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">antialiased</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Generate a linear radial gradient from 0 to 1 within radius</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ogrid</span><span class="p">[</span><span class="o">-</span><span class="n">centerY</span><span class="p">:</span><span class="n">imageSizeY</span><span class="o">-</span><span class="n">centerY</span><span class="p">,</span> <span class="o">-</span><span class="n">centerX</span><span class="p">:</span><span class="n">imageSizeX</span><span class="o">-</span><span class="n">centerX</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">antialiased</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">radial_gradient_background_subtraction</span><span class="p">(</span>
+            <span class="n">r</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">r_outer</span><span class="o">=</span><span class="mi">0</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span> <span class="o">&lt;=</span> <span class="n">radius</span><span class="o">*</span><span class="n">radius</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">radius</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="radial_gradient_background_subtraction"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.radial_gradient_background_subtraction">[docs]</a><span class="k">def</span> <span class="nf">radial_gradient_background_subtraction</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">r_outer</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Generate a template with a linear radial gradient from 0 to 1 inside r0,</span>
+<span class="sd">    linear transition region for antialiasing between [r0 - delta/2, r0 + delta/2[,</span>
+<span class="sd">    and a negative ring with value -1 in [r0 + delta/2, r_outer].</span>
+
+<span class="sd">    The function accepts the radius for each pixel as a parameter so that a distorted version can</span>
+<span class="sd">    be generated with the stretchY and angle parameters of :meth:`~libertem.masks.polar_map`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    r : numpy.ndarray</span>
+<span class="sd">        Map of radius for each pixel, typically 2D. This allows to work in distorted coordinate</span>
+<span class="sd">        systems by assigning arbitrary radius values to each pixel.</span>
+<span class="sd">        :meth:`~libertem.masks.polar_map` can generate elliptical maps as an example.</span>
+<span class="sd">    r0 : float</span>
+<span class="sd">        Inner radius to fill with a linear gradient in units of r</span>
+<span class="sd">    r_outer : float</span>
+<span class="sd">        Outer radius of ring from r0 to fill with -1 in units of r</span>
+<span class="sd">    delta : float, optional</span>
+<span class="sd">        Width of transition region between inner and outer in units of r</span>
+<span class="sd">        with linear gradient for antialiasing or smoothening. Defaults to 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        NumPy numpy.ndarray with the same shape and type of r with mask values assigned as</span>
+<span class="sd">        described in the description.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">within</span> <span class="o">=</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="n">r0</span> <span class="o">-</span> <span class="n">delta</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">within</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">within</span><span class="p">]</span> <span class="o">/</span> <span class="n">r0</span>
+
+    <span class="n">transition</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span> <span class="o">&gt;=</span> <span class="n">r0</span> <span class="o">-</span> <span class="n">delta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="n">r0</span> <span class="o">+</span> <span class="n">delta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">transition</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">r0</span> <span class="o">-</span> <span class="n">r</span><span class="p">[</span><span class="n">transition</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">delta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">without</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span> <span class="o">&gt;=</span> <span class="n">r0</span> <span class="o">+</span> <span class="n">delta</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">r</span> <span class="o">&lt;=</span> <span class="n">r_outer</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">without</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="polar_map"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.polar_map">[docs]</a><span class="k">def</span> <span class="nf">polar_map</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">stretchY</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return a map of radius and angle.</span>
+
+<span class="sd">    The optional parameters stretchY and angle allow to stretch and rotate the coordinate system</span>
+<span class="sd">    into an elliptical form. This is useful to generate modified input data for functions that</span>
+<span class="sd">    generate a template as a function of radius and angle.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    centerX,centerY : float</span>
+<span class="sd">        Center of the coordinate system in pixel coordinates</span>
+<span class="sd">    imageSizeX,imageSizeY : int</span>
+<span class="sd">        Size of the map to generate in px</span>
+<span class="sd">    stretchY,angle : float, optional</span>
+<span class="sd">        Stretch the radius elliptically by amount :code:`stretchY` in direction</span>
+<span class="sd">        :code:`angle` in radians. :code:`angle = 0` means in Y direction.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    Tuple[numpy.ndarray, numpy.ndarray]</span>
+<span class="sd">        Map of radius and angle of shape :code:`(imageSizeY, imageSizeX)`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">imageSizeX</span><span class="p">]</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">centerY</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">centerX</span>
+    <span class="k">if</span> <span class="n">stretchY</span> <span class="o">!=</span> <span class="mf">1.0</span> <span class="ow">or</span> <span class="n">angle</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">dy</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">-</span> <span class="n">dx</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">))</span> <span class="o">/</span> <span class="n">stretchY</span><span class="p">,</span>
+            <span class="n">dx</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">+</span> <span class="n">dy</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">dy</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">dx</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">cartesians</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">dy</span><span class="p">,</span> <span class="n">dx</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">polars</span> <span class="o">=</span> <span class="n">make_polar</span><span class="p">(</span><span class="n">cartesians</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">polars</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">)),</span>
+        <span class="n">polars</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">))</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="balance"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.balance">[docs]</a><span class="k">def</span> <span class="nf">balance</span><span class="p">(</span><span class="n">template</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Accept a template with both positive and negative values and scale the negative</span>
+<span class="sd">    part in such a way that the sum is zero.</span>
+
+<span class="sd">    This is useful to generate masks that return zero when applied to a</span>
+<span class="sd">    uniform background or linear gradient.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">above</span> <span class="o">=</span> <span class="n">template</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">below</span> <span class="o">=</span> <span class="n">template</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="n">result</span><span class="p">[</span><span class="n">below</span><span class="p">]</span> <span class="o">*=</span> <span class="n">template</span><span class="p">[</span><span class="n">above</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">template</span><span class="p">[</span><span class="n">below</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="bounding_radius"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.bounding_radius">[docs]</a><span class="k">def</span> <span class="nf">bounding_radius</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate a radius around centerX, centerY that covers the whole frame</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeY</span> <span class="o">-</span> <span class="n">centerY</span><span class="p">)</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">imageSizeX</span> <span class="o">-</span> <span class="n">centerX</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="radial_bins"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.radial_bins">[docs]</a><span class="k">def</span> <span class="nf">radial_bins</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span>
+        <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radius_inner</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_sparse</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Generate antialiased rings</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">radius</span> <span class="o">=</span> <span class="n">bounding_radius</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n_bins</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">n_bins</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">radius</span> <span class="o">-</span> <span class="n">radius_inner</span><span class="p">))</span>
+
+    <span class="n">r</span><span class="p">,</span> <span class="n">phi</span> <span class="o">=</span> <span class="n">polar_map</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+    <span class="n">width</span> <span class="o">=</span> <span class="p">(</span><span class="n">radius</span> <span class="o">-</span> <span class="n">radius_inner</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_bins</span>
+    <span class="n">bin_area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">radius</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">use_sparse</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">use_sparse</span> <span class="o">=</span> <span class="n">bin_area</span> <span class="o">/</span> <span class="p">(</span><span class="n">imageSizeX</span> <span class="o">*</span> <span class="n">imageSizeY</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.1</span>
+
+    <span class="k">if</span> <span class="n">use_sparse</span><span class="p">:</span>
+        <span class="n">jjs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+    <span class="n">slices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">r0</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">radius_inner</span><span class="p">,</span> <span class="n">radius</span> <span class="o">-</span> <span class="n">width</span><span class="p">,</span> <span class="n">n_bins</span><span class="p">)</span> <span class="o">+</span> <span class="n">width</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span> <span class="o">-</span> <span class="n">r0</span><span class="p">)</span>
+        <span class="c1"># The &quot;0.5&quot; ensures that the bins overlap and sum up to exactly 1</span>
+        <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">-</span> <span class="n">diff</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">use_sparse</span><span class="p">:</span>
+            <span class="n">select</span> <span class="o">=</span> <span class="n">vals</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="p">[</span><span class="n">select</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>  <span class="c1"># Make sure each bin has a sum of 1</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">vals</span> <span class="o">/=</span> <span class="n">s</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">COO</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="n">vals</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">(</span><span class="n">jjs</span><span class="p">[</span><span class="n">select</span><span class="p">],)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>  <span class="c1"># Make sure each bin has a sum of 1</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+                    <span class="n">vals</span> <span class="o">/=</span> <span class="n">s</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+    <span class="c1"># Patch a singularity at the center</span>
+    <span class="k">if</span> <span class="n">radius_inner</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+        <span class="n">yy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">centerY</span><span class="p">))</span>
+        <span class="n">xx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">centerX</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">yy</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">yy</span> <span class="o">&lt;</span> <span class="n">imageSizeY</span> <span class="ow">and</span> <span class="n">xx</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">xx</span> <span class="o">&lt;</span> <span class="n">imageSizeX</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">use_sparse</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">yy</span> <span class="o">*</span> <span class="n">imageSizeX</span> <span class="o">+</span> <span class="n">xx</span>
+                <span class="n">diff</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">slices</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="n">radius_inner</span>
+                <span class="n">patch</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">COO</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">diff</span><span class="p">],</span> <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+                <span class="n">slices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">patch</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">slices</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">yy</span><span class="p">,</span> <span class="n">xx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">radius_inner</span>
+    <span class="k">if</span> <span class="n">use_sparse</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sparse</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">slices</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="background_subtraction"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.background_subtraction">[docs]</a><span class="k">def</span> <span class="nf">background_subtraction</span><span class="p">(</span><span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">radius_inner</span><span class="p">,</span>
+        <span class="n">antialiased</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">mask_1</span> <span class="o">=</span> <span class="n">circular</span><span class="p">(</span>
+        <span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius_inner</span><span class="p">,</span> <span class="n">antialiased</span><span class="o">=</span><span class="n">antialiased</span>
+    <span class="p">)</span>
+    <span class="n">sum_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask_1</span><span class="p">)</span>
+    <span class="n">mask_2</span> <span class="o">=</span> <span class="n">ring</span><span class="p">(</span>
+        <span class="n">centerX</span><span class="p">,</span> <span class="n">centerY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">radius_inner</span><span class="p">,</span> <span class="n">antialiased</span><span class="o">=</span><span class="n">antialiased</span>
+    <span class="p">)</span>
+    <span class="n">sum_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mask_2</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">mask_1</span> <span class="o">-</span> <span class="n">mask_2</span><span class="o">*</span><span class="n">sum_1</span><span class="o">/</span><span class="n">sum_2</span>
+    <span class="k">return</span> <span class="n">mask</span></div>
+
+
+<div class="viewcode-block" id="rectangular"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.rectangular">[docs]</a><span class="k">def</span> <span class="nf">rectangular</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Width</span><span class="p">,</span> <span class="n">Height</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Make a rectangular mask as a 2D array of bool.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X, Y : Corner coordinates</span>
+<span class="sd">        Centre point of the mask.</span>
+<span class="sd">    imageSizeX, imageSizeY : int</span>
+<span class="sd">        Size of the image to be masked.</span>
+<span class="sd">    Width, Height : Width and Height of the rectangle</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Numpy 2D Array</span>
+<span class="sd">        Array with the shape (imageSizeX, imageSizeY) with the mask.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bool_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Height</span><span class="o">*</span><span class="n">Width</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y</span><span class="o">+</span><span class="n">Height</span><span class="p">)</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="o">+</span><span class="n">Width</span><span class="p">)</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">Y</span><span class="o">+</span><span class="n">Height</span><span class="p">)</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="o">+</span><span class="n">Width</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">Height</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">Width</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="n">Y</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="n">X</span><span class="o">+</span><span class="n">Width</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="n">Y</span><span class="o">+</span><span class="n">Height</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">X</span>
+    <span class="k">elif</span> <span class="n">Height</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">Width</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="n">Y</span><span class="o">+</span><span class="n">Height</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="n">Y</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">X</span><span class="o">+</span><span class="n">Width</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">ymin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ymin</span><span class="p">)</span>
+    <span class="n">xmin</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xmin</span><span class="p">)</span>
+    <span class="n">ymax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ymax</span><span class="p">)</span>
+    <span class="n">xmax</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xmax</span><span class="p">)</span>
+    <span class="n">bool_mask</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ymin</span><span class="p">):</span><span class="nb">min</span><span class="p">(</span><span class="n">ymax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">xmin</span><span class="p">):</span><span class="nb">min</span><span class="p">(</span><span class="n">xmax</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">bool_mask</span></div>
+
+
+<span class="c1"># TODO: dtype parameter? consistency with ring/circular above</span>
+<div class="viewcode-block" id="gradient_x"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.gradient_x">[docs]</a><span class="k">def</span> <span class="nf">gradient_x</span><span class="p">(</span><span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ogrid</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">)]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">imageSizeY</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="gradient_y"><a class="viewcode-back" href="../../reference/masks.html#libertem.masks.gradient_y">[docs]</a><span class="k">def</span> <span class="nf">gradient_y</span><span class="p">(</span><span class="n">imageSizeX</span><span class="p">,</span> <span class="n">imageSizeY</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">gradient_x</span><span class="p">(</span><span class="n">imageSizeY</span><span class="p">,</span> <span class="n">imageSizeX</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

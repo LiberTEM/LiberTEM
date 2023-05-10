@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dask integration &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example of integration with HyperSpy lazy signals" href="hyperspy-integration.html" />
+    <link rel="prev" title="Profiling UDFs" href="udf/profiling.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dask integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#linking-with-hyperspy-lazy-signals">Linking with HyperSpy Lazy Signals</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="hyperspy-integration.html">Example of integration with HyperSpy lazy signals</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scheduler">Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#load-datasets-as-dask-arrays">Load datasets as Dask arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#load-dask-arrays-as-datasets">Load Dask arrays as datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-dask-arrays-with-udfs">Create Dask arrays with UDFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#merge-function-for-dask-array-results">Merge function for Dask array results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cuda-and-scheduling">CUDA and scheduling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Dask integration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dask.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The features described below are experimental and under development.</p>
+</div>
+<section id="dask-integration">
+<span id="dask"></span><h1>Dask integration<a class="headerlink" href="#dask-integration" title="Permalink to this heading"></a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0.</span></p>
+</div>
+<p>Since version 0.9, LiberTEM supports seamless integration with workflows that
+are based on Dask arrays. That means Dask arrays can serve as input for LiberTEM, and
+UDF computations can produce Dask arrays. Additionally,
+<a class="reference internal" href="reference/dask.html#libertem.contrib.daskadapter.make_dask_array" title="libertem.contrib.daskadapter.make_dask_array"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_dask_array()</span></code></a> can create Dask arrays from LiberTEM datasets.</p>
+<section id="linking-with-hyperspy-lazy-signals">
+<h2>Linking with HyperSpy Lazy Signals<a class="headerlink" href="#linking-with-hyperspy-lazy-signals" title="Permalink to this heading"></a></h2>
+<p>LiberTEM’s Dask integration features can be used to combine features from
+HyperSpy and LiberTEM in a single analysis workflow:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hyperspy-integration.html">Example of integration with HyperSpy lazy signals</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="hyperspy-integration.html#From-HyperSpy-to-LiberTEM">From HyperSpy to LiberTEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hyperspy-integration.html#From-LiberTEM-to-HyperSpy:-Dataset">From LiberTEM to HyperSpy: Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hyperspy-integration.html#From-LiberTEM-to-HyperSpy:-UDF-computation-result">From LiberTEM to HyperSpy: UDF computation result</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="scheduler">
+<span id="id1"></span><h2>Scheduler<a class="headerlink" href="#scheduler" title="Permalink to this heading"></a></h2>
+<p>LiberTEM uses Dask.distributed as the default method to execute tasks.
+Unless instructed otherwise, LiberTEM keeps the default Dask scheduler as-is and only
+uses the Dask <code class="code docutils literal notranslate"><span class="pre">Client</span></code> internally to make sure existing workflows keep running
+as before. However, for a closer integration it can be beneficial to use the same scheduler
+for both LiberTEM and other Dask computations. There are several options for that:</p>
+<ul>
+<li><p>Set the LiberTEM Dask cluster as default Dask scheduler:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Use <code class="code docutils literal notranslate"><span class="pre">Context.make_with('dask-make-default')</span></code> (<a class="reference internal" href="reference/api.html#libertem.api.Context.make_with" title="libertem.api.Context.make_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_with()</span></code></a>)</p></li>
+<li><p>Pass <code class="code docutils literal notranslate"><span class="pre">client_kwargs={'set_as_default':</span> <span class="pre">True}</span></code>
+to <a class="reference internal" href="dev/executors.html#libertem.executor.dask.DaskJobExecutor.connect" title="libertem.executor.dask.DaskJobExecutor.connect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">connect()</span></code></a>
+or <a class="reference internal" href="dev/executors.html#libertem.executor.dask.DaskJobExecutor.make_local" title="libertem.executor.dask.DaskJobExecutor.make_local"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_local()</span></code></a></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Use an existing Dask scheduler:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Use <code class="code docutils literal notranslate"><span class="pre">Context.make_with('dask-integration')</span></code> to start
+an executor that is compatible with the current Dask scheduler.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Use dask.delayed:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.executor.delayed.DelayedJobExecutor</span></code></a> can
+return UDF computations as Dask arrays. The scheduler will only be
+determined when <code class="code docutils literal notranslate"><span class="pre">compute()</span></code> is called downstream using the
+normal mechanisms of Dask.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="load-datasets-as-dask-arrays">
+<span id="daskarray"></span><h2>Load datasets as Dask arrays<a class="headerlink" href="#load-datasets-as-dask-arrays" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference internal" href="reference/dask.html#libertem.contrib.daskadapter.make_dask_array" title="libertem.contrib.daskadapter.make_dask_array"><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_dask_array()</span></code></a> function can generate
+a <a class="reference external" href="https://docs.dask.org/en/latest/array.html">distributed Dask array</a> from a
+<a class="reference internal" href="reference/dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> using its partitions as blocks. The
+typical LiberTEM partition size is close to the optimum size for Dask array
+blocks under most circumstances. The dask array is accompanied with a map of
+optimal workers. This map should be passed to the <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute()</span></code> method in
+order to construct the blocks on the workers that have them in local storage.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.contrib.daskadapter</span> <span class="kn">import</span> <span class="n">make_dask_array</span>
+
+<span class="c1"># Construct a Dask array from the dataset</span>
+<span class="c1"># The second return value contains information</span>
+<span class="c1"># on workers that hold parts of a dataset in local</span>
+<span class="c1"># storage to ensure optimal data locality</span>
+<span class="n">dask_array</span><span class="p">,</span> <span class="n">workers</span> <span class="o">=</span> <span class="n">make_dask_array</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">dask_array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">workers</span><span class="o">=</span><span class="n">workers</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="load-dask-arrays-as-datasets">
+<h2>Load Dask arrays as datasets<a class="headerlink" href="#load-dask-arrays-as-datasets" title="Permalink to this heading"></a></h2>
+<p>LiberTEM datasets can be created from Dask arrays by using
+<a class="reference internal" href="reference/api.html#libertem.api.Context.load" title="libertem.api.Context.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.api.Context.load()</span></code></a> with filetype <code class="code docutils literal notranslate"><span class="pre">'dask'</span></code>. See
+<a class="reference internal" href="reference/dataset.html#daskds"><span class="std std-ref">Dask</span></a> for details. The performance can vary and depends on chunking,
+executor, I/O method and Dask array creation method. Please <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">contact us</a> or <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/new">create an Issue</a> for questions, bug reports
+and other feedback!</p>
+<p>This basic example shows running a UDF on a Dask array:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.sum</span> <span class="kn">import</span> <span class="n">SumUDF</span>
+
+<span class="c1"># Create a Context that integrates well with</span>
+<span class="c1"># the current Dask scheduler</span>
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="o">.</span><span class="n">make_with</span><span class="p">(</span><span class="s1">&#39;dask-integration&#39;</span><span class="p">)</span>
+
+<span class="n">a</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">23</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">19</span><span class="p">))</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;dask&#39;</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumUDF</span><span class="p">())</span>
+
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span>
+    <span class="n">a</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">compute</span><span class="p">(),</span>
+    <span class="n">res</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See also <a class="reference internal" href="api.html#executors"><span class="std std-ref">Executors</span></a> on how to set up compatible schedulers for
+both Dask and LiberTEM.</p>
+</section>
+<section id="create-dask-arrays-with-udfs">
+<span id="delayed-udfs"></span><h2>Create Dask arrays with UDFs<a class="headerlink" href="#create-dask-arrays-with-udfs" title="Permalink to this heading"></a></h2>
+<p>Using a <a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a> with a
+<a class="reference internal" href="reference/api.html#libertem.api.Context" title="libertem.api.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a> lets <a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-class docutils literal notranslate"><span class="pre">run_udf</span></code></a>
+return results as Dask arrays.
+In addition to the usual <a class="reference internal" href="reference/udf.html#libertem.common.buffers.BufferWrapper.data" title="libertem.common.buffers.BufferWrapper.data"><code class="xref py py-attr docutils literal notranslate"><span class="pre">data</span></code></a>
+and <a class="reference internal" href="reference/udf.html#libertem.common.buffers.BufferWrapper.raw_data" title="libertem.common.buffers.BufferWrapper.raw_data"><code class="xref py py-attr docutils literal notranslate"><span class="pre">raw_data</span></code></a> properties, which
+provide results as numpy arrays eagerly, the results are made available
+as dask arrays using the attributes
+<a class="reference internal" href="reference/dask.html#libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.delayed_data" title="libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.delayed_data"><code class="xref py py-attr docutils literal notranslate"><span class="pre">delayed_data</span></code></a>
+and <a class="reference internal" href="reference/dask.html#libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.delayed_raw_data" title="libertem.executor.utils.dask_buffer.DaskResultBufferWrapper.delayed_raw_data"><code class="xref py py-attr docutils literal notranslate"><span class="pre">delayed_raw_data</span></code></a>.
+The computation is only performed when the
+<code class="code docutils literal notranslate"><span class="pre">compute()</span></code> method is called on a Dask array result.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.api</span> <span class="kn">import</span> <span class="n">Context</span>
+<span class="kn">from</span> <span class="nn">libertem.executor.delayed</span> <span class="kn">import</span> <span class="n">DelayedJobExecutor</span>
+
+<span class="kn">from</span> <span class="nn">libertem.udf.sumsigudf</span> <span class="kn">import</span> <span class="n">SumSigUDF</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">DelayedJobExecutor</span><span class="p">())</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumSigUDF</span><span class="p">())</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">delayed_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>dask.array&lt;reshape, shape=(16, 16), dtype=float32, chunksize=(..., ...), chunktype=numpy.ndarray&gt;
+</pre></div>
+</div>
+<p>This method allows to create large intermediate results of <code class="code docutils literal notranslate"><span class="pre">kind='nav'</span></code>
+efficiently in the form of Dask arrays. The partial results can stay as
+ephemeral array chunks on the workers only while they are needed for downstream
+calculations instead of transporting them through the cluster and instantiating
+the full result on the main node.</p>
+<p>For calls to <a class="reference internal" href="reference/api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-class docutils literal notranslate"><span class="pre">run_udf</span></code></a> which run multiple UDFs
+or have with UDFs which return multiple results, it is strongly recommended
+to compute results with a single call to <code class="code docutils literal notranslate"><span class="pre">compute()</span></code>, in order to re-use
+computation over the dataset. By default, Dask does not cache intermediate
+results from prior runs, so individual calls to <code class="code docutils literal notranslate"><span class="pre">compute()</span></code> require
+a complete re-run of the UDFs that were passed to <code class="code docutils literal notranslate"><span class="pre">run_udf</span></code>.</p>
+</section>
+<section id="merge-function-for-dask-array-results">
+<span id="dask-merge-all"></span><span id="merge-all"></span><h2>Merge function for Dask array results<a class="headerlink" href="#merge-function-for-dask-array-results" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference internal" href="udf/advanced.html#udf-merge-all"><span class="std std-ref">One-step merge (merge_all)</span></a> for more information.</p>
+</div>
+<p>LiberTEM already uses an efficient default merging method to create Dask arrays
+for UDFs that only use <code class="code docutils literal notranslate"><span class="pre">kind='nav'</span></code> buffers and don’t specify their own
+<code class="code docutils literal notranslate"><span class="pre">merge()</span></code>.</p>
+<p>For all UDFs that define their own <code class="code docutils literal notranslate"><span class="pre">merge()</span></code>,
+<a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a> will use this
+existing <code class="code docutils literal notranslate"><span class="pre">udf.merge()</span></code> function to assemble the final results, in the same
+way it is used to assemble partial results in each partition. This is carried
+out by wrapping the <code class="code docutils literal notranslate"><span class="pre">udf.merge()</span></code> in <code class="code docutils literal notranslate"><span class="pre">dask.delayed</span></code> calls.</p>
+<p>However, the user can also specify a
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFMergeAllMixin.merge_all" title="libertem.udf.base.UDFMergeAllMixin.merge_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge_all()</span></code></a> method on their UDF that
+combines all partial results from the workers to the complete result in a single
+step. This allows the <a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a> to
+produce a streamlined task tree, which then gives Dask greater scope to
+parallelise the merge step and reduce data transfers.</p>
+<p>This example shows the task tree first with the built-in wrapper for <code class="code docutils literal notranslate"><span class="pre">udf.merge()</span></code>
+and then the stramlined one after defining <code class="code docutils literal notranslate"><span class="pre">merge_all()</span></code>. In tests the streamlined
+variant was twice as fast as the built-in wrapper.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MySumUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">intensity</span><span class="p">[:]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">intensity</span><span class="p">[:]</span> <span class="o">+=</span> <span class="n">src</span><span class="o">.</span><span class="n">intensity</span>
+
+<span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="p">(</span><span class="n">executor</span><span class="o">=</span><span class="n">DelayedJobExecutor</span><span class="p">())</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">MySumUDF</span><span class="p">(),</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
+
+<span class="n">result</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">delayed_data</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/tree-default-merge.png"><img alt="Task tree with wrapper for standard merge." src="_images/tree-default-merge.png" style="width: 300px;" /></a>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MySumMergeUDF</span><span class="p">(</span><span class="n">MySumUDF</span><span class="p">):</span>
+    <span class="c1"># Define the merge_all() method for the UDF above</span>
+    <span class="k">def</span> <span class="nf">merge_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ordered_results</span><span class="p">):</span>
+        <span class="c1"># List and not generator for NumPy dispatch to work</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">intensity</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">ordered_results</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="c1"># NumPy will dispatch the stacking to the appropriate method</span>
+        <span class="c1"># for the chunks.</span>
+        <span class="c1"># See also https://numpy.org/doc/stable/user/basics.dispatch.html</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
+        <span class="c1"># Perform computation on the stacked chunks</span>
+        <span class="c1"># equivalent to the normal merge()</span>
+        <span class="n">intensity</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Return a dictionary mapping buffer name to new content</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="n">intensity</span><span class="p">}</span>
+
+<span class="n">result2</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">udf</span><span class="o">=</span><span class="n">MySumMergeUDF</span><span class="p">(),</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
+
+<span class="n">result2</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">delayed_data</span><span class="o">.</span><span class="n">visualize</span><span class="p">()</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/tree-merge-all.png"><img alt="Task tree with :code:`merge_all()`." src="_images/tree-merge-all.png" style="width: 300px;" /></a>
+<p>The argument <code class="code docutils literal notranslate"><span class="pre">ordered_results</span></code> is a dictionary of partial results
+results for that UDF. The dictionary is keyed by <a class="reference internal" href="reference/internals.html#libertem.common.slice.Slice" title="libertem.common.slice.Slice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Slice</span></code></a>
+objects, one for each partition processed, and is ordered in the flat navigation dimension.
+Each partial result is itself a dictionary with a key for each result declared in
+<code class="code docutils literal notranslate"><span class="pre">udf.get_result_buffers()</span></code>. The <code class="code docutils literal notranslate"><span class="pre">ordered_results</span></code> dictionary is created
+such that the <code class="code docutils literal notranslate"><span class="pre">merge_all</span></code> method can safely concatenate the elements in the case
+of <code class="code docutils literal notranslate"><span class="pre">'nav'</span></code>-shaped results. Any applied ROI is automatically taken into account
+after the call to <code class="code docutils literal notranslate"><span class="pre">merge_all</span></code>.</p>
+<p>The return value from the function must be a dictionary of merged result arrays
+with the keys matching the declared result buffers. There is, however, no requirement
+to return merged results for all existing buffers, though any that are missing will not
+contain results from the computation and are likely to be filled with zeros.</p>
+</section>
+<section id="cuda-and-scheduling">
+<h2>CUDA and scheduling<a class="headerlink" href="#cuda-and-scheduling" title="Permalink to this heading"></a></h2>
+<p>A native LiberTEM Dask cluster uses resource tags to schedule work on CPUs or
+CUDA devices based on an UDF’s capability. For Dask integration a fallback was
+implemented that allows running computations that can run on a CPU on a native
+LiberTEM Dask cluster without requiring resource tags. However, CUDA-only computations
+will require passing the appropriate tags as <code class="code docutils literal notranslate"><span class="pre">resources</span></code> argument to <code class="code docutils literal notranslate"><span class="pre">compute()</span></code>.</p>
+<p><a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs" title="libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.executor.delayed.DelayedJobExecutor.get_resources_from_udfs()</span></code></a> returns
+the appropriate resources for a given set of UDFs based on their capabilities.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At this time the combination of CUDA-requiring UDFs and
+<a class="reference internal" href="dev/executors.html#libertem.executor.delayed.DelayedJobExecutor" title="libertem.executor.delayed.DelayedJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">DelayedJobExecutor</span></code></a> is not well-tested.
+At a minimum, the merge process carried out on the main node
+will not take place with GPU-backed Dask arrays, though this is
+under consideration for the future.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="udf/profiling.html" class="btn btn-neutral float-left" title="Profiling UDFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="hyperspy-integration.html" class="btn btn-neutral float-right" title="Example of integration with HyperSpy lazy signals" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

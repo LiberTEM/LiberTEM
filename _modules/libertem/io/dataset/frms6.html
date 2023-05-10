@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.frms6 &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.frms6</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.frms6</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span><span class="p">,</span> <span class="n">escape</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">configparser</span>
+
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">numba.typed</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">sio</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">libertem.io.corrections</span> <span class="kn">import</span> <span class="n">CorrectionSet</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">flat_nonzero</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSet</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span>
+    <span class="n">FileSet</span><span class="p">,</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Decoder</span><span class="p">,</span>
+    <span class="n">TilingScheme</span><span class="p">,</span> <span class="n">make_get_read_ranges</span><span class="p">,</span> <span class="n">IOBackend</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">READOUT_MODE_PAT</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^&quot;bin:\s*(?P&lt;bin&gt;\d+),\s*windowing:\s*(?P&lt;win_i&gt;\d+)\s*x\s*(?P&lt;win_j&gt;\d+)\s*&quot;$&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># file header: 1024 bytes, at the beginning of each file</span>
+<span class="n">file_header_dtype</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;header_size&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">),</span>        <span class="c1"># fixed value: 1024</span>
+    <span class="p">(</span><span class="s1">&#39;frame_header_size&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">),</span>  <span class="c1"># fixed value: 64</span>
+    <span class="p">(</span><span class="s1">&#39;padding_1&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u1&#39;</span><span class="p">),</span>            <span class="c1"># fixed value: 6</span>
+    <span class="p">(</span><span class="s1">&#39;comment_1&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">80</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">),</span>              <span class="c1"># -&gt; columns</span>
+    <span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">),</span>             <span class="c1"># -&gt; rows</span>
+    <span class="p">(</span><span class="s1">&#39;comment_2&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">928</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;num_frames&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u4&#39;</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># frame header: 64 bytes, before each frame</span>
+<span class="n">frame_header_dtype</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;padding_1&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;timestamp_s&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u4&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;timestamp_us&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u4&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;frame_number&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;u4&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;padding_2&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">12</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="mi">36</span><span class="p">)),</span>
+<span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">FRMS6DatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/FRMS6DatasetParams.schema.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;FRMS6DatasetParams&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;FRMS6&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;io_backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">IOBackend</span><span class="o">.</span><span class="n">get_supported</span><span class="p">(),</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s2">&quot;nav_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;nav_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sig_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sync_offset&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">GainMapCSVDialect</span><span class="p">(</span><span class="n">csv</span><span class="o">.</span><span class="n">excel</span><span class="p">):</span>
+    <span class="n">delimiter</span> <span class="o">=</span> <span class="s1">&#39;;&#39;</span>
+
+
+<span class="k">def</span> <span class="nf">_unbin</span><span class="p">(</span><span class="n">tile_data</span><span class="p">,</span> <span class="n">factor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    tile_data should have shape (num_frames, y, x)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">tile_data</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># insert a binning dimension:</span>
+    <span class="n">tile_data</span> <span class="o">=</span> <span class="n">tile_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="n">unbinned</span> <span class="o">=</span> <span class="n">tile_data</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># FIXME: should we scale the data by the binning factor?</span>
+    <span class="k">return</span> <span class="n">unbinned</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_base_filename</span><span class="p">(</span><span class="n">_path</span><span class="p">):</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.hdr&quot;</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.frms6&quot;</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_[0-9]+$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;unknown extension: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ext</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">base</span>
+
+
+<span class="k">def</span> <span class="nf">_read_dataset_hdr</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+            <span class="s2">&quot;Could not find .hdr file </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">fname</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">configparser</span><span class="o">.</span><span class="n">ConfigParser</span><span class="p">()</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">sections</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">sections</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;measurementInfo&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+            <span class="s2">&quot;measurementInfo missing from .hdr file </span><span class="si">{}</span><span class="s2">, have: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">fname</span><span class="p">,</span>
+                <span class="nb">repr</span><span class="p">(</span><span class="n">sections</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">msm_info</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;measurementInfo&#39;</span><span class="p">]</span>
+    <span class="n">int_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;darkframes&#39;</span><span class="p">,</span> <span class="s1">&#39;dwelltimemicroseconds&#39;</span><span class="p">,</span> <span class="s1">&#39;gain&#39;</span><span class="p">,</span> <span class="s1">&#39;signalframes&#39;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">msm_info</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">msm_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">int_fields</span><span class="p">:</span>
+            <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parsed</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="c1"># FIXME: are the dimensions the right way aroud? is there a sample file with a non-square</span>
+    <span class="c1"># scan region?</span>
+    <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;stemimagesize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;stemimagesize&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">))</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">READOUT_MODE_PAT</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;readoutmode&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;could not parse readout mode&quot;</span><span class="p">)</span>
+    <span class="n">readout_mode</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+    <span class="n">parsed</span><span class="p">[</span><span class="s1">&#39;readoutmode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">readout_mode</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="n">parsed</span>
+
+
+<span class="k">def</span> <span class="nf">_read_file_header</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">header_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">file_header_dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">file_header_dtype</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">header</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">header_raw</span><span class="p">[</span><span class="n">field</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># to prevent overflows in following computations:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;u&quot;</span><span class="p">:</span>
+            <span class="n">header</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
+    <span class="n">header</span><span class="p">[</span><span class="s1">&#39;filesize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+    <span class="n">header</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="k">return</span> <span class="n">header</span>
+
+
+<span class="k">def</span> <span class="nf">_pattern</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">path</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.hdr&quot;</span><span class="p">:</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_*.frms6&quot;</span> <span class="o">%</span> <span class="n">escape</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.frms6&quot;</span><span class="p">:</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">*.frms6&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">escape</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[0-9]+$&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;unknown extension: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ext</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pattern</span>
+
+
+<span class="k">def</span> <span class="nf">get_filenames</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">disable_glob</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">disable_glob</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">path</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="p">(</span><span class="n">_pattern</span><span class="p">(</span><span class="n">path</span><span class="p">))))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_sig_shape</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">bin_factor</span><span class="p">):</span>
+    <span class="n">filenames</span> <span class="o">=</span> <span class="n">get_filenames</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">_read_file_header</span><span class="p">(</span><span class="n">filenames</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">sig_shape</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">bin_factor</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">sig_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">sig_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">bin_factor</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">sig_shape</span>
+
+
+<span class="k">def</span> <span class="nf">_header_valid</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;header_size&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1024</span>
+            <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_header_size&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">64</span>
+            <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">6</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="c1"># TODO: file size sanity check?</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">_num_frames</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;num_frames&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;num_frames&#39;</span><span class="p">]</span>
+    <span class="c1"># older FRMS6 files don&#39;t contain the number of frames in the header,</span>
+    <span class="c1"># so calculate from filesize:</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
+    <span class="n">bytes_per_frame</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="k">assert</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;filesize&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;filesize&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="n">denum</span> <span class="o">=</span> <span class="p">(</span><span class="n">bytes_per_frame</span> <span class="o">+</span> <span class="mi">64</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">num</span> <span class="o">//</span> <span class="n">denum</span>
+    <span class="k">if</span> <span class="n">num</span> <span class="o">%</span> <span class="n">denum</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;could not determine number of frames&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_map_y</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">binning</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    binning : int</span>
+<span class="sd">        Binning factor (1, 2, 4)</span>
+
+<span class="sd">    num_rows : int</span>
+<span class="sd">        Total number of rows (should be 264, if not windowing)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">half</span> <span class="o">=</span> <span class="n">num_rows</span> <span class="o">//</span> <span class="mi">2</span> <span class="o">//</span> <span class="n">binning</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="o">&lt;</span> <span class="n">half</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(((</span><span class="n">num_rows</span> <span class="o">//</span> <span class="n">binning</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">xs</span><span class="p">)</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_frms6_read_ranges_tile_block</span><span class="p">(</span>
+    <span class="n">slices_arr</span><span class="p">,</span> <span class="n">fileset_arr</span><span class="p">,</span> <span class="n">slice_sig_sizes</span><span class="p">,</span> <span class="n">sig_origins</span><span class="p">,</span>
+    <span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">,</span> <span class="n">frame_indices</span><span class="p">,</span> <span class="n">sig_size</span><span class="p">,</span>
+    <span class="n">px_to_bytes</span><span class="p">,</span> <span class="n">bpp</span><span class="p">,</span> <span class="n">frame_header_bytes</span><span class="p">,</span> <span class="n">frame_footer_bytes</span><span class="p">,</span> <span class="n">file_idxs</span><span class="p">,</span>
+    <span class="n">slice_offset</span><span class="p">,</span> <span class="n">extra</span><span class="p">,</span> <span class="n">sig_shape</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read ranges for frms6: create read ranges line-by-line</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">List</span><span class="p">()</span>
+
+    <span class="c1"># positions in the signal dimensions:</span>
+    <span class="k">for</span> <span class="n">slice_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">slices_arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># (offset, size) arrays defining what data to read (in pixels)</span>
+        <span class="n">slice_origin</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">slice_shape</span> <span class="o">=</span> <span class="n">slices_arr</span><span class="p">[</span><span class="n">slice_idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">read_ranges</span> <span class="o">=</span> <span class="n">List</span><span class="p">()</span>
+
+        <span class="n">x_shape</span> <span class="o">=</span> <span class="n">slice_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">stride</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x_shape</span>
+
+        <span class="n">binning</span> <span class="o">=</span> <span class="n">extra</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="n">sig_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># inner &quot;depth&quot; loop along the (flat) navigation axis of a tile:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inner_frame_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">inner_indices_start</span><span class="p">,</span> <span class="n">inner_indices_stop</span><span class="p">)):</span>
+            <span class="n">inner_frame</span> <span class="o">=</span> <span class="n">frame_indices</span><span class="p">[</span><span class="n">inner_frame_idx</span><span class="p">]</span>
+            <span class="n">file_idx</span> <span class="o">=</span> <span class="n">file_idxs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">fileset_arr</span><span class="p">[</span><span class="n">file_idx</span><span class="p">]</span>
+            <span class="n">frame_in_file_idx</span> <span class="o">=</span> <span class="n">inner_frame</span> <span class="o">-</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">file_header_bytes</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+            <span class="c1"># we are reading a part of a single frame, so we first need to find</span>
+            <span class="c1"># the offset caused by headers:</span>
+            <span class="n">header_offset</span> <span class="o">=</span> <span class="n">file_header_bytes</span> <span class="o">+</span> <span class="n">frame_header_bytes</span> <span class="o">*</span> <span class="p">(</span><span class="n">frame_in_file_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># now let&#39;s figure in the current frame index:</span>
+            <span class="c1"># (go down into the file by full frames; `sig_size`)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">header_offset</span> <span class="o">+</span> <span class="n">frame_in_file_idx</span> <span class="o">*</span> <span class="p">(</span><span class="n">sig_size</span> <span class="o">//</span> <span class="n">binning</span><span class="p">)</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+
+            <span class="n">y_start</span> <span class="o">=</span> <span class="n">slice_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">binning</span>
+            <span class="n">y_stop</span> <span class="o">=</span> <span class="p">(</span><span class="n">slice_origin</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">slice_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="n">binning</span>
+
+            <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">y_start</span><span class="p">,</span> <span class="n">y_stop</span><span class="p">):</span>
+                <span class="n">mapped_y</span><span class="p">,</span> <span class="n">x_offset</span> <span class="o">=</span> <span class="n">_map_y</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">,</span> <span class="n">binning</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">)</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">+</span> <span class="p">(</span><span class="n">stride</span> <span class="o">*</span> <span class="n">mapped_y</span> <span class="o">+</span> <span class="n">x_offset</span><span class="p">)</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+                <span class="n">read_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="n">file_idx</span><span class="p">,</span>
+                        <span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">x_shape</span> <span class="o">*</span> <span class="n">bpp</span> <span class="o">//</span> <span class="mi">8</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># the indices are compressed to the selected frames</span>
+        <span class="n">compressed_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="n">slice_offset</span> <span class="o">+</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_origin</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">inner_indices_stop</span> <span class="o">-</span> <span class="n">inner_indices_start</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">slice_shape</span><span class="p">],</span>
+        <span class="p">])</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">slice_idx</span><span class="p">,</span> <span class="n">compressed_slice</span><span class="p">,</span> <span class="n">read_ranges</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="n">frms6_get_read_ranges</span> <span class="o">=</span> <span class="n">make_get_read_ranges</span><span class="p">(</span>
+    <span class="n">read_ranges_tile_block</span><span class="o">=</span><span class="n">_frms6_read_ranges_tile_block</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_make_decode_frms6</span><span class="p">(</span><span class="n">binning</span><span class="p">):</span>
+    <span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="s1">&#39;always&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_decode_frms6</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">rr</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">ds_shape</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Row-for-row decoding of frms6 data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inp_decoded</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">native_dtype</span><span class="p">)</span>
+        <span class="n">out_3d</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">num_rows_binned</span> <span class="o">=</span> <span class="n">ds_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">//</span> <span class="n">binning</span>
+        <span class="n">origin_y_binned</span> <span class="o">=</span> <span class="n">origin</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">binning</span>
+
+        <span class="c1"># how many rows need to be *read* for this tile</span>
+        <span class="c1"># if we are un-binning, we need to read only</span>
+        <span class="n">rows_in_tile</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">binning</span>
+
+        <span class="c1"># broadcast the row we read to (start, stop) rows:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="n">rows_in_tile</span><span class="p">)</span> <span class="o">*</span> <span class="n">binning</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">binning</span>
+
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">//</span> <span class="n">rows_in_tile</span>
+
+        <span class="c1"># print(depth, start, stop, rows_in_tile, origin_y_binned)</span>
+
+        <span class="k">if</span> <span class="n">origin_y_binned</span> <span class="o">+</span> <span class="p">(</span><span class="n">idx</span> <span class="o">%</span> <span class="n">rows_in_tile</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">num_rows_binned</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">out_3d</span><span class="p">[</span><span class="n">depth</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">inp_decoded</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out_3d</span><span class="p">[</span><span class="n">depth</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">inp_decoded</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">_decode_frms6</span>
+
+
+<span class="n">decode_frms6_b1</span> <span class="o">=</span> <span class="n">_make_decode_frms6</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">decode_frms6_b2</span> <span class="o">=</span> <span class="n">_make_decode_frms6</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">decode_frms6_b4</span> <span class="o">=</span> <span class="n">_make_decode_frms6</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">FRMS6Decoder</span><span class="p">(</span><span class="n">Decoder</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">binning</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_binning</span> <span class="o">=</span> <span class="n">binning</span>
+
+    <span class="k">def</span> <span class="nf">get_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">native_dtype</span><span class="p">,</span> <span class="n">read_dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="mi">1</span><span class="p">:</span> <span class="n">decode_frms6_b1</span><span class="p">,</span>
+            <span class="mi">2</span><span class="p">:</span> <span class="n">decode_frms6_b2</span><span class="p">,</span>
+            <span class="mi">4</span><span class="p">:</span> <span class="n">decode_frms6_b4</span><span class="p">,</span>
+        <span class="p">}[</span><span class="bp">self</span><span class="o">.</span><span class="n">_binning</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">FRMS6FileSet</span><span class="p">(</span><span class="n">FileSet</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_header</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_header</span> <span class="o">=</span> <span class="n">global_header</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
+            <span class="n">global_header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_header</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_read_ranges</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start_at_frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stop_before_frame</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">:</span> <span class="n">TilingScheme</span><span class="p">,</span> <span class="n">sync_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">fileset_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_as_arr</span><span class="p">()</span>
+        <span class="n">binning</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_header</span><span class="p">[</span><span class="s1">&#39;readoutmode&#39;</span><span class="p">][</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span>
+        <span class="n">roi_nonzero</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">roi</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">roi_nonzero</span> <span class="o">=</span> <span class="n">flat_nonzero</span><span class="p">(</span><span class="n">roi</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">frms6_get_read_ranges</span><span class="p">(</span>
+            <span class="n">start_at_frame</span><span class="o">=</span><span class="n">start_at_frame</span><span class="p">,</span>
+            <span class="n">stop_before_frame</span><span class="o">=</span><span class="n">stop_before_frame</span><span class="p">,</span>
+            <span class="n">roi_nonzero</span><span class="o">=</span><span class="n">roi_nonzero</span><span class="p">,</span>
+            <span class="n">depth</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span>
+            <span class="n">slices_arr</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">slices_array</span><span class="p">,</span>
+            <span class="n">fileset_arr</span><span class="o">=</span><span class="n">fileset_arr</span><span class="p">,</span>
+            <span class="n">sig_shape</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">dataset_shape</span><span class="o">.</span><span class="n">sig</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="n">sync_offset</span><span class="p">,</span>
+            <span class="n">bpp</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="n">frame_header_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_header_bytes</span><span class="p">,</span>
+            <span class="n">frame_footer_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_frame_footer_bytes</span><span class="p">,</span>
+            <span class="n">extra</span><span class="o">=</span><span class="p">(</span><span class="n">binning</span><span class="p">,),</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="FRMS6DataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.frms6.FRMS6DataSet">[docs]</a><span class="k">class</span> <span class="nc">FRMS6DataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read PNDetector FRMS6 files. FRMS6 data sets consist of multiple .frms6 files and</span>
+<span class="sd">    a .hdr file. The first .frms6 file (matching \*_000.frms6) contains dark frames, which</span>
+<span class="sd">    are subtracted if `enable_offset_correction` is true.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    path : string</span>
+<span class="sd">        Path to one of the files of the FRMS6 dataset (either .hdr or .frms6)</span>
+
+<span class="sd">    enable_offset_correction : boolean</span>
+<span class="sd">        Subtract dark frames when reading data</span>
+
+<span class="sd">    gain_map_path : string</span>
+<span class="sd">        Path to a gain map to apply (.mat format)</span>
+
+<span class="sd">    nav_shape: tuple of int, optional</span>
+<span class="sd">        A n-tuple that specifies the size of the navigation region ((y, x), but</span>
+<span class="sd">        can also be of length 1 for example for a line scan, or length 3 for</span>
+<span class="sd">        a data cube, for example)</span>
+
+<span class="sd">    sig_shape: tuple of int, optional</span>
+<span class="sd">        Signal/detector size (height, width)</span>
+
+<span class="sd">    sync_offset: int, optional</span>
+<span class="sd">        If positive, number of frames to skip from start</span>
+<span class="sd">        If negative, number of blank frames to insert at start</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">enable_offset_correction</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">gain_map_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dest_dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">nav_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sig_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gain_map_path</span> <span class="o">=</span> <span class="n">gain_map_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dark_frame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_offset_correction</span> <span class="o">=</span> <span class="n">enable_offset_correction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filenames</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hdr_info</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="n">nav_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="n">sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="k">if</span> <span class="n">dest_dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;dest_dtype is now handled per `get_tiles` call, and ignored here&quot;</span><span class="p">,</span>
+                <span class="ne">DeprecationWarning</span>
+            <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">_do_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filenames</span> <span class="o">=</span> <span class="n">get_filenames</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hdr_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_hdr_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">_read_file_header</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">()</span>
+        <span class="p">]</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">raw_frame_size</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span>
+        <span class="c1"># frms6 frames are folded in a specific way, this is the shape after unfolding:</span>
+        <span class="n">frame_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">hdr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_hdr_info</span><span class="p">()</span>
+        <span class="n">bin_factor</span> <span class="o">=</span> <span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;readoutmode&#39;</span><span class="p">][</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">bin_factor</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">frame_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">frame_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">bin_factor</span><span class="p">,</span> <span class="n">frame_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">preferred_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;&lt;u2&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;signalframes&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;stemimagesize&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="n">frame_size</span>
+        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">frame_size</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sig_shape must be of size: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">frame_size</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sync_offset_info</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_offset_correction</span><span class="p">:</span>
+            <span class="n">preferred_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s2">&quot;&lt;u2&quot;</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">preferred_dtype</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;raw_frame_size&#39;</span><span class="p">:</span> <span class="n">raw_frame_size</span><span class="p">},</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">)),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dark_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dark_frame</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gain_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_gain_map</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_filesize</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+            <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_initialize</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="n">hdr_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.hdr&quot;</span> <span class="o">%</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_get_base_filename</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">hdr</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_read_dataset_hdr</span><span class="p">,</span> <span class="n">hdr_filename</span><span class="p">)</span>
+            <span class="n">bin_factor</span> <span class="o">=</span> <span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;readoutmode&#39;</span><span class="p">][</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span>
+            <span class="n">nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="s1">&#39;stemimagesize&#39;</span><span class="p">])</span>
+            <span class="n">image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">))</span>
+            <span class="n">sig_shape</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">_get_sig_shape</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">bin_factor</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="n">nav_shape</span><span class="p">,</span>
+                <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;image_count&quot;</span><span class="p">:</span> <span class="n">image_count</span><span class="p">,</span>
+                <span class="s2">&quot;native_sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;frms6&quot;</span><span class="p">,</span> <span class="s2">&quot;hdr&quot;</span><span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FRMS6DatasetParams</span>
+
+    <span class="k">def</span> <span class="nf">get_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">global_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_hdr_info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Offset correction available and enabled&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dark_frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)},</span>
+        <span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)}</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">global_header</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_read_hdr_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">hdr_filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.hdr&quot;</span> <span class="o">%</span> <span class="n">_get_base_filename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_read_dataset_hdr</span><span class="p">(</span><span class="n">hdr_filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_hdr_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hdr_info</span>
+
+    <span class="k">def</span> <span class="nf">_get_dark_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_offset_correction</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">num_frames</span> <span class="o">=</span> <span class="n">_num_frames</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_frames</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="n">fs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="n">part_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span>
+            <span class="n">origin</span><span class="o">=</span><span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">FRMS6Partition</span><span class="p">(</span>
+            <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+            <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+            <span class="n">fileset</span><span class="o">=</span><span class="n">fs</span><span class="p">,</span>
+            <span class="n">start_frame</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">num_frames</span><span class="o">=</span><span class="n">num_frames</span><span class="p">,</span>
+            <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_decoder</span><span class="p">(),</span>
+            <span class="n">binning</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_binning</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="n">tileshape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span>
+            <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],),</span>
+            <span class="n">sig_dims</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tiling_scheme</span> <span class="o">=</span> <span class="n">TilingScheme</span><span class="o">.</span><span class="n">make_for_shape</span><span class="p">(</span>
+            <span class="n">tileshape</span><span class="o">=</span><span class="n">tileshape</span><span class="p">,</span>
+            <span class="n">dataset_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">tiles</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="p">,</span> <span class="n">dest_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tile</span> <span class="ow">in</span> <span class="n">tiles</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">tile</span><span class="o">.</span><span class="n">tile_slice</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sig_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span> <span class="o">/</span> <span class="n">num_frames</span>
+
+    <span class="k">def</span> <span class="nf">_get_gain_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_map_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gain_map_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;.mat&#39;</span><span class="p">:</span>
+            <span class="n">gain_mat</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gain_map_path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">gain_mat</span><span class="p">[</span><span class="s1">&#39;GainMap&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;.csv&#39;</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gain_map_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">csv_f</span><span class="p">:</span>
+                <span class="n">csv_reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csv_f</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="n">GainMapCSVDialect</span><span class="p">)</span>
+                <span class="n">csv_gain_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">csv_reader</span><span class="p">)</span>
+                <span class="n">csv_gain_nums</span> <span class="o">=</span> <span class="p">[[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">row</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv_gain_data</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">csv_gain_nums</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span> <span class="nf">_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filenames</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">_header_valid</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                        <span class="s2">&quot;error while checking validity of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+                    <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;invalid dataset: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+            <span class="s2">&quot;enable_offset_correction&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_offset_correction</span><span class="p">,</span>
+            <span class="s2">&quot;gain_map_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_map_path</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">headers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">headers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># skip first file w/ dark frames...</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">native_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span>
+        <span class="n">frame_header_size</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;frame_header_size&#39;</span><span class="p">]</span>
+        <span class="n">file_header</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;header_size&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+            <span class="n">sig_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
+            <span class="n">num_frames</span> <span class="o">=</span> <span class="n">_num_frames</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">File</span><span class="p">(</span>
+                    <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                    <span class="n">start_idx</span><span class="o">=</span><span class="n">start_idx</span><span class="p">,</span>
+                    <span class="n">end_idx</span><span class="o">=</span><span class="n">start_idx</span> <span class="o">+</span> <span class="n">num_frames</span><span class="p">,</span>
+                    <span class="n">native_dtype</span><span class="o">=</span><span class="n">native_dtype</span><span class="p">,</span>
+                    <span class="n">sig_shape</span><span class="o">=</span><span class="n">sig_shape</span><span class="p">,</span>
+                    <span class="n">file_header</span><span class="o">=</span><span class="n">file_header</span><span class="p">,</span>
+                    <span class="n">frame_header</span><span class="o">=</span><span class="n">frame_header_size</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">start_idx</span> <span class="o">+=</span> <span class="n">num_frames</span>
+        <span class="n">global_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_hdr_info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">FRMS6FileSet</span><span class="p">(</span>
+            <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span>
+            <span class="n">global_header</span><span class="o">=</span><span class="n">global_header</span><span class="p">,</span>
+            <span class="n">frame_header_bytes</span><span class="o">=</span><span class="n">frame_header_size</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_correction_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CorrectionSet</span><span class="p">(</span>
+            <span class="n">dark</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dark_frame</span><span class="p">,</span>
+            <span class="n">gain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gain_map</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_binning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_hdr_info</span><span class="p">()[</span><span class="s1">&#39;readoutmode&#39;</span><span class="p">][</span><span class="s1">&#39;bin&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Decoder</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FRMS6Decoder</span><span class="p">(</span>
+            <span class="n">binning</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_binning</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_base_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_binning</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">FRMS6Partition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">binning</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_binning</span><span class="p">(),</span>
+                <span class="n">header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+                <span class="n">decoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_decoder</span><span class="p">(),</span>
+            <span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">FRMS6Partition</span><span class="p">(</span><span class="n">BasePartition</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">binning</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">header</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_binning</span> <span class="o">=</span> <span class="n">binning</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">validate_tiling_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tiling_scheme</span><span class="p">):</span>
+        <span class="n">binning</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_binning</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="n">binning</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">tiling_scheme</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span> <span class="ow">and</span> <span class="n">b</span> <span class="ow">and</span> <span class="n">c</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid tiling scheme: needs to be divisible by binning (</span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="n">binning</span>
+            <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

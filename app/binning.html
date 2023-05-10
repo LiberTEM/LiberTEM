@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Binning &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Loading data" href="../formats.html" />
+    <link rel="prev" title="Image processing" href="processing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../applications.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="phasecontrast.html">Phase contrast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amorphous.html">Amorphous materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="strain.html">Strain mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phasechange.html">Phase-change materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="holography.html">Off-axis electron holography</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="processing.html">Image processing</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="processing.html#binning">Binning</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Binning</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../applications.html">Applications</a></li>
+          <li class="breadcrumb-item"><a href="processing.html">Image processing</a></li>
+      <li class="breadcrumb-item active">Binning</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/app/binning.nblink.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Binning">
+<h1>Binning<a class="headerlink" href="#Binning" title="Permalink to this heading"></a></h1>
+<p>This example shows how LiberTEM can be used for fast binning of a large dataset.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sparse</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">libertem.api</span> <span class="kn">import</span> <span class="n">Context</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.masks</span> <span class="kn">import</span> <span class="n">ApplyMasksUDF</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/weber/miniconda3/envs/libertem39/lib/python3.9/site-packages/distributed/node.py:182: UserWarning: Port 8787 is already in use.
+Perhaps you already have a cluster running?
+Hosting the HTTP server on port 33311 instead
+  warnings.warn(
+2023-01-12 17:46:05,328 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-puok182k&#39;, purging
+2023-01-12 17:46:05,329 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-aabyao71&#39;, purging
+2023-01-12 17:46:05,329 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-2ka8wcft&#39;, purging
+2023-01-12 17:46:05,329 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-jywv_h_e&#39;, purging
+2023-01-12 17:46:05,329 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-pexwfimn&#39;, purging
+2023-01-12 17:46:05,330 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-59tgcdqq&#39;, purging
+2023-01-12 17:46:05,330 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-j015gndf&#39;, purging
+2023-01-12 17:46:05,330 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-jsq_co7e&#39;, purging
+2023-01-12 17:46:05,330 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-hfwa88fk&#39;, purging
+2023-01-12 17:46:05,330 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-risvestd&#39;, purging
+2023-01-12 17:46:05,331 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-243wjyf7&#39;, purging
+2023-01-12 17:46:05,331 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-uqbzw2aj&#39;, purging
+2023-01-12 17:46:05,331 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-e5y9xkg4&#39;, purging
+2023-01-12 17:46:05,331 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-i0n5572i&#39;, purging
+2023-01-12 17:46:05,332 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-ezz_dlzn&#39;, purging
+2023-01-12 17:46:05,332 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-7t3fncwj&#39;, purging
+2023-01-12 17:46:05,332 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-yz_7qeiy&#39;, purging
+2023-01-12 17:46:05,332 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-tytmei57&#39;, purging
+2023-01-12 17:46:05,333 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-ziyu5pcp&#39;, purging
+2023-01-12 17:46:05,333 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-8ato0_wb&#39;, purging
+2023-01-12 17:46:05,333 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-n7il75ba&#39;, purging
+2023-01-12 17:46:05,333 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-gpdms9po&#39;, purging
+2023-01-12 17:46:05,333 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-5lug78uh&#39;, purging
+2023-01-12 17:46:05,334 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-_e62snqq&#39;, purging
+2023-01-12 17:46:05,334 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-m80aei6a&#39;, purging
+2023-01-12 17:46:05,334 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-kwvd977a&#39;, purging
+2023-01-12 17:46:05,334 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=10)
+2023-01-12 17:46:05,335 - distributed.utils - INFO - Reload module tmpuxnxe5ye from .py file
+2023-01-12 17:46:05,346 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=3)
+2023-01-12 17:46:05,346 - distributed.utils - INFO - Reload module tmpvq20t87c from .py file
+2023-01-12 17:46:05,354 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=14)
+2023-01-12 17:46:05,354 - distributed.utils - INFO - Reload module tmpqkldlogs from .py file
+2023-01-12 17:46:05,369 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=13)
+2023-01-12 17:46:05,370 - distributed.utils - INFO - Reload module tmpdnzwwr1z from .py file
+2023-01-12 17:46:05,382 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=9)
+2023-01-12 17:46:05,382 - distributed.utils - INFO - Reload module tmpbuwh2reh from .py file
+2023-01-12 17:46:05,392 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=6)
+2023-01-12 17:46:05,393 - distributed.utils - INFO - Reload module tmp_ir2g6re from .py file
+2023-01-12 17:46:05,403 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=15)
+2023-01-12 17:46:05,403 - distributed.utils - INFO - Reload module tmpihz62_ke from .py file
+2023-01-12 17:46:05,417 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=23)
+2023-01-12 17:46:05,417 - distributed.utils - INFO - Reload module tmpytb0guza from .py file
+2023-01-12 17:46:05,429 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=11)
+2023-01-12 17:46:05,429 - distributed.utils - INFO - Reload module tmpoife_3ol from .py file
+2023-01-12 17:46:05,487 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=4)
+2023-01-12 17:46:05,488 - distributed.utils - INFO - Reload module tmpmisbl4qs from .py file
+2023-01-12 17:46:05,497 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=0)
+2023-01-12 17:46:05,498 - distributed.utils - INFO - Reload module tmpb2x08nyy from .py file
+2023-01-12 17:46:05,508 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=1)
+2023-01-12 17:46:05,509 - distributed.utils - INFO - Reload module tmpkr60pqdc from .py file
+2023-01-12 17:46:05,513 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=21)
+2023-01-12 17:46:05,514 - distributed.utils - INFO - Reload module tmpd0_y3dey from .py file
+2023-01-12 17:46:05,533 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=2)
+2023-01-12 17:46:05,534 - distributed.utils - INFO - Reload module tmp5xho_d85 from .py file
+2023-01-12 17:46:05,545 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=22)
+2023-01-12 17:46:05,546 - distributed.utils - INFO - Reload module tmp_g1o0i9j from .py file
+2023-01-12 17:46:05,560 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=7)
+2023-01-12 17:46:05,561 - distributed.utils - INFO - Reload module tmp96889rkw from .py file
+2023-01-12 17:46:05,569 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=17)
+2023-01-12 17:46:05,570 - distributed.utils - INFO - Reload module tmperpj6six from .py file
+2023-01-12 17:46:05,578 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=12)
+2023-01-12 17:46:05,578 - distributed.utils - INFO - Reload module tmpmi6p4hd4 from .py file
+2023-01-12 17:46:05,590 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=8)
+2023-01-12 17:46:05,591 - distributed.utils - INFO - Reload module tmptm7nqrea from .py file
+2023-01-12 17:46:05,624 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=18)
+2023-01-12 17:46:05,625 - distributed.utils - INFO - Reload module tmphal63ifm from .py file
+2023-01-12 17:46:05,635 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=16)
+2023-01-12 17:46:05,635 - distributed.utils - INFO - Reload module tmp51es4m7y from .py file
+2023-01-12 17:46:05,638 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=5)
+2023-01-12 17:46:05,638 - distributed.utils - INFO - Reload module tmpm6jjgc2g from .py file
+2023-01-12 17:46:05,654 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CUDA&#34;, device=0)
+2023-01-12 17:46:05,654 - distributed.utils - INFO - Reload module tmp7dxik48v from .py file
+2023-01-12 17:46:05,668 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-service-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:46:05,668 - distributed.utils - INFO - Reload module tmpdflrcfx7 from .py file
+2023-01-12 17:46:05,684 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=19)
+2023-01-12 17:46:05,684 - distributed.utils - INFO - Reload module tmpviy6cifk from .py file
+2023-01-12 17:46:05,695 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=20)
+2023-01-12 17:46:05,695 - distributed.utils - INFO - Reload module tmp2m9aqbmc from .py file
+2023-01-12 17:46:05,702 - distributed.preloading - INFO - Import preload module: /tmp/tmpvq20t87c.py
+2023-01-12 17:46:05,702 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-3&#39;, service_id=&#39;3&#39;)
+2023-01-12 17:46:05,703 - distributed.utils - INFO - Reload module tmpldv3o8uz from .py file
+2023-01-12 17:46:05,703 - distributed.preloading - INFO - Import preload module: /tmp/tmpldv3o8uz.py
+2023-01-12 17:46:05,703 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,711 - distributed.preloading - INFO - Import preload module: /tmp/tmpbuwh2reh.py
+2023-01-12 17:46:05,711 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-9&#39;, service_id=&#39;9&#39;)
+2023-01-12 17:46:05,711 - distributed.utils - INFO - Reload module tmprcnfndre from .py file
+2023-01-12 17:46:05,711 - distributed.preloading - INFO - Import preload module: /tmp/tmprcnfndre.py
+2023-01-12 17:46:05,711 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,726 - distributed.preloading - INFO - Import preload module: /tmp/tmpihz62_ke.py
+2023-01-12 17:46:05,727 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-15&#39;, service_id=&#39;15&#39;)
+2023-01-12 17:46:05,727 - distributed.utils - INFO - Reload module tmpxb4v9o9k from .py file
+2023-01-12 17:46:05,727 - distributed.preloading - INFO - Import preload module: /tmp/tmpxb4v9o9k.py
+2023-01-12 17:46:05,728 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,740 - distributed.preloading - INFO - Import preload module: /tmp/tmpoife_3ol.py
+2023-01-12 17:46:05,740 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-11&#39;, service_id=&#39;11&#39;)
+2023-01-12 17:46:05,741 - distributed.utils - INFO - Reload module tmpfveh_50p from .py file
+2023-01-12 17:46:05,741 - distributed.preloading - INFO - Import preload module: /tmp/tmpfveh_50p.py
+2023-01-12 17:46:05,741 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,751 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,752 - distributed.preloading - INFO - Import preload module: /tmp/tmp_ir2g6re.py
+2023-01-12 17:46:05,752 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-6&#39;, service_id=&#39;6&#39;)
+2023-01-12 17:46:05,753 - distributed.utils - INFO - Reload module tmpu3u5hxmx from .py file
+2023-01-12 17:46:05,753 - distributed.preloading - INFO - Import preload module: /tmp/tmpu3u5hxmx.py
+2023-01-12 17:46:05,753 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,758 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,774 - distributed.preloading - INFO - Import preload module: /tmp/tmpuxnxe5ye.py
+2023-01-12 17:46:05,774 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-10&#39;, service_id=&#39;10&#39;)
+2023-01-12 17:46:05,775 - distributed.utils - INFO - Reload module tmpvauiztwl from .py file
+2023-01-12 17:46:05,775 - distributed.preloading - INFO - Import preload module: /tmp/tmpvauiztwl.py
+2023-01-12 17:46:05,775 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,777 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,788 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,795 - distributed.preloading - INFO - Import preload module: /tmp/tmpdnzwwr1z.py
+2023-01-12 17:46:05,795 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-13&#39;, service_id=&#39;13&#39;)
+2023-01-12 17:46:05,796 - distributed.utils - INFO - Reload module tmpgjceznef from .py file
+2023-01-12 17:46:05,796 - distributed.preloading - INFO - Import preload module: /tmp/tmpgjceznef.py
+2023-01-12 17:46:05,796 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,798 - distributed.preloading - INFO - Import preload module: /tmp/tmpqkldlogs.py
+2023-01-12 17:46:05,799 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-14&#39;, service_id=&#39;14&#39;)
+2023-01-12 17:46:05,799 - distributed.utils - INFO - Reload module tmp_10g0lb9 from .py file
+2023-01-12 17:46:05,799 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,800 - distributed.preloading - INFO - Import preload module: /tmp/tmp_10g0lb9.py
+2023-01-12 17:46:05,800 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,823 - distributed.preloading - INFO - Import preload module: /tmp/tmpd0_y3dey.py
+2023-01-12 17:46:05,823 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-21&#39;, service_id=&#39;21&#39;)
+2023-01-12 17:46:05,824 - distributed.utils - INFO - Reload module tmpkybfwbvj from .py file
+2023-01-12 17:46:05,824 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,824 - distributed.preloading - INFO - Import preload module: /tmp/tmpkybfwbvj.py
+2023-01-12 17:46:05,824 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,833 - distributed.preloading - INFO - Import preload module: /tmp/tmpb2x08nyy.py
+2023-01-12 17:46:05,834 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:46:05,834 - distributed.utils - INFO - Reload module tmp3gswzo_c from .py file
+2023-01-12 17:46:05,835 - distributed.preloading - INFO - Import preload module: /tmp/tmp3gswzo_c.py
+2023-01-12 17:46:05,835 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,838 - distributed.preloading - INFO - Import preload module: /tmp/tmp5xho_d85.py
+2023-01-12 17:46:05,838 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-2&#39;, service_id=&#39;2&#39;)
+2023-01-12 17:46:05,838 - distributed.utils - INFO - Reload module tmp9gf7ci5j from .py file
+2023-01-12 17:46:05,839 - distributed.preloading - INFO - Import preload module: /tmp/tmp9gf7ci5j.py
+2023-01-12 17:46:05,839 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,842 - distributed.preloading - INFO - Import preload module: /tmp/tmpytb0guza.py
+2023-01-12 17:46:05,842 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-23&#39;, service_id=&#39;23&#39;)
+2023-01-12 17:46:05,843 - distributed.utils - INFO - Reload module tmp1jg1317i from .py file
+2023-01-12 17:46:05,843 - distributed.preloading - INFO - Import preload module: /tmp/tmp1jg1317i.py
+2023-01-12 17:46:05,843 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,846 - distributed.preloading - INFO - Import preload module: /tmp/tmpmisbl4qs.py
+2023-01-12 17:46:05,846 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-4&#39;, service_id=&#39;4&#39;)
+2023-01-12 17:46:05,846 - distributed.utils - INFO - Reload module tmps7r31uyx from .py file
+2023-01-12 17:46:05,846 - distributed.preloading - INFO - Import preload module: /tmp/tmps7r31uyx.py
+2023-01-12 17:46:05,847 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,848 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,861 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,872 - distributed.preloading - INFO - Import preload module: /tmp/tmp96889rkw.py
+2023-01-12 17:46:05,872 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-7&#39;, service_id=&#39;7&#39;)
+2023-01-12 17:46:05,873 - distributed.utils - INFO - Reload module tmpk5bfxky5 from .py file
+2023-01-12 17:46:05,873 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,873 - distributed.preloading - INFO - Import preload module: /tmp/tmpk5bfxky5.py
+2023-01-12 17:46:05,873 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,882 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,885 - distributed.preloading - INFO - Import preload module: /tmp/tmp_g1o0i9j.py
+2023-01-12 17:46:05,886 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-22&#39;, service_id=&#39;22&#39;)
+2023-01-12 17:46:05,886 - distributed.utils - INFO - Reload module tmped1jm29u from .py file
+2023-01-12 17:46:05,886 - distributed.preloading - INFO - Import preload module: /tmp/tmped1jm29u.py
+2023-01-12 17:46:05,886 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,888 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,889 - distributed.preloading - INFO - Import preload module: /tmp/tmpmi6p4hd4.py
+2023-01-12 17:46:05,889 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-12&#39;, service_id=&#39;12&#39;)
+2023-01-12 17:46:05,890 - distributed.utils - INFO - Reload module tmpcaujv2ru from .py file
+2023-01-12 17:46:05,890 - distributed.preloading - INFO - Import preload module: /tmp/tmpcaujv2ru.py
+2023-01-12 17:46:05,890 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,891 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,893 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,902 - distributed.preloading - INFO - Import preload module: /tmp/tmperpj6six.py
+2023-01-12 17:46:05,903 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-17&#39;, service_id=&#39;17&#39;)
+2023-01-12 17:46:05,903 - distributed.utils - INFO - Reload module tmp1vkqo7xe from .py file
+2023-01-12 17:46:05,904 - distributed.preloading - INFO - Import preload module: /tmp/tmp1vkqo7xe.py
+2023-01-12 17:46:05,904 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,907 - distributed.preloading - INFO - Import preload module: /tmp/tmpkr60pqdc.py
+2023-01-12 17:46:05,907 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-1&#39;, service_id=&#39;1&#39;)
+2023-01-12 17:46:05,908 - distributed.utils - INFO - Reload module tmpsj9s8a10 from .py file
+2023-01-12 17:46:05,908 - distributed.preloading - INFO - Import preload module: /tmp/tmpsj9s8a10.py
+2023-01-12 17:46:05,908 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,916 - distributed.preloading - INFO - Import preload module: /tmp/tmpdflrcfx7.py
+2023-01-12 17:46:05,916 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,922 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,927 - distributed.preloading - INFO - Import preload module: /tmp/tmptm7nqrea.py
+2023-01-12 17:46:05,927 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-8&#39;, service_id=&#39;8&#39;)
+2023-01-12 17:46:05,927 - distributed.utils - INFO - Reload module tmpbvt5qpp4 from .py file
+2023-01-12 17:46:05,927 - distributed.preloading - INFO - Import preload module: /tmp/tmpbvt5qpp4.py
+2023-01-12 17:46:05,928 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,937 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,937 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,951 - distributed.preloading - INFO - Import preload module: /tmp/tmpm6jjgc2g.py
+2023-01-12 17:46:05,951 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-5&#39;, service_id=&#39;5&#39;)
+2023-01-12 17:46:05,951 - distributed.utils - INFO - Reload module tmpwrkxfs_9 from .py file
+2023-01-12 17:46:05,952 - distributed.preloading - INFO - Import preload module: /tmp/tmpwrkxfs_9.py
+2023-01-12 17:46:05,952 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,952 - distributed.preloading - INFO - Import preload module: /tmp/tmphal63ifm.py
+2023-01-12 17:46:05,952 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-18&#39;, service_id=&#39;18&#39;)
+2023-01-12 17:46:05,952 - distributed.utils - INFO - Reload module tmpev6kwut7 from .py file
+2023-01-12 17:46:05,953 - distributed.preloading - INFO - Import preload module: /tmp/tmpev6kwut7.py
+2023-01-12 17:46:05,953 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,963 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,969 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,972 - distributed.preloading - INFO - Import preload module: /tmp/tmp51es4m7y.py
+2023-01-12 17:46:05,972 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-16&#39;, service_id=&#39;16&#39;)
+2023-01-12 17:46:05,972 - distributed.utils - INFO - Reload module tmpwxktz161 from .py file
+2023-01-12 17:46:05,973 - distributed.preloading - INFO - Import preload module: /tmp/tmpwxktz161.py
+2023-01-12 17:46:05,973 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:05,975 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,978 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,998 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:05,999 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:06,004 - distributed.preloading - INFO - Import preload module: /tmp/tmpviy6cifk.py
+2023-01-12 17:46:06,004 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-19&#39;, service_id=&#39;19&#39;)
+2023-01-12 17:46:06,005 - distributed.utils - INFO - Reload module tmp3palcnaf from .py file
+2023-01-12 17:46:06,005 - distributed.preloading - INFO - Import preload module: /tmp/tmp3palcnaf.py
+2023-01-12 17:46:06,005 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:06,009 - distributed.preloading - INFO - Import preload module: /tmp/tmp2m9aqbmc.py
+2023-01-12 17:46:06,009 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-20&#39;, service_id=&#39;20&#39;)
+2023-01-12 17:46:06,010 - distributed.utils - INFO - Reload module tmpp262uu1b from .py file
+2023-01-12 17:46:06,010 - distributed.preloading - INFO - Import preload module: /tmp/tmpp262uu1b.py
+2023-01-12 17:46:06,010 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:06,017 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:06,050 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:06,056 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:46:06,082 - distributed.preloading - INFO - Import preload module: /tmp/tmp7dxik48v.py
+2023-01-12 17:46:06,083 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cuda-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:46:06,083 - distributed.utils - INFO - Reload module tmp4vr8ur2u from .py file
+2023-01-12 17:46:06,083 - distributed.preloading - INFO - Import preload module: /tmp/tmp4vr8ur2u.py
+2023-01-12 17:46:06,083 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:46:06,128 - distributed.preloading - INFO - Import preload module: libertem.preload
+</pre></div></div>
+</div>
+<section id="Generate-test-data">
+<h2>Generate test data<a class="headerlink" href="#Generate-test-data" title="Permalink to this heading"></a></h2>
+<p>Just a folded linear gradient for illustration</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;memory&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Define-the-binning-factor-and-determine-target-shape">
+<h2>Define the binning factor and determine target shape<a class="headerlink" href="#Define-the-binning-factor-and-determine-target-shape" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bin_factor</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ceil() to include output bins that only fit partially into the</span>
+<span class="c1"># source frame</span>
+<span class="n">size_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">bin_factor</span><span class="p">))</span>
+<span class="n">size_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">bin_factor</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Create-a-sparse-matrix-for-binning">
+<h2>Create a sparse matrix for binning<a class="headerlink" href="#Create-a-sparse-matrix-for-binning" title="Permalink to this heading"></a></h2>
+<p>Each layer corresponds to an output bin. We calculate which pixels are in each output bin.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bin_matrix_layers</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size_y</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">size_x</span><span class="p">):</span>
+        <span class="n">layer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+        <span class="n">start_y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">*</span> <span class="n">bin_factor</span>
+        <span class="n">stop_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">bin_factor</span>
+        <span class="n">start_x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">bin_factor</span>
+        <span class="n">stop_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">bin_factor</span>
+        <span class="n">layer</span><span class="p">[</span><span class="n">start_y</span><span class="p">:</span><span class="n">stop_y</span><span class="p">,</span> <span class="n">start_x</span><span class="p">:</span><span class="n">stop_x</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">layer</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="n">bin_matrix_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sparse</span><span class="o">.</span><span class="n">COO</span><span class="p">(</span><span class="n">layer</span><span class="p">))</span>
+<span class="n">bin_matrix</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">bin_matrix_layers</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mask_factory</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">bin_matrix</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Apply-the-matrix">
+<h2>Apply the matrix<a class="headerlink" href="#Apply-the-matrix" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">udf</span> <span class="o">=</span> <span class="n">ApplyMasksUDF</span><span class="p">(</span><span class="n">mask_factories</span><span class="o">=</span><span class="n">mask_factory</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udf</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b7e0964381254484936b9486200486df", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/weber/miniconda3/envs/libertem39/lib/python3.9/site-packages/distributed/worker.py:2988: UserWarning: Large object of size 1.65 MiB detected in task graph:
+  (&lt;UDFTask [&lt;class &#39;libertem.udf.masks.ApplyMasksUD ... -cf73ad3e178c&#39;)
+Consider scattering large objects ahead of time
+with client.scatter to reduce scheduler burden and
+keep data on workers
+
+    future = client.submit(func, big_data)    # bad
+
+    big_future = client.scatter(big_data)     # good
+    future = client.submit(func, big_future)  # good
+  warnings.warn(
+</pre></div></div>
+</div>
+</section>
+<section id="Reshape-and-show-result">
+<h2>Reshape and show result<a class="headerlink" href="#Reshape-and-show-result" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">reshaped_result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">*</span><span class="n">ds</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">,</span> <span class="n">size_y</span><span class="p">,</span> <span class="n">size_x</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">reshaped_result</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fd5d874f3d0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_binning_17_1.png" src="../_images/app_binning_17_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"0edea1a7b3f9439c81878ca92714c6a6": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "4577eb6e1d6d4b908ff97fa99936fe94": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "8ab31e7ff97c4eff889707ee9f25954e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_9cef5981787f4fa1a8f1cba25fb02057", "placeholder": "\u200b", "style": "IPY_MODEL_d5162760361b4d0e88609d4568ec65a3", "tabbable": null, "tooltip": null, "value": " 323/323 [00:00&lt;00:00, 455.14it/s]"}}, "8d51d993dadb4356b6b520c11da7c2e9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_0edea1a7b3f9439c81878ca92714c6a6", "max": 323, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_e3ca57a97e4043d4bfb6d319da6c622b", "tabbable": null, "tooltip": null, "value": 323}}, "9029edbecd764bc2aa808119b230e3a3": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_a1e4faeb4bc54bdb9b61b8d443186248", "IPY_MODEL_8d51d993dadb4356b6b520c11da7c2e9", "IPY_MODEL_8ab31e7ff97c4eff889707ee9f25954e"], "layout": "IPY_MODEL_4577eb6e1d6d4b908ff97fa99936fe94", "tabbable": null, "tooltip": null}}, "94879016376b4d70888c6611763465bf": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "9cef5981787f4fa1a8f1cba25fb02057": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "a1e4faeb4bc54bdb9b61b8d443186248": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_94879016376b4d70888c6611763465bf", "placeholder": "\u200b", "style": "IPY_MODEL_cd9ffbbea1834afaa77a4ffb11d2cfd9", "tabbable": null, "tooltip": null, "value": "Partitions 24/24, Frames: 100%"}}, "cd9ffbbea1834afaa77a4ffb11d2cfd9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "d5162760361b4d0e88609d4568ec65a3": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "e3ca57a97e4043d4bfb6d319da6c622b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}}, "version_major": 2, "version_minor": 0}
+</script></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="processing.html" class="btn btn-neutral float-left" title="Image processing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../formats.html" class="btn btn-neutral float-right" title="Loading data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

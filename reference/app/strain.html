@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Correlation-based peak finding and strain mapping reference &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Phase-change materials reference" href="phasechange.html" />
+    <link rel="prev" title="Amorphous materials reference" href="amorphous.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../application.html">Application-specific APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="amorphous.html">Amorphous materials reference</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Correlation-based peak finding and strain mapping reference</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#blobfinder">Blobfinder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#matching">Matching</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="phasechange.html">Phase-change materials reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="holography.html">Off-axis electron holography</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../progress.html">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Python API reference</a></li>
+          <li class="breadcrumb-item"><a href="../application.html">Application-specific APIs</a></li>
+      <li class="breadcrumb-item active">Correlation-based peak finding and strain mapping reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/app/strain.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="correlation-based-peak-finding-and-strain-mapping-reference">
+<h1>Correlation-based peak finding and strain mapping reference<a class="headerlink" href="#correlation-based-peak-finding-and-strain-mapping-reference" title="Permalink to this heading"></a></h1>
+<section id="blobfinder">
+<span id="blobfinder-api"></span><h2>Blobfinder<a class="headerlink" href="#blobfinder" title="Permalink to this heading"></a></h2>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">Deprecated since version 0.4.0: </span>Blobfinder has moved to its own package LiberTEM-blobfinder with a new
+structure. Please see
+<a class="reference external" href="https://libertem.github.io/LiberTEM-blobfinder/index.html">https://libertem.github.io/LiberTEM-blobfinder/index.html</a> for installation
+instructions and documentation of the new structure. Imports from
+<code class="code docutils literal notranslate"><span class="pre">libertem.udf.blobfinder</span></code> trigger a <code class="code docutils literal notranslate"><span class="pre">FutureWarning</span></code> starting from
+0.4.0 and are supported until LiberTEM release 0.6.0.</p>
+</div>
+</section>
+<section id="matching">
+<span id="matching-api"></span><h2>Matching<a class="headerlink" href="#matching" title="Permalink to this heading"></a></h2>
+<p>These modules contain classes and helper functions that extract and manipulate lattices from correlation results.</p>
+<span class="target" id="module-libertem.analysis.gridmatching"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.CorrelationResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.analysis.gridmatching.</span></span><span class="sig-name descname"><span class="pre">CorrelationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refineds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_elevations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#CorrelationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.CorrelationResult" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.10/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Container class for the result of correlation-based refinement of peak
+positions within a frame.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.analysis.gridmatching.</span></span><span class="sig-name descname"><span class="pre">Match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">correlation_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.analysis.gridmatching.CorrelationResult" title="libertem.analysis.gridmatching.CorrelationResult"><span class="pre">CorrelationResult</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Match" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection" title="libertem.analysis.gridmatching.PointSelection"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointSelection</span></code></a></p>
+<p>Class that represents a lattice match to a subset of a correlation result</p>
+<p>The attributes are not guaranteed to be correct or sensible for the given lattice.
+The methods <a class="reference internal" href="#libertem.analysis.gridmatching.Match.weighted_optimize" title="libertem.analysis.gridmatching.Match.weighted_optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">weighted_optimize()</span></code></a> and <a class="reference internal" href="#libertem.analysis.gridmatching.Match.optimize" title="libertem.analysis.gridmatching.Match.optimize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optimize()</span></code></a>
+calculate a derived <a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a> with a best fit of <a class="reference internal" href="#libertem.analysis.gridmatching.Match.zero" title="libertem.analysis.gridmatching.Match.zero"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zero</span></code></a>,
+<a class="reference internal" href="#libertem.analysis.gridmatching.Match.a" title="libertem.analysis.gridmatching.Match.a"><code class="xref py py-attr docutils literal notranslate"><span class="pre">a</span></code></a> and <a class="reference internal" href="#libertem.analysis.gridmatching.Match.b" title="libertem.analysis.gridmatching.Match.b"><code class="xref py py-attr docutils literal notranslate"><span class="pre">b</span></code></a> based on the points and the indices.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.zero">
+<span class="sig-name descname"><span class="pre">zero</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.Match.zero" title="Permalink to this definition"></a></dt>
+<dd><p>Declared zero point (y, x) of the lattice</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.a">
+<span class="sig-name descname"><span class="pre">a</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.Match.a" title="Permalink to this definition"></a></dt>
+<dd><p>Declared “a” vector (y, x) of the lattice</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.b">
+<span class="sig-name descname"><span class="pre">b</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.Match.b" title="Permalink to this definition"></a></dt>
+<dd><p>Declared “b” vector (y, x) of the lattice</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.indices">
+<span class="sig-name descname"><span class="pre">indices</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.Match.indices" title="Permalink to this definition"></a></dt>
+<dd><p>List of indices (i, j) that are declared to express the matched points as linear combination
+of vectors <code class="code docutils literal notranslate"><span class="pre">a</span></code> and <code class="code docutils literal notranslate"><span class="pre">b</span></code> with reference to <code class="code docutils literal notranslate"><span class="pre">zero</span></code>. The indices
+can be integers or floats, and they can be precise or approximate, depending on the
+matching method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.calc_coords">
+<span class="sig-name descname"><span class="pre">calc_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Match.calc_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Match.calc_coords" title="Permalink to this definition"></a></dt>
+<dd><p>Shorthand to calculate peak coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>indices</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Indices to calculate coordinates for. Both an array of (y, x) pairs
+and the output of np.mgrid are supported.</p></li>
+<li><p><strong>drop_zero</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Drop the zero order peak. This is important for virtual darkfield imaging.</p></li>
+<li><p><strong>frame_shape</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – If set, the peaks are filtered with <code class="xref py py-meth docutils literal notranslate"><span class="pre">within_frame()</span></code></p></li>
+<li><p><strong>r</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Radius for <code class="xref py py-meth docutils literal notranslate"><span class="pre">within_frame()</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of (y, x) coordinate pairs for peaks</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.10/library/exceptions.html#ValueError" title="(in Python v3.10)"><strong>ValueError</strong></a> – If the shape of <code class="code docutils literal notranslate"><span class="pre">indices</span></code> is not as expected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.calculated_refineds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculated_refineds</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.Match.calculated_refineds" title="Permalink to this definition"></a></dt>
+<dd><p>Calculated peak positions based on lattice parameters and indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.error">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">error</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.Match.error" title="Permalink to this definition"></a></dt>
+<dd><p>Weighted average distance between calculated and given peak position.
+numpy.float(‘inf’) if match of length zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.invalid">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">invalid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">correlation_result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Match.invalid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Match.invalid" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Match</dt><dd><p>A <a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a> instance with empty selector and all-‘nan’ attributes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.optimize">
+<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Match.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Match.optimize" title="Permalink to this definition"></a></dt>
+<dd><p>Least square optimization of <a class="reference internal" href="#libertem.analysis.gridmatching.Match.zero" title="libertem.analysis.gridmatching.Match.zero"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zero</span></code></a>, <a class="reference internal" href="#libertem.analysis.gridmatching.Match.a" title="libertem.analysis.gridmatching.Match.a"><code class="xref py py-attr docutils literal notranslate"><span class="pre">a</span></code></a> and <a class="reference internal" href="#libertem.analysis.gridmatching.Match.b" title="libertem.analysis.gridmatching.Match.b"><code class="xref py py-attr docutils literal notranslate"><span class="pre">b</span></code></a></p>
+<p>Optimization to match the given points and indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new <a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a> instance with optimized <a class="reference internal" href="#libertem.analysis.gridmatching.Match.zero" title="libertem.analysis.gridmatching.Match.zero"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zero</span></code></a>, <a class="reference internal" href="#libertem.analysis.gridmatching.Match.a" title="libertem.analysis.gridmatching.Match.a"><code class="xref py py-attr docutils literal notranslate"><span class="pre">a</span></code></a> and <a class="reference internal" href="#libertem.analysis.gridmatching.Match.b" title="libertem.analysis.gridmatching.Match.b"><code class="xref py py-attr docutils literal notranslate"><span class="pre">b</span></code></a></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match">Match</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>np.linalg.LinAlgError</strong> – If the solver didn’t find a solution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Match.weighted_optimize">
+<span class="sig-name descname"><span class="pre">weighted_optimize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Match.weighted_optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Match.weighted_optimize" title="Permalink to this definition"></a></dt>
+<dd><p>Weighted least square optimization of <a class="reference internal" href="#libertem.analysis.gridmatching.Match.zero" title="libertem.analysis.gridmatching.Match.zero"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zero</span></code></a>, <a class="reference internal" href="#libertem.analysis.gridmatching.Match.a" title="libertem.analysis.gridmatching.Match.a"><code class="xref py py-attr docutils literal notranslate"><span class="pre">a</span></code></a> and <a class="reference internal" href="#libertem.analysis.gridmatching.Match.b" title="libertem.analysis.gridmatching.Match.b"><code class="xref py py-attr docutils literal notranslate"><span class="pre">b</span></code></a></p>
+<p>Optimization to match the given points and indices using <code class="xref py py-attr docutils literal notranslate"><span class="pre">peak_elevation</span></code> as weight.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A new <a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a> instance with optimized <a class="reference internal" href="#libertem.analysis.gridmatching.Match.zero" title="libertem.analysis.gridmatching.Match.zero"><code class="xref py py-attr docutils literal notranslate"><span class="pre">zero</span></code></a>, <a class="reference internal" href="#libertem.analysis.gridmatching.Match.a" title="libertem.analysis.gridmatching.Match.a"><code class="xref py py-attr docutils literal notranslate"><span class="pre">a</span></code></a> and <a class="reference internal" href="#libertem.analysis.gridmatching.Match.b" title="libertem.analysis.gridmatching.Match.b"><code class="xref py py-attr docutils literal notranslate"><span class="pre">b</span></code></a></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match">Match</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>np.linalg.LinAlgError</strong> – If the solver didn’t find a solution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Matcher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.analysis.gridmatching.</span></span><span class="sig-name descname"><span class="pre">Matcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_match</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Matcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Matcher" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.10/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The main job of the Matcher object is managing the matching parameters
+and making them available for the various matching routines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Position tolerance in px for peaks to be considered matches</p></li>
+<li><p><strong>min_weight</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum peak elevation of a peak to be considered for matching</p></li>
+<li><p><strong>min_match</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Minimum number of matching peaks to be considered a match.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Matcher.affinematch">
+<span class="sig-name descname"><span class="pre">affinematch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refineds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_elevations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Matcher.affinematch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Matcher.affinematch" title="Permalink to this definition"></a></dt>
+<dd><p>This function creates a Match object from correlation_result and
+indices for all points. The indices can be non-integer and relative to any
+base vectors zero, a, b, including virtual ones like zero=(0, 0), a=(1, 0), b=(0, 1).</p>
+<p>Refined values for zero, a and b that match the correlated peaks are then derived.</p>
+<p>This match method is very fast, can be robust against a distorted field of view and
+works without determining a lattice. It matches the full CorrelationResult and does
+not reject random points or other outliers.</p>
+<p>It is mathematically equivalent to calculating
+an affine transformation, as inspired by Giulio Guzzinati
+<a class="reference external" href="https://arxiv.org/abs/1902.06979">https://arxiv.org/abs/1902.06979</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>centers</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks</p></li>
+<li><p><strong>refineds</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)</p></li>
+<li><p><strong>peak_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n,) with float maxima of correlation map of peaks</p></li>
+<li><p><strong>peak_values</strong> – numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
+See <code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem_blobfinder.base.correlation.peak_elevation()</span></code> for details.</p></li>
+<li><p><strong>indices</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – The indices assigned to each point of the CorrelationResult.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match">Match</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.Matcher.fastmatch">
+<span class="sig-name descname"><span class="pre">fastmatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refineds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_elevations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#Matcher.fastmatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.Matcher.fastmatch" title="Permalink to this definition"></a></dt>
+<dd><p>This function creates a Match object from correlation_result and approximates
+for zero point and lattice vectors a and b.
+This function is much, much faster than the full match.
+It works well to match a large number of point sets
+that share the same lattice vectors, for example from a
+larger grain or monocrystalline material. It rejects
+random points or other lattices in the CorrelationResult,
+provided they are not on near-integer positions of zero, a, b.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>centers</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks</p></li>
+<li><p><strong>refineds</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)</p></li>
+<li><p><strong>peak_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n,) with float maxima of correlation map of peaks</p></li>
+<li><p><strong>peak_elevations</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
+See <code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem_blobfinder.base.correlation.peak_elevation()</span></code> for details.</p></li>
+<li><p><strong>zero</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – The near approximate zero point as numpy array (y, x).</p></li>
+<li><p><strong>a</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – The near approximate vectors a, b to match the grid as numpy arrays (y, x).</p></li>
+<li><p><strong>b</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – The near approximate vectors a, b to match the grid as numpy arrays (y, x).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a> object with the optimized
+matching result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match">Match</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.PointSelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.analysis.gridmatching.</span></span><span class="sig-name descname"><span class="pre">PointSelection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">correlation_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#libertem.analysis.gridmatching.CorrelationResult" title="libertem.analysis.gridmatching.CorrelationResult"><span class="pre">CorrelationResult</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#PointSelection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.PointSelection" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.10/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class that represents a subset of a correlation result.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.PointSelection.selector">
+<span class="sig-name descname"><span class="pre">selector</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.PointSelection.selector" title="Permalink to this definition"></a></dt>
+<dd><p>Boolean mask for all points in the correlation result, <code class="code docutils literal notranslate"><span class="pre">True</span></code> indicating
+selected points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.PointSelection.centers">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">centers</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.PointSelection.centers" title="Permalink to this definition"></a></dt>
+<dd><p>Integer centers (y, x) of correlation result masked with <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection.selector" title="libertem.analysis.gridmatching.PointSelection.selector"><code class="xref py py-attr docutils literal notranslate"><span class="pre">selector</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.PointSelection.peak_elevations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">peak_elevations</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.PointSelection.peak_elevations" title="Permalink to this definition"></a></dt>
+<dd><p>Peak elevations of correlation result masked with <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection.selector" title="libertem.analysis.gridmatching.PointSelection.selector"><code class="xref py py-attr docutils literal notranslate"><span class="pre">selector</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.PointSelection.peak_values">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">peak_values</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.PointSelection.peak_values" title="Permalink to this definition"></a></dt>
+<dd><p>Peak heights of correlation result masked with <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection.selector" title="libertem.analysis.gridmatching.PointSelection.selector"><code class="xref py py-attr docutils literal notranslate"><span class="pre">selector</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.PointSelection.refineds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">refineds</span></span><a class="headerlink" href="#libertem.analysis.gridmatching.PointSelection.refineds" title="Permalink to this definition"></a></dt>
+<dd><p>Refined float centers (y, x) of correlation result masked
+with <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection.selector" title="libertem.analysis.gridmatching.PointSelection.selector"><code class="xref py py-attr docutils literal notranslate"><span class="pre">selector</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.get_indices">
+<span class="sig-prename descclassname"><span class="pre">libertem.analysis.gridmatching.</span></span><span class="sig-name descname"><span class="pre">get_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#get_indices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.get_indices" title="Permalink to this definition"></a></dt>
+<dd><p>Find indices to express each point as sum of lattice vectors from zero point</p>
+<p>This could solve for arbitrarily many points, i.e. frame stacks instead of frame by frame
+With that the algorithm could actually match entire frame collections at once.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.analysis.gridmatching.get_transformation">
+<span class="sig-prename descclassname"><span class="pre">libertem.analysis.gridmatching.</span></span><span class="sig-name descname"><span class="pre">get_transformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peaks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/gridmatching.html#get_transformation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.gridmatching.get_transformation" title="Permalink to this definition"></a></dt>
+<dd><p>Inspired by Giulio Guzzinati
+<a class="reference external" href="https://arxiv.org/abs/1902.06979">https://arxiv.org/abs/1902.06979</a></p>
+</dd></dl>
+
+<span class="target" id="module-libertem.analysis.fullmatch"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.analysis.fullmatch.FullMatcher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.analysis.fullmatch.</span></span><span class="sig-name descname"><span class="pre">FullMatcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_match</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3141592653589793</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusterer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_cluster_size_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_samples_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/fullmatch.html#FullMatcher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.fullmatch.FullMatcher" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#libertem.analysis.gridmatching.Matcher" title="libertem.analysis.gridmatching.Matcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matcher</span></code></a></p>
+<p>Extension of <a class="reference internal" href="#libertem.analysis.gridmatching.Matcher" title="libertem.analysis.gridmatching.Matcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matcher</span></code></a> will full matching</p>
+<p>Include the ability to guess grid parameters from a point cloud. This is separated
+from the other code since it currently only works with <code class="xref py py-class docutils literal notranslate"><span class="pre">HDBSCAN</span></code>,
+which can be problematic
+to install on some platforms. For that reason it is an optional dependency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Position tolerance in px for peaks to be considered matches</p></li>
+<li><p><strong>min_weight</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum peak elevation of a peak to be considered for matching</p></li>
+<li><p><strong>min_match</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Minimum number of matching peaks to be considered a match.</p></li>
+<li><p><strong>min_angle</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum angle in radians between two vectors to be considered candidates</p></li>
+<li><p><strong>min_points</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Minimum points to try clustering matching. Otherwise match directly</p></li>
+<li><p><strong>min_delta</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Minimum length of a potential grid vector</p></li>
+<li><p><strong>max_delta</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Maximum length of a potential grid vector</p></li>
+<li><p><strong>min_candidates</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Minimum number of candidates to consider clustering matching successful.
+If not enough are found, the algorithm uses a brute-force search with all
+pairwise vectors between points</p></li>
+<li><p><strong>max_candidates</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Maximum number of candidates to return from clustering matching</p></li>
+<li><p><strong>clusterer</strong> – Instance of sklearn.cluster compatible clusterer. Default is <code class="xref py py-class docutils literal notranslate"><span class="pre">HDBSCAN</span></code>.</p></li>
+<li><p><strong>min_cluster_size_fraction</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Tuning parameter for clustering matching with <code class="xref py py-class docutils literal notranslate"><span class="pre">HDBSCAN</span></code>.
+Larger values allow
+smaller or fuzzier clusters. This is used to adapt the <code class="code docutils literal notranslate"><span class="pre">min_cluster_size</span></code>
+parameter of <code class="xref py py-class docutils literal notranslate"><span class="pre">HDBSCAN</span></code> dynamically to the number of points to be
+matched.
+Set this to <code class="code docutils literal notranslate"><span class="pre">None</span></code> to disable dynamic adjustment of <code class="code docutils literal notranslate"><span class="pre">min_cluster_size</span></code>.
+If you like to set <code class="code docutils literal notranslate"><span class="pre">min_cluster_size</span></code> to a constant value, you can
+set this to <code class="code docutils literal notranslate"><span class="pre">None</span></code> and additionally set the <code class="code docutils literal notranslate"><span class="pre">clusterer</span></code> parameter with
+your own clusterer object to have direct control over all parameters.</p></li>
+<li><p><strong>min_samples_fraction</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Tuning parameter for clustering matching with <code class="xref py py-class docutils literal notranslate"><span class="pre">HDBSCAN</span></code>.
+Larger values allow
+smaller or fuzzier clusters. This is used to adapt the <code class="code docutils literal notranslate"><span class="pre">min_samples</span></code>
+parameter of <code class="xref py py-class docutils literal notranslate"><span class="pre">HDBSCAN</span></code> dynamically to the number of points to be
+matched.
+Set this to <code class="code docutils literal notranslate"><span class="pre">None</span></code> to disable dynamic adjustment of <code class="code docutils literal notranslate"><span class="pre">min_samples</span></code>.
+If you like to set <code class="code docutils literal notranslate"><span class="pre">min_samples</span></code> to a constant value, you can
+set this to <code class="code docutils literal notranslate"><span class="pre">None</span></code> and additionally set the <code class="code docutils literal notranslate"><span class="pre">clusterer</span></code> parameter with
+your own clusterer object to have direct control over all parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.fullmatch.FullMatcher.full_match">
+<span class="sig-name descname"><span class="pre">full_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refineds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_elevations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/fullmatch.html#FullMatcher.full_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.fullmatch.FullMatcher.full_match" title="Permalink to this definition"></a></dt>
+<dd><p>This function extracts a list of Match objects as well two PointSelection objects
+for unmatched and weak points from correlation_result and zero point.
+The zero point is included in each of the matches because it is shared between all grids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>centers</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks. This would typically
+be extracted with <code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem_blobfinder.common.correlation.get_peaks()</span></code></p></li>
+<li><p><strong>zero</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Zero point as numpy array (y, x).</p></li>
+<li><p><strong>cand</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#list" title="(in Python v3.10)"><em>list</em></a><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – Optional list of candidate vectors (y, x) to use in a first matching round before
+guessing.</p></li>
+<li><p><strong>refineds</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)</p></li>
+<li><p><strong>peak_values</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n,) with float maxima of correlation map of peaks</p></li>
+<li><p><strong>peak_elevations</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)"><em>numpy.ndarray</em></a>) – numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.
+See <code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem_blobfinder.base.correlation.peak_elevation()</span></code> for details.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>matches: list of <a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match"><code class="xref py py-class docutils literal notranslate"><span class="pre">Match</span></code></a> instances,</p>
+<p>unmatched: instance of <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection" title="libertem.analysis.gridmatching.PointSelection"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointSelection</span></code></a>,</p>
+<p>weak: instance of <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection" title="libertem.analysis.gridmatching.PointSelection"><code class="xref py py-class docutils literal notranslate"><span class="pre">PointSelection</span></code></a></p>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[List[<a class="reference internal" href="#libertem.analysis.gridmatching.Match" title="libertem.analysis.gridmatching.Match">libertem.analysis.gridmatching.Match</a>, …],        <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection" title="libertem.analysis.gridmatching.PointSelection">libertem.analysis.gridmatching.PointSelection</a>,        <a class="reference internal" href="#libertem.analysis.gridmatching.PointSelection" title="libertem.analysis.gridmatching.PointSelection">libertem.analysis.gridmatching.PointSelection</a>]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">peaks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+<span class="gp">... </span>    <span class="c1"># First peak is zero if not specified otherwise</span>
+<span class="gp">... </span>    <span class="c1"># Base lattice vectors (32, 0) and (0, 32)</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">96</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">96</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="mi">96</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span> <span class="p">(</span><span class="mi">96</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span> <span class="p">(</span><span class="mi">96</span><span class="p">,</span> <span class="mi">96</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matcher</span> <span class="o">=</span> <span class="n">FullMatcher</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">matches</span><span class="p">,</span> <span class="n">unmatched</span><span class="p">,</span> <span class="n">weak</span><span class="p">)</span> <span class="o">=</span> <span class="n">matcher</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="n">peaks</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.analysis.fullmatch.FullMatcher.make_polar_vectors">
+<span class="sig-name descname"><span class="pre">make_polar_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/fullmatch.html#FullMatcher.make_polar_vectors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.fullmatch.FullMatcher.make_polar_vectors" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate all unique pairwise connecting polar vectors between points in coords.</p>
+<p>The pairwise connecting vectors are converted to polar coordinates and
+filtered with parameters <code class="xref py py-attr docutils literal notranslate"><span class="pre">min_delta</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">max_delta</span></code>
+to avoid calculating for unwanted higher order or random smaller vectors.</p>
+<p>All calculated vectors have a positive or zero x direction.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="libertem.analysis.fullmatch.NotFoundException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.analysis.fullmatch.</span></span><span class="sig-name descname"><span class="pre">NotFoundException</span></span><a class="reference internal" href="../../_modules/libertem/analysis/fullmatch.html#NotFoundException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.fullmatch.NotFoundException" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.10/library/exceptions.html#Exception" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.analysis.fullmatch.angle_check">
+<span class="sig-prename descclassname"><span class="pre">libertem.analysis.fullmatch.</span></span><span class="sig-name descname"><span class="pre">angle_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/fullmatch.html#angle_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.fullmatch.angle_check" title="Permalink to this definition"></a></dt>
+<dd><p>Check if p1 and p2 have an angle difference of at least limit,
+both parallel or antiparallel</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.analysis.fullmatch.size_filter">
+<span class="sig-prename descclassname"><span class="pre">libertem.analysis.fullmatch.</span></span><span class="sig-name descname"><span class="pre">size_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">polar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_delta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/analysis/fullmatch.html#size_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.analysis.fullmatch.size_filter" title="Permalink to this definition"></a></dt>
+<dd><p>Accept a list of polar vectors
+Return a list of polar vectors with length between min_delta and max_delta</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="amorphous.html" class="btn btn-neutral float-left" title="Amorphous materials reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="phasechange.html" class="btn btn-neutral float-right" title="Phase-change materials reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

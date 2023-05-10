@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setting up a development environment &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing" href="../contributing.html" />
+    <link rel="prev" title="Why Python?" href="../why_python.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Setting up a development environment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-from-a-git-clone">Installing from a git clone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updating">Updating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-tox-on-windows">Setting up tox on Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Setting up a development environment</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev/setup.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="setting-up-a-development-environment">
+<h1>Setting up a development environment<a class="headerlink" href="#setting-up-a-development-environment" title="Permalink to this heading"></a></h1>
+<p>When you want to develop LiberTEM itself, or run the latest git version, the installation works a
+bit differently as opposed to installing from PyPI.
+As a first step, please follow the instructions for creating a Python virtual environment from
+the <a class="reference internal" href="../install.html#installation"><span class="std std-ref">Installation</span></a> section. Then, instead of installing from PyPI, follow the instructions below.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<p>In addition to a Python installation, there are a few system dependencies needed when contributing:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://pandoc.org/installing.html">pandoc</a> and <a class="reference external" href="https://graphviz.org/download/">graphviz</a>
+are needed to build and test the documentation.</p></li>
+<li><p>Node.js is needed for rebuilding the LiberTEM GUI. On Linux, we recommend
+to <a class="reference external" href="https://nodejs.org/en/download/package-manager/">install via package manager</a>, on Windows <a class="reference external" href="https://nodejs.org/en/download/">the installer</a> should be fine. Choose the current LTS
+version.</p></li>
+</ul>
+</section>
+<section id="installing-from-a-git-clone">
+<span id="id1"></span><h2>Installing from a git clone<a class="headerlink" href="#installing-from-a-git-clone" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Distinguish between installing a released version and installing the latest
+development version. Both <a class="reference internal" href="../install.html#installing-from-pypi"><span class="std std-ref">Installing from PyPI</span></a> and <a class="reference internal" href="#installing-from-a-git-clone"><span class="std std-ref">Installing from a git clone</span></a> use pip, but they do fundamentally different things. <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span>
+<span class="pre">install</span> <span class="pre">libertem</span></code> downloads the latest release from PyPI.</p>
+<p>Changing directory to a git clone and running <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code>
+installs from the local directory in editable mode. “Editable mode” means
+that the source directory is “linked” into the current Python environment
+rather than copied. That means changes in the source directory are
+immediately active in the Python environment.</p>
+<p>Installing from a git clone in editable mode is the correct setup for
+development work and using <a class="reference internal" href="../changelog.html#continuous"><span class="std std-ref">the latest features in the development
+branch</span></a>. Installing from PyPI is easier and preferred for
+production use and for new users.</p>
+</div>
+<p>If you want to follow the latest development, you should install LiberTEM from
+a git clone. As a prerequisite, you need to have git installed on your system. On Linux,
+we suggest using the git package that comes with your package manager. On Windows, you can use one
+of the many available clients, like  <a class="reference external" href="https://gitforwindows.org/">git for windows</a>,
+<a class="reference external" href="https://desktop.github.com/">GitHub Desktop</a>, <a class="reference external" href="https://tortoisegit.org/">TortoiseGit</a>,
+or the git integration of your development environment.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/LiberTEM/LiberTEM
+</pre></div>
+</div>
+<p>Or, if you wish to contribute to LiberTEM, create a fork of the LiberTEM repository
+by following these steps:</p>
+<ol class="arabic">
+<li><p>Log into your <a class="reference external" href="https://github.com/">GitHub</a> account.</p></li>
+<li><p>Go to the <a class="reference external" href="https://github.com/liberteM/LiberTEM/">LiberTEM GitHub</a> home page.</p></li>
+<li><p>Click on the <em>fork</em> button:</p>
+<blockquote>
+<div><figure class="align-default">
+<img alt="../_images/forking_button.png" src="../_images/forking_button.png" />
+</figure>
+</div></blockquote>
+</li>
+<li><p>Clone your fork of LiberTEM from GitHub to your computer</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-user-name/LiberTEM
+</pre></div>
+</div>
+<p>More information about <a class="reference external" href="https://docs.github.com/en/get-started/quickstart/fork-a-repo">forking a repository</a>.
+For a beginner-friendly introduction to git and GitHub, consider going through
+the following resources:</p>
+<ul class="simple">
+<li><p>This <a class="reference external" href="https://www.udacity.com/course/version-control-with-git--ud123">free course</a>
+covers the essentials of using Git.</p></li>
+<li><p>Practice <a class="reference external" href="https://github.com/firstcontributions/first-contributions">pull request</a>
+in a safe sandbox environment.</p></li>
+<li><p>Sample <a class="reference external" href="https://docs.astropy.org/en/latest/development/workflow/development_workflow.html">workflow</a>
+for contributing code.</p></li>
+</ul>
+<p>Activate the Python environment (conda or virtualenv) and change to the newly
+created directory with the clone of the LiberTEM repository. Now you can start
+the LiberTEM installation. Please note the dot at the end, which indicates the
+current directory!</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<p>This should download the dependencies and install LiberTEM in the environment.
+Please continue by reading the <a class="reference internal" href="../usage.html#usage-documentation"><span class="std std-ref">GUI usage</span></a>.</p>
+<p>Installing extra dependencies works just like when installing LiberTEM from PyPI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>torch,hdbscan,cupy<span class="o">]</span>
+</pre></div>
+</div>
+</section>
+<section id="updating">
+<h2>Updating<a class="headerlink" href="#updating" title="Permalink to this heading"></a></h2>
+<p>If you have installed from a git clone, you can easily update it to the current
+status. Open a command line in the base directory of the LiberTEM clone and
+update the source code with this command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>pull
+</pre></div>
+</div>
+<p>The installation with <code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span></code> has installed LiberTEM in <a class="reference external" href="https://pip.pypa.io/en/stable/cli/pip_install/#editable-installs">“editable”
+mode</a>.
+That means the changes pulled from git are active immediately. Only if the
+requirements for installed third-party packages have changed, you should re-run
+<code class="code docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> in order to install any missing packages.</p>
+</section>
+<section id="setting-up-tox-on-windows">
+<h2>Setting up tox on Windows<a class="headerlink" href="#setting-up-tox-on-windows" title="Permalink to this heading"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This doesn’t seem to work on the newest tox major release 4.x anymore.
+We are still figuring out how to make it work. Help is appreciated!</p>
+</div>
+<p>We are using tox to run our tests.
+On Windows with Anaconda, you have to create named aliases for the Python
+interpreter before you can run <code class="docutils literal notranslate"><span class="pre">tox</span></code> so that tox finds the python
+interpreter where it is expected. Assuming that you run LiberTEM with Python
+3.9, place the following file as <code class="docutils literal notranslate"><span class="pre">python3.9.bat</span></code> in your LiberTEM conda
+environment base folder, typically
+<code class="docutils literal notranslate"><span class="pre">%LOCALAPPDATA%\conda\conda\envs\libertem\</span></code>, where the
+<code class="docutils literal notranslate"><span class="pre">python.exe</span></code> of that environment is located.</p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="p">@</span><span class="k">echo</span> off
+<span class="c1">REM @echo off is vital so that the file doesn&#39;t clutter the output</span>
+<span class="c1">REM execute python.exe with the same command line</span>
+<span class="p">@</span>python.exe <span class="nv">%*</span>
+</pre></div>
+</div>
+<p>To execute tests with Python 3.7, you create a new environment with Python 3.7:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>&gt;<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>libertem-3.7<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
+</pre></div>
+</div>
+<p>Now you can create <code class="docutils literal notranslate"><span class="pre">python3.7.bat</span></code> in your normal LiberTEM environment
+alongside <code class="docutils literal notranslate"><span class="pre">python3.9.bat</span></code> and make it execute the Python interpreter of
+your new libertem-3.7 environment:</p>
+<div class="highlight-bat notranslate"><div class="highlight"><pre><span></span><span class="p">@</span><span class="k">echo</span> off
+<span class="c1">REM @echo off is vital so that the file doesn&#39;t clutter the output</span>
+<span class="c1">REM execute python.exe in a different environment</span>
+<span class="c1">REM with the same command line</span>
+<span class="p">@</span><span class="nv">%LOCALAPPDATA%</span>\conda\conda\envs\libertem-3.7\python.exe <span class="nv">%*</span>
+</pre></div>
+</div>
+<p>See also:
+<a class="reference external" href="https://tox.wiki/en/3.0.0/developers.html#id2">https://tox.wiki/en/3.0.0/developers.html#id2</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../why_python.html" class="btn btn-neutral float-left" title="Why Python?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

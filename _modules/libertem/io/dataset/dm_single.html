@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.dm_single &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.dm_single</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.dm_single</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">ncempy.io.dm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">IOBackend</span><span class="p">,</span> <span class="n">DataSet</span>
+<span class="kn">from</span> <span class="nn">.dm</span> <span class="kn">import</span> <span class="n">DMDataSet</span><span class="p">,</span> <span class="n">SingleDMDatasetParams</span><span class="p">,</span> <span class="n">DMFileSet</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">typing</span> <span class="k">as</span> <span class="n">nt</span>
+    <span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="n">JobExecutor</span>
+
+
+<div class="viewcode-block" id="SingleDMDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.dm_single.SingleDMDataSet">[docs]</a><span class="k">class</span> <span class="nc">SingleDMDataSet</span><span class="p">(</span><span class="n">DMDataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reader for a single DM3/DM4 file. Handles 4D-STEM, 3D-Spectrum Images,</span>
+<span class="sd">    and TEM image stacks stored in a single-file format. Where possible</span>
+<span class="sd">    the structure will be inferred from the file metadata.</span>
+
+<span class="sd">    .. versionadded:: 0.11.0</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    Single-file DM data can be stored on disk using either normal C-ordering,</span>
+<span class="sd">    which is an option in recent versions of GMS, or an alternative F/C-hybrid</span>
+<span class="sd">    ordering depending on the imaging mode and dimensionality. The reading of</span>
+<span class="sd">    F/C-hybrid files is currently not supported for performance reasons.</span>
+
+<span class="sd">    The DataSet will try to infer the ordering from the file metadata and</span>
+<span class="sd">    read accordingly. If the file uses the older hybrid F/C-ordering</span>
+<span class="sd">    :code:`(flat_sig, flat_nav)` then the dataset will raise an exception</span>
+<span class="sd">    unless the `force_c_order` argument. is set to true.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    In the Web-GUI a 2D-image or 3D-stack/spectrum image will have extra</span>
+<span class="sd">    singleton navigation dimensions prepended to allow them to display.</span>
+<span class="sd">    DM files containing multiple datasets are supported via the</span>
+<span class="sd">    `dataset_index` argument.</span>
+
+<span class="sd">    While capable of reading 2D/3D files, LiberTEM is not particularly</span>
+<span class="sd">    well-adapted to processing these data and the user should consider</span>
+<span class="sd">    other tools. Individual spectra or vectors (1D data) are not supported.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    path : PathLike</span>
+<span class="sd">        The path to the .dm3/.dm4 file</span>
+
+<span class="sd">    nav_shape : Tuple[int], optional</span>
+<span class="sd">        Over-ride the nav_shape provided by the file metadata.</span>
+<span class="sd">        This can be used to adjust the total</span>
+<span class="sd">        number of frames.</span>
+
+<span class="sd">    sig_shape: Tuple[int], optional</span>
+<span class="sd">        Over-ride the sig_shape provided by the file metadata.</span>
+<span class="sd">        Data are read sequentially in all cases, therefore this</span>
+<span class="sd">        is typically only interesting if the total number of</span>
+<span class="sd">        sig pixels remains constant.</span>
+
+<span class="sd">    sync_offset: int, optional, by default 0</span>
+<span class="sd">        If positive, number of frames to skip from start</span>
+<span class="sd">        If negative, number of blank frames to insert at start</span>
+
+<span class="sd">    io_backend: IOBackend, optional</span>
+<span class="sd">        A specific IOBackend implementation to over-ride the</span>
+<span class="sd">        platform default.</span>
+
+<span class="sd">    force_c_order: bool, optional, by default False</span>
+<span class="sd">        Force the data to be interpreted as a C-ordered</span>
+<span class="sd">        array regardless of the tag information. This will lead</span>
+<span class="sd">        to incorrect results on an hybrid C/F-ordered file.</span>
+
+<span class="sd">    dataset_index: int, optional</span>
+<span class="sd">        In the case of a multi-dataset DM file this can</span>
+<span class="sd">        be used to open a specific dataset index. Note that</span>
+<span class="sd">        the datasets in a DM-file often begin with a thumbnail</span>
+<span class="sd">        which occupies the 0 dataset index. If not provided the</span>
+<span class="sd">        first compatible dataset found in the file is used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span>
+        <span class="n">nav_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sig_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sync_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">io_backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IOBackend</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">force_c_order</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">dataset_index</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_force_c_order</span> <span class="o">=</span> <span class="n">force_c_order</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dm_ds_index</span> <span class="o">=</span> <span class="n">dataset_index</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Skip the superclasse&#39;s :code:`__new__()` method.</span>
+
+<span class="sd">        Instead, go straight to the grandparent. That disables the</span>
+<span class="sd">        :class:`DMDataSet` type determination magic. Otherwise unpickling will</span>
+<span class="sd">        always yield a :class:`SingleDMDataSet` since this class inherits the</span>
+<span class="sd">        parent&#39;s :code:`__new__()` method and unpickling calls it without</span>
+<span class="sd">        parameters, making it select :class:`SingleDMDataSet`.</span>
+
+<span class="sd">        It mimics calling the superclass :code:`__new__(cls)` without additional</span>
+<span class="sd">        parameters, just like the parent&#39;s method.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">DataSet</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39; - </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;DMFileDataset </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="s2">&gt;&quot;</span> <span class="o">+</span> <span class="n">shape</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;dm3&quot;</span><span class="p">,</span> <span class="s2">&quot;dm4&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_get_filesize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SingleDMDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="n">pathlow</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pathlow</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.dm3&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pathlow</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.dm4&quot;</span><span class="p">):</span>
+            <span class="n">array_meta</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_read_metadata</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;sig_dims&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">sig_dims</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">sync_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">nav_shape</span><span class="p">,</span> <span class="n">sig_shape</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_modify_shape</span><span class="p">(</span><span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">],</span>
+                                                    <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">nav_shape</span>
+            <span class="n">image_count</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="n">nav_shape</span><span class="p">,</span>
+                <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+                <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="n">sync_offset</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;image_count&quot;</span><span class="p">:</span> <span class="n">image_count</span><span class="p">,</span>
+                <span class="s2">&quot;native_sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">ncempy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">fileDM</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;invalid dataset: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_read_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">use_ds</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">ncempy</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">dm</span><span class="o">.</span><span class="n">fileDM</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">on_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">allTags</span>
+            <span class="n">array_map</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">start_from</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">fp</span><span class="o">.</span><span class="n">thumbnail</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">ds_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_from</span><span class="p">,</span> <span class="n">fp</span><span class="o">.</span><span class="n">numObjects</span><span class="p">):</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">dataShape</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">dims</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="c1"># Spectrum-only ?</span>
+                    <span class="k">continue</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">xSize</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">],</span> <span class="n">fp</span><span class="o">.</span><span class="n">ySize</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">dims</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">zSize</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">],)</span>
+                <span class="k">if</span> <span class="n">dims</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">zSize2</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">],)</span>
+                <span class="n">array_map</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="n">shape</span><span class="p">,</span> <span class="s1">&#39;ds_idx&#39;</span><span class="p">:</span> <span class="n">ds_idx</span><span class="p">}</span>
+                <span class="n">array_map</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">][</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">dataOffset</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">array_map</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">][</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">_DM2NPDataType</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">dataType</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">])</span>
+                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                    <span class="c1"># unconvertible DM data type</span>
+                    <span class="n">array_map</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">][</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">dataType</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">array_map</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Unable to find any 2/3/4D datasets in DM file&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">use_ds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">use_ds</span> <span class="ow">in</span> <span class="n">array_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">ds_idx</span> <span class="o">=</span> <span class="n">use_ds</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Specified dataset idx </span><span class="si">{</span><span class="n">use_ds</span><span class="si">}</span><span class="s1"> not found in file&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use first dataset index we loaded</span>
+            <span class="n">ds_idx</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">array_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array_map</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;Found multiple datasets in DM file, using first dataset&quot;</span><span class="p">,</span>
+                    <span class="ne">RuntimeWarning</span>
+                <span class="p">)</span>
+
+        <span class="n">array_meta</span> <span class="o">=</span> <span class="n">array_map</span><span class="p">[</span><span class="n">ds_idx</span><span class="p">]</span>
+        <span class="n">ndims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">])</span>
+        <span class="c1"># Set default metadata in case tags are incomplete</span>
+        <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Unknown&#39;</span>
+        <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;sig_dims&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="c1"># Assume C-ordering for 2D images and 3D image stacks</span>
+        <span class="c1"># Assume F-ordering for STEM data unless tagged otherwise</span>
+        <span class="c1"># Spectrum images are also F-ordered but these data must</span>
+        <span class="c1"># be recognized from the tags (they can be 2- or 3-D)</span>
+        <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;c_order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">ndims</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span>
+
+        <span class="c1"># Infer array ordering</span>
+        <span class="n">nest</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_tags_to_nest</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+        <span class="c1"># Must + 1 because DM uses 1-based-indexing in its tags</span>
+        <span class="n">dm_data_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;ds_idx&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data_tags</span> <span class="o">=</span> <span class="n">nest</span><span class="p">[</span><span class="s1">&#39;ImageList&#39;</span><span class="p">][</span><span class="n">dm_data_key</span><span class="p">][</span><span class="s1">&#39;ImageTags&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># unrecognized / invalid tag structure, return defaults</span>
+            <span class="k">return</span> <span class="n">array_meta</span>
+
+        <span class="k">if</span> <span class="s1">&#39;Meta Data&#39;</span> <span class="ow">in</span> <span class="n">data_tags</span><span class="p">:</span>
+            <span class="n">meta_data</span> <span class="o">=</span> <span class="n">data_tags</span><span class="p">[</span><span class="s1">&#39;Meta Data&#39;</span><span class="p">]</span>
+            <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Format&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;spectrum image&#39;</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">ndims</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+                <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;sig_dims&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">ndims</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                    <span class="c1"># 3-D spectrum images seem to be F-ordered</span>
+                    <span class="c1"># 2-D SI are seemingly C-ordered (value set above)</span>
+                    <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;c_order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="s1">&#39;Data Order Swapped&#39;</span> <span class="ow">in</span> <span class="n">meta_data</span><span class="p">:</span>
+                <span class="c1"># Always defer to tag for ordering if available</span>
+                <span class="c1"># This line handes the new-style STEM datasets</span>
+                <span class="c1"># The bool(int()) is just-in-case for string tags</span>
+                <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;c_order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">meta_data</span><span class="p">[</span><span class="s1">&#39;Data Order Swapped&#39;</span><span class="p">]))</span>
+
+        <span class="c1"># Need to find a 3D image stack with the &#39;Meta Data&#39; + &#39;Format&#39; tags</span>
+        <span class="k">if</span> <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Spectrum image&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;Image&#39;</span><span class="p">,</span>
+                                        <span class="s1">&#39;Diffraction image&#39;</span><span class="p">):</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unrecognized image format </span><span class="si">{</span><span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="s2">&quot;DM tags may be parsed incorrectly&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">array_meta</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_tags_to_nest</span><span class="p">(</span><span class="n">tags</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="n">tags_nest</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">tags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+            <span class="n">_insert_to</span> <span class="o">=</span> <span class="n">tags_nest</span>
+            <span class="k">for</span> <span class="n">tag_el</span> <span class="ow">in</span> <span class="n">tag</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">_insert_to</span> <span class="o">=</span> <span class="n">_insert_to</span><span class="p">[</span><span class="n">tag_el</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">_insert_to</span><span class="p">[</span><span class="n">tag_el</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                    <span class="n">_insert_to</span> <span class="o">=</span> <span class="n">_insert_to</span><span class="p">[</span><span class="n">tag_el</span><span class="p">]</span>
+            <span class="n">_insert_to</span><span class="p">[</span><span class="n">tag</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">element</span>
+        <span class="k">return</span> <span class="n">tags_nest</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_modify_shape</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">sig_dims</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="c1"># The shape reversal to read in C-ordering applies to DM4/STEM files</span>
+        <span class="c1"># saved in the new style as well as DM3, 3D image stacks saved</span>
+        <span class="c1"># in older versions of GMS. Must check whether newer image stacks</span>
+        <span class="c1"># are saved in C-ordering as well (despite the metadata order)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">shape</span><span class="p">))</span>
+        <span class="n">nav_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">]</span>
+        <span class="n">sig_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nav_shape</span><span class="p">:</span>
+            <span class="c1"># Special case for 2D image data, LT always requires a nav dim</span>
+            <span class="n">nav_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+        <span class="k">return</span> <span class="n">nav_shape</span><span class="p">,</span> <span class="n">sig_shape</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="s1">&#39;JobExecutor&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_filesize</span><span class="p">)</span>
+        <span class="n">array_meta</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_read_metadata</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+                                           <span class="n">use_ds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dm_ds_index</span><span class="p">)</span>
+        <span class="n">sig_dims</span> <span class="o">=</span> <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;sig_dims&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_offset</span> <span class="o">=</span> <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_raw_dtype</span> <span class="o">=</span> <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;dtype&#39;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_raw_dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_dtype</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="n">array_c_ordered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_c_order</span> <span class="ow">or</span> <span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;c_order&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">array_c_ordered</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Cannot identify DM file as C-ordered from metadata&#39;</span>
+                                   <span class="s1">&#39;use force_c_order=True to force behaviour.&#39;</span><span class="p">)</span>
+
+        <span class="n">nav_shape</span><span class="p">,</span> <span class="n">sig_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modify_shape</span><span class="p">(</span><span class="n">array_meta</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">],</span>
+                                                  <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+
+        <span class="c1"># Image count is true number of frames in file (?)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">manual_nav_shape_product</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">manual_nav_shape_product</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Specified nav_shape greater than file nav size&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="n">nav_shape</span>
+        <span class="c1"># nav_shape product is either manual nav_shape if supplied or metadata nav_shape (?)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="n">sig_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">manual_sig_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">manual_sig_size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">*</span> <span class="n">sig_size</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Specified sig_shape and nav size &#39;</span>
+                                       <span class="s1">&#39;too large for data in file&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="n">sig_shape</span>
+
+        <span class="c1"># regardless of file order the Dataset shape property is &#39;standard&#39;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="n">sig_dims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sync_offset_info</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_dtype</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DMFileSet</span><span class="p">([</span>
+            <span class="n">DMFile</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">raw_dtype</span><span class="p">,</span>
+                <span class="n">file_header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_array_offset</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">DMPartition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+            <span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">DMFile</span><span class="p">(</span><span class="n">File</span><span class="p">):</span>
+    <span class="o">...</span>
+
+
+<span class="k">class</span> <span class="nc">DMPartition</span><span class="p">(</span><span class="n">BasePartition</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

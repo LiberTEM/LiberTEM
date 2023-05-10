@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.executor.pipelined &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.executor.pipelined</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.executor.pipelined</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">contextlib</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Generator</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">tblib</span> <span class="kn">import</span> <span class="n">pickling_support</span>
+<span class="kn">import</span> <span class="nn">cloudpickle</span>
+<span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
+<span class="kn">from</span> <span class="nn">libertem.common.backend</span> <span class="kn">import</span> <span class="n">set_use_cpu</span><span class="p">,</span> <span class="n">set_use_cuda</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Environment</span><span class="p">,</span> <span class="n">TaskProtocol</span><span class="p">,</span> <span class="n">WorkerContext</span><span class="p">,</span> <span class="n">WorkerQueue</span><span class="p">,</span>
+    <span class="n">WorkerQueueEmpty</span><span class="p">,</span> <span class="n">TaskCommHandler</span><span class="p">,</span> <span class="n">SimpleMPWorkerQueue</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">libertem.common.scheduler</span> <span class="kn">import</span> <span class="n">Worker</span><span class="p">,</span> <span class="n">WorkerSet</span>
+<span class="kn">from</span> <span class="nn">libertem.common.tracing</span> <span class="kn">import</span> <span class="n">add_partition_to_span</span><span class="p">,</span> <span class="n">attach_to_parent</span><span class="p">,</span> <span class="n">maybe_setup_tracing</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">assign_cudas</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseJobExecutor</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">prctl</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">prctl</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="n">SpanContext</span>
+
+<span class="n">tracer</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="WorkerQueues"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.WorkerQueues">[docs]</a><span class="k">class</span> <span class="nc">WorkerQueues</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">request</span><span class="p">:</span> <span class="s2">&quot;WorkerQueue&quot;</span>
+    <span class="n">response</span><span class="p">:</span> <span class="s2">&quot;WorkerQueue&quot;</span>
+    <span class="n">message</span><span class="p">:</span> <span class="s2">&quot;WorkerQueue&quot;</span></div>
+
+
+<div class="viewcode-block" id="WorkerSpec"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.WorkerSpec">[docs]</a><span class="k">class</span> <span class="nc">WorkerSpec</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">device_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">device_kind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;CPU&#39;</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;CUDA&#39;</span><span class="p">]]</span>
+    <span class="n">worker_idx</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">has_cupy</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+<div class="viewcode-block" id="PoolWorkerInfo"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PoolWorkerInfo">[docs]</a><span class="k">class</span> <span class="nc">PoolWorkerInfo</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">queues</span><span class="p">:</span> <span class="n">WorkerQueues</span>
+    <span class="n">process</span><span class="p">:</span> <span class="n">mp</span><span class="o">.</span><span class="n">Process</span>
+    <span class="n">spec</span><span class="p">:</span> <span class="n">WorkerSpec</span></div>
+
+
+<div class="viewcode-block" id="WorkerPool"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.WorkerPool">[docs]</a><span class="k">class</span> <span class="nc">WorkerPool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Combination of worker processes and matching request queues,</span>
+<span class="sd">    and a single response queue.</span>
+
+<span class="sd">    Processes are started using the spawn method, so they need</span>
+<span class="sd">    to use primitives that are compatible with spawn.</span>
+
+<span class="sd">    Take care to properly close queues and join workers at shutdown.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    We are not using the vanilla :class:`multiprocesing.Pool` here, because</span>
+<span class="sd">    we need to coordinate the sending and receiving side for each task,</span>
+<span class="sd">    and we need to keep state on the worker, pin processes to cores etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">WorkerSpec</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_worker_q_cls</span> <span class="o">=</span> <span class="n">SimpleMPWorkerQueue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PoolWorkerInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_worker_fn</span> <span class="o">=</span> <span class="n">worker_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_response_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_worker_q_cls</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_message_q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_worker_q_cls</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mp_ctx</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_workers</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">response_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WorkerQueue&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_response_q</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">message_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WorkerQueue&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_message_q</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_start_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;WorkerPool._start_workers&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+            <span class="n">span_context</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">spec_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">:</span>
+                <span class="n">queues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_worker_queues</span><span class="p">()</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mp_ctx</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_worker_fn</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;queues&quot;</span><span class="p">:</span> <span class="n">queues</span><span class="p">,</span>
+                    <span class="s2">&quot;spec&quot;</span><span class="p">:</span> <span class="n">spec_item</span><span class="p">,</span>
+                    <span class="s2">&quot;span_context&quot;</span><span class="p">:</span> <span class="n">span_context</span><span class="p">,</span>
+                <span class="p">})</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">PoolWorkerInfo</span><span class="p">(</span><span class="n">queues</span><span class="o">=</span><span class="n">queues</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">spec</span><span class="o">=</span><span class="n">spec_item</span><span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">kill_worker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker_info</span><span class="p">:</span> <span class="n">PoolWorkerInfo</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">):</span>
+        <span class="n">worker_info</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">drain</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">exitcode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+            <span class="c1"># reap the dead process:</span>
+            <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">kill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kill_worker</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">exitcodes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">worker</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">exitcode</span>
+            <span class="k">for</span> <span class="n">worker</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_response_q</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">drain</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_response_q</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">e</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exitcodes</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">PoolWorkerInfo</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span>
+
+    <span class="k">def</span> <span class="nf">all_alive</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">qp</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="k">for</span> <span class="n">qp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">close_resp_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_response_q</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">close_mesg_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_message_q</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_worker_queues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">worker_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WorkerQueues</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_workers</span><span class="p">[</span><span class="n">worker_idx</span><span class="p">]</span><span class="o">.</span><span class="n">queues</span>
+
+    <span class="k">def</span> <span class="nf">_make_worker_queues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">WorkerQueues</span><span class="p">(</span>
+            <span class="n">request</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_worker_q_cls</span><span class="p">(),</span>
+            <span class="n">response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_response_q</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_message_q</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="set_thread_name"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.set_thread_name">[docs]</a><span class="k">def</span> <span class="nf">set_thread_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set a thread name; mostly useful for using system tools for profiling</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The thread name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">prctl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">prctl</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="worker_run_task"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.worker_run_task">[docs]</a><span class="k">def</span> <span class="nf">worker_run_task</span><span class="p">(</span>
+    <span class="n">header</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">work_mem</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">queues</span><span class="p">:</span> <span class="n">WorkerQueues</span><span class="p">,</span>
+    <span class="n">worker_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Environment</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Called from the worker main loop when a RUN_TASK message is received</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    header</span>
+<span class="sd">        The header of the message that was received</span>
+
+<span class="sd">    work_mem</span>
+<span class="sd">        The worker&#39;s working memory, for accessing scattered data</span>
+
+<span class="sd">    queues</span>
+<span class="sd">        request and response queues</span>
+
+<span class="sd">    worker_idx</span>
+<span class="sd">        This worker&#39;s index</span>
+
+<span class="sd">    env</span>
+<span class="sd">        The Environment for preparing thread counts etc. for the UDF run</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;RUN_TASK&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">span</span><span class="o">.</span><span class="n">set_attributes</span><span class="p">({</span>
+                <span class="s2">&quot;libertem.task_size_pickled&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">]),</span>
+                <span class="s2">&quot;libertem.os.pid&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">(),</span>
+            <span class="p">})</span>
+            <span class="n">task</span><span class="p">:</span> <span class="n">TaskProtocol</span> <span class="o">=</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;task&quot;</span><span class="p">])</span>
+            <span class="n">params_handle</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;params_handle&quot;</span><span class="p">]</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">work_mem</span><span class="p">[</span><span class="n">params_handle</span><span class="p">]</span>
+            <span class="n">partition</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_partition</span><span class="p">()</span>
+            <span class="n">add_partition_to_span</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;RESULT&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
+                <span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;task_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;failure in RUN_TASK&quot;</span><span class="p">)</span>
+            <span class="n">pickling_support</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+                <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+                <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+                <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">],</span>
+            <span class="p">})</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="worker_run_function"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.worker_run_function">[docs]</a><span class="k">def</span> <span class="nf">worker_run_function</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">queues</span><span class="p">,</span> <span class="n">worker_idx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Called from the worker main loop when a RUN_FUNCTION message is received</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    header</span>
+<span class="sd">        The header of the message that was received</span>
+
+<span class="sd">    queues</span>
+<span class="sd">        request and response queues</span>
+
+<span class="sd">    worker_idx</span>
+<span class="sd">        This worker&#39;s index</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;RUN_FUNCTION&quot;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;fn&quot;</span><span class="p">])</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">fn</span><span class="p">()</span>
+            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;RUN_FUNCTION_RESULT&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
+                <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;failure in RUN_FUNCTION&quot;</span><span class="p">)</span>
+            <span class="n">pickling_support</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+                <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+                <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+            <span class="p">})</span></div>
+
+
+<div class="viewcode-block" id="worker_loop"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.worker_loop">[docs]</a><span class="k">def</span> <span class="nf">worker_loop</span><span class="p">(</span>
+    <span class="n">queues</span><span class="p">:</span> <span class="n">WorkerQueues</span><span class="p">,</span>
+    <span class="n">work_mem</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">worker_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">env</span><span class="p">:</span> <span class="n">Environment</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The worker main loop, called when the worker setup is done.</span>
+<span class="sd">    Waits for messages on the request queue until a SHUTDOWN message</span>
+<span class="sd">    is received.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    work_mem</span>
+<span class="sd">        The worker&#39;s working memory, for accessing scattered data</span>
+
+<span class="sd">    queues</span>
+<span class="sd">        request and response queues</span>
+
+<span class="sd">    worker_idx</span>
+<span class="sd">        This worker&#39;s index</span>
+
+<span class="sd">    env</span>
+<span class="sd">        The Environment for preparing thread counts etc. for the UDF run</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+                <span class="n">header</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">msg</span>
+                <span class="n">header_type</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;RUN_TASK&quot;</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">attach_to_parent</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;span_context&quot;</span><span class="p">]):</span>
+                        <span class="n">worker_run_task</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">work_mem</span><span class="p">,</span> <span class="n">queues</span><span class="p">,</span> <span class="n">worker_idx</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+                        <span class="c1"># NOTE: in case of an error, need to drain the request queue</span>
+                        <span class="c1"># (anything that is left over from the detector-specific</span>
+                        <span class="c1"># data that was sent in `TaskCommHandler.handle_task`):</span>
+                        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;drain after task&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+                            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                                <span class="k">with</span> <span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+                                    <span class="n">header</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">msg</span>
+                                    <span class="n">header_type</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                                    <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;msg&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">header_type</span><span class="p">})</span>
+                                    <span class="k">if</span> <span class="n">header_type</span> <span class="ow">in</span> <span class="p">(</span>
+                                        <span class="s2">&quot;RUN_TASK&quot;</span><span class="p">,</span> <span class="s2">&quot;SCATTER&quot;</span><span class="p">,</span> <span class="s2">&quot;RUN_FUNCTION&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;DELETE&quot;</span><span class="p">,</span> <span class="s2">&quot;SHUTDOWN&quot;</span><span class="p">,</span> <span class="s2">&quot;WARMUP&quot;</span><span class="p">,</span>
+                                    <span class="p">):</span>
+                                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                                            <span class="sa">f</span><span class="s2">&quot;unexpected message type </span><span class="si">{</span><span class="n">header_type</span><span class="si">}</span><span class="s2">&quot;</span>
+                                        <span class="p">)</span>
+                                    <span class="k">if</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;END_TASK&quot;</span><span class="p">:</span>
+                                        <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;SCATTER&quot;</span><span class="p">:</span>
+                    <span class="c1"># FIXME: array data could be transferred and stored in SHM instead</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">work_mem</span><span class="p">:</span>
+                        <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> already stored in worker memory&quot;</span><span class="p">,</span>
+                            <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+                        <span class="p">})</span>
+                        <span class="k">continue</span>
+                    <span class="n">work_mem</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;RUN_FUNCTION&quot;</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">attach_to_parent</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;span_context&quot;</span><span class="p">]):</span>
+                        <span class="n">worker_run_function</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">queues</span><span class="p">,</span> <span class="n">worker_idx</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">work_mem</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">work_mem</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;SHUTDOWN&quot;</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">attach_to_parent</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;span_context&quot;</span><span class="p">]):</span>
+                        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;SHUTDOWN&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+                            <span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">drain</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                            <span class="n">queues</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">drain</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="k">elif</span> <span class="n">header_type</span> <span class="o">==</span> <span class="s2">&quot;WARMUP&quot;</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">attach_to_parent</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s2">&quot;span_context&quot;</span><span class="p">]):</span>
+                        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;WARMUP&quot;</span><span class="p">):</span>
+                            <span class="kn">import</span> <span class="nn">libertem.udf.base</span>  <span class="c1"># NOQA</span>
+                            <span class="kn">import</span> <span class="nn">libertem.api</span>  <span class="c1"># NOQA</span>
+                            <span class="kn">import</span> <span class="nn">libertem.preload</span>  <span class="c1"># NOQA</span>
+                            <span class="k">with</span> <span class="n">env</span><span class="o">.</span><span class="n">enter</span><span class="p">():</span>
+                                <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;unknown message </span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+                    <span class="p">})</span>
+                    <span class="c1"># probably desynchronized with the main process, so give up:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;unknown message, shutting down worker </span><span class="si">{</span><span class="n">worker_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;KeyboardInterrupt&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="k">raise</span></div>
+
+
+<span class="n">DeviceT</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;CUDA&#39;</span><span class="p">],</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;CPU&#39;</span><span class="p">]]]</span>
+
+
+<span class="k">def</span> <span class="nf">_setup_device</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">WorkerSpec</span><span class="p">,</span> <span class="n">pin</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set up this worker for its given task - either CPU or GPU comptation,</span>
+<span class="sd">    and maybe pin CPU workers to a given CPU core.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_kind&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;cpu&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s1">&#39;sched_setaffinity&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">pin</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">sched_setaffinity</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_id&quot;</span><span class="p">]])</span>
+        <span class="n">set_use_cpu</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_id&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_kind&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
+        <span class="n">set_use_cuda</span><span class="p">(</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_id&quot;</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="pipelined_worker"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.pipelined_worker">[docs]</a><span class="k">def</span> <span class="nf">pipelined_worker</span><span class="p">(</span>
+    <span class="n">queues</span><span class="p">:</span> <span class="n">WorkerQueues</span><span class="p">,</span>
+    <span class="n">pin</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">spec</span><span class="p">:</span> <span class="n">WorkerSpec</span><span class="p">,</span>
+    <span class="n">span_context</span><span class="p">:</span> <span class="s2">&quot;SpanContext&quot;</span><span class="p">,</span>
+    <span class="n">early_setup</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main pipelined worker function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    queues</span>
+<span class="sd">        request and response queues</span>
+
+<span class="sd">    pin</span>
+<span class="sd">        Whether or not the CPU worker should be pinned to a specific CPU</span>
+
+<span class="sd">    spec</span>
+<span class="sd">        This worker&#39;s spec, containing name, worker index, device kind etc.</span>
+
+<span class="sd">    span_context</span>
+<span class="sd">        The tracing span we should attach to for the setup code</span>
+
+<span class="sd">    early_setup</span>
+<span class="sd">        Function that will be called very early in the setup code,</span>
+<span class="sd">        allowing to inject custom functionality or specific warmup code</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># FIXME: propagate to parent process with a pipe or similar?</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_RDWR</span><span class="p">),</span> <span class="n">closefd</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">early_setup</span><span class="p">:</span>
+            <span class="n">early_setup</span><span class="p">()</span>
+
+        <span class="c1"># FIXME: explicitly propagate exporter settings to the workers?</span>
+        <span class="c1"># right now taken care of by environment variables...</span>
+        <span class="n">worker_idx</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;worker_idx&quot;</span><span class="p">]</span>
+        <span class="n">maybe_setup_tracing</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="s2">&quot;pipelined_worker&quot;</span><span class="p">,</span> <span class="n">service_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;worker-</span><span class="si">{</span><span class="n">worker_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># attach to parent span context for startup:</span>
+        <span class="k">with</span> <span class="n">attach_to_parent</span><span class="p">(</span><span class="n">span_context</span><span class="p">),</span>\
+                <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;pipelined_worker.startup&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+            <span class="n">_setup_device</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">pin</span><span class="p">)</span>
+            <span class="n">work_mem</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">span</span><span class="o">.</span><span class="n">set_attributes</span><span class="p">({</span>
+                <span class="s2">&quot;libertem.spec.name&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;libertem.spec.device_id&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_id&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;libertem.spec.devide_kind&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;device_kind&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;libertem.spec.worker_idx&quot;</span><span class="p">:</span> <span class="n">spec</span><span class="p">[</span><span class="s2">&quot;worker_idx&quot;</span><span class="p">],</span>
+            <span class="p">})</span>
+
+            <span class="n">set_thread_name</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;worker-</span><span class="si">{</span><span class="n">worker_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">worker_context</span> <span class="o">=</span> <span class="n">PipelinedWorkerContext</span><span class="p">(</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">queues</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span>
+                <span class="n">threaded_executor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">threads_per_worker</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">worker_context</span><span class="o">=</span><span class="n">worker_context</span>
+            <span class="p">)</span>
+
+            <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;STARTUP_DONE&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+            <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">worker_loop</span><span class="p">(</span><span class="n">queues</span><span class="p">,</span> <span class="n">work_mem</span><span class="p">,</span> <span class="n">worker_idx</span><span class="p">,</span> <span class="n">env</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">worker_idx</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+            <span class="s2">&quot;exception&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
+        <span class="p">})</span>
+        <span class="c1"># drain, close and join queues:</span>
+        <span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">drain</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">queues</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">drain</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PipelinedWorkerContext"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedWorkerContext">[docs]</a><span class="k">class</span> <span class="nc">PipelinedWorkerContext</span><span class="p">(</span><span class="n">WorkerContext</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A context object that is made available to the Partition</span>
+<span class="sd">    for custom communication to its matching DataSet class</span>
+<span class="sd">    (currently uni-directional)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="p">:</span> <span class="s2">&quot;WorkerQueue&quot;</span><span class="p">,</span> <span class="n">msg_queue</span><span class="p">:</span> <span class="s2">&quot;WorkerQueue&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_msg_queue</span> <span class="o">=</span> <span class="n">msg_queue</span>
+
+    <span class="k">def</span> <span class="nf">get_worker_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WorkerQueue</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span>
+
+    <span class="k">def</span> <span class="nf">signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ident</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">msg_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="n">msg_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;ident&#39;</span><span class="p">:</span> <span class="n">ident</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_msg_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">topic</span><span class="p">,</span> <span class="n">msg_dict</span><span class="p">))</span></div>
+
+
+<span class="n">ResultT</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">TaskProtocol</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+<span class="n">ResultWithID</span> <span class="o">=</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">TaskProtocol</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_order_results</span><span class="p">(</span><span class="n">results_in</span><span class="p">:</span> <span class="n">ResultWithID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResultT</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Order the `results_in` generator by the result id, yielding ordered results.</span>
+<span class="sd">    Requires indexes to be without gaps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">last_sent_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="c1"># for results that are received out-of-order, keep sorted:</span>
+    <span class="n">result_stack</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">TaskProtocol</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">span</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_current_span</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">task_id</span> <span class="ow">in</span> <span class="n">results_in</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task_id</span> <span class="o">==</span> <span class="n">last_sent_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;_order_results.yield&quot;</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+            <span class="n">last_sent_id</span> <span class="o">=</span> <span class="n">task_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;_order_results.postpone&quot;</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;expect&quot;</span><span class="p">:</span> <span class="n">last_sent_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">&quot;is&quot;</span><span class="p">:</span> <span class="n">task_id</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="n">result_stack</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+                <span class="n">result_stack</span> <span class="o">+</span> <span class="p">[(</span><span class="n">result</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">task_id</span><span class="p">)],</span>
+                <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="c1"># top of the stack looks good, yield as long as it matches:</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">result_stack</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">result_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">last_sent_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">result_stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">res</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">last_sent_id</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">result</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">task_id</span> <span class="ow">in</span> <span class="n">result_stack</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task_id</span> <span class="o">!=</span> <span class="n">last_sent_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;missing tasks? end of result but next id on result_stack is &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2">, was expecting </span><span class="si">{</span><span class="n">last_sent_id</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;_order_results.yield&quot;</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+        <span class="n">last_sent_id</span> <span class="o">=</span> <span class="n">task_id</span>
+
+
+<span class="k">def</span> <span class="nf">_make_spec</span><span class="p">(</span>
+    <span class="n">cpus</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">cudas</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
+    <span class="n">has_cupy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># currently ignored, for convenience of passing **detect()</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">WorkerSpec</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the output of :func:`libertem.utils.devices.detect`</span>
+<span class="sd">    and makes a plan for starting workers on them.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    cpus: int | Iterable</span>
+<span class="sd">        Iterable of integer CPU identifiers or an integer number of workers to create.</span>
+<span class="sd">        If pinning is enabled, each worker processe is pinned to one of these identifiers,</span>
+<span class="sd">        as accepted by :func:`python:os.sched_setaffinity`. Pinning is currently only</span>
+<span class="sd">        supported on platforms that implement :func:`python:os.sched_setaffinity`.</span>
+
+<span class="sd">    cudas: int | Iterable</span>
+<span class="sd">        Interable of CUDA device identifiers for which workers should be started or</span>
+<span class="sd">        an integer number of GPU workers to create across the available devices.</span>
+<span class="sd">        Identifiers can be repeated to start multiple workers per GPU, which can</span>
+<span class="sd">        result in better device utilization.</span>
+
+<span class="sd">    has_cupy</span>
+<span class="sd">        Currently ignored, for compatibility with :func:`libertem.utils.devices.detect`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">worker_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cpus</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">cpus</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">cpus</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">device_id</span> <span class="ow">in</span> <span class="n">cpus</span><span class="p">:</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WorkerSpec</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;cpu-</span><span class="si">{</span><span class="n">device_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">device_id</span><span class="o">=</span><span class="n">device_id</span><span class="p">,</span>
+            <span class="n">device_kind</span><span class="o">=</span><span class="s2">&quot;CPU&quot;</span><span class="p">,</span>
+            <span class="n">worker_idx</span><span class="o">=</span><span class="n">worker_idx</span><span class="p">,</span>
+            <span class="n">has_cupy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">))</span>
+        <span class="n">worker_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">cudas</span> <span class="o">=</span> <span class="n">assign_cudas</span><span class="p">(</span><span class="n">cudas</span><span class="p">)</span>
+
+    <span class="n">grouped_cudas</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">cudas</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">device_id</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">grouped_cudas</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">group</span><span class="p">))):</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WorkerSpec</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;cuda-</span><span class="si">{</span><span class="n">device_id</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">device_id</span><span class="o">=</span><span class="n">device_id</span><span class="p">,</span>
+                <span class="n">device_kind</span><span class="o">=</span><span class="s2">&quot;CUDA&quot;</span><span class="p">,</span>
+                <span class="n">worker_idx</span><span class="o">=</span><span class="n">worker_idx</span><span class="p">,</span>
+                <span class="n">has_cupy</span><span class="o">=</span><span class="n">has_cupy</span><span class="p">,</span>
+            <span class="p">))</span>
+            <span class="n">worker_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">spec</span>
+
+
+<span class="k">def</span> <span class="nf">_raise_from_msg</span><span class="p">(</span><span class="n">msg</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">err_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s2">&quot;exception&quot;</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;exception&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">err_prefix</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">msg</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_inspect_startup</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">span</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span>
+        <span class="n">_raise_from_msg</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="s2">&quot;error on startup&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;STARTUP_DONE&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;unknown message type </span><span class="si">{</span><span class="n">msg</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, expected STARTUP_DONE&quot;</span>
+        <span class="p">)</span>
+    <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;worker startup done&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;worker_id&quot;</span><span class="p">:</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;worker_id&quot;</span><span class="p">]})</span>
+
+
+<div class="viewcode-block" id="PipelinedExecutor"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor">[docs]</a><span class="k">class</span> <span class="nc">PipelinedExecutor</span><span class="p">(</span><span class="n">BaseJobExecutor</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multi-process pipelined executor. Useful for live processing using</span>
+<span class="sd">    `LiberTEM-live &lt;https://libertem.github.io/LiberTEM-live/&gt;`_</span>
+<span class="sd">    if your processing function is not able to keep up with the incoming data</span>
+<span class="sd">    stream in a single process, but also works for offline processing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec</span>
+<span class="sd">        Specification for the worker processes - can be generated</span>
+<span class="sd">        by :meth:`make_spec`.</span>
+
+<span class="sd">    pin_workers</span>
+<span class="sd">        Pin each CPU worker to a specific CPU, as defined by :func:`python:os.sched_setaffinity`.</span>
+<span class="sd">        Only works on OSes that implement :func:`python:os.sched_setaffinity`.</span>
+
+<span class="sd">    startup_timeout</span>
+<span class="sd">        Startup of the executor is cancelled if it doesn&#39;t finish within</span>
+<span class="sd">        this limit (in detail: each worker&#39;s startup time is limited by this timeout).</span>
+<span class="sd">        In seconds.</span>
+
+<span class="sd">    cleanup_timeout</span>
+<span class="sd">        When cleaning up using :meth:`close`, give up after</span>
+<span class="sd">        this limit. In seconds.</span>
+
+<span class="sd">    early_setup</span>
+<span class="sd">        Callable that will be run as early as possible on each worker process.</span>
+<span class="sd">        Useful for custom warmup code or testing.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    This executor is not thread-safe - concurrent calls into :meth:`run_tasks` or</span>
+<span class="sd">    :meth:`run_function` are not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">spec</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">WorkerSpec</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pin_workers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">startup_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span>
+        <span class="n">cleanup_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span>
+        <span class="n">early_setup</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pin_workers</span> <span class="o">=</span> <span class="n">pin_workers</span>
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_spec</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_early_setup</span> <span class="o">=</span> <span class="n">early_setup</span>
+
+        <span class="c1"># timeout for cleanup, either from exception or when joining processes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_timeout</span> <span class="o">=</span> <span class="n">cleanup_timeout</span>
+
+        <span class="c1"># timeout for starting a single worker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_startup_timeout</span> <span class="o">=</span> <span class="n">startup_timeout</span>
+
+        <span class="c1"># keep this at the bottom:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_pool</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_start_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WorkerPool</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;PipelinedExecutor.start_pool&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">WorkerPool</span><span class="p">(</span>
+                <span class="n">worker_fn</span><span class="o">=</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span>
+                    <span class="n">pipelined_worker</span><span class="p">,</span>
+                    <span class="n">pin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pin_workers</span><span class="p">,</span>
+                    <span class="n">early_setup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_early_setup</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">spec</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># if any processes are already dead here, raise an exception so we</span>
+            <span class="c1"># don&#39;t have to run into a timeout below:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pool</span><span class="o">.</span><span class="n">all_alive</span><span class="p">():</span>
+                <span class="n">pool</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="s2">&quot;One or more workers failed to start&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">warn_time</span> <span class="o">=</span> <span class="mf">5.0</span>
+            <span class="n">time_to_warn</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">warn_time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startup_timeout</span><span class="p">)</span>
+            <span class="n">time_after_warn</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startup_timeout</span> <span class="o">-</span> <span class="n">warn_time</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">pool</span><span class="o">.</span><span class="n">response_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">time_to_warn</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+                            <span class="n">_inspect_startup</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">span</span><span class="p">)</span>
+                            <span class="k">continue</span>
+                    <span class="k">except</span> <span class="n">WorkerQueueEmpty</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">time_after_warn</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                            <span class="k">raise</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Slow worker startup, please be patient...&#39;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+
+                    <span class="k">with</span> <span class="n">pool</span><span class="o">.</span><span class="n">response_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_startup_timeout</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+                        <span class="n">_inspect_startup</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">span</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">WorkerQueueEmpty</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">pool</span><span class="o">.</span><span class="n">all_alive</span><span class="p">():</span>
+                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                            <span class="s2">&quot;One or more workers failed to start&quot;</span>
+                        <span class="p">)</span>
+                    <span class="n">pool</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+                    <span class="c1"># break possibly confusing exception chain using &quot;from None&quot;:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Timeout while starting workers, might need to increase &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;`startup_timeout` (is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_startup_timeout</span><span class="si">}</span><span class="s2">s)&quot;</span>
+                    <span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
+
+            <span class="k">for</span> <span class="n">qp</span> <span class="ow">in</span> <span class="n">pool</span><span class="o">.</span><span class="n">workers</span><span class="p">:</span>
+                <span class="n">qp</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;WARMUP&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;span_context&quot;</span><span class="p">:</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">(),</span>
+                <span class="p">})</span>
+            <span class="c1"># set here, so we don&#39;t try to close the pool if it doesn&#39;t exist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">pool</span>
+
+    <span class="k">def</span> <span class="nf">_restart_pool</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_pool</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_default_spec</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
+        <span class="n">detected</span> <span class="o">=</span> <span class="n">detect</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">_make_spec</span><span class="p">(</span><span class="o">**</span><span class="n">detected</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PipelinedExecutor.make_local"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.make_local">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_local</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a :code:`PipelinedExecutor` with the default spec.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_default_spec</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_spec</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_make_spec</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">make_spec</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">_make_spec</span><span class="o">.</span><span class="vm">__doc__</span>
+
+    <span class="k">def</span> <span class="nf">_validate_worker_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">all_alive</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;some workers are stopped, cannot continue&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_tasks_inner</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tasks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TaskProtocol</span><span class="p">],</span>
+        <span class="n">params_handle</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">cancel_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">task_comm_handler</span><span class="p">:</span> <span class="s2">&quot;TaskCommHandler&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResultWithID</span><span class="p">:</span>
+        <span class="c1"># In theory, `in_flight` could be calculated from `id_to_task`, but in case</span>
+        <span class="c1"># of exceptions, it becomes a bit harder to keep attribution of messages to</span>
+        <span class="c1"># tasks, which is why we have a separate counter for now.</span>
+        <span class="n">in_flight</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">id_to_task</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">tasks_uuid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_worker_state</span><span class="p">()</span>
+            <span class="n">task_comm_handler</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="n">span</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_current_span</span><span class="p">()</span>
+            <span class="n">span_context</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">yield_result_if_found</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">timeout</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">response_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uuid&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="n">tasks_uuid</span><span class="p">:</span>
+                            <span class="c1"># mismatch, log and ignore:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                                <span class="s2">&quot;mismatched result, ignoring: </span><span class="si">%s</span><span class="s2"> != </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                                <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;uuid&#39;</span><span class="p">),</span> <span class="n">tasks_uuid</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="k">return</span>
+                        <span class="n">in_flight</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span>
+                            <span class="n">_raise_from_msg</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s2">&quot;failed to run tasks&quot;</span><span class="p">)</span>
+                        <span class="n">result_task_id</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;task_id&quot;</span><span class="p">]</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">],</span> <span class="n">id_to_task</span><span class="p">[</span><span class="n">result_task_id</span><span class="p">],</span> <span class="n">result_task_id</span><span class="p">)</span>
+                        <span class="k">del</span> <span class="n">id_to_task</span><span class="p">[</span><span class="n">result_task_id</span><span class="p">]</span>
+                        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">id_to_task</span><span class="p">)</span> <span class="o">==</span> <span class="n">in_flight</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">except</span> <span class="n">WorkerQueueEmpty</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_validate_worker_state</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">task_idx</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tasks</span><span class="p">):</span>
+                <span class="n">in_flight</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">id_to_task</span><span class="p">[</span><span class="n">task_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">id_to_task</span><span class="p">)</span> <span class="o">==</span> <span class="n">in_flight</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># NOTE: this implements simple round-robin &quot;scheduling&quot;;</span>
+                <span class="c1"># as noted by @matbryan52 selecting the worker with the</span>
+                <span class="c1"># currently shortest request queue could be a simple extension</span>
+                <span class="c1"># and provide minimal load balancing</span>
+                <span class="n">worker_idx</span> <span class="o">=</span> <span class="n">task_idx</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">size</span>
+                <span class="n">worker_queues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">get_worker_queues</span><span class="p">(</span><span class="n">worker_idx</span><span class="p">)</span>
+                <span class="n">worker_queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;RUN_TASK&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;uuid&quot;</span><span class="p">:</span> <span class="n">tasks_uuid</span><span class="p">,</span>
+                    <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">task</span><span class="p">),</span>
+                    <span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="n">task_idx</span><span class="p">,</span>
+                    <span class="s2">&quot;params_handle&quot;</span><span class="p">:</span> <span class="n">params_handle</span><span class="p">,</span>
+                    <span class="s2">&quot;span_context&quot;</span><span class="p">:</span> <span class="n">span_context</span><span class="p">,</span>
+                <span class="p">})</span>
+                <span class="c1"># FIXME: semantics of this - is this enough?</span>
+                <span class="c1"># does it matter if this is enough? we can change it in the future if not</span>
+                <span class="c1"># could be: the function returns once it has forwarded</span>
+                <span class="c1"># all the data necessary for the given task,</span>
+                <span class="c1"># (or, in the offline case, immediately)</span>
+                <span class="n">task_comm_handler</span><span class="o">.</span><span class="n">handle_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">worker_queues</span><span class="o">.</span><span class="n">request</span><span class="p">)</span>
+
+                <span class="c1"># NOTE: sentinel message; in case of errors, the worker</span>
+                <span class="c1"># needs to discard the data from the queue until it receives</span>
+                <span class="c1"># this message:</span>
+                <span class="n">worker_queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;END_TASK&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="n">task_idx</span><span class="p">,</span>
+                    <span class="s2">&quot;params_handle&quot;</span><span class="p">:</span> <span class="n">params_handle</span><span class="p">,</span>
+                    <span class="s2">&quot;span_context&quot;</span><span class="p">:</span> <span class="n">span_context</span><span class="p">,</span>
+                <span class="p">})</span>
+
+                <span class="k">yield from</span> <span class="n">yield_result_if_found</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+            <span class="c1"># FIXME: code duplication</span>
+            <span class="c1"># at the end, block to get the remaining results:</span>
+            <span class="k">while</span> <span class="n">in_flight</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">yield from</span> <span class="n">yield_result_if_found</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># In case of an exception, we need to drain the response queue,</span>
+            <span class="c1"># so the next `run_tasks` call isn&#39;t polluted by old responses.</span>
+            <span class="c1"># -&gt; just like in the happy case, we need to wait for responses</span>
+            <span class="c1"># for all in-flight tasks. In case the error happened between incrementing</span>
+            <span class="c1"># `in_flight` and actually sending the task to the queue, we should</span>
+            <span class="c1"># have a timeout here to not wait infinitely long.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_drain_response_queue</span><span class="p">(</span><span class="n">in_flight</span><span class="o">=</span><span class="n">in_flight</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e2</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="c1"># if from a worker, this is the first exception that got put into the queue</span>
+            <span class="k">raise</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">task_comm_handler</span><span class="o">.</span><span class="n">done</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_drain_response_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_flight</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Drain response queue and log any errors returned from workers</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        in_flight : int</span>
+<span class="sd">            The number of requests that are still in flight</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">while</span> <span class="n">in_flight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.010</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_timeout</span> <span class="o">-</span> <span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">response_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                <span class="p">)</span> <span class="k">as</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+                    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="n">in_flight</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="c1"># we only raise the first exception; log the others here:</span>
+                    <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error response from worker: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">WorkerQueueEmpty</span><span class="p">:</span>
+                <span class="c1"># kill and restart workers:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_restart_pool</span><span class="p">()</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Worker or queue presumably in a bad state, lost </span><span class="si">{</span><span class="n">in_flight</span><span class="si">}</span><span class="s1"> in-flight tasks.&#39;</span>
+                <span class="p">)</span>
+
+<div class="viewcode-block" id="PipelinedExecutor.run_tasks"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.run_tasks">[docs]</a>    <span class="k">def</span> <span class="nf">run_tasks</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tasks</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TaskProtocol</span><span class="p">],</span>
+        <span class="n">params_handle</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">cancel_id</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">task_comm_handler</span><span class="p">:</span> <span class="s2">&quot;TaskCommHandler&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResultT</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;PipelinedExecutor.run_tasks&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">task_comm_handler</span><span class="o">.</span><span class="n">monitor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">message_queue</span><span class="p">):</span>
+                <span class="k">yield from</span> <span class="n">_order_results</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_run_tasks_inner</span><span class="p">(</span>
+                    <span class="n">tasks</span><span class="p">,</span> <span class="n">params_handle</span><span class="p">,</span> <span class="n">cancel_id</span><span class="p">,</span> <span class="n">task_comm_handler</span><span class="p">,</span>
+                <span class="p">))</span></div>
+
+<div class="viewcode-block" id="PipelinedExecutor.get_available_workers"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.get_available_workers">[docs]</a>    <span class="k">def</span> <span class="nf">get_available_workers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WorkerSet</span><span class="p">:</span>
+        <span class="n">resources_by_kind</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;CPU&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;compute&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;ndarray&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="s2">&quot;CUDA&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;compute&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;CUDA&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="k">def</span> <span class="nf">_resources_for_spec</span><span class="p">(</span><span class="n">worker_spec</span><span class="p">:</span> <span class="n">WorkerSpec</span><span class="p">):</span>
+            <span class="n">resources</span> <span class="o">=</span> <span class="n">resources_by_kind</span><span class="p">[</span><span class="n">worker_spec</span><span class="p">[</span><span class="s2">&quot;device_kind&quot;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">worker_spec</span><span class="p">[</span><span class="s2">&quot;has_cupy&quot;</span><span class="p">]:</span>
+                <span class="n">resources</span><span class="p">[</span><span class="s2">&quot;ndarray&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">resources</span>
+
+        <span class="k">return</span> <span class="n">WorkerSet</span><span class="p">([</span>
+            <span class="n">Worker</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">worker_info</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                <span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+                <span class="n">resources</span><span class="o">=</span><span class="n">_resources_for_spec</span><span class="p">(</span><span class="n">worker_info</span><span class="o">.</span><span class="n">spec</span><span class="p">),</span>
+                <span class="n">nthreads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">worker_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">workers</span>
+        <span class="p">])</span></div>
+
+<div class="viewcode-block" id="PipelinedExecutor.close"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;PipelinedExecutor.close&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">worker_info</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">workers</span><span class="p">):</span>
+                <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;sending SHUTDOWN&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;idx&quot;</span><span class="p">:</span> <span class="n">idx</span><span class="p">})</span>
+                <span class="n">worker_info</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;SHUTDOWN&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;span_context&quot;</span><span class="p">:</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">(),</span>
+                <span class="p">})</span>
+                <span class="n">span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="s2">&quot;SHUTDOWN sent&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;idx&quot;</span><span class="p">:</span> <span class="n">idx</span><span class="p">})</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">worker_info</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;got message on close: </span><span class="si">{</span><span class="n">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">WorkerQueueEmpty</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_timeout</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">worker_info</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">exitcode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">kill_worker</span><span class="p">(</span><span class="n">worker_info</span><span class="p">)</span>
+                <span class="n">worker_info</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">close_resp_queue</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">close_mesg_queue</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># `self` may be already partially garbage-collected; only close</span>
+        <span class="c1"># if &quot;enough&quot; of `self` still exists:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_closed&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_run_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="n">worker_idx</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_worker_state</span><span class="p">()</span>
+        <span class="n">qs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">get_worker_queues</span><span class="p">(</span><span class="n">worker_idx</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">pickled</span> <span class="o">=</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">qs</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;RUN_FUNCTION&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fn&quot;</span><span class="p">:</span> <span class="n">pickled</span><span class="p">,</span>
+            <span class="s2">&quot;span_context&quot;</span><span class="p">:</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_current_span</span><span class="p">()</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">(),</span>
+        <span class="p">})</span>
+        <span class="c1"># FIXME: timeout?</span>
+        <span class="k">with</span> <span class="n">qs</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="k">as</span> <span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;exception&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;exception&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to run function: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;RUN_FUNCTION_RESULT&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalid response type: </span><span class="si">{</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">result</span><span class="p">:</span> <span class="n">T</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="PipelinedExecutor.run_function"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.run_function">[docs]</a>    <span class="k">def</span> <span class="nf">run_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+        <span class="c1"># FIXME: this is not concurrency-safe currently! beware!</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;PipelinedExecutor.run_function&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_function</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PipelinedExecutor.run_each_worker"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.run_each_worker">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_worker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># FIXME: not as fast as it could be, but also not really perf-sensitive?</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">worker_info</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">workers</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">worker_info</span><span class="o">.</span><span class="n">spec</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_function</span><span class="p">(</span>
+                <span class="n">fn</span><span class="p">,</span> <span class="n">worker_idx</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="PipelinedExecutor.run_each_host"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.run_each_host">[docs]</a>    <span class="k">def</span> <span class="nf">run_each_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;localhost&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)}</span></div>
+
+<div class="viewcode-block" id="PipelinedExecutor.scatter"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.scatter">[docs]</a>    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span> <span class="nf">scatter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_worker_state</span><span class="p">()</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">worker_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">workers</span><span class="p">:</span>
+            <span class="n">worker_info</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;SCATTER&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">key</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">worker_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pool</span><span class="o">.</span><span class="n">workers</span><span class="p">:</span>
+                    <span class="n">worker_info</span><span class="o">.</span><span class="n">queues</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">put</span><span class="p">({</span>
+                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
+                    <span class="p">})</span></div>
+
+<div class="viewcode-block" id="PipelinedExecutor.map"><a class="viewcode-back" href="../../../dev/executors.html#libertem.executor.pipelined.PipelinedExecutor.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
+        <span class="c1"># FIXME: replace with efficient impl if needed</span>
+        <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;PipelinedExecutor.map&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_run_function</span><span class="p">(</span><span class="n">fn</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="n">item</span><span class="p">),</span> <span class="n">worker_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iterable</span>
+            <span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

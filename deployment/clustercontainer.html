@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Containers and clusters &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="GUI usage" href="../usage.html" />
+    <link rel="prev" title="Jupyter integration" href="jupyter.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../install.html">Installation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../install.html#the-short-version">The short version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#linux-and-mac-os-x">Linux and Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#docker-and-singularity">Docker and Singularity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../install.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../install.html#integration-and-deployment">Integration and deployment</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="jupyter.html">Jupyter integration</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Containers and clusters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#containers">Containers</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#starting-a-custom-cluster">Starting a custom cluster</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../install.html">Installation</a></li>
+      <li class="breadcrumb-item active">Containers and clusters</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/deployment/clustercontainer.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="containers-and-clusters">
+<h1>Containers and clusters<a class="headerlink" href="#containers-and-clusters" title="Permalink to this heading"></a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0: </span><a class="reference external" href="https://hub.docker.com/r/libertem/libertem/tags">LiberTEM repository on Docker Hub</a> with images
+for public use.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The LiberTEM server will only bind to localhost by default, unless
+token-based authentication is enabled or the <code class="code docutils literal notranslate"><span class="pre">--insecure</span></code> flag is
+provided. It should run behind a reverse proxy that supplies the token and
+adds encryption, authentication and authorization when access from an
+untrusted network is desired. <a class="reference internal" href="jupyter.html#jupyter-integration"><span class="std std-ref">Jupyter integration</span></a> can be used for
+that.</p>
+<p>Third-party commands like <code class="code docutils literal notranslate"><span class="pre">dask-scheduler</span></code> may bind to public
+interfaces by default, which can expose a machine to remote code execution.
+For that reason the interface should always be specified and limited to
+trusted networks.</p>
+<p>Furthermore, the default command of the LiberTEM Docker container starts a
+server that binds to all interfaces to facilitate integration. Docker runs
+containers in an isolated environment and requires the user to expose the
+port explicitly. Singularity, however, will run the container like a regular
+user program. That means it exposes an insecure LiberTEM server to all
+interfaces when running the default container command. For that reason the
+command to run should always be specified explicitly when using Singularity.</p>
+</div>
+<section id="containers">
+<span id="id1"></span><h2>Containers<a class="headerlink" href="#containers" title="Permalink to this heading"></a></h2>
+<p>Docker images can be found in <a class="reference external" href="https://hub.docker.com/r/libertem/libertem/tags">the LiberTEM repository on Docker Hub</a>. LiberTEM is
+installed in a virtual environment in <code class="code docutils literal notranslate"><span class="pre">/venv/</span></code> in the Docker image. The
+executables <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code>, <code class="code docutils literal notranslate"><span class="pre">dask-scheduler</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">libertem-worker</span></code> can be found in <code class="code docutils literal notranslate"><span class="pre">/venv/bin/</span></code>, consequently. The
+container runs <code class="code docutils literal notranslate"><span class="pre">/venv/bin/libertem-server</span> <span class="pre">--host</span> <span class="pre">0.0.0.0</span> <span class="pre">--insecure</span> <span class="pre">--port</span> <span class="pre">9000</span></code>
+by default.</p>
+<p>When using Docker, you can run and expose the LiberTEM server to
+<code class="code docutils literal notranslate"><span class="pre">localhost</span></code> while accessing local data like this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">127</span>.0.0.1:9000:9000<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mount<span class="w"> </span><span class="nv">type</span><span class="o">=</span>bind,source<span class="o">=</span>/path/to/your/data/,dst<span class="o">=</span>/data/,ro<span class="w"> </span>libertem/libertem
+</pre></div>
+</div>
+<p>To use the Docker image and Singularity to start <code class="code docutils literal notranslate"><span class="pre">libertem-server</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>singularity<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>docker://libertem/libertem<span class="w"> </span>/venv/bin/libertem-server
+</pre></div>
+</div>
+<section id="available-versions">
+<h3>Available versions<a class="headerlink" href="#available-versions" title="Permalink to this heading"></a></h3>
+<p>The tag “latest” (default) points to the stable release with the highest version
+number. Version tags for all stable releases are available as well. See <a class="reference external" href="https://hub.docker.com/r/libertem/libertem/tags">the LiberTEM
+repository on Docker Hub</a> for
+details.</p>
+</section>
+<section id="updating">
+<h3>Updating<a class="headerlink" href="#updating" title="Permalink to this heading"></a></h3>
+<p>You can update to the latest release like this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>pull<span class="w"> </span>libertem/libertem
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>singularity<span class="w"> </span>pull<span class="w"> </span>docker://libertem/libertem
+</pre></div>
+</div>
+</section>
+</section>
+<section id="starting-a-custom-cluster">
+<span id="cluster"></span><h2>Starting a custom cluster<a class="headerlink" href="#starting-a-custom-cluster" title="Permalink to this heading"></a></h2>
+<p>LiberTEM can connect to a running Dask cluster. To start a cluster on
+<code class="code docutils literal notranslate"><span class="pre">localhost</span></code>, first run a scheduler:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>dask-scheduler<span class="w"> </span>--host<span class="w"> </span>localhost
+</pre></div>
+</div>
+<p>GPU support in LiberTEM requires specific resource tags and environment settings
+on the dask workers. The easiest way to start workers with the appropriate
+settings is</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>libertem<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>libertem-worker<span class="w"> </span>tcp://localhost:8786
+</pre></div>
+</div>
+<p>There are a few command line options available:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">libertem</span><span class="o">-</span><span class="n">worker</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="p">[</span><span class="n">SCHEDULER</span><span class="p">]</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">k</span><span class="p">,</span> <span class="o">--</span><span class="n">kind</span> <span class="n">TEXT</span>             <span class="n">Worker</span> <span class="n">kind</span><span class="o">.</span> <span class="n">Currently</span> <span class="n">only</span> <span class="s2">&quot;dask&quot;</span> <span class="ow">is</span>
+                              <span class="n">implemented</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">local</span><span class="o">-</span><span class="n">directory</span> <span class="n">TEXT</span>  <span class="n">local</span> <span class="n">directory</span> <span class="n">to</span> <span class="n">manage</span> <span class="n">temporary</span> <span class="n">files</span>
+  <span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="o">--</span><span class="n">n</span><span class="o">-</span><span class="n">cpus</span> <span class="n">INTEGER</span>        <span class="n">Number</span> <span class="n">of</span> <span class="n">CPUs</span> <span class="n">to</span> <span class="n">use</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">number</span> <span class="n">of</span> <span class="n">CPU</span>
+                              <span class="n">cores</span> <span class="n">without</span> <span class="n">hyperthreading</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="o">--</span><span class="n">cudas</span> <span class="n">TEXT</span>            <span class="n">List</span> <span class="n">of</span> <span class="n">CUDA</span> <span class="n">device</span> <span class="n">IDs</span> <span class="n">to</span> <span class="n">use</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="nb">all</span>
+                              <span class="n">detected</span> <span class="n">CUDA</span> <span class="n">devices</span><span class="o">.</span> <span class="n">Use</span> <span class="s2">&quot;&quot;</span> <span class="n">to</span> <span class="n">deactivate</span>
+                              <span class="n">CUDA</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">p</span><span class="p">,</span> <span class="o">--</span><span class="n">has</span><span class="o">-</span><span class="n">cupy</span> <span class="n">BOOLEAN</span>      <span class="n">Activate</span> <span class="n">CuPy</span> <span class="n">integration</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">detection</span>
+                              <span class="n">of</span> <span class="n">installed</span> <span class="n">CuPy</span> <span class="n">module</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">n</span><span class="p">,</span> <span class="o">--</span><span class="n">name</span> <span class="n">TEXT</span>             <span class="n">Name</span> <span class="n">of</span> <span class="n">the</span> <span class="n">cluster</span> <span class="n">node</span><span class="p">,</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">host</span> <span class="n">name</span>
+  <span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="n">level</span> <span class="n">TEXT</span>        <span class="nb">set</span> <span class="n">logging</span> <span class="n">level</span><span class="o">.</span> <span class="n">Default</span> <span class="ow">is</span> <span class="s1">&#39;info&#39;</span><span class="o">.</span> <span class="n">Allowed</span>
+                              <span class="n">values</span> <span class="n">are</span> <span class="s1">&#39;critical&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="s1">&#39;debug&#39;</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">preload</span> <span class="n">TEXT</span>              <span class="n">Module</span><span class="p">,</span> <span class="n">file</span> <span class="ow">or</span> <span class="n">code</span> <span class="n">to</span> <span class="n">preload</span> <span class="n">on</span> <span class="n">workers</span><span class="p">,</span> <span class="k">for</span>
+                              <span class="n">example</span> <span class="n">HDF5</span> <span class="n">plugins</span><span class="o">.</span> <span class="n">Can</span> <span class="n">be</span> <span class="n">specified</span> <span class="n">multiple</span>
+                              <span class="n">times</span><span class="o">.</span> <span class="n">See</span> <span class="n">also</span>
+                              <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">docs</span><span class="o">.</span><span class="n">dask</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="n">en</span><span class="o">/</span><span class="n">stable</span><span class="o">/</span><span class="n">how</span><span class="o">-</span>
+                              <span class="n">to</span><span class="o">/</span><span class="n">customize</span><span class="o">-</span><span class="n">initialization</span><span class="o">.</span><span class="n">html</span><span class="c1">#preload-scripts</span>
+                              <span class="k">for</span> <span class="n">the</span> <span class="n">behavior</span> <span class="k">with</span> <span class="n">Dask</span> <span class="n">workers</span> <span class="p">(</span><span class="n">current</span>
+                              <span class="n">default</span><span class="p">)</span><span class="ow">and</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">libertem</span><span class="o">.</span><span class="n">github</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">LiberTEM</span><span class="o">/</span>
+                              <span class="n">reference</span><span class="o">/</span><span class="n">dataset</span><span class="o">.</span><span class="n">html</span><span class="c1">#hdf5 for information on</span>
+                              <span class="n">loading</span> <span class="n">HDF5</span> <span class="n">files</span> <span class="n">that</span> <span class="n">depend</span> <span class="n">on</span> <span class="n">custom</span>
+                              <span class="n">filters</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">help</span>                      <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.9.0: </span><code class="code docutils literal notranslate"><span class="pre">--preload</span></code> was added.</p>
+</div>
+<p>For a cluster setup, you can run the scheduler on the appropriate network interface and
+run workers on all cluster nodes to connect to the scheduler.</p>
+<p>You can then connect to the cluster’s scheduler URL in the LiberTEM web GUI.</p>
+<p>For easier deployment of in container-based environments, you can also use the
+Docker image.</p>
+<p>Example: Start a scheduler and workers in an isolated environment with Docker.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--mount<span class="w"> </span><span class="nv">type</span><span class="o">=</span>bind,source<span class="o">=</span>/path/to/your/data/,dst<span class="o">=</span>/data/,ro<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libertem/libertem<span class="w"> </span>/venv/bin/dask-scheduler
+$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>--mount<span class="w"> </span><span class="nv">type</span><span class="o">=</span>bind,source<span class="o">=</span>/path/to/your/data/,dst<span class="o">=</span>/data/,ro<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>libertem/libertem<span class="w"> </span>/venv/bin/libertem-worker<span class="w"> </span>tcp://&lt;scheduler-addr&gt;:8786
+</pre></div>
+</div>
+<p>Example: Start a scheduler and workers in the context
+of the local user with Singularity.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>singularity<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>docker://libertem/libertem<span class="w"> </span>/venv/bin/dask-scheduler<span class="w"> </span>--host<span class="w"> </span>localhost
+$<span class="w"> </span>singularity<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>docker://libertem/libertem<span class="w"> </span>/venv/bin/libertem-worker<span class="w"> </span>tcp://localhost:8786
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="jupyter.html" class="btn btn-neutral float-left" title="Jupyter integration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../usage.html" class="btn btn-neutral float-right" title="GUI usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

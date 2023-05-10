@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.analysis.base &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.analysis.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.analysis.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.buffers</span> <span class="kn">import</span> <span class="n">BufferWrapper</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="n">DataSet</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.base</span> <span class="kn">import</span> <span class="n">UDF</span>
+
+<span class="c1"># Base classes for results moved to common for MIT licensing, refs #1031</span>
+<span class="kn">from</span> <span class="nn">libertem.common.analysis</span> <span class="kn">import</span> <span class="n">AnalysisResult</span><span class="p">,</span> <span class="n">AnalysisResultSet</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">libertem.analysis.helper</span> <span class="kn">import</span> <span class="n">GeneratorHelper</span>
+    <span class="kn">from</span> <span class="nn">libertem.web.rpc</span> <span class="kn">import</span> <span class="n">ProcedureProtocol</span>
+    <span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">nt</span>
+
+
+<div class="viewcode-block" id="Analysis"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.base.Analysis">[docs]</a><span class="k">class</span> <span class="nc">Analysis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for Analysis classes.</span>
+
+<span class="sd">    An Analysis is the interface between a UDF and the Web API, and handles</span>
+<span class="sd">    visualization of partial and full results.</span>
+
+<span class="sd">    Passing an instance of an :class:`Analysis` sub-class to</span>
+<span class="sd">    :meth:`libertem.api.Context.run` will generate an :class:`AnalysisResultSet`.</span>
+<span class="sd">    The content of this result set is governed by the specific implementation of</span>
+<span class="sd">    the :code:`Analysis` sub-class.</span>
+
+<span class="sd">    .. versionadded:: 0.3.0</span>
+
+<span class="sd">    .. versionchanged:: 0.7.0</span>
+<span class="sd">        Removed deprecated methods :code:`get_results` and :code:`get_job`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">TYPE</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;UDF&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;UDF&quot;</span>
+    <span class="n">registry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;Type[Analysis]&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">:</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+
+    <span class="k">def</span> <span class="nf">__init_subclass__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">id_</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="c1"># override id_ with your own id</span>
+        <span class="c1"># Used to register the subclass</span>
+        <span class="c1"># https://www.python.org/dev/peps/pep-0487/#subclass-registration</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init_subclass__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">id_</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">[</span><span class="n">id_</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_analysis_by_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;Analysis&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">[</span><span class="n">id_</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_template_helper</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;GeneratorHelper&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_rpc_definitions</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;ProcedureProtocol&quot;</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">controller</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cancel_id</span><span class="p">,</span> <span class="n">executor</span><span class="p">,</span> <span class="n">job_is_cancelled</span><span class="p">,</span> <span class="n">send_results</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Analysis.get_udf_results"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.base.Analysis.get_udf_results">[docs]</a>    <span class="k">def</span> <span class="nf">get_udf_results</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BufferWrapper</span><span class="p">],</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">damage</span><span class="p">:</span> <span class="s2">&quot;nt.ArrayLike&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AnalysisResultSet</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert UDF results to a :code:`AnalysisResultSet`,</span>
+<span class="sd">        including visualizations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        udf_results</span>
+<span class="sd">            raw results from the UDF</span>
+<span class="sd">        roi : numpy.ndarray or None</span>
+<span class="sd">            Boolean array of the navigation dimension</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of AnalysisResult</span>
+<span class="sd">            one or more annotated results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Analysis.get_udf"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.base.Analysis.get_udf">[docs]</a>    <span class="k">def</span> <span class="nf">get_udf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UDF</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set TYPE=&#39;UDF&#39; on the class and implement this method to run a UDF</span>
+<span class="sd">        from this analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Analysis.get_roi"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.base.Analysis.get_roi">[docs]</a>    <span class="k">def</span> <span class="nf">get_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the region of interest the UDF should be run on. For example,</span>
+<span class="sd">        the parameters could describe some geometry, which this method should</span>
+<span class="sd">        convert to a boolean array. See also: :func:`libertem.analysis.getroi.get_roi`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray or None</span>
+<span class="sd">            region of interest for which we want to run our analysis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">get_complex_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_result</span><span class="p">,</span> <span class="n">key_prefix</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">damage</span><span class="p">,</span> <span class="n">default_lin</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Analysis.get_parameters"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.base.Analysis.get_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get analysis parameters. Override to set defaults</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Analysis.need_rerun"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.base.Analysis.need_rerun">[docs]</a>    <span class="k">def</span> <span class="nf">need_rerun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">new_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine if the analysis needs to be re-run on the data. If not,</span>
+<span class="sd">        we can just call `get_udf_results` again, for example if the parameters</span>
+<span class="sd">        only change the visualization.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        old_params : Dict</span>
+<span class="sd">        new_params : Dict</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True iff the parameter change needs to cause a re-run on the data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">BaseAnalysis</span><span class="p">(</span><span class="n">Analysis</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">TYPE</span> <span class="o">==</span> <span class="s1">&#39;JOB&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Job support was removed in 0.7&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">get_complex_results</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">job_result</span><span class="p">,</span> <span class="n">key_prefix</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">desc</span><span class="p">,</span> <span class="n">damage</span><span class="p">,</span> <span class="n">default_lin</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.viz</span> <span class="kn">import</span> <span class="n">visualize_simple</span><span class="p">,</span> <span class="n">CMAP_CIRCULAR_DEFAULT</span>
+        <span class="n">damage</span> <span class="o">=</span> <span class="n">damage</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">job_result</span><span class="p">)</span>
+        <span class="n">magn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">job_result</span><span class="p">)</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">job_result</span><span class="p">)</span>
+        <span class="n">wheel</span> <span class="o">=</span> <span class="n">CMAP_CIRCULAR_DEFAULT</span><span class="o">.</span><span class="n">rgb_from_vector</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">job_result</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">job_result</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">magn</span><span class="p">[</span><span class="n">damage</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="c1"># for compatability, the magnitude has key=key_prefix</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">magn</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">magn</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="n">key_prefix</span> <span class="k">if</span> <span class="n">default_lin</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s1">_lin&#39;</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [magn]&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [magn]&quot;</span> <span class="o">%</span> <span class="n">desc</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">magn</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">magn</span><span class="p">,</span> <span class="n">logarithmic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">key_prefix</span><span class="si">}</span><span class="s1">_log&#39;</span> <span class="k">if</span> <span class="n">default_lin</span> <span class="k">else</span> <span class="n">key_prefix</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [log(magn)]&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [log(magn)]&quot;</span> <span class="o">%</span> <span class="n">desc</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">job_result</span><span class="o">.</span><span class="n">real</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">job_result</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_real&quot;</span> <span class="o">%</span> <span class="n">key_prefix</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [real]&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [real]&quot;</span> <span class="o">%</span> <span class="n">desc</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">job_result</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">job_result</span><span class="o">.</span><span class="n">imag</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_imag&quot;</span> <span class="o">%</span> <span class="n">key_prefix</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [imag]&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [imag]&quot;</span> <span class="o">%</span> <span class="n">desc</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">angle</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_angle&quot;</span> <span class="o">%</span> <span class="n">key_prefix</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [angle]&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [angle]&quot;</span> <span class="o">%</span> <span class="n">desc</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">job_result</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">wheel</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_complex&quot;</span> <span class="o">%</span> <span class="n">key_prefix</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [complex]&quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [complex]&quot;</span> <span class="o">%</span> <span class="n">desc</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get analysis parameters. Override to set defaults</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">parameters</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AnalysisResult&#39;</span><span class="p">,</span> <span class="s1">&#39;AnalysisResultSet&#39;</span><span class="p">,</span> <span class="s1">&#39;Analysis&#39;</span><span class="p">,</span> <span class="s1">&#39;BaseAnalysis&#39;</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

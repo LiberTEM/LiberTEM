@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.base.dataset &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.base.dataset</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.base.dataset</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sparseconverter</span> <span class="kn">import</span> <span class="n">CUDA</span><span class="p">,</span> <span class="n">NUMPY</span><span class="p">,</span> <span class="n">ArrayBackend</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.shape</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">libertem.io.utils</span> <span class="kn">import</span> <span class="n">get_partition_shape</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="n">DataSetException</span><span class="p">,</span> <span class="n">MMapBackend</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">libertem.io.corrections.corrset</span> <span class="kn">import</span> <span class="n">CorrectionSet</span>
+<span class="kn">from</span> <span class="nn">.partition</span> <span class="kn">import</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">Partition</span>
+
+<span class="k">if</span> <span class="n">typing</span><span class="o">.</span><span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="n">JobExecutor</span><span class="p">,</span> <span class="n">TaskCommHandler</span>
+    <span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="n">IOBackend</span><span class="p">,</span> <span class="n">Decoder</span><span class="p">,</span> <span class="n">DataSetMeta</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">typing</span> <span class="k">as</span> <span class="n">nt</span>
+
+
+<div class="viewcode-block" id="DataSet"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet">[docs]</a><span class="k">class</span> <span class="nc">DataSet</span><span class="p">:</span>
+    <span class="c1"># The default partition size in bytes</span>
+    <span class="n">MAX_PARTITION_SIZE</span> <span class="o">=</span> <span class="mi">512</span><span class="o">*</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_backend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;IOBackend&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_io_backend</span> <span class="o">=</span> <span class="n">io_backend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DataSetMeta</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DataSet.initialize"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.initialize">[docs]</a>    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DataSet&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform possibly expensive initialization, like pre-loading metadata.</span>
+
+<span class="sd">        This is run on the master node, but can execute parts on workers, for example</span>
+<span class="sd">        if they need to access the data stored on worker nodes, using the passed executor</span>
+<span class="sd">        instance.</span>
+
+<span class="sd">        If you need the executor around for later operations, for example when creating</span>
+<span class="sd">        the partitioning, save a reference here!</span>
+
+<span class="sd">        Should return the possibly modified `DataSet` instance (if a method running</span>
+<span class="sd">        on a worker is changing `self`, these changes won&#39;t automatically be transferred back</span>
+<span class="sd">        to the master node)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.set_num_cores"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.set_num_cores">[docs]</a>    <span class="k">def</span> <span class="nf">set_num_cores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cores</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span> <span class="o">=</span> <span class="n">cores</span></div>
+
+<div class="viewcode-block" id="DataSet.get_sync_offset_info"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_sync_offset_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_sync_offset_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check sync_offset specified and returns number of frames skipped and inserted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sync_offset should be in (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">), which is (-image_count, image_count)&quot;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;frames_skipped_start&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">),</span>
+            <span class="s2">&quot;frames_ignored_end&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;frames_inserted_start&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">)),</span>
+            <span class="s2">&quot;frames_inserted_end&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span>
+            <span class="p">)</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="DataSet.get_num_partitions"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_num_partitions">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the number of partitions the dataset should be split into.</span>
+
+<span class="sd">        The default implementation sizes partition such that they</span>
+<span class="sd">        fit into 512MB of float data in memory, regardless of their</span>
+<span class="sd">        native dtype. At least :code:`self._cores` partitions</span>
+<span class="sd">        are created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">partition_size_float_px</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_PARTITION_SIZE</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">dataset_size_px</span> <span class="o">=</span> <span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cores</span><span class="p">,</span> <span class="n">dataset_size_px</span> <span class="o">//</span> <span class="n">partition_size_float_px</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">num</span></div>
+
+<div class="viewcode-block" id="DataSet.get_slices"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_slices">[docs]</a>    <span class="k">def</span> <span class="nf">get_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the partition slices for the dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BasePartition</span><span class="o">.</span><span class="n">make_slices</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">num_partitions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_num_partitions</span><span class="p">(),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataSet.get_partitions"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_partitions">[docs]</a>    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Partition</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a generator over all Partitions in this DataSet. Should only</span>
+<span class="sd">        be called on the master node.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The &quot;native&quot; data type</span>
+<span class="sd">        (either one matching the data on disk, or one that is closest)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Shape</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The shape of the DataSet, as it makes sense for the application domain</span>
+<span class="sd">        (for example, 4D for pixelated STEM)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">array_backends</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ArrayBackend</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The array backends the dataset can return data as.</span>
+
+<span class="sd">        Defaults to only NumPy arrays</span>
+
+<span class="sd">        .. versionadded:: 0.11.0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">NUMPY</span><span class="p">,</span> <span class="n">CUDA</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataSet.check_valid"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.check_valid">[docs]</a>    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        check validity of the DataSet. this will be executed (after initialize) on a worker node.</span>
+<span class="sd">        should raise DataSetException in case of errors, return True otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.detect_params"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.detect_params">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="s2">&quot;JobExecutor&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Guess if path can be opened using this DataSet implementation and</span>
+<span class="sd">        detect parameters.</span>
+
+<span class="sd">        returns dict of detected parameters if path matches this dataset type,</span>
+<span class="sd">        returns False if path is most likely not of a matching type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># FIXME: return hints for the user and additional values,</span>
+        <span class="c1"># for example number of signal elements</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.get_msg_converter"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_msg_converter">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="n">MessageConverter</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Diagnostics common for all DataSet implementations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_partitions</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_diagnostics</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Partition shape&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">shape</span><span class="p">)},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of partitions&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_partitions</span><span class="p">())))},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of frames skipped at the beginning&quot;</span><span class="p">,</span>
+             <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span><span class="p">[</span><span class="s2">&quot;frames_skipped_start&quot;</span><span class="p">]},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of frames ignored at the end&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span><span class="p">[</span><span class="s2">&quot;frames_ignored_end&quot;</span><span class="p">]},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of blank frames inserted at the beginning&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span><span class="p">[</span><span class="s2">&quot;frames_inserted_start&quot;</span><span class="p">]},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Number of blank frames inserted at the end&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span><span class="p">[</span><span class="s2">&quot;frames_inserted_end&quot;</span><span class="p">]}</span>
+        <span class="p">]</span>
+
+<div class="viewcode-block" id="DataSet.get_diagnostics"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_diagnostics">[docs]</a>    <span class="k">def</span> <span class="nf">get_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get relevant diagnostics for this dataset, as a list of</span>
+<span class="sd">        dicts with keys name, value, where value may be string or</span>
+<span class="sd">        a list of dicts itself. Subclasses should override this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="DataSet.partition_shape"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.partition_shape">[docs]</a>    <span class="k">def</span> <span class="nf">partition_shape</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">,</span>
+        <span class="n">target_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">min_num_partitions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">containing_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Shape</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate partition shape for the given ``target_size``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dtype : numpy.dtype or str</span>
+<span class="sd">            data type of the dataset</span>
+
+<span class="sd">        target_size : int</span>
+<span class="sd">            target size in bytes - how large should each partition be?</span>
+
+<span class="sd">        min_num_partitions : int</span>
+<span class="sd">            minimum number of partitions desired. Defaults to the number of workers in the cluster.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[int]</span>
+<span class="sd">            the shape calculated from the given parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">min_num_partitions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">min_num_partitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cores</span>
+        <span class="k">if</span> <span class="n">containing_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">containing_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="n">get_partition_shape</span><span class="p">(</span>
+            <span class="n">dataset_shape</span><span class="o">=</span><span class="n">containing_shape</span><span class="p">,</span>
+            <span class="n">target_size_items</span><span class="o">=</span><span class="n">target_size</span> <span class="o">//</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span><span class="p">,</span>
+            <span class="n">min_num</span><span class="o">=</span><span class="n">min_num_partitions</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataSet.get_supported_extensions"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_supported_extensions">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return supported extensions as a set of strings.</span>
+
+<span class="sd">        Plain extensions only, no pattern!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.get_cache_key"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_cache_key">[docs]</a>    <span class="k">def</span> <span class="nf">get_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.get_default_io_backend"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_default_io_backend">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_default_io_backend</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;IOBackend&quot;</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">platform</span>
+        <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="n">BufferedBackend</span>
+            <span class="k">return</span> <span class="n">BufferedBackend</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">MMapBackend</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.get_supported_io_backends"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_supported_io_backends">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_io_backends</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the supported I/O backends as list of their IDs. Some DataSet</span>
+<span class="sd">        implementations with a custom backend may return an empty list here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;mmap&quot;</span><span class="p">,</span> <span class="s2">&quot;buffered&quot;</span><span class="p">,</span> <span class="s2">&quot;direct&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="DataSet.get_io_backend"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_io_backend">[docs]</a>    <span class="k">def</span> <span class="nf">get_io_backend</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;IOBackend&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_backend</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_default_io_backend</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_io_backend</span></div>
+
+<div class="viewcode-block" id="DataSet.get_correction_data"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_correction_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_correction_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CorrectionSet</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Correction parameters that are part of this DataSet.</span>
+<span class="sd">        This should only be called after the DataSet is initialized.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CorrectionSet</span>
+<span class="sd">            correction parameters that are part of this DataSet</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">CorrectionSet</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DataSet.supports_correction"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.supports_correction">[docs]</a>    <span class="k">def</span> <span class="nf">supports_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DataSet.get_decoder"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_decoder">[docs]</a>    <span class="k">def</span> <span class="nf">get_decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Decoder&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="DataSet.get_base_shape"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_base_shape">[docs]</a>    <span class="k">def</span> <span class="nf">get_base_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="o">.</span><span class="n">dims</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],)</span></div>
+
+<div class="viewcode-block" id="DataSet.adjust_tileshape"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.adjust_tileshape">[docs]</a>    <span class="k">def</span> <span class="nf">adjust_tileshape</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tileshape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Final veto of the DataSet in the tileshape negotiation process,</span>
+<span class="sd">        make sure that corrections are taken into account!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">tileshape</span></div>
+
+<div class="viewcode-block" id="DataSet.need_decode"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.need_decode">[docs]</a>    <span class="k">def</span> <span class="nf">need_decode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">read_dtype</span><span class="p">:</span> <span class="s2">&quot;nt.DTypeLike&quot;</span><span class="p">,</span>
+        <span class="n">roi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">corrections</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CorrectionSet</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">io_backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">()</span><span class="o">.</span><span class="n">get_impl</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">io_backend</span><span class="o">.</span><span class="n">need_copy</span><span class="p">(</span>
+            <span class="n">decoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_decoder</span><span class="p">(),</span>
+            <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
+            <span class="n">native_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">raw_dtype</span><span class="p">,</span>
+            <span class="n">read_dtype</span><span class="o">=</span><span class="n">read_dtype</span><span class="p">,</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">corrections</span><span class="o">=</span><span class="n">corrections</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DataSet.get_min_sig_size"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_min_sig_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_min_sig_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        minimum signal size, in number of elements</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">4096</span> <span class="o">//</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">raw_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span></div>
+
+<div class="viewcode-block" id="DataSet.get_max_io_size"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_max_io_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_max_io_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override this method to implement a custom maximum I/O size (in bytes)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;DataSetMeta&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+<div class="viewcode-block" id="DataSet.get_task_comm_handler"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.DataSet.get_task_comm_handler">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_comm_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TaskCommHandler&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">libertem.common.executor</span> <span class="kn">import</span> <span class="n">NoopCommHandler</span>
+        <span class="k">return</span> <span class="n">NoopCommHandler</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="WritableDataSet"><a class="viewcode-back" href="../../../../../reference/dataset.html#libertem.io.dataset.base.WritableDataSet">[docs]</a><span class="k">class</span> <span class="nc">WritableDataSet</span><span class="p">:</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

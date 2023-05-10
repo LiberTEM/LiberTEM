@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amorphous materials &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Radial Fourier Analysis scripting example" href="radialfourier.html" />
+    <link rel="prev" title="Phase contrast" href="phasecontrast.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../applications.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="phasecontrast.html">Phase contrast</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Amorphous materials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fluctuation-em">Fluctuation EM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gui-use">GUI use</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#scripting-interface">Scripting interface</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#radial-fourier-series">Radial Fourier Series</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="radialfourier.html">Radial Fourier Analysis scripting example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">GUI use</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Scripting interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="strain.html">Strain mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phasechange.html">Phase-change materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="holography.html">Off-axis electron holography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html">Image processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../applications.html">Applications</a></li>
+      <li class="breadcrumb-item active">Amorphous materials</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/app/amorphous.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="amorphous-materials">
+<span id="amorphous-app"></span><h1>Amorphous materials<a class="headerlink" href="#amorphous-materials" title="Permalink to this heading"></a></h1>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>See <a class="reference internal" href="../reference/app/amorphous.html#fem-api"><span class="std std-ref">Fluctuation EM</span></a> and <a class="reference internal" href="../reference/app/amorphous.html#radial-fourier-api"><span class="std std-ref">Radial Fourier Analysis</span></a> for API references</p>
+</div>
+<p>LiberTEM offers methods to determine the local order or crystallinity of
+amorphous and nanocrystalline materials.</p>
+<section id="fluctuation-em">
+<h2>Fluctuation EM<a class="headerlink" href="#fluctuation-em" title="Permalink to this heading"></a></h2>
+<p>The diffraction pattern of amorphous materials show a characteristic ring of
+intensity around the zero-order diffraction peak that is a result of near-range
+ordering of the atoms in the material. Any local ordering within the interaction
+volume of beam and sample will lead to increased “speckle”, i.e. intensity
+fluctuations within this ring, since regions with local ordering will diffract
+the beam to preferred directions similar to a crystal. For Fluctuation EM
+<span id="id1">[<a class="reference internal" href="../index.html#id107" title="J. M. Gibson and M. M. J. Treacy. Diminished medium-range order observed in annealed amorphous germanium. Physical Review Letters, 78(6):1074–1077, feb 1997. doi:10.1103/physrevlett.78.1074.">GT97</a>]</span>, the standard deviation within this ring is calculated to
+obtain a measure of this local ordering.</p>
+<section id="gui-use">
+<h3>GUI use<a class="headerlink" href="#gui-use" title="Permalink to this heading"></a></h3>
+<p>You can select <cite>FEM</cite> from the “Add Analysis” menu in the GUI to add a
+Fluctuation EM Analysis.</p>
+<figure class="align-default">
+<img alt="../_images/fem-select.png" src="../_images/fem-select.png" />
+</figure>
+<p>Use the controls on the left to position the ring-shaped selector over the
+region you’d like to analyze and then click “Apply”.</p>
+<figure class="align-default">
+<img alt="../_images/fem.png" src="../_images/fem.png" />
+</figure>
+<p>Pick mode or average over ROI comes in handy to inspect individual frames or
+regions of interest:</p>
+<figure class="align-default">
+<img alt="../_images/fem-pick.png" src="../_images/fem-pick.png" />
+</figure>
+<p>Sample data: Metallic glass courtesy of Shuai Wei
+&lt;<a class="reference external" href="mailto:shuai&#46;wei&#37;&#52;&#48;physik&#46;rwth-aachen&#46;de">shuai<span>&#46;</span>wei<span>&#64;</span>physik<span>&#46;</span>rwth-aachen<span>&#46;</span>de</a>&gt;, RWTH Aachen; Alexander Kuball, Universität
+des Saarlandes; Hongchu Du &lt;<a class="reference external" href="mailto:h&#46;du&#37;&#52;&#48;fz-juelich&#46;de">h<span>&#46;</span>du<span>&#64;</span>fz-juelich<span>&#46;</span>de</a>&gt;, ER-C, Forschungszentrum Jülich.</p>
+</section>
+<section id="scripting-interface">
+<h3>Scripting interface<a class="headerlink" href="#scripting-interface" title="Permalink to this heading"></a></h3>
+<p>LiberTEM supports this with the <a class="reference internal" href="../reference/app/amorphous.html#libertem.udf.FEM.FEMUDF" title="libertem.udf.FEM.FEMUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">FEMUDF</span></code></a> and
+<a class="reference internal" href="../reference/app/amorphous.html#libertem.udf.FEM.run_fem" title="libertem.udf.FEM.run_fem"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_fem()</span></code></a> method.</p>
+</section>
+</section>
+<section id="radial-fourier-series">
+<span id="radialfourier-app"></span><h2>Radial Fourier Series<a class="headerlink" href="#radial-fourier-series" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="radialfourier.html">Radial Fourier Analysis scripting example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#Calculate-a-spectrum-for-the-entire-scan-as-a-function-of-radius">Calculate a spectrum for the entire scan as a function of radius</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#Summing-the-absolutes-of-all-non-zero-components">Summing the absolutes of all non-zero components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#We-can-do-a-radial-profile-of-any-order.">We can do a radial profile of any order.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#The-zero-order-component-is-just-the-radial-sum.">The zero order component is just the radial sum.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#We-analyze-which-coefficients-are-present-in-that-ring">We analyze which coefficients are present in that ring</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#We-calculate-maps-for-selected-orders-across-the-scan">We calculate maps for selected orders across the scan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#The-phase-gives-information-about-orientation">The phase gives information about orientation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="radialfourier.html#We-determine-which-order-is-predominant">We determine which order is predominant</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>Fluctuation EM doesn’t evaluate the spatial distribution of intensity. It only
+works if enough intensity accumulates in each pixel so that local ordering leads
+to larger intensity variations than just random noise, i.e. if statistical
+variations from shot noise average out and variations introduced by the sample
+dominate.</p>
+<p>If most of the detector pixels are only hit with one electron or none, the
+standard deviation between detector positions in a region of interest is the
+same, even if pixels that received electrons are spatially close, while other
+regions received no intensity. That means Fluctuation EM doesn’t produce
+contrast between amorphous and crystalline regions if the detector has a high
+resolution, and/or if only low intensity is scattered into the region of
+interest.</p>
+<p>The Radial Fourier Series Analysis solves this problem by calculating a Fourier
+series in a ring-shaped region instead of just evaluating the standard
+deviation. The reference <span id="id2">[<a class="reference internal" href="../index.html#id109" title="S. C. F. Lin, C. Y. Wong, G. Jiang, M. A. Rahman, and N. M. Kwok. Radial fourier analysis (RFA) image descriptor. In 2014 11th International Conference on Fuzzy Systems and Knowledge Discovery (FSKD), 814-819. Aug 2014. doi:10.1109/FSKD.2014.6980942.">LinWongJiang+14</a>]</span> describes a previous application of
+this method as a descriptor for feature extraction from images. The angle of a
+pixel relative to the user-defined center point of the diffraction pattern is
+used as a phase angle for the Fourier series.</p>
+<p>Since <a class="reference external" href="http://xrayweb.chem.ou.edu/notes/symmetry.html">diffraction patterns usually show characteristic</a> <a class="reference external" href="https://en.wikipedia.org/wiki/Friedel%27s_law">symmetries</a>, the strength of the Fourier
+coefficients of orders 2, 4 and 6 highlight regions with crystalline order for
+even the lowest intensities. With the <a class="reference external" href="https://en.wikipedia.org/wiki/Parseval%27s_theorem">relationship between variance in real
+space and power spectral density in frequency space</a>, the sum of all
+coefficients that are larger than zero is equivalent to the standard deviation,
+i.e. Fluctuation EM. Only summing coefficients from lower orders corresponds
+Fluctuation EM on a smoothened dataset.</p>
+<p>The phase angle of selected coefficients, for example first or second order, can
+be used for in-plane orientation mapping similar to <span id="id3">[<a class="reference internal" href="../index.html#id106" title="Ouliana Panova, Colin Ophus, Christopher J. Takacs, Karen C. Bustillo, Luke Balhorn, Alberto Salleo, Nitash Balsara, and Andrew M. Minor. Diffraction imaging of nanocrystalline structures in organic semiconductor molecular thin films. Nature Materials, jun 2019. doi:10.1038/s41563-019-0387-3.">POT+19</a>]</span>.</p>
+<p>Please note that this method is new and experimental and still needs to be
+validated further. If you are interested in helping us with applications and
+validations, that would be highly appreciated!</p>
+<section id="id4">
+<h3>GUI use<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<p>You can select “Radial Fourier” from the “Add Analysis” menu in the GUI to add a
+Radial Fourier Series Analysis.</p>
+<figure class="align-default">
+<img alt="../_images/select.png" src="../_images/select.png" />
+</figure>
+<p>Use the controls on the left to position the ring-shaped selector over the
+region you’d like to analyze and then click “Apply”.</p>
+<figure class="align-default">
+<img alt="../_images/radialfourier.png" src="../_images/radialfourier.png" />
+</figure>
+<p>Under the right-hand side image you can select the channel to display. Available
+are predominant order, absolute value, phase angle and a cubehelix vector field
+visualization of the complex number. The orders larger than zero are all plotted
+on the same range and are normalized by the zero-order component for each scan
+position to make the components comparable and eliminate the influence of
+absolute intensity variations in the visual display.</p>
+<p>You can select entries with the arrow keys on the keyboard in case the menu is
+outside the browser window. Your help with a more user-friendly GUI
+implementation would be highly appreciated!</p>
+<figure class="align-default">
+<img alt="../_images/radialfourier-channel.png" src="../_images/radialfourier-channel.png" />
+</figure>
+<p>Pick mode comes in handy to inspect individual frames:</p>
+<figure class="align-default">
+<img alt="../_images/radialfourier-pick.png" src="../_images/radialfourier-pick.png" />
+</figure>
+<p>Sample data: Metallic glass courtesy of Shuai Wei
+&lt;<a class="reference external" href="mailto:shuai&#46;wei&#37;&#52;&#48;physik&#46;rwth-aachen&#46;de">shuai<span>&#46;</span>wei<span>&#64;</span>physik<span>&#46;</span>rwth-aachen<span>&#46;</span>de</a>&gt;, RWTH Aachen; Alexander Kuball, Universität
+des Saarlandes; Hongchu Du &lt;<a class="reference external" href="mailto:h&#46;du&#37;&#52;&#48;fz-juelich&#46;de">h<span>&#46;</span>du<span>&#64;</span>fz-juelich<span>&#46;</span>de</a>&gt;, ER-C, Forschungszentrum Jülich.</p>
+</section>
+<section id="id5">
+<h3>Scripting interface<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<p>The scripting interface
+<a class="reference internal" href="../reference/api.html#libertem.api.Context.create_radial_fourier_analysis" title="libertem.api.Context.create_radial_fourier_analysis"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_radial_fourier_analysis()</span></code></a> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">RadialFourierAnalysis</span></code> allows to
+calculate more than one bin at a time and influence the number of orders that
+are calculated. It relies on the sparse matrix back-end for <code class="code docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code> and allows
+to calculate many orders for many bins at once with acceptable efficiency.</p>
+<p>Having a fine-grained analysis with many orders calculated as a function of
+radius allows for a number of additional processing and analysis steps. <a class="reference internal" href="radialfourier.html"><span class="doc">Follow
+this link to a Jupyter notebook.</span></a></p>
+<p class="rubric">Reference</p>
+<p>See <a class="reference internal" href="../reference/app/amorphous.html#fem-api"><span class="std std-ref">Fluctuation EM</span></a> and <a class="reference internal" href="../reference/app/amorphous.html#radial-fourier-api"><span class="std std-ref">Radial Fourier Analysis</span></a> for API references!</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="phasecontrast.html" class="btn btn-neutral float-left" title="Phase contrast" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="radialfourier.html" class="btn btn-neutral float-right" title="Radial Fourier Analysis scripting example" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

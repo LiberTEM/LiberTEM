@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radial Fourier Analysis scripting example &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Strain mapping" href="strain.html" />
+    <link rel="prev" title="Amorphous materials" href="amorphous.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../applications.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="phasecontrast.html">Phase contrast</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="amorphous.html">Amorphous materials</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="amorphous.html#fluctuation-em">Fluctuation EM</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="amorphous.html#radial-fourier-series">Radial Fourier Series</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Radial Fourier Analysis scripting example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amorphous.html#id4">GUI use</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amorphous.html#id5">Scripting interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="strain.html">Strain mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phasechange.html">Phase-change materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="holography.html">Off-axis electron holography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processing.html">Image processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../applications.html">Applications</a></li>
+          <li class="breadcrumb-item"><a href="amorphous.html">Amorphous materials</a></li>
+      <li class="breadcrumb-item active">Radial Fourier Analysis scripting example</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/app/radialfourier.nblink.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Radial-Fourier-Analysis-scripting-example">
+<h1>Radial Fourier Analysis scripting example<a class="headerlink" href="#Radial-Fourier-Analysis-scripting-example" title="Permalink to this heading"></a></h1>
+<p>Sample data: Metallic glass</p>
+<ul class="simple">
+<li><p>Shuai Wei <a class="reference external" href="mailto:shuai&#46;wei&#37;&#52;&#48;physik&#46;rwth-aachen&#46;de">shuai<span>&#46;</span>wei<span>&#64;</span>physik<span>&#46;</span>rwth-aachen<span>&#46;</span>de</a>, RWTH Aachen</p></li>
+<li><p>Alexander Kuball, Universität des Saarlandes</p></li>
+<li><p>Hongchu Du <a class="reference external" href="mailto:h&#46;du&#37;&#52;&#48;fz-juelich&#46;de">h<span>&#46;</span>du<span>&#64;</span>fz-juelich<span>&#46;</span>de</a>, ER-C, Forschungszentrum Jülich</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colors</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">cm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">libertem.api</span> <span class="k">as</span> <span class="nn">lt</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/weber/miniconda3/envs/libertem39/lib/python3.9/site-packages/distributed/node.py:182: UserWarning: Port 8787 is already in use.
+Perhaps you already have a cluster running?
+Hosting the HTTP server on port 33853 instead
+  warnings.warn(
+2023-01-12 17:53:45,364 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-igxdkgtc&#39;, purging
+2023-01-12 17:53:45,364 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-h6k80yy2&#39;, purging
+2023-01-12 17:53:45,365 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-97wrkzha&#39;, purging
+2023-01-12 17:53:45,365 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-psfppcbi&#39;, purging
+2023-01-12 17:53:45,365 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-frnk4kfq&#39;, purging
+2023-01-12 17:53:45,365 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-olx_tywx&#39;, purging
+2023-01-12 17:53:45,366 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-9s6vmauk&#39;, purging
+2023-01-12 17:53:45,366 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-si7suw92&#39;, purging
+2023-01-12 17:53:45,366 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-y8a6misn&#39;, purging
+2023-01-12 17:53:45,366 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-gtydfr86&#39;, purging
+2023-01-12 17:53:45,366 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-ag3d6z53&#39;, purging
+2023-01-12 17:53:45,367 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-ooqtvij0&#39;, purging
+2023-01-12 17:53:45,367 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-njp5yz59&#39;, purging
+2023-01-12 17:53:45,367 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-tik7ps_2&#39;, purging
+2023-01-12 17:53:45,367 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-zb64yx5_&#39;, purging
+2023-01-12 17:53:45,367 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-5bknez69&#39;, purging
+2023-01-12 17:53:45,368 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-tygysjea&#39;, purging
+2023-01-12 17:53:45,368 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-1pi64al4&#39;, purging
+2023-01-12 17:53:45,368 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-3602r18h&#39;, purging
+2023-01-12 17:53:45,368 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-keubfvsn&#39;, purging
+2023-01-12 17:53:45,369 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-6se9yek9&#39;, purging
+2023-01-12 17:53:45,369 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-shwg8ixk&#39;, purging
+2023-01-12 17:53:45,369 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-qt4bzhz1&#39;, purging
+2023-01-12 17:53:45,369 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-_twfn4zq&#39;, purging
+2023-01-12 17:53:45,369 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-wdrtl3z8&#39;, purging
+2023-01-12 17:53:45,370 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=2)
+2023-01-12 17:53:45,370 - distributed.utils - INFO - Reload module tmp8v4m_mi3 from .py file
+2023-01-12 17:53:45,374 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=22)
+2023-01-12 17:53:45,375 - distributed.utils - INFO - Reload module tmpm80f0vwh from .py file
+2023-01-12 17:53:45,393 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=12)
+2023-01-12 17:53:45,394 - distributed.utils - INFO - Reload module tmpumbhj9a7 from .py file
+2023-01-12 17:53:45,409 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CUDA&#34;, device=0)
+2023-01-12 17:53:45,409 - distributed.utils - INFO - Reload module tmpe8otvwop from .py file
+2023-01-12 17:53:45,418 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=8)
+2023-01-12 17:53:45,419 - distributed.utils - INFO - Reload module tmp11tac9h_ from .py file
+2023-01-12 17:53:45,427 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=9)
+2023-01-12 17:53:45,427 - distributed.utils - INFO - Reload module tmp21nz_0ul from .py file
+2023-01-12 17:53:45,438 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=1)
+2023-01-12 17:53:45,438 - distributed.utils - INFO - Reload module tmp82v15s0x from .py file
+2023-01-12 17:53:45,451 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=6)
+2023-01-12 17:53:45,451 - distributed.utils - INFO - Reload module tmpis5tq7ki from .py file
+2023-01-12 17:53:45,474 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=23)
+2023-01-12 17:53:45,474 - distributed.utils - INFO - Reload module tmpcr_2tptu from .py file
+2023-01-12 17:53:45,524 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-service-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:53:45,524 - distributed.utils - INFO - Reload module tmp64sycomr from .py file
+2023-01-12 17:53:45,549 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=17)
+2023-01-12 17:53:45,549 - distributed.utils - INFO - Reload module tmplcabvmiy from .py file
+2023-01-12 17:53:45,550 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=13)
+2023-01-12 17:53:45,550 - distributed.utils - INFO - Reload module tmp97dl_a09 from .py file
+2023-01-12 17:53:45,561 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=20)
+2023-01-12 17:53:45,562 - distributed.utils - INFO - Reload module tmplsku_cx_ from .py file
+2023-01-12 17:53:45,569 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=15)
+2023-01-12 17:53:45,569 - distributed.utils - INFO - Reload module tmpy_7lt26l from .py file
+2023-01-12 17:53:45,581 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=5)
+2023-01-12 17:53:45,581 - distributed.utils - INFO - Reload module tmpgz9_3jtj from .py file
+2023-01-12 17:53:45,596 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=10)
+2023-01-12 17:53:45,597 - distributed.utils - INFO - Reload module tmppi6cfzix from .py file
+2023-01-12 17:53:45,624 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=0)
+2023-01-12 17:53:45,625 - distributed.utils - INFO - Reload module tmpgr_gdin1 from .py file
+2023-01-12 17:53:45,639 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=21)
+2023-01-12 17:53:45,639 - distributed.utils - INFO - Reload module tmpqn3oev1y from .py file
+2023-01-12 17:53:45,666 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=7)
+2023-01-12 17:53:45,666 - distributed.utils - INFO - Reload module tmplqt44560 from .py file
+2023-01-12 17:53:45,672 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=18)
+2023-01-12 17:53:45,673 - distributed.utils - INFO - Reload module tmpmjv8ghes from .py file
+2023-01-12 17:53:45,677 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=3)
+2023-01-12 17:53:45,678 - distributed.utils - INFO - Reload module tmpj31vluh1 from .py file
+2023-01-12 17:53:45,702 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=14)
+2023-01-12 17:53:45,703 - distributed.utils - INFO - Reload module tmpz3hkpyti from .py file
+2023-01-12 17:53:45,715 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=16)
+2023-01-12 17:53:45,715 - distributed.utils - INFO - Reload module tmp0wnqgr1l from .py file
+2023-01-12 17:53:45,725 - distributed.preloading - INFO - Import preload module: /tmp/tmpumbhj9a7.py
+2023-01-12 17:53:45,725 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-12&#39;, service_id=&#39;12&#39;)
+2023-01-12 17:53:45,726 - distributed.utils - INFO - Reload module tmpjk4xma6h from .py file
+2023-01-12 17:53:45,726 - distributed.preloading - INFO - Import preload module: /tmp/tmpjk4xma6h.py
+2023-01-12 17:53:45,726 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,730 - distributed.preloading - INFO - Import preload module: /tmp/tmp8v4m_mi3.py
+2023-01-12 17:53:45,730 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-2&#39;, service_id=&#39;2&#39;)
+2023-01-12 17:53:45,731 - distributed.utils - INFO - Reload module tmpp1j831ip from .py file
+2023-01-12 17:53:45,731 - distributed.preloading - INFO - Import preload module: /tmp/tmpp1j831ip.py
+2023-01-12 17:53:45,731 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,735 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=19)
+2023-01-12 17:53:45,735 - distributed.utils - INFO - Reload module tmpykkf5rv4 from .py file
+2023-01-12 17:53:45,736 - distributed.preloading - INFO - Import preload module: /tmp/tmp11tac9h_.py
+2023-01-12 17:53:45,736 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-8&#39;, service_id=&#39;8&#39;)
+2023-01-12 17:53:45,736 - distributed.utils - INFO - Reload module tmp01j2y5cl from .py file
+2023-01-12 17:53:45,737 - distributed.preloading - INFO - Import preload module: /tmp/tmp01j2y5cl.py
+2023-01-12 17:53:45,737 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,749 - distributed.preloading - INFO - Import preload module: /tmp/tmp82v15s0x.py
+2023-01-12 17:53:45,749 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-1&#39;, service_id=&#39;1&#39;)
+2023-01-12 17:53:45,749 - distributed.utils - INFO - Reload module tmpbgcg0gok from .py file
+2023-01-12 17:53:45,750 - distributed.preloading - INFO - Import preload module: /tmp/tmpbgcg0gok.py
+2023-01-12 17:53:45,750 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,750 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=11)
+2023-01-12 17:53:45,750 - distributed.utils - INFO - Reload module tmplp3to0qk from .py file
+2023-01-12 17:53:45,754 - distributed.preloading - INFO - Import preload module: /tmp/tmpe8otvwop.py
+2023-01-12 17:53:45,754 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cuda-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:53:45,754 - distributed.utils - INFO - Reload module tmpsaxjm3hf from .py file
+2023-01-12 17:53:45,755 - distributed.preloading - INFO - Import preload module: /tmp/tmpsaxjm3hf.py
+2023-01-12 17:53:45,755 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,771 - distributed.preloading - INFO - Import preload module: /tmp/tmpis5tq7ki.py
+2023-01-12 17:53:45,771 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-6&#39;, service_id=&#39;6&#39;)
+2023-01-12 17:53:45,772 - distributed.utils - INFO - Reload module tmphylpl62b from .py file
+2023-01-12 17:53:45,772 - distributed.preloading - INFO - Import preload module: /tmp/tmphylpl62b.py
+2023-01-12 17:53:45,772 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,773 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,774 - distributed.preloading - INFO - Import preload module: /tmp/tmp64sycomr.py
+2023-01-12 17:53:45,774 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,776 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=4)
+2023-01-12 17:53:45,776 - distributed.utils - INFO - Reload module tmp_oftk04g from .py file
+2023-01-12 17:53:45,784 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,797 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,803 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,803 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,820 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,823 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,838 - distributed.preloading - INFO - Import preload module: /tmp/tmpm80f0vwh.py
+2023-01-12 17:53:45,838 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-22&#39;, service_id=&#39;22&#39;)
+2023-01-12 17:53:45,838 - distributed.utils - INFO - Reload module tmp_oel88uq from .py file
+2023-01-12 17:53:45,839 - distributed.preloading - INFO - Import preload module: /tmp/tmp_oel88uq.py
+2023-01-12 17:53:45,839 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,864 - distributed.preloading - INFO - Import preload module: /tmp/tmp21nz_0ul.py
+2023-01-12 17:53:45,865 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-9&#39;, service_id=&#39;9&#39;)
+2023-01-12 17:53:45,865 - distributed.utils - INFO - Reload module tmpti045z8w from .py file
+2023-01-12 17:53:45,865 - distributed.preloading - INFO - Import preload module: /tmp/tmpti045z8w.py
+2023-01-12 17:53:45,865 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,870 - distributed.preloading - INFO - Import preload module: /tmp/tmp97dl_a09.py
+2023-01-12 17:53:45,870 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-13&#39;, service_id=&#39;13&#39;)
+2023-01-12 17:53:45,870 - distributed.utils - INFO - Reload module tmpknvyzsyz from .py file
+2023-01-12 17:53:45,871 - distributed.preloading - INFO - Import preload module: /tmp/tmpknvyzsyz.py
+2023-01-12 17:53:45,871 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,876 - distributed.preloading - INFO - Import preload module: /tmp/tmplcabvmiy.py
+2023-01-12 17:53:45,876 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-17&#39;, service_id=&#39;17&#39;)
+2023-01-12 17:53:45,876 - distributed.utils - INFO - Reload module tmpxbg2qvht from .py file
+2023-01-12 17:53:45,877 - distributed.preloading - INFO - Import preload module: /tmp/tmpxbg2qvht.py
+2023-01-12 17:53:45,877 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,885 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,889 - distributed.preloading - INFO - Import preload module: /tmp/tmpgz9_3jtj.py
+2023-01-12 17:53:45,889 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-5&#39;, service_id=&#39;5&#39;)
+2023-01-12 17:53:45,890 - distributed.utils - INFO - Reload module tmppk115mhj from .py file
+2023-01-12 17:53:45,890 - distributed.preloading - INFO - Import preload module: /tmp/tmppk115mhj.py
+2023-01-12 17:53:45,890 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,894 - distributed.preloading - INFO - Import preload module: /tmp/tmplsku_cx_.py
+2023-01-12 17:53:45,894 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-20&#39;, service_id=&#39;20&#39;)
+2023-01-12 17:53:45,895 - distributed.utils - INFO - Reload module tmph7yx7huj from .py file
+2023-01-12 17:53:45,895 - distributed.preloading - INFO - Import preload module: /tmp/tmph7yx7huj.py
+2023-01-12 17:53:45,895 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,901 - distributed.preloading - INFO - Import preload module: /tmp/tmpy_7lt26l.py
+2023-01-12 17:53:45,901 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-15&#39;, service_id=&#39;15&#39;)
+2023-01-12 17:53:45,901 - distributed.utils - INFO - Reload module tmph3q70138 from .py file
+2023-01-12 17:53:45,902 - distributed.preloading - INFO - Import preload module: /tmp/tmph3q70138.py
+2023-01-12 17:53:45,902 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,904 - distributed.preloading - INFO - Import preload module: /tmp/tmpcr_2tptu.py
+2023-01-12 17:53:45,904 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-23&#39;, service_id=&#39;23&#39;)
+2023-01-12 17:53:45,904 - distributed.utils - INFO - Reload module tmpqzau8q6i from .py file
+2023-01-12 17:53:45,905 - distributed.preloading - INFO - Import preload module: /tmp/tmpqzau8q6i.py
+2023-01-12 17:53:45,905 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,912 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,918 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,921 - distributed.preloading - INFO - Import preload module: /tmp/tmppi6cfzix.py
+2023-01-12 17:53:45,921 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-10&#39;, service_id=&#39;10&#39;)
+2023-01-12 17:53:45,921 - distributed.utils - INFO - Reload module tmpklir588h from .py file
+2023-01-12 17:53:45,921 - distributed.preloading - INFO - Import preload module: /tmp/tmpklir588h.py
+2023-01-12 17:53:45,921 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,924 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,930 - distributed.preloading - INFO - Import preload module: /tmp/tmpgr_gdin1.py
+2023-01-12 17:53:45,930 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:53:45,930 - distributed.utils - INFO - Reload module tmpjh_jht6r from .py file
+2023-01-12 17:53:45,931 - distributed.preloading - INFO - Import preload module: /tmp/tmpjh_jht6r.py
+2023-01-12 17:53:45,931 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,937 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,946 - distributed.preloading - INFO - Import preload module: /tmp/tmpqn3oev1y.py
+2023-01-12 17:53:45,946 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-21&#39;, service_id=&#39;21&#39;)
+2023-01-12 17:53:45,946 - distributed.utils - INFO - Reload module tmp8vtl5tgz from .py file
+2023-01-12 17:53:45,947 - distributed.preloading - INFO - Import preload module: /tmp/tmp8vtl5tgz.py
+2023-01-12 17:53:45,947 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,953 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,963 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,968 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,970 - distributed.preloading - INFO - Import preload module: /tmp/tmplqt44560.py
+2023-01-12 17:53:45,971 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-7&#39;, service_id=&#39;7&#39;)
+2023-01-12 17:53:45,971 - distributed.utils - INFO - Reload module tmptm9v3avp from .py file
+2023-01-12 17:53:45,971 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,971 - distributed.preloading - INFO - Import preload module: /tmp/tmptm9v3avp.py
+2023-01-12 17:53:45,971 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,977 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:45,977 - distributed.preloading - INFO - Import preload module: /tmp/tmpmjv8ghes.py
+2023-01-12 17:53:45,977 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-18&#39;, service_id=&#39;18&#39;)
+2023-01-12 17:53:45,978 - distributed.utils - INFO - Reload module tmp1tb7rgg_ from .py file
+2023-01-12 17:53:45,979 - distributed.preloading - INFO - Import preload module: /tmp/tmp1tb7rgg_.py
+2023-01-12 17:53:45,979 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:45,993 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,009 - distributed.preloading - INFO - Import preload module: /tmp/tmpj31vluh1.py
+2023-01-12 17:53:46,009 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-3&#39;, service_id=&#39;3&#39;)
+2023-01-12 17:53:46,010 - distributed.utils - INFO - Reload module tmpen21eryx from .py file
+2023-01-12 17:53:46,010 - distributed.preloading - INFO - Import preload module: /tmp/tmpen21eryx.py
+2023-01-12 17:53:46,010 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:46,016 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,022 - distributed.preloading - INFO - Import preload module: /tmp/tmp0wnqgr1l.py
+2023-01-12 17:53:46,022 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-16&#39;, service_id=&#39;16&#39;)
+2023-01-12 17:53:46,022 - distributed.utils - INFO - Reload module tmpo1b88dna from .py file
+2023-01-12 17:53:46,022 - distributed.preloading - INFO - Import preload module: /tmp/tmpo1b88dna.py
+2023-01-12 17:53:46,023 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:46,025 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,035 - distributed.preloading - INFO - Import preload module: /tmp/tmpz3hkpyti.py
+2023-01-12 17:53:46,035 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-14&#39;, service_id=&#39;14&#39;)
+2023-01-12 17:53:46,035 - distributed.utils - INFO - Reload module tmpf1tc25me from .py file
+2023-01-12 17:53:46,036 - distributed.preloading - INFO - Import preload module: /tmp/tmpf1tc25me.py
+2023-01-12 17:53:46,036 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:46,043 - distributed.preloading - INFO - Import preload module: /tmp/tmpykkf5rv4.py
+2023-01-12 17:53:46,043 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-19&#39;, service_id=&#39;19&#39;)
+2023-01-12 17:53:46,044 - distributed.utils - INFO - Reload module tmpah10v_ou from .py file
+2023-01-12 17:53:46,044 - distributed.preloading - INFO - Import preload module: /tmp/tmpah10v_ou.py
+2023-01-12 17:53:46,044 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:46,056 - distributed.preloading - INFO - Import preload module: /tmp/tmplp3to0qk.py
+2023-01-12 17:53:46,056 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-11&#39;, service_id=&#39;11&#39;)
+2023-01-12 17:53:46,057 - distributed.utils - INFO - Reload module tmpae52v14b from .py file
+2023-01-12 17:53:46,057 - distributed.preloading - INFO - Import preload module: /tmp/tmpae52v14b.py
+2023-01-12 17:53:46,057 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:46,066 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,067 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,084 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,090 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,102 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:53:46,105 - distributed.preloading - INFO - Import preload module: /tmp/tmp_oftk04g.py
+2023-01-12 17:53:46,105 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-4&#39;, service_id=&#39;4&#39;)
+2023-01-12 17:53:46,106 - distributed.utils - INFO - Reload module tmprxrc06cb from .py file
+2023-01-12 17:53:46,106 - distributed.preloading - INFO - Import preload module: /tmp/tmprxrc06cb.py
+2023-01-12 17:53:46,106 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:53:46,151 - distributed.preloading - INFO - Import preload module: libertem.preload
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TESTDATA_BASE_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;/home/alex/Data/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+    <span class="s1">&#39;MIB&#39;</span><span class="p">,</span>
+    <span class="n">path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_base_path</span><span class="p">,</span> <span class="s1">&#39;200_20190328_185735/default.hdr&#39;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="c1"># ds.shape is (256, 256, 256, 256)</span>
+<span class="c1"># Size: 8 GB</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="mi">134</span><span class="p">,</span> <span class="mi">129</span>
+</pre></div>
+</div>
+</div>
+<p>These parameters allow running the analysis on a consumer-grade computer within a few minutes:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># rfa = ctx.create_radial_fourier_analysis(</span>
+<span class="c1">#     dataset=ds,</span>
+<span class="c1">#     cx=cx,</span>
+<span class="c1">#     cy=cy,</span>
+<span class="c1">#     ri=0,</span>
+<span class="c1">#     ro=45,</span>
+<span class="c1">#     n_bins=45,</span>
+<span class="c1">#     max_order=12</span>
+<span class="c1"># )</span>
+</pre></div>
+</div>
+</div>
+<p>A workstation with a powerful multicore CPU is more suitable for these parameters</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rfa</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">create_radial_fourier_analysis</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span>
+    <span class="n">cx</span><span class="o">=</span><span class="n">cx</span><span class="p">,</span>
+    <span class="n">cy</span><span class="o">=</span><span class="n">cy</span><span class="p">,</span>
+    <span class="n">ri</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">ro</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+    <span class="n">n_bins</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+    <span class="n">max_order</span><span class="o">=</span><span class="mi">36</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">rfa</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "6acb67fbd124453baa212744e93191af", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<section id="Calculate-a-spectrum-for-the-entire-scan-as-a-function-of-radius">
+<h2>Calculate a spectrum for the entire scan as a function of radius<a class="headerlink" href="#Calculate-a-spectrum-for-the-entire-scan-as-a-function-of-radius" title="Permalink to this heading"></a></h2>
+<p>Note the “abs”: The coefficients are complex numbers with arbitrary phase angles. We sum up the absolute values to ignore orientations, otherwise they would cancel each other out. Summing the actual values could yield texture information.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">raw_results</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">spectrum</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">colors</span><span class="o">.</span><span class="n">LogNorm</span><span class="p">())</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Order of Fourier component&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Radius / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Spectrum summed over entire scan&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Spectrum summed over entire scan&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_13_1.png" src="../_images/app_radialfourier_13_1.png" />
+</div>
+</div>
+</section>
+<section id="Summing-the-absolutes-of-all-non-zero-components">
+<h2>Summing the absolutes of all non-zero components<a class="headerlink" href="#Summing-the-absolutes-of-all-non-zero-components" title="Permalink to this heading"></a></h2>
+<p>This is qualitatively equivalent to the variance after filtering the dataset radially with a low-pass filter. High orders would have to be included and bins and Fourier transform would have to be normalized correctly for this to be quantitatively equivalent to the variance, i.e. Fluctuation EM.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">radial_variance</span> <span class="o">=</span> <span class="n">spectrum</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">radial_variance</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Intensity / a.u.&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Radius / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Radial variance profile summed over entire scan&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Radial variance profile summed over entire scan&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_15_1.png" src="../_images/app_radialfourier_15_1.png" />
+</div>
+</div>
+</section>
+<section id="We-can-do-a-radial-profile-of-any-order.">
+<h2>We can do a radial profile of any order.<a class="headerlink" href="#We-can-do-a-radial-profile-of-any-order." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">radial_six</span> <span class="o">=</span> <span class="n">spectrum</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Radial profile of order 6 summed over entire scan&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">radial_six</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Intensity / a.u.&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Radius / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_17_0.png" src="../_images/app_radialfourier_17_0.png" />
+</div>
+</div>
+</section>
+<section id="The-zero-order-component-is-just-the-radial-sum.">
+<h2>The zero order component is just the radial sum.<a class="headerlink" href="#The-zero-order-component-is-just-the-radial-sum." title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">radial_sum</span> <span class="o">=</span> <span class="n">spectrum</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">radial_sum</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Intensity / a.u.&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Radius / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Radial sum profile summed over entire scan&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Radial sum profile summed over entire scan&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_19_1.png" src="../_images/app_radialfourier_19_1.png" />
+</div>
+</div>
+<p>We determined a “ring of interest” from the radial plots or spectrum and put it in these variables for subsequent use.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ri</span><span class="p">,</span> <span class="n">ro</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">35</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="We-analyze-which-coefficients-are-present-in-that-ring">
+<h2>We analyze which coefficients are present in that ring<a class="headerlink" href="#We-analyze-which-coefficients-are-present-in-that-ring" title="Permalink to this heading"></a></h2>
+<p>Note that the coefficients contain higher harmonics! The one with the highest value is of interest.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">psd</span> <span class="o">=</span> <span class="n">spectrum</span><span class="p">[</span><span class="n">ri</span><span class="p">:</span><span class="n">ro</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">psd</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Spectrum in </span><span class="se">\&quot;</span><span class="s2">ring of interest</span><span class="se">\&quot;</span><span class="s2"> summed over entire scan&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Intensity / a.u.&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Order of Fourier component&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_23_0.png" src="../_images/app_radialfourier_23_0.png" />
+</div>
+</div>
+</section>
+<section id="We-calculate-maps-for-selected-orders-across-the-scan">
+<h2>We calculate maps for selected orders across the scan<a class="headerlink" href="#We-calculate-maps-for-selected-orders-across-the-scan" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">maps</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">raw_results</span><span class="p">[</span><span class="n">ri</span><span class="p">:</span><span class="n">ro</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1"># We normalize higher orders with the total integrated intensity</span>
+<span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">absmaps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">maps</span><span class="p">)</span>
+
+<span class="n">vmin</span> <span class="o">=</span> <span class="n">absmaps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+<span class="n">vmax</span> <span class="o">=</span> <span class="n">absmaps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+<span class="c1"># Plotting the absolute values gives the best overview.</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">absmaps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;y scan dimension / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x scan dimension / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Map of absolute of order 0&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">absmaps</span><span class="p">[</span><span class="n">o</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;y scan dimension / px&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x scan dimension / px&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Map of absolute of order </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">o</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_0.png" src="../_images/app_radialfourier_25_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_1.png" src="../_images/app_radialfourier_25_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_2.png" src="../_images/app_radialfourier_25_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_3.png" src="../_images/app_radialfourier_25_3.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_4.png" src="../_images/app_radialfourier_25_4.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_5.png" src="../_images/app_radialfourier_25_5.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_25_6.png" src="../_images/app_radialfourier_25_6.png" />
+</div>
+</div>
+</section>
+<section id="The-phase-gives-information-about-orientation">
+<h2>The phase gives information about orientation<a class="headerlink" href="#The-phase-gives-information-about-orientation" title="Permalink to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">maps</span><span class="p">[</span><span class="n">o</span><span class="p">]),</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">twilight</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;y scan dimension / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x scan dimension / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Map of phase of order </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">o</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Map of phase of order 6&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_27_1.png" src="../_images/app_radialfourier_27_1.png" />
+</div>
+</div>
+</section>
+<section id="We-determine-which-order-is-predominant">
+<h2>We determine which order is predominant<a class="headerlink" href="#We-determine-which-order-is-predominant" title="Permalink to this heading"></a></h2>
+<p>We reject values below a threshold to eliminate noise Limit to 20 orders for colormap and only use “typical crystalline” orders 2, 4, 6 to determine the threshold.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">below_threshold</span> <span class="o">=</span> <span class="n">absmaps</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">20</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">absmaps</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="o">...</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.5</span>
+<span class="n">below_threshold</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">below_threshold</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">dominant</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">absmaps</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">20</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">dominant</span><span class="p">[</span><span class="n">below_threshold</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">dominant</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cm</span><span class="o">.</span><span class="n">tab20</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;y scan dimension / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;x scan dimension / px&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Map of predominant order&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Text(0.5, 1.0, &#39;Map of predominant order&#39;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/app_radialfourier_29_1.png" src="../_images/app_radialfourier_29_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"0a732b03b4c2414b872729baa2740fa3": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "178d01ac150b429f862276fadb8d9d3f": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_4cff7b5611bb4987b43d53fbb15cde59", "IPY_MODEL_47b960f3026340088e48322ee5c60e1a", "IPY_MODEL_b79d52d687474e9b93a06856877c9051"], "layout": "IPY_MODEL_0a732b03b4c2414b872729baa2740fa3", "tabbable": null, "tooltip": null}}, "17d15bc57242416fadda9996d7dd6440": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "209ae97f1878412ea3cdaf0a1ef5e0fe": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "47b960f3026340088e48322ee5c60e1a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_209ae97f1878412ea3cdaf0a1ef5e0fe", "max": 65536, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_fa8561e57b48405c8221d7e9262004e7", "tabbable": null, "tooltip": null, "value": 65536}}, "4cff7b5611bb4987b43d53fbb15cde59": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_6a8ba8781d4d4d3280aa237871c41c89", "placeholder": "\u200b", "style": "IPY_MODEL_17d15bc57242416fadda9996d7dd6440", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "6a8ba8781d4d4d3280aa237871c41c89": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "9a717431a5e34cb19c528c50a796f50a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "b79d52d687474e9b93a06856877c9051": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_e7ddab39ee6a4b249b0aabe8af039457", "placeholder": "\u200b", "style": "IPY_MODEL_9a717431a5e34cb19c528c50a796f50a", "tabbable": null, "tooltip": null, "value": " 65536/65536 [00:29&lt;00:00, 1434.89it/s]"}}, "e7ddab39ee6a4b249b0aabe8af039457": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "fa8561e57b48405c8221d7e9262004e7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}}, "version_major": 2, "version_minor": 0}
+</script></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="amorphous.html" class="btn btn-neutral float-left" title="Amorphous materials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="strain.html" class="btn btn-neutral float-right" title="Strain mapping" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How does I/O work in LiberTEM? &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="LiberTEM executors" href="executors.html" />
+    <link rel="prev" title="Architecture" href="../architecture.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How does I/O work in LiberTEM?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#high-level-overview">High-level overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#read-ranges">Read ranges</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#notes-for-implementing-a-dataset">Notes for implementing a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subclass-basepartition">Subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">BasePartition</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#implementing-a-decoder">Implementing a <code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">How does I/O work in LiberTEM?</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/dev/how-io-works.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="how-does-i-o-work-in-libertem">
+<h1>How does I/O work in LiberTEM?<a class="headerlink" href="#how-does-i-o-work-in-libertem" title="Permalink to this heading"></a></h1>
+<p>Many algorithms benefit from <a class="reference internal" href="../udf/advanced.html#tiled"><span class="std std-ref">Tiled processing</span></a> where the same slice of the signal
+dimension is processed for several frames in a row. In many cases, algorithms
+have specific minimum and maximum sizes in signal dimension, navigation
+dimension or total size where they operate efficiently. Smaller sizes might
+increase overheads, while larger sizes might reduce cache efficiency.</p>
+<p>At the same time, file formats might operate well within specific size and
+shape limits. The <a class="reference internal" href="../reference/dataset.html#k2is"><span class="std std-ref">K2IS</span></a> raw format is a prime example where data is saved
+in tiled form and can be processed efficiently in specific tile sizes and
+shapes that follow the native layout. Furthermore, some formats require
+decoding or corrections by the CPU, such as <a class="reference internal" href="../reference/dataset.html#frms6"><span class="std std-ref">FRMS6</span></a>, where tiles that fit
+the L3 cache can speed up subsequent processing steps. Requirements from the
+I/O method such as alignment and efficient block sizes are taken into account
+as well.</p>
+<p>The LiberTEM I/O back-end negotiates a tiling scheme between UDF and dataset
+that fulfills requirements from both UDF and dataset side as far as possible.
+However, it is not always guaranteed that the supplied data will fall within
+the requested limits.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0: </span>This guide is written for version 0.6.0</p>
+</div>
+<section id="high-level-overview">
+<h2>High-level overview<a class="headerlink" href="#high-level-overview" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Once per <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code>, the <code class="code docutils literal notranslate"><span class="pre">UDFRunner</span></code> negotiates a <code class="code docutils literal notranslate"><span class="pre">TilingScheme</span></code> using the
+<code class="code docutils literal notranslate"><span class="pre">Negotiator</span></code> class</p></li>
+<li><p>Data is split into partitions which are read from independently. Usually
+they split the navigation axis.</p></li>
+<li><p>The <code class="code docutils literal notranslate"><span class="pre">TilingScheme</span></code> is then passed on to <code class="code docutils literal notranslate"><span class="pre">Partition.get_tiles</span></code>,
+which then yields <code class="code docutils literal notranslate"><span class="pre">DataTiles</span></code> that match the given
+<code class="code docutils literal notranslate"><span class="pre">TilingScheme</span></code>. Note that the tiles MUST match the slicing in the signal dimensions, but
+the tile depth may differ from the scheme (for example, if partition depth isn’t evenly divisible by
+tile depth, or if there are other technical reasons the <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code> can’t return the given depth)</p></li>
+<li><dl class="simple">
+<dt>Under the hood, the <code class="code docutils literal notranslate"><span class="pre">Partition</span></code>…</dt><dd><ul>
+<li><p>instantiates an <code class="code docutils literal notranslate"><span class="pre">IOBackend</span></code>, which has a reference to a <code class="code docutils literal notranslate"><span class="pre">Decoder</span></code></p></li>
+<li><p>generates read ranges, which are passed on to the <code class="code docutils literal notranslate"><span class="pre">IOBackend</span></code></p></li>
+<li><p>delegates <code class="code docutils literal notranslate"><span class="pre">get_tiles</span></code> to the <code class="code docutils literal notranslate"><span class="pre">IOBackend</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>The I/O process can be influenced by passing a subclass
+of <code class="code docutils literal notranslate"><span class="pre">FileSet</span></code> to the <code class="code docutils literal notranslate"><span class="pre">Partition</span></code> and overriding <code class="code docutils literal notranslate"><span class="pre">FileSet.get_read_ranges</span></code>,
+implementing a <code class="code docutils literal notranslate"><span class="pre">Decoder</span></code>, or even completely overriding
+the <code class="code docutils literal notranslate"><span class="pre">Partition.get_tiles</span></code> functionality.</p></li>
+<li><p>There are currently three I/O backends implemented: <code class="code docutils literal notranslate"><span class="pre">MMapBackend</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">BufferedBackend</span></code>, and <code class="code docutils literal notranslate"><span class="pre">DirectBackend</span></code>
+which are useful for different storage media and purposes</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">MMapBackend.get_tiles</span></code> has two modes of operation: either it returns a reference to the
+tiles “straight” from the file, without copying or decoding, or it
+uses the read ranges and copies/decodes the tiles in smaller units.</p></li>
+<li><p>When reading the tiles “straight”, the read ranges are not used, instead
+only the slice information for each tile is used. That also means that this
+mode only works for very simple formats, when reading without a <code class="code docutils literal notranslate"><span class="pre">roi</span></code>
+and when not doing any <code class="code docutils literal notranslate"><span class="pre">dtype</span></code> conversion or decoding.</p></li>
+<li><p>For most formats, a <code class="code docutils literal notranslate"><span class="pre">sync_offset</span></code> can be specified, which can be used to
+correct for synchronization errors by inserting blank frames,
+or ignoring one or more frames, at the beginning or at the end of the data set.</p></li>
+</ul>
+<section id="read-ranges">
+<h3>Read ranges<a class="headerlink" href="#read-ranges" title="Permalink to this heading"></a></h3>
+<p>In <code class="code docutils literal notranslate"><span class="pre">FileSet.get_read_ranges</span></code>, the reading parameters (<code class="code docutils literal notranslate"><span class="pre">TilingScheme</span></code>, <code class="code docutils literal notranslate"><span class="pre">roi</span></code> etc.)
+are translated into one or more byte ranges (offset, length) for each tile.
+You can imagine it as translating pixel/element positions into byte offsets.</p>
+<p>Each range corresponds to a read operation on a single file, and with multiple
+read ranges per tile, ranges for a single tile can correspond to reads from multiple files.
+This is important when reading from a data set with many small files - we can
+still generate deep tiles for efficient processing.</p>
+<p>There are some built-in common parameters in <code class="code docutils literal notranslate"><span class="pre">FileSet</span></code>, like
+<code class="code docutils literal notranslate"><span class="pre">frame_header_bytes</span></code>, <code class="code docutils literal notranslate"><span class="pre">frame_footer_bytes</span></code>, which can be used to easily
+implement formats where the reading just needs to skip a few bytes for each
+frame header/footer.</p>
+<p>If you need more influence over how data is read, you can override
+<code class="code docutils literal notranslate"><span class="pre">FileSet.get_read_ranges</span></code> and return your own read ranges. You can use
+the <code class="code docutils literal notranslate"><span class="pre">make_get_read_ranges</span></code> function to re-use much of the tiling logic,
+or implement this yourself. Using <code class="code docutils literal notranslate"><span class="pre">make_get_read_ranges</span></code> you can either
+override just the <code class="code docutils literal notranslate"><span class="pre">px_to_bytes</span></code> part, or <code class="code docutils literal notranslate"><span class="pre">read_ranges_tile_block</span></code> for whole
+tile blocks. This is done by passing in njit-ed functions to <code class="code docutils literal notranslate"><span class="pre">make_get_read_ranges</span></code>.
+<code class="code docutils literal notranslate"><span class="pre">make_get_read_ranges</span></code> should only be called on module-level to enable
+caching of the numba compilation.</p>
+<p>Read ranges are generated as an array with the following shape:</p>
+<blockquote>
+<div><p><code class="code docutils literal notranslate"><span class="pre">(number_of_tiles,</span> <span class="pre">rr_per_tile,</span> <span class="pre">rr_num_entries)</span></code></p>
+</div></blockquote>
+<p><code class="code docutils literal notranslate"><span class="pre">rr_per_tile</span></code> here is the maximum number of read ranges per tile - there
+can be tiles that are smaller than this, for example at the end of a partition.
+<code class="code docutils literal notranslate"><span class="pre">rr_num_entries</span></code> is at least 3 and contains at least the values
+<code class="code docutils literal notranslate"><span class="pre">(file_idx,</span> <span class="pre">start,</span> <span class="pre">stop)</span></code>. This means to read <code class="code docutils literal notranslate"><span class="pre">stop</span> <span class="pre">-</span> <span class="pre">start</span></code>
+bytes, beginning at offset <code class="code docutils literal notranslate"><span class="pre">start</span></code>, from the file <code class="code docutils literal notranslate"><span class="pre">file_idx</span></code>
+in the corresponding <code class="code docutils literal notranslate"><span class="pre">FileSet</span></code>.</p>
+<p>Overriding <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code>s are free to add additional fields to the end, for
+example if the decoding functions need additional information.</p>
+<p>As an example when you would generate custom read ranges, have a look at the
+implementations for MIB, K2IS, and FRMS6 - they may not have a direct 1:1 mapping
+to a numpy <code class="code docutils literal notranslate"><span class="pre">dtype</span></code>, or the pixels may need to be re-ordered after decoding.</p>
+</section>
+</section>
+<section id="notes-for-implementing-a-dataset">
+<h2>Notes for implementing a <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a><a class="headerlink" href="#notes-for-implementing-a-dataset" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Read file header(s) in <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.initialize" title="libertem.io.dataset.base.DataSet.initialize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">initialize()</span></code></a> -
+make sure to do the actual I/O in a function dispatched via the
+<code class="code docutils literal notranslate"><span class="pre">JobExecutor</span></code> that is passed to <code class="code docutils literal notranslate"><span class="pre">initialize</span></code>.
+See also <a class="reference internal" href="../tips.html#os-mismatch"><span class="std std-ref">Platform-dependent code and remote executor</span></a> regarding platform-dependent code.</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.check_valid" title="libertem.io.dataset.base.DataSet.check_valid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">check_valid()</span></code></a> - this will
+be run on a worker node</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_msg_converter" title="libertem.io.dataset.base.DataSet.get_msg_converter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_msg_converter()</span></code></a> - the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">MessageConverter</span></code> class returned is responsible
+for parsing parameters passed to the Web API and converting them to a Python
+representation that can be passed to the
+<a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet" title="libertem.io.dataset.base.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a> constructor.</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_cache_key" title="libertem.io.dataset.base.DataSet.get_cache_key"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_cache_key()</span></code></a> - the cache
+key must be different for <code class="code docutils literal notranslate"><span class="pre">DataSet</span></code>s that return different data.</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_partitions" title="libertem.io.dataset.base.DataSet.get_partitions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_partitions()</span></code></a>. You may
+want to use the helper function
+<a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_slices" title="libertem.io.dataset.base.DataSet.get_slices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_slices()</span></code></a> to generate
+slices for a specified number of partitions.
+<a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_partitions" title="libertem.io.dataset.base.DataSet.get_partitions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_partitions()</span></code></a> should yield either
+<a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.BasePartition" title="libertem.io.dataset.base.BasePartition"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePartition</span></code></a> instances or instances of
+your own subclass (see below). The same is true for the
+<a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.FileSet" title="libertem.io.dataset.base.FileSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">FileSet</span></code></a> that is passed to each
+partition - you possibly have to implement your own subclass.</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_decoder" title="libertem.io.dataset.base.DataSet.get_decoder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_decoder()</span></code></a> to return
+an instance of <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.Decoder" title="libertem.io.dataset.base.Decoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></a>. Only needed if
+the data is saved in a data type that is not directly understood by numpy
+or numba. See below for details.</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.get_base_shape" title="libertem.io.dataset.base.DataSet.get_base_shape"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_base_shape()</span></code></a>. This
+is only needed if the data format imposes any constraints on how the data can be
+read in an efficient manner, for example if data is saved in blocks. The tileshape
+that is negotiated before reading will be a multiple of the base shape in
+all dimensions.</p></li>
+<li><p>Implement <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.DataSet.adjust_tileshape" title="libertem.io.dataset.base.DataSet.adjust_tileshape"><code class="xref py py-meth docutils literal notranslate"><span class="pre">adjust_tileshape()</span></code></a>. This
+is needed if you need to “veto” the generated tileshape, for example if your dataset
+has constraints that can’t be expressed by the base shape.</p></li>
+</ul>
+<section id="subclass-basepartition">
+<h3>Subclass <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.BasePartition" title="libertem.io.dataset.base.BasePartition"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePartition</span></code></a><a class="headerlink" href="#subclass-basepartition" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Override <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.BasePartition.get_tiles" title="libertem.io.dataset.base.BasePartition.get_tiles"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_tiles()</span></code></a> if you need to
+use completely custom I/O logic.</p></li>
+</ul>
+</section>
+<section id="implementing-a-decoder">
+<h3>Implementing a <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.Decoder" title="libertem.io.dataset.base.Decoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decoder</span></code></a><a class="headerlink" href="#implementing-a-decoder" title="Permalink to this heading"></a></h3>
+<p>This may be needed if the raw data is not directly supported
+by numpy or numba. Mostly your decoder will return a different
+<code class="code docutils literal notranslate"><span class="pre">decode</span></code> function in <a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.Decoder.get_decode" title="libertem.io.dataset.base.Decoder.get_decode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_decode()</span></code></a>.
+You can also return different decode functions, depending on the
+concrete data set you are currently reading. For example, this may be needed if there
+are different data representations generated by different detector modes.
+You can also instruct the <code class="code docutils literal notranslate"><span class="pre">IOBackend</span></code> to clear the read
+buffer before calling <code class="code docutils literal notranslate"><span class="pre">decode</span></code> by returning <code class="code docutils literal notranslate"><span class="pre">True</span></code> from
+<a class="reference internal" href="../reference/dataset.html#libertem.io.dataset.base.Decoder.do_clear" title="libertem.io.dataset.base.Decoder.do_clear"><code class="xref py py-meth docutils literal notranslate"><span class="pre">do_clear()</span></code></a>. This can be needed
+if different read ranges contribute to the same part of the output buffer
+and the <code class="code docutils literal notranslate"><span class="pre">decode</span></code> function accumulates into the buffer instead of slice-assigning.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">decode</span></code> function will be called for each read range that was
+generated by the <code class="code docutils literal notranslate"><span class="pre">get_read_ranges</span></code> method described above.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../architecture.html" class="btn btn-neutral float-left" title="Architecture" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="executors.html" class="btn btn-neutral float-right" title="LiberTEM executors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

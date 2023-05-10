@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.viz.base &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.viz.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.viz.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">colors</span><span class="p">,</span> <span class="n">cm</span>
+
+<span class="kn">from</span> <span class="nn">libertem.udf.base</span> <span class="kn">import</span> <span class="n">UDFRunner</span>
+
+<span class="c1"># Import here for backwards compatibility, refs #1031</span>
+<span class="kn">from</span> <span class="nn">libertem.common.viz</span> <span class="kn">import</span> <span class="n">encode_image</span>  <span class="c1"># NOQA: F401</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_norm</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">norm_cls</span><span class="o">=</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">vmin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">vmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">norm_cls</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">damage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">damage</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">damage</span> <span class="o">=</span> <span class="n">damage</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">damage</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">norm_cls</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># all-NaN or all-zero</span>
+
+    <span class="k">if</span> <span class="n">vmin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vmin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">damage</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">vmax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">damage</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">norm_cls</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="visualize_simple"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.visualize_simple">[docs]</a><span class="k">def</span> <span class="nf">visualize_simple</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logarithmic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize and visualize ``result`` with ``colormap`` and return the</span>
+<span class="sd">    resulting RGBA data as an array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    result : numpy.ndarray</span>
+<span class="sd">        2d array of intensity values</span>
+
+<span class="sd">    colormap : matplotlib colormap or None</span>
+<span class="sd">        colormap used for visualizing intensity values, defaults to ColormapCubehelix()</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    np.array</span>
+<span class="sd">        A numpy array of shape (Y, X, 4) containing RGBA data, suitable for</span>
+<span class="sd">        passing to `Image.fromarray` in PIL.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">logarithmic</span><span class="p">:</span>
+        <span class="c1"># Convert to the smallest dtype that supports subtractions</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">cnorm</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">LogNorm</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cnorm</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span>
+    <span class="k">if</span> <span class="n">colormap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">colormap</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">gist_earth</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="n">_get_norm</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">norm_cls</span><span class="o">=</span><span class="n">cnorm</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">)</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">normalized</span> <span class="o">=</span> <span class="n">norm</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,)))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">colored</span> <span class="o">=</span> <span class="n">colormap</span><span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="nb">bytes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">colored</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_plottable_2D_channels</span><span class="p">(</span><span class="n">buffers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">k</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">buf</span> <span class="ow">in</span> <span class="n">buffers</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="c1"># 2D data, removing axes of size 1</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+    <span class="p">]</span>
+
+
+<div class="viewcode-block" id="Live2DPlot"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Live2DPlot">[docs]</a><span class="k">class</span> <span class="nc">Live2DPlot</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base plotting class for interactive use. Please see the subclasses for</span>
+<span class="sd">    concrete details.</span>
+
+<span class="sd">    .. versionadded:: 0.7.0</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dataset : DataSet</span>
+<span class="sd">        The dataset on which the UDF will be run. This allows</span>
+<span class="sd">        to determine the shape of the plots for initialization.</span>
+<span class="sd">    udf : UDF</span>
+<span class="sd">        The UDF instance this plot is associated to. This needs to be</span>
+<span class="sd">        the same instance that is passed to</span>
+<span class="sd">        :meth:`~libertem.api.Context.run_udf`.</span>
+<span class="sd">    roi : numpy.ndarray or None</span>
+<span class="sd">        Region of interest (ROI) that the UDF will</span>
+<span class="sd">        be run on. This is necessary for UDFs where the `extra_shape`</span>
+<span class="sd">        parameter of result buffers is a function of the ROI, such as</span>
+<span class="sd">        :class:`~libertem.udf.raw.PickUDF`.</span>
+<span class="sd">    channel : misc</span>
+<span class="sd">        Indicate the channel to be plotted.</span>
+
+<span class="sd">        - :code:`None`: The first plottable (2D) channel of the UDF is plotted.</span>
+<span class="sd">        - :code:`str`: The UDF result buffer name that should be plotted.</span>
+<span class="sd">        - :code:`tuple(str, function(ndarray) -&gt; ndarray)`: The UDF result buffer name that</span>
+<span class="sd">          should be plotted together with a function that extracts a plottable result</span>
+<span class="sd">        - :code:`function(udf_result, damage) -&gt; (ndarray, damage)`: Function that derives a</span>
+<span class="sd">          plottable 2D ndarray and damage indicator from the full</span>
+<span class="sd">          UDF results and the processed nav space. See :ref:`plotting` for more details!</span>
+<span class="sd">    title : str</span>
+<span class="sd">        The plot title. By default UDF class name and channel name.</span>
+<span class="sd">    min_delta : float</span>
+<span class="sd">        Minimum time span in seconds between updates to reduce overheads for slow plotting.</span>
+<span class="sd">    udfresult : UDFResults, optional</span>
+<span class="sd">        UDF result to initialize the plot data and determine plot shape. If None (default),</span>
+<span class="sd">        this is determined using :meth:`~libertem.udf.base.UDFRunner.dry_run` on the dataset,</span>
+<span class="sd">        UDF and ROI. This parameter allows re-using buffers to avoid unnecessary dry runs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">udfresult</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">udfresult</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">udfresult</span> <span class="o">=</span> <span class="n">UDFRunner</span><span class="o">.</span><span class="n">dry_run</span><span class="p">([</span><span class="n">udf</span><span class="p">],</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="p">)</span>
+        <span class="n">eligible_channels</span> <span class="o">=</span> <span class="n">get_plottable_2D_channels</span><span class="p">(</span><span class="n">udfresult</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">channel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">eligible_channels</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No plottable 2D channel found for </span><span class="si">{</span><span class="n">udf</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="n">eligible_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">channel_title</span> <span class="o">=</span> <span class="n">channel</span>
+
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">channel</span><span class="p">):</span>
+            <span class="n">extract</span> <span class="o">=</span> <span class="n">channel</span>
+            <span class="n">channel_title</span> <span class="o">=</span> <span class="n">channel</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">channel</span><span class="p">,</span> <span class="n">func</span> <span class="o">=</span> <span class="n">channel</span>
+            <span class="k">if</span> <span class="n">channel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">udfresult</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;channel </span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2"> not found, have: </span><span class="si">{</span><span class="n">udfresult</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">kind</span> <span class="o">=</span> <span class="n">udfresult</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">channel</span><span class="p">]</span><span class="o">.</span><span class="n">kind</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;nav&#39;</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">udf_results</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="n">damage</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">udf_results</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">channel_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">extract</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">channel</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">eligible_channels</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;channel </span><span class="si">{}</span><span class="s2"> not found or not plottable, have: </span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">channel</span><span class="p">,</span> <span class="n">eligible_channels</span>
+                <span class="p">))</span>
+            <span class="n">channel_title</span> <span class="o">=</span> <span class="n">channel</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extract</span> <span class="o">=</span> <span class="n">extract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="n">channel</span>
+        <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">udf</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">channel_title</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">udfresult</span><span class="o">.</span><span class="n">buffers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">udfresult</span><span class="o">.</span><span class="n">damage</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">udf</span> <span class="o">=</span> <span class="n">udf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_update</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_delta</span> <span class="o">=</span> <span class="n">min_delta</span>
+
+<div class="viewcode-block" id="Live2DPlot.get_udf"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Live2DPlot.get_udf">[docs]</a>    <span class="k">def</span> <span class="nf">get_udf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the associated UDF instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">udf</span></div>
+
+<div class="viewcode-block" id="Live2DPlot.extract"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Live2DPlot.extract">[docs]</a>    <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extract plotting data from UDF result.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        udf_results : UDF result</span>
+<span class="sd">            (Partial) UDF result</span>
+
+<span class="sd">        damage : BufferWrapper</span>
+<span class="sd">            :class:`~libertem.common.buffers.BufferWraper` with :code:`kind=&#39;nav&#39;`</span>
+<span class="sd">            and :code:`dtype=bool` that indicates the area of the nav dimension that</span>
+<span class="sd">            has been processed by the UDF already.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (numpy.ndarray, damage)</span>
+<span class="sd">            It returns the data and damage of a UDF result buffer indicated by :code:`channel`</span>
+<span class="sd">            if that is a string, or a numpy.ndarray and damage derived from the UDF results by</span>
+<span class="sd">            calling :code:`channel` with this method&#39;s arguments if it is callable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">udf_results</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">channel</span><span class="p">]</span>
+            <span class="n">squeezed</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">buffer</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;nav&#39;</span><span class="p">:</span>
+                <span class="n">res_damage</span> <span class="o">=</span> <span class="n">damage</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res_damage</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">squeezed</span><span class="p">,</span> <span class="n">res_damage</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract</span><span class="p">(</span><span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Live2DPlot.new_data"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Live2DPlot.new_data">[docs]</a>    <span class="k">def</span> <span class="nf">new_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method is called with the raw `udf_results` any time a new</span>
+<span class="sd">        partition has finished processing.</span>
+
+<span class="sd">        The :code:`damage` parameter is filtered to only cover finite</span>
+<span class="sd">        values of :code:`self.data` and passed to :meth:`self.update`,</span>
+<span class="sd">        which should then be implemented by a subclass.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">t0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_update</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">force</span><span class="p">)</span> <span class="ow">and</span> <span class="n">delta</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_delta</span><span class="p">:</span>
+            <span class="k">return</span>  <span class="c1"># don&#39;t update plot if we recently updated</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">damage</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">udf_results</span><span class="p">,</span> <span class="n">damage</span><span class="p">)</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="c1"># duck typing &quot;array-like&quot; since damage can also be bool</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">damage</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
+            <span class="n">start_axis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">damage</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">stop_axis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="c1"># Reduce surplus axes, for example RGB plotting #1052</span>
+            <span class="k">if</span> <span class="n">stop_axis</span> <span class="o">&gt;</span> <span class="n">start_axis</span><span class="p">:</span>
+                <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">finite</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start_axis</span><span class="p">,</span> <span class="n">stop_axis</span><span class="p">)))</span>
+        <span class="n">damage</span> <span class="o">=</span> <span class="n">damage</span> <span class="o">&amp;</span> <span class="n">finite</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">damage</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="n">force</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_update</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> updated in </span><span class="si">%.3f</span><span class="s2"> seconds&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_update</span> <span class="o">-</span> <span class="n">t0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Live2DPlot.update"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Live2DPlot.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">damage</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the plot based on `self.data`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        damage : numpy.ndarray Boolean array with the shape of</span>
+<span class="sd">            :code:`self.data`. It is :code:`True` for all positions in</span>
+<span class="sd">            :code:`self.data` that contain finite values and have potentially</span>
+<span class="sd">            been touched by the UDF. This can be used to extract the correct</span>
+<span class="sd">            plot range by ignoring invalid buffer portions.</span>
+
+<span class="sd">        force : bool Force an update, disabling any throttling mechanisms</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Live2DPlot.display"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Live2DPlot.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show the plot, for example in the current Jupyter cell.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="Dummy2DPlot"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Dummy2DPlot">[docs]</a><span class="k">class</span> <span class="nc">Dummy2DPlot</span><span class="p">(</span><span class="n">Live2DPlot</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    No-op plot. This is useful for test and example code to not</span>
+<span class="sd">    attempt displaying :code:`matplotlib` plots in a headless environment</span>
+<span class="sd">    or during batch operation.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+<div class="viewcode-block" id="Dummy2DPlot.update"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Dummy2DPlot.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">damage</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Dummy2DPlot.display"><a class="viewcode-back" href="../../../reference/viz.html#libertem.viz.base.Dummy2DPlot.display">[docs]</a>    <span class="k">def</span> <span class="nf">display</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

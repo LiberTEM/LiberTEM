@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.analysis.gridmatching &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.analysis.gridmatching</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.analysis.gridmatching</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">libertem.utils</span> <span class="kn">import</span> <span class="n">calc_coords</span><span class="p">,</span> <span class="n">within_frame</span>
+
+
+<div class="viewcode-block" id="CorrelationResult"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.CorrelationResult">[docs]</a><span class="k">class</span> <span class="nc">CorrelationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Container class for the result of correlation-based refinement of peak</span>
+<span class="sd">    positions within a frame.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">refineds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">peak_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">peak_elevations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">refineds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">refineds</span> <span class="o">=</span> <span class="n">centers</span>
+        <span class="k">if</span> <span class="n">peak_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">peak_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">peak_elevations</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">peak_elevations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="p">[</span><span class="n">refineds</span><span class="p">,</span> <span class="n">peak_values</span><span class="p">,</span> <span class="n">peak_elevations</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centers</span> <span class="o">=</span> <span class="n">centers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refineds</span> <span class="o">=</span> <span class="n">refineds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_values</span> <span class="o">=</span> <span class="n">peak_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_elevations</span> <span class="o">=</span> <span class="n">peak_elevations</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centers</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PointSelection"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.PointSelection">[docs]</a><span class="k">class</span> <span class="nc">PointSelection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class that represents a subset of a correlation result.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    selector : numpy.ndarray</span>
+<span class="sd">        Boolean mask for all points in the correlation result, :code:`True` indicating</span>
+<span class="sd">        selected points.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">correlation_result</span><span class="p">:</span> <span class="n">CorrelationResult</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span> <span class="o">=</span> <span class="n">correlation_result</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">correlation_result</span><span class="o">.</span><span class="n">centers</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">correlation_result</span><span class="o">.</span><span class="n">centers</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selector</span> <span class="o">=</span> <span class="n">selector</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">centers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        numpy.ndarray : Integer centers (y, x) of correlation result masked with :attr:`selector`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span><span class="o">.</span><span class="n">centers</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">refineds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        numpy.ndarray : Refined float centers (y, x) of correlation result masked</span>
+<span class="sd">                        with :attr:`selector`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span><span class="o">.</span><span class="n">refineds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">peak_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        numpy.ndarray : Peak heights of correlation result masked with :attr:`selector`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span><span class="o">.</span><span class="n">peak_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">peak_elevations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        numpy.ndarray : Peak elevations of correlation result masked with :attr:`selector`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span><span class="o">.</span><span class="n">peak_elevations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">new_selector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="n">new_selector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">)</span>
+        <span class="n">new_selector</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">selector</span><span class="p">]</span> <span class="o">=</span> <span class="n">selector</span>
+        <span class="k">return</span> <span class="n">new_selector</span>
+
+    <span class="k">def</span> <span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span>
+        <span class="k">return</span> <span class="n">PointSelection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Matcher"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Matcher">[docs]</a><span class="k">class</span> <span class="nc">Matcher</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    The main job of the Matcher object is managing the matching parameters</span>
+<span class="sd">    and making them available for the various matching routines.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    tolerance : float</span>
+<span class="sd">        Position tolerance in px for peaks to be considered matches</span>
+<span class="sd">    min_weight : float</span>
+<span class="sd">        Minimum peak elevation of a peak to be considered for matching</span>
+<span class="sd">    min_match : int</span>
+<span class="sd">        Minimum number of matching peaks to be considered a match.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">min_weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">min_match</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">=</span> <span class="n">tolerance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_match</span> <span class="o">=</span> <span class="n">min_match</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_weight</span> <span class="o">=</span> <span class="n">min_weight</span>
+
+<div class="viewcode-block" id="Matcher.fastmatch"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Matcher.fastmatch">[docs]</a>    <span class="k">def</span> <span class="nf">fastmatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">refineds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">peak_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">peak_elevations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        This function creates a Match object from correlation_result and approximates</span>
+<span class="sd">        for zero point and lattice vectors a and b.</span>
+<span class="sd">        This function is much, much faster than the full match.</span>
+<span class="sd">        It works well to match a large number of point sets</span>
+<span class="sd">        that share the same lattice vectors, for example from a</span>
+<span class="sd">        larger grain or monocrystalline material. It rejects</span>
+<span class="sd">        random points or other lattices in the CorrelationResult,</span>
+<span class="sd">        provided they are not on near-integer positions of zero, a, b.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        centers : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks</span>
+<span class="sd">        refineds : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)</span>
+<span class="sd">        peak_values : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n,) with float maxima of correlation map of peaks</span>
+<span class="sd">        peak_elevations : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.</span>
+<span class="sd">            See :meth:`libertem_blobfinder.base.correlation.peak_elevation` for details.</span>
+<span class="sd">        zero : numpy.ndarray</span>
+<span class="sd">            The near approximate zero point as numpy array (y, x).</span>
+<span class="sd">        a,b : numpy.ndarray</span>
+<span class="sd">            The near approximate vectors a, b to match the grid as numpy arrays (y, x).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        Match</span>
+<span class="sd">            :class:`~libertem.analysis.gridmatching.Match` object with the optimized</span>
+<span class="sd">            matching result.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">CorrelationResult</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">refineds</span><span class="p">,</span> <span class="n">peak_values</span><span class="p">,</span> <span class="n">peak_elevations</span><span class="p">)</span>
+        <span class="n">filt</span> <span class="o">=</span> <span class="n">corr</span><span class="o">.</span><span class="n">peak_elevations</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_weight</span>
+
+        <span class="n">selection</span> <span class="o">=</span> <span class="n">PointSelection</span><span class="p">(</span><span class="n">correlation_result</span><span class="o">=</span><span class="n">corr</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">filt</span><span class="p">)</span>
+        <span class="c1"># We match twice because we might catch more peaks in the second run with better parameters</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">match1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_all</span><span class="p">(</span>
+                <span class="n">point_selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">match1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_match</span><span class="p">:</span>
+                <span class="n">match1</span> <span class="o">=</span> <span class="n">match1</span><span class="o">.</span><span class="n">weighted_optimize</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">(</span><span class="s2">&quot;Not enough matched points&quot;</span><span class="p">)</span>
+            <span class="n">match2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_match_all</span><span class="p">(</span>
+                <span class="n">point_selection</span><span class="o">=</span><span class="n">selection</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="n">match1</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">match1</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">match1</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">match2</span><span class="o">.</span><span class="n">weighted_optimize</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Match</span><span class="o">.</span><span class="n">invalid</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Matcher.affinematch"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Matcher.affinematch">[docs]</a>    <span class="k">def</span> <span class="nf">affinematch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">centers</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">refineds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">peak_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">peak_elevations</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        This function creates a Match object from correlation_result and</span>
+<span class="sd">        indices for all points. The indices can be non-integer and relative to any</span>
+<span class="sd">        base vectors zero, a, b, including virtual ones like zero=(0, 0), a=(1, 0), b=(0, 1).</span>
+
+<span class="sd">        Refined values for zero, a and b that match the correlated peaks are then derived.</span>
+
+<span class="sd">        This match method is very fast, can be robust against a distorted field of view and</span>
+<span class="sd">        works without determining a lattice. It matches the full CorrelationResult and does</span>
+<span class="sd">        not reject random points or other outliers.</span>
+
+<span class="sd">        It is mathematically equivalent to calculating</span>
+<span class="sd">        an affine transformation, as inspired by Giulio Guzzinati</span>
+<span class="sd">        https://arxiv.org/abs/1902.06979</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        centers : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n, 2) with integer centers (y, x) of peaks</span>
+<span class="sd">        refineds : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n, 2) with float centers (y, x) of peaks (subpixel refinement)</span>
+<span class="sd">        peak_values : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n,) with float maxima of correlation map of peaks</span>
+<span class="sd">        peak_values : numpy.ndarray</span>
+<span class="sd">            numpy.ndarray of shape (n,) with float elevation of correlation map of peaks.</span>
+<span class="sd">            See :meth:`libertem_blobfinder.base.correlation.peak_elevation` for details.</span>
+<span class="sd">        indices : numpy.ndarray</span>
+<span class="sd">            The indices assigned to each point of the CorrelationResult.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Match</span>
+<span class="sd">            :class:`~libertem.analysis.gridmatching.Match`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">CorrelationResult</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span> <span class="n">refineds</span><span class="p">,</span> <span class="n">peak_values</span><span class="p">,</span> <span class="n">peak_elevations</span><span class="p">)</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">Match</span><span class="p">(</span><span class="n">corr</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">weighted_optimize</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Match</span><span class="o">.</span><span class="n">invalid</span><span class="p">(</span><span class="n">corr</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_match_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_selection</span><span class="p">:</span> <span class="n">PointSelection</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Find points that can be generated from the lattice vectors with near integer indices</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        :class:`~libertem.analysis.gridmatching.Match`</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">get_indices</span><span class="p">(</span><span class="n">point_selection</span><span class="o">.</span><span class="n">refineds</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">rounded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="n">index_diffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">indices</span> <span class="o">-</span> <span class="n">rounded</span><span class="p">)</span>
+        <span class="c1"># We scale the difference from index dimension to the pixel dimension</span>
+        <span class="n">diffs</span> <span class="o">=</span> <span class="n">index_diffs</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+        <span class="c1"># We scale far-out differences with the square root of the indices</span>
+        <span class="c1"># to be more tolerant to small errors of a and b that result in large deviations</span>
+        <span class="c1"># in absolute position at high indices</span>
+        <span class="n">scaled_diffs</span> <span class="o">=</span> <span class="n">diffs</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">indices</span><span class="p">))</span><span class="o">**</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">scaled_diffs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">matched_selector</span> <span class="o">=</span> <span class="n">errors</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">tolerance</span>
+        <span class="n">matched_indices</span> <span class="o">=</span> <span class="n">rounded</span><span class="p">[</span><span class="n">matched_selector</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="c1"># remove the ones that weren&#39;t matched</span>
+        <span class="n">new_selector</span> <span class="o">=</span> <span class="n">point_selection</span><span class="o">.</span><span class="n">new_selector</span><span class="p">(</span><span class="n">matched_selector</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">Match</span><span class="o">.</span><span class="n">from_point_selection</span><span class="p">(</span>
+            <span class="n">point_selection</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">new_selector</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">matched_indices</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Match"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Match">[docs]</a><span class="k">class</span> <span class="nc">Match</span><span class="p">(</span><span class="n">PointSelection</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Class that represents a lattice match to a subset of a correlation result</span>
+
+<span class="sd">    The attributes are not guaranteed to be correct or sensible for the given lattice.</span>
+<span class="sd">    The methods :meth:`weighted_optimize` and :meth:`optimize`</span>
+<span class="sd">    calculate a derived :class:`Match` with a best fit of :attr:`zero`,</span>
+<span class="sd">    :attr:`a` and :attr:`b` based on the points and the indices.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    zero : numpy.ndarray</span>
+<span class="sd">        Declared zero point (y, x) of the lattice</span>
+<span class="sd">    a : numpy.ndarray</span>
+<span class="sd">        Declared &quot;a&quot; vector (y, x) of the lattice</span>
+<span class="sd">    b : numpy.ndarray</span>
+<span class="sd">        Declared &quot;b&quot; vector (y, x) of the lattice</span>
+<span class="sd">    indices : numpy.ndarray</span>
+<span class="sd">        List of indices (i, j) that are declared to express the matched points as linear combination</span>
+<span class="sd">        of vectors :code:`a` and :code:`b` with reference to :code:`zero`. The indices</span>
+<span class="sd">        can be integers or floats, and they can be precise or approximate, depending on the</span>
+<span class="sd">        matching method.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">correlation_result</span><span class="p">:</span> <span class="n">CorrelationResult</span><span class="p">,</span>
+            <span class="n">selector</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zero</span> <span class="o">=</span> <span class="n">zero</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">correlation_result</span><span class="p">,</span> <span class="n">selector</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s2">&quot;zero: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>\
+            <span class="s2">&quot;a: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span>\
+            <span class="s2">&quot;b: </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">result</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zero</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_point_selection</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">point_selection</span><span class="p">:</span> <span class="n">PointSelection</span><span class="p">,</span>
+            <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="n">point_selection</span><span class="o">.</span><span class="n">selector</span>
+        <span class="k">return</span> <span class="n">Match</span><span class="p">(</span>
+            <span class="n">correlation_result</span><span class="o">=</span><span class="n">point_selection</span><span class="o">.</span><span class="n">correlation_result</span><span class="p">,</span>
+            <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Match.invalid"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Match.invalid">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">invalid</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">correlation_result</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Match</span>
+<span class="sd">            A :class:`Match` instance with empty selector and all-&#39;nan&#39; attributes</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">nanvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">correlation_result</span><span class="o">=</span><span class="n">correlation_result</span><span class="p">,</span>
+            <span class="n">selector</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">correlation_result</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span>
+            <span class="n">zero</span><span class="o">=</span><span class="n">nanvec</span><span class="p">,</span>
+            <span class="n">a</span><span class="o">=</span><span class="n">nanvec</span><span class="p">,</span>
+            <span class="n">b</span><span class="o">=</span><span class="n">nanvec</span><span class="p">,</span>
+            <span class="n">indices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">isnan</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">])))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">calculated_refineds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        numpy.ndarray : Calculated peak positions based on lattice parameters and indices.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">calc_coords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Match.calc_coords"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Match.calc_coords">[docs]</a>    <span class="k">def</span> <span class="nf">calc_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">drop_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">frame_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Shorthand to calculate peak coordinates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        indices : numpy.ndarray</span>
+<span class="sd">            Indices to calculate coordinates for. Both an array of (y, x) pairs</span>
+<span class="sd">            and the output of np.mgrid are supported.</span>
+<span class="sd">        drop_zero : bool</span>
+<span class="sd">            Drop the zero order peak. This is important for virtual darkfield imaging.</span>
+<span class="sd">        frame_shape : Tuple[int, int]</span>
+<span class="sd">            If set, the peaks are filtered with :meth:`~libertem.analysis.gridmatching.within_frame`</span>
+<span class="sd">        r : float</span>
+<span class="sd">            Radius for :meth:`~libertem.analysis.gridmatching.within_frame`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            A list of (y, x) coordinate pairs for peaks</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">            If the shape of :code:`indices` is not as expected.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># Output of mgrid</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="c1"># List of (i, j) pairs</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Shape of indices is </span><span class="si">%s</span><span class="s2">, expected (n, 2) or (2, n, m)&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+
+        <span class="n">selector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">drop_zero</span><span class="p">:</span>
+            <span class="n">nz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">indices</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">selector</span> <span class="o">*=</span> <span class="n">nz</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">calc_coords</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">frame_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fy</span><span class="p">,</span> <span class="n">fx</span> <span class="o">=</span> <span class="n">frame_shape</span>
+            <span class="n">selector</span> <span class="o">*=</span> <span class="n">within_frame</span><span class="p">(</span><span class="n">peaks</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">fy</span><span class="p">,</span> <span class="n">fx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">peaks</span><span class="p">[</span><span class="n">selector</span><span class="p">]</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        float : Weighted average distance between calculated and given peak position.</span>
+<span class="sd">                numpy.float(&#39;inf&#39;) if match of length zero.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refineds</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculated_refineds</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">diff</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_elevations</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_elevations</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="k">def</span> <span class="nf">derive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">zero</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">zero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span>
+        <span class="k">if</span> <span class="n">selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">selector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selector</span>
+        <span class="k">return</span> <span class="n">Match</span><span class="p">(</span><span class="n">correlation_result</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation_result</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>
+            <span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">indices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Match.weighted_optimize"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Match.weighted_optimize">[docs]</a>    <span class="k">def</span> <span class="nf">weighted_optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Weighted least square optimization of :attr:`zero`, :attr:`a` and :attr:`b`</span>
+
+<span class="sd">        Optimization to match the given points and indices using :attr:`peak_elevation` as weight.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        Match</span>
+<span class="sd">            A new :class:`Match` instance with optimized :attr:`zero`, :attr:`a` and :attr:`b`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+
+<span class="sd">        np.linalg.LinAlgError</span>
+<span class="sd">            If the solver didn&#39;t find a solution.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1"># Following</span>
+        <span class="c1"># https://stackoverflow.com/questions/27128688/how-to-use-least-squares-with-weight-matrix-in-python</span>
+
+        <span class="c1"># We stack an index of 1 to the index list for the zero component</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices</span>
+        <span class="p">])</span>
+
+        <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_elevations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_elevations</span><span class="p">])</span>
+
+        <span class="n">Aw</span> <span class="o">=</span> <span class="n">indices</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_elevations</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
+        <span class="n">Bw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refineds</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
+            <span class="n">Aw</span><span class="p">,</span> <span class="n">Bw</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="c1"># (zero, a, b)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">(</span><span class="s2">&quot;Optimizing returned empty result&quot;</span><span class="p">)</span>
+        <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Match.optimize"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.Match.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Least square optimization of :attr:`zero`, :attr:`a` and :attr:`b`</span>
+
+<span class="sd">        Optimization to match the given points and indices.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        Match</span>
+<span class="sd">            A new :class:`Match` instance with optimized :attr:`zero`, :attr:`a` and :attr:`b`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+
+<span class="sd">        np.linalg.LinAlgError</span>
+<span class="sd">            If the solver didn&#39;t find a solution.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># We stack an index of 1 to the index list for the zero component</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices</span>
+        <span class="p">])</span>
+
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
+            <span class="n">indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">refineds</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># (zero, a, b)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">(</span><span class="s2">&quot;Optimizing returned empty result&quot;</span><span class="p">)</span>
+        <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">derive</span><span class="p">(</span><span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="get_indices"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.get_indices">[docs]</a><span class="k">def</span> <span class="nf">get_indices</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">zero</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Find indices to express each point as sum of lattice vectors from zero point</span>
+
+<span class="sd">    This could solve for arbitrarily many points, i.e. frame stacks instead of frame by frame</span>
+<span class="sd">    With that the algorithm could actually match entire frame collections at once.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">points</span> <span class="o">-</span> <span class="n">zero</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="get_transformation"><a class="viewcode-back" href="../../../reference/app/strain.html#libertem.analysis.gridmatching.get_transformation">[docs]</a><span class="k">def</span> <span class="nf">get_transformation</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">peaks</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weighs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Inspired by Giulio Guzzinati</span>
+<span class="sd">    https://arxiv.org/abs/1902.06979</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+
+    <span class="k">assert</span> <span class="n">ref</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">peaks</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">ref</span> <span class="o">-</span> <span class="n">center</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">),</span> <span class="mi">1</span><span class="p">))))</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">peaks</span> <span class="o">-</span> <span class="n">center</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">),</span> <span class="mi">1</span><span class="p">))))</span>
+
+    <span class="k">if</span> <span class="n">weighs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">weighs</span><span class="p">)</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">weighs</span><span class="p">,</span> <span class="n">weighs</span><span class="p">,</span> <span class="n">weighs</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">A</span> <span class="o">*=</span> <span class="n">W</span>
+        <span class="n">B</span> <span class="o">*=</span> <span class="n">W</span>
+
+    <span class="p">(</span><span class="n">fit</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fit</span></div>
+
+
+<span class="k">def</span> <span class="nf">do_transformation</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">peaks</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">peaks</span> <span class="o">-</span> <span class="n">center</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">peaks</span><span class="p">),</span> <span class="mi">1</span><span class="p">))))</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">matrix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">B</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">center</span>
+
+
+<span class="k">def</span> <span class="nf">find_center</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">diff</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Find neutral point: solve a*m = a</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">((</span><span class="n">matrix</span> <span class="o">-</span> <span class="n">diff</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

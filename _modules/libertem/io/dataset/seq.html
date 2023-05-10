@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.seq &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.seq</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.seq</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Based on the SEQ reader of the PIMS project, with the following license:</span>
+<span class="c1">#</span>
+<span class="c1">#    Copyright (c) 2013-2014 PIMS contributors</span>
+<span class="c1">#    https://github.com/soft-matter/pims</span>
+<span class="c1">#    All rights reserved</span>
+<span class="c1">#</span>
+<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c1"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c1">#     * Redistributions of source code must retain the above copyright</span>
+<span class="c1">#       notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#     * Redistributions in binary form must reproduce the above copyright</span>
+<span class="c1">#       notice, this list of conditions and the following disclaimer in the</span>
+<span class="c1">#       documentation and/or other materials provided with the distribution.</span>
+<span class="c1">#     * Neither the name of the soft-matter organization nor the</span>
+<span class="c1">#       names of its contributors may be used to endorse or promote products</span>
+<span class="c1">#       derived from this software without specific prior written permission.</span>
+<span class="c1">#</span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND</span>
+<span class="c1"># ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c1"># DISCLAIMED. IN NO EVENT SHALL &lt;COPYRIGHT HOLDER&gt; BE LIABLE FOR ANY</span>
+<span class="c1"># DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES</span>
+<span class="c1"># (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;</span>
+<span class="c1"># LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND</span>
+<span class="c1"># ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT</span>
+<span class="c1"># (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c1"># SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">defusedxml.ElementTree</span> <span class="k">as</span> <span class="nn">ET</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sparse</span>
+<span class="kn">from</span> <span class="nn">ncempy.io.mrc</span> <span class="kn">import</span> <span class="n">mrcReader</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common.math</span> <span class="kn">import</span> <span class="n">prod</span><span class="p">,</span> <span class="n">make_2D_square</span>
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FileSet</span><span class="p">,</span> <span class="n">DataSet</span><span class="p">,</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span> <span class="n">DataSetException</span><span class="p">,</span>
+    <span class="n">File</span><span class="p">,</span> <span class="n">IOBackend</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">libertem.io.corrections</span> <span class="kn">import</span> <span class="n">CorrectionSet</span>
+
+<span class="n">DWORD</span> <span class="o">=</span> <span class="s1">&#39;L&#39;</span>
+<span class="n">LONG</span> <span class="o">=</span> <span class="s1">&#39;l&#39;</span>
+<span class="n">DOUBLE</span> <span class="o">=</span> <span class="s1">&#39;d&#39;</span>
+<span class="n">USHORT</span> <span class="o">=</span> <span class="s1">&#39;H&#39;</span>
+
+<span class="n">HEADER_FIELDS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;magic&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;24s&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;header_size&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="s1">&#39;512s&#39;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;bit_depth&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;bit_depth_real&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;image_size_bytes&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;image_format&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;allocated_frames&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;origin&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;true_image_size&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;suggested_frame_rate&#39;</span><span class="p">,</span> <span class="n">DOUBLE</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;description_format&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;reference_frame&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;fixed_size&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;flags&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;bayer_pattern&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;time_offset_us&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;extended_header_size&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;compression_format&#39;</span><span class="p">,</span> <span class="n">DWORD</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;reference_time_s&#39;</span><span class="p">,</span> <span class="n">LONG</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;reference_time_ms&#39;</span><span class="p">,</span> <span class="n">USHORT</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;reference_time_us&#39;</span><span class="p">,</span> <span class="n">USHORT</span><span class="p">)</span>
+    <span class="c1"># More header values not implemented</span>
+<span class="p">]</span>
+
+<span class="n">HEADER_SIZE</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+    <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span> <span class="o">+</span> <span class="n">field</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">HEADER_FIELDS</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_read_header</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+        <span class="n">fh</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_unpack_header</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">HEADER_SIZE</span><span class="p">),</span> <span class="n">fields</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_unpack_header</span><span class="p">(</span><span class="n">header_bytes</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+    <span class="n">str_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">}</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">fmt</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+        <span class="n">header_part</span> <span class="o">=</span> <span class="n">header_bytes</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span>
+        <span class="n">val</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="n">_unpack_header_field</span><span class="p">(</span><span class="n">header_part</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">str_fields</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">_decode_str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="n">pos</span> <span class="o">+=</span> <span class="n">size</span>
+
+    <span class="k">return</span> <span class="n">tmp</span>
+
+
+<span class="k">def</span> <span class="nf">_unpack_header_field</span><span class="p">(</span><span class="n">header_part</span><span class="p">,</span> <span class="n">fs</span><span class="p">):</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span> <span class="o">+</span> <span class="n">fs</span><span class="p">)</span>
+    <span class="n">vals</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="n">header_part</span><span class="p">[:</span><span class="n">s</span><span class="o">.</span><span class="n">size</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">vals</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">size</span>
+
+
+<span class="k">def</span> <span class="nf">_decode_str</span><span class="p">(</span><span class="n">str_in</span><span class="p">):</span>
+    <span class="n">end_pos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">str_in</span><span class="p">)</span>
+    <span class="n">end_mark</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x00\x00</span><span class="s1">&#39;</span>
+    <span class="k">if</span> <span class="n">end_mark</span> <span class="ow">in</span> <span class="n">str_in</span><span class="p">:</span>
+        <span class="n">end_pos</span> <span class="o">=</span> <span class="n">str_in</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">end_mark</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">str_in</span><span class="p">[:</span><span class="n">end_pos</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf16&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_image_offset</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">8192</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1024</span>
+
+
+<span class="k">def</span> <span class="nf">xml_map_sizes</span><span class="p">(</span><span class="n">bad_pixel_maps</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the sizes and binning values of bad_pixel_maps</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bad_pixel_maps: node</span>
+<span class="sd">        all of the bad pixel map nodes from the root</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">map_sizes</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">size_map</span> <span class="ow">in</span> <span class="n">bad_pixel_maps</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;Binning&quot;</span> <span class="ow">in</span> <span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="p">:</span>
+            <span class="n">map_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;Columns&#39;</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;Rows&#39;</span><span class="p">]),</span>
+                              <span class="nb">int</span><span class="p">(</span><span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Binning&quot;</span><span class="p">])))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">map_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;Columns&#39;</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;Rows&#39;</span><span class="p">]),</span>
+                              <span class="nb">int</span><span class="p">(</span><span class="n">size_map</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Binning&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))))</span>
+    <span class="n">map_rearrange</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">map_sizes</span><span class="p">)</span>
+    <span class="n">xy_map_sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">map_rearrange</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xy_map_sizes</span><span class="p">,</span> <span class="n">map_sizes</span>
+
+
+<span class="k">def</span> <span class="nf">xml_unbinned_map_maker</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns two list of unbinned sizes(rows and cols) if the size was binned</span>
+<span class="sd">    return 0 in the list in its place</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xy_map_sizes: list of tuple</span>
+<span class="sd">        bad pixel maps sizes separated by row and col</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unbinned_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unbinned_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">map_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="k">if</span> <span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">map_ind</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">unbinned_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">map_ind</span><span class="p">])</span>
+            <span class="n">unbinned_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">map_ind</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unbinned_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">unbinned_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unbinned_x</span><span class="p">,</span> <span class="n">unbinned_y</span>
+
+
+<span class="k">def</span> <span class="nf">xml_binned_map_maker</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns two list of binned sizes(rows and cols) if the size was not binned</span>
+<span class="sd">    return 0 in the list in its place</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xy_map_sizes: list of tuple</span>
+<span class="sd">        bad pixel maps sizes separated by row and col</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unbinned_x</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unbinned_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">map_ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="k">if</span> <span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="n">map_ind</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">unbinned_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">map_ind</span><span class="p">])</span>
+            <span class="n">unbinned_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">map_ind</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">unbinned_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">unbinned_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unbinned_x</span><span class="p">,</span> <span class="n">unbinned_y</span>
+
+
+<span class="k">def</span> <span class="nf">xml_map_index_selector</span><span class="p">(</span><span class="n">used_y</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the bad pixel maps  index with the largest column count</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    used_y: list</span>
+<span class="sd">        list of either binned or unbinned y coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">max_y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">used_y</span><span class="p">)</span>
+
+    <span class="n">map_index</span> <span class="o">=</span> <span class="n">used_y</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">max_y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">map_index</span>
+
+
+<span class="k">def</span> <span class="nf">xml_defect_coord_extractor</span><span class="p">(</span><span class="n">bad_pixel_map</span><span class="p">,</span> <span class="n">map_index</span><span class="p">,</span> <span class="n">map_sizes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns the chosen bad pixel map&#39;s defects</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bad_pixel_map: node</span>
+<span class="sd">        the xml file&#39;s root node</span>
+<span class="sd">    map_index: int</span>
+<span class="sd">        the index of the correct bad pixel map</span>
+<span class="sd">    map_sizes: list of tuples</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">excluded_rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">excluded_cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">excluded_pixels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">defect</span> <span class="ow">in</span> <span class="n">bad_pixel_map</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;Defect&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">defect_attrib_key</span> <span class="o">=</span> <span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;Rows&quot;</span> <span class="ow">in</span> <span class="n">defect_attrib_key</span><span class="p">:</span>
+                <span class="n">split</span> <span class="o">=</span> <span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Rows&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                <span class="n">excluded_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">split</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;Row&quot;</span> <span class="ow">in</span> <span class="n">defect_attrib_key</span><span class="p">:</span>
+                <span class="n">excluded_rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Row&quot;</span><span class="p">]])</span>
+
+            <span class="k">if</span> <span class="s2">&quot;Columns&quot;</span> <span class="ow">in</span> <span class="n">defect_attrib_key</span><span class="p">:</span>
+                <span class="n">split</span> <span class="o">=</span> <span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Columns&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                <span class="n">excluded_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">split</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;Column&quot;</span> <span class="ow">in</span> <span class="n">defect_attrib_key</span><span class="p">:</span>
+                <span class="n">excluded_cols</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Column&quot;</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">excluded_pixels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Column&quot;</span><span class="p">],</span> <span class="n">defect</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;Row&quot;</span><span class="p">]])</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">excluded_rows</span><span class="p">,</span>
+            <span class="s2">&quot;cols&quot;</span><span class="p">:</span> <span class="n">excluded_cols</span><span class="p">,</span>
+            <span class="s2">&quot;pixels&quot;</span><span class="p">:</span> <span class="n">excluded_pixels</span><span class="p">,</span>
+            <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">map_sizes</span><span class="p">[</span><span class="n">map_index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">map_sizes</span><span class="p">[</span><span class="n">map_index</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+            <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">xml_defect_data_extractor</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root: node</span>
+<span class="sd">        the xml file&#39;s root node</span>
+<span class="sd">    metadata: dictionary</span>
+<span class="sd">        the content of the metadata file as a dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bad_pixel_maps</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;.//BadPixelMap&#39;</span><span class="p">)</span>
+    <span class="n">xy_size</span><span class="p">,</span> <span class="n">map_sizes</span> <span class="o">=</span> <span class="n">xml_map_sizes</span><span class="p">(</span><span class="n">bad_pixel_maps</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;HardwareBinning&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">used_x</span><span class="p">,</span> <span class="n">used_y</span> <span class="o">=</span> <span class="n">xml_unbinned_map_maker</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="o">=</span><span class="n">xy_size</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">used_x</span><span class="p">,</span> <span class="n">used_y</span> <span class="o">=</span> <span class="n">xml_binned_map_maker</span><span class="p">(</span><span class="n">xy_map_sizes</span><span class="o">=</span><span class="n">xy_size</span><span class="p">)</span>
+    <span class="n">map_index</span> <span class="o">=</span> <span class="n">xml_map_index_selector</span><span class="p">(</span><span class="n">used_y</span><span class="p">)</span>
+    <span class="n">defect_dict</span> <span class="o">=</span> <span class="n">xml_defect_coord_extractor</span><span class="p">(</span><span class="n">bad_pixel_maps</span><span class="p">[</span><span class="n">map_index</span><span class="p">],</span> <span class="n">map_index</span><span class="p">,</span> <span class="n">map_sizes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">defect_dict</span>
+
+
+<span class="k">def</span> <span class="nf">bin_array2d</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">binning</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a: np array</span>
+<span class="sd">    binning: int</span>
+<span class="sd">        the times we want to bin the array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">sxc</span> <span class="o">=</span> <span class="n">sx</span> <span class="o">//</span> <span class="n">binning</span> <span class="o">*</span> <span class="n">binning</span>
+    <span class="n">syc</span> <span class="o">=</span> <span class="n">sy</span> <span class="o">//</span> <span class="n">binning</span> <span class="o">*</span> <span class="n">binning</span>
+    <span class="c1"># crop:</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="n">sxc</span><span class="p">,</span> <span class="p">:</span><span class="n">syc</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ac</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ac</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">binning</span><span class="p">,</span> <span class="n">binning</span><span class="p">,</span>
+                      <span class="n">ac</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">binning</span><span class="p">,</span> <span class="n">binning</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">array_cropping</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">start_size</span><span class="p">,</span> <span class="n">req_size</span><span class="p">,</span> <span class="n">offsets</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    returns a crop from the original array</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    arr: np array</span>
+<span class="sd">        the array we will make the changes on</span>
+<span class="sd">    start_size: tuple</span>
+<span class="sd">        the size of the original array</span>
+<span class="sd">    req_size: tuple</span>
+<span class="sd">        the size we want to crop to</span>
+<span class="sd">    offsets: tuple</span>
+<span class="sd">        the top left coord of the crop</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">arr</span>
+    <span class="k">if</span> <span class="n">offsets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">req_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">start_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">offsets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">req_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">start_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">req_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">req_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">req_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">req_size</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">offsets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="n">req_y</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">offsets</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">req_x</span>
+        <span class="n">ac</span> <span class="o">=</span> <span class="n">ac</span><span class="p">[(</span><span class="n">a</span> <span class="o">-</span> <span class="n">req_y</span><span class="p">):(</span><span class="n">a</span> <span class="o">+</span> <span class="n">req_y</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">req_x</span><span class="p">):(</span><span class="n">b</span> <span class="o">+</span> <span class="n">req_x</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">ac</span>
+
+
+<span class="k">def</span> <span class="nf">xml_generate_map_size</span><span class="p">(</span><span class="n">exc_rows</span><span class="p">,</span> <span class="n">exc_cols</span><span class="p">,</span> <span class="n">exc_pix</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function will be responsible for generating new size based on the parameters.</span>
+<span class="sd">    returns an np array with the excluded pixels as True</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    exc_rows: list of lists</span>
+<span class="sd">        list with the excluded rows as lists which length is 1 if its a single row</span>
+<span class="sd">        and two if its an interval of rows</span>
+<span class="sd">    exc_cols: list of lists</span>
+<span class="sd">    exc_pix: list of lists</span>
+<span class="sd">    size: tuple</span>
+<span class="sd">        selected bad pixel maps size</span>
+<span class="sd">    metadata: dictionary</span>
+<span class="sd">        the metadata where we specify the image&#39;s parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">required_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;UnbinnedFrameSizeY&quot;</span><span class="p">],</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;UnbinnedFrameSizeX&quot;</span><span class="p">])</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;OffsetY&quot;</span><span class="p">],</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;OffsetX&quot;</span><span class="p">])</span>
+    <span class="n">bin_value</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;HardwareBinning&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">bin_value</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">required_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">required_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">required_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="p">(</span><span class="n">offsets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">offsets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">dummy_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">exc_rows</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">dummy_m</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dummy_m</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">exc_cols</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">dummy_m</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dummy_m</span><span class="p">[:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span><span class="nb">int</span><span class="p">(</span><span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">pix</span> <span class="ow">in</span> <span class="n">exc_pix</span><span class="p">:</span>
+        <span class="n">dummy_m</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">pix</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">pix</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">cropped</span> <span class="o">=</span> <span class="n">array_cropping</span><span class="p">(</span><span class="n">dummy_m</span><span class="p">,</span> <span class="n">start_size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">req_size</span><span class="o">=</span><span class="n">required_size</span><span class="p">,</span> <span class="n">offsets</span><span class="o">=</span><span class="n">offsets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cropped</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">xml_processing</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">metadata_dict</span><span class="p">):</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="n">xml_defect_data_extractor</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">metadata_dict</span><span class="p">)</span>
+    <span class="n">coord</span> <span class="o">=</span> <span class="n">xml_generate_map_size</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;rows&quot;</span><span class="p">],</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;cols&quot;</span><span class="p">],</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;pixels&quot;</span><span class="p">],</span>
+                                  <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">],</span> <span class="n">metadata_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sparse</span><span class="o">.</span><span class="n">COO</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_load_xml_from_string</span><span class="p">(</span><span class="n">xml</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xml_processing</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SEQDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/SEQDatasetParams.schema.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;SEQDatasetParams&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;SEQ&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;io_backend&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="n">IOBackend</span><span class="o">.</span><span class="n">get_supported</span><span class="p">(),</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;nav_shape&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;nav_shape&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="s2">&quot;sig_shape&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sig_shape&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;sync_offset&quot;</span> <span class="ow">in</span> <span class="n">raw_data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;sync_offset&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">SEQFileSet</span><span class="p">(</span><span class="n">FileSet</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="SEQDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.seq.SEQDataSet">[docs]</a><span class="k">class</span> <span class="nc">SEQDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read data from Norpix SEQ files.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; ds = ctx.load(&quot;seq&quot;, path=&quot;/path/to/file.seq&quot;, nav_shape=(1024, 1024))  # doctest: +SKIP</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    path</span>
+<span class="sd">        Path to the .seq file</span>
+<span class="sd">    nav_shape: tuple of int</span>
+<span class="sd">        A n-tuple that specifies the size of the navigation region ((y, x), but</span>
+<span class="sd">        can also be of length 1 for example for a line scan, or length 3 for</span>
+<span class="sd">        a data cube, for example)</span>
+<span class="sd">    sig_shape: tuple of int, optional</span>
+<span class="sd">        Signal/detector size (height, width)</span>
+<span class="sd">    sync_offset: int, optional</span>
+<span class="sd">        If positive, number of frames to skip from start.</span>
+<span class="sd">        If negative, number of blank frames to insert at start.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+
+<span class="sd">    Dark and gain reference are loaded from MRC files with the same root as the</span>
+<span class="sd">    SEQ file and the extensions :code:`.dark.mrc` and :code:`.gain.mrc`, i.e.</span>
+<span class="sd">    :code:`/path/to/file.dark.mrc` and :code:`/path/to/file.gain.mrc` if they are present.</span>
+
+<span class="sd">    .. versionadded:: 0.8.0</span>
+
+<span class="sd">    Dead pixels are read from an XML file with the same root as the</span>
+<span class="sd">    SEQ file and the extension :code:`.Config.Metadata.xml`, i.e.</span>
+<span class="sd">    :code:`/path/to/file.Config.Metadata.xml` in the above example if both this file and</span>
+<span class="sd">    :code:`/path/to/file.metadata` are present.</span>
+
+<span class="sd">    See :ref:`corrections` for more information on how to change or disable corrections.</span>
+
+<span class="sd">    FIXME find public documentation of the XML format and dark/gain maps.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">scan_size</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nav_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">sig_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sync_offset</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="c1"># There might be &#39;.seq.seq&#39; and &#39;.seq&#39; in the wild</span>
+        <span class="c1"># See https://github.com/LiberTEM/LiberTEM/issues/1120</span>
+        <span class="c1"># We first try if &#39;.seq.seq&#39; matches, then &#39;.seq&#39;</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">name2</span><span class="p">,</span> <span class="n">ext2</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;.seq&#39;</span> <span class="ow">and</span> <span class="n">ext2</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;.seq&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">=</span> <span class="n">name2</span>
+        <span class="k">elif</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;.seq&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">nav_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">nav_shape</span> <span class="k">else</span> <span class="n">nav_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sig_shape</span><span class="p">)</span> <span class="k">if</span> <span class="n">sig_shape</span> <span class="k">else</span> <span class="n">sig_shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span> <span class="o">=</span> <span class="n">sync_offset</span>
+        <span class="c1"># handle backwards-compatability:</span>
+        <span class="k">if</span> <span class="n">scan_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;scan_size argument is deprecated. please specify nav_shape instead&quot;</span><span class="p">,</span>
+                <span class="ne">FutureWarning</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">nav_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot specify both scan_size and nav_shape&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">scan_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;missing 1 required argument: &#39;nav_shape&#39;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_footer_size</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dark</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gain</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excluded_pixels</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_do_initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">_read_header</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span> <span class="n">HEADER_FIELDS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_offset</span> <span class="o">=</span> <span class="n">_get_image_offset</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;version&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># StreamPix version 6</span>
+            <span class="c1"># Timestamp = 4-byte unsigned long + 2-byte unsigned short (ms)</span>
+            <span class="c1">#   + 2-byte unsigned short (us)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_timestamp_micro</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Older versions</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_timestamp_micro</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="s1">&#39;uint</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;bit_depth&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;unsupported bit depth: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;bit_depth&#39;</span><span class="p">])</span>
+        <span class="n">frame_size_bytes</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_footer_size</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;true_image_size&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">frame_size_bytes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_filesize</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_offset</span><span class="p">)</span> <span class="o">/</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;true_image_size&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span> <span class="o">!=</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span>
+                <span class="s2">&quot;sig_shape must be of size: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sync_offset_info</span><span class="p">()</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">header</span><span class="p">,</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_load_dark_gain</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_maybe_load_mrc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="n">mrcReader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_load_xml_from_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">xml_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">+</span> <span class="s2">&quot;.seq.Config.Metadata.xml&quot;</span>
+        <span class="n">meta_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">+</span> <span class="s2">&quot;.seq.metadata&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">xml_path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">meta_path</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tree</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">xml_path</span><span class="p">)</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">meta_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">met</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">metdata_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;DEMetadataSize&#39;</span><span class="p">,</span> <span class="s1">&#39;DEMetadataVersion&#39;</span><span class="p">,</span> <span class="s1">&#39;UnbinnedFrameSizeX&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;UnbinnedFrameSizeY&#39;</span><span class="p">,</span> <span class="s1">&#39;OffsetX&#39;</span><span class="p">,</span> <span class="s1">&#39;OffsetY&#39;</span><span class="p">,</span> <span class="s1">&#39;HardwareBinning&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Bitmode&#39;</span><span class="p">,</span> <span class="s1">&#39;FrameRate&#39;</span><span class="p">,</span> <span class="s1">&#39;RotationMode&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;FlipMode&#39;</span><span class="p">,</span> <span class="s1">&#39;OkraMode&#39;</span><span class="p">]</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">metdata_keys</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s1">&#39;iiiiiiiiiii?&#39;</span><span class="p">,</span> <span class="n">met</span><span class="p">,</span> <span class="mi">282</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="n">xml_processing</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_maybe_load_dark_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dark</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_load_mrc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">+</span> <span class="s2">&quot;.seq.dark.mrc&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_load_mrc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_basename</span> <span class="o">+</span> <span class="s2">&quot;.seq.gain.mrc&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_excluded_pixels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_xml_from_file</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_correction_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CorrectionSet</span><span class="p">(</span>
+            <span class="n">dark</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dark</span><span class="p">,</span>
+            <span class="n">gain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gain</span><span class="p">,</span>
+            <span class="n">excluded_pixels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_excluded_pixels</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_initialize</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span>
+        <span class="k">return</span> <span class="p">[</span>
+                   <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)}</span>
+                   <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+               <span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
+                   <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Footer size&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_footer_size</span><span class="p">)},</span>
+                   <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Dark frame included&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dark</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)},</span>
+                   <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Gain map included&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)},</span>
+               <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SEQDatasetParams</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_do_detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">_read_header</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">HEADER_FIELDS</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;magic&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0xFEED</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">image_offset</span> <span class="o">=</span> <span class="n">_get_image_offset</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+            <span class="n">image_count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">filesize</span> <span class="o">-</span> <span class="n">image_offset</span><span class="p">)</span> <span class="o">/</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;true_image_size&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="n">sig_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+                    <span class="s2">&quot;nav_shape&quot;</span><span class="p">:</span> <span class="n">make_2D_square</span><span class="p">((</span><span class="n">image_count</span><span class="p">,)),</span>
+                    <span class="s2">&quot;sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;info&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;image_count&quot;</span><span class="p">:</span> <span class="n">image_count</span><span class="p">,</span>
+                    <span class="s2">&quot;native_sig_shape&quot;</span><span class="p">:</span> <span class="n">sig_shape</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">detect_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">executor</span><span class="o">.</span><span class="n">run_function</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_do_detect_params</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_supported_extensions</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;seq&quot;</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SEQFileSet</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">File</span><span class="p">(</span>
+                <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">,</span>
+                <span class="n">frame_footer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_footer_size</span><span class="p">,</span>
+                <span class="n">frame_header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">file_header</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image_offset</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">],</span> <span class="n">frame_footer_bytes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_footer_size</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;magic&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0xFEED</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;The format of this .seq file is unrecognized&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;compression_format&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Only uncompressed images are supported in .seq files&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">[</span><span class="s1">&#39;image_format&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Non-monochrome images are not supported&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_cache_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+            <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="s2">&quot;sync_offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_offset</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">BasePartition</span><span class="p">(</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;SEQDataSet of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&gt;&quot;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

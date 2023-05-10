@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User-defined functions (UDFs) &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="LiberTEM UDFs" href="udf/introduction.html" />
+    <link rel="prev" title="Python API" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User-defined functions (UDFs)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-notebook">Example notebook</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="udf/introduction.html">LiberTEM UDFs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#more-about-udfs">More about UDFs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="udf/basic.html">Implementing a UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/basic.html#running-udfs">Running UDFs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/basic.html#live-plotting">Live Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/basic.html#partial-results">Partial results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/basic.html#asynchronous-execution">Asynchronous execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html">User-defined functions: advanced topics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#tiled-processing">Tiled processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#partition-processing">Partition processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#precedence">Precedence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#post-processing-of-partition-results">Post-processing of partition results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#post-processing-after-merging">Post-processing after merging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#pre-processing">Pre-processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#aux-data">AUX data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#task-data">Task data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#meta-information">Meta information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#preferred-input-dtype">Preferred input dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#cupy-support">CuPy support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#sparse-arrays">Sparse arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#threading">Threading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#auto-udf">Auto UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/advanced.html#one-step-merge-merge-all">One-step merge (<cite>merge_all</cite>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/profiling.html">Profiling UDFs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">User-defined functions (UDFs)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/udf.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="user-defined-functions-udfs">
+<span id="user-defined-functions"></span><h1>User-defined functions (UDFs)<a class="headerlink" href="#user-defined-functions-udfs" title="Permalink to this heading"></a></h1>
+<p>A common case for analyzing big EM data sets is running a reduction operation
+on each individual detector frame or other small subsets of a data set and then
+combining the results of these reductions to form the complete result. This should
+cover a wide range of use cases, from simple mathematical operations, for
+example statistics, to complex image processing and analysis, like feature extraction.</p>
+<p>The user-defined functions (UDF) interface of LiberTEM allows you to define and run your
+own reduction functions easily, without having to worry about parallelizing,
+I/O, or the details of buffer management. This corresponds to
+a simplified <a class="reference external" href="https://en.wikipedia.org/wiki/MapReduce">MapReduce programming model</a>,
+where the intermediate re-keying and shuffling step is omitted.</p>
+<p>LiberTEM ships with some <a class="reference internal" href="reference/udf.html#utilify-udfs"><span class="std std-ref">utility UDFs</span></a> that implement
+general functionality:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="reference/udf.html#sum-udf"><span class="std std-ref">Sum</span></a></p></li>
+<li><p><a class="reference internal" href="reference/udf.html#logsum-udf"><span class="std std-ref">Logsum</span></a></p></li>
+<li><p><a class="reference internal" href="reference/udf.html#stddev-udf"><span class="std std-ref">StdDev</span></a></p></li>
+<li><p><a class="reference internal" href="reference/udf.html#sumsig-udf"><span class="std std-ref">SumSig</span></a></p></li>
+<li><p><a class="reference internal" href="reference/udf.html#masks-udf"><span class="std std-ref">Masks and other linear operations</span></a></p></li>
+<li><p><a class="reference internal" href="reference/udf.html#pick-udf"><span class="std std-ref">Pick</span></a></p></li>
+</ul>
+<p>Also, LiberTEM includes <a class="reference internal" href="applications.html#applications"><span class="std std-ref">ready-to-use application-specific UDFs</span></a>.</p>
+<p>It can be helpful to review <a class="reference internal" href="concepts.html#concepts"><span class="std std-ref">some general concepts</span></a> before
+reading the following sections.</p>
+<section id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h2>
+<p>The easiest way of running a function over your data is using the
+<a class="reference internal" href="reference/api.html#libertem.api.Context.map" title="libertem.api.Context.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code></a> method of the LiberTEM API. For example,
+to calculate the sum over the last signal axis:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+   <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+   <span class="n">f</span><span class="o">=</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="c1"># access the result as NumPy array:</span>
+<span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="c1"># or, alternatively:</span>
+<span class="n">result</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+<p>The function specified via the <code class="code docutils literal notranslate"><span class="pre">f</span></code> parameter is called for each frame / diffraction pattern.
+See <a class="reference internal" href="udf/advanced.html#auto-udf"><span class="std std-ref">Auto UDF</span></a> for more details. This is most suited for simple functions; once you have
+parameters or want to re-use some data across function calls, you should create a
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF" title="libertem.udf.base.UDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">UDF</span></code></a> subclass instead.</p>
+<p><a class="reference external" href="https://docs.python.org/3.10/library/functools.html#functools.partial" title="(in Python v3.10)"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.partial()</span></code></a> is a higher-order function that allows to create a new
+function by wrapping an existing function and passing additional parameters to
+it. In this case, the resulting call to <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.sum.html#numpy.sum" title="(in NumPy v1.24)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.sum()</span></code></a> within
+<code class="code docutils literal notranslate"><span class="pre">ctx.map(...)</span></code> is <code class="code docutils literal notranslate"><span class="pre">numpy.sum(frame,</span> <span class="pre">axis=-1)</span></code>. See
+<a class="reference external" href="https://docs.python.org/3/library/functools.html#functools.partial">https://docs.python.org/3/library/functools.html#functools.partial</a> for more
+details.</p>
+</section>
+<section id="example-notebook">
+<h2>Example notebook<a class="headerlink" href="#example-notebook" title="Permalink to this heading"></a></h2>
+<p>See the following notebook for a demonstration of basic UDF functionality. It
+can be downloaded <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/blob/master/examples/Introduction%20to%20UDFs.ipynb">from our example collection on GitHub</a>.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="udf/introduction.html">LiberTEM UDFs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#Specifying-the-dataset">Specifying the dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#Standard-analyses:-virtual-detector">Standard analyses: virtual detector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#Simple-UDF-definition">Simple UDF definition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#extra_shape:-more-than-one-result-per-scan-position"><code class="docutils literal notranslate"><span class="pre">extra_shape</span></code>: more than one result per scan position</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#kind=%22sig%22-buffers,-merge-functions">kind=”sig” buffers, merge functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#Region-of-interest">Region of interest</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="udf/introduction.html#Results-with-ROI-applied">Results with ROI applied</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="udf/introduction.html#Parameters">Parameters</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="how-udfs-works">
+<span id="how-udfs-work"></span><h2>How UDFs works<a class="headerlink" href="#how-udfs-works" title="Permalink to this heading"></a></h2>
+<a class="reference internal image-reference" href="_images/udf-diagram.svg"><img alt="Diagram with the data flow of a UDF." src="_images/udf-diagram.svg" width="450" /></a>
+<p>To allow for parallel processing, data is first divided into partitions along the navigation axes,
+which are worked on by different worker processes. Then, for each frame of a partition, a
+user-defined function <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFFrameMixin.process_frame" title="libertem.udf.base.UDFFrameMixin.process_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_frame()</span></code></a> is called,
+which is free to do any imaginable processing.</p>
+<p>As a result of splitting the data set into partitions, the results then need to be merged
+back together. This is accomplished by calling the <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDF.merge" title="libertem.udf.base.UDF.merge"><code class="xref py py-meth docutils literal notranslate"><span class="pre">merge()</span></code></a> method
+after all frames of a partition are processed.</p>
+<p>In pseudocode, data is processed in the following way:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">empty</span>
+<span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="n">get_partitions</span><span class="p">(</span><span class="n">dataset</span><span class="p">):</span>
+   <span class="n">partition_result</span> <span class="o">=</span> <span class="n">empty</span>
+   <span class="k">for</span> <span class="n">frame</span><span class="p">,</span> <span class="n">frame_slice</span> <span class="ow">in</span> <span class="n">get_frames</span><span class="p">(</span><span class="n">partition</span><span class="p">):</span>
+      <span class="n">frame_result</span> <span class="o">=</span> <span class="n">process_frame</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+      <span class="n">partition_result</span><span class="p">[</span><span class="n">frame_slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame_result</span>
+   <span class="n">merge</span><span class="p">(</span><span class="n">dest</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">partition_result</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In reality, the loop over partitions is run in parallel using multiple worker processes,
+potentially <a class="reference internal" href="architecture.html#architecture"><span class="std std-ref">on multiple computers</span></a>. The loop over individual frames is
+run in the worker processes, and the merge function is run in the main process, accumulating the
+results, every time the results for a partition are available.</p>
+<p>In addition to <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFFrameMixin.process_frame" title="libertem.udf.base.UDFFrameMixin.process_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_frame()</span></code></a>, there are two more methods
+available for overriding, to work on larger/different units of data at the same time:
+<a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFTileMixin.process_tile" title="libertem.udf.base.UDFTileMixin.process_tile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_tile()</span></code></a>
+and <a class="reference internal" href="reference/udf.html#libertem.udf.base.UDFPartitionMixin.process_partition" title="libertem.udf.base.UDFPartitionMixin.process_partition"><code class="xref py py-meth docutils literal notranslate"><span class="pre">process_partition()</span></code></a>. They can be used for optimizing
+some operations, and are documented in the <a class="reference internal" href="udf/advanced.html#advanced-udf"><span class="std std-ref">advanced topics</span></a> section.</p>
+</section>
+<section id="more-about-udfs">
+<h2>More about UDFs<a class="headerlink" href="#more-about-udfs" title="Permalink to this heading"></a></h2>
+<p>Now would be a good time to <a class="reference internal" href="udf/basic.html#implement-udf"><span class="std std-ref">read more about implementing UDFs</span></a> and <a class="reference internal" href="udf/advanced.html#advanced-udf"><span class="std std-ref">advanced UDF functionality</span></a>. The <a class="reference internal" href="debugging.html#debugging-udfs"><span class="std std-ref">general
+section on debugging</span></a> helps with resolving issues. Once you
+have your UDF working, you can proceed to <a class="reference internal" href="udf/profiling.html#udf-profiling"><span class="std std-ref">UDF profiling</span></a>
+to gain insights into the efficiency of your UDF.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="udf/basic.html">Implementing a UDF</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#declaring-buffers">Declaring buffers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#implementing-the-processing-function">Implementing the processing function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#merging-partial-results">Merging partial results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#passing-parameters">Passing parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#declaring-a-constructor">Declaring a constructor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#initializing-result-buffers">Initializing result buffers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf/basic.html#running-udfs">Running UDFs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/basic.html#regions-of-interest">Regions of interest</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf/basic.html#live-plotting">Live Plotting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/liveplotting.html">Live plotting for LiberTEM UDFs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Plot-classes">Plot classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Demo-UDFs">Demo UDFs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Plot-all-plottable-channels">Plot all plottable channels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Select-specific-channels">Select specific channels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Apply-a-function-to-a-channel">Apply a function to a channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Custom-plot-setup">Custom plot setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Gridded-display">Gridded display</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="udf/liveplotting.html#What-it-looks-like">What it looks like</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#User-defined-plotting">User-defined plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/liveplotting.html#Region-of-interest-(ROI)">Region of interest (ROI)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf/basic.html#partial-results">Partial results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/basic.html#asynchronous-execution">Asynchronous execution</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/async.html">Synchronous and asynchronous UDF execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="udf/async.html#Synchronous-execution,-only-result">Synchronous execution, only result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/async.html#Asynchronous-execution,-only-result">Asynchronous execution, only result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/async.html#Synchronous-execution-as-an-iterator">Synchronous execution as an iterator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="udf/async.html#Asynchronous-execution-as-an-iterator">Asynchronous execution as an iterator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html">User-defined functions: advanced topics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#tiled-processing">Tiled processing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/advanced.html#real-world-example">Real-world example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#partition-processing">Partition processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#precedence">Precedence</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#post-processing-of-partition-results">Post-processing of partition results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#post-processing-after-merging">Post-processing after merging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#pre-processing">Pre-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#aux-data">AUX data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#task-data">Task data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#meta-information">Meta information</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/advanced.html#input-data-shapes-and-types">Input data shapes and types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/advanced.html#device-class">Device class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/advanced.html#roi-and-current-slice">ROI and current slice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/advanced.html#coordinates">Coordinates</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#preferred-input-dtype">Preferred input dtype</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#cupy-support">CuPy support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#sparse-arrays">Sparse arrays</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#threading">Threading</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#auto-udf">Auto UDF</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/advanced.html#one-step-merge-merge-all">One-step merge (<cite>merge_all</cite>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf/profiling.html">Profiling UDFs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf/profiling.html#prerequisite-inlinejobexecutor">Prerequisite: <code class="code docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/profiling.html#using-progress-bar">Using progress bar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf/profiling.html#line-profiling-using-line-profiler">Line profiling using <cite>line_profiler</cite></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="reference/udf.html#udf-reference"><span class="std std-ref">UDF API reference</span></a></dt><dd><p>API documentation for UDFs</p>
+</dd>
+</dl>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-left" title="Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="udf/introduction.html" class="btn btn-neutral float-right" title="LiberTEM UDFs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

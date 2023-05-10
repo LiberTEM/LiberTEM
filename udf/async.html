@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synchronous and asynchronous UDF execution &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="User-defined functions: advanced topics" href="advanced.html" />
+    <link rel="prev" title="Live plotting for LiberTEM UDFs" href="liveplotting.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#example-notebook">Example notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../udf.html#more-about-udfs">More about UDFs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic.html">Implementing a UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#running-udfs">Running UDFs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#live-plotting">Live Plotting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basic.html#partial-results">Partial results</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="basic.html#asynchronous-execution">Asynchronous execution</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Synchronous and asynchronous UDF execution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html">User-defined functions: advanced topics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#tiled-processing">Tiled processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#partition-processing">Partition processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#precedence">Precedence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-of-partition-results">Post-processing of partition results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#post-processing-after-merging">Post-processing after merging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#pre-processing">Pre-processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#aux-data">AUX data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#task-data">Task data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#meta-information">Meta information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#preferred-input-dtype">Preferred input dtype</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#cupy-support">CuPy support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#sparse-arrays">Sparse arrays</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#threading">Threading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#auto-udf">Auto UDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="advanced.html#one-step-merge-merge-all">One-step merge (<cite>merge_all</cite>)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="profiling.html">Profiling UDFs</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../udf.html">User-defined functions (UDFs)</a></li>
+          <li class="breadcrumb-item"><a href="basic.html">Implementing a UDF</a></li>
+      <li class="breadcrumb-item active">Synchronous and asynchronous UDF execution</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/udf/async.nblink.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Synchronous-and-asynchronous-UDF-execution">
+<h1>Synchronous and asynchronous UDF execution<a class="headerlink" href="#Synchronous-and-asynchronous-UDF-execution" title="Permalink to this heading"></a></h1>
+<p>This notebook demonstrates the following features that were introduced in release 0.7.0:</p>
+<ul class="simple">
+<li><p>Execute several UDFs in one pass</p></li>
+<li><p>Obtain intermediate results from each merge step by executing UDFs as an iterator</p></li>
+<li><p>Execute UDFs asynchronously</p></li>
+</ul>
+<p>Please see example live-plotting.ipynb for the related live plotting feature!</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">libertem.api</span> <span class="k">as</span> <span class="nn">lt</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.sum</span> <span class="kn">import</span> <span class="n">SumUDF</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.sumsigudf</span> <span class="kn">import</span> <span class="n">SumSigUDF</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/weber/miniconda3/envs/libertem39/lib/python3.9/site-packages/distributed/node.py:182: UserWarning: Port 8787 is already in use.
+Perhaps you already have a cluster running?
+Hosting the HTTP server on port 40445 instead
+  warnings.warn(
+2023-01-12 16:17:08,313 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=15)
+2023-01-12 16:17:08,313 - distributed.utils - INFO - Reload module tmpioryzcko from .py file
+2023-01-12 16:17:08,323 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=16)
+2023-01-12 16:17:08,323 - distributed.utils - INFO - Reload module tmph8_w2ycc from .py file
+2023-01-12 16:17:08,338 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=21)
+2023-01-12 16:17:08,339 - distributed.utils - INFO - Reload module tmp7qw173dt from .py file
+2023-01-12 16:17:08,354 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=18)
+2023-01-12 16:17:08,354 - distributed.utils - INFO - Reload module tmp5qsl_mgf from .py file
+2023-01-12 16:17:08,359 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=11)
+2023-01-12 16:17:08,360 - distributed.utils - INFO - Reload module tmpg9shv96a from .py file
+2023-01-12 16:17:08,374 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=7)
+2023-01-12 16:17:08,375 - distributed.utils - INFO - Reload module tmpk38e72ru from .py file
+2023-01-12 16:17:08,387 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=19)
+2023-01-12 16:17:08,388 - distributed.utils - INFO - Reload module tmp5k8ln3d6 from .py file
+2023-01-12 16:17:08,403 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=8)
+2023-01-12 16:17:08,403 - distributed.utils - INFO - Reload module tmpciaau8cj from .py file
+2023-01-12 16:17:08,416 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=13)
+2023-01-12 16:17:08,416 - distributed.utils - INFO - Reload module tmph4ri158_ from .py file
+2023-01-12 16:17:08,439 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=9)
+2023-01-12 16:17:08,440 - distributed.utils - INFO - Reload module tmp8n6u_f8r from .py file
+2023-01-12 16:17:08,454 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=23)
+2023-01-12 16:17:08,455 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=4)
+2023-01-12 16:17:08,455 - distributed.utils - INFO - Reload module tmpu4b_ap_8 from .py file
+2023-01-12 16:17:08,455 - distributed.utils - INFO - Reload module tmp7briwqsy from .py file
+2023-01-12 16:17:08,488 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=1)
+2023-01-12 16:17:08,488 - distributed.utils - INFO - Reload module tmp28hfv12y from .py file
+2023-01-12 16:17:08,492 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=17)
+2023-01-12 16:17:08,492 - distributed.utils - INFO - Reload module tmp91gia771 from .py file
+2023-01-12 16:17:08,510 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=10)
+2023-01-12 16:17:08,511 - distributed.utils - INFO - Reload module tmph1cyy14q from .py file
+2023-01-12 16:17:08,531 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=22)
+2023-01-12 16:17:08,531 - distributed.utils - INFO - Reload module tmpmp21k6t_ from .py file
+2023-01-12 16:17:08,533 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-service-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 16:17:08,533 - distributed.utils - INFO - Reload module tmp__q7et61 from .py file
+2023-01-12 16:17:08,557 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=6)
+2023-01-12 16:17:08,558 - distributed.utils - INFO - Reload module tmpagqz6y9z from .py file
+2023-01-12 16:17:08,559 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=12)
+2023-01-12 16:17:08,559 - distributed.utils - INFO - Reload module tmpgifm6cp1 from .py file
+2023-01-12 16:17:08,569 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=5)
+2023-01-12 16:17:08,570 - distributed.utils - INFO - Reload module tmpwzgbq6em from .py file
+2023-01-12 16:17:08,597 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=3)
+2023-01-12 16:17:08,598 - distributed.utils - INFO - Reload module tmp3cyljleg from .py file
+2023-01-12 16:17:08,600 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CUDA&#34;, device=0)
+2023-01-12 16:17:08,600 - distributed.utils - INFO - Reload module tmp2tfzjdmu from .py file
+2023-01-12 16:17:08,606 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=14)
+2023-01-12 16:17:08,607 - distributed.utils - INFO - Reload module tmpw32ydyaz from .py file
+2023-01-12 16:17:08,613 - distributed.preloading - INFO - Import preload module: /tmp/tmph8_w2ycc.py
+2023-01-12 16:17:08,613 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-16&#39;, service_id=&#39;16&#39;)
+2023-01-12 16:17:08,613 - distributed.utils - INFO - Reload module tmpw_3r5ys8 from .py file
+2023-01-12 16:17:08,614 - distributed.preloading - INFO - Import preload module: /tmp/tmpw_3r5ys8.py
+2023-01-12 16:17:08,614 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,617 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=0)
+2023-01-12 16:17:08,617 - distributed.utils - INFO - Reload module tmpmf74ytxf from .py file
+2023-01-12 16:17:08,639 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=20)
+2023-01-12 16:17:08,639 - distributed.utils - INFO - Reload module tmpg8_h6muw from .py file
+2023-01-12 16:17:08,652 - distributed.preloading - INFO - Import preload module: /tmp/tmp5qsl_mgf.py
+2023-01-12 16:17:08,652 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-18&#39;, service_id=&#39;18&#39;)
+2023-01-12 16:17:08,653 - distributed.utils - INFO - Reload module tmps3w38vgu from .py file
+2023-01-12 16:17:08,653 - distributed.preloading - INFO - Import preload module: /tmp/tmps3w38vgu.py
+2023-01-12 16:17:08,653 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,659 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,666 - distributed.preloading - INFO - Import preload module: /tmp/tmpg9shv96a.py
+2023-01-12 16:17:08,666 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-11&#39;, service_id=&#39;11&#39;)
+2023-01-12 16:17:08,666 - distributed.utils - INFO - Reload module tmpue1fwqm_ from .py file
+2023-01-12 16:17:08,667 - distributed.preloading - INFO - Import preload module: /tmp/tmpue1fwqm_.py
+2023-01-12 16:17:08,667 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,668 - distributed.preloading - INFO - Import preload module: /tmp/tmpioryzcko.py
+2023-01-12 16:17:08,669 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-15&#39;, service_id=&#39;15&#39;)
+2023-01-12 16:17:08,669 - distributed.utils - INFO - Reload module tmp9dg3oypu from .py file
+2023-01-12 16:17:08,669 - distributed.preloading - INFO - Import preload module: /tmp/tmp9dg3oypu.py
+2023-01-12 16:17:08,669 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,673 - distributed.preloading - INFO - Import preload module: /tmp/tmpk38e72ru.py
+2023-01-12 16:17:08,674 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-7&#39;, service_id=&#39;7&#39;)
+2023-01-12 16:17:08,674 - distributed.preloading - INFO - Import preload module: /tmp/tmp7qw173dt.py
+2023-01-12 16:17:08,674 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-21&#39;, service_id=&#39;21&#39;)
+2023-01-12 16:17:08,674 - distributed.utils - INFO - Reload module tmp2qlo6kj1 from .py file
+2023-01-12 16:17:08,674 - distributed.utils - INFO - Reload module tmpmrnqf556 from .py file
+2023-01-12 16:17:08,674 - distributed.preloading - INFO - Import preload module: /tmp/tmp2qlo6kj1.py
+2023-01-12 16:17:08,674 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,674 - distributed.preloading - INFO - Import preload module: /tmp/tmpmrnqf556.py
+2023-01-12 16:17:08,675 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,682 - distributed.preloading - INFO - Import preload module: /tmp/tmp5k8ln3d6.py
+2023-01-12 16:17:08,682 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-19&#39;, service_id=&#39;19&#39;)
+2023-01-12 16:17:08,682 - distributed.utils - INFO - Reload module tmp1jzei7i6 from .py file
+2023-01-12 16:17:08,682 - distributed.preloading - INFO - Import preload module: /tmp/tmp1jzei7i6.py
+2023-01-12 16:17:08,682 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,690 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=2)
+2023-01-12 16:17:08,691 - distributed.utils - INFO - Reload module tmpcv7bxv_2 from .py file
+2023-01-12 16:17:08,701 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,705 - distributed.preloading - INFO - Import preload module: /tmp/tmph4ri158_.py
+2023-01-12 16:17:08,705 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-13&#39;, service_id=&#39;13&#39;)
+2023-01-12 16:17:08,705 - distributed.utils - INFO - Reload module tmpieybz66v from .py file
+2023-01-12 16:17:08,706 - distributed.preloading - INFO - Import preload module: /tmp/tmpieybz66v.py
+2023-01-12 16:17:08,706 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,714 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,716 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,719 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,720 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,728 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,734 - distributed.preloading - INFO - Import preload module: /tmp/tmpu4b_ap_8.py
+2023-01-12 16:17:08,735 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-23&#39;, service_id=&#39;23&#39;)
+2023-01-12 16:17:08,735 - distributed.utils - INFO - Reload module tmpvjz5j24f from .py file
+2023-01-12 16:17:08,735 - distributed.preloading - INFO - Import preload module: /tmp/tmpvjz5j24f.py
+2023-01-12 16:17:08,735 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,745 - distributed.preloading - INFO - Import preload module: /tmp/tmp8n6u_f8r.py
+2023-01-12 16:17:08,745 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-9&#39;, service_id=&#39;9&#39;)
+2023-01-12 16:17:08,746 - distributed.utils - INFO - Reload module tmpoplyvbei from .py file
+2023-01-12 16:17:08,746 - distributed.preloading - INFO - Import preload module: /tmp/tmpoplyvbei.py
+2023-01-12 16:17:08,746 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,750 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,765 - distributed.preloading - INFO - Import preload module: /tmp/tmpciaau8cj.py
+2023-01-12 16:17:08,765 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-8&#39;, service_id=&#39;8&#39;)
+2023-01-12 16:17:08,766 - distributed.utils - INFO - Reload module tmp1kfvaomt from .py file
+2023-01-12 16:17:08,766 - distributed.preloading - INFO - Import preload module: /tmp/tmp1kfvaomt.py
+2023-01-12 16:17:08,766 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,767 - distributed.preloading - INFO - Import preload module: /tmp/tmp91gia771.py
+2023-01-12 16:17:08,767 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-17&#39;, service_id=&#39;17&#39;)
+2023-01-12 16:17:08,767 - distributed.utils - INFO - Reload module tmpd_0j1z0u from .py file
+2023-01-12 16:17:08,768 - distributed.preloading - INFO - Import preload module: /tmp/tmpd_0j1z0u.py
+2023-01-12 16:17:08,768 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,781 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,788 - distributed.preloading - INFO - Import preload module: /tmp/tmp__q7et61.py
+2023-01-12 16:17:08,788 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,791 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,813 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,813 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,820 - distributed.preloading - INFO - Import preload module: /tmp/tmph1cyy14q.py
+2023-01-12 16:17:08,820 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-10&#39;, service_id=&#39;10&#39;)
+2023-01-12 16:17:08,821 - distributed.utils - INFO - Reload module tmpg69_e1ll from .py file
+2023-01-12 16:17:08,821 - distributed.preloading - INFO - Import preload module: /tmp/tmpg69_e1ll.py
+2023-01-12 16:17:08,821 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,826 - distributed.preloading - INFO - Import preload module: /tmp/tmp7briwqsy.py
+2023-01-12 16:17:08,827 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-4&#39;, service_id=&#39;4&#39;)
+2023-01-12 16:17:08,827 - distributed.utils - INFO - Reload module tmps67qqebg from .py file
+2023-01-12 16:17:08,828 - distributed.preloading - INFO - Import preload module: /tmp/tmps67qqebg.py
+2023-01-12 16:17:08,828 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,841 - distributed.preloading - INFO - Import preload module: /tmp/tmpwzgbq6em.py
+2023-01-12 16:17:08,841 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-5&#39;, service_id=&#39;5&#39;)
+2023-01-12 16:17:08,841 - distributed.utils - INFO - Reload module tmpgtd36kxl from .py file
+2023-01-12 16:17:08,842 - distributed.preloading - INFO - Import preload module: /tmp/tmpgtd36kxl.py
+2023-01-12 16:17:08,842 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,845 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,848 - distributed.preloading - INFO - Import preload module: /tmp/tmpmp21k6t_.py
+2023-01-12 16:17:08,848 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-22&#39;, service_id=&#39;22&#39;)
+2023-01-12 16:17:08,849 - distributed.utils - INFO - Reload module tmpsrlhukl0 from .py file
+2023-01-12 16:17:08,849 - distributed.preloading - INFO - Import preload module: /tmp/tmpsrlhukl0.py
+2023-01-12 16:17:08,849 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,857 - distributed.preloading - INFO - Import preload module: /tmp/tmpgifm6cp1.py
+2023-01-12 16:17:08,857 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-12&#39;, service_id=&#39;12&#39;)
+2023-01-12 16:17:08,857 - distributed.utils - INFO - Reload module tmpjguc39bg from .py file
+2023-01-12 16:17:08,858 - distributed.preloading - INFO - Import preload module: /tmp/tmpjguc39bg.py
+2023-01-12 16:17:08,858 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,860 - distributed.preloading - INFO - Import preload module: /tmp/tmpagqz6y9z.py
+2023-01-12 16:17:08,860 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-6&#39;, service_id=&#39;6&#39;)
+2023-01-12 16:17:08,861 - distributed.utils - INFO - Reload module tmp5394248q from .py file
+2023-01-12 16:17:08,861 - distributed.preloading - INFO - Import preload module: /tmp/tmp5394248q.py
+2023-01-12 16:17:08,861 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,866 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,880 - distributed.preloading - INFO - Import preload module: /tmp/tmp3cyljleg.py
+2023-01-12 16:17:08,880 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-3&#39;, service_id=&#39;3&#39;)
+2023-01-12 16:17:08,881 - distributed.utils - INFO - Reload module tmphha6hli_ from .py file
+2023-01-12 16:17:08,881 - distributed.preloading - INFO - Import preload module: /tmp/tmphha6hli_.py
+2023-01-12 16:17:08,881 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,886 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,889 - distributed.preloading - INFO - Import preload module: /tmp/tmp2tfzjdmu.py
+2023-01-12 16:17:08,889 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cuda-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 16:17:08,890 - distributed.utils - INFO - Reload module tmpvs6mftm5 from .py file
+2023-01-12 16:17:08,890 - distributed.preloading - INFO - Import preload module: /tmp/tmpvs6mftm5.py
+2023-01-12 16:17:08,890 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,891 - distributed.preloading - INFO - Import preload module: /tmp/tmpmf74ytxf.py
+2023-01-12 16:17:08,891 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 16:17:08,891 - distributed.utils - INFO - Reload module tmptqa4lwge from .py file
+2023-01-12 16:17:08,892 - distributed.preloading - INFO - Import preload module: /tmp/tmptqa4lwge.py
+2023-01-12 16:17:08,892 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,894 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,896 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,897 - distributed.preloading - INFO - Import preload module: /tmp/tmp28hfv12y.py
+2023-01-12 16:17:08,897 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-1&#39;, service_id=&#39;1&#39;)
+2023-01-12 16:17:08,898 - distributed.utils - INFO - Reload module tmp2dwo7__c from .py file
+2023-01-12 16:17:08,898 - distributed.preloading - INFO - Import preload module: /tmp/tmp2dwo7__c.py
+2023-01-12 16:17:08,898 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,903 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,907 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,909 - distributed.preloading - INFO - Import preload module: /tmp/tmpg8_h6muw.py
+2023-01-12 16:17:08,909 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-20&#39;, service_id=&#39;20&#39;)
+2023-01-12 16:17:08,909 - distributed.utils - INFO - Reload module tmpo8kbgqp1 from .py file
+2023-01-12 16:17:08,909 - distributed.preloading - INFO - Import preload module: /tmp/tmpo8kbgqp1.py
+2023-01-12 16:17:08,909 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,913 - distributed.preloading - INFO - Import preload module: /tmp/tmpw32ydyaz.py
+2023-01-12 16:17:08,913 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-14&#39;, service_id=&#39;14&#39;)
+2023-01-12 16:17:08,914 - distributed.utils - INFO - Reload module tmpuwbyt0sh from .py file
+2023-01-12 16:17:08,914 - distributed.preloading - INFO - Import preload module: /tmp/tmpuwbyt0sh.py
+2023-01-12 16:17:08,914 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:08,927 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,937 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,945 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,945 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,953 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,958 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 16:17:08,964 - distributed.preloading - INFO - Import preload module: /tmp/tmpcv7bxv_2.py
+2023-01-12 16:17:08,964 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-2&#39;, service_id=&#39;2&#39;)
+2023-01-12 16:17:08,965 - distributed.utils - INFO - Reload module tmpc1f0r09y from .py file
+2023-01-12 16:17:08,965 - distributed.preloading - INFO - Import preload module: /tmp/tmpc1f0r09y.py
+2023-01-12 16:17:08,965 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 16:17:09,010 - distributed.preloading - INFO - Import preload module: libertem.preload
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TESTDATA_BASE_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;/home/alex/Data/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_base_path</span><span class="p">,</span> <span class="s2">&quot;20200518 165148/default.hdr&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-01-12 16:17:09,425 - distributed.worker - WARNING - Compute Failed
+Key:       _do_detect-fa956156-516c-43c3-a192-5484c489a9e2
+Function:  _do_detect
+args:      ()
+kwargs:    {}
+Exception: &#39;DataSetException(&#34;OSError(\&#39;Unable to open file (file signature not found)\&#39;)&#34;)&#39;
+
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">udfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">SumUDF</span><span class="p">(),</span> <span class="n">SumSigUDF</span><span class="p">()]</span>
+</pre></div>
+</div>
+</div>
+<section id="Synchronous-execution,-only-result">
+<h2>Synchronous execution, only result<a class="headerlink" href="#Synchronous-execution,-only-result" title="Permalink to this heading"></a></h2>
+<p>Note that both UDFs are executed in a single pass!</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The result is a tuple with one entry per UDF:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+</pre></div></div>
+</div>
+<p>The previous API when passing a single UDF is not changed, i.e. it doesn’t return a tuple but a single UDF result</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;}
+</pre></div></div>
+</div>
+</section>
+<section id="Asynchronous-execution,-only-result">
+<h2>Asynchronous execution, only result<a class="headerlink" href="#Asynchronous-execution,-only-result" title="Permalink to this heading"></a></h2>
+<p>By setting <code class="docutils literal notranslate"><span class="pre">sync=False</span></code>, the result is awaitable:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">async_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Do something else while UDFs are running in the background&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">async_res</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Do something else while UDFs are running in the background
+Finished
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+</pre></div></div>
+</div>
+<p>Just like in the synchronous case, running a single UDF returns the UDF result directly, not a tuple:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">async_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Do something else while UDF is running in the background&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">async_res</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Do something else while UDF is running in the background
+Finished
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;}
+</pre></div></div>
+</div>
+</section>
+<section id="Synchronous-execution-as-an-iterator">
+<h2>Synchronous execution as an iterator<a class="headerlink" href="#Synchronous-execution-as-an-iterator" title="Permalink to this heading"></a></h2>
+<p>This returns <code class="docutils literal notranslate"><span class="pre">UDFResults</span></code> objects with attributes <code class="docutils literal notranslate"><span class="pre">buffers</span></code> and <code class="docutils literal notranslate"><span class="pre">damage</span></code>. <code class="docutils literal notranslate"><span class="pre">buffers</span></code> is a tuple with the results per UDF, and <code class="docutils literal notranslate"><span class="pre">damage</span></code> is a <code class="docutils literal notranslate"><span class="pre">BufferWrapper</span></code> with <code class="docutils literal notranslate"><span class="pre">kind='nav'</span></code> and <code class="docutils literal notranslate"><span class="pre">dtype=bool</span></code> that indicates which parts of the navigation space have been merged already.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># (output is ignored in nbval run because the number of nav positions can be different)</span>
+<span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf_iter</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">damage</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;nav positions processed&quot;</span><span class="p">)</span>
+    <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">buffers</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+683 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+1366 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+2048 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+2731 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+3414 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+4096 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+4779 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+5461 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+6143 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+6826 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+7509 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+8191 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+8874 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+9557 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+10240 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+10923 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+11606 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+12289 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+12971 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+13654 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+14337 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+15020 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+15702 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+16384 nav positions processed
+({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+ {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;})
+</pre></div></div>
+</div>
+</section>
+<section id="Asynchronous-execution-as-an-iterator">
+<h2>Asynchronous execution as an iterator<a class="headerlink" href="#Asynchronous-execution-as-an-iterator" title="Permalink to this heading"></a></h2>
+<p>This allows several iterators to proceed asynchronously in parallel. This approach is used in the backend for the web GUI of LiberTEM to run several analyses concurrently. It could also be useful to implement live feedback to instrument control from UDF results if the control solution works asynchronously.</p>
+<p>Note that the UDFs are copied here so that different instances are executed in parallel. Executing the same UDF instances concurrently can lead to undefined behavior.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NBVAL_IGNORE_OUTPUT</span>
+<span class="c1"># (output is ignored in nbval run because the number of nav positions can be different)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">udfs</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf_iter</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">udfs</span><span class="p">,</span> <span class="n">sync</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">damage</span><span class="o">.</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;nav positions processed&quot;</span><span class="p">)</span>
+        <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">((</span><span class="n">label</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">buffers</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">doit</span><span class="p">(</span><span class="s2">&quot;one&quot;</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">udfs</span><span class="p">))</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">doit</span><span class="p">(</span><span class="s2">&quot;two&quot;</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">udfs</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Do something else while UDFs are running in the background&quot;</span><span class="p">)</span>
+<span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Do something else while UDFs are running in the background
+one 682 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 1365 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 2048 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 2731 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 3414 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 4097 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 4779 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 5462 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 6145 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 6828 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 7510 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 8192 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 8875 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 9558 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 10240 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 10923 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 11606 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 12289 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 12972 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 13654 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 14336 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 15019 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 682 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 15702 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+one 16384 nav positions processed
+(&#39;one&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 1365 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 2048 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 2730 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 3413 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 4096 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 4778 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 5461 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 6144 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 6827 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 7509 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 8192 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 8875 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 9557 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 10240 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 10923 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 11606 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 12289 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 12971 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 13654 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 14336 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 15018 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 15701 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+two 16384 nav positions processed
+(&#39;two&#39;,
+ ({&#39;intensity&#39;: &lt;BufferWrapper kind=sig dtype=float32 extra_shape=()&gt;},
+  {&#39;intensity&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}))
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;libertem.udf.base.UDFResults at 0x7f01744ebe50&gt;,
+ &lt;libertem.udf.base.UDFResults at 0x7f01770e5f70&gt;]
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="liveplotting.html" class="btn btn-neutral float-left" title="Live plotting for LiberTEM UDFs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="advanced.html" class="btn btn-neutral float-right" title="User-defined functions: advanced topics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

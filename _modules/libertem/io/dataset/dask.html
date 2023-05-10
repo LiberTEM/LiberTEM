@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.io.dataset.dask &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.io.dataset.dask</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.io.dataset.dask</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
+
+<span class="kn">from</span> <span class="nn">libertem.common</span> <span class="kn">import</span> <span class="n">Shape</span><span class="p">,</span> <span class="n">Slice</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DataSet</span><span class="p">,</span> <span class="n">DataSetMeta</span><span class="p">,</span> <span class="n">BasePartition</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">FileSet</span><span class="p">,</span> <span class="n">DataSetException</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">libertem.io.dataset.base.backend_mmap</span> <span class="kn">import</span> <span class="n">MMapFile</span><span class="p">,</span> <span class="n">MMapBackend</span><span class="p">,</span> <span class="n">MMapBackendImpl</span>
+<span class="kn">from</span> <span class="nn">libertem.common.messageconverter</span> <span class="kn">import</span> <span class="n">MessageConverter</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">DaskDatasetParams</span><span class="p">(</span><span class="n">MessageConverter</span><span class="p">):</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;$schema&quot;</span><span class="p">:</span> <span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;$id&quot;</span><span class="p">:</span> <span class="s2">&quot;http://libertem.org/DaskDatasetParams.schema.json&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;DaskDatasetParams&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;const&quot;</span><span class="p">:</span> <span class="s2">&quot;DASK&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;sig_dims&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="s2">&quot;preserve_dimensions&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;boolean&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;min_size&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;minimum&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">convert_to_python</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_data</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">raw_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;sig_dims&quot;</span><span class="p">,</span> <span class="s2">&quot;preserve_dimensions&quot;</span><span class="p">,</span> <span class="s2">&quot;min_size&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">raw_data</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">class</span> <span class="nc">FakeDaskMMapFile</span><span class="p">(</span><span class="n">MMapFile</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementing the same interface as MMapFile, without filesystem backing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># scheduler=&#39;threads&#39; ensures that upstream computation for this array</span>
+        <span class="c1"># chunk happens completely on this worker and not elsewhere</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">scheduler</span><span class="o">=</span><span class="s1">&#39;threads&#39;</span><span class="p">)</span>
+        <span class="c1"># need to be aware that Dask can create Fortran-ordered arrays</span>
+        <span class="c1"># when .compute is called, which can lead to downstream issues when</span>
+        <span class="c1"># np.frombuffer is called on self._mmap in the backend. Currently it seems</span>
+        <span class="c1"># like np.frombuffer cannot handle Fortran ordering and throws a ValueError</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mmap</span>
+
+
+<span class="k">class</span> <span class="nc">DaskBackend</span><span class="p">(</span><span class="n">MMapBackend</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DaskBackendImpl</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">DaskBackendImpl</span><span class="p">(</span><span class="n">MMapBackendImpl</span><span class="p">):</span>
+    <span class="n">FILE_CLS</span> <span class="o">=</span> <span class="n">FakeDaskMMapFile</span>
+
+
+<div class="viewcode-block" id="DaskDataSet"><a class="viewcode-back" href="../../../../reference/dataset.html#libertem.io.dataset.dask.DaskDataSet">[docs]</a><span class="k">class</span> <span class="nc">DaskDataSet</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    .. versionadded:: 0.9.0</span>
+
+<span class="sd">    Wraps a Dask.array.array such that it can be processed by LiberTEM.</span>
+<span class="sd">    Partitions are created to be aligned with the array chunking. When</span>
+<span class="sd">    the array chunking is not compatible with LiberTEM the wrapper</span>
+<span class="sd">    merges chunks until compatibility is achieved.</span>
+
+<span class="sd">    The best-case scenario is for the original array to be chunked in</span>
+<span class="sd">    the leftmost navigation dimension. If instead another navigation</span>
+<span class="sd">    dimension is chunked then the user can set `preserve_dimension=False`</span>
+<span class="sd">    to re-order the navigation shape to achieve better chunking for LiberTEM.</span>
+<span class="sd">    If more than one navigation dimension is chunked, the class will do</span>
+<span class="sd">    its best to merge chunks without creating partitions which are too large.</span>
+
+<span class="sd">    LiberTEM requires that a partition contains only whole signal frames,</span>
+<span class="sd">    so any signal dimension chunking is immediately merged by this class.</span>
+
+<span class="sd">    This wrapper is most useful when the Dask array was created using</span>
+<span class="sd">    lazy I/O via `dask.delayed`, or via `dask.array` operations.</span>
+<span class="sd">    The major assumption is that the chunks in the array can each be</span>
+<span class="sd">    individually evaluated without having to read or compute more data</span>
+<span class="sd">    than the chunk itself contains. If this is not the case then this class</span>
+<span class="sd">    could perform very poorly due to read amplification, or even crash the Dask</span>
+<span class="sd">    workers.</span>
+
+<span class="sd">    As the class performs rechunking using a merge-only strategy it will never</span>
+<span class="sd">    split chunks which were present in the original array. If the array</span>
+<span class="sd">    is originally very lightly chunked, then the corresponding LiberTEM partitions</span>
+<span class="sd">    will be very large. In addition, overly-chunked arrays (for example one chunk per</span>
+<span class="sd">    frame) can incurr excessive Dask task graph overheads and should be avoided</span>
+<span class="sd">    where possible.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    dask_array: dask.array.array</span>
+<span class="sd">        A Dask array</span>
+
+<span class="sd">    sig_dims: int</span>
+<span class="sd">        Number of dimensions in dask_array.shape counting from the right</span>
+<span class="sd">        to treat as signal dimensions</span>
+
+<span class="sd">    preserve_dimensions: bool, optional</span>
+<span class="sd">        If False, allow optimization of the dask_arry chunking by</span>
+<span class="sd">        re-ordering the nav_shape to put the most chunked dimensions first.</span>
+<span class="sd">        This can help when more than one nav dimension is chunked.</span>
+
+<span class="sd">    min_size: float, optional</span>
+<span class="sd">        The minimum partition size in bytes if the array chunking allows</span>
+<span class="sd">        an order-preserving merge strategy. The default min_size is 128 MiB.</span>
+
+<span class="sd">    io_backend: bool, optional</span>
+<span class="sd">        For compatibility, accept an unused io_backend argument.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; from libertem.io.dataset.dask import DaskDataSet</span>
+<span class="sd">    &gt;&gt;&gt; import dask.array as da</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; d_arr = da.ones((10, 100, 256, 256), chunks=(2, -1, -1, -1))</span>
+<span class="sd">    &gt;&gt;&gt; ds = DaskDataSet(d_arr, sig_dims=2)</span>
+
+<span class="sd">    Will create a dataset with 5 partitions split along the zeroth dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO add mechanism to re-order the dimensions of results automatically</span>
+    <span class="c1"># if preserve_dimensions is set to False</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dask_array</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">,</span> <span class="n">preserve_dimensions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">min_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">io_backend</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">io_backend</span><span class="o">=</span><span class="n">io_backend</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">io_backend</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s2">&quot;DaskDataSet currently doesn&#39;t support alternative I/O backends&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_array</span><span class="p">(</span><span class="n">dask_array</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="o">=</span> <span class="n">dask_array</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span> <span class="o">=</span> <span class="n">sig_dims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preserve_dimension</span> <span class="o">=</span> <span class="n">preserve_dimensions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_size</span> <span class="o">=</span> <span class="n">min_size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># TODO add a method to determine a sensible partition byte-size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_min_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_min_size</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">array</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span>
+
+    <span class="k">def</span> <span class="nf">get_io_backend</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DaskBackend</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adapt_chunking</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span> <span class="o">=</span> <span class="n">DataSetMeta</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+            <span class="n">raw_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">),</span>
+            <span class="n">sync_offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">image_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape_product</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">raw_dtype</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_msg_converter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DaskDatasetParams</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_default_min_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Default minimum chunk size if not supplied at init</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">128</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">20</span><span class="p">)</span>  <span class="c1"># MB</span>
+
+    <span class="k">def</span> <span class="nf">_chunk_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span>
+        <span class="n">boundaries</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">chunks_to_slices</span><span class="p">(</span><span class="n">chunk_lengths</span><span class="p">))</span> <span class="k">for</span> <span class="n">chunk_lengths</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">boundaries</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_adapt_chunking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">):</span>
+        <span class="n">n_dimension</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="c1"># Handle chunked signal dimensions by merging just in case</span>
+        <span class="n">sig_dim_idxs</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="nb">range</span><span class="p">(</span><span class="n">n_dimension</span><span class="p">)[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:]]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">[</span><span class="n">c</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">sig_dim_idxs</span><span class="p">]):</span>
+            <span class="n">original_n_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">rechunk</span><span class="p">({</span><span class="n">idx</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">sig_dim_idxs</span><span class="p">})</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Merging sig dim chunks as LiberTEM does not &#39;</span>
+                        <span class="s1">&#39;support paritioning along the sig axes. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;Original n_blocks: </span><span class="si">{</span><span class="n">original_n_chunks</span><span class="si">}</span><span class="s1">. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;New n_blocks: </span><span class="si">{</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="c1"># Warn if there is no nav_dim chunking</span>
+        <span class="n">n_nav_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dim_chunking</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim_chunking</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">[:</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">n_nav_chunks</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="mi">1</span><span class="p">}:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Dask array is not chunked in navigation dimensions, &#39;</span>
+                        <span class="s1">&#39;cannot split into nav-partitions without loading the &#39;</span>
+                        <span class="s1">&#39;whole dataset on each worker. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;Array shape: </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;Chunking: </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="si">}</span><span class="s1">. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;array size </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">nbytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">}</span><span class="s1"> MiB.&#39;</span><span class="p">)</span>
+            <span class="c1"># If we are here there is nothing else to do.</span>
+            <span class="k">return</span> <span class="n">array</span>
+        <span class="c1"># Orient the nav dimensions so that the zeroth dimension is</span>
+        <span class="c1"># the most chunked, this obviously changes the dataset nav_shape !</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preserve_dimension</span><span class="p">:</span>
+            <span class="n">n_nav_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dim_chunking</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim_chunking</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">[:</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">]]</span>
+            <span class="n">nav_sort_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">n_nav_chunks</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">sort_order</span> <span class="o">=</span> <span class="n">nav_sort_order</span> <span class="o">+</span> <span class="n">sig_dim_idxs</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">sort_order</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_dimension</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="n">original_shape</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">original_n_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span>
+                <span class="n">array</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">sort_order</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Re-ordered nav_dimensions to improve partitioning, &#39;</span>
+                            <span class="s1">&#39;create the dataset with preserve_dimensions=True &#39;</span>
+                            <span class="s1">&#39;to suppress this behaviour. &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;Original shape: </span><span class="si">{</span><span class="n">original_shape</span><span class="si">}</span><span class="s1"> with &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;n_blocks: </span><span class="si">{</span><span class="n">original_n_chunks</span><span class="si">}</span><span class="s1">. &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;New shape: </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1"> with &#39;</span>
+                            <span class="sa">f</span><span class="s1">&#39;n_blocks: </span><span class="si">{</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="c1"># Handle chunked nav_dimensions</span>
+        <span class="c1"># We can allow nav_dimensions to be fully chunked (one chunk per element)</span>
+        <span class="c1"># up-to-but-not-including the first non-fully chunked dimension. After this point</span>
+        <span class="c1"># we must merge/rechunk all subsequent nav dimensions to ensure continuity</span>
+        <span class="c1"># of frame indexes in a flattened nav dimension. This should be removed</span>
+        <span class="c1"># when if we allow non-contiguous flat_idx Partitions</span>
+        <span class="n">nav_rechunk_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">dim_idx</span><span class="p">,</span> <span class="n">dim_chunking</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">[:</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">dim_chunking</span><span class="p">)</span> <span class="o">==</span> <span class="p">{</span><span class="mi">1</span><span class="p">}:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">merge_dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="nb">range</span><span class="p">(</span><span class="n">dim_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_dimension</span> <span class="o">-</span> <span class="n">sig_dims</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">merge_i</span> <span class="ow">in</span> <span class="n">merge_dimensions</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">[</span><span class="n">merge_i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">nav_rechunk_dict</span><span class="p">[</span><span class="n">merge_i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">nav_rechunk_dict</span><span class="p">:</span>
+            <span class="n">original_n_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">rechunk</span><span class="p">(</span><span class="n">nav_rechunk_dict</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Merging nav dimension chunks according to scheme &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">nav_rechunk_dict</span><span class="si">}</span><span class="s1"> as we cannot maintain continuity &#39;</span>
+                        <span class="s1">&#39;of frame indexing in the flattened navigation dimension. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;Original n_blocks: </span><span class="si">{</span><span class="n">original_n_chunks</span><span class="si">}</span><span class="s1">. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;New n_blocks: </span><span class="si">{</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="c1"># Merge remaining chunks maintaining C-ordering until we reach a target chunk sizes</span>
+        <span class="c1"># or a minmum number of partitions corresponding to the number of workers</span>
+        <span class="n">new_chunking</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">max_size</span> <span class="o">=</span> <span class="n">merge_until_target</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_size</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_chunking</span> <span class="o">!=</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">:</span>
+            <span class="n">original_n_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span>
+            <span class="n">chunksizes</span> <span class="o">=</span> <span class="n">get_chunksizes</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+            <span class="n">orig_min</span><span class="p">,</span> <span class="n">orig_max</span> <span class="o">=</span> <span class="n">chunksizes</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">chunksizes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">rechunk</span><span class="p">(</span><span class="n">new_chunking</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Applying re-chunking to increase minimum partition size. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;n_blocks: </span><span class="si">{</span><span class="n">original_n_chunks</span><span class="si">}</span><span class="s1"> =&gt; </span><span class="si">{</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span><span class="si">}</span><span class="s1">. &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;Min chunk size </span><span class="si">{</span><span class="n">orig_min</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> =&gt; </span><span class="si">{</span><span class="n">min_size</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> MiB , &#39;</span>
+                        <span class="sa">f</span><span class="s1">&#39;Max chunk size </span><span class="si">{</span><span class="n">orig_max</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> =&gt; </span><span class="si">{</span><span class="n">max_size</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">1e6</span><span class="si">:</span><span class="s1">.1f</span><span class="si">}</span><span class="s1"> MiB.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">array</span>
+
+    <span class="k">def</span> <span class="nf">_check_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Expected a Dask array as input, recieved &#39;</span>
+                                   <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sig_dims</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sig_dims</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Expected non-negative integer sig_dims,&#39;</span>
+                                   <span class="sa">f</span><span class="s1">&#39;recieved </span><span class="si">{</span><span class="n">sig_dims</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">])</span>\
+           <span class="ow">or</span> <span class="nb">any</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="s1">&#39;Dask array has an unknown shape or chunk sizes &#39;</span>
+                                   <span class="s1">&#39;so cannot be interpreted as a LiberTEM partitions. &#39;</span>
+                                   <span class="s1">&#39;Run array.compute_compute_chunk_sizes() &#39;</span>
+                                   <span class="s1">&#39;before passing to DaskDataSet, though this &#39;</span>
+                                   <span class="s1">&#39;may be performance-intensive. Chunking: &#39;</span>
+                                   <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">chunks</span><span class="si">}</span><span class="s1">, Shape </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sig_dims</span> <span class="o">&gt;=</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DataSetException</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of sig_dims </span><span class="si">{</span><span class="n">sig_dims</span><span class="si">}</span><span class="s1"> not compatible &#39;</span>
+                                   <span class="sa">f</span><span class="s1">&#39;with number of array dims </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s1">, &#39;</span>
+                                   <span class="s1">&#39;must be able to create partitions along nav &#39;</span>
+                                   <span class="s1">&#39;dimensions.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">check_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_num_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="o">*</span><span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">chunks</span><span class="p">)])</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">chunks_to_slices</span><span class="p">(</span><span class="n">chunk_lengths</span><span class="p">):</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chunk_lengths</span><span class="p">:</span>
+            <span class="n">newc</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="n">prior</span>
+            <span class="k">yield</span> <span class="nb">slice</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">newc</span><span class="p">)</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">newc</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">slices_to_shape</span><span class="p">(</span><span class="n">slices</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">slices</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">slices_to_origin</span><span class="p">(</span><span class="n">slices</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">slices</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">flatten_nav</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">nav_shape</span><span class="p">,</span> <span class="n">sig_dims</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Because LiberTEM partitions are set up with a flat nav dimension</span>
+<span class="sd">        we must flatten the Dask array slices. This is ensured to be possible</span>
+<span class="sd">        by earlier calls to _adapt_chunking but should be removed if ever</span>
+<span class="sd">        partitions are able to have &gt;1D navigation axes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nav_slices</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[:</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">]</span>
+        <span class="n">sig_slices</span> <span class="o">=</span> <span class="n">slices</span><span class="p">[</span><span class="o">-</span><span class="n">sig_dims</span><span class="p">:]</span>
+        <span class="n">start_frame</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">start</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">nav_slices</span><span class="p">],</span> <span class="n">nav_shape</span><span class="p">)</span>
+        <span class="n">end_frame</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">nav_slices</span><span class="p">],</span> <span class="n">nav_shape</span><span class="p">)</span>
+        <span class="n">nav_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start_frame</span><span class="p">,</span> <span class="n">end_frame</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">nav_slice</span><span class="p">,)</span> <span class="o">+</span> <span class="n">sig_slices</span><span class="p">,</span> <span class="n">start_frame</span><span class="p">,</span> <span class="n">end_frame</span>
+
+    <span class="k">def</span> <span class="nf">get_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the LiberTEM slices which correspond to the chunks</span>
+<span class="sd">        in the Dask array backing the dataset</span>
+
+<span class="sd">        Generates both the flat_nav slice for creating the LiberTEM partition</span>
+<span class="sd">        and also the full_slices used to index into the dask array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chunk_slices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_chunk_slices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">full_slices</span> <span class="ow">in</span> <span class="n">chunk_slices</span><span class="p">:</span>
+            <span class="n">flat_slices</span><span class="p">,</span> <span class="n">start_frame</span><span class="p">,</span> <span class="n">end_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flatten_nav</span><span class="p">(</span><span class="n">full_slices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nav_shape</span><span class="p">,</span>
+                                                                   <span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">)</span>
+            <span class="n">flat_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">slices_to_origin</span><span class="p">(</span><span class="n">flat_slices</span><span class="p">),</span>
+                               <span class="n">shape</span><span class="o">=</span><span class="n">Shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slices_to_shape</span><span class="p">(</span><span class="n">flat_slices</span><span class="p">),</span>
+                                           <span class="n">sig_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sig_dims</span><span class="p">))</span>
+            <span class="k">yield</span> <span class="n">full_slices</span><span class="p">,</span> <span class="n">flat_slice</span><span class="p">,</span> <span class="n">start_frame</span><span class="p">,</span> <span class="n">end_frame</span>
+
+    <span class="k">def</span> <span class="nf">_get_fileset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The fileset is set up to have one &#39;file&#39; per partition</span>
+<span class="sd">        which corresponds to one &#39;file&#39; per Dask chunk</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">partitions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">full_slices</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="n">partitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DaskFile</span><span class="p">(</span>
+                <span class="n">array_chunk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[</span><span class="n">full_slices</span><span class="p">],</span>
+                <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">start_idx</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">end_idx</span><span class="o">=</span><span class="n">stop</span><span class="p">,</span>
+                <span class="n">native_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dtype</span><span class="p">,</span>
+                <span class="n">sig_shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">DaskFileSet</span><span class="p">(</span><span class="n">partitions</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_partitions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Partitions contain a reference to the whole array and the whole</span>
+<span class="sd">        fileset, but the part_slice and start_frame/num_frames provided mean</span>
+<span class="sd">        that the subsequent call to get_read_ranges() means only one &#39;file&#39;</span>
+<span class="sd">        is read/.compute(), and this corresponds to the partition *exactly*</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fileset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_fileset</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">part_slice</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slices</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">DaskPartition</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">,</span>
+                <span class="n">meta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span>
+                <span class="n">fileset</span><span class="o">=</span><span class="n">fileset</span><span class="p">,</span>
+                <span class="n">partition_slice</span><span class="o">=</span><span class="n">part_slice</span><span class="p">,</span>
+                <span class="n">start_frame</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+                <span class="n">num_frames</span><span class="o">=</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">,</span>
+                <span class="n">io_backend</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_io_backend</span><span class="p">(),</span>
+                <span class="n">decoder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_decoder</span><span class="p">()</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;DaskDataSet of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;n_blocks=</span><span class="si">{</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">chunks</span><span class="p">]</span><span class="si">}</span><span class="s2">&gt;&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">DaskFile</span><span class="p">(</span><span class="n">File</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">array_chunk</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upon creation, the dask array has been sliced to give</span>
+<span class="sd">        only one chunk corresponding to a LiberTEM partition</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="o">=</span> <span class="n">array_chunk</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">DaskFileSet</span><span class="p">(</span><span class="n">FileSet</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">DaskPartition</span><span class="p">(</span><span class="n">BasePartition</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dask_array</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="o">=</span> <span class="n">dask_array</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">array_mult</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="n">num_arrays</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_arrays</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">num_arrays</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">num_arrays</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">array_mult</span><span class="p">(</span><span class="o">*</span><span class="n">arrays</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unexpected number of arrays&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_last_chunked_dim</span><span class="p">(</span><span class="n">chunking</span><span class="p">):</span>
+    <span class="n">n_chunks</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chunking</span><span class="p">]</span>
+    <span class="n">chunked_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">n_chunks</span><span class="p">)</span> <span class="k">if</span> <span class="n">el</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">chunked_dims</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">get_chunksizes</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">chunking</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">chunking</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">el_bytes</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">itemsize</span>
+    <span class="n">last_chunked</span> <span class="o">=</span> <span class="n">get_last_chunked_dim</span><span class="p">(</span><span class="n">chunking</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">last_chunked</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">nbytes</span><span class="p">)</span>
+    <span class="n">static_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">last_chunked</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="n">el_bytes</span>
+    <span class="n">chunksizes</span> <span class="o">=</span> <span class="n">array_mult</span><span class="p">(</span><span class="o">*</span><span class="n">chunking</span><span class="p">[:</span><span class="n">last_chunked</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">static_size</span>
+    <span class="k">return</span> <span class="n">chunksizes</span>
+
+
+<span class="k">def</span> <span class="nf">modify_chunking</span><span class="p">(</span><span class="n">chunking</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">merge_idxs</span><span class="p">):</span>
+    <span class="n">chunk_dim</span> <span class="o">=</span> <span class="n">chunking</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span>
+    <span class="n">merge_idxs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">merge_idxs</span><span class="p">))</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="n">chunk_dim</span><span class="p">[:</span><span class="n">merge_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">after</span> <span class="o">=</span> <span class="n">chunk_dim</span><span class="p">[</span><span class="n">merge_idxs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+    <span class="n">merged_dim</span> <span class="o">=</span> <span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">chunk_dim</span><span class="p">[</span><span class="n">merge_idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">merge_idxs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]),)</span>
+    <span class="n">new_chunk_dim</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">before</span><span class="p">)</span> <span class="o">+</span> <span class="n">merged_dim</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
+    <span class="n">chunking</span> <span class="o">=</span> <span class="n">chunking</span><span class="p">[:</span><span class="n">dim</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">new_chunk_dim</span><span class="p">,)</span> <span class="o">+</span> <span class="n">chunking</span><span class="p">[</span><span class="n">dim</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">chunking</span>
+
+
+<span class="k">def</span> <span class="nf">findall</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span> <span class="k">if</span> <span class="n">e</span> <span class="o">==</span> <span class="n">val</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">neighbour_idxs</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="n">max_idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="n">max_idx</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">idx</span> <span class="o">==</span> <span class="n">max_idx</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+
+<span class="k">def</span> <span class="nf">min_neighbour</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="n">neighbour_idxs</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">left</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">right</span>
+    <span class="k">elif</span> <span class="n">right</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">left</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">([</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sequence</span><span class="p">[</span><span class="n">x</span><span class="p">])</span>
+
+
+<span class="k">def</span> <span class="nf">min_with_min_neighbor</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
+    <span class="n">min_val</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+    <span class="n">occurences</span> <span class="o">=</span> <span class="n">findall</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">min_val</span><span class="p">)</span>
+    <span class="n">min_idx_pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">idx</span><span class="p">,</span> <span class="n">min_neighbour</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">idx</span><span class="p">))</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">occurences</span><span class="p">]</span>
+    <span class="n">pair</span> <span class="o">=</span> <span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">get_values</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">idxs</span><span class="p">))</span> <span class="k">for</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">min_idx_pairs</span><span class="p">]</span>
+    <span class="n">min_pair</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+    <span class="n">min_pair_occurences</span> <span class="o">=</span> <span class="n">findall</span><span class="p">(</span><span class="n">pair</span><span class="p">,</span> <span class="n">min_pair</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">min_idx_pairs</span><span class="p">[</span><span class="n">min_pair_occurences</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>  <span class="c1"># breaking ties from right</span>
+
+
+<span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">sequence</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">merge_until_target</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">min_chunks</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="n">chunking</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">chunks</span>
+    <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">:</span>
+        <span class="c1"># A really small dataset, better to treat as one partition</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">s</span><span class="p">,)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">chunksizes</span> <span class="o">=</span> <span class="n">get_chunksizes</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">chunksizes</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">min_chunks</span> <span class="ow">and</span> <span class="n">chunksizes</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">target</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">chunksizes</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Overflow in chunksize calculation, will be clipped!&#39;</span><span class="p">)</span>
+        <span class="n">chunksizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">chunksizes</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">last_chunked_dim</span> <span class="o">=</span> <span class="n">get_last_chunked_dim</span><span class="p">(</span><span class="n">chunking</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">last_chunked_dim</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># No chunking, by definition complete</span>
+            <span class="k">break</span>
+        <span class="n">last_chunking</span> <span class="o">=</span> <span class="n">chunking</span><span class="p">[</span><span class="n">last_chunked_dim</span><span class="p">]</span>
+        <span class="n">to_merge</span> <span class="o">=</span> <span class="n">min_with_min_neighbor</span><span class="p">(</span><span class="n">last_chunking</span><span class="p">)</span>
+        <span class="n">chunking</span> <span class="o">=</span> <span class="n">modify_chunking</span><span class="p">(</span><span class="n">chunking</span><span class="p">,</span> <span class="n">last_chunked_dim</span><span class="p">,</span> <span class="n">to_merge</span><span class="p">)</span>
+        <span class="n">chunksizes</span> <span class="o">=</span> <span class="n">get_chunksizes</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">chunking</span><span class="o">=</span><span class="n">chunking</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chunking</span><span class="p">,</span> <span class="n">chunksizes</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">chunksizes</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

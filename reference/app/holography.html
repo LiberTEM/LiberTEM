@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Off-axis electron holography &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Mask creation and manipulation" href="../masks.html" />
+    <link rel="prev" title="Phase-change materials reference" href="phasechange.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Python API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../application.html">Application-specific APIs</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="amorphous.html">Amorphous materials reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="strain.html">Correlation-based peak finding and strain mapping reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="phasechange.html">Phase-change materials reference</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Off-axis electron holography</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#hologram-reconstruction">Hologram reconstruction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-libertem.utils.generate">Hologram simulation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../progress.html">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Python API reference</a></li>
+          <li class="breadcrumb-item"><a href="../application.html">Application-specific APIs</a></li>
+      <li class="breadcrumb-item active">Off-axis electron holography</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/reference/app/holography.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="off-axis-electron-holography">
+<h1>Off-axis electron holography<a class="headerlink" href="#off-axis-electron-holography" title="Permalink to this heading"></a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.3.0.</span></p>
+</div>
+<p>The off-axis holography applications (see <a class="reference internal" href="../../app/holography.html#holography-app"><span class="std std-ref">Off-axis electron holography</span></a> for the application examples) are realized in
+two modules: UDF for off axis electron holography reconstruction and utility function for hologram simulations.</p>
+<section id="hologram-reconstruction">
+<h2>Hologram reconstruction<a class="headerlink" href="#hologram-reconstruction" title="Permalink to this heading"></a></h2>
+<p>The reconstruction module contains class for reconstruction of off-axis holograms using Fourier-space method
+which implies following processing steps:</p>
+<ul class="simple">
+<li><p>Fast Fourier transform</p></li>
+<li><p>Filtering of the sideband in Fourier space and cropping (if applicable)</p></li>
+<li><p>Centering of the sideband</p></li>
+<li><p>Inverse Fourier transform.</p></li>
+</ul>
+<span class="target" id="module-libertem.udf.holography"></span><dl class="py class">
+<dt class="sig sig-object py" id="libertem.udf.holography.HoloReconstructUDF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">libertem.udf.holography.</span></span><span class="sig-name descname"><span class="pre">HoloReconstructUDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sb_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sb_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sb_smoothness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#HoloReconstructUDF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.HoloReconstructUDF" title="Permalink to this definition"></a></dt>
+<dd><p>Reconstruct off-axis electron holograms using a Fourier-based method.</p>
+<p>Running <a class="reference internal" href="../api.html#libertem.api.Context.run_udf" title="libertem.api.Context.run_udf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_udf()</span></code></a> on an instance of this class
+will reconstruct a complex electron wave. Use the <code class="code docutils literal notranslate"><span class="pre">wave</span></code> key to access
+the raw data in the result.</p>
+<p>See <a class="reference internal" href="../../app/holography.html#holography-app"><span class="std std-ref">Off-axis electron holography</span></a> for detailed application example</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.3.0.</span></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>out_shape</strong> (<em>(</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – Shape of the returned complex wave image. Note that the result should fit into the
+main memory.
+See <a class="reference internal" href="../../app/holography.html#holography-app"><span class="std std-ref">Off-axis electron holography</span></a> for more details</p></li>
+<li><p><strong>sb_position</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/stdtypes.html#tuple" title="(in Python v3.10)"><em>tuple</em></a><em>, or </em><em>vector</em>) – Coordinates of sideband position with respect to non-shifted FFT of a hologram</p></li>
+<li><p><strong>sb_size</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Radius of side band filter in pixels</p></li>
+<li><p><strong>sb_smoothness</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em><em> (</em><em>Default: 0.05</em><em>)</em>) – Fraction of <cite>sb_size</cite> over which the edge of the filter aperture to be smoothed</p></li>
+<li><p><strong>precision</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>(</em><em>Default: True</em><em>)</em>) – Defines precision of the reconstruction, True for complex128 for the resulting
+complex wave, otherwise results will be complex64</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">sig</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sb_position</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sb_size</span> <span class="o">=</span> <span class="mf">4.4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">holo_udf</span> <span class="o">=</span> <span class="n">HoloReconstructUDF</span><span class="p">(</span><span class="n">out_shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+<span class="gp">... </span>                              <span class="n">sb_position</span><span class="o">=</span><span class="n">sb_position</span><span class="p">,</span>
+<span class="gp">... </span>                              <span class="n">sb_size</span><span class="o">=</span><span class="n">sb_size</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wave</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">holo_udf</span><span class="p">)[</span><span class="s1">&#39;wave&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.udf.holography.HoloReconstructUDF.get_backends">
+<span class="sig-name descname"><span class="pre">get_backends</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#HoloReconstructUDF.get_backends"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.HoloReconstructUDF.get_backends" title="Permalink to this definition"></a></dt>
+<dd><p>Signal which computation back-ends the UDF can use.</p>
+<p>Allowed are values in <a class="reference internal" href="../udf.html#libertem.udf.base.UDF.BACKEND_ALL" title="libertem.udf.base.UDF.BACKEND_ALL"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDF.BACKEND_ALL</span></code></a>.
+<code class="code docutils literal notranslate"><span class="pre">(UDF.BACKEND_NUMPY,</span> <span class="pre">)</span></code> is returned by default for CPU-based computation.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.6.0.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">Changed in version 0.11.0: </span>Extended from just NumPy vs. CuPy to include more generic specification of backends,
+including sparse arrays. See <a class="reference internal" href="../../udf/advanced.html#sparse"><span class="std std-ref">Sparse arrays</span></a> for details! The backend specifications are
+backwards-compatible with the previously supported values.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A single value or iterable containing values from the supported backends
+in <a class="reference internal" href="../udf.html#libertem.udf.base.UDF.BACKEND_ALL" title="libertem.udf.base.UDF.BACKEND_ALL"><code class="xref py py-attr docutils literal notranslate"><span class="pre">libertem.udf.base.UDF.BACKEND_ALL</span></code></a></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>backends</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.udf.holography.HoloReconstructUDF.get_result_buffers">
+<span class="sig-name descname"><span class="pre">get_result_buffers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#HoloReconstructUDF.get_result_buffers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.HoloReconstructUDF.get_result_buffers" title="Permalink to this definition"></a></dt>
+<dd><p>Initializes <a class="reference internal" href="../udf.html#libertem.common.buffers.BufferWrapper" title="libertem.common.buffers.BufferWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BufferWrapper</span></code></a> objects for reconstructed
+wave function</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><em>A dictionary that maps ‘wave’ to the corresponding</em></p></li>
+<li><p><a class="reference internal" href="../udf.html#libertem.common.buffers.BufferWrapper" title="libertem.common.buffers.BufferWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">BufferWrapper</span></code></a> objects</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.udf.holography.HoloReconstructUDF.get_task_data">
+<span class="sig-name descname"><span class="pre">get_task_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#HoloReconstructUDF.get_task_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.HoloReconstructUDF.get_task_data" title="Permalink to this definition"></a></dt>
+<dd><p>Updates <cite>task_data</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>kwargs</strong> (<em>dict</em>)</p></li>
+<li><p><em>A dictionary with the following keys</em> – kwargs[‘aperture’] : array-like
+Side band filter aperture (mask)
+kwargs[‘slice’] : slice
+Slice for slicing FFT of the hologram</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="libertem.udf.holography.HoloReconstructUDF.process_frame">
+<span class="sig-name descname"><span class="pre">process_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#HoloReconstructUDF.process_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.HoloReconstructUDF.process_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Reconstructs holograms outputting results into ‘wave’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>frame</strong> – single frame (hologram) of the data</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.udf.holography.aperture_function">
+<span class="sig-prename descclassname"><span class="pre">libertem.udf.holography.</span></span><span class="sig-name descname"><span class="pre">aperture_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apradius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rsmooth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#aperture_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.aperture_function" title="Permalink to this definition"></a></dt>
+<dd><p>A smooth aperture function that decays from apradius-rsmooth to apradius+rsmooth.
+:param r: Array of input data (e.g. frequencies)
+:type r: ndarray
+:param apradius: Radius (center) of the smooth aperture. Decay starts at apradius - rsmooth.
+:type apradius: float
+:param rsmooth: Smoothness in halfwidth. rsmooth = 1 will cause a decay from 1 to 0 over 2 pixel.
+:type rsmooth: float</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2d array containing aperture</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.udf.holography.freq_array">
+<span class="sig-prename descclassname"><span class="pre">libertem.udf.holography.</span></span><span class="sig-name descname"><span class="pre">freq_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1.0,</span> <span class="pre">1.0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/udf/holography.html#freq_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.udf.holography.freq_array" title="Permalink to this definition"></a></dt>
+<dd><p>Makes up a frequency array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> (<em>(</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>)</em>) – The shape of the array.</p></li>
+<li><p><strong>sampling</strong> (<em>(</em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>)</em><em>, </em><em>optional</em><em>, </em><em>(</em><em>Default:</em><em> (</em><em>1.</em><em>, </em><em>1.</em><em>)</em><em>)</em>) – The sampling rates of the array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Array of the frequencies.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-libertem.utils.generate">
+<span id="hologram-simulation"></span><h2>Hologram simulation<a class="headerlink" href="#module-libertem.utils.generate" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="libertem.utils.generate.hologram_frame">
+<span class="sig-prename descclassname"><span class="pre">libertem.utils.generate.</span></span><span class="sig-name descname"><span class="pre">hologram_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visibility</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_angle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gaussian_noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poisson_noise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/libertem/utils/generate.html#hologram_frame"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.utils.generate.hologram_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Generates holograms using phase and amplitude as an input</p>
+<p>See <a class="reference internal" href="../../app/holography.html#holography-app"><span class="std std-ref">Off-axis electron holography</span></a> for detailed application example</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 0.3.0.</span></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Theoretical basis for hologram simulations see in:
+Lichte, H., and M. Lehmann. Rep. Prog. Phys. 71 (2008): 016102.
+doi:10.1088/0034-4885/71/1/016102
+<span id="id1">[<a class="reference internal" href="../../index.html#id110" title="H. Lichte and M. Lehmann. Electron holography–basics and applications. Rep. Prog. Phys., 71:016102, 2008. doi:10.1088/0034-4885/71/1/016102.">LL08</a>]</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>amp</strong> (<em>np.ndarray</em><em>, </em><em>2d</em>) – normalized amplitude and phase images of the same shape</p></li>
+<li><p><strong>phi</strong> (<em>np.ndarray</em><em>, </em><em>2d</em>) – normalized amplitude and phase images of the same shape</p></li>
+<li><p><strong>counts</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>default: 1000.</em>) – Number of electron counts in vacuum</p></li>
+<li><p><strong>sampling</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>default: 5.</em>) – Hologram fringe sampling (number of pixels per fringe)</p></li>
+<li><p><strong>visibility</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>default: 1.</em>) – Hologram fringe visibility (aka fringe contrast)</p></li>
+<li><p><strong>f_angle</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>default: 30.</em>) – Angle in degrees of hologram fringes with respect to X-axis</p></li>
+<li><p><strong>gaussian_noise</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> or </em><em>None</em><em>, </em><em>default: None.</em>) – Amount of Gaussian smoothing determined by sigma parameter
+applied to the hologram simulating effect of focus spread or
+PSF of the detector.</p></li>
+<li><p><strong>poisson_noise</strong> (<a class="reference external" href="https://docs.python.org/3.10/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.10/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em> or </em><em>None</em><em>, </em><em>default: None.</em>) – Amount of Poisson applied to the hologram.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>holo</strong> – hologram image</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, 2d</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="phasechange.html" class="btn btn-neutral float-left" title="Phase-change materials reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../masks.html" class="btn btn-neutral float-right" title="Mask creation and manipulation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

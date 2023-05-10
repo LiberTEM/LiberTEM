@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.udf.stddev &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.udf.stddev</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.udf.stddev</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numba</span>
+<span class="kn">from</span> <span class="nn">sparseconverter</span> <span class="kn">import</span> <span class="n">SPARSE_BACKENDS</span>
+
+<span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+<span class="kn">from</span> <span class="nn">libertem.common.buffers</span> <span class="kn">import</span> <span class="n">reshaped_view</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">merge_single</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n_0</span><span class="p">,</span> <span class="n">sum_0</span><span class="p">,</span> <span class="n">varsum_0</span><span class="p">,</span> <span class="n">n_1</span><span class="p">,</span> <span class="n">sum_1</span><span class="p">,</span> <span class="n">varsum_1</span><span class="p">,</span> <span class="n">mean_1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Basic function to perform numerically stable merge.</span>
+
+<span class="sd">    This function is designed to be inlined in a loop over all pixels in a frame</span>
+<span class="sd">    to merge an individual pixel, with some parts pre-calculated.</span>
+
+<span class="sd">    Based on :cite:`Schubert2018`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Total number of frames, assumed n == n_0 + n_1</span>
+<span class="sd">        Pre-calculated since equal for all pixels.</span>
+<span class="sd">    n_0 : int</span>
+<span class="sd">        Number of frames aggregated in sum_0 and varsum_0, n_0 &gt; 0.</span>
+<span class="sd">        The case n_0 == 0 is handled separately in the calling function.</span>
+<span class="sd">    sum_0, varsum_0 : float</span>
+<span class="sd">        Aggregate sum and sum of variances</span>
+<span class="sd">    n_1 : int</span>
+<span class="sd">        Number of frames to merge from minibatch, n_1 &gt; 0</span>
+<span class="sd">    sum_1, varsum_1, mean_1 : float</span>
+<span class="sd">        Minibatch sum, sum of variances and mean. The mean is</span>
+<span class="sd">        available from the previous minibatch calculation in the innermost</span>
+<span class="sd">        aggregation loop as a &quot;hot&quot; value.samples</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sum, varsum : float</span>
+<span class="sd">        New aggregate sum and sum of variances</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># compute mean for each partitions</span>
+    <span class="n">mean_0</span> <span class="o">=</span> <span class="n">sum_0</span> <span class="o">/</span> <span class="n">n_0</span>
+
+    <span class="c1"># compute mean for joint samples</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">mean_1</span> <span class="o">-</span> <span class="n">mean_0</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">mean_0</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_1</span> <span class="o">*</span> <span class="n">delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+
+    <span class="c1"># compute sum of images for joint samples</span>
+    <span class="n">sumsum</span> <span class="o">=</span> <span class="n">sum_0</span> <span class="o">+</span> <span class="n">sum_1</span>
+
+    <span class="c1"># compute sum of variances for joint samples</span>
+    <span class="n">partial_delta</span> <span class="o">=</span> <span class="n">mean_1</span> <span class="o">-</span> <span class="n">mean</span>
+    <span class="c1"># The original version had delta * partial_delta, which gave wrong results</span>
+    <span class="c1"># for complex numbers. Taking the absolute seems to fix this for complex.</span>
+    <span class="c1"># For real values it is equivalent since delta and partial_delta always have</span>
+    <span class="c1"># the same sign: inserting mean from above yields</span>
+    <span class="c1"># partial_delta = delta + (n_1 * delta) / n</span>
+    <span class="c1"># n_1 and n are natural numbers.</span>
+    <span class="c1"># For complex values it is plausible since the variance</span>
+    <span class="c1"># sum of the total is a real number. If the mean of both subsets is equal,</span>
+    <span class="c1"># the total is varsum_0 + varsum_1, since both delta and partial_delta are</span>
+    <span class="c1"># zero. If the mean of the subsets is different, the total variance sum</span>
+    <span class="c1"># must always be larger than the variance sums of the</span>
+    <span class="c1"># subsets. Taking the absolute of both is the only plausible way I can see</span>
+    <span class="c1"># to make sure the calculation is equivalent for real values and at the same time always</span>
+    <span class="c1"># a positive real value for complex numbers.</span>
+    <span class="c1"># FIXME proper validation and proof for complex</span>
+    <span class="n">varsum</span> <span class="o">=</span> <span class="n">varsum_0</span> <span class="o">+</span> <span class="n">varsum_1</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">partial_delta</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sumsum</span><span class="p">,</span> <span class="n">varsum</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">dest_n</span><span class="p">,</span> <span class="n">dest_sum</span><span class="p">,</span> <span class="n">dest_varsum</span><span class="p">,</span> <span class="n">src_n</span><span class="p">,</span> <span class="n">src_sum</span><span class="p">,</span> <span class="n">src_varsum</span><span class="p">,</span> <span class="n">src_mean</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given two sets of buffers, with sum of frames</span>
+<span class="sd">    and sum of variances, aggregate joint sum of frames</span>
+<span class="sd">    and sum of variances in destination buffers using one pass</span>
+<span class="sd">    algorithm.</span>
+
+<span class="sd">    This is ther numerical workhorse for :meth:`StdDevUDF.merge`.</span>
+
+<span class="sd">    Based on :cite:`Schubert2018`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dest_n : int</span>
+<span class="sd">        Number of frames aggregated in dest_sum and dest_varsum</span>
+<span class="sd">        The case :code:`dest_N == 0` is handled correctly.</span>
+<span class="sd">    dest_sum, dest_varsum : one-dimensional numpy.ndarray</span>
+<span class="sd">        Aggregation buffers, will be updated: sum of pixels, sum of variances</span>
+<span class="sd">    src_n : int</span>
+<span class="sd">        Number of frames aggregated in src_sum and src_varsum</span>
+<span class="sd">    src_sum, src_varsum : one-dimensional numpy.ndarray</span>
+<span class="sd">        Source buffers to merge: sum of pixels, sum of variances</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    N:</span>
+<span class="sd">        New number of frames aggregated in aggregation buffer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dest_n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dest_sum</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">src_sum</span>
+        <span class="n">dest_varsum</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">src_varsum</span>
+        <span class="k">return</span> <span class="n">src_n</span>
+    <span class="k">elif</span> <span class="n">src_n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Can happen from empty partitions due to sync offset</span>
+        <span class="k">return</span> <span class="n">dest_n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">dest_n</span> <span class="o">+</span> <span class="n">src_n</span>
+
+        <span class="k">for</span> <span class="n">pixel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dest_sum</span><span class="p">)):</span>
+            <span class="n">dest_sum</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span> <span class="n">dest_varsum</span><span class="p">[</span><span class="n">pixel</span><span class="p">]</span> <span class="o">=</span> <span class="n">merge_single</span><span class="p">(</span>
+                <span class="n">n</span><span class="p">,</span>
+                <span class="n">dest_n</span><span class="p">,</span> <span class="n">dest_sum</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span> <span class="n">dest_varsum</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span>
+                <span class="n">src_n</span><span class="p">,</span> <span class="n">src_sum</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span> <span class="n">src_varsum</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span> <span class="n">src_mean</span><span class="p">[</span><span class="n">pixel</span><span class="p">]</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">n</span>
+
+
+<span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">fastmath</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nogil</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">n_0</span><span class="p">,</span> <span class="n">sum_inout</span><span class="p">,</span> <span class="n">varsum_inout</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute sum and variance of :code:`tile` along navigation axis</span>
+<span class="sd">    and merge into aggregation buffers. Numerical &quot;workhorse&quot; for</span>
+<span class="sd">    :meth:`StdDevUDF.process_tile`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tile : 2-dimensional numpy.ndarray</span>
+<span class="sd">        Tile with flattened signal dimension</span>
+<span class="sd">    n_0 : int</span>
+<span class="sd">        Number of frames already aggegated in sum_inout, varsum_inout</span>
+<span class="sd">        Cannot be 0 -- the initial case is handled in :meth:`StdDevUDF.process_tile`</span>
+<span class="sd">        For unknown reasons, handling the case N0 == 0 in this function degraded performance</span>
+<span class="sd">        significantly. Re-check with a newer compiler version!</span>
+<span class="sd">    sum_inout, varsum_inout : numpy.ndarray</span>
+<span class="sd">        Aggregation buffers (1D) with length matching the flattened signal dimension</span>
+<span class="sd">        of the tile. The tile will be merged into these buffers (call by reference)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        New number of frames in aggregation buffer</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">n_frames</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n_pixels</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">n_0</span> <span class="o">+</span> <span class="n">n_frames</span>
+
+    <span class="n">BLOCKSIZE</span> <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">n_blocks</span> <span class="o">=</span> <span class="n">n_pixels</span> <span class="o">//</span> <span class="n">BLOCKSIZE</span>
+
+    <span class="n">sumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">BLOCKSIZE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">sum_inout</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">varsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">BLOCKSIZE</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">varsum_inout</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_blocks</span><span class="p">):</span>
+        <span class="n">pixel_offset</span> <span class="o">=</span> <span class="n">block</span><span class="o">*</span><span class="n">BLOCKSIZE</span>
+        <span class="n">sumsum</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">BLOCKSIZE</span><span class="p">):</span>
+                <span class="n">sumsum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">tile</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">pixel_offset</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">sumsum</span> <span class="o">/</span> <span class="n">n_frames</span>
+        <span class="n">varsum</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">BLOCKSIZE</span><span class="p">):</span>
+                <span class="n">varsum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tile</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">pixel_offset</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">BLOCKSIZE</span><span class="p">):</span>
+            <span class="n">sum_inout</span><span class="p">[</span><span class="n">pixel_offset</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span> <span class="n">varsum_inout</span><span class="p">[</span><span class="n">pixel_offset</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">merge_single</span><span class="p">(</span>
+                <span class="n">n</span><span class="p">,</span>
+                <span class="n">n_0</span><span class="p">,</span> <span class="n">sum_inout</span><span class="p">[</span><span class="n">pixel_offset</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span> <span class="n">varsum_inout</span><span class="p">[</span><span class="n">pixel_offset</span> <span class="o">+</span> <span class="n">i</span><span class="p">],</span>
+                <span class="n">n_frames</span><span class="p">,</span> <span class="n">sumsum</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">varsum</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mean</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="n">pixel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_blocks</span><span class="o">*</span><span class="n">BLOCKSIZE</span><span class="p">,</span> <span class="n">n_pixels</span><span class="p">):</span>
+        <span class="n">sumsum_rest</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+            <span class="n">sumsum_rest</span> <span class="o">+=</span> <span class="n">tile</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">pixel</span><span class="p">]</span>
+        <span class="n">mean_rest</span> <span class="o">=</span> <span class="n">sumsum_rest</span> <span class="o">/</span> <span class="n">n_frames</span>
+        <span class="n">varsum_rest</span> <span class="o">=</span> <span class="mf">0.</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_frames</span><span class="p">):</span>
+            <span class="n">varsum_rest</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tile</span><span class="p">[</span><span class="n">frame</span><span class="p">,</span> <span class="n">pixel</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_rest</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">sum_inout</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span> <span class="n">varsum_inout</span><span class="p">[</span><span class="n">pixel</span><span class="p">]</span> <span class="o">=</span> <span class="n">merge_single</span><span class="p">(</span>
+            <span class="n">n</span><span class="p">,</span>
+            <span class="n">n_0</span><span class="p">,</span> <span class="n">sum_inout</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span> <span class="n">varsum_inout</span><span class="p">[</span><span class="n">pixel</span><span class="p">],</span>
+            <span class="n">n_frames</span><span class="p">,</span> <span class="n">sumsum_rest</span><span class="p">,</span> <span class="n">varsum_rest</span><span class="p">,</span> <span class="n">mean_rest</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">n</span>
+
+
+<span class="k">def</span> <span class="nf">merge_ndarray</span><span class="p">(</span><span class="n">dest_n</span><span class="p">,</span> <span class="n">dest_sum</span><span class="p">,</span> <span class="n">dest_varsum</span><span class="p">,</span> <span class="n">src_n</span><span class="p">,</span> <span class="n">src_sum</span><span class="p">,</span> <span class="n">src_varsum</span><span class="p">,</span> <span class="n">src_mean</span><span class="p">,</span> <span class="n">forbuf</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Version of :func:`merge` that only uses ndarray routines</span>
+<span class="sd">    for CuPy and sparse input data</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">dest_n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dest_sum</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">forbuf</span><span class="p">(</span><span class="n">src_sum</span><span class="p">,</span> <span class="n">dest_sum</span><span class="p">)</span>
+        <span class="n">dest_varsum</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">forbuf</span><span class="p">(</span><span class="n">src_varsum</span><span class="p">,</span> <span class="n">dest_varsum</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">src_n</span>
+    <span class="k">elif</span> <span class="n">src_n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dest_n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">dest_n</span> <span class="o">+</span> <span class="n">src_n</span>
+        <span class="c1"># compute mean for each partitions</span>
+        <span class="n">mean_0</span> <span class="o">=</span> <span class="n">dest_sum</span> <span class="o">/</span> <span class="n">dest_n</span>
+        <span class="n">mean_1</span> <span class="o">=</span> <span class="n">src_mean</span>
+
+        <span class="c1"># compute mean for joint samples</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">mean_1</span> <span class="o">-</span> <span class="n">mean_0</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">mean_0</span> <span class="o">+</span> <span class="p">(</span><span class="n">src_n</span> <span class="o">*</span> <span class="n">delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+
+        <span class="c1"># compute sum of images for joint samples</span>
+        <span class="n">dest_sum</span> <span class="o">+=</span> <span class="n">forbuf</span><span class="p">(</span><span class="n">src_sum</span><span class="p">,</span> <span class="n">dest_sum</span><span class="p">)</span>
+
+        <span class="c1"># compute sum of variances for joint samples</span>
+        <span class="n">partial_delta</span> <span class="o">=</span> <span class="n">mean_1</span> <span class="o">-</span> <span class="n">mean</span>
+        <span class="n">dest_varsum</span> <span class="o">+=</span> <span class="n">forbuf</span><span class="p">(</span>
+            <span class="c1"># Use multiply for compatibility with matrix interface (scipy.sparse)</span>
+            <span class="n">src_varsum</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">src_n</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">partial_delta</span><span class="p">))),</span>
+            <span class="n">dest_varsum</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">n</span>
+
+
+<span class="k">def</span> <span class="nf">process_tile_ndarray</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">n_0</span><span class="p">,</span> <span class="n">sum_inout</span><span class="p">,</span> <span class="n">varsum_inout</span><span class="p">,</span> <span class="n">forbuf</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Version of :func:`process_tile` that only uses ndarray routines</span>
+<span class="sd">    for CuPy and sparse input data</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">n_frames</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">n_0</span> <span class="o">+</span> <span class="n">n_frames</span>
+    <span class="n">sumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">sumsum</span> <span class="o">/</span> <span class="n">n_frames</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tile</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span>
+    <span class="n">varsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">delta</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">merge_ndarray</span><span class="p">(</span>
+        <span class="n">n_0</span><span class="p">,</span> <span class="n">sum_inout</span><span class="p">,</span> <span class="n">varsum_inout</span><span class="p">,</span>
+        <span class="n">n_frames</span><span class="p">,</span> <span class="n">sumsum</span><span class="p">,</span> <span class="n">varsum</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span>
+        <span class="n">forbuf</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">n</span>
+
+
+<span class="c1"># Helper function to make sure the frame count</span>
+<span class="c1"># is consistent at the merge stage</span>
+<span class="k">def</span> <span class="nf">_validate_n</span><span class="p">(</span><span class="n">num_frame</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_frame</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">num_frame</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">equal</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="StdDevUDF"><a class="viewcode-back" href="../../../reference/udf.html#libertem.udf.stddev.StdDevUDF">[docs]</a><span class="k">class</span> <span class="nc">StdDevUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute sum of variances and sum of pixels from the given dataset</span>
+
+<span class="sd">    The one-pass algorithm used in this code is taken from the following</span>
+<span class="sd">    paper: :cite:`Schubert2018`.</span>
+
+<span class="sd">    ..versionchanged:: 0.5.0</span>
+<span class="sd">        Result buffers have been renamed</span>
+
+<span class="sd">    ..versionchanged:: 0.7.0</span>
+<span class="sd">        :code:`var`, :code:`mean`, and :code:`std` are now returned directly</span>
+<span class="sd">        from the UDF via :code:`get_results`.</span>
+
+<span class="sd">    ..versionchanged:: 0.11</span>
+<span class="sd">        added dtype and use_numba parameters, added support for sparse input.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    dtype</span>
+<span class="sd">        Base dtype to determine numerical precision.</span>
+
+<span class="sd">    use_numba : bool</span>
+<span class="sd">        Use the Numba-accelerated version if input array format and backend allow.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; udf = StdDevUDF()</span>
+<span class="sd">    &gt;&gt;&gt; result = ctx.run_udf(dataset=dataset, udf=udf)</span>
+<span class="sd">    &gt;&gt;&gt; np.array(result[&quot;varsum&quot;])        # variance times number of frames</span>
+<span class="sd">    array(...)</span>
+<span class="sd">    &gt;&gt;&gt; np.array(result[&quot;num_frames&quot;])  # number of frames for each tile</span>
+<span class="sd">    array(...)</span>
+<span class="sd">    &gt;&gt;&gt; np.array(result[&quot;sum&quot;])  # sum of all frames</span>
+<span class="sd">    array(...)</span>
+<span class="sd">    &gt;&gt;&gt; np.array(result[&quot;var&quot;])</span>
+<span class="sd">    array(...)</span>
+<span class="sd">    &gt;&gt;&gt; np.array(result[&quot;mean&quot;])</span>
+<span class="sd">    array(...)</span>
+<span class="sd">    &gt;&gt;&gt; np.array(result[&quot;std&quot;])</span>
+<span class="sd">    array(...)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_numba</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">use_numba</span><span class="o">=</span><span class="n">use_numba</span><span class="p">)</span>
+
+<div class="viewcode-block" id="StdDevUDF.get_backends"><a class="viewcode-back" href="../../../reference/udf.html#libertem.udf.stddev.StdDevUDF.get_backends">[docs]</a>    <span class="k">def</span> <span class="nf">get_backends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO supporting sparse backends efficiently requires a dedicated implementation</span>
+        <span class="c1"># since the generic one calculates the difference from a mean value,</span>
+        <span class="c1"># which can densify a sparse array.</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">BACKEND_ALL</span> <span class="k">if</span> <span class="n">b</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SPARSE_BACKENDS</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="n">base_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">if</span> <span class="n">base_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">input_dtype</span><span class="p">,</span> <span class="n">base_dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;varsum&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">base_dtype</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;device&#39;</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;num_frames&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int64&#39;</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s1">&#39;device&#39;</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;var&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">base_dtype</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;result_only&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">base_dtype</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;result_only&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span>
+                <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">use</span><span class="o">=</span><span class="s1">&#39;result_only&#39;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="StdDevUDF.get_task_data"><a class="viewcode-back" href="../../../reference/udf.html#libertem.udf.stddev.StdDevUDF.get_task_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_task_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;num_frames&#39;</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">}</span></div>
+
+    <span class="k">def</span> <span class="nf">postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">_validate_n</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_data</span><span class="o">.</span><span class="n">num_frames</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="c1"># Given destination and source buffers that contain sum of variances, sum of frames,</span>
+        <span class="c1"># and the number of frames used in each of the buffers, merge the source</span>
+        <span class="c1"># buffers into the destination buffers by computing the joint sum of variances and</span>
+        <span class="c1"># sum of frames over all frames used</span>
+
+        <span class="c1"># Parameters</span>
+        <span class="c1"># ----------</span>
+        <span class="c1"># dest</span>
+        <span class="c1">#     Aggregation bufer that contains sum of variances, sum of frames, and the</span>
+        <span class="c1">#     number of frames</span>
+        <span class="c1"># src</span>
+        <span class="c1">#     Partial results that contains sum of variances, sum of frames, and the</span>
+        <span class="c1">#     number of frames of a partition to be merged into the aggregation buffers</span>
+        <span class="n">dest_n</span> <span class="o">=</span> <span class="n">dest</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">src_n</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">use_numba</span><span class="p">:</span>
+            <span class="n">my_merge</span> <span class="o">=</span> <span class="n">merge</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">my_merge</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">merge_ndarray</span><span class="p">,</span> <span class="n">forbuf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forbuf</span><span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">my_merge</span><span class="p">(</span>
+            <span class="n">dest_n</span><span class="o">=</span><span class="n">dest_n</span><span class="p">,</span>
+            <span class="n">dest_sum</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="n">dest</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)),</span>
+            <span class="n">dest_varsum</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="n">dest</span><span class="o">.</span><span class="n">varsum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)),</span>
+            <span class="n">src_n</span><span class="o">=</span><span class="n">src_n</span><span class="p">,</span>
+            <span class="n">src_sum</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)),</span>
+            <span class="n">src_varsum</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">varsum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,)),</span>
+            <span class="n">src_mean</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,))</span> <span class="o">/</span> <span class="n">src_n</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">n</span>
+
+    <span class="k">def</span> <span class="nf">merge_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ordered_results</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="n">n_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">ordered_results</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="n">pixel_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">sum</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">ordered_results</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="n">pixel_varsums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">varsum</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">ordered_results</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+
+        <span class="c1"># Expand n_frames to be broadcastable</span>
+        <span class="n">extra_dims</span> <span class="o">=</span> <span class="n">pixel_sums</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="n">n_frames</span><span class="o">.</span><span class="n">ndim</span>
+        <span class="n">n_frames</span> <span class="o">=</span> <span class="n">n_frames</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_frames</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span> <span class="o">*</span> <span class="n">extra_dims</span><span class="p">)</span>
+
+        <span class="n">cumulative_frames</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">cumulative_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pixel_sums</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">sumsum</span> <span class="o">=</span> <span class="n">cumulative_sum</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+        <span class="n">total_frames</span> <span class="o">=</span> <span class="n">cumulative_frames</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">mean_0</span> <span class="o">=</span> <span class="n">cumulative_sum</span> <span class="o">/</span> <span class="n">cumulative_frames</span>
+        <span class="c1"># Handle the fact that mean_0 is indexed to results from</span>
+        <span class="c1"># up-to the partition before. We shift everything one to</span>
+        <span class="c1"># the right, and we don&#39;t care about result 0 because it</span>
+        <span class="c1"># is by definiition replaced with varsum[0, ...]</span>
+        <span class="n">mean_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">mean_0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">mean_1</span> <span class="o">=</span> <span class="n">pixel_sums</span> <span class="o">/</span> <span class="n">n_frames</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">mean_1</span> <span class="o">-</span> <span class="n">mean_0</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">mean_0</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_frames</span> <span class="o">*</span> <span class="n">delta</span><span class="p">)</span> <span class="o">/</span> <span class="n">cumulative_frames</span>
+        <span class="n">partial_delta</span> <span class="o">=</span> <span class="n">mean_1</span> <span class="o">-</span> <span class="n">mean</span>
+        <span class="n">varsum</span> <span class="o">=</span> <span class="n">pixel_varsums</span> <span class="o">+</span> <span class="p">(</span><span class="n">n_frames</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">partial_delta</span><span class="p">))</span>
+        <span class="n">varsum_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">varsum</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">sumsum</span><span class="p">,</span>
+            <span class="s1">&#39;varsum&#39;</span><span class="p">:</span> <span class="n">varsum_total</span><span class="p">,</span>
+            <span class="s1">&#39;num_frames&#39;</span><span class="p">:</span> <span class="n">total_frames</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_adjust_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="n">base_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">if</span> <span class="n">base_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">result_type</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">base_dtype</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">dtype</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">input</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">input</span>
+
+    <span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+        <span class="c1"># Calculate a sum and variance minibatch for the tile and update partition buffers</span>
+        <span class="c1"># with it.</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">tiling_scheme_idx</span>
+        <span class="n">n_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_data</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">n_1</span> <span class="o">=</span> <span class="n">tile</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">n_0</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Make sure we calculate with full precision</span>
+            <span class="n">tile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjust_dtype</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sum</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbuf</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sum</span><span class="p">)</span>
+            <span class="c1"># Done this way to support the various array libraries</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tile</span> <span class="o">-</span> <span class="n">tile</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">varsum</span><span class="p">[:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forbuf</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">delta</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">varsum</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_data</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">n_1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">use_numba</span><span class="p">:</span>
+                <span class="n">my_process_tile</span> <span class="o">=</span> <span class="n">process_tile</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Make sure we calculate with full precision</span>
+                <span class="n">tile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjust_dtype</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+                <span class="n">my_process_tile</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">process_tile_ndarray</span><span class="p">,</span> <span class="n">forbuf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forbuf</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_data</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">my_process_tile</span><span class="p">(</span>
+                <span class="n">tile</span><span class="o">=</span><span class="n">tile</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">n_0</span><span class="o">=</span><span class="n">n_0</span><span class="p">,</span>
+                <span class="n">sum_inout</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">)),</span>
+                <span class="n">varsum_inout</span><span class="o">=</span><span class="n">reshaped_view</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">varsum</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="s1">&#39;&#39;</span>
+        <span class="c1"># Calculate variance, mean and standard deviation from raw UDF results</span>
+        <span class="n">num_frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">num_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">varsum</span> <span class="o">/</span> <span class="n">num_frames</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;var&#39;</span><span class="p">:</span> <span class="n">var</span><span class="p">,</span>
+            <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">),</span>
+            <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sum</span> <span class="o">/</span> <span class="n">num_frames</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="consolidate_result"><a class="viewcode-back" href="../../../reference/udf.html#libertem.udf.stddev.consolidate_result">[docs]</a><span class="k">def</span> <span class="nf">consolidate_result</span><span class="p">(</span><span class="n">udf_result</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculate variance, mean and standard deviation</span>
+<span class="sd">    from raw UDF results and consolidate the per-tile frame counter</span>
+<span class="sd">    into a single value. Convert all result arrays to `ndarray`.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    This is mostly here for backwards-compatability - nowadays, &#39;var&#39;, &#39;std&#39;,</span>
+<span class="sd">    and &#39;mean&#39; are already calculated in :meth:`StdDevUDF.get_results`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    udf_result : Dict[str, BufferWrapper]</span>
+<span class="sd">        UDF result with keys &#39;sum&#39;, &#39;varsum&#39;, &#39;num_frames&#39;, &#39;var&#39;, &#39;std&#39;, &#39;mean&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pass_results : Dict[str, Union[numpy.ndarray, int]]</span>
+<span class="sd">        Result dictionary with keys :code:`&#39;sum&#39;, &#39;varsum&#39;, &#39;var&#39;, &#39;std&#39;, &#39;mean&#39;` as</span>
+<span class="sd">        :class:`numpy.ndarray`, and :code:`&#39;num_frames&#39;` as :code:`int`</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;num_frames&#39;</span><span class="p">:</span> <span class="n">udf_result</span><span class="p">[</span><span class="s1">&#39;num_frames&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="s1">&#39;varsum&#39;</span><span class="p">:</span> <span class="n">udf_result</span><span class="p">[</span><span class="s1">&#39;varsum&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="n">udf_result</span><span class="p">[</span><span class="s1">&#39;sum&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="s1">&#39;var&#39;</span><span class="p">:</span> <span class="n">udf_result</span><span class="p">[</span><span class="s1">&#39;var&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="s1">&#39;std&#39;</span><span class="p">:</span> <span class="n">udf_result</span><span class="p">[</span><span class="s1">&#39;std&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+        <span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="n">udf_result</span><span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="run_stddev"><a class="viewcode-back" href="../../../reference/udf.html#libertem.udf.stddev.run_stddev">[docs]</a><span class="k">def</span> <span class="nf">run_stddev</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_numba</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute sum of variances and sum of pixels from the given dataset</span>
+
+<span class="sd">    One-pass algorithm used in this code is taken from the following paper:</span>
+<span class="sd">    :cite:`Schubert2018`.</span>
+
+<span class="sd">    ..versionchanged:: 0.5.0</span>
+<span class="sd">        Result buffers have been renamed</span>
+
+<span class="sd">    ..versionchanged:: 0.5.0</span>
+<span class="sd">        Added :code:`progress` parameter for progress bar</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ctx : libertem.api.Context</span>
+<span class="sd">    dataset : libertem.io.dataset.base.DataSet</span>
+<span class="sd">        dataset to work on</span>
+<span class="sd">    roi : numpy.ndarray</span>
+<span class="sd">        Region of interest, see :ref:`udf roi` for more information.</span>
+<span class="sd">    progress : bool, optional</span>
+<span class="sd">        Show progress bar. Default is :code:`False`.</span>
+<span class="sd">    use_numba : bool</span>
+<span class="sd">        Use the Numba backend if available, otherwise use ndarray based implementation</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pass_results</span>
+<span class="sd">        A dictionary of narrays that contains sum of variances, sum of pixels,</span>
+<span class="sd">        and number of frames used to compute the above statistic</span>
+
+<span class="sd">    To retrieve statistic, using the following commands:</span>
+<span class="sd">    variance : :code:`pass_results[&#39;var&#39;]`</span>
+<span class="sd">    standard deviation : :code:`pass_results[&#39;std&#39;]`</span>
+<span class="sd">    sum of pixels : :code:`pass_results[&#39;sum&#39;]`</span>
+<span class="sd">    mean : :code:`pass_results[&#39;mean&#39;]`</span>
+<span class="sd">    number of frames : :code:`pass_results[&#39;num_frames&#39;]`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stddev_udf</span> <span class="o">=</span> <span class="n">StdDevUDF</span><span class="p">(</span><span class="n">use_numba</span><span class="o">=</span><span class="n">use_numba</span><span class="p">)</span>
+    <span class="n">pass_results</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">stddev_udf</span><span class="p">,</span> <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="n">progress</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">consolidate_result</span><span class="p">(</span><span class="n">pass_results</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

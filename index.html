@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiberTEM - Open Pixelated STEM platform &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            LiberTEM
+              <img src="_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">LiberTEM - Open Pixelated STEM platform</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="libertem-open-pixelated-stem-platform">
+<h1>LiberTEM - Open Pixelated STEM platform<a class="headerlink" href="#libertem-open-pixelated-stem-platform" title="Permalink to this heading"></a></h1>
+<p><a class="reference external" href="https://libertem.github.io/LiberTEM/"><img alt="docs" src="https://img.shields.io/badge/%F0%9F%95%AE-docs-green.svg" /></a> <a class="reference external" href="https://gitter.im/LiberTEM/Lobby"><img alt="gitter" src="https://badges.gitter.im/Join%20Chat.svg" /></a> <a class="reference external" href="https://dev.azure.com/LiberTEM/LiberTEM/_build/latest?definitionId=4&amp;branchName=master"><img alt="azure" src="https://dev.azure.com/LiberTEM/LiberTEM/_apis/build/status/LiberTEM.LiberTEM-data?branchName=master" /></a> <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/"><img alt="github" src="https://img.shields.io/badge/GitHub-GPL--3.0-informational" /></a> <a class="reference external" href="https://codeclimate.com/github/LiberTEM/LiberTEM"><img alt="codeclimate" src="https://api.codeclimate.com/v1/badges/dee042f64380f64737e5/maintainability" /></a> <a class="reference external" href="https://results.pre-commit.ci/latest/github/LiberTEM/LiberTEM/master"><img alt="precommit" src="https://results.pre-commit.ci/badge/github/LiberTEM/LiberTEM/master.svg" /></a> <a class="reference external" href="https://doi.org/10.21105/joss.02006"><img alt="joss" src="https://joss.theoj.org/papers/10.21105/joss.02006/status.svg" /></a> <a class="reference external" href="https://doi.org/10.5281/zenodo.1477847"><img alt="zenodo" src="https://zenodo.org/badge/DOI/10.5281/zenodo.1477847.svg" /></a></p>
+<p>LiberTEM is an open source platform for high-throughput distributed processing
+of large-scale binary data sets and live data streams using a modified
+<a class="reference external" href="https://en.wikipedia.org/wiki/MapReduce">MapReduce programming model</a>. The
+current focus is <a class="reference external" href="https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors_(4D_STEM)">pixelated</a>
+scanning transmission electron microscopy (<a class="reference external" href="https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy">STEM</a>)
+<span id="id1">[<a class="reference internal" href="#id20" title="Ian MacLaren, Magnus Nord, Andrew Ross, Matus Krajnak, Martin Hart, Alastair Doye, Damien McGrouther, Rantej Bali, Archan Banerjee, and Robert Hadfield. Pixelated STEM detectors: opportunities and challenges, pages 663-664. American Cancer Society, 2016. URL: https://onlinelibrary.wiley.com/doi/abs/10.1002/9783527808465.EMC2016.6284, doi:10.1002/9783527808465.EMC2016.6284.">MNR+16</a>, <a class="reference internal" href="#id108" title="Colin Ophus. Four-dimensional scanning transmission electron microscopy (4d-STEM): from scanning nanodiffraction to ptychography and beyond. Microscopy and Microanalysis, 25(3):563–582, may 2019. doi:10.1017/s1431927619000497.">Oph19</a>]</span> and scanning electron
+beam diffraction data.</p>
+<p>MapReduce-like processing allows to specify an algorithm through two functions:
+One function that is mapped on portions of the input data, and another function
+that merges (reduces) a partial result from this mapping step into the complete
+result. A wide range of TEM and 4D STEM processing tasks can be expressed in
+this fashion, see <a class="reference internal" href="#applications">Applications</a>.</p>
+<p>The UDF interface of LiberTEM offers a standardized, versatile API to decouple
+the mathematical core of an algorithm from details of data source, parallelism,
+and use of results. Mapping and merging can be performed in any order and with
+different subdivisions of the input data, including running parts of the
+calculation concurrently. That means the same implementation can be used in a
+wide range of modalities, including massive scaling on clusters. Since each
+merge step produces an intermediate result, this style of processing is suitable
+for displaying live results from a running calculation in a GUI application and
+for <a class="reference external" href="https://github.com/LiberTEM/LiberTEM-live">processing live data streams</a>.
+A closed-loop feedback between processing and instrument control can be realized
+as well. See <a class="reference external" href="https://libertem.github.io/LiberTEM/udf.html">User-defined functions</a> for more details on the
+LiberTEM UDF interface.</p>
+<p>The LiberTEM back-end offers <a class="reference external" href="https://libertem.github.io/LiberTEM/architecture.html">high throughput and scalability</a> on PCs, single server
+nodes, clusters and cloud services. On clusters it can use fast distributed
+local storage on high-performance SSDs. That way it achieves <a class="reference external" href="https://libertem.github.io/LiberTEM/performance.html">very high
+aggregate IO performance</a> on a compact and
+cost-efficient system built from stock components. All CPU cores and CUDA
+devices in a system can be used in parallel.</p>
+<p>LiberTEM is supported on Linux, Mac OS X and Windows. Other platforms that allow
+installation of Python 3.7+ and the required packages will likely work as well. The
+GUI is running in a web browser.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>The short version:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virtualenv<span class="w"> </span>-p<span class="w"> </span>python3<span class="w"> </span>~/libertem-venv/
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>~/libertem-venv/bin/activate
+<span class="o">(</span>libertem-venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;libertem[torch]&quot;</span>
+
+<span class="c1"># optional for GPU support</span>
+<span class="c1"># See also https://docs.cupy.dev/en/stable/install.html</span>
+<span class="o">(</span>libertem-venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>cupy
+</pre></div>
+</div>
+<p>Please see <a class="reference external" href="https://libertem.github.io/LiberTEM/install.html">our documentation</a> for details!</p>
+<p>Alternatively, to run the <a class="reference external" href="https://libertem.github.io/LiberTEM/deployment/clustercontainer.html">LiberTEM Docker image</a>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span>localhost:9000:9000<span class="w"> </span>--mount<span class="w"> </span><span class="nv">type</span><span class="o">=</span>bind,source<span class="o">=</span>/path/to/your/data/,dst<span class="o">=</span>/data/,ro<span class="w"> </span>libertem/libertem
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>singularity<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>docker://libertem/libertem<span class="w"> </span>/venv/bin/libertem-server
+</pre></div>
+</div>
+<p>Deployment for offline data processing on a single-node system for a local user
+is thoroughly tested and can be considered stable. Deployment on a cluster is
+experimental and still requires some additional work, see <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/issues/105">Issue #105</a>. Back-end support for live data processing
+is still experimental as well, see <a class="reference external" href="https://github.com/LiberTEM/LiberTEM-live">https://github.com/LiberTEM/LiberTEM-live</a>.</p>
+</section>
+<section id="applications">
+<h2>Applications<a class="headerlink" href="#applications" title="Permalink to this heading"></a></h2>
+<p>Since LiberTEM is programmable through <a class="reference external" href="https://libertem.github.io/LiberTEM/udf.html">user-defined functions (UDFs)</a>, it can be used for a wide
+range of processing tasks on array-like data and data streams. The following
+applications have been implemented already:</p>
+<ul class="simple">
+<li><p>Virtual detectors (virtual bright field, virtual HAADF, center of mass <span id="id2">[<a class="reference internal" href="#id17" title="Matus Krajnak, Damien McGrouther, Dzmitry Maneuski, Val O\textquotesingle  Shea, and Stephen McVitie. Pixelated detectors and improved efficiency for magnetic imaging in STEM differential phase contrast. Ultramicroscopy, 165:42–50, jun 2016. doi:10.1016/j.ultramic.2016.03.006.">KMM+16</a>]</span>,
+custom shapes via masks)</p></li>
+<li><p><a class="reference external" href="https://libertem.github.io/LiberTEM/app/amorphous.html">Analysis of amorphous materials</a></p></li>
+<li><p><a class="reference external" href="https://libertem.github.io/LiberTEM-blobfinder/">Strain mapping</a></p></li>
+<li><p><a class="reference external" href="https://libertem.github.io/LiberTEM/app/holography.html">Off-axis electron holography reconstruction</a></p></li>
+<li><p><a class="reference external" href="https://ptychography-4-0.github.io/ptychography/">Single Side Band ptychography</a></p></li>
+</ul>
+<p>Some of these applications are available through an <a class="reference external" href="https://libertem.github.io/LiberTEM/usage.html#gui-usage">interactive web GUI</a>. Please see <a class="reference external" href="https://libertem.github.io/LiberTEM/applications.html">the
+applications section</a>
+of our documentation for details!</p>
+<p>The Python API and user-defined functions (UDFs) can be used for complex
+operations such as arbitrary linear operations and other features like data
+export. Example Jupyter notebooks are available in the <a class="reference external" href="https://github.com/LiberTEM/LiberTEM/tree/master/examples">examples directory</a>. If you are having
+trouble running the examples, please let us know by filing an issue or
+by <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">joining our Gitter chat</a>.</p>
+<p>LiberTEM is suitable as a high-performance processing backend for other
+applications, including live data streams. <a class="reference external" href="https://gitter.im/LiberTEM/Lobby">Contact us</a> if you are interested!</p>
+<p>LiberTEM is evolving rapidly and prioritizes features following user demand and
+contributions. Currently we are working on <a class="reference external" href="https://github.com/LiberTEM/LiberTEM-live">live data processing</a>, improving application support for sparse
+data and event-based detectors, performance improvements for GPU processing, and implementing
+analysis methods for various applications of pixelated
+STEM and other large-scale detector data. If you like to influence the direction
+this project is taking, or if you’d like to <a class="reference external" href="https://libertem.github.io/LiberTEM/contributing.html">contribute</a>, please join our
+<a class="reference external" href="https://gitter.im/LiberTEM/Lobby">gitter chat</a> and our <a class="reference external" href="https://groups.google.com/forum/#!forum/libertem">general mailing list</a>.</p>
+</section>
+<section id="file-formats">
+<h2>File formats<a class="headerlink" href="#file-formats" title="Permalink to this heading"></a></h2>
+<p>LiberTEM currently opens most file formats used for pixelated STEM. See <a class="reference external" href="https://libertem.github.io/LiberTEM/formats.html">our
+general information on loading data</a> and <a class="reference external" href="https://libertem.github.io/LiberTEM/reference/dataset.html#formats">format-specific
+documentation</a> for more
+information!</p>
+<ul class="simple">
+<li><p>Raw binary files</p></li>
+<li><p>NumPy .npy binary files</p></li>
+<li><p>Thermo Fisher EMPAD detector <span id="id3">[<a class="reference internal" href="#id30" title="Mark W. Tate, Prafull Purohit, Darol Chamberlain, Kayla X. Nguyen, Robert Hovden, Celesta S. Chang, Pratiti Deb, Emrah Turgut, John T. Heron, Darrell G. Schlom, Daniel C. Ralph, Gregory D. Fuchs, Katherine S. Shanks, Hugh T. Philipp, David A. Muller, and Sol M. Gruner. High dynamic range pixel array detector for scanning transmission electron microscopy. Microscopy and Microanalysis, 22(01):237–249, jan 2016. doi:10.1017/s1431927615015664.">TPC+16</a>]</span> files</p></li>
+<li><p><a class="reference external" href="http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf">Quantum Detectors MIB format</a></p></li>
+<li><p>Nanomegas .blo block files</p></li>
+<li><p>Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for <a class="reference external" href="http://www.directelectron.com/de-series/">DE-Series</a> detectors</p></li>
+<li><p><a class="reference external" href="https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera">Gatan K2 IS</a> raw format</p></li>
+<li><p>Stacks of Gatan DM3 and DM4 files (via <a class="reference external" href="https://github.com/ercius/openNCEM">openNCEM</a>)</p></li>
+<li><p>Single-file Gatan DM4 scans when saved using C-ordering</p></li>
+<li><p>FRMS6 from PNDetector pnCCD cameras <span id="id4">[<a class="reference internal" href="#id33" title="M. Simson, H. Ryll, H. Banba, R. Hartmann, M. Huth, S. Ihle, L. Jones, Y. Kondo, K. Muller, P.D. Nellist, R. Sagawa, J. Schmidt, H. Soltau, L. Striider, and H. Yang. 4d-STEM imaging with the pnCCD (s)TEM-camera. Microscopy and Microanalysis, 21(S3):2211–2212, aug 2015. doi:10.1017/s1431927615011836.">SRB+15</a>]</span> (currently alpha, gain correction still needs UI changes)</p></li>
+<li><p>FEI SER files (via <a class="reference external" href="https://github.com/ercius/openNCEM">openNCEM</a>)</p></li>
+<li><p>MRC (via <a class="reference external" href="https://github.com/ercius/openNCEM">openNCEM</a>)</p></li>
+<li><p>HDF5-based formats such as HyperSpy files, NeXus and EMD</p></li>
+<li><p>TVIPS binary files</p></li>
+<li><p>Sparse data in Raw CSR (compressed sparse row) format, as is possible
+to generate from event-based detectors</p></li>
+<li><p>Please contact us if you are interested in support for an additional format!</p></li>
+</ul>
+</section>
+<section id="live-processing-and-detectors-experimental">
+<h2>Live processing and detectors (experimental)<a class="headerlink" href="#live-processing-and-detectors-experimental" title="Permalink to this heading"></a></h2>
+<p>See <a class="reference external" href="https://libertem.github.io/LiberTEM-live/">LiberTEM-live</a>!</p>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Permalink to this heading"></a></h2>
+<p>LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT
+license, please see LICENSE files in the subdirectories for details.</p>
+</section>
+<section id="acknowledgements">
+<h2>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Permalink to this heading"></a></h2>
+<p>We are very grateful for your continuing support for LiberTEM!</p>
+<p>See <a class="reference external" href="https://libertem.github.io/acknowledgements.html">the acknowledgement page</a> for a list of authors and
+contributors to LiberTEM and its subprojects. See also our info on <a class="reference external" href="https://libertem.github.io/#funding">funding</a> and <a class="reference external" href="https://libertem.github.io/#industry-partners">industry partners</a>.</p>
+</section>
+</section>
+<section id="documentation">
+<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#the-short-version">The short version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#linux-and-mac-os-x">Linux and Mac OS X</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#windows">Windows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#docker-and-singularity">Docker and Singularity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install.html#integration-and-deployment">Integration and deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">GUI usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#starting-the-gui">Starting the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#create-the-local-cluster">Create the local cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#opening-data">Opening data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#running-analyses">Running analyses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#downloading-results">Downloading results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuring-the-libertem-server-advanced">Configuring the LiberTEM server (Advanced)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="app/phasecontrast.html">Phase contrast</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app/amorphous.html">Amorphous materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app/strain.html">Strain mapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app/phasechange.html">Phase-change materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app/holography.html">Off-axis electron holography</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app/processing.html">Image processing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="formats.html">Loading data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="formats.html#loading-through-the-api">Loading through the API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats.html#loading-using-the-gui">Loading using the GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats.html#common-parameters">Common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats.html#supported-formats">Supported formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="formats.html#dataset-conversion">Dataset conversion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sample_datasets.html">Sample Datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sample_datasets.html#bullseye-and-circular-probe-diffraction">Bullseye and circular probe diffraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sample_datasets.html#electron-bessel-beam-diffraction">Electron Bessel beam diffraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sample_datasets.html#high-resolution-4d-stem-dataset-of-srtio3">High-resolution 4D STEM dataset of SrTiO3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sample_datasets.html#synthetic-4d-stem-dataset-based-on-a-srtio3-supercell">Synthetic 4D STEM dataset based on a SrTiO3 supercell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sample_datasets.html#graphene-simulated-dataset">Graphene simulated dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sample_datasets.html#creating-random-data">Creating random data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#context">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#basic-example">Basic example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#custom-processing-routines">Custom processing routines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#reference">Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#executors">Executors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pipelined-executor">Pipelined executor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="udf.html">User-defined functions (UDFs)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="udf.html#getting-started">Getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html#example-notebook">Example notebook</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="udf.html#more-about-udfs">More about UDFs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dask.html">Dask integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#linking-with-hyperspy-lazy-signals">Linking with HyperSpy Lazy Signals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#scheduler">Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#load-datasets-as-dask-arrays">Load datasets as Dask arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#load-dask-arrays-as-datasets">Load Dask arrays as datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#create-dask-arrays-with-udfs">Create Dask arrays with UDFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#merge-function-for-dask-array-results">Merge function for Dask array results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dask.html#cuda-and-scheduling">CUDA and scheduling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#dev0">0.12.0.dev0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-11-0">0.11.0 / 2023-04-21</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-10-0">0.10.0 / 2022-07-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-9-2">0.9.2 / 2022-04-28</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-9-0">0.9.0 / 2022-02-17</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-8-0">0.8.0 / 2021-10-04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-7-1">0.7.1 / 2021-07-08</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-7-0">0.7.0 / 2021-06-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-6-0">0.6.0 / 2021-02-16</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-5-1">0.5.1 / 2020-08-12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-5-0">0.5.0 / 2020-04-23</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-4-1">0.4.1 / 2020-02-18</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-4-0">0.4.0 / 2020-02-13</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-3-0">0.3.0 / 2019-12-12</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-2-2">0.2.2 / 2019-10-14</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-2-1">0.2.1 / 2019-10-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-2-0">0.2.0 / 2019-10-07</a></li>
+<li class="toctree-l2"><a class="reference internal" href="changelog.html#v0-1-0">0.1.0 / 2018-11-06</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledgments.html">Acknowledgments</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="acknowledgments.html#notable-upstream-projects">Notable upstream projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acknowledgments.html#code-licensing">Code licensing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acknowledgments.html#funding">Funding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="acknowledgments.html#industry-partners">Industry partners</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Python API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/api.html">LiberTEM Context API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/udf.html">UDF API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dataset.html">Data Set API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/io_backends.html">I/O Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/application.html">Application-specific APIs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/masks.html">Mask creation and manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/sparse.html">Sparse array utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/internals.html">Internal API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/dask.html">Dask API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/corrections.html">Corrections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/viz.html">Visualization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/progress.html">Progress bar support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tips.html">Tips and tricks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#using-ssh-forwarding">Using SSH forwarding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#activating-ipywidgets-in-jupyter">Activating ipywidgets in Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#running-in-a-top-level-script">Running in a top-level script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#gatan-digital-micrograph-and-other-embedded-interpreters">Gatan Digital Micrograph and other embedded interpreters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#show-deprecation-warnings">Show deprecation warnings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#profiling-long-running-tests">Profiling long-running tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#platform-dependent-code-and-remote-executor">Platform-dependent code and remote executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#benchmark-numba-compilation-time">Benchmark Numba compilation time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#simulating-slow-systems-with-control-groups">Simulating slow systems with control groups</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#jupyter">Jupyter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tips.html#jupyterhub">JupyterHub</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concepts.html">Concepts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#axis-order">Axis order</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#coordinate-system">Coordinate system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#multidimensional-data">Multidimensional data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_python.html">Why Python?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="why_python.html#isn-t-python-slow">Isn’t Python slow?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="why_python.html#but-what-about-multicore-scaling">But what about (multicore) scaling?</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dev/setup.html">Setting up a development environment</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dev/setup.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/setup.html#installing-from-a-git-clone">Installing from a git clone</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/setup.html#updating">Updating</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/setup.html#setting-up-tox-on-windows">Setting up tox on Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#development-principles">Development principles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-contributions">Code contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#running-the-tests">Running the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-style">Code style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#building-the-documentation">Building the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#building-the-gui-client">Building the GUI (client)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#advanced">Advanced</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">Debugging</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#debugging-the-web-gui">Debugging the Web GUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#debugging-the-api-server">Debugging the API server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#debugging-udfs-or-other-python-code">Debugging UDFs or other Python code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#debugging-failing-test-cases">Debugging failing test cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html#tracing-using-opentelemetry">Tracing using opentelemetry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#mathematical-expression-for-applying-masks">Mathematical expression for applying masks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dev/how-io-works.html">How does I/O work in LiberTEM?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dev/how-io-works.html#high-level-overview">High-level overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/how-io-works.html#notes-for-implementing-a-dataset">Notes for implementing a <code class="xref py py-class docutils literal notranslate"><span class="pre">DataSet</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dev/executors.html">LiberTEM executors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dev/executors.html#module-libertem.common.executor">Base classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/executors.html#dask-distributed">Dask.Distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/executors.html#module-libertem.executor.inline">Inline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/executors.html#module-libertem.executor.concurrent">Concurrent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/executors.html#dask-delayed">Dask.delayed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dev/executors.html#pipelined-executor">Pipelined executor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authorship.html">Authorship policy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authorship.html#publications-about-libertem">Publications about LiberTEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authorship.html#ordering-of-author-lists">Ordering of author lists</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+<section id="citations">
+<h2>Citations<a class="headerlink" href="#citations" title="Permalink to this heading"></a></h2>
+<div class="docutils container" id="id7">
+<div class="citation" id="id107" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>GT97<span class="fn-bracket">]</span></span>
+<p>J. M. Gibson and M. M. J. Treacy. Diminished medium-range order observed in annealed amorphous germanium. <em>Physical Review Letters</em>, 78(6):1074–1077, feb 1997. <a class="reference external" href="https://doi.org/10.1103/physrevlett.78.1074">doi:10.1103/physrevlett.78.1074</a>.</p>
+</div>
+<div class="citation" id="id105" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>GGM+19a<span class="fn-bracket">]</span></span>
+<p>Giulio Guzzinati, Wannes Ghielens, Christoph Mahr, Armand Béché, Andreas Rosenauer, Toon Calders, and Jo Verbeeck. Electron bessel beam diffraction for precise and accurate nanoscale strain mapping. <em>Applied Physics Letters</em>, 2019. <a class="reference external" href="https://arxiv.org/abs/1902.06979v3">arXiv:1902.06979v3</a>, <a class="reference external" href="https://doi.org/10.1063/1.5096245">doi:10.1063/1.5096245</a>.</p>
+</div>
+<div class="citation" id="id113" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>GGM+19b<span class="fn-bracket">]</span></span>
+<p>Giulio Guzzinati, Wannes Ghielens, Christoph Mahr, Armand Béché, Andreas Rosenauer, Toon Calders, and Jo Verbeeck. Electron Bessel beam diffraction patterns, line scan of Si/SiGe multilayer. February 2019. URL: <a class="reference external" href="https://doi.org/10.5281/zenodo.2566137">https://doi.org/10.5281/zenodo.2566137</a>, <a class="reference external" href="https://doi.org/10.5281/zenodo.2566137">doi:10.5281/zenodo.2566137</a>.</p>
+</div>
+<div class="citation" id="id17" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">KMM+16</a><span class="fn-bracket">]</span></span>
+<p>Matus Krajnak, Damien McGrouther, Dzmitry Maneuski, Val O\textquotesingle  Shea, and Stephen McVitie. Pixelated detectors and improved efficiency for magnetic imaging in STEM differential phase contrast. <em>Ultramicroscopy</em>, 165:42–50, jun 2016. <a class="reference external" href="https://doi.org/10.1016/j.ultramic.2016.03.006">doi:10.1016/j.ultramic.2016.03.006</a>.</p>
+</div>
+<div class="citation" id="id110" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>LL08<span class="fn-bracket">]</span></span>
+<p>H. Lichte and M. Lehmann. Electron holography–basics and applications. <em>Rep. Prog. Phys.</em>, 71:016102, 2008. <a class="reference external" href="https://doi.org/10.1088/0034-4885/71/1/016102">doi:10.1088/0034-4885/71/1/016102</a>.</p>
+</div>
+<div class="citation" id="id20" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">MNR+16</a><span class="fn-bracket">]</span></span>
+<p>Ian MacLaren, Magnus Nord, Andrew Ross, Matus Krajnak, Martin Hart, Alastair Doye, Damien McGrouther, Rantej Bali, Archan Banerjee, and Robert Hadfield. <em>Pixelated STEM detectors: opportunities and challenges</em>, pages 663–664. American Cancer Society, 2016. URL: <a class="reference external" href="https://onlinelibrary.wiley.com/doi/abs/10.1002/9783527808465.EMC2016.6284">https://onlinelibrary.wiley.com/doi/abs/10.1002/9783527808465.EMC2016.6284</a>, <a class="reference external" href="https://doi.org/10.1002/9783527808465.EMC2016.6284">doi:10.1002/9783527808465.EMC2016.6284</a>.</p>
+</div>
+<div class="citation" id="id108" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">Oph19</a><span class="fn-bracket">]</span></span>
+<p>Colin Ophus. Four-dimensional scanning transmission electron microscopy (4d-STEM): from scanning nanodiffraction to ptychography and beyond. <em>Microscopy and Microanalysis</em>, 25(3):563–582, may 2019. <a class="reference external" href="https://doi.org/10.1017/s1431927619000497">doi:10.1017/s1431927619000497</a>.</p>
+</div>
+<div class="citation" id="id112" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>OS19<span class="fn-bracket">]</span></span>
+<p>Colin Ophus and Benjamin Savitzky. Simulated calibration dataset for 4D scanning transmission electron microscopy. December 2019. URL: <a class="reference external" href="https://doi.org/10.5281/zenodo.3592520">https://doi.org/10.5281/zenodo.3592520</a>, <a class="reference external" href="https://doi.org/10.5281/zenodo.3592520">doi:10.5281/zenodo.3592520</a>.</p>
+</div>
+<div class="citation" id="id106" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>POT+19<span class="fn-bracket">]</span></span>
+<p>Ouliana Panova, Colin Ophus, Christopher J. Takacs, Karen C. Bustillo, Luke Balhorn, Alberto Salleo, Nitash Balsara, and Andrew M. Minor. Diffraction imaging of nanocrystalline structures in organic semiconductor molecular thin films. <em>Nature Materials</em>, jun 2019. <a class="reference external" href="https://doi.org/10.1038/s41563-019-0387-3">doi:10.1038/s41563-019-0387-3</a>.</p>
+</div>
+<div class="citation" id="id118" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Pen21<span class="fn-bracket">]</span></span>
+<p>T. Pennycook. Graphene simulated dataset. January 2021. URL: <a class="reference external" href="https://doi.org/10.5281/zenodo.4476506">https://doi.org/10.5281/zenodo.4476506</a>, <a class="reference external" href="https://doi.org/10.5281/zenodo.4476506">doi:10.5281/zenodo.4476506</a>.</p>
+</div>
+<div class="citation" id="id119" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Ros76<span class="fn-bracket">]</span></span>
+<p>H. Rose. Nonstandard imaging methods in electron microscopy. <em>Ultramicroscopy</em>, 2:251–267, 1976. URL: <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/S0304399176915382">https://www.sciencedirect.com/science/article/pii/S0304399176915382</a>, <a class="reference external" href="https://doi.org/https://doi.org/10.1016/S0304-3991(76)91538-2">doi:https://doi.org/10.1016/S0304-3991(76)91538-2</a>.</p>
+</div>
+<div class="citation" id="id111" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>SG18<span class="fn-bracket">]</span></span>
+<p>Erich Schubert and Michael Gertz. Numerically stable parallel computation of (co-)variance. In <em>Proceedings of the 30th International Conference on Scientific and Statistical Database Management - SSDBM 18</em>. ACM Press, 2018. <a class="reference external" href="https://doi.org/10.1145/3221269.3223036">doi:10.1145/3221269.3223036</a>.</p>
+</div>
+<div class="citation" id="id33" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">SRB+15</a><span class="fn-bracket">]</span></span>
+<p>M. Simson, H. Ryll, H. Banba, R. Hartmann, M. Huth, S. Ihle, L. Jones, Y. Kondo, K. Muller, P.D. Nellist, R. Sagawa, J. Schmidt, H. Soltau, L. Striider, and H. Yang. 4d-STEM imaging with the pnCCD (s)TEM-camera. <em>Microscopy and Microanalysis</em>, 21(S3):2211–2212, aug 2015. <a class="reference external" href="https://doi.org/10.1017/s1431927615011836">doi:10.1017/s1431927615011836</a>.</p>
+</div>
+<div class="citation" id="id116" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>SCWMC21<span class="fn-bracket">]</span></span>
+<p>Achim Strauch, Alexander Clausen, Dieter Weber, and Knut Müller-Caspary. High-resolution 4D STEM dataset of SrTiO3 along the [1 0 0] axis at high magnification. July 2021. Achim Strauch and Knut Müller-Caspary were supported by funding from the Initiative and Network Fund of the Helmholtz Association (Germany) under contract VH-NG-1317 (moreSTEM project). Knut Müller-Caspary acknowledges support from Helmholtz within the project &quot;Ptychography 4.0&quot; under contract ZT-I-0025. URL: <a class="reference external" href="https://doi.org/10.5281/zenodo.5113449">https://doi.org/10.5281/zenodo.5113449</a>, <a class="reference external" href="https://doi.org/10.5281/zenodo.5113449">doi:10.5281/zenodo.5113449</a>.</p>
+</div>
+<div class="citation" id="id117" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>SWCMC21<span class="fn-bracket">]</span></span>
+<p>Achim Strauch, Dieter Weber, Alexander Clausen, and Knut Müller-Caspary. Synthetic 4D STEM dataset based on a SrTiO3 supercell with two additional artificial spatial frequencies. July 2021. Achim Strauch and Knut Müller-Caspary were supported by funding from the Initiative and Network Fund of the Helmholtz Association (Germany) under contract VH-NG-1317 (moreSTEM project). Knut Müller-Caspary acknowledges support from Helmholtz within the project &quot;Ptychography 4.0&quot; under contract ZT-I-0025. URL: <a class="reference external" href="https://doi.org/10.5281/zenodo.5113235">https://doi.org/10.5281/zenodo.5113235</a>, <a class="reference external" href="https://doi.org/10.5281/zenodo.5113235">doi:10.5281/zenodo.5113235</a>.</p>
+</div>
+<div class="citation" id="id30" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">TPC+16</a><span class="fn-bracket">]</span></span>
+<p>Mark W. Tate, Prafull Purohit, Darol Chamberlain, Kayla X. Nguyen, Robert Hovden, Celesta S. Chang, Pratiti Deb, Emrah Turgut, John T. Heron, Darrell G. Schlom, Daniel C. Ralph, Gregory D. Fuchs, Katherine S. Shanks, Hugh T. Philipp, David A. Muller, and Sol M. Gruner. High dynamic range pixel array detector for scanning transmission electron microscopy. <em>Microscopy and Microanalysis</em>, 22(01):237–249, jan 2016. <a class="reference external" href="https://doi.org/10.1017/s1431927615015664">doi:10.1017/s1431927615015664</a>.</p>
+</div>
+<div class="citation" id="id115" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>ZMB+19<span class="fn-bracket">]</span></span>
+<p>Steven E Zeltmann, Alexander Müller, Karen C Bustillo, Benjamin Savitzky, Lauren Hughes, Andrew M Minor, and Colin Ophus. Patterned probes for high precision 4D-STEM bragg measurements. <em>Ultramicroscopy</em>, 2019. <a class="reference external" href="https://arxiv.org/abs/1907.05504v2">arXiv:1907.05504v2</a>, <a class="reference external" href="https://doi.org/10.1016/j.ultramic.2019.112890">doi:10.1016/j.ultramic.2019.112890</a>.</p>
+</div>
+<div class="citation" id="id109" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>LinWongJiang+14<span class="fn-bracket">]</span></span>
+<p>S. C. F. Lin, C. Y. Wong, G. Jiang, M. A. Rahman, and N. M. Kwok. Radial fourier analysis (RFA) image descriptor. In <em>2014 11th International Conference on Fuzzy Systems and Knowledge Discovery (FSKD)</em>, 814–819. Aug 2014. <a class="reference external" href="https://doi.org/10.1109/FSKD.2014.6980942">doi:10.1109/FSKD.2014.6980942</a>.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

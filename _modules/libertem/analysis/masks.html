@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>libertem.analysis.masks &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../../../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../udf.html">User-defined functions (UDFs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">libertem.analysis.masks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for libertem.analysis.masks</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseAnalysis</span><span class="p">,</span> <span class="n">AnalysisResultSet</span><span class="p">,</span> <span class="n">AnalysisResult</span>
+<span class="kn">from</span> <span class="nn">libertem.udf.masks</span> <span class="kn">import</span> <span class="n">ApplyMasksUDF</span>
+<span class="kn">from</span> <span class="nn">libertem.analysis.getroi</span> <span class="kn">import</span> <span class="n">get_roi</span>
+
+
+<span class="k">class</span> <span class="nc">BaseMasksAnalysis</span><span class="p">(</span><span class="n">BaseAnalysis</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for any masks-based analysis; you only need to implement</span>
+<span class="sd">    ``get_results``, ``get_udf_results`` and ``get_mask_factories``.</span>
+<span class="sd">    Overwrite  ``get_use_sparse`` to return True to calculate with sparse mask matrices.</span>
+
+<span class="sd">    .. versionchanged:: 0.4.0</span>
+<span class="sd">        Add support to use this Analysis with both ApplyMasksJob and ApplyMasksUDF :issue:`549`</span>
+
+<span class="sd">    .. versionchanged:: 0.7.0</span>
+<span class="sd">        ApplyMasksJob support removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">get_udf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ApplyMasksUDF</span><span class="p">(</span>
+            <span class="n">mask_factories</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_mask_factories</span><span class="p">(),</span>
+            <span class="n">use_sparse</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_use_sparse</span><span class="p">(),</span>
+            <span class="n">mask_count</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_preset_mask_count</span><span class="p">(),</span>
+            <span class="n">mask_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_preset_mask_dtype</span><span class="p">(),</span>
+            <span class="n">preferred_dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_preset_dtype</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_mask_factories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_use_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_sparse&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_preset_mask_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_count&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_preset_mask_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mask_dtype&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_preset_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SingleMaskAnalysis</span><span class="p">(</span><span class="n">BaseMasksAnalysis</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_udf_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">udf_results</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_generic_results</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">get_generic_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.viz</span> <span class="kn">import</span> <span class="n">visualize_simple</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SingleMaskResultSet</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_complex_results</span><span class="p">(</span>
+                    <span class="n">data</span><span class="p">,</span>
+                    <span class="n">key_prefix</span><span class="o">=</span><span class="s1">&#39;intensity&#39;</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="s1">&#39;intensity&#39;</span><span class="p">,</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_description</span><span class="p">(),</span>
+                    <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">SingleMaskResultSet</span><span class="p">([</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;intensity&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;intensity [lin]&quot;</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_description</span><span class="p">()</span><span class="si">}</span><span class="s1"> lin-scaled&#39;</span>
+            <span class="p">),</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">logarithmic</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;intensity_log&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;intensity [log]&quot;</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">get_description</span><span class="p">()</span><span class="si">}</span><span class="s1"> log-scaled&#39;</span>
+            <span class="p">),</span>
+        <span class="p">])</span>
+
+
+<div class="viewcode-block" id="MasksResultSet"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.masks.MasksResultSet">[docs]</a><span class="k">class</span> <span class="nc">MasksResultSet</span><span class="p">(</span><span class="n">AnalysisResultSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Running a :class:`MasksAnalysis` via :meth:`libertem.api.Context.run` on a dataset</span>
+<span class="sd">    returns an instance of this class.</span>
+
+<span class="sd">    If any of the masks or the dataset contain complex numbers, the regular mask results</span>
+<span class="sd">    attributes carry the absolute value of the results, and additional attributes with real</span>
+<span class="sd">    part, imaginary part, phase and full complex result are available.</span>
+
+<span class="sd">    .. versionadded:: 0.3.0</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mask_0, mask_1, ..., mask_&lt;n&gt; : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        For dataset and masks containing only real numbers:</span>
+<span class="sd">        Results of the element-wise multiplication and sum of each individual mask with</span>
+<span class="sd">        each detector frame. Each mask result has the shape of the navigation dimension.</span>
+<span class="sd">        These keys contain the absolute value of the result if dataset or masks contain</span>
+<span class="sd">        complex numbers.</span>
+<span class="sd">    mask_0, mask_0_real, mask_0_imag, mask_0_angle, mask_0_complex,\</span>
+<span class="sd">    mask_1, mask_1_real, ...,\</span>
+<span class="sd">    mask_&lt;n&gt;, ..., mask_&lt;n&gt;_complex : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        If masks or dataset contain complex numbers: Absolute, real part, imaginary part,</span>
+<span class="sd">        phase angle, complex result of the element-wise multiplication and sum of each individual</span>
+<span class="sd">        mask with each detector frame. Each mask result has the shape of the navigation dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SingleMaskResultSet"><a class="viewcode-back" href="../../../reference/api.html#libertem.analysis.masks.SingleMaskResultSet">[docs]</a><span class="k">class</span> <span class="nc">SingleMaskResultSet</span><span class="p">(</span><span class="n">AnalysisResultSet</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A number of Analyses that are based on applying a single mask create an instance of this class</span>
+<span class="sd">    as a result when executed via :meth:`libertem.api.Context.run`.</span>
+
+<span class="sd">    If the dataset contains complex numbers, the regular result attribute carries the</span>
+<span class="sd">    absolute value of the result, and additional attributes with real part, imaginary part,</span>
+<span class="sd">    phase and full complex result are available.</span>
+
+<span class="sd">    .. versionadded:: 0.3.0</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    intensity : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Sum of the selected region for each detector frame, with shape of</span>
+<span class="sd">        the navigation dimension. Absolute of the result if the dataset or mask contains</span>
+<span class="sd">        complex numbers.</span>
+<span class="sd">    intensity_log : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Log-scaled sum of the selected region for each detector frame, with shape of</span>
+<span class="sd">        the navigation dimension. Absolute of the result if the dataset or mask contains</span>
+<span class="sd">        complex numbers.</span>
+
+<span class="sd">        .. versionadded:: 0.6.0</span>
+
+<span class="sd">    intensity_real : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Real part of the sum of the selected region. This is only available if the dataset</span>
+<span class="sd">        or mask contains complex numbers.</span>
+<span class="sd">    intensity_imag : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Imaginary part of the sum of the selected region. This is only available if the dataset</span>
+<span class="sd">        contains complex numbers.</span>
+<span class="sd">    intensity_angle : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Phase angle of the sum of the selected region. This is only available if the dataset</span>
+<span class="sd">        or mask contains complex numbers.</span>
+<span class="sd">    intensity_complex : libertem.analysis.base.AnalysisResult</span>
+<span class="sd">        Complex result of the sum of the selected region. This is only available if the dataset</span>
+<span class="sd">        or mask contains complex numbers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<span class="k">class</span> <span class="nc">MasksAnalysis</span><span class="p">(</span><span class="n">BaseMasksAnalysis</span><span class="p">):</span>
+    <span class="n">TYPE</span> <span class="o">=</span> <span class="s1">&#39;UDF&#39;</span>
+
+    <span class="k">def</span> <span class="nf">get_mask_factories</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;factories&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_generic_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">libertem.viz</span> <span class="kn">import</span> <span class="n">visualize_simple</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_complex_results</span><span class="p">(</span>
+                        <span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">idx</span><span class="p">],</span>
+                        <span class="n">key_prefix</span><span class="o">=</span><span class="s2">&quot;mask_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">,</span>
+                        <span class="n">title</span><span class="o">=</span><span class="s2">&quot;mask </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">,</span>
+                        <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;integrated intensity for mask </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">,</span>
+                        <span class="n">damage</span><span class="o">=</span><span class="n">damage</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">MasksResultSet</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">MasksResultSet</span><span class="p">([</span>
+            <span class="n">AnalysisResult</span><span class="p">(</span>
+                <span class="n">raw_data</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">idx</span><span class="p">],</span>
+                <span class="n">visualized</span><span class="o">=</span><span class="n">visualize_simple</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">idx</span><span class="p">],</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">),</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;mask_</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;mask </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">,</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;integrated intensity for mask </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">idx</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_roi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_roi</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">nav</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_udf_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">udf_results</span><span class="p">,</span> <span class="n">roi</span><span class="p">,</span> <span class="n">damage</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">udf_results</span><span class="p">[</span><span class="s1">&#39;intensity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_generic_results</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">damage</span><span class="o">=</span><span class="n">damage</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

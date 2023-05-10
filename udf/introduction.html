@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiberTEM UDFs &mdash; LiberTEM 0.12.0.dev0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/nbsphinx-code-cells.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Implementing a UDF" href="basic.html" />
+    <link rel="prev" title="User-defined functions (UDFs)" href="../udf.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            LiberTEM
+              <img src="../_static/logo.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                0.12
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">GUI usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../formats.html">Loading data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../sample_datasets.html">Sample Datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../udf.html">User-defined functions (UDFs)</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#getting-started">Getting started</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../udf.html#example-notebook">Example notebook</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">LiberTEM UDFs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Specifying-the-dataset">Specifying the dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Standard-analyses:-virtual-detector">Standard analyses: virtual detector</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Simple-UDF-definition">Simple UDF definition</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extra_shape:-more-than-one-result-per-scan-position"><code class="docutils literal notranslate"><span class="pre">extra_shape</span></code>: more than one result per scan position</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#kind=%22sig%22-buffers,-merge-functions">kind=”sig” buffers, merge functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Region-of-interest">Region of interest</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Parameters">Parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#how-udfs-works">How UDFs works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../udf.html#more-about-udfs">More about UDFs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../dask.html">Dask integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledgments.html">Acknowledgments</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Python API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tips.html">Tips and tricks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../packages.html">Package overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts.html">Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../performance.html">Performance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_python.html">Why Python?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">For developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev/setup.html">Setting up a development environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/how-io-works.html">How does I/O work in LiberTEM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev/executors.html">LiberTEM executors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authorship.html">Authorship policy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">LiberTEM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../udf.html">User-defined functions (UDFs)</a></li>
+      <li class="breadcrumb-item active">LiberTEM UDFs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/udf/introduction.nblink.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="LiberTEM-UDFs">
+<h1>LiberTEM UDFs<a class="headerlink" href="#LiberTEM-UDFs" title="Permalink to this heading"></a></h1>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">libertem.api</span> <span class="k">as</span> <span class="nn">lt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/home/weber/miniconda3/envs/libertem39/lib/python3.9/site-packages/distributed/node.py:182: UserWarning: Port 8787 is already in use.
+Perhaps you already have a cluster running?
+Hosting the HTTP server on port 36095 instead
+  warnings.warn(
+2023-01-12 17:14:25,996 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-8f213pwu&#39;, purging
+2023-01-12 17:14:25,997 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-n3ws_9ic&#39;, purging
+2023-01-12 17:14:25,997 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-1xqd091z&#39;, purging
+2023-01-12 17:14:25,998 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-wi3ns33a&#39;, purging
+2023-01-12 17:14:25,998 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-03g78l_e&#39;, purging
+2023-01-12 17:14:25,998 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-48u41lm4&#39;, purging
+2023-01-12 17:14:25,998 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-a7fdkrne&#39;, purging
+2023-01-12 17:14:25,998 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-awkh6gob&#39;, purging
+2023-01-12 17:14:25,999 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-xfijlddh&#39;, purging
+2023-01-12 17:14:25,999 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-_6p8_h1o&#39;, purging
+2023-01-12 17:14:25,999 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-r2f3v0j4&#39;, purging
+2023-01-12 17:14:26,000 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-g0wt60ni&#39;, purging
+2023-01-12 17:14:26,000 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-dwz_4fyo&#39;, purging
+2023-01-12 17:14:26,000 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-9876_ixm&#39;, purging
+2023-01-12 17:14:26,000 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-gyul3rfp&#39;, purging
+2023-01-12 17:14:26,001 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-fcq1wgw8&#39;, purging
+2023-01-12 17:14:26,001 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-s39k6xg6&#39;, purging
+2023-01-12 17:14:26,001 - distributed.diskutils - INFO - Found stale lock file and directory &#39;/tmp/dask-worker-space-20335/worker-3dgbcb5n&#39;, purging
+2023-01-12 17:14:26,002 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=0)
+2023-01-12 17:14:26,002 - distributed.utils - INFO - Reload module tmprcqajvtw from .py file
+2023-01-12 17:14:26,012 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=12)
+2023-01-12 17:14:26,013 - distributed.utils - INFO - Reload module tmp0w0h9c0g from .py file
+2023-01-12 17:14:26,024 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=7)
+2023-01-12 17:14:26,024 - distributed.utils - INFO - Reload module tmpo1k1d_mb from .py file
+2023-01-12 17:14:26,035 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=21)
+2023-01-12 17:14:26,035 - distributed.utils - INFO - Reload module tmpe9_gyt72 from .py file
+2023-01-12 17:14:26,050 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=15)
+2023-01-12 17:14:26,050 - distributed.utils - INFO - Reload module tmp5cvsbgqm from .py file
+2023-01-12 17:14:26,063 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=8)
+2023-01-12 17:14:26,063 - distributed.utils - INFO - Reload module tmp66wygbjn from .py file
+2023-01-12 17:14:26,070 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=20)
+2023-01-12 17:14:26,071 - distributed.utils - INFO - Reload module tmpd8erz6s_ from .py file
+2023-01-12 17:14:26,126 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=5)
+2023-01-12 17:14:26,127 - distributed.utils - INFO - Reload module tmpq3k7q2ok from .py file
+2023-01-12 17:14:26,136 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=19)
+2023-01-12 17:14:26,136 - distributed.utils - INFO - Reload module tmpv6prmkwl from .py file
+2023-01-12 17:14:26,144 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=1)
+2023-01-12 17:14:26,145 - distributed.utils - INFO - Reload module tmpj04fhm9v from .py file
+2023-01-12 17:14:26,158 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CUDA&#34;, device=0)
+2023-01-12 17:14:26,158 - distributed.utils - INFO - Reload module tmplp1hhi6y from .py file
+2023-01-12 17:14:26,167 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=3)
+2023-01-12 17:14:26,167 - distributed.utils - INFO - Reload module tmpjaub_lqj from .py file
+2023-01-12 17:14:26,182 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=22)
+2023-01-12 17:14:26,182 - distributed.utils - INFO - Reload module tmpdhg2bn4z from .py file
+2023-01-12 17:14:26,197 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=11)
+2023-01-12 17:14:26,198 - distributed.utils - INFO - Reload module tmpmvvk4ah4 from .py file
+2023-01-12 17:14:26,209 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=17)
+2023-01-12 17:14:26,209 - distributed.utils - INFO - Reload module tmp4ojhow71 from .py file
+2023-01-12 17:14:26,229 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=4)
+2023-01-12 17:14:26,230 - distributed.utils - INFO - Reload module tmpyxjg20xm from .py file
+2023-01-12 17:14:26,236 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-service-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:14:26,237 - distributed.utils - INFO - Reload module tmp7f9zuyi5 from .py file
+2023-01-12 17:14:26,254 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=18)
+2023-01-12 17:14:26,255 - distributed.utils - INFO - Reload module tmp3ers66bd from .py file
+2023-01-12 17:14:26,263 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=10)
+2023-01-12 17:14:26,264 - distributed.utils - INFO - Reload module tmpkrzer_o1 from .py file
+2023-01-12 17:14:26,277 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=13)
+2023-01-12 17:14:26,278 - distributed.utils - INFO - Reload module tmpeitammja from .py file
+2023-01-12 17:14:26,290 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=9)
+2023-01-12 17:14:26,291 - distributed.utils - INFO - Reload module tmpk7bn699x from .py file
+2023-01-12 17:14:26,306 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=16)
+2023-01-12 17:14:26,307 - distributed.utils - INFO - Reload module tmpqpgvkr1c from .py file
+2023-01-12 17:14:26,354 - distributed.preloading - INFO - Import preload module: /tmp/tmp0w0h9c0g.py
+2023-01-12 17:14:26,354 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-12&#39;, service_id=&#39;12&#39;)
+2023-01-12 17:14:26,354 - distributed.utils - INFO - Reload module tmpm8pts2sm from .py file
+2023-01-12 17:14:26,355 - distributed.preloading - INFO - Import preload module: /tmp/tmpm8pts2sm.py
+2023-01-12 17:14:26,355 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,362 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=14)
+2023-01-12 17:14:26,363 - distributed.utils - INFO - Reload module tmp3a8iwk7j from .py file
+2023-01-12 17:14:26,367 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=2)
+2023-01-12 17:14:26,367 - distributed.utils - INFO - Reload module tmprgr7wy9x from .py file
+2023-01-12 17:14:26,371 - distributed.preloading - INFO - Import preload module: /tmp/tmpe9_gyt72.py
+2023-01-12 17:14:26,372 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-21&#39;, service_id=&#39;21&#39;)
+2023-01-12 17:14:26,372 - distributed.utils - INFO - Reload module tmpqwoh3xyq from .py file
+2023-01-12 17:14:26,372 - distributed.preloading - INFO - Import preload module: /tmp/tmpqwoh3xyq.py
+2023-01-12 17:14:26,373 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,385 - distributed.preloading - INFO - Import preload module: /tmp/tmpd8erz6s_.py
+2023-01-12 17:14:26,386 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-20&#39;, service_id=&#39;20&#39;)
+2023-01-12 17:14:26,386 - distributed.utils - INFO - Reload module tmpb963prju from .py file
+2023-01-12 17:14:26,386 - distributed.preloading - INFO - Import preload module: /tmp/tmpb963prju.py
+2023-01-12 17:14:26,386 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,387 - distributed.preloading - INFO - Import preload module: /tmp/tmp5cvsbgqm.py
+2023-01-12 17:14:26,388 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-15&#39;, service_id=&#39;15&#39;)
+2023-01-12 17:14:26,388 - distributed.utils - INFO - Reload module tmp61lej30i from .py file
+2023-01-12 17:14:26,388 - distributed.preloading - INFO - Import preload module: /tmp/tmp61lej30i.py
+2023-01-12 17:14:26,389 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,397 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=23)
+2023-01-12 17:14:26,398 - distributed.utils - INFO - Reload module tmp1vmjsx6k from .py file
+2023-01-12 17:14:26,404 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,409 - distributed.preloading - INFO - Import preload module: /tmp/tmp66wygbjn.py
+2023-01-12 17:14:26,409 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-8&#39;, service_id=&#39;8&#39;)
+2023-01-12 17:14:26,410 - distributed.utils - INFO - Reload module tmpfu2i0ci2 from .py file
+2023-01-12 17:14:26,410 - distributed.preloading - INFO - Import preload module: /tmp/tmpfu2i0ci2.py
+2023-01-12 17:14:26,410 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,411 - distributed.preloading - INFO - Creating preload: from libertem.executor.dask import worker_setup; worker_setup(resource=&#34;CPU&#34;, device=6)
+2023-01-12 17:14:26,412 - distributed.utils - INFO - Reload module tmp0n4uvr59 from .py file
+2023-01-12 17:14:26,421 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,436 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,438 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,449 - distributed.preloading - INFO - Import preload module: /tmp/tmpv6prmkwl.py
+2023-01-12 17:14:26,450 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-19&#39;, service_id=&#39;19&#39;)
+2023-01-12 17:14:26,450 - distributed.utils - INFO - Reload module tmphg7bn6vs from .py file
+2023-01-12 17:14:26,450 - distributed.preloading - INFO - Import preload module: /tmp/tmphg7bn6vs.py
+2023-01-12 17:14:26,450 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,456 - distributed.preloading - INFO - Import preload module: /tmp/tmpo1k1d_mb.py
+2023-01-12 17:14:26,456 - distributed.preloading - INFO - Import preload module: /tmp/tmprcqajvtw.py
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-7&#39;, service_id=&#39;7&#39;)
+2023-01-12 17:14:26,457 - distributed.utils - INFO - Reload module tmpd0mpyda_ from .py file
+2023-01-12 17:14:26,457 - distributed.utils - INFO - Reload module tmp5ruukbik from .py file
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Import preload module: /tmp/tmpd0mpyda_.py
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Import preload module: /tmp/tmp5ruukbik.py
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,457 - distributed.preloading - INFO - Import preload module: /tmp/tmpq3k7q2ok.py
+2023-01-12 17:14:26,458 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-5&#39;, service_id=&#39;5&#39;)
+2023-01-12 17:14:26,458 - distributed.utils - INFO - Reload module tmp3s8m5qcq from .py file
+2023-01-12 17:14:26,458 - distributed.preloading - INFO - Import preload module: /tmp/tmp3s8m5qcq.py
+2023-01-12 17:14:26,459 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,471 - distributed.preloading - INFO - Import preload module: /tmp/tmpj04fhm9v.py
+2023-01-12 17:14:26,471 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-1&#39;, service_id=&#39;1&#39;)
+2023-01-12 17:14:26,471 - distributed.utils - INFO - Reload module tmpdwr3jqm8 from .py file
+2023-01-12 17:14:26,471 - distributed.preloading - INFO - Import preload module: /tmp/tmpdwr3jqm8.py
+2023-01-12 17:14:26,472 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,479 - distributed.preloading - INFO - Import preload module: /tmp/tmpjaub_lqj.py
+2023-01-12 17:14:26,479 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-3&#39;, service_id=&#39;3&#39;)
+2023-01-12 17:14:26,480 - distributed.utils - INFO - Reload module tmp1v7trw7e from .py file
+2023-01-12 17:14:26,480 - distributed.preloading - INFO - Import preload module: /tmp/tmp1v7trw7e.py
+2023-01-12 17:14:26,480 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,481 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,497 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,505 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,505 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,505 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,509 - distributed.preloading - INFO - Import preload module: /tmp/tmp4ojhow71.py
+2023-01-12 17:14:26,509 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-17&#39;, service_id=&#39;17&#39;)
+2023-01-12 17:14:26,509 - distributed.utils - INFO - Reload module tmpbdpw_rm7 from .py file
+2023-01-12 17:14:26,510 - distributed.preloading - INFO - Import preload module: /tmp/tmpbdpw_rm7.py
+2023-01-12 17:14:26,510 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,510 - distributed.preloading - INFO - Import preload module: /tmp/tmpmvvk4ah4.py
+2023-01-12 17:14:26,510 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-11&#39;, service_id=&#39;11&#39;)
+2023-01-12 17:14:26,511 - distributed.utils - INFO - Reload module tmp8cmzlxi8 from .py file
+2023-01-12 17:14:26,511 - distributed.preloading - INFO - Import preload module: /tmp/tmp8cmzlxi8.py
+2023-01-12 17:14:26,511 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,516 - distributed.preloading - INFO - Import preload module: /tmp/tmp7f9zuyi5.py
+2023-01-12 17:14:26,517 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,518 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,527 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,561 - distributed.preloading - INFO - Import preload module: /tmp/tmpyxjg20xm.py
+2023-01-12 17:14:26,562 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-4&#39;, service_id=&#39;4&#39;)
+2023-01-12 17:14:26,562 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,562 - distributed.utils - INFO - Reload module tmpuzx184vp from .py file
+2023-01-12 17:14:26,562 - distributed.preloading - INFO - Import preload module: /tmp/tmpuzx184vp.py
+2023-01-12 17:14:26,562 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,566 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,570 - distributed.preloading - INFO - Import preload module: /tmp/tmp3ers66bd.py
+2023-01-12 17:14:26,570 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-18&#39;, service_id=&#39;18&#39;)
+2023-01-12 17:14:26,571 - distributed.utils - INFO - Reload module tmp2c59zmp_ from .py file
+2023-01-12 17:14:26,571 - distributed.preloading - INFO - Import preload module: /tmp/tmp2c59zmp_.py
+2023-01-12 17:14:26,571 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,573 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,582 - distributed.preloading - INFO - Import preload module: /tmp/tmplp1hhi6y.py
+2023-01-12 17:14:26,582 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cuda-0&#39;, service_id=&#39;0&#39;)
+2023-01-12 17:14:26,582 - distributed.utils - INFO - Reload module tmp3o85bw1y from .py file
+2023-01-12 17:14:26,583 - distributed.preloading - INFO - Import preload module: /tmp/tmp3o85bw1y.py
+2023-01-12 17:14:26,583 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,608 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,609 - distributed.preloading - INFO - Import preload module: /tmp/tmpdhg2bn4z.py
+2023-01-12 17:14:26,610 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-22&#39;, service_id=&#39;22&#39;)
+2023-01-12 17:14:26,610 - distributed.utils - INFO - Reload module tmpwsn459cm from .py file
+2023-01-12 17:14:26,610 - distributed.preloading - INFO - Import preload module: /tmp/tmpwsn459cm.py
+2023-01-12 17:14:26,610 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,618 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,621 - distributed.preloading - INFO - Import preload module: /tmp/tmpkrzer_o1.py
+2023-01-12 17:14:26,622 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-10&#39;, service_id=&#39;10&#39;)
+2023-01-12 17:14:26,622 - distributed.utils - INFO - Reload module tmpmlywld0o from .py file
+2023-01-12 17:14:26,622 - distributed.preloading - INFO - Import preload module: /tmp/tmpmlywld0o.py
+2023-01-12 17:14:26,622 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,624 - distributed.preloading - INFO - Import preload module: /tmp/tmpqpgvkr1c.py
+2023-01-12 17:14:26,624 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-16&#39;, service_id=&#39;16&#39;)
+2023-01-12 17:14:26,625 - distributed.utils - INFO - Reload module tmpacg0gsvq from .py file
+2023-01-12 17:14:26,625 - distributed.preloading - INFO - Import preload module: /tmp/tmpacg0gsvq.py
+2023-01-12 17:14:26,625 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,629 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,657 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,659 - distributed.preloading - INFO - Import preload module: /tmp/tmpk7bn699x.py
+2023-01-12 17:14:26,660 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-9&#39;, service_id=&#39;9&#39;)
+2023-01-12 17:14:26,660 - distributed.utils - INFO - Reload module tmp07xp19wc from .py file
+2023-01-12 17:14:26,661 - distributed.preloading - INFO - Import preload module: /tmp/tmp07xp19wc.py
+2023-01-12 17:14:26,661 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,672 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,673 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,679 - distributed.preloading - INFO - Import preload module: /tmp/tmpeitammja.py
+2023-01-12 17:14:26,679 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-13&#39;, service_id=&#39;13&#39;)
+2023-01-12 17:14:26,679 - distributed.utils - INFO - Reload module tmpmuk01c0i from .py file
+2023-01-12 17:14:26,680 - distributed.preloading - INFO - Import preload module: /tmp/tmpmuk01c0i.py
+2023-01-12 17:14:26,680 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,694 - distributed.preloading - INFO - Import preload module: /tmp/tmprgr7wy9x.py
+2023-01-12 17:14:26,694 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-2&#39;, service_id=&#39;2&#39;)
+2023-01-12 17:14:26,695 - distributed.utils - INFO - Reload module tmp0r8w2hih from .py file
+2023-01-12 17:14:26,695 - distributed.preloading - INFO - Import preload module: /tmp/tmp0r8w2hih.py
+2023-01-12 17:14:26,695 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,700 - distributed.preloading - INFO - Import preload module: /tmp/tmp3a8iwk7j.py
+2023-01-12 17:14:26,700 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-14&#39;, service_id=&#39;14&#39;)
+2023-01-12 17:14:26,700 - distributed.utils - INFO - Reload module tmpl_pepip3 from .py file
+2023-01-12 17:14:26,701 - distributed.preloading - INFO - Import preload module: /tmp/tmpl_pepip3.py
+2023-01-12 17:14:26,701 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,706 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,716 - distributed.preloading - INFO - Import preload module: /tmp/tmp0n4uvr59.py
+2023-01-12 17:14:26,716 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-6&#39;, service_id=&#39;6&#39;)
+2023-01-12 17:14:26,716 - distributed.utils - INFO - Reload module tmpcd9324xa from .py file
+2023-01-12 17:14:26,717 - distributed.preloading - INFO - Import preload module: /tmp/tmpcd9324xa.py
+2023-01-12 17:14:26,717 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,721 - distributed.preloading - INFO - Import preload module: /tmp/tmp1vmjsx6k.py
+2023-01-12 17:14:26,721 - distributed.preloading - INFO - Creating preload: from libertem.common.tracing import maybe_setup_tracing; maybe_setup_tracing(service_name=&#39;default-cpu-23&#39;, service_id=&#39;23&#39;)
+2023-01-12 17:14:26,721 - distributed.utils - INFO - Reload module tmp4ssjomqn from .py file
+2023-01-12 17:14:26,722 - distributed.preloading - INFO - Import preload module: /tmp/tmp4ssjomqn.py
+2023-01-12 17:14:26,722 - distributed.preloading - INFO - Creating preload: libertem.preload
+2023-01-12 17:14:26,731 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,742 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,747 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,763 - distributed.preloading - INFO - Import preload module: libertem.preload
+2023-01-12 17:14:26,766 - distributed.preloading - INFO - Import preload module: libertem.preload
+</pre></div></div>
+</div>
+<section id="Specifying-the-dataset">
+<h2>Specifying the dataset<a class="headerlink" href="#Specifying-the-dataset" title="Permalink to this heading"></a></h2>
+<p>Most formats can be loaded using the <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> type, but some may need additional parameters.</p>
+<p>See the <a class="reference external" href="https://libertem.github.io/LiberTEM/formats.html">loading data</a> section of the LiberTEM docs for details.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TESTDATA_BASE_PATH&quot;</span><span class="p">,</span> <span class="s2">&quot;/home/alex/Data/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_base_path</span><span class="p">,</span> <span class="s2">&quot;01_ms1_3p3gK.hdr&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-01-12 17:14:27,239 - distributed.worker - WARNING - Compute Failed
+Key:       _do_detect-576a164e-3c4f-4994-917a-c7de21bc56d5
+Function:  _do_detect
+args:      ()
+kwargs:    {}
+Exception: &#39;DataSetException(&#34;OSError(\&#39;Unable to open file (file signature not found)\&#39;)&#34;)&#39;
+
+</pre></div></div>
+</div>
+<p>After loading, some information is available in the <code class="docutils literal notranslate"><span class="pre">diagnostics</span></code> attribute:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ds</span><span class="o">.</span><span class="n">diagnostics</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[{&#39;name&#39;: &#39;Bits per pixel&#39;, &#39;value&#39;: &#39;12&#39;},
+ {&#39;name&#39;: &#39;Data kind&#39;, &#39;value&#39;: &#39;u&#39;},
+ {&#39;name&#39;: &#39;Layout&#39;, &#39;value&#39;: &#39;(1, 1)&#39;},
+ {&#39;name&#39;: &#39;Partition shape&#39;, &#39;value&#39;: &#39;(2075, 256, 256)&#39;},
+ {&#39;name&#39;: &#39;Number of partitions&#39;, &#39;value&#39;: &#39;32&#39;},
+ {&#39;name&#39;: &#39;Number of frames skipped at the beginning&#39;, &#39;value&#39;: 0},
+ {&#39;name&#39;: &#39;Number of frames ignored at the end&#39;, &#39;value&#39;: 0},
+ {&#39;name&#39;: &#39;Number of blank frames inserted at the beginning&#39;, &#39;value&#39;: 0},
+ {&#39;name&#39;: &#39;Number of blank frames inserted at the end&#39;, &#39;value&#39;: 0}]
+</pre></div></div>
+</div>
+</section>
+<section id="Standard-analyses:-virtual-detector">
+<h2>Standard analyses: virtual detector<a class="headerlink" href="#Standard-analyses:-virtual-detector" title="Permalink to this heading"></a></h2>
+<p>A standard analysis to run on 4D STEM data is to apply a virtual detector. Here, we define a ring detector, with radii in pixels:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ring</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">create_ring_analysis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">ri</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">ro</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The analysis can be run with the <code class="docutils literal notranslate"><span class="pre">Context.run</span></code> method:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ring_res</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ring_res</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "fa5e188620f8427880a6ecae8cbf15c2", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[&lt;AnalysisResult: intensity&gt;, &lt;AnalysisResult: intensity_log&gt;]
+</pre></div></div>
+</div>
+<p>As the analysis mirrors what the web GUI does, we have to access the data using the <code class="docutils literal notranslate"><span class="pre">raw_data</span></code> attribute, as we would get a viusalized result otherwise. Here we do the visualization ourselves using <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">ring_res</span><span class="o">.</span><span class="n">intensity</span><span class="o">.</span><span class="n">raw_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb29825a4f0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_15_1.png" src="../_images/udf_introduction_15_1.png" />
+</div>
+</div>
+</section>
+<section id="Simple-UDF-definition">
+<h2>Simple UDF definition<a class="headerlink" href="#Simple-UDF-definition" title="Permalink to this heading"></a></h2>
+<p>User-defined funtions provide a way for you to implement your own data processing functionality. As a very simple example, we define a function that just sums up the pixels of each frame:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">sum_of_pixels</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The easiest way to run this on the data is to use the <code class="docutils literal notranslate"><span class="pre">Context.map</span></code> function:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_pixelsum_1</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">sum_of_pixels</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">res_pixelsum_1</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "19bf26de6cf8422eaffe6c74280a015c", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;
+</pre></div></div>
+</div>
+<p>The result is of type <code class="docutils literal notranslate"><span class="pre">BufferWrapper</span></code>, but can be used by any function that expects a numpy array, for example for plotting it:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">res_pixelsum_1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb2909a1130&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_21_1.png" src="../_images/udf_introduction_21_1.png" />
+</div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Context.map</span></code> function is a shortcut for implementing very easy mapping over data, in a frame-by-frame fashion. The longer way of writing this would be as follows:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
+
+
+<span class="k">class</span> <span class="nc">SumOfPixels</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;sum_of_pixels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;nav&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">sum_of_pixels</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>This can now be run using the <code class="docutils literal notranslate"><span class="pre">Context.run_udf</span></code> method:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_pixelsum_2</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">SumOfPixels</span><span class="p">(),</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">res_pixelsum_2</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "58e595e3325a405f87fe05959adfdd96", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;sum_of_pixels&#39;: &lt;BufferWrapper kind=nav dtype=float32 extra_shape=()&gt;}
+</pre></div></div>
+</div>
+<p>The result is now a <code class="docutils literal notranslate"><span class="pre">dict</span></code>, which maps buffer names, as defined in <code class="docutils literal notranslate"><span class="pre">get_result_buffers</span></code>, to the <code class="docutils literal notranslate"><span class="pre">BufferWrapper</span></code> result, so we can use the following to plot the results:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">res_pixelsum_2</span><span class="p">[</span><span class="s1">&#39;sum_of_pixels&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb290867a00&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_27_1.png" src="../_images/udf_introduction_27_1.png" />
+</div>
+</div>
+</section>
+<section id="extra_shape:-more-than-one-result-per-scan-position">
+<h2><code class="docutils literal notranslate"><span class="pre">extra_shape</span></code>: more than one result per scan position<a class="headerlink" href="#extra_shape:-more-than-one-result-per-scan-position" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">StatsUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;all_stats&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;nav&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">,</span> <span class="n">extra_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,)),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">all_stats</span><span class="p">[:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">frame</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_stats</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">StatsUDF</span><span class="p">(),</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "b0686ac271fc48b79b8fb163e49d2dc0", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<p>Result now has an extra dimension, as specified by <code class="docutils literal notranslate"><span class="pre">extra_shape</span></code> above:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_stats</span><span class="p">[</span><span class="s1">&#39;all_stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(186, 357, 4)
+</pre></div></div>
+</div>
+<p>Let’s plot the <code class="docutils literal notranslate"><span class="pre">stddev</span></code> of each frame:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">res_stats</span><span class="p">[</span><span class="s1">&#39;all_stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb2904c1370&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_34_1.png" src="../_images/udf_introduction_34_1.png" />
+</div>
+</div>
+</section>
+<section id="kind=%22sig%22-buffers,-merge-functions">
+<h2>kind=”sig” buffers, merge functions<a class="headerlink" href="#kind=%22sig%22-buffers,-merge-functions" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Previously: one result for each scan position</p></li>
+<li><p>Now: result buffer shaped like the diffraction patterns</p></li>
+<li><p>We need a merge function to merge the result of one partition into the final result</p></li>
+<li><p>Different buffer kinds can be combined in a single UDF, so you can combine different operations in a single pass over the data</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MaxFrameUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;maxframe&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;sig&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="c1"># element-wise maximum:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">maxframe</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">maxframe</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">src</span><span class="p">):</span>
+        <span class="c1"># src: the maximum observed in the current partition</span>
+        <span class="c1"># dest: the maximum observed in all partitions that were already merged together</span>
+        <span class="n">dest</span><span class="o">.</span><span class="n">maxframe</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">dest</span><span class="o">.</span><span class="n">maxframe</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">maxframe</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_max</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">MaxFrameUDF</span><span class="p">(),</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "9e24a2f846eb4cbbaf435805b9288a76", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">res_max</span><span class="p">[</span><span class="s1">&#39;maxframe&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb2904b9bb0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_38_1.png" src="../_images/udf_introduction_38_1.png" />
+</div>
+</div>
+</section>
+<section id="Region-of-interest">
+<h2>Region of interest<a class="headerlink" href="#Region-of-interest" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>work on a subset of the navigation axes</p></li>
+<li><p>can be used with all UDFs</p></li>
+<li><p>useful for working selectively on data, or just reducing the I/O and computational load when implementing a new UDF</p></li>
+<li><p>defined as a binary mask</p></li>
+</ul>
+<p>Let’s create a mask based on the previously calculated pixel-sum:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="kn">import</span> <span class="n">opening</span><span class="p">,</span> <span class="n">closing</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">res_pixelsum_1</span><span class="p">),</span>  <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">res_pixelsum_1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">res_pixelsum_1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(7762.0, 12367.0, 10277.385)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">mask</span> <span class="o">=</span> <span class="n">res_pixelsum_1</span><span class="o">.</span><span class="n">data</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">res_pixelsum_1</span><span class="p">)</span>
+<span class="c1"># mask = opening(mask)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">closing</span><span class="p">(</span><span class="n">opening</span><span class="p">(</span><span class="n">mask</span><span class="p">))</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.colorbar.Colorbar at 0x7fb28dd2deb0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_43_1.png" src="../_images/udf_introduction_43_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_roi</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">StatsUDF</span><span class="p">(),</span> <span class="n">roi</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "fd3c5888786f4b83a5fdef8c899b35a4", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">res_roi</span><span class="p">[</span><span class="s1">&#39;all_stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb28d9cbee0&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_45_1.png" src="../_images/udf_introduction_45_1.png" />
+</div>
+</div>
+<section id="Results-with-ROI-applied">
+<h3>Results with ROI applied<a class="headerlink" href="#Results-with-ROI-applied" title="Permalink to this heading"></a></h3>
+<p>One has to take some care when handling results where a <code class="docutils literal notranslate"><span class="pre">roi</span></code> was applied; just using the result as a numpy array or accessing the <code class="docutils literal notranslate"><span class="pre">data</span></code> attribute will give you a result that keeps the whole dataset shape, where the deselected parts are filled with <code class="docutils literal notranslate"><span class="pre">NaN</span></code> values:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_roi</span><span class="p">[</span><span class="s1">&#39;all_stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(186, 357, 4)
+</pre></div></div>
+</div>
+<p>There is a second attribute, <code class="docutils literal notranslate"><span class="pre">raw_data</span></code>, which will give you a flattenned array of just the results, like numpy would give you for fancy indexing:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_roi</span><span class="p">[</span><span class="s1">&#39;all_stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">raw_data</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(45358, 4)
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Parameters">
+<h2>Parameters<a class="headerlink" href="#Parameters" title="Permalink to this heading"></a></h2>
+<p>Keyword arguments passed to the UDF are made available in <code class="docutils literal notranslate"><span class="pre">self.params</span></code> on the UDF. A good convention to document your parameters is to put a docstring into your <code class="docutils literal notranslate"><span class="pre">__init__</span></code> method and just pass on the values to <code class="docutils literal notranslate"><span class="pre">super().__init__</span></code>. You can also validate the arguments here.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">PixelPicker</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        coords : Tuple[int]</span>
+<span class="sd">            The coordinates to look at in each frame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;invalid coordinates&quot;</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_result_buffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;value_of_pixel&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;nav&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">process_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">value_of_pixel</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">coords</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">res_pixel_picker</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">ds</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">PixelPicker</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)),</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "aef4d3de78804c3b9c1a9a58989a7660", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">res_pixel_picker</span><span class="p">[</span><span class="s1">&#39;value_of_pixel&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;matplotlib.image.AxesImage at 0x7fb28d8adb50&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/udf_introduction_55_1.png" src="../_images/udf_introduction_55_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+<script type="application/vnd.jupyter.widget-state+json">
+{"state": {"02d4b3f3758d4da6a400904e29e62696": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_144598b29d604639bc9329f0abe16ed7", "placeholder": "\u200b", "style": "IPY_MODEL_9734dae7d0da49a789461f2a30bbb6d7", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "0474e598eaad40ef9677265295d60ec2": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "0507e8fca8de4706a8f7a222c85052df": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "0598bc5eaf5345d0a8a6a4d51bfe1063": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_3db424dbbb7e462fa9995d4b3e218ac7", "IPY_MODEL_1f15f957544541b98a786e9993b92000", "IPY_MODEL_aba26a55d90f41c9b7c2155d13857b1b"], "layout": "IPY_MODEL_888949605d7d401fb9a49c17d1191227", "tabbable": null, "tooltip": null}}, "089a7b1772d84ce7b44f665c8896cb44": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_5afec754e1f8454fae2684e07f541169", "placeholder": "\u200b", "style": "IPY_MODEL_929aa24ec3df423183da9167214f2f8e", "tabbable": null, "tooltip": null, "value": " 66402/66402 [00:01&lt;00:00, 45569.81it/s]"}}, "09339fd4779d4fae9119670c7eb1c577": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "09394f29cf394a8ba5d8666c7578dc9a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_36b8288afc494c3eb667125adf89d8d8", "placeholder": "\u200b", "style": "IPY_MODEL_e24fa73eebd844ab8d4f0ccb540f5e81", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "0c63c4a482664d029d9d26040f952f5c": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "0c88bdf2cae3410a834e9cee7b6f34fe": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_6b33bdcbe24d4327b3413a4bbaf378aa", "placeholder": "\u200b", "style": "IPY_MODEL_38931db6b1bb4f7285cd964f8036228b", "tabbable": null, "tooltip": null, "value": " 66402/66402 [00:00&lt;00:00, 94888.22it/s]"}}, "0f30124a8f7c484799a6997321a9ac2d": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "144598b29d604639bc9329f0abe16ed7": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "17a05db88a144504accd1f4b0c57bbd8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "1a71e54b6eae4c1f833ef62e6d7d151c": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "1c00b9e9fed544a397ea1ef3e4ee1908": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "1ea17de7be2149d581bc7270da5e21a7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_26bf7cba98f744159cdf8e2056bbf42d", "max": 66402, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_e32a73e587334bccb8bb72116e91f8e9", "tabbable": null, "tooltip": null, "value": 66402}}, "1f15f957544541b98a786e9993b92000": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_6648f90da80d4b23967b6ef23d0a9f96", "max": 66402, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_f46d316f54cb4edda1c7ed41c4f016f8", "tabbable": null, "tooltip": null, "value": 66402}}, "26bf7cba98f744159cdf8e2056bbf42d": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "2a2b5561f71b495eaae27fe566925ccb": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_92b1556524bc48f2aa1eb7b0bbd7cb49", "placeholder": "\u200b", "style": "IPY_MODEL_81c18f5b075e4a058e86a140db9e4436", "tabbable": null, "tooltip": null, "value": " 66402/66402 [00:00&lt;00:00, 126530.98it/s]"}}, "32cdd93add344bdcaa124d73390c2f25": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "343e05a301b64e209cbc3685434c75da": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_02d4b3f3758d4da6a400904e29e62696", "IPY_MODEL_a2cd5fe7e24d416f9fb2677b61a4bef2", "IPY_MODEL_44f4f3a860ed4121be918155ab04e430"], "layout": "IPY_MODEL_0474e598eaad40ef9677265295d60ec2", "tabbable": null, "tooltip": null}}, "36b8288afc494c3eb667125adf89d8d8": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "36d30d69d15c4ae4860b59c4bc3059da": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_7aef91003388472c83c7d94a5104bcf4", "IPY_MODEL_1ea17de7be2149d581bc7270da5e21a7", "IPY_MODEL_089a7b1772d84ce7b44f665c8896cb44"], "layout": "IPY_MODEL_cf41e20ff9124c5ab9b1e01a0c5edb92", "tabbable": null, "tooltip": null}}, "38931db6b1bb4f7285cd964f8036228b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "3d58c971e5b04910bd3f17e1ed29bf32": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_52b2bdcf7b0248399ded539da93967aa", "max": 66402, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_70592060088442e6bfd410a909a0e235", "tabbable": null, "tooltip": null, "value": 66402}}, "3db424dbbb7e462fa9995d4b3e218ac7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_7d3fda370a724bb1bbb44f21f610bc86", "placeholder": "\u200b", "style": "IPY_MODEL_e81fedc628a64217a38a8d4a41cc1b81", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "4054effa8d884649b7726af0288198c4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "40fdd23a6b75425291a0774e16b749ce": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "44f4f3a860ed4121be918155ab04e430": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_661bcc8f2ec14c6f93bf452b824043f3", "placeholder": "\u200b", "style": "IPY_MODEL_4b69ad249694448cb96434ff28100736", "tabbable": null, "tooltip": null, "value": " 45358/45358 [00:06&lt;00:00, 21276.98it/s]"}}, "46bafd909a814c8fb516adb6a397a8f7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "4b69ad249694448cb96434ff28100736": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "52b2bdcf7b0248399ded539da93967aa": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "5a4f68bf7f62451389f9836042f3b511": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_09394f29cf394a8ba5d8666c7578dc9a", "IPY_MODEL_c674ad6beec140d0843dc8bcde632a09", "IPY_MODEL_64b6157e104c44f2a16582ab5cd3293d"], "layout": "IPY_MODEL_8b3e3ffec1a44b7d8cc0bd10fba7647f", "tabbable": null, "tooltip": null}}, "5afec754e1f8454fae2684e07f541169": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "614745e43e304941943a3ae95782ff45": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "64b6157e104c44f2a16582ab5cd3293d": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_baae02c9477f4a98bb02216f772e4ac3", "placeholder": "\u200b", "style": "IPY_MODEL_95f3d1a1411744a8938c023a727b56e9", "tabbable": null, "tooltip": null, "value": " 66402/66402 [00:00&lt;00:00, 98234.78it/s]"}}, "661bcc8f2ec14c6f93bf452b824043f3": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "6648f90da80d4b23967b6ef23d0a9f96": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "6ae379b7bbc345d99f43670c1b922a4e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "6b33bdcbe24d4327b3413a4bbaf378aa": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "70592060088442e6bfd410a909a0e235": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "731f4ae83b63402d8438f4dba2ba66e9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_970a6148c655498f90e67b5d99e8f6ce", "placeholder": "\u200b", "style": "IPY_MODEL_925359b5b8ea49328dc0a38564921400", "tabbable": null, "tooltip": null, "value": " 66402/66402 [00:01&lt;00:00, 49394.35it/s]"}}, "75768744a81546d7867b2a79b0cce51a": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "778e79cc018247399d7f79cfbb7276ac": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "7ac15aeb1b11423cb96676b6ed5d805b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_40fdd23a6b75425291a0774e16b749ce", "placeholder": "\u200b", "style": "IPY_MODEL_17a05db88a144504accd1f4b0c57bbd8", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "7aef91003388472c83c7d94a5104bcf4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_1c00b9e9fed544a397ea1ef3e4ee1908", "placeholder": "\u200b", "style": "IPY_MODEL_0507e8fca8de4706a8f7a222c85052df", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "7d3fda370a724bb1bbb44f21f610bc86": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "81c18f5b075e4a058e86a140db9e4436": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "87eef1434cba4468897cad32ad1d71f4": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "888949605d7d401fb9a49c17d1191227": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "8b3e3ffec1a44b7d8cc0bd10fba7647f": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "90e0404a799e4c5da5a142a442093baa": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_0c63c4a482664d029d9d26040f952f5c", "placeholder": "\u200b", "style": "IPY_MODEL_4054effa8d884649b7726af0288198c4", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "925359b5b8ea49328dc0a38564921400": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "929aa24ec3df423183da9167214f2f8e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "92b1556524bc48f2aa1eb7b0bbd7cb49": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "95f3d1a1411744a8938c023a727b56e9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "970a6148c655498f90e67b5d99e8f6ce": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "9734dae7d0da49a789461f2a30bbb6d7": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "9964514065214b0c938c9fd1d5addc6e": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "a2cd5fe7e24d416f9fb2677b61a4bef2": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_f4dd68c1bf9c4c1bb50e064d195358d0", "max": 45358, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_46bafd909a814c8fb516adb6a397a8f7", "tabbable": null, "tooltip": null, "value": 45358}}, "aba26a55d90f41c9b7c2155d13857b1b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_c4afbae4571842a68a8d0686972acc79", "placeholder": "\u200b", "style": "IPY_MODEL_6ae379b7bbc345d99f43670c1b922a4e", "tabbable": null, "tooltip": null, "value": " 66402/66402 [00:01&lt;00:00, 59275.44it/s]"}}, "b2b018ccb38f4e8da297fa0a748b14d9": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "b6607f03a1f04e6a9d6e30910bbace5b": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_7ac15aeb1b11423cb96676b6ed5d805b", "IPY_MODEL_3d58c971e5b04910bd3f17e1ed29bf32", "IPY_MODEL_731f4ae83b63402d8438f4dba2ba66e9"], "layout": "IPY_MODEL_b2b018ccb38f4e8da297fa0a748b14d9", "tabbable": null, "tooltip": null}}, "baae02c9477f4a98bb02216f772e4ac3": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "c430c008849f4365a29d2591b5009dee": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_0f30124a8f7c484799a6997321a9ac2d", "max": 66402, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_75768744a81546d7867b2a79b0cce51a", "tabbable": null, "tooltip": null, "value": 66402}}, "c4afbae4571842a68a8d0686972acc79": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "c674ad6beec140d0843dc8bcde632a09": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_32cdd93add344bdcaa124d73390c2f25", "max": 66402, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_87eef1434cba4468897cad32ad1d71f4", "tabbable": null, "tooltip": null, "value": 66402}}, "cd9d917da8984ef3ae1e1537fd57ba96": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "cf41e20ff9124c5ab9b1e01a0c5edb92": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "dd68e2939ec14a929f9066df88d4e2cc": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "FloatProgressModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_cd9d917da8984ef3ae1e1537fd57ba96", "max": 66402, "min": 0, "orientation": "horizontal", "style": "IPY_MODEL_9964514065214b0c938c9fd1d5addc6e", "tabbable": null, "tooltip": null, "value": 66402}}, "e24fa73eebd844ab8d4f0ccb540f5e81": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "e32a73e587334bccb8bb72116e91f8e9": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "e60df7e74c65434e9d7e3b2813a6a543": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_f0286cefe3e649e0887048b6b524aede", "IPY_MODEL_c430c008849f4365a29d2591b5009dee", "IPY_MODEL_2a2b5561f71b495eaae27fe566925ccb"], "layout": "IPY_MODEL_778e79cc018247399d7f79cfbb7276ac", "tabbable": null, "tooltip": null}}, "e81fedc628a64217a38a8d4a41cc1b81": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "f0286cefe3e649e0887048b6b524aede": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HTMLModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_1a71e54b6eae4c1f833ef62e6d7d151c", "placeholder": "\u200b", "style": "IPY_MODEL_09339fd4779d4fae9119670c7eb1c577", "tabbable": null, "tooltip": null, "value": "Partitions 32/32, Frames: 100%"}}, "f46d316f54cb4edda1c7ed41c4f016f8": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "ProgressStyleModel", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "f4dd68c1bf9c4c1bb50e064d195358d0": {"model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "model_name": "LayoutModel", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "f56da495829d4e29af90d3467508a662": {"model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "model_name": "HBoxModel", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_90e0404a799e4c5da5a142a442093baa", "IPY_MODEL_dd68e2939ec14a929f9066df88d4e2cc", "IPY_MODEL_0c88bdf2cae3410a834e9cee7b6f34fe"], "layout": "IPY_MODEL_614745e43e304941943a3ae95782ff45", "tabbable": null, "tooltip": null}}}, "version_major": 2, "version_minor": 0}
+</script></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../udf.html" class="btn btn-neutral float-left" title="User-defined functions (UDFs)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="basic.html" class="btn btn-neutral float-right" title="Implementing a UDF" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LiberTEM Authors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

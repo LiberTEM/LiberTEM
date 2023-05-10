@@ -20,6 +20,15 @@ Changelog
   changelog/*/*
 
 .. _latest:
+
+.. _`v0-11-1`:
+
+0.11.1 / 2023-05-10
+###################
+
+This point release works around `issue #8940 in numba 0.57.0 <https://github.com/numba/numba/issues/8940>`_,
+which can cause crashes under certain circumstances.
+
 .. _`v0-11-0`:
 
 0.11.0 / 2023-04-21

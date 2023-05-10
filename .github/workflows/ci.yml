@@ -46,6 +46,7 @@ jobs:
         with:
           node-version: 16
           cache: 'npm'
+          cache-dependency-path: client/package-lock.json
       - run: (cd client && npm ci)
       - run: (cd client && npm run build)
       - run: (cd client && CI=1 npm test -- --coverage -all)

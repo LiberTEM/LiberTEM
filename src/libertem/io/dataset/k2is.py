@@ -12,7 +12,6 @@ from numba.typed import List
 from ncempy.io import dm
 
 from libertem.common.math import prod, make_2D_square, flat_nonzero
-from libertem.common.buffers import zeros_aligned
 from libertem.common import Shape
 from libertem.common.messageconverter import MessageConverter
 from .base import (
@@ -651,7 +650,7 @@ class DataBlock:
     def pixel_data(self):
         if not self.is_valid:
             raise ValueError("invalid block: %r" % self)
-        arr = zeros_aligned((930 * 16), dtype="uint16")
+        arr = np.zeros((930 * 16), dtype="uint16")
         self.readinto(arr)
         return arr.reshape(930, 16)
 

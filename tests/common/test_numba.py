@@ -121,6 +121,10 @@ def _issue_1432():
     np.array([1 for _ in range(1)])
 
 
+@pytest.mark.slow
 def test_issue_1432():
-    with Context() as ctx:
+    from libertem.executor.dask import cluster_spec, DaskJobExecutor
+    spec = cluster_spec(cpus=1, cudas=[], has_cupy=False, num_service=0)
+    executor = DaskJobExecutor.make_local(spec=spec)
+    with Context(executor=executor) as ctx:
         print(ctx.executor.run_function(_issue_1432))

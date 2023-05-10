@@ -134,4 +134,4 @@ jobs:
       - name: release status
         run: ./scripts/release status
       - name: run release script
-        run: ./scripts/release --verbose upload --no-dry-run --pypi-user __token__ --pypi-test-user __token__
+        run: ./scripts/release --verbose upload --no-dry-run --pypi-user __token__ --pypi-test-user __token__ --build-appimage

@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -72,7 +72,23 @@
 <li class="toctree-l2"><a class="reference internal" href="dataset.html">Data Set API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="io_backends.html">I/O Backends</a></li>
 <li class="toctree-l2"><a class="reference internal" href="application.html">Application-specific APIs</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mask creation and manipulation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Mask creation and manipulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.background_subtraction"><code class="docutils literal notranslate"><span class="pre">background_subtraction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.balance"><code class="docutils literal notranslate"><span class="pre">balance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.bounding_radius"><code class="docutils literal notranslate"><span class="pre">bounding_radius()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.circular"><code class="docutils literal notranslate"><span class="pre">circular()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.gradient_x"><code class="docutils literal notranslate"><span class="pre">gradient_x()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.gradient_y"><code class="docutils literal notranslate"><span class="pre">gradient_y()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.polar_map"><code class="docutils literal notranslate"><span class="pre">polar_map()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.radial_bins"><code class="docutils literal notranslate"><span class="pre">radial_bins()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.radial_gradient"><code class="docutils literal notranslate"><span class="pre">radial_gradient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.radial_gradient_background_subtraction"><code class="docutils literal notranslate"><span class="pre">radial_gradient_background_subtraction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.rectangular"><code class="docutils literal notranslate"><span class="pre">rectangular()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.ring"><code class="docutils literal notranslate"><span class="pre">ring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.sparse_circular_multi_stack"><code class="docutils literal notranslate"><span class="pre">sparse_circular_multi_stack()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.masks.sparse_template_multi_stack"><code class="docutils literal notranslate"><span class="pre">sparse_template_multi_stack()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="sparse.html">Sparse array utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="internals.html">Internal API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>

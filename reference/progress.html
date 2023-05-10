@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -78,7 +78,24 @@
 <li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
 <li class="toctree-l2"><a class="reference internal" href="viz.html">Visualization</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Progress bar support</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Progress bar support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.common.progress.ProgressReporter"><code class="docutils literal notranslate"><span class="pre">ProgressReporter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressReporter.end"><code class="docutils literal notranslate"><span class="pre">ProgressReporter.end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressReporter.start"><code class="docutils literal notranslate"><span class="pre">ProgressReporter.start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressReporter.update"><code class="docutils literal notranslate"><span class="pre">ProgressReporter.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#libertem.common.progress.ProgressState"><code class="docutils literal notranslate"><span class="pre">ProgressState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressState.num_frames_complete"><code class="docutils literal notranslate"><span class="pre">ProgressState.num_frames_complete</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressState.num_frames_total"><code class="docutils literal notranslate"><span class="pre">ProgressState.num_frames_total</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressState.num_part_complete"><code class="docutils literal notranslate"><span class="pre">ProgressState.num_part_complete</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressState.num_part_in_progress"><code class="docutils literal notranslate"><span class="pre">ProgressState.num_part_in_progress</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressState.num_part_total"><code class="docutils literal notranslate"><span class="pre">ProgressState.num_part_total</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.progress.ProgressState.progress_id"><code class="docutils literal notranslate"><span class="pre">ProgressState.progress_id</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
 </ul>
 </li>

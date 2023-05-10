@@ -13,11 +13,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -1042,7 +1042,7 @@ dictionary. The result data is accessible with key <code class="code docutils li
 </pre></div>
 </div>
 <p>Now with <a class="reference internal" href="reference/udf.html#libertem.udf.masks.ApplyMasksUDF" title="libertem.udf.masks.ApplyMasksUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApplyMasksUDF</span></code></a>:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">mask_udf</span> <span class="o">=</span> <span class="n">libertem</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">ApplyMasksUDF</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mask_udf</span> <span class="o">=</span> <span class="n">libertem</span><span class="o">.</span><span class="n">udf</span><span class="o">.</span><span class="n">masks</span><span class="o">.</span><span class="n">ApplyMasksUDF</span><span class="p">(</span>
   <span class="n">mask_factories</span><span class="o">=</span><span class="p">[</span><span class="n">all_ones</span><span class="p">,</span> <span class="n">single_pixel</span><span class="p">]</span>
 <span class="p">)</span>
 <span class="n">mask_udf_result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">run_udf</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">udf</span><span class="o">=</span><span class="n">mask_udf</span><span class="p">)</span>

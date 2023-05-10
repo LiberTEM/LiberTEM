@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -78,10 +78,25 @@
 <li class="toctree-l2"><a class="reference internal" href="dask.html">Dask API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="corrections.html">Corrections</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Visualization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.mpl">Matplotlib</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.bqp">bqplot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.gms">GMS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.base">Base classes and functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.mpl">Matplotlib</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.viz.mpl.MPLLive2DPlot"><code class="docutils literal notranslate"><span class="pre">MPLLive2DPlot</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.bqp">bqplot</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.viz.bqp.BQLive2DPlot"><code class="docutils literal notranslate"><span class="pre">BQLive2DPlot</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.gms">GMS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.viz.gms.GMSLive2DPlot"><code class="docutils literal notranslate"><span class="pre">GMSLive2DPlot</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-libertem.viz.base">Base classes and functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.viz.base.Dummy2DPlot"><code class="docutils literal notranslate"><span class="pre">Dummy2DPlot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.viz.base.Live2DPlot"><code class="docutils literal notranslate"><span class="pre">Live2DPlot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.viz.base.visualize_simple"><code class="docutils literal notranslate"><span class="pre">visualize_simple()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#libertem.common.viz.encode_image"><code class="docutils literal notranslate"><span class="pre">encode_image()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="progress.html">Progress bar support</a></li>
@@ -488,7 +503,7 @@ passing to <cite>Image.fromarray</cite> in PIL.</p>
 
 <span class="target" id="module-libertem.common.viz"></span><dl class="py function">
 <dt class="sig sig-object py" id="libertem.common.viz.encode_image">
-<span class="sig-prename descclassname"><span class="pre">libertem.common.viz.</span></span><span class="sig-name descname"><span class="pre">encode_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Optional" title="(in Python v3.10)"><span class="pre">Optional</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Dict" title="(in Python v3.10)"><span class="pre">Dict</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BytesIO</span></span></span><a class="reference internal" href="../_modules/libertem/common/viz.html#encode_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.viz.encode_image" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">libertem.common.viz.</span></span><span class="sig-name descname"><span class="pre">encode_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3.10/library/typing.html#typing.Dict" title="(in Python v3.10)"><span class="pre">Dict</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3.10/library/constants.html#None" title="(in Python v3.10)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">BytesIO</span></span></span><a class="reference internal" href="../_modules/libertem/common/viz.html#encode_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#libertem.common.viz.encode_image" title="Permalink to this definition"></a></dt>
 <dd><p>Save the RGBA data in <code class="docutils literal notranslate"><span class="pre">result</span></code> to an image with parameters <code class="docutils literal notranslate"><span class="pre">save_kwargs</span></code>
 passed to <code class="docutils literal notranslate"><span class="pre">PIL.Image.save</span></code>.</p>
 <dl class="field-list simple">

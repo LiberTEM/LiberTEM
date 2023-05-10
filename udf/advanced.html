@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -205,7 +205,7 @@ merge it with the results of the other tiles because addition is the correct
 merge function for a dot product. Other operations would require a different
 merge function here, for example <code class="xref py py-meth docutils literal notranslate"><span class="pre">numpy.max()</span></code> if a global maximum is to
 be calculated.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">process_tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile</span><span class="p">):</span>
     <span class="n">tile_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">slice</span>
     <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_data</span><span class="o">.</span><span class="n">mask_container</span>
     <span class="n">tile_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
@@ -257,7 +257,7 @@ complete partition.</p>
 evaluates the correlation maps that have been generated with the dot product in
 the previous processing step and places the results in additional result
 buffers:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">postprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">steps</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">steps</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="n">corrmaps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">corr</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span>
         <span class="o">-</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># frames</span>
@@ -284,7 +284,7 @@ partitions have been merged.</p>
 <p>If you want to implement a post-processing step that is run on the main node
 after merging result buffers, you can override
 <a class="reference internal" href="../reference/udf.html#libertem.udf.base.UDF.get_results" title="libertem.udf.base.UDF.get_results"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.udf.base.UDF.get_results()</span></code></a>:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AverageUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AverageUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Like SumUDF, but also computes the average</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -396,7 +396,7 @@ a <a class="reference internal" href="../reference/internals.html#libertem.commo
 <code class="code docutils literal notranslate"><span class="pre">self.params</span></code>. This <a class="reference internal" href="../reference/internals.html#libertem.common.container.MaskContainer" title="libertem.common.container.MaskContainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaskContainer</span></code></a> is then
 available as <code class="code docutils literal notranslate"><span class="pre">self.task_data.mask_container</span></code> within the processing
 functions.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_task_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_task_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">match_pattern</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">match_pattern</span>
     <span class="n">crop_size</span> <span class="o">=</span> <span class="n">match_pattern</span><span class="o">.</span><span class="n">get_crop_size</span><span class="p">()</span>
     <span class="n">size</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">crop_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">crop_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
@@ -469,7 +469,7 @@ buffer in order to optimize dot product performance and support sparse masks.</p
 with flattened navigation dimension. This example illustrates the behavior by
 implementing a custom version of the <a class="reference internal" href="basic.html#sumsig"><span class="std std-ref">simple “sum over sig” example</span></a>. It allocates a custom result buffer that matches the navigation
 dimension as it appears in processing:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
 
@@ -508,7 +508,7 @@ nav dimensions with applied ROI, is available through
 collects the coordinate info for demonstration purposes. A real-world example
 that uses the coordinates is <a class="reference external" href="https://github.com/Ptychography-4-0/ptychography/blob/master/src/ptychography40/reconstruction/ssb/udf.py">the UDF implementation of single side band
 ptychography</a>.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">libertem.udf</span> <span class="kn">import</span> <span class="n">UDF</span>
 
@@ -645,7 +645,7 @@ array to a backend that is suitable for assigning into the specified result
 buffer. It also takes care of reshaping from 2D to nD as necessary.</p>
 <p>Simplified example implementation based on <a class="reference internal" href="../reference/udf.html#libertem.udf.sumsigudf.SumSigUDF" title="libertem.udf.sumsigudf.SumSigUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">libertem.udf.sumsigudf.SumSigUDF</span></code></a> that
 demonstrates how support for all array formats can be implemented:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SumSigUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SumSigUDF</span><span class="p">(</span><span class="n">UDF</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">get_backends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Support all recommended array backends</span>
         <span class="c1"># Please note that their APIs can differ so that comprehensive</span>
@@ -757,7 +757,7 @@ derived automatically from this NumPy array.</p>
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">functools.partial()</span></code>, for example. The return value should be much smaller
 than the input size for this to work efficiently.</p>
 <p>Example: Calculate sum over the last signal axis.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">functools</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">functools</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
     <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>

@@ -12,11 +12,11 @@
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../_static/jquery.js"></script>
-        <script src="../../../../../_static/underscore.js"></script>
         <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="../../../../../_static/js/theme.js"></script>
@@ -252,12 +252,18 @@
         <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span>
+            <span class="n">tiles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span>
                 <span class="n">tiling_scheme</span><span class="o">=</span><span class="n">tiling_scheme</span><span class="p">,</span>
                 <span class="n">dest_dtype</span><span class="o">=</span><span class="n">dest_dtype</span><span class="p">,</span>
                 <span class="n">roi</span><span class="o">=</span><span class="n">roi</span><span class="p">,</span>
                 <span class="n">array_backend</span><span class="o">=</span><span class="n">array_backend</span><span class="p">,</span>
-            <span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">tile</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+            <span class="c1"># NOTE: run the generator to completion, but there must not be any</span>
+            <span class="c1"># more tiles than the one!</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="n">tile</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
             <span class="n">tile_slice</span> <span class="o">=</span> <span class="n">Slice</span><span class="p">(</span>
                 <span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slice</span><span class="o">.</span><span class="n">origin</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>

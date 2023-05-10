@@ -13,11 +13,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -154,7 +154,7 @@ you can try to reproduce the problem using the Python API and follow the instruc
 <p>If you are trying to write a UDF, or debug other Python parts of LiberTEM, you can
 instruct LiberTEM to use simple single-threaded execution using the
 <a class="reference internal" href="dev/executors.html#libertem.executor.inline.InlineJobExecutor" title="libertem.executor.inline.InlineJobExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InlineJobExecutor</span></code></a>.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">lt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">lt</span>
 
 <span class="n">ctx</span> <span class="o">=</span> <span class="n">lt</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">make_with</span><span class="p">(</span><span class="s1">&#39;inline&#39;</span><span class="p">)</span>
 
@@ -168,7 +168,7 @@ instruct LiberTEM to use simple single-threaded execution using the
 by default. It can be switched to GPU processing to test CuPy-enabled UDFs by
 calling <a class="reference internal" href="reference/internals.html#libertem.common.backend.set_use_cuda" title="libertem.common.backend.set_use_cuda"><code class="xref py py-meth docutils literal notranslate"><span class="pre">libertem.common.backend.set_use_cuda()</span></code></a> with the device ID to use.
 <code class="code docutils literal notranslate"><span class="pre">libertem.common.backend.set_use_cpu(0)</span></code> switches back to CPU processing.</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">lt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">lt</span>
 <span class="kn">from</span> <span class="nn">libertem.utils.devices</span> <span class="kn">import</span> <span class="n">detect</span>
 <span class="kn">from</span> <span class="nn">libertem.common.backend</span> <span class="kn">import</span> <span class="n">set_use_cpu</span><span class="p">,</span> <span class="n">set_use_cuda</span>
 
@@ -289,7 +289,7 @@ information, to be able to understand how UDFs are executed across multiple
 processes. Adding tracing instrumentation to your code is similar to setting
 up logging using the <code class="code docutils literal notranslate"><span class="pre">logging</span></code> module. At the top of your Python module,
 you create and use a <code class="code docutils literal notranslate"><span class="pre">Tracer</span></code> object like this:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
 
 <span class="n">tracer</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -302,7 +302,7 @@ you create and use a <code class="code docutils literal notranslate"><span class
 </pre></div>
 </div>
 <p>You can also add some more information to a span, for example events with attributes:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
     <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;span-name&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">):</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># do some real work here</span>
@@ -314,7 +314,7 @@ you create and use a <code class="code docutils literal notranslate"><span class
 </pre></div>
 </div>
 <p>Attributes can also be added to spans themselves:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
     <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;span-name&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">span</span><span class="p">:</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>  <span class="c1"># do some real work here</span>
         <span class="n">span</span><span class="o">.</span><span class="n">set_attributes</span><span class="p">({</span>

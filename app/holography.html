@@ -13,11 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
         <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
@@ -138,7 +138,7 @@ Fresnel fringes of the biprism. The simulator requires amplitude and phase image
 calculated as in example below in which for amplitude a sphere is assumed, the same sphere is used
 for the mean inner potential (MIP) contribution to the phase and in addition to the quadratic long-range
 phase shift originating from the centre of the sphere:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">libertem.utils.generate</span> <span class="kn">import</span> <span class="n">hologram_frame</span>
 
@@ -170,11 +170,11 @@ phase shift originating from the centre of the sphere:</p>
 <img alt="../_images/amplitude_phase.png" src="../_images/amplitude_phase.png" />
 <p>To generate the object hologram, <code class="code docutils literal notranslate"><span class="pre">amp</span></code> and <code class="code docutils literal notranslate"><span class="pre">phase</span></code> should be passed to the <code class="code docutils literal notranslate"><span class="pre">holo_frame</span></code>
 function as follows:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">holo</span> <span class="o">=</span> <span class="n">hologram_frame</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">phase</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">holo</span> <span class="o">=</span> <span class="n">hologram_frame</span><span class="p">(</span><span class="n">amp</span><span class="p">,</span> <span class="n">phase</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To generate the vacuum reference hologram, use an array of ones for amplitude and zero for phase:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">hologram_frame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">phase</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">phase</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">hologram_frame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">phase</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">phase</span><span class="p">))</span>
 
 <span class="c1"># Plot</span>
 <span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -201,7 +201,7 @@ The processing involves the following steps:</p>
 <p>The reconstruction can be accessed through the <a class="reference internal" href="../reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoloReconstructUDF</span></code></a> class.
 To demonstrate the reconstruction capability, two datasets can be created from the holograms
 simulated above as follows:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.io.dataset.memory</span> <span class="kn">import</span> <span class="n">MemoryDataSet</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">libertem.io.dataset.memory</span> <span class="kn">import</span> <span class="n">MemoryDataSet</span>
 <span class="kn">from</span> <span class="nn">libertem.udf.holography</span> <span class="kn">import</span> <span class="n">HoloReconstructUDF</span>
 
 <span class="n">dataset_holo</span> <span class="o">=</span> <span class="n">MemoryDataSet</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">holo</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span><span class="p">)),</span>
@@ -215,7 +215,7 @@ simulated above as follows:</p>
 <p>The reconstruction requires knowledge about the position of the sideband and the size of the
 sideband filter which will be used in the reconstruction. The position of the sideband can be
 estimated from the Fourier transform of the vacuum reference hologram:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot FFT and the sideband position</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot FFT and the sideband position</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span><span class="n">ref</span><span class="p">))))</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mf">26.</span><span class="p">,</span> <span class="mf">44.</span><span class="p">,</span> <span class="s1">&#39;+r&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;off&#39;</span><span class="p">)</span>
@@ -229,7 +229,7 @@ estimated from the Fourier transform of the vacuum reference hologram:</p>
 <p>The radius of sideband filter is typically chosen as either half of the distance between the sideband and
 autocorrelation for strong phase objects or as one third of the distance for weak phase objects. Assuming
 a strong phase object, one can proceed as follows:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">sb_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">sb_position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sb_position</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sb_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">sb_position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sb_position</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="mf">2.</span>
 </pre></div>
 </div>
 <p>Since in off-axis electron holography, the spatial resolution is determined by the interference
@@ -238,12 +238,12 @@ involve changing the shape of the data.
 For medium magnification holography the size of the reconstructed images can be typically set to the size
 (diameter) of the sideband filter. (For high-resolution holography reconstruction, typically binning factors of
 1-4 are used.) Therefore, the output shape can be defined as follows:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">sb_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">sb_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output_shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">sb_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">sb_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Finally the <a class="reference internal" href="../reference/app/holography.html#libertem.udf.holography.HoloReconstructUDF" title="libertem.udf.holography.HoloReconstructUDF"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoloReconstructUDF</span></code></a> class can be used to reconstruct the object and
 reference holograms:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create reconstruction UDF:</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create reconstruction UDF:</span>
 <span class="n">holo_udf</span> <span class="o">=</span> <span class="n">HoloReconstructUDF</span><span class="p">(</span><span class="n">out_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
                               <span class="n">sb_position</span><span class="o">=</span><span class="n">sb_position</span><span class="p">,</span>
                               <span class="n">sb_size</span><span class="o">=</span><span class="n">sb_size</span><span class="p">)</span>
@@ -276,7 +276,7 @@ reference holograms:</p>
 synthetic data. One of the ways to get synthetic data closer to the experimental would be adding noise.
 Comparing phase images, one should keep in mind that phase is typically wrapped in an interval <span class="math notranslate nohighlight">\([0; 2\pi)\)</span>.
 To unwrap phase one can do the following:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skimage.restoration</span> <span class="kn">import</span> <span class="n">unwrap_phase</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">skimage.restoration</span> <span class="kn">import</span> <span class="n">unwrap_phase</span>
 
 <span class="c1"># Unwrap phase:</span>
 <span class="n">phase_unwrapped</span> <span class="o">=</span> <span class="n">unwrap_phase</span><span class="p">(</span><span class="n">phase_r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>

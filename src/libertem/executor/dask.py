@@ -707,7 +707,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         if cluster_kwargs.get('silence_logs') is None:
             cluster_kwargs['silence_logs'] = logging.WARN
 
-        with set_num_threads_env(n=1), set_worker_log_level(cluster_kwargs['silence_logs']):
+        dist_log_level = dask.config.get('distributed.logging.distributed', default=None)
+        if dist_log_level is None:
+            dist_log_level = cluster_kwargs['silence_logs']
+
+        with set_num_threads_env(n=1), set_worker_log_level(dist_log_level):
             # Mitigation for https://github.com/dask/distributed/issues/6776
             with dask.config.set({"distributed.worker.profile.enabled": False}):
                 cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))

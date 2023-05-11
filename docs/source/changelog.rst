@@ -23,8 +23,11 @@ Changelog
 
 .. _`v0-11-1`:
 
-0.11.1 / 2023-05-10
+0.11.1 / 2023-05-11
 ###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7924714.svg
+   :target: https://doi.org/10.5281/zenodo.7924714
 
 This point release works around `issue #8940 in numba 0.57.0 <https://github.com/numba/numba/issues/8940>`_,
 which can cause crashes under certain circumstances.

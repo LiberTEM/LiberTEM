@@ -53,6 +53,33 @@ class DaskWorkerContext(WorkerContext):
             pass
 
 
+@contextlib.contextmanager
+def set_worker_log_level(level: Union[str, int], force: bool = False):
+    """
+    Set the dask.distributed log level for any processes spawned
+    within the context manager. If force is False, don't overwrite
+    any existing environment variable.
+    """
+    env_keys = ['DASK_DISTRIBUTED__LOGGING__DISTRIBUTED']
+    try:
+        old_env = {
+            k: os.environ[k]
+            for k in env_keys
+            if k in os.environ
+        }
+        os.environ.update({
+            k: str(level)
+            for k in env_keys
+            if force or (k not in old_env)
+        })
+        yield
+    finally:
+        os.environ.update(old_env)
+        for key in env_keys:
+            if key not in old_env:
+                del os.environ[key]
+
+
 def worker_setup(resource, device):
     # Disable handling Ctrl-C on the workers for a local cluster
     # since the nanny restarts workers in that case and that gets mixed
@@ -680,15 +707,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         if cluster_kwargs.get('silence_logs') is None:
             cluster_kwargs['silence_logs'] = logging.WARN
 
-        # Set the distributed log level to the same as cluster_kwargs['silence_logs']
-        # on the forked processes via environment variable (if the envvar is not
-        # already set externally)
-        dist_log_key = 'DASK_DISTRIBUTED__LOGGING__DISTRIBUTED'
-        dist_log_level = os.environ.get(dist_log_key)
-        if dist_log_level is None:
-            os.environ[dist_log_key] = f"{cluster_kwargs['silence_logs']}"
-
-        with set_num_threads_env(n=1):
+        with set_num_threads_env(n=1), set_worker_log_level(cluster_kwargs['silence_logs']):
             # Mitigation for https://github.com/dask/distributed/issues/6776
             with dask.config.set({"distributed.worker.profile.enabled": False}):
                 cluster = dd.SpecCluster(workers=spec, **(cluster_kwargs or {}))

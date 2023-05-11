@@ -1,3 +1,4 @@
+import os
 import contextlib
 from copy import deepcopy
 import functools
@@ -678,6 +679,14 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             cluster_kwargs = {}
         if cluster_kwargs.get('silence_logs') is None:
             cluster_kwargs['silence_logs'] = logging.WARN
+
+        # Set the distributed log level to the same as cluster_kwargs['silence_logs']
+        # on the forked processes via environment variable (if the envvar is not
+        # already set externally)
+        dist_log_key = 'DASK_DISTRIBUTED__LOGGING__DISTRIBUTED'
+        dist_log_level = os.environ.get(dist_log_key)
+        if dist_log_level is None:
+            os.environ[dist_log_key] = f"{cluster_kwargs['silence_logs']}"
 
         with set_num_threads_env(n=1):
             # Mitigation for https://github.com/dask/distributed/issues/6776

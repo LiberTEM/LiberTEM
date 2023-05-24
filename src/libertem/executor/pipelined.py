@@ -456,6 +456,18 @@ def worker_loop(
                         continue
                     work_mem[key] = header["value"]
                     continue
+                elif header_type == "SCATTER_UPDATE":
+                    # FIXME: array data could be transferred and stored in SHM instead
+                    key = header["key"]
+                    if key not in work_mem:
+                        queues.response.put({
+                            "type": "ERROR",
+                            "error": f"key {key} not stored in worker memory, can't update",
+                            "worker_id": worker_idx,
+                        })
+                        continue
+                    work_mem[key] = header["value"]
+                    continue
                 elif header_type == "RUN_FUNCTION":
                     with attach_to_parent(header["span_context"]):
                         worker_run_function(header, queues, worker_idx)
@@ -1164,6 +1176,18 @@ class PipelinedExecutor(BaseJobExecutor):
                         "type": "DELETE",
                         "key": key,
                     })
+
+    def scatter_update(self, key: str, obj):
+        """
+        Hacks: update an already existing key to a new value
+        """
+        self._validate_worker_state()
+        for worker_info in self._pool.workers:
+            worker_info.queues.request.put({
+                "type": "SCATTER_UPDATE",
+                "key": key,
+                "value": obj,
+            })
 
     def map(self, fn, iterable):
         # FIXME: replace with efficient impl if needed

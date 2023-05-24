@@ -1601,6 +1601,9 @@ class UDFParams:
         kwargs = [udf._kwargs for udf in udfs]
         return cls(kwargs, roi, corrections, tiling_scheme)
 
+    def update_from_udfs(self, udfs):
+        self._kwargs = [udf._kwargs for udf in udfs]
+
     @property
     def roi(self):
         return self._roi
@@ -2285,6 +2288,8 @@ class UDFRunner:
             corrections=corrections,
             tiling_scheme=tiling_scheme,
         )
+        # XXX hacks
+        self._params = params
         if dry:
             tasks = []
         else:
@@ -2345,6 +2350,10 @@ class UDFRunner:
                 for task in tasks:
                     task.report_progress()
             with executor.scatter(params) as params_handle:
+                # XXX omg hacks: store params_handle on our instance,
+                # so we can update it concurrently (to be solved properly later):
+                self._params_handle = params_handle
+
                 if tasks:
                     for res in executor.run_tasks(
                         tasks,

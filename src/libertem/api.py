@@ -1139,10 +1139,12 @@ class Context:
 
         def _run_sync_wrap() -> Generator[UDFResults, None, None]:
             runner_cls = self.executor.get_udf_runner()
-            result_iter = runner_cls(
+            # XXX hacks
+            self._runner = runner_cls(
                 udfs,
                 progress_reporter=progress_reporter,
-            ).run_for_dataset_sync(
+            )
+            result_iter = self._runner.run_for_dataset_sync(
                 dataset=dataset,
                 executor=self.executor,
                 roi=roi,

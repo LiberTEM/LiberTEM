@@ -384,10 +384,7 @@ class COMUDF(UDF):
             raw_shifts = raw_shifts[roi]
             field = field[roi]
             mag = mag[roi]
-            div2 = div[roi]
-            dumped = div[np.invert(roi)]
-            div = div2
-            assert np.allclose(dumped, np.nan, equal_nan=True)
+            div = div[roi]
             curl = curl[roi]
         else:
             raw_shifts = raw_shifts.reshape((-1, 2))

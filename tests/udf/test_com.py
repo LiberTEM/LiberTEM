@@ -162,11 +162,22 @@ def test_com_roi(lt_ctx):
                 if not np.allclose(ref, res, equal_nan=True):
                     print(y, x, ref, res)
 
+        # The Analysis may return non-NaN values outside of the ROI
+        # if all neighbors are within the ROI because of the way how np.gradient works.
+        # It can directly return the result for the entire nav buffer, i.e. also set
+        # values outside of the ROI.
+        # The UDF cannot set values outside of the ROI to exactly replicate the Analysis
+        # because of the way how get_results() and UDF result buffers for kind='nav' work.
+        # Instead of equality for the entire result, we test for equality within the ROI
+        # and only NaN outside of the ROI for the UDF result.
+        inverted_roi = np.invert(roi)
         assert_allclose(
-            com_result['divergence'],
-            analysis_result.divergence.raw_data,
+            com_result['divergence'].data[roi],
+            analysis_result.divergence.raw_data[roi],
         )
+        assert np.all(np.isnan(com_result['divergence'].data[inverted_roi]))
         assert_allclose(
-            com_result['curl'],
-            analysis_result.curl.raw_data,
+            com_result['curl'].data[roi],
+            analysis_result.curl.raw_data[roi],
         )
+        assert np.all(np.isnan(com_result['curl'].data[inverted_roi]))

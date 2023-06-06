@@ -8,6 +8,7 @@ from libertem import masks
 from libertem.corrections import coordinates
 from libertem.udf.masks import ApplyMasksEngine
 from libertem.common.container import MaskContainer
+from libertem.common.math import prod
 from libertem.udf.base import UDF
 
 
@@ -353,6 +354,22 @@ class COMUDF(UDF):
             raw_result, self.results.raw_mask_result
         )
 
+    def get_field_results(self, field_y, field_x):
+        '''
+        To be overwritten in subclasses, such as for iCoM results
+        in https://github.com/LiberTEM/LiberTEM-iCoM
+        '''
+        mag = magnitude(
+            y_centers=field_y, x_centers=field_x
+        )
+        div = divergence(y_centers=field_y, x_centers=field_x)
+        curl = curl_2d(y_centers=field_y, x_centers=field_x)
+        return {
+            'magnitude': mag,
+            'divergence': div,
+            'curl': curl,
+        }
+
     def get_results(self):
         com_params = self.get_params()
         raw_mask_result = self.results.get_buffer('raw_mask_result')
@@ -375,28 +392,20 @@ class COMUDF(UDF):
 
         raw_shifts = np.moveaxis(np.array(raw_shifts), 0, -1)
         field = np.moveaxis(np.array(field), 0, -1)
-        mag = magnitude(
-            y_centers=field_y, x_centers=field_x
-        )
-        div = divergence(y_centers=field_y, x_centers=field_x)
-        curl = curl_2d(y_centers=field_y, x_centers=field_x)
-        if self.meta.roi is not None:
-            raw_shifts = raw_shifts[roi]
-            field = field[roi]
-            mag = mag[roi]
-            div = div[roi]
-            curl = curl[roi]
-        else:
-            raw_shifts = raw_shifts.reshape((-1, 2))
-            field = field.reshape((-1, 2))
-            mag = mag.reshape(-1)
-            div = div.reshape(-1)
-            curl = curl.reshape(-1)
 
-        return {
+        nav_size = prod(self.meta.dataset_shape.nav)
+
+        results = {
             'raw_shifts': raw_shifts,
             'field': field,
-            'magnitude': mag,
-            'divergence': div,
-            'curl': curl,
         }
+
+        results.update(self.get_field_results(field_y=field_y, field_x=field_x))
+
+        if self.meta.roi is not None:
+            for key in results:
+                results[key] = results[key][roi]
+        else:
+            for key in results:
+                results[key] = results[key].reshape((nav_size, -1))
+        return results

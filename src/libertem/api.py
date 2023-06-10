@@ -227,7 +227,7 @@ class Context:
             cpus = 0
         spec = None
         if cpus is not None and executor_spec in ('dask', 'dask-make-default'):
-            spec = cluster_spec(cpus=cpus, cuda=gpus, has_cupy=has_cupy)
+            spec = cluster_spec(cpus=cpus, cudas=gpus, has_cupy=has_cupy)
 
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
@@ -247,7 +247,7 @@ class Context:
             executor = DelayedJobExecutor()
         elif executor_spec == 'pipelined':
             if cpus is not None:  # implies gpus is also not None
-                spec = PipelinedExecutor.make_spec(cpus=cpus, cuda=gpus, has_cupy=has_cupy)
+                spec = PipelinedExecutor.make_spec(cpus=cpus, cudas=gpus, has_cupy=has_cupy)
                 executor = PipelinedExecutor(spec=spec)
             else:
                 executor = PipelinedExecutor.make_local()

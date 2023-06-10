@@ -153,7 +153,7 @@ class Context:
         Parameters
         ----------
 
-        executor_spec:
+        executor_spec : ExecutorSpecType, optional, by default "dask"
             A string identifier for executor variants:
 
             "synchronous", "inline":

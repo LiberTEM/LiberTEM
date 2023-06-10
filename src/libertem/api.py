@@ -219,7 +219,7 @@ class Context:
                                       'specifying GPU workers at this time')
         # Delay import here to avoid cupy import overhead
         if executor_spec in ('dask', 'dask-make-default', 'pipelined'):
-            from libertem.utils.devices import _cupy
+            from libertem.utils.devices import cupy as _cupy
             has_cupy = _cupy is not None
         if cpus is not None and gpus is None:
             gpus = 0

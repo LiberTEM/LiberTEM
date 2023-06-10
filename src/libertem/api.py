@@ -17,7 +17,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset import load, filetypes
 from libertem.io.dataset.base import DataSet
 from libertem.common.buffers import BufferWrapper
-from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.integration import get_dask_integration_executor
 from libertem.common.executor import JobExecutor
@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     import numpy.typing as nt
     from sparse import SparseArray
     from scipy.sparse import spmatrix
+    from libertem.viz.base import Live2DPlot
 
 tracer = trace.get_tracer(__name__)
 
@@ -52,13 +53,15 @@ RunUDFGenType = Generator[UDFResults, None, None]
 RunUDFGenTypeL = Generator[UDFResults, None, None]
 RunUDFAGenType = AsyncGenerator[UDFResults, None]
 RunUDFAGenTypeL = AsyncGenerator[UDFResults, None]
-ExecutorSpecType = Union[
-    Literal['synchronous'], Literal['inline'],
-    Literal['threads'],
-    Literal['dask-integration'],
-    Literal['dask-make-default'],
-    Literal['delayed'],
-    Literal['pipelined'],
+ExecutorSpecType = Literal[
+    'synchronous',
+    'inline',
+    'threads',
+    'dask',
+    'dask-integration',
+    'dask-make-default',
+    'delayed',
+    'pipelined',
 ]
 IterableRoiT = Iterable[Tuple[Tuple[int], bool]]
 RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int], IterableRoiT]]
@@ -119,14 +122,33 @@ class Context:
         self._register_at_exit()
 
     @classmethod
-    def make_with(cls, executor_spec: ExecutorSpecType, *args, **kwargs) -> 'Context':
+    def make_with(
+        cls,
+        executor_spec: ExecutorSpecType = 'dask',
+        *,
+        cpus: Optional[Union[int, Iterable[int]]] = None,
+        gpus: Optional[Union[int, Iterable[int]]] = None,
+        plot_class: Optional['Live2DPlot'] = None,
+    ) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
 
         .. versionadded:: 0.9.0
 
         This simplifies creating a :class:`Context` for a number of common executor
-        choices. See :ref:`executors` for general information on executors.
+        choices and allows specification of the resources used to create the executor.
+        For more fine-grained control of resource allocation create the
+        executor manually and pass it to the :class:`Context`.
+
+        See :ref:`executors` for general information on executors.
+
+        .. note::
+
+            Prior to version 0.12.0, this function accepted :code:`*args, **kwargs`
+            and passed them to the initializer of :class:`Context`. Given that the
+            Context accepts only the :code:`plot_class` keyword-argument this was
+            hard-coded into this function for backwards-compatibility, enabling
+            the  addition of the :code:`cpus` and :code:`gpus` parameters.
 
         Parameters
         ----------
@@ -139,15 +161,18 @@ class Context:
                 :class:`~libertem.executor.inline.InlineJobExecutor`
             "threads":
                 Use a multi-threaded :class:`~libertem.executor.concurrent.ConcurrentJobExecutor`
+            "dask":
+                Create a standard :class:`~libertem.executor.dask.DaskJobExecutor` without
+                considering any pre-existing Dask schedulers available on the system, similar to
+                the default behaviour of :code:`Context()` called with no arguments.
             "dask-integration":
                 Use a JobExecutor that is compatible with the currently active Dask scheduler.
                 See :func:`~libertem.executor.integration.get_dask_integration_executor` for
                 more information.
             "dask-make-default":
                 Create a local :code:`dask.distributed` cluster and client
-                using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`, similar to
-                the default behaviour of :code:`Context()` called with no arguments.
-                However, the Client will be set as the default Dask scheduler and will
+                using :meth:`~libertem.executor.dask.DaskJobExecutor.make_local`.
+                The Client will be set as the default Dask scheduler and will
                 persist after the LiberTEM Context closes, which is suitable for downstream
                 computation using :code:`dask.distributed`.
             "delayed":
@@ -158,34 +183,81 @@ class Context:
             "pipelined":
                 Create a :class:`~libertem.executor.pipelined.PipelinedExecutor`,
                 which is suitable for multi-process streaming live processing
-                using `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_.
-        *args, **kwargs
-            Passed to :class:`Context`.
+                using `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_
+        cpus : int | Iterable[int], optional
+            The number of CPU workers to create, where possible. The meaning of
+            CPU worker depends on the type of executor created - threaded executors
+            will interpret :code:`cpus` to choose the number of threads, while process-based
+            executors will interpret the value to choose the number of processes to spawn.
+            The iterable form of of the argument is intended contain CPU-id values to
+            enable cpu-pinning where the exector and the system support it, but most
+            use cases will only require an integer argument. Executors where this
+            parameter does not make sense will raise an error if provided.
+        gpus : int | Iterable[int], optional
+            Similar to :code:`cpus`, specifies the number of GPU workers to create
+            where the executor chosen supports it, else raise an error. The integer
+            form of the argument assigns workers round-robin to available GPUs on
+            the system, while the iterable form allows specifiying the number of
+            workers per GPU by repeating the id of any given GPU in the argument.
+        plot_class : libertem.viz.base.Live2DPlot, optional
+            Plot class for live plotting, passed to :class:`Context`.
 
         Returns
         -------
         Instance of :class:`Context` using a new instance of the specified executor.
         '''
+        # The following block is temporary until the handling of cpus/gpus args is
+        # pushed onto each exector
+        limited_execs = ('inline', 'synchronous', 'dask-integration', 'delayed')
+        cannot_cpus = executor_spec in limited_execs
+        if cpus is not None and cannot_cpus:
+            raise NotImplementedError(f'Executor type {executor_spec} does not support '
+                                      'specifying CPU workers at this time')
+        cannot_gpus = executor_spec in limited_execs + ('threads',)
+        if gpus is not None and cannot_gpus:
+            raise NotImplementedError(f'Executor type {executor_spec} does not support '
+                                      'specifying GPU workers at this time')
+        # Delay import here to avoid cupy import overhead
+        if executor_spec in ('dask', 'dask-make-default', 'pipelined'):
+            from libertem.utils.devices import _cupy
+            has_cupy = _cupy is not None
+        if cpus is not None and gpus is None:
+            gpus = 0
+        if gpus is not None and cpus is None:
+            cpus = 0
+        spec = None
+        if cpus is not None and executor_spec in ('dask', 'dask-make-default'):
+            spec = cluster_spec(cpus=cpus, cuda=gpus, has_cupy=has_cupy)
+
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
             executor = InlineJobExecutor()
         elif executor_spec == 'threads':
             executor = ConcurrentJobExecutor.make_local()
+        elif executor_spec == 'dask':
+            executor = DaskJobExecutor.make_local(spec=spec)
         elif executor_spec == 'dask-integration':
             executor = get_dask_integration_executor()
         elif executor_spec == 'dask-make-default':
-            executor = DaskJobExecutor.make_local(client_kwargs={"set_as_default": True})
+            executor = DaskJobExecutor.make_local(
+                spec=spec,
+                client_kwargs={"set_as_default": True}
+            )
         elif executor_spec == 'delayed':
             executor = DelayedJobExecutor()
         elif executor_spec == 'pipelined':
-            executor = PipelinedExecutor()
+            if cpus is not None:  # implies gpus is also not None
+                spec = PipelinedExecutor.make_spec(cpus=cpus, cuda=gpus, has_cupy=has_cupy)
+                executor = PipelinedExecutor(spec=spec)
+            else:
+                executor = PipelinedExecutor.make_local()
         else:
             raise ValueError(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '
-                f'synchronous", "inline", "threads", "dask-integration", '
-                f'"dask-make-default" or "pipelined".'
+                f'synchronous", "inline", "threads", "dask", "dask-integration",'
+                f'"dask-make-default" "delayed" or "pipelined".'
             )
-        return cls(executor=executor, *args, **kwargs)
+        return cls(executor=executor, plot_class=plot_class)
 
     @property
     def plot_class(self):

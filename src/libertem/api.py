@@ -233,7 +233,12 @@ class Context:
         if executor_spec in ('synchronous', 'inline'):
             executor = InlineJobExecutor()
         elif executor_spec == 'threads':
-            executor = ConcurrentJobExecutor.make_local()
+            n_threads = cpus
+            try:
+                n_threads = len(n_threads)
+            except TypeError:
+                pass
+            executor = ConcurrentJobExecutor.make_local(n_threads=n_threads)
         elif executor_spec == 'dask':
             executor = DaskJobExecutor.make_local(spec=spec)
         elif executor_spec == 'dask-integration':

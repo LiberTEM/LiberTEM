@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import logging
+from typing import Optional
 import concurrent.futures
 from typing import Iterable, Any, Dict
 
@@ -179,7 +180,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             self.client.shutdown(wait=False)
 
     @classmethod
-    def make_local(cls):
+    def make_local(cls, n_threads: Optional[int] = None):
         """
         Create a local ConcurrentJobExecutor backed by
         a :class:`python:concurrent.futures.ThreadPoolExecutor`
@@ -190,7 +191,8 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             the connected JobExecutor
         """
         devices = detect()
-        n_threads = len(devices['cpus'])
+        if n_threads is None:
+            n_threads = len(devices['cpus'])
         client = TracedThreadPoolExecutor(tracer, max_workers=n_threads)
         return cls(client=client, is_local=True)
 

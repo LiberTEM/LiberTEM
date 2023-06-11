@@ -185,13 +185,21 @@ class ConcurrentJobExecutor(BaseJobExecutor):
         Create a local ConcurrentJobExecutor backed by
         a :class:`python:concurrent.futures.ThreadPoolExecutor`
 
+        Parameters
+        ----------
+
+        n_threads : Optional[int]
+            The number of threads to spawn in the executor,
+            by default None in which case as many threads as there
+            are CPU cores will be spawned.
+
         Returns
         -------
         ConcurrentJobExecutor
             the connected JobExecutor
         """
-        devices = detect()
         if n_threads is None:
+            devices = detect()
             n_threads = len(devices['cpus'])
         client = TracedThreadPoolExecutor(tracer, max_workers=n_threads)
         return cls(client=client, is_local=True)

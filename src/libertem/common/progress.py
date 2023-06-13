@@ -1,6 +1,8 @@
 import threading
+import logging
 from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Any, NamedTuple, Optional
 import time
+
 from libertem.common.executor import WorkerQueueEmpty
 
 
@@ -9,6 +11,8 @@ if TYPE_CHECKING:
     from libertem.udf.base import UDFTask
     from libertem.io.dataset.base.tiling import DataTile
     from libertem.io.dataset.base.partition import Partition
+
+logger = logging.getLogger(__name__)
 
 
 class CommsDispatcher:
@@ -33,13 +37,17 @@ class CommsDispatcher:
     def __enter__(self, *args, **kwargs):
         if self._thread is not None:
             raise RuntimeError('Cannot re-enter CommsDispatcher')
-        self._thread = threading.Thread(target=self.monitor_queue)
+        self._thread = threading.Thread(
+            target=self.monitor_queue,
+            name="CommsDispatcher",
+        )
         self._thread.daemon = True
         self._thread.start()
 
     def __exit__(self, *args, **kwargs):
         if self._thread is None:
             return
+        logger.debug(f"tid {self._thread.native_id}: sending STOP to thread")
         self._message_q.put(('STOP', {}))
         self._thread.join()
         self._thread = None
@@ -57,8 +65,10 @@ class CommsDispatcher:
         If there are no subscribers this should drain
         messages from the queue as fast as they are recieved
         """
+        logger.debug(f"tid {threading.current_thread().native_id}: monitoring thread started")
         while True:
             with self._message_q.get(block=True) as ((topic, msg), _):
+                logger.debug("tid %d: %s %s", threading.current_thread().native_id, topic, msg)
                 if topic == 'STOP':
                     break
                 try:

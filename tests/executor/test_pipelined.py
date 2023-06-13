@@ -440,7 +440,9 @@ def test_exception_in_main_thread():
             next(res_iter)
 
         # here, we get a KeyError if the worker queues aren't drained:
+        print("second UDF run starting")
         ctx.run_udf(dataset=ds, udf=udf)
+        print("second UDF run done")
     finally:
         if executor is not None:
             executor.close()

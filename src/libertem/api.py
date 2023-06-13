@@ -6,6 +6,7 @@ from typing_extensions import Literal
 import warnings
 import weakref
 import atexit
+import logging
 
 from opentelemetry import trace
 import numpy as np
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
     from libertem.viz.base import Live2DPlot
 
 tracer = trace.get_tracer(__name__)
+logger = logging.getLogger(__name__)
 
 RunUDFResultType = UDFResultDict
 RunUDFSyncL = List[UDFResultDict]
@@ -82,10 +84,14 @@ class ResultGenerator:
 
     def close(self):
         self._task_results.close()
+        self._result_iter.close()
 
     def update_parameters(self, parameters: List[Dict[str, Any]]):
-        print(f"ResultGenerator.update_parameters: {parameters}")
+        logger.debug("ResultGenerator.update_parameters: %s", parameters)
         self._result_iter.update_parameters(parameters)
+
+    def throw(self, exc: Exception):
+        return self._result_iter.throw(exc)
 
 
 class Context:

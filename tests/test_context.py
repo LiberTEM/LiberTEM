@@ -276,9 +276,22 @@ def test_make_with_inline(inline_executor):
     assert isinstance(ctx.executor, inline_executor.__class__)
 
 
-def test_make_with_threads(concurrent_executor):
-    ctx = Context.make_with('threads')
+def test_make_with_inline_raises():
+    with pytest.raises(NotImplementedError):
+        Context.make_with('inline', cpus=4)
+
+
+@pytest.mark.parametrize('n_threads', (None, 4))
+def test_make_with_threads(concurrent_executor, n_threads):
+    ctx = Context.make_with('threads', cpus=n_threads)
     assert isinstance(ctx.executor, concurrent_executor.__class__)
+    # No way to check number of workers in a concurrent.futures.Executor!
+
+
+@pytest.mark.parametrize('exec_spec', ('threads', 'inline', 'delayed'))
+def test_make_with_raises_gpus_no_support(exec_spec):
+    with pytest.raises(NotImplementedError):
+        Context.make_with(exec_spec, gpus=4)
 
 
 def test_make_with_unrecognized():

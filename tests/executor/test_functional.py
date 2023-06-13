@@ -76,14 +76,9 @@ def ctx(request, local_cluster_url):
         if sys.version_info < (3, 8):
             pytest.skip("PipelinedExecutor only supported from Python 3.8 onwards")
         else:
-            from libertem.executor.pipelined import PipelinedExecutor
             ctx = None
             try:
-                ctx = Context(
-                    executor=PipelinedExecutor(
-                        spec=PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
-                    )
-                )
+                ctx = Context.make_with('pipelined', cpus=range(2))
                 yield ctx
             finally:
                 if ctx is not None:
@@ -292,6 +287,14 @@ def test_make_default():
             ctx.executor.client.cluster.close(timeout=30)
         ctx.executor.client.close()
         ctx.close()
+
+
+@pytest.mark.slow
+def test_make_dask_implicit():
+    ctx = Context.make_with(cpus=(4, 7))
+    assert ctx.executor.__class__ == DaskJobExecutor
+    assert ctx.executor.client is not None
+    assert len(ctx.executor.get_available_workers().has_cpu()) == 2
 
 
 def test_connect_default(local_cluster_url):

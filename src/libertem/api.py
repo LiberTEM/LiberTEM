@@ -208,25 +208,28 @@ class Context:
         '''
         # The following block is temporary until the handling of cpus/gpus args is
         # pushed onto each exector
+        cpu_spec = cpus is not None
+        gpu_spec = gpus is not None
+        has_spec = cpu_spec or gpu_spec
         limited_execs = ('inline', 'synchronous', 'dask-integration', 'delayed')
         cannot_cpus = executor_spec in limited_execs
-        if cpus is not None and cannot_cpus:
+        if cpu_spec and cannot_cpus:
             raise NotImplementedError(f'Executor type {executor_spec} does not support '
                                       'specifying CPU workers at this time')
         cannot_gpus = executor_spec in limited_execs + ('threads',)
-        if gpus is not None and cannot_gpus:
+        if gpu_spec and cannot_gpus:
             raise NotImplementedError(f'Executor type {executor_spec} does not support '
                                       'specifying GPU workers at this time')
         # Delay import here to avoid cupy import overhead
-        if executor_spec in ('dask', 'dask-make-default', 'pipelined'):
+        if has_spec and executor_spec in ('dask', 'dask-make-default', 'pipelined'):
             from libertem.utils.devices import cupy as _cupy
             has_cupy = _cupy is not None
-        if cpus is not None and gpus is None:
+        if cpu_spec and not gpu_spec:
             gpus = 0
-        if gpus is not None and cpus is None:
+        if gpu_spec and not cpu_spec:
             cpus = 0
         spec = None
-        if cpus is not None and executor_spec in ('dask', 'dask-make-default'):
+        if has_spec and executor_spec in ('dask', 'dask-make-default'):
             spec = cluster_spec(cpus=cpus, cudas=gpus, has_cupy=has_cupy)
 
         executor: JobExecutor
@@ -251,7 +254,7 @@ class Context:
         elif executor_spec == 'delayed':
             executor = DelayedJobExecutor()
         elif executor_spec == 'pipelined':
-            if cpus is not None:  # implies gpus is also not None
+            if has_spec:  # implies gpus is also not None
                 spec = PipelinedExecutor.make_spec(cpus=cpus, cudas=gpus, has_cupy=has_cupy)
                 executor = PipelinedExecutor(spec=spec)
             else:

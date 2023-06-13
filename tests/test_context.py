@@ -283,7 +283,7 @@ def test_make_with_inline_raises():
         Context.make_with('inline', cpus=4)
 
 
-@pytest.mark.parametrize('n_threads', (None, 4))
+@pytest.mark.parametrize('n_threads', (None, 4, (2, 3)))
 def test_make_with_threads(concurrent_executor, n_threads):
     ctx = Context.make_with('threads', cpus=n_threads)
     assert isinstance(ctx.executor, concurrent_executor.__class__)

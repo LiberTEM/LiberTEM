@@ -1,7 +1,9 @@
 from typing import Any, Iterable, Dict
+import contextlib
+
 import cloudpickle
 import psutil
-import contextlib
+import uuid
 
 from .base import BaseJobExecutor
 from libertem.common.executor import (
@@ -44,10 +46,20 @@ class InlineJobExecutor(BaseJobExecutor):
         import libertem.preload  # noqa: 401
         self._debug = debug
         self._inline_threads = inline_threads
+        self._scattered = {}
 
     @contextlib.contextmanager
     def scatter(self, obj):
-        yield obj
+        obj_id = uuid.uuid4()
+        self._scattered[obj_id] = obj
+        try:
+            yield obj_id
+        finally:
+            del self._scattered[obj_id]
+
+    def scatter_update(self, handle, obj):
+        print(f"updating {handle} to {obj}")
+        self._scattered[handle] = obj
 
     def run_tasks(
         self,
@@ -74,7 +86,7 @@ class InlineJobExecutor(BaseJobExecutor):
                 if self._debug:
                     cloudpickle.loads(cloudpickle.dumps(task))
                 task_comm_handler.handle_task(task, worker_queue)
-                result = task(env=env, params=params_handle)
+                result = task(env=env, params=self._scattered[params_handle])
                 if self._debug:
                     cloudpickle.loads(cloudpickle.dumps(result))
                 yield result, task

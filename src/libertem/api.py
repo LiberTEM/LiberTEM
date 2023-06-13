@@ -1,6 +1,6 @@
 from typing import (
-    TYPE_CHECKING, Any, List, Optional, Union, Iterable, Generator, Coroutine,
-    AsyncGenerator, overload, Tuple
+    TYPE_CHECKING, Any, List, Dict, Optional, Union, Iterable, Generator,
+    Coroutine, AsyncGenerator, overload, Tuple
 )
 from typing_extensions import Literal
 import os
@@ -34,7 +34,7 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
-from libertem.udf.base import UDFResultDict, UDF, UDFResults
+from libertem.udf.base import UDFResultDict, UDF, UDFResults, UDFRunner
 from libertem.udf.auto import AutoUDF
 from libertem.common.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 from libertem.common.sparse import sparse_to_coo, to_dense
@@ -68,6 +68,26 @@ ExecutorSpecType = Literal[
 ]
 IterableRoiT = Iterable[Tuple[Tuple[int, ...], bool]]
 RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int, ...], IterableRoiT]]
+
+
+class ResultGenerator:
+    def __init__(self, task_results: RunUDFGenType, runner: UDFRunner, result_iter):
+        self._task_results = task_results
+        self._runner = runner
+        self._result_iter = result_iter
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self._task_results)
+
+    def close(self):
+        self._task_results.close()
+
+    def update_parameters(self, parameters: List[Dict[str, Any]]):
+        print(f"ResultGenerator.update_parameters: {parameters}")
+        self._result_iter.update_parameters(parameters)
 
 
 class Context:
@@ -1139,12 +1159,11 @@ class Context:
 
         def _run_sync_wrap() -> Generator[UDFResults, None, None]:
             runner_cls = self.executor.get_udf_runner()
-            # XXX hacks
-            self._runner = runner_cls(
+            runner = runner_cls(
                 udfs,
                 progress_reporter=progress_reporter,
             )
-            result_iter = self._runner.run_for_dataset_sync(
+            result_iter = runner.run_for_dataset_sync(
                 dataset=dataset,
                 executor=self.executor,
                 roi=roi,
@@ -1153,16 +1172,19 @@ class Context:
                 backends=backends,
                 iterate=(iterate or enable_plotting)
             )
-            for udf_results in result_iter:
-                yield udf_results
+
+            def _inner():
+                for udf_results in result_iter:
+                    yield udf_results
+                    if enable_plotting:
+                        self._update_plots(
+                            plots, udfs, udf_results.buffers, udf_results.damage.data, force=False
+                        )
                 if enable_plotting:
                     self._update_plots(
-                        plots, udfs, udf_results.buffers, udf_results.damage.data, force=False
+                        plots, udfs, udf_results.buffers, udf_results.damage.data, force=True
                     )
-            if enable_plotting:
-                self._update_plots(
-                    plots, udfs, udf_results.buffers, udf_results.damage.data, force=True
-                )
+            return ResultGenerator(_inner(), runner=runner, result_iter=result_iter)
 
         if iterate:
             return _run_sync_wrap()

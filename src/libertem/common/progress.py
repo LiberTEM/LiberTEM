@@ -34,6 +34,7 @@ class CommsDispatcher:
         if self._thread is not None:
             raise RuntimeError('Cannot re-enter CommsDispatcher')
         self._thread = threading.Thread(target=self.monitor_queue)
+        self._thread.daemon = True
         self._thread.start()
 
     def __exit__(self, *args, **kwargs):

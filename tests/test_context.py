@@ -1,18 +1,20 @@
 import sys
 import copy
+from typing import Dict
 from unittest import mock
+import contextlib
 
 import pytest
 import numpy as np
 import sparse
 import scipy.sparse
+from libertem.common.buffers import BufferWrapper
 
 from libertem.io.dataset.base import MMapBackend
-from libertem.udf import UDF
+from libertem.udf import UDF, UDFRunCancelled
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF
-from libertem.udf import UDFRunCancelled
 from libertem.api import Context
 from libertem.exceptions import ExecutorSpecException
 
@@ -330,3 +332,33 @@ def test_udf_cancellation(default_raw):
             pass
 
     assert ex.match(r"^UDF run cancelled after \d+ partitions$")
+
+
+class DynamicParamsUDF(UDF):
+    def __init__(self, latest_index):
+        super().__init__(latest_index=latest_index)
+
+    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+        return {
+            'index': self.buffer(kind='nav', dtype=int),
+        }
+
+    def process_partition(self, partition):
+        print(f"DynamicParamsUDF {self.params.latest_index}")
+        self.results.index[:] = self.params.latest_index
+
+
+def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
+    # just for exercising the code paths:
+    result_iter = lt_ctx.run_udf_iter(dataset=default_raw, udf=[DynamicParamsUDF(latest_index=0)])
+    with contextlib.closing(result_iter) as result_iter:
+        # because this is using the inline executor, we can guarantee
+        # that the updated parameters are used for the next partition.
+        for idx, part_res in enumerate(result_iter):
+            result_iter.update_parameters([
+                {"latest_index": idx + 1}
+            ])
+            print(idx, part_res.buffers[0]['index'].data)
+        # `default_raw` has at least two partitions, so there should be
+        # something non-zero in the result:
+        assert not np.allclose(part_res.buffers[0]['index'], 0)

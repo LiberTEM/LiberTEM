@@ -134,6 +134,22 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
+    def scatter_update(self, handle, obj):
+        '''
+        Update :code:`handle` to point to :code:`obj`
+
+        Must have been scattered before using :meth:`scatter`.
+
+        Parameters
+        ----------
+        handle
+            The handle, as returned from :meth:`scatter`.
+
+        obj
+            Some kind of Python object. Must be serializable.
+        '''
+        raise NotImplementedError()
+
     @contextmanager
     def scatter(self, obj):
         '''
@@ -143,7 +159,7 @@ class JobExecutor:
         ----------
 
         obj
-            Some kind of Python object or variable
+            Some kind of Python object. Must be serializable.
 
         Returns
         -------

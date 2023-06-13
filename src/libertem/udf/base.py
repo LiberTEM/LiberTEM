@@ -62,6 +62,34 @@ UDFKwargs = Dict[str, UDFKwarg]
 ExecutionPlan = Dict[ArrayBackend, Iterable["UDF"]]
 
 
+class ResultsForDataSet:
+    def __init__(
+        self,
+        it: Iterable[Tuple[Tuple["UDFData", ...], TaskProtocol]],
+        params: "UDFParams",
+        params_handle,
+        executor: JobExecutor,
+    ):
+        self._iter = iter(it)
+        self._params = params
+        self._params_handle = params_handle
+        self._executor = executor
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple[Tuple["UDFData", ...], TaskProtocol]:
+        return next(self._iter)
+
+    def close(self):
+        self._iter.close()
+
+    def update_parameters(self, parameters: List[Dict[str, Any]]):
+        self._params.update_parameters(parameters=parameters)
+        self._executor.scatter_update(self._params_handle, self._params)
+        print(f"ResultsForDataSet.update_parameters: {parameters}")
+
+
 def _get_dtype(
     udfs: List["UDF"],
     dtype: "nt.DTypeLike",
@@ -1604,6 +1632,9 @@ class UDFParams:
     def update_from_udfs(self, udfs):
         self._kwargs = [udf._kwargs for udf in udfs]
 
+    def update_parameters(self, parameters):
+        self._kwargs = parameters
+
     @property
     def roi(self):
         return self._roi
@@ -2288,8 +2319,6 @@ class UDFRunner:
             corrections=corrections,
             tiling_scheme=tiling_scheme,
         )
-        # XXX hacks
-        self._params = params
         if dry:
             tasks = []
         else:
@@ -2318,7 +2347,7 @@ class UDFRunner:
                 iterate=False
             ):
                 pass
-            return res
+            return res  # type: ignore
 
     def results_for_dataset_sync(
         self,
@@ -2329,7 +2358,11 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
-    ) -> Iterable[Tuple[Tuple[UDFData, ...], TaskProtocol]]:
+    ) -> Tuple[
+        Iterable[Tuple[Tuple[UDFData, ...], TaskProtocol]],
+        Any,
+        UDFParams
+    ]:
         with tracer.start_as_current_span("_prepare_run_for_dataset"):
             tasks, params = self._prepare_run_for_dataset(
                 dataset, executor, roi, corrections, backends, dry
@@ -2343,30 +2376,34 @@ class UDFRunner:
         else:
             task_comm_handler = dataset.get_task_comm_handler()
 
-        try:
-            if progress and tasks:
-                pman = ProgressManager(tasks, cancel_id, reporter=self._progress_reporter)
-                pman.connect(task_comm_handler)
-                for task in tasks:
-                    task.report_progress()
-            with executor.scatter(params) as params_handle:
-                # XXX omg hacks: store params_handle on our instance,
-                # so we can update it concurrently (to be solved properly later):
-                self._params_handle = params_handle
+        def _inner():
+            try:
+                if progress and tasks:
+                    pman = ProgressManager(tasks, cancel_id, reporter=self._progress_reporter)
+                    pman.connect(task_comm_handler)
+                    for task in tasks:
+                        task.report_progress()
+                with executor.scatter(params) as params_handle:
+                    # XXX yuck, refactor this?
+                    yield params_handle
 
-                if tasks:
-                    for res in executor.run_tasks(
-                        tasks,
-                        params_handle,
-                        cancel_id,
-                        task_comm_handler,
-                    ):
-                        if progress:
-                            pman.finalize_task(res[1])
-                        yield res
-        finally:
-            if progress and tasks:
-                pman.close()
+                    if tasks:
+                        for res in executor.run_tasks(
+                            tasks,
+                            params_handle,
+                            cancel_id,
+                            task_comm_handler,
+                        ):
+                            if progress:
+                                pman.finalize_task(res[1])
+                            yield res
+            finally:
+                if progress and tasks:
+                    pman.close()
+
+        it = _inner()
+        params_handle = next(it)
+        return it, params_handle, params
 
     def run_for_dataset_sync(
         self,
@@ -2378,9 +2415,9 @@ class UDFRunner:
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
         iterate: bool = True
-    ) -> Generator["UDFResults", None, None]:
+    ) -> ResultsForDataSet:
         executor = executor.ensure_sync()
-        result_iter = self.results_for_dataset_sync(
+        result_iter, params_handle, params = self.results_for_dataset_sync(
             dataset=dataset,
             executor=executor,
             roi=roi,
@@ -2392,29 +2429,39 @@ class UDFRunner:
         damage = BufferWrapper(kind='nav', dtype=bool)
         damage.set_shape_ds(dataset.shape, roi)
         damage.allocate()
-        num_results = 0
-        try:
-            for part_results, task in result_iter:
-                num_results += 1
-                with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
-                    self._apply_part_result(
-                        udfs=self._udfs,
-                        damage=damage,
-                        part_results=part_results,
-                        task=task
-                    )
-                if iterate:
+
+        def _inner():
+            num_results = 0
+            try:
+                for part_results, task in result_iter:
+                    num_results += 1
+                    with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
+                        self._apply_part_result(
+                            udfs=self._udfs,
+                            damage=damage,
+                            part_results=part_results,
+                            task=task
+                        )
+                    if iterate:
+                        yield self._make_udf_result(
+                            udfs=self._udfs,
+                            damage=damage
+                        )
+                if num_results == 0 or not iterate:
                     yield self._make_udf_result(
                         udfs=self._udfs,
                         damage=damage
                     )
-            if num_results == 0 or not iterate:
-                yield self._make_udf_result(
-                    udfs=self._udfs,
-                    damage=damage
-                )
-        except JobCancelledError:
-            raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
+            except JobCancelledError:
+                raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
+
+        it = _inner()
+        return ResultsForDataSet(
+            it=it,
+            params_handle=params_handle,
+            params=params,
+            executor=executor,
+        )
 
     async def run_for_dataset_async(
         self,

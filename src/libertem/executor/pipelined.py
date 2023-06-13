@@ -1177,15 +1177,12 @@ class PipelinedExecutor(BaseJobExecutor):
                         "key": key,
                     })
 
-    def scatter_update(self, key: str, obj):
-        """
-        Hacks: update an already existing key to a new value
-        """
+    def scatter_update(self, handle: str, obj):
         self._validate_worker_state()
         for worker_info in self._pool.workers:
             worker_info.queues.request.put({
                 "type": "SCATTER_UPDATE",
-                "key": key,
+                "key": handle,
                 "value": obj,
             })
 

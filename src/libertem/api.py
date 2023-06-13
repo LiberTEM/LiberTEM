@@ -148,7 +148,7 @@ class Context:
             and passed them to the initializer of :class:`Context`. Given that the
             Context accepts only the :code:`plot_class` keyword-argument this was
             hard-coded into this function for backwards-compatibility, enabling
-            the  addition of the :code:`cpus` and :code:`gpus` parameters.
+            the addition of the :code:`cpus` and :code:`gpus` parameters.
 
         Parameters
         ----------

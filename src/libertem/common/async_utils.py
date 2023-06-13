@@ -83,8 +83,10 @@ async def run_agen_get_last(gen: AsyncGenerator[T, None]) -> T:
             result = await gen.__anext__()
     except StopAsyncIteration:
         pass
+    finally:
+        await gen.aclose()
     if result is None:
-        raise RuntimeError("run_gen_get_last called with empty generator")
+        raise RuntimeError("run_agen_get_last called with empty generator")
     return result
 
 
@@ -95,6 +97,8 @@ def run_gen_get_last(gen: Generator[T, None, None]) -> T:
             result = gen.__next__()
     except StopIteration:
         pass
+    finally:
+        gen.close()
     if result is None:
         raise RuntimeError("run_gen_get_last called with empty generator")
     return result

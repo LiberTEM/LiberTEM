@@ -65,12 +65,12 @@ ExecutionPlan = Dict[ArrayBackend, Iterable["UDF"]]
 class ResultsForDataSet:
     def __init__(
         self,
-        it: Iterable[Tuple[Tuple["UDFData", ...], TaskProtocol]],
+        gen: Generator[Tuple[Tuple["UDFData", ...], TaskProtocol], None, None],
         params: "UDFParams",
         params_handle,
         executor: JobExecutor,
     ):
-        self._iter = iter(it)
+        self._gen = gen
         self._params = params
         self._params_handle = params_handle
         self._executor = executor
@@ -79,10 +79,13 @@ class ResultsForDataSet:
         return self
 
     def __next__(self) -> Tuple[Tuple["UDFData", ...], TaskProtocol]:
-        return next(self._iter)
+        return next(self._gen)
 
     def close(self):
-        self._iter.close()
+        self._gen.close()
+
+    def throw(self, exc: Exception):
+        return self._gen.throw(exc)
 
     def update_parameters(self, parameters: List[Dict[str, Any]]):
         self._params.update_parameters(parameters=parameters)
@@ -2454,9 +2457,9 @@ class UDFRunner:
             except JobCancelledError:
                 raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
 
-        it = _inner()
+        gen = _inner()
         return ResultsForDataSet(
-            it=it,
+            gen=gen,
             params_handle=params_handle,
             params=params,
             executor=executor,

@@ -5,9 +5,8 @@ from typing_extensions import Literal
 
 import numpy as np
 
-from libertem.common.buffers import BufferWrapper
 from libertem.io.dataset.base import DataSet
-from libertem.udf.base import UDF
+from libertem.udf.base import UDF, UDFResultDict
 
 # Base classes for results moved to common for MIT licensing, refs #1031
 from libertem.common.analysis import AnalysisResult, AnalysisResultSet
@@ -67,7 +66,7 @@ class Analysis:
         raise NotImplementedError()
 
     def get_udf_results(
-        self, udf_results: Dict[str, BufferWrapper], roi: Optional[np.ndarray],
+        self, udf_results: UDFResultDict, roi: Optional[np.ndarray],
         damage: "nt.ArrayLike",
     ) -> AnalysisResultSet:
         """

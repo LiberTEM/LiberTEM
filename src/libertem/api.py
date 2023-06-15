@@ -96,6 +96,46 @@ class ResultGenerator:
         return self._result_iter.throw(exc)
 
 
+class ResultAsyncGenerator:
+    def __init__(self, result_generator: ResultGenerator):
+        from concurrent.futures import ThreadPoolExecutor
+        self._result_generator = result_generator
+        self._pool = ThreadPoolExecutor(max_workers=1)
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        from .common.async_utils import MyStopIteration
+        try:
+            return await self._run_in_executor(self._inner_next)
+        except MyStopIteration:
+            raise StopAsyncIteration()
+
+    def _inner_next(self):
+        from .common.async_utils import MyStopIteration
+        try:
+            return next(self._result_generator)
+        except StopIteration:
+            raise MyStopIteration()
+
+    async def aclose(self):
+        return await self._run_in_executor(self._result_generator.close)
+
+    async def _run_in_executor(self, f, *args):
+        import asyncio
+        loop = asyncio.get_event_loop()
+        next_result = await loop.run_in_executor(self._pool, f, *args)
+        return next_result
+
+    async def update_parameters(self, parameters: List[Dict[str, Any]]):
+        logger.debug("ResultGenerator.update_parameters: %s", parameters)
+        return await self._run_in_executor(self._result_generator.update_parameters, parameters)
+
+    async def athrow(self, exc: Exception):
+        return await self._run_in_executor(self._result_generator.throw, exc)
+
+
 class Context:
     """
     Context is the main entry point of the LiberTEM API. It contains
@@ -1317,18 +1357,17 @@ class Context:
             plots=plots,
             iterate=True,
         )
-        udfres_iter = async_generator(sync_generator)
 
         async def _run_async_wrap() -> UDFResultDict:
-            udf_results = await run_agen_get_last(udfres_iter)
+            udf_results = await run_agen_get_last(async_generator(sync_generator))
             return udf_results.buffers[0]
 
         async def _run_async_wrap_l() -> List[UDFResultDict]:
-            udf_results = await run_agen_get_last(udfres_iter)
+            udf_results = await run_agen_get_last(async_generator(sync_generator))
             return udf_results.buffers
 
         if iterate:
-            return udfres_iter
+            return ResultAsyncGenerator(result_generator=sync_generator)
         else:
             if isinstance(udf, Iterable):
                 return _run_async_wrap_l()

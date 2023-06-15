@@ -362,3 +362,27 @@ def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
         # `default_raw` has at least two partitions, so there should be
         # something non-zero in the result:
         assert not np.allclose(part_res.buffers[0]['index'], 0)
+
+
+@pytest.mark.asyncio
+async def test_dynamic_parameter_update_async(lt_ctx, default_raw):
+    result_iter = lt_ctx.run_udf_iter(
+        dataset=default_raw,
+        udf=[DynamicParamsUDF(latest_index=0)],
+        sync=False,
+    )
+    try:
+        # because this is using the inline executor, we can guarantee
+        # that the updated parameters are used for the next partition.
+        idx = 0  # no aenumerate in stdlib :(
+        async for part_res in result_iter:
+            await result_iter.update_parameters([
+                {"latest_index": idx + 1}
+            ])
+            print(idx, part_res.buffers[0]['index'].data)
+            idx += 1
+        # `default_raw` has at least two partitions, so there should be
+        # something non-zero in the result:
+        assert not np.allclose(part_res.buffers[0]['index'], 0)
+    finally:
+        await result_iter.aclose()

@@ -1174,7 +1174,7 @@ class Context:
         enable_plotting = bool(plots)
 
         udf_is_list = isinstance(udf, Iterable)
-        if not udf_is_list:
+        if not isinstance(udf, Iterable):  # duplicate, because mypy.
             udfs = [udf]
         else:
             udfs = list(udf)
@@ -1195,6 +1195,7 @@ class Context:
                 warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
                 roi = roi.astype(bool)
 
+        progress_reporter: Optional[ProgressReporter]
         if isinstance(progress, ProgressReporter):
             progress_reporter = progress
             progress = True

@@ -14,7 +14,7 @@ from libertem.io.dataset.base import MMapBackend
 from libertem.udf import UDF, UDFRunCancelled
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.udf.base import NoOpUDF
+from libertem.udf.base import NoOpUDF, UDF, MergeAttrMapping
 from libertem.api import Context
 from libertem.exceptions import ExecutorSpecException
 
@@ -341,16 +341,22 @@ class DynamicParamsUDF(UDF):
     def get_result_buffers(self) -> Dict[str, BufferWrapper]:
         return {
             'index': self.buffer(kind='nav', dtype=int),
+            'index_merge': self.buffer(kind='nav', dtype=int),
         }
 
     def process_partition(self, partition):
         print(f"DynamicParamsUDF {self.params.latest_index}")
         self.results.index[:] = self.params.latest_index
 
+    def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
+        dest.index[:] = src.index
+        dest.index_merge = self.params.latest_index
+
 
 def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
-    # just for exercising the code paths:
-    result_iter = lt_ctx.run_udf_iter(dataset=default_raw, udf=[DynamicParamsUDF(latest_index=0)])
+    result_iter = lt_ctx.run_udf_iter(
+        dataset=default_raw, udf=[DynamicParamsUDF(latest_index=0)]
+    )
     with contextlib.closing(result_iter) as result_iter:
         # because this is using the inline executor, we can guarantee
         # that the updated parameters are used for the next partition.
@@ -362,6 +368,7 @@ def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
         # `default_raw` has at least two partitions, so there should be
         # something non-zero in the result:
         assert not np.allclose(part_res.buffers[0]['index'], 0)
+        assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
 
 
 @pytest.mark.asyncio
@@ -384,5 +391,64 @@ async def test_dynamic_parameter_update_async(lt_ctx, default_raw):
         # `default_raw` has at least two partitions, so there should be
         # something non-zero in the result:
         assert not np.allclose(part_res.buffers[0]['index'], 0)
+        assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
     finally:
         await result_iter.aclose()
+
+
+class DynamicParamsAuxUDF(UDF):
+    def __init__(self, latest_index):
+        super().__init__(latest_index=latest_index)
+
+    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+        return {
+            'index': self.buffer(kind='nav', dtype=int),
+            'index_merge': self.buffer(kind='nav', dtype=int),
+        }
+
+    def process_partition(self, partition):
+        print(f"DynamicParamsAuxUDF.process_partition {self.params.latest_index}")
+        self.results.index[:] = self.params.latest_index[:, 2]
+        # the correct view is set:
+        assert np.allclose(
+            self.meta.coordinates,
+            self.params.latest_index[:, :2],
+        )
+
+    def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
+        print(self.params.latest_index.shape)
+        print(f"DynamicParamsAuxUDF.merge: {self.params.latest_index}")
+        dest.index[:] = src.index
+        dest.index_merge = self.params.latest_index[:, 2]
+
+
+def test_dynamic_parameter_aux_data(lt_ctx, default_raw):
+    def _aux_data(idx):
+        coords = np.moveaxis(
+            np.indices(default_raw.shape.nav),
+            0,
+            -1,
+        ).astype(np.float32).reshape((-1, 2))
+        idx_arr = np.zeros((coords.shape[0], 1), dtype=np.float32)
+        idx_arr[:] = idx
+        aux = DynamicParamsAuxUDF.aux_data(
+            data=np.hstack([coords, idx_arr]),
+            kind="nav", dtype=np.float32, extra_shape=(3,)
+        )
+        return aux
+    aux = _aux_data(0)
+    result_iter = lt_ctx.run_udf_iter(
+        dataset=default_raw, udf=[DynamicParamsAuxUDF(latest_index=aux)]
+    )
+    with contextlib.closing(result_iter) as result_iter:
+        # because this is using the inline executor, we can guarantee
+        # that the updated parameters are used for the next partition.
+        for idx, part_res in enumerate(result_iter):
+            aux = _aux_data(idx + 1)
+            result_iter.update_parameters([
+                {"latest_index": aux}
+            ])
+        # `default_raw` has at least two partitions, so there should be
+        # something non-zero in the result:
+        assert not np.allclose(part_res.buffers[0]['index'], 0)
+        assert not np.allclose(part_res.buffers[0]['index_merge'], 0)

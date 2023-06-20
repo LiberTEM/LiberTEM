@@ -58,7 +58,6 @@ class InlineJobExecutor(BaseJobExecutor):
             del self._scattered[obj_id]
 
     def scatter_update(self, handle, obj):
-        print(f"updating {handle} to {obj}")
         self._scattered[handle] = obj
 
     def run_tasks(

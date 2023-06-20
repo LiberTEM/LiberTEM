@@ -23,9 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Choose Python version ${{ matrix.python_version }}
+        if: ${{ matrix.os != 'macos-latest' || matrix.python_version != '3.7' }}
         uses: actions/setup-python@v4
         with:
           python-version: '${{ matrix.python_version }}'
+          cache: 'pip'
+      # workaround for https://github.com/actions/setup-python/issues/682
+      - name: Choose Python version 3.7.16 for macos-latest
+        if: ${{ matrix.os == 'macos-latest' && matrix.python_version == '3.7' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.7.16'
           cache: 'pip'
       - run: |
            [[ "${{ matrix.os }}" = "ubuntu-latest" ]] && sudo apt-get install -y libcap-dev || true

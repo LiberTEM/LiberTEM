@@ -69,11 +69,13 @@ class ResultsForDataSet:
         params: "UDFParams",
         params_handle,
         executor: JobExecutor,
+        udfs: List["UDF"],
     ):
         self._gen = gen
         self._params = params
         self._params_handle = params_handle
         self._executor = executor
+        self._udfs = udfs
 
     def __iter__(self):
         return self
@@ -88,9 +90,13 @@ class ResultsForDataSet:
         return self._gen.throw(exc)
 
     def update_parameters(self, parameters: List[Dict[str, Any]]):
+        log.debug("ResultsForDataSet.update_parameters: %s", parameters)
+        # update parameters on workers (via the executor):
         self._params.update_parameters(parameters=parameters)
         self._executor.scatter_update(self._params_handle, self._params)
-        print(f"ResultsForDataSet.update_parameters: {parameters}")
+        # update UDFs on the main node:
+        for udf, params in zip(self._udfs, parameters):
+            udf._update_parameters(new_kwargs=params)
 
 
 def _get_dtype(
@@ -948,6 +954,17 @@ class UDFBase(UDFProtocol):
         # this should not execute - it is mostly for getting the typing right:
         self.params = UDFKwargsWrapper({})
         self.results = UDFData({})
+
+    def _update_parameters(self, new_kwargs):
+        """
+        Update the parameters _for this UDF instance_ to `new_kwargs`.
+
+        For properly supporting AUX data (i.e. `BufferWrapper`-typed parameters),
+        make sure to set the correct views afterwards.
+
+        :meta private:
+        """
+        self.params = UDFKwargsWrapper(new_kwargs)
 
     def get_task_data(self) -> Dict[str, Any]:
         raise NotImplementedError()
@@ -2463,6 +2480,7 @@ class UDFRunner:
             params_handle=params_handle,
             params=params,
             executor=executor,
+            udfs=self._udfs,
         )
 
     async def run_for_dataset_async(

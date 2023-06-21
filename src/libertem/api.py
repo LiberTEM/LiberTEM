@@ -193,12 +193,15 @@ class Context:
             enable cpu-pinning where the exector and the system support it, but most
             use cases will only require an integer argument. Executors where this
             parameter does not make sense will raise an error if provided.
+            When unspecified the default executor behaviour is retained.
         gpus : int | Iterable[int], optional
             Similar to :code:`cpus`, specifies the number of GPU workers to create
             where the executor chosen supports it, else raise an error. The integer
-            form of the argument assigns workers round-robin to available GPUs on
-            the system, while the iterable form allows specifiying the number of
-            workers per GPU by repeating the id of any given GPU in the argument.
+            form of the argument specifies the total number of workers to create,
+            assigned according to the implementation of each executor, while
+            the iterable form allows assigment of multiple workers to specific GPUs
+            by repeating the id of any given GPU in the argument.
+            When unspecified the default executor behaviour is retained.
         plot_class : libertem.viz.base.Live2DPlot, optional
             Plot class for live plotting, passed to :class:`Context`.
 

@@ -26,6 +26,7 @@ from utils import get_testdata_path
 
 d = detect()
 has_cupy = d['cudas'] and d['has_cupy']
+has_gpus = len(d['cudas']) > 0
 
 
 @pytest.fixture(
@@ -385,3 +386,9 @@ def test_executor_run_each_host(ctx: Context):
     for k, v in res.items():
         assert k in workers.hosts()
         assert v == 43
+
+
+@pytest.mark.skipif(has_gpus, reason='Test to check error on no-GPU avail')
+def test_make_with_no_gpu():
+    with pytest.raises(ValueError):
+        Context.make_with('dask', gpus=2)

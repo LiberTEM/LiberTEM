@@ -222,15 +222,17 @@ class Context:
                                       'specifying GPU workers at this time')
         # Delay import here to avoid cupy import overhead
         if has_spec and executor_spec in ('dask', 'dask-make-default', 'pipelined'):
-            from libertem.utils.devices import cupy as _cupy
-            has_cupy = _cupy is not None
-        if cpu_spec and not gpu_spec:
-            gpus = 0
-        if gpu_spec and not cpu_spec:
-            cpus = 0
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if cpu_spec:
+                spec_args['cpus'] = cpus
+            if gpu_spec:
+                if len(spec_args['cudas']) == 0 and gpus:
+                    raise ValueError('Cannot specify GPU workers as no GPUs detected')
+                spec_args['cudas'] = gpus
         spec = None
         if has_spec and executor_spec in ('dask', 'dask-make-default'):
-            spec = cluster_spec(cpus=cpus, cudas=gpus, has_cupy=has_cupy)
+            spec = cluster_spec(**spec_args)
 
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
@@ -254,8 +256,8 @@ class Context:
         elif executor_spec == 'delayed':
             executor = DelayedJobExecutor()
         elif executor_spec == 'pipelined':
-            if has_spec:  # implies gpus is also not None
-                spec = PipelinedExecutor.make_spec(cpus=cpus, cudas=gpus, has_cupy=has_cupy)
+            if has_spec:
+                spec = PipelinedExecutor.make_spec(**spec_args)
                 executor = PipelinedExecutor(spec=spec)
             else:
                 executor = PipelinedExecutor.make_local()

@@ -22,6 +22,7 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
     WorkerQueueEmpty, TaskCommHandler, SimpleMPWorkerQueue,
+    JobCancelledError,
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
@@ -770,6 +771,8 @@ class PipelinedExecutor(BaseJobExecutor):
         id_to_task = {}
         tasks_uuid = str(uuid.uuid4())
 
+        drain_on_error = True
+
         try:
             self._validate_worker_state()
             task_comm_handler.start()
@@ -821,7 +824,16 @@ class PipelinedExecutor(BaseJobExecutor):
                 # could be: the function returns once it has forwarded
                 # all the data necessary for the given task,
                 # (or, in the offline case, immediately)
-                task_comm_handler.handle_task(task, worker_queues.request)
+                try:
+                    task_comm_handler.handle_task(task, worker_queues.request)
+                except JobCancelledError:
+                    worker_queues.request.put({
+                        "type": "END_TASK",
+                        "task_id": task_idx,
+                        "params_handle": params_handle,
+                        "span_context": span_context,
+                    })
+                    raise
 
                 # NOTE: sentinel message; in case of errors, the worker
                 # needs to discard the data from the queue until it receives
@@ -839,6 +851,11 @@ class PipelinedExecutor(BaseJobExecutor):
             # at the end, block to get the remaining results:
             while in_flight[0] > 0:
                 yield from yield_result_if_found(block=True, timeout=0.1)
+        except JobCancelledError:
+            # don't drain here, as the next acquisition could start
+            # very soon; instead, we just ignore the mismatched
+            # responses in the next run
+            raise
         except Exception as e:
             # In case of an exception, we need to drain the response queue,
             # so the next `run_tasks` call isn't polluted by old responses.
@@ -847,7 +864,8 @@ class PipelinedExecutor(BaseJobExecutor):
             # `in_flight` and actually sending the task to the queue, we should
             # have a timeout here to not wait infinitely long.
             try:
-                self._drain_response_queue(in_flight=in_flight[0])
+                if drain_on_error:
+                    self._drain_response_queue(in_flight=in_flight[0])
             except RuntimeError as e2:
                 raise e2 from e
             # if from a worker, this is the first exception that got put into the queue

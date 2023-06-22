@@ -22,6 +22,10 @@ def _build_sparse(m, dtype, sparse_backend, backend):
         # sparse.pydata.org is fastest for masks with few layers
         # and few entries
         return m.astype(dtype)
+    elif sparse_backend == 'sparse.pydata.GCXS' and backend == 'numpy':
+        # sparse.pydata.org is fastest for masks with few layers
+        # and few entries
+        return sparse.GCXS(m.astype(dtype))
     elif 'scipy.sparse' in sparse_backend:
         if backend in CPU_BACKENDS or backend == CUDA:
             lib = scipy.sparse
@@ -48,8 +52,8 @@ def _build_sparse(m, dtype, sparse_backend, backend):
     # Fall through if no return statement was reached
     raise ValueError(
         f"sparse_backend {sparse_backend} not implemented for backend {backend}. "
-        "CPU-based backends supports 'sparse.pydata', 'scipy.sparse', 'scipy.sparse.csc' or "
-        "'scipy.sparse.csr'. "
+        "CPU-based backends supports 'sparse.pydata', 'sparse.pydata.GCXS', 'scipy.sparse', "
+        "'scipy.sparse.csc' or 'scipy.sparse.csr'. "
         "CUDA-based backends supports 'scipy.sparse', 'scipy.sparse.csc' or 'scipy.sparse.csr'. "
     )
 
@@ -78,7 +82,8 @@ class MaskContainer:
     It allows stacking, cached slicing, transposing and conversion
     to condition the masks for high-performance dot products.
 
-    use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc' or 'sparse.pydata'
+    use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc',
+    'sparse.pydata', or 'sparse.pydata.GCXS'
     '''
     def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None, backend=None):
         self.mask_factories = mask_factories

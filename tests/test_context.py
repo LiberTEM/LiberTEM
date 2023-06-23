@@ -8,9 +8,11 @@ import sparse
 import scipy.sparse
 
 from libertem.io.dataset.base import MMapBackend
+from libertem.udf import UDF
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF
+from libertem.udf import UDFRunCancelled
 from libertem.api import Context
 from libertem.exceptions import ExecutorSpecException
 
@@ -300,3 +302,29 @@ def test_make_with_raises_gpus_no_support(exec_spec):
 def test_make_with_unrecognized():
     with pytest.raises(ExecutorSpecException):
         Context.make_with('not_an_executor')
+
+
+def test_udf_cancellation(default_raw):
+    from libertem.common.executor import JobCancelledError
+    ctx = Context.make_with('inline')
+
+    # As we don't have an API for explicit cancellation by the user yet, we
+    # raise `JobCancelledError` from `process_frame` of the UDF.  In reality, it
+    # would be raised either from somewhere inside the UDF runner on explicit
+    # cancellation, or from the executor when the data source has run dry.
+
+    class DumbUDF(UDF):
+        def get_result_buffers(self):
+            return {
+                'stuff': self.buffer(kind='nav', dtype='float32'),
+            }
+
+        def process_frame(self, frame):
+            raise JobCancelledError()
+
+    res_iter = ctx.run_udf_iter(dataset=default_raw, udf=DumbUDF())
+
+    # TODO: support `res_iter.cancel_run()` or similar
+    with pytest.raises(UDFRunCancelled):
+        for part in res_iter:
+            pass

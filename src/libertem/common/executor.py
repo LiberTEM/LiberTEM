@@ -150,7 +150,13 @@ class JobExecutor:
         task_comm_handler: "TaskCommHandler",
     ):
         """
-        Run the tasks with the given parameters
+        Run the tasks with the given parameters.
+
+        Raises
+        ------
+        JobCancelledError
+            Either the job was cancelled using :meth:`AsyncJobExecutor.cancel`,
+            or the underlying data source was interrupted.
 
         Parameters
         ----------

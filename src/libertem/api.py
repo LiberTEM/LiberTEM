@@ -781,6 +781,12 @@ class Context:
             Added the :code:`plots` and :code:`sync` parameters,
             and the ability to run multiple UDFs on the same data in a single pass.
 
+        Raises
+        ------
+        UDFRunCancelled
+            Either the run was cancelled using :meth:`AsyncJobExecutor.cancel`,
+            or the underlying data source was interrupted.
+
         Parameters
         ----------
         dataset

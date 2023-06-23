@@ -771,8 +771,6 @@ class PipelinedExecutor(BaseJobExecutor):
         id_to_task = {}
         tasks_uuid = str(uuid.uuid4())
 
-        drain_on_error = True
-
         try:
             self._validate_worker_state()
             task_comm_handler.start()
@@ -864,8 +862,7 @@ class PipelinedExecutor(BaseJobExecutor):
             # `in_flight` and actually sending the task to the queue, we should
             # have a timeout here to not wait infinitely long.
             try:
-                if drain_on_error:
-                    self._drain_response_queue(in_flight=in_flight[0])
+                self._drain_response_queue(in_flight=in_flight[0])
             except RuntimeError as e2:
                 raise e2 from e
             # if from a worker, this is the first exception that got put into the queue

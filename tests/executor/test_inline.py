@@ -1,7 +1,14 @@
 import numpy as np
+import pytest
 
 from libertem.executor.inline import InlineJobExecutor
 from libertem.udf import UDF
+from libertem.udf.sum import SumUDF
+from libertem.common.executor import (
+    TaskCommHandler, TaskProtocol, WorkerQueue, JobCancelledError,
+)
+from libertem.exceptions import UDFRunCancelled
+from libertem.io.dataset.memory import MemoryDataSet
 
 
 def test_run_each_worker_1():
@@ -39,3 +46,29 @@ def test_inline_num_threads(lt_ctx, default_raw):
         udf=ThreadsPerWorkerUDF()
     )['num_threads']
     assert np.allclose(res, threads)
+
+
+class CancelledTaskCommHandler(TaskCommHandler):
+    def handle_task(self, task: TaskProtocol, queue: WorkerQueue):
+        raise JobCancelledError()
+
+    def start(self):
+        pass
+
+    def done(self):
+        pass
+
+
+class CancelledMemoryDataSet(MemoryDataSet):
+    def get_task_comm_handler(self) -> TaskCommHandler:
+        return CancelledTaskCommHandler()
+
+
+def test_cancellation(lt_ctx, default_raw):
+    cancel_ds = CancelledMemoryDataSet(data=np.zeros((16, 16, 16, 16)))
+
+    with pytest.raises(UDFRunCancelled):
+        lt_ctx.run_udf(dataset=cancel_ds, udf=SumUDF())
+
+    # after cancellation, the executor is still usable:
+    _ = lt_ctx.run_udf(dataset=default_raw, udf=SumUDF())

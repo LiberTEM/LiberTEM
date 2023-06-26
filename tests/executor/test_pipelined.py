@@ -10,12 +10,17 @@ import pytest
 import numpy as np
 
 from libertem.api import Context
+from libertem.common.executor import (
+    TaskCommHandler, TaskProtocol, WorkerQueue, JobCancelledError,
+)
 from libertem.udf.sum import SumUDF
 from libertem.executor.pipelined import (
     PipelinedExecutor, WorkerPool, _order_results, pipelined_worker
 )
 import libertem.executor.pipelined
 from libertem.udf import UDF
+from libertem.exceptions import UDFRunCancelled
+from libertem.io.dataset.memory import MemoryDataSet
 
 
 class CustomException(Exception):
@@ -509,3 +514,32 @@ def test_manual_teardown():
     if exitcode != 0:
         p.terminate()
         raise RuntimeError(f"exitcode is {exitcode}, should be 0")
+
+
+class CancelledTaskCommHandler(TaskCommHandler):
+    def handle_task(self, task: TaskProtocol, queue: WorkerQueue):
+        raise JobCancelledError()
+
+    def start(self):
+        pass
+
+    def done(self):
+        pass
+
+
+class CancelledMemoryDataSet(MemoryDataSet):
+    def get_task_comm_handler(self) -> TaskCommHandler:
+        return CancelledTaskCommHandler()
+
+
+def test_cancellation(pipelined_ex, default_raw):
+    executor = pipelined_ex
+    ctx = Context(executor=executor)
+
+    cancel_ds = CancelledMemoryDataSet(data=np.zeros((16, 16, 16, 16)))
+
+    with pytest.raises(UDFRunCancelled):
+        ctx.run_udf(dataset=cancel_ds, udf=SumUDF())
+
+    # after cancellation, the executor is still usable:
+    _ = ctx.run_udf(dataset=default_raw, udf=SumUDF())

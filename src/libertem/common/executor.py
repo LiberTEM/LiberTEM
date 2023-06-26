@@ -554,6 +554,9 @@ class TaskCommHandler:
         It may be run in a background thread on the main node,
         or synchronously, depending on the :class:`JobExecutor`.
 
+        May raise :class:`JobCancelledError` to signal that the acquisition has
+        been cancelled for some reason.
+
         Parameters
         ----------
         task : TaskProtocol

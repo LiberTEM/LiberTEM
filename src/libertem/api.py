@@ -86,9 +86,9 @@ class ResultGenerator:
         self._task_results.close()
         self._result_iter.close()
 
-    def update_parameters(self, parameters: List[Dict[str, Any]]):
+    def update_parameters_experimental(self, parameters: List[Dict[str, Any]]):
         logger.debug("ResultGenerator.update_parameters: %s", parameters)
-        self._result_iter.update_parameters(parameters)
+        self._result_iter.update_parameters_experimental(parameters)
 
     def throw(self, exc: Exception):
         return self._result_iter.throw(exc)
@@ -126,9 +126,11 @@ class ResultAsyncGenerator:
         next_result = await loop.run_in_executor(self._pool, f, *args)
         return next_result
 
-    async def update_parameters(self, parameters: List[Dict[str, Any]]):
-        logger.debug("ResultGenerator.update_parameters: %s", parameters)
-        return await self._run_in_executor(self._result_generator.update_parameters, parameters)
+    async def update_parameters_experimental(self, parameters: List[Dict[str, Any]]):
+        logger.debug("ResultGenerator.update_parameters_experimental: %s", parameters)
+        return await self._run_in_executor(
+            self._result_generator.update_parameters_experimental, parameters
+        )
 
     async def athrow(self, exc: Exception):
         return await self._run_in_executor(self._result_generator.throw, exc)

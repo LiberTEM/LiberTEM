@@ -150,6 +150,25 @@ class JobExecutor:
         '''
         raise NotImplementedError()
 
+    def scatter_update_patch(self, handle, patch):
+        '''
+        Update :code:`handle` by remotely calling :code:`obj.patch(patch)` on
+        the underlying object.
+
+        The referenced object must have a :code:`patch` method, and
+        must have been scattered before using :meth:`scatter`.
+
+        Parameters
+        ----------
+        handle
+            The handle, as returned from :meth:`scatter`.
+
+        patch
+            Some kind of Python object. Must be serializable
+            and must match the :code:`obj.patch()` method.
+        '''
+        raise NotImplementedError()
+
     @contextmanager
     def scatter(self, obj):
         '''

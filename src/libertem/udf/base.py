@@ -89,14 +89,23 @@ class ResultsForDataSet:
     def throw(self, exc: Exception):
         return self._gen.throw(exc)
 
-    def update_parameters(self, parameters: List[Dict[str, Any]]):
-        log.debug("ResultsForDataSet.update_parameters: %s", parameters)
+    def update_parameters_experimental_full(self, parameters: List[Dict[str, Any]]):
+        log.debug("ResultsForDataSet.update_parameters_experimental_full: %s", parameters)
         # update parameters on workers (via the executor):
         self._params.update_parameters(parameters=parameters)
         self._executor.scatter_update(self._params_handle, self._params)
         # update UDFs on the main node:
         for udf, params in zip(self._udfs, parameters):
             udf._update_parameters(new_kwargs=params)
+
+    def update_parameters_experimental(self, patch: List[Dict[str, Any]]):
+        log.debug("ResultsForDataSet.update_parameters_experimental: %s", patch)
+        # update parameters on workers (via the executor):
+        self._params.patch(patch=patch)
+        self._executor.scatter_update_patch(self._params_handle, patch)
+        # update UDFs on the main node:
+        for udf, params in zip(self._udfs, patch):
+            udf._update_parameters_patch(kwargs_patch=params)
 
 
 def _get_dtype(
@@ -967,6 +976,20 @@ class UDFBase(UDFProtocol):
         """
         self.params = UDFKwargsWrapper(new_kwargs)
 
+    def _update_parameters_patch(self, kwargs_patch):
+        """
+        Update the parameters _for this UDF instance_ to `new_kwargs`.
+
+        For properly supporting AUX data (i.e. `BufferWrapper`-typed parameters),
+        make sure to set the correct views afterwards.
+
+        :meta private:
+        """
+        new_kwargs = {}
+        new_kwargs.update(self._kwargs)
+        new_kwargs.update(kwargs_patch)
+        self.params = UDFKwargsWrapper(new_kwargs)
+
     def get_task_data(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
@@ -1654,6 +1677,10 @@ class UDFParams:
 
     def update_parameters(self, parameters):
         self._kwargs = parameters
+
+    def patch(self, patch):
+        for p, kwargs in zip(patch, self._kwargs):
+            kwargs.update(p)
 
     @property
     def roi(self):

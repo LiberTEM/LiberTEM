@@ -361,7 +361,7 @@ def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
         # because this is using the inline executor, we can guarantee
         # that the updated parameters are used for the next partition.
         for idx, part_res in enumerate(result_iter):
-            result_iter.update_parameters([
+            result_iter.update_parameters_experimental([
                 {"latest_index": idx + 1}
             ])
             print(idx, part_res.buffers[0]['index'].data)
@@ -383,7 +383,7 @@ async def test_dynamic_parameter_update_async(lt_ctx, default_raw):
         # that the updated parameters are used for the next partition.
         idx = 0  # no aenumerate in stdlib :(
         async for part_res in result_iter:
-            await result_iter.update_parameters([
+            await result_iter.update_parameters_experimental([
                 {"latest_index": idx + 1}
             ])
             print(idx, part_res.buffers[0]['index'].data)
@@ -445,7 +445,7 @@ def test_dynamic_parameter_aux_data(lt_ctx, default_raw):
         # that the updated parameters are used for the next partition.
         for idx, part_res in enumerate(result_iter):
             aux = _aux_data(idx + 1)
-            result_iter.update_parameters([
+            result_iter.update_parameters_experimental([
                 {"latest_index": aux}
             ])
         # `default_raw` has at least two partitions, so there should be

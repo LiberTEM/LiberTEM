@@ -60,6 +60,9 @@ class InlineJobExecutor(BaseJobExecutor):
     def scatter_update(self, handle, obj):
         self._scattered[handle] = obj
 
+    def scatter_update_patch(self, handle, patch):
+        self._scattered[handle].patch(patch)
+
     def run_tasks(
         self,
         tasks: Iterable[TaskProtocol],

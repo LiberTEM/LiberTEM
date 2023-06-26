@@ -436,7 +436,8 @@ def worker_loop(
                                     header_type = header["type"]
                                     span.add_event("msg", {"type": header_type})
                                     if header_type in (
-                                        "RUN_TASK", "SCATTER", "RUN_FUNCTION",
+                                        "RUN_TASK", "SCATTER", "SCATTER_UPDATE",
+                                        "SCATTER_UPDATE_PATCH", "RUN_FUNCTION",
                                         "DELETE", "SHUTDOWN", "WARMUP",
                                     ):
                                         raise RuntimeError(
@@ -467,6 +468,25 @@ def worker_loop(
                         })
                         continue
                     work_mem[key] = header["value"]
+                    continue
+                elif header_type == "SCATTER_UPDATE_PATCH":
+                    # FIXME: array data could be transferred and stored in SHM instead
+                    key = header["key"]
+                    if key not in work_mem:
+                        queues.response.put({
+                            "type": "ERROR",
+                            "error": f"key {key} not stored in worker memory, can't update",
+                            "worker_id": worker_idx,
+                        })
+                        continue
+                    if not hasattr(work_mem[key], 'patch'):
+                        queues.response.put({
+                            "type": "ERROR",
+                            "error": f"key {key} is not patcheable",
+                            "worker_id": worker_idx,
+                        })
+                        continue
+                    work_mem[key].patch(header["patch"])
                     continue
                 elif header_type == "RUN_FUNCTION":
                     with attach_to_parent(header["span_context"]):
@@ -1184,6 +1204,15 @@ class PipelinedExecutor(BaseJobExecutor):
                 "type": "SCATTER_UPDATE",
                 "key": handle,
                 "value": obj,
+            })
+
+    def scatter_update_patch(self, handle: str, patch):
+        self._validate_worker_state()
+        for worker_info in self._pool.workers:
+            worker_info.queues.request.put({
+                "type": "SCATTER_UPDATE_PATCH",
+                "key": handle,
+                "patch": patch,
             })
 
     def map(self, fn, iterable):

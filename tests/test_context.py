@@ -257,6 +257,8 @@ def test_allowed_rois(lt_ctx, default_raw, roi_type):
         roi_input = roi_type.from_numpy(roi)
     elif issubclass(roi_type, scipy.sparse.spmatrix):
         roi_input = roi_type(roi)
+    elif hasattr(scipy.sparse, 'sparray') and issubclass(roi_type, scipy.sparse.sparray):
+        roi_input = roi_type(roi)
     elif roi_type in (tuple, list):
         roi_input = np.argwhere(roi)
         roi_input = roi_type(roi_type((roi_type(row), True)) for row in roi_input)

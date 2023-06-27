@@ -90,6 +90,7 @@ def test_udf_exception_queued(pipelined_ex):
     ctx.run_udf(dataset=ds, udf=normal_udf)
 
 
+@pytest.mark.slow
 def test_default_spec():
     # make sure `.make_local` works:
     executor = None
@@ -104,7 +105,7 @@ def test_default_spec():
 
 
 def test_make_with():
-    with Context.make_with("pipelined") as ctx:
+    with Context.make_with("pipelined", cpus=1) as ctx:
         assert ctx.executor.run_function(lambda: 42) == 42
 
 
@@ -235,7 +236,7 @@ def test_run_function_error():
             executor.close()
 
 
-def _broken_pipelined_worker(queues, pin, spec, span_context):
+def _broken_pipelined_worker(queues, pin, spec, span_context, early_setup):
     raise CustomException("stuff is broken, can't do it.")
 
 
@@ -412,10 +413,10 @@ def test_make_spec_cuda_int():
 
 
 def test_close_with_scatter():
-    # make sure `.make_local` works:
     executor = None
     try:
-        executor = PipelinedExecutor.make_local()
+        spec = PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
+        executor = PipelinedExecutor(spec=spec, pin_workers=False)
         with executor.scatter("huh"):
             executor.close()
     finally:
@@ -426,7 +427,8 @@ def test_close_with_scatter():
 def test_exception_in_main_thread():
     executor = None
     try:
-        executor = PipelinedExecutor.make_local()
+        spec = PipelinedExecutor.make_spec(cpus=range(2), cudas=[])
+        executor = PipelinedExecutor(spec=spec, pin_workers=False)
         ctx = Context(executor=executor)
         udf = SucceedEventuallyUDF()
         data = np.random.randn(1, 32, 16, 16)
@@ -478,7 +480,7 @@ def _teardown_manual():
         '-c',
         'import time;'
         'from libertem.api import Context;'
-        'ctx=Context.make_with("pipelined");'
+        'ctx=Context.make_with("pipelined", cpus=1);'
         'time.sleep(0.2);'
         'ctx.close()'
     ], timeout=30)
@@ -490,7 +492,7 @@ def test_auto_teardown_1():
         '-c',
         'import time;'
         'from libertem.api import Context;'
-        'ctx=Context.make_with("pipelined");'
+        'ctx=Context.make_with("pipelined", cpus=1);'
     ], timeout=30)
 
 
@@ -501,7 +503,7 @@ def test_auto_teardown_2():
         'import time;'
         'import gc;'
         'from libertem.api import Context;'
-        'Context.make_with("pipelined");'
+        'Context.make_with("pipelined", cpus=1);'
         'gc.collect();'
     ], timeout=30)
 

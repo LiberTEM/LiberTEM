@@ -8,7 +8,7 @@ import multiprocessing as mp
 
 import cloudpickle
 import numpy as np
-from typing_extensions import Protocol
+from typing_extensions import Protocol, Literal
 
 from libertem.common.scheduler import WorkerSet
 from libertem.common.threading import set_num_threads, mitigations
@@ -18,6 +18,13 @@ from libertem.io.dataset.base import Partition
 if TYPE_CHECKING:
     from libertem.udf.base import UDFParams, UDFRunner
     from opentelemetry.trace import SpanContext
+
+ResourceDef = Dict[
+    Literal[
+        'CPU', 'compute', 'ndarray', 'CUDA',
+    ],
+    int
+]
 
 
 class ExecutorError(Exception):
@@ -107,6 +114,9 @@ class TaskProtocol(Protocol):
         ...
 
     def get_partition(self) -> Partition:
+        ...
+
+    def get_resources(self) -> ResourceDef:
         ...
 
 

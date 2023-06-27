@@ -43,7 +43,7 @@ from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.common.executor import (
     Environment, JobExecutor, TaskCommHandler, NoopCommHandler, TaskProtocol,
-    JobCancelledError,
+    JobCancelledError, ResourceDef,
 )
 from libertem.exceptions import UDFRunCancelled
 
@@ -56,12 +56,6 @@ tracer = trace.get_tracer(__name__)
 log = logging.getLogger(__name__)
 
 BackendSpec = Union[ArrayBackend, Iterable[ArrayBackend]]
-ResourceDef = Dict[
-    Literal[
-        'CPU', 'compute', 'ndarray', 'CUDA',
-    ],
-    int
-]
 DeviceClass = Literal['cpu', 'cuda']
 UDFKwarg = Union[Any, AuxBufferWrapper]
 UDFKwargs = Dict[str, UDFKwarg]

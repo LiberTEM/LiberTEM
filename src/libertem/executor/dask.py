@@ -254,14 +254,20 @@ def _simple_run_task(task):
 
 
 class CommonDaskMixin:
-    def _task_idx_to_workers(self, workers, idx):
+    def _task_idx_to_workers(self, workers: WorkerSet, idx) -> WorkerSet:
         hosts = list(sorted(workers.hosts()))
         host_idx = idx % len(hosts)
         host = hosts[host_idx]
         return workers.filter(lambda w: w.host == host)
 
     def _future_for_location(
-        self, task, locations, resources, workers, task_args=None, wrap_fn=_run_task,
+        self,
+        task: TaskProtocol,
+        locations: WorkerSet,
+        resources,
+        workers: WorkerSet,
+        task_args=None,
+        wrap_fn=_run_task,
     ):
         """
         Submit tasks and return the resulting futures
@@ -283,10 +289,12 @@ class CommonDaskMixin:
         if locations is not None:
             if len(locations) == 0:
                 raise ValueError("no workers found for task")
-            locations = locations.names()
+            location_names = locations.names()
+        else:
+            location_names = None
         submit_kwargs.update({
             'resources': self._validate_resources(workers, resources),
-            'workers': locations,
+            'workers': location_names,
             'pure': False,
         })
         return self.client.submit(
@@ -322,17 +330,24 @@ class CommonDaskMixin:
 
         return len(workers.filter(has_resources)) > 0
 
-    def _get_future(self, task, workers, idx, params_handle,
-                    threaded_executor, comms_topic: Optional[str]):
+    def _get_future(
+        self,
+        task: TaskProtocol,
+        workers: WorkerSet,
+        idx: int,
+        params_handle,
+        threaded_executor,
+        comms_topic: Optional[str]
+    ):
         if len(workers) == 0:
             raise RuntimeError("no workers available!")
         return self._future_for_location(
-            task,
-            task.get_locations() or self._task_idx_to_workers(
+            task=task,
+            locations=task.get_locations() or self._task_idx_to_workers(
                 workers, idx
             ),
-            task.get_resources(),
-            workers,
+            resources=task.get_resources(),
+            workers=workers,
             task_args=(
                 params_handle,
                 idx,

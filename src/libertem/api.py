@@ -267,7 +267,7 @@ class Context:
         else:
             raise ValueError(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '
-                f'synchronous", "inline", "threads", "dask", "dask-integration",'
+                f'"synchronous", "inline", "threads", "dask", "dask-integration",'
                 f'"dask-make-default" "delayed" or "pipelined".'
             )
         return cls(executor=executor, plot_class=plot_class)

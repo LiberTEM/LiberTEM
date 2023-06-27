@@ -448,4 +448,3 @@ def test_make_with_scenarios():
     with Context.make_with('dask', gpus=0) as ctx:
         assert len(ctx.executor.get_available_workers().has_cpu()) > 0
         assert len(ctx.executor.get_available_workers().has_cuda()) == 0
-

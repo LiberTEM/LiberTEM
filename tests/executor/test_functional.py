@@ -438,7 +438,7 @@ def test_make_with_scenarios():
         assert len(ctx.executor.get_available_workers().has_cpu()) == 0
         if has_gpus:
             assert len(ctx.executor.get_available_workers().has_cuda()) > 0
-        else
+        else:
             # FIXME: this should raise, as we don't have any non-service
             # workers, correct?
             pass

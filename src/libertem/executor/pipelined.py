@@ -146,6 +146,17 @@ class WorkerPool:
     def all_alive(self) -> bool:
         return all(qp.process.is_alive() for qp in self._workers)
 
+    def assert_all_alive(self):
+        """
+        Check if any workers are dead, if so, kill the whole pool and raise a
+        `RuntimeError`.
+        """
+        if not self.all_alive():
+            self.kill()
+            raise RuntimeError(
+                "One or more workers failed to start"
+            )
+
     def close_resp_queue(self):
         self._response_q.close()
 
@@ -161,6 +172,17 @@ class WorkerPool:
             response=self._response_q,
             message=self._message_q,
         )
+
+
+def schedule_task(task_idx: int, pool: WorkerPool) -> Tuple[int, WorkerQueues]:
+    """
+    Returns the worker index and its queues that this task should be scheduled on.
+
+    Currently selects the worker with the shortest request queue.
+    """
+    worker = min(pool.workers, key=lambda w: w.queues.request.size())
+    idx = pool.workers.index(worker)
+    return idx, worker.queues
 
 
 def set_thread_name(name: str):
@@ -686,41 +708,35 @@ class PipelinedExecutor(BaseJobExecutor):
             )
             # if any processes are already dead here, raise an exception so we
             # don't have to run into a timeout below:
-            if not pool.all_alive():
-                pool.kill()
-                raise RuntimeError(
-                    "One or more workers failed to start"
-                )
+            pool.assert_all_alive()
 
             warn_time = 5.0
-            time_to_warn = min(warn_time, self._startup_timeout)
-            time_after_warn = max(0.0, self._startup_timeout - warn_time)
+            check_interval = 0.1
+            warn_deadline = time.monotonic() + warn_time
+            startup_deadline = time.monotonic() + self._startup_timeout
+            warned = False
 
-            for i in range(pool.size):
+            num_started = 0
+
+            while num_started < pool.size:
+                pool.assert_all_alive()
                 try:
-                    try:
-                        with pool.response_queue.get(timeout=time_to_warn) as (msg, _):
-                            _inspect_startup(msg, span)
-                            continue
-                    except WorkerQueueEmpty:
-                        if time_after_warn == 0.0:
-                            raise
-                        warnings.warn('Slow worker startup, please be patient...', RuntimeWarning)
-
-                    with pool.response_queue.get(timeout=self._startup_timeout) as (msg, _):
+                    with pool.response_queue.get(timeout=check_interval) as (msg, _):
                         _inspect_startup(msg, span)
+                        num_started += 1
+                        continue
                 except WorkerQueueEmpty:
-                    if not pool.all_alive():
+                    if time.monotonic() > startup_deadline:
+                        pool.assert_all_alive()
+                        pool.kill()
+                        # break possibly confusing exception chain using "from None":
                         raise RuntimeError(
-                            "One or more workers failed to start"
-                        )
-                    pool.kill()
-                    # break possibly confusing exception chain using "from None":
-                    raise RuntimeError(
-                        f"Timeout while starting workers, might need to increase "
-                        f"`startup_timeout` (is {self._startup_timeout}s)"
-                    ) from None
-
+                            f"Timeout while starting workers, might need to increase "
+                            f"`startup_timeout` (is {self._startup_timeout}s)"
+                        ) from None
+                    if time.monotonic() > warn_deadline and not warned:
+                        warnings.warn('Slow worker startup, please be patient...', RuntimeWarning)
+                        warned = True
             for qp in pool.workers:
                 qp.queues.request.put({
                     "type": "WARMUP",
@@ -803,12 +819,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
                 assert len(id_to_task) == in_flight[0]
 
-                # NOTE: this implements simple round-robin "scheduling";
-                # as noted by @matbryan52 selecting the worker with the
-                # currently shortest request queue could be a simple extension
-                # and provide minimal load balancing
-                worker_idx = task_idx % self._pool.size
-                worker_queues = self._pool.get_worker_queues(worker_idx)
+                _worker_idx, worker_queues = schedule_task(task_idx, self._pool)
                 worker_queues.request.put({
                     "type": "RUN_TASK",
                     "uuid": tasks_uuid,

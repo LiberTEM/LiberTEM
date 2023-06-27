@@ -453,6 +453,9 @@ class WorkerQueue:
         """
         raise NotImplementedError()
 
+    def size(self) -> int:
+        raise NotImplementedError()
+
 
 class SimpleWorkerQueue(WorkerQueue):
     """
@@ -481,6 +484,9 @@ class SimpleWorkerQueue(WorkerQueue):
 
     def close(self, drain: bool = True, force: bool = False):
         pass
+
+    def size(self) -> int:
+        return self.q.qsize()
 
 
 class SimpleMPWorkerQueue(WorkerQueue):
@@ -527,6 +533,9 @@ class SimpleMPWorkerQueue(WorkerQueue):
             else:
                 self.q.join_thread()
             self._closed = True
+
+    def size(self) -> int:
+        return self.q.qsize()
 
 
 class WorkerContext:

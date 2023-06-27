@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import List, Set, TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
-    from .executor import TaskProtocol
+    from .executor import TaskProtocol, ResourceDef
     from libertem.io.dataset.base import Partition
 
 
@@ -81,19 +81,27 @@ class Worker:
     """
     A reference to a worker process identified by `name` running on `host`.
     """
-    def __init__(self, name: str, host: str, resources, nthreads: int):
+    def __init__(
+        self,
+        name: str,
+        host: str,
+        resources: "ResourceDef",
+        nthreads: int
+    ):
         self.name = name
         self.host = host
         self.resources = resources
         self.nthreads = nthreads
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Worker {self.name} on {self.host} with {self.resources}, {self.nthreads} threads>"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Worker):
+            return False
         return self.name == other.name and self.host == other.host
 
 

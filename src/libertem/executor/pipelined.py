@@ -22,7 +22,7 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
     WorkerQueueEmpty, TaskCommHandler, SimpleMPWorkerQueue,
-    JobCancelledError,
+    JobCancelledError, ResourceDef,
 )
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
@@ -174,14 +174,50 @@ class WorkerPool:
         )
 
 
-def schedule_task(task_idx: int, pool: WorkerPool) -> Tuple[int, WorkerQueues]:
+def _task_fits_on_worker(task: TaskProtocol, worker: PoolWorkerInfo) -> bool:
+    spec = worker.spec
+    worker_resources: "ResourceDef" = {}
+
+    if spec['device_kind'] == 'CPU':
+        worker_resources["compute"] = 1
+        worker_resources["CPU"] = 1
+        worker_resources["ndarray"] = 1
+
+    if spec["device_kind"] == "CUDA":
+        worker_resources["compute"] = 1
+        worker_resources["CUDA"] = 1
+        if spec["has_cupy"]:
+            worker_resources["ndarray"] = 1
+
+    # all resources of the task must be present in the worker resources:
+    for k, v in task.get_resources().items():
+        if k not in worker_resources:
+            return False
+        if v > worker_resources[k]:
+            return False
+    return True
+
+
+def schedule_task(
+    task_idx: int,
+    task: TaskProtocol,
+    pool: WorkerPool
+) -> Tuple[int, WorkerQueues]:
     """
     Returns the worker index and its queues that this task should be scheduled on.
 
     Currently selects the worker with the shortest request queue.
     """
+
+    # FIXME: maybe use libertem.common.scheduler.Scheduler
+    # and implement the resources matching logic there?
+    eligible = [
+        w for w in pool.workers
+        if _task_fits_on_worker(task, w)
+    ]
+
     try:
-        worker = min(pool.workers, key=lambda w: w.queues.request.size())
+        worker = min(eligible, key=lambda w: w.queues.request.size())
         idx = pool.workers.index(worker)
         return idx, worker.queues
     except NotImplementedError:
@@ -571,7 +607,7 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 def _make_spec(
     cpus: Union[int, Iterable[int]],
     cudas: Union[int, Iterable[int]],
-    has_cupy: bool = False,  # currently ignored, for convenience of passing **detect()
+    has_cupy: bool = False,
 ) -> List[WorkerSpec]:
     """
     Takes the output of :func:`libertem.utils.devices.detect`
@@ -593,7 +629,7 @@ def _make_spec(
         result in better device utilization.
 
     has_cupy
-        Currently ignored, for compatibility with :func:`libertem.utils.devices.detect`
+        Is cupy available?
     """
     spec = []
     worker_idx = 0
@@ -826,7 +862,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
                 assert len(id_to_task) == in_flight[0]
 
-                _worker_idx, worker_queues = schedule_task(task_idx, self._pool)
+                _worker_idx, worker_queues = schedule_task(task_idx, task, self._pool)
                 worker_queues.request.put({
                     "type": "RUN_TASK",
                     "uuid": tasks_uuid,

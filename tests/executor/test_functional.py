@@ -392,3 +392,60 @@ def test_executor_run_each_host(ctx: Context):
 def test_make_with_no_gpu():
     with pytest.raises(ValueError):
         Context.make_with('dask', gpus=2)
+
+
+@pytest.mark.slow
+def test_make_with_scenarios():
+    """
+    Comment from @uellue on #1443:
+
+    I see several scenarios to use these parameters:
+
+    1. CPU defaults are OK, but I want to hand-craft and optimize my GPU worker setup
+    2. GPU defaults are OK/not applicable, but I need to optimize my CPU worker setup.
+    3. Co-optimize CPU and GPU setup
+    4. Disable all CPU or GPU workers.
+
+    For 1. and 2. it would be good if the user doesn't have to specify the CPU or
+    GPU setup to retain it at the defaults. For 4. it is easy to specify ...=0. For
+    that reason it would be better, IMO, if leaving a parameter at "None" keeps it
+    at the defaults.
+    """
+    # 1. CPU defaults are OK, but I want to hand-craft and optimize my GPU worker setup
+    try:
+        with Context.make_with('dask', gpus=2) as ctx:
+            assert len(ctx.executor.get_available_workers().has_cpu()) > 0
+            assert len(ctx.executor.get_available_workers().has_cuda()) == 2
+    except ValueError:
+        assert not has_gpus, "should only happen if we have no GPUs available"
+
+    # 2. GPU defaults are OK/not applicable, but I need to optimize my CPU worker setup.
+    with Context.make_with('dask', cpus=2) as ctx:
+        assert len(ctx.executor.get_available_workers().has_cpu()) == 2
+        if has_gpus:
+            assert len(ctx.executor.get_available_workers().has_cuda()) > 0
+
+    # 3. Co-optimize CPU and GPU setup
+    try:
+        with Context.make_with('dask', cpus=2, gpus=2) as ctx:
+            assert len(ctx.executor.get_available_workers().has_cpu()) > 0
+            assert len(ctx.executor.get_available_workers().has_cuda()) == 2
+    except ValueError:
+        assert not has_gpus, "should only happen if we have no GPUs available"
+
+    # 4.1 Disable all CPU* or GPU workers.
+    with Context.make_with('dask', cpus=0) as ctx:
+        assert len(ctx.executor.get_available_workers().has_cpu()) == 0
+        if has_gpus:
+            assert len(ctx.executor.get_available_workers().has_cuda()) > 0
+        else
+            # FIXME: this should raise, as we don't have any non-service
+            # workers, correct?
+            pass
+
+    # 4.1 Disable all CPU or GPU* workers.
+    # (this should even be possible if no GPUs are available anyways)
+    with Context.make_with('dask', gpus=0) as ctx:
+        assert len(ctx.executor.get_available_workers().has_cpu()) > 0
+        assert len(ctx.executor.get_available_workers().has_cuda()) == 0
+

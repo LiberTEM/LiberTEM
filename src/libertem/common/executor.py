@@ -454,6 +454,12 @@ class WorkerQueue:
         raise NotImplementedError()
 
     def size(self) -> int:
+        """
+        Approximate number of items currently in the queue
+
+        Can raise `NotImplementedError` depending on operating system
+        or underlying implementation.
+        """
         raise NotImplementedError()
 
 

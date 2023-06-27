@@ -180,9 +180,16 @@ def schedule_task(task_idx: int, pool: WorkerPool) -> Tuple[int, WorkerQueues]:
 
     Currently selects the worker with the shortest request queue.
     """
-    worker = min(pool.workers, key=lambda w: w.queues.request.size())
-    idx = pool.workers.index(worker)
-    return idx, worker.queues
+    try:
+        worker = min(pool.workers, key=lambda w: w.queues.request.size())
+        idx = pool.workers.index(worker)
+        return idx, worker.queues
+    except NotImplementedError:
+        # if the queue doesn't implement the `size` method (hello, Mac OS!),
+        # we fall back to round robin scheduling:
+        idx = task_idx % pool.size
+        worker_queues = pool.get_worker_queues(idx)
+        return idx, worker_queues
 
 
 def set_thread_name(name: str):

@@ -12,6 +12,7 @@ from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF
 from libertem.api import Context
+from libertem.exceptions import ExecutorSpecException
 
 
 def test_ctx_load(lt_ctx, default_raw):
@@ -279,7 +280,7 @@ def test_make_with_inline(inline_executor):
 
 
 def test_make_with_inline_raises():
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ExecutorSpecException):
         Context.make_with('inline', cpus=4)
 
 
@@ -292,10 +293,10 @@ def test_make_with_threads(concurrent_executor, n_threads):
 
 @pytest.mark.parametrize('exec_spec', ('threads', 'inline', 'delayed'))
 def test_make_with_raises_gpus_no_support(exec_spec):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ExecutorSpecException):
         Context.make_with(exec_spec, gpus=4)
 
 
 def test_make_with_unrecognized():
-    with pytest.raises(ValueError):
+    with pytest.raises(ExecutorSpecException):
         Context.make_with('not_an_executor')

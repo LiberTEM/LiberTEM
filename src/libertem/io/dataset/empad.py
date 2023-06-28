@@ -127,7 +127,7 @@ class EMPADDataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("empad", path='./path_to_file.xml', ...)
+    >>> ds = ctx.load("empad", path='./path_to_file.xml', ...)  # doctest: +SKIP
     """
     def __init__(self, path, scan_size=None, nav_shape=None,
                  sig_shape=None, sync_offset=0, io_backend=None):

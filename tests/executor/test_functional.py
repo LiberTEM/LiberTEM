@@ -17,6 +17,7 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
+from libertem.exceptions import ExecutorSpecException
 from sparseconverter import (
     BACKENDS, CUPY, CUPY_BACKENDS, CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO
 )
@@ -390,7 +391,7 @@ def test_executor_run_each_host(ctx: Context):
 
 @pytest.mark.skipif(has_gpus, reason='Test to check error on no-GPU avail')
 def test_make_with_no_gpu():
-    with pytest.raises(ValueError):
+    with pytest.raises(ExecutorSpecException):
         Context.make_with('dask', gpus=2)
 
 
@@ -416,7 +417,7 @@ def test_make_with_scenarios():
         with Context.make_with('dask', gpus=2) as ctx:
             assert len(ctx.executor.get_available_workers().has_cpu()) > 0
             assert len(ctx.executor.get_available_workers().has_cuda()) == 2
-    except ValueError:
+    except ExecutorSpecException:
         assert not has_gpus, "should only happen if we have no GPUs available"
 
     # 2. GPU defaults are OK/not applicable, but I need to optimize my CPU worker setup.
@@ -430,7 +431,7 @@ def test_make_with_scenarios():
         with Context.make_with('dask', cpus=2, gpus=2) as ctx:
             assert len(ctx.executor.get_available_workers().has_cpu()) > 0
             assert len(ctx.executor.get_available_workers().has_cuda()) == 2
-    except ValueError:
+    except ExecutorSpecException:
         assert not has_gpus, "should only happen if we have no GPUs available"
 
     # 4.1 Disable all CPU* or GPU workers.

@@ -36,6 +36,7 @@ from libertem.udf.base import UDFResultDict, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.common.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 from libertem.common.sparse import sparse_to_coo, to_dense
+from libertem.exceptions import ExecutorSpecException
 
 if TYPE_CHECKING:
     import numpy.typing as nt
@@ -205,6 +206,11 @@ class Context:
         plot_class : libertem.viz.base.Live2DPlot, optional
             Plot class for live plotting, passed to :class:`Context`.
 
+        Raises
+        ------
+        libertem.exceptions.ExecutorSpecException :
+            for invalid executor choice or unsupported worker specifications
+
         Returns
         -------
         Instance of :class:`Context` using a new instance of the specified executor.
@@ -217,12 +223,12 @@ class Context:
         limited_execs = ('inline', 'synchronous', 'dask-integration', 'delayed')
         cannot_cpus = executor_spec in limited_execs
         if cpu_spec and cannot_cpus:
-            raise NotImplementedError(f'Executor type {executor_spec} does not support '
-                                      'specifying CPU workers at this time')
+            raise ExecutorSpecException(f'Executor type {executor_spec} does not support '
+                                        'specifying CPU workers at this time')
         cannot_gpus = executor_spec in limited_execs + ('threads',)
         if gpu_spec and cannot_gpus:
-            raise NotImplementedError(f'Executor type {executor_spec} does not support '
-                                      'specifying GPU workers at this time')
+            raise ExecutorSpecException(f'Executor type {executor_spec} does not support '
+                                        'specifying GPU workers at this time')
         # Delay import here to avoid cupy import overhead
         if has_spec and executor_spec in ('dask', 'dask-make-default', 'pipelined'):
             from libertem.utils.devices import detect
@@ -231,7 +237,7 @@ class Context:
                 spec_args['cpus'] = cpus
             if gpu_spec:
                 if len(spec_args['cudas']) == 0 and gpus:
-                    raise ValueError('Cannot specify GPU workers as no GPUs detected')
+                    raise ExecutorSpecException('Cannot specify GPU workers as no GPUs detected')
                 spec_args['cudas'] = gpus
         spec = None
         if has_spec and executor_spec in ('dask', 'dask-make-default'):
@@ -265,7 +271,7 @@ class Context:
             else:
                 executor = PipelinedExecutor.make_local()
         else:
-            raise ValueError(
+            raise ExecutorSpecException(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '
                 f'"synchronous", "inline", "threads", "dask", "dask-integration",'
                 f'"dask-make-default" "delayed" or "pipelined".'

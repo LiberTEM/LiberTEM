@@ -139,7 +139,7 @@ which must be installed to allow the following to work:
 Developments are planned to better integrate this into the normal LiberTEM API
 and support conversion to other formats in addition to :code:`.npy` files.
 
-Alternatively, you can create Dask arrays from LiberTEM datasets via the :ref:`Dask integraton <daskarray>`.
+Alternatively, you can create Dask arrays from LiberTEM datasets via the :ref:`Dask integration <daskarray>`.
 These arrays can then be stored with
 `Dask's built-in functions <https://docs.dask.org/en/stable/array-creation.html#store-dask-arrays>`_
 or through additional libraries such as `RosettaSciIO <https://rosettasciio.readthedocs.io/en/latest/index.html>`_.

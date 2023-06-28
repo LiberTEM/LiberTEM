@@ -493,6 +493,32 @@ than making two passes over the whole :code:`DataSet`:
    # `res` and `res_sum`:
    res, res_sum = ctx.run_udf(udf=[udf, SumUDF()], dataset=dataset)
 
+.. _`udf cancellation`:
+
+Cancellation
+~~~~~~~~~~~~
+
+.. versionadded:: 0.12.0
+
+Especially when running UDFs on live data streams, it can happen that a UDF
+doesn't run to completion. An example scenario is when a continuously running
+preview scan is stopped, or scan parameters are changed while the scan is
+running.
+
+In this case, the exception
+:class:`~libertem.exceptions.UDFRunCancelled` is raised, which you can
+handle in an appropriate way for your application:
+
+.. testcode:: run
+
+   from libertem.exceptions import UDFRunCancelled
+
+   try:
+       res = ctx.run_udf(udf=udf, dataset=dataset)
+   except UDFRunCancelled:
+       # handle cancellation, for example, start the next UDF run
+       pass
+
 
 .. _`udf roi`:
 

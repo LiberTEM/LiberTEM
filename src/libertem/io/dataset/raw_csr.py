@@ -140,7 +140,7 @@ class RawCSRDataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("raw_csr", path='./path_to.toml')
+    >>> ds = ctx.load("raw_csr", path='./path_to.toml')  # doctest: +SKIP
     """
 
     def __init__(

@@ -127,7 +127,7 @@ class DaskDataSet(DataSet):
 
     >>> import dask.array as da
     >>>
-    >>> d_arr = da.ones((10, 100, 256, 256), chunks=(2, -1, -1, -1))
+    >>> d_arr = da.ones((4, 4, 64, 64), chunks=(2, -1, -1, -1))
     >>> ds = ctx.load('dask', dask_array=d_arr, sig_dims=2)
 
     Will create a dataset with 5 partitions split along the zeroth dimension.

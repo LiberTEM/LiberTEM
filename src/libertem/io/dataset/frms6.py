@@ -437,7 +437,7 @@ class FRMS6DataSet(DataSet):
             Examples
     --------
 
-    >>> ds = ctx.load("frms6", path='./path_to_file.hdr', ...)
+    >>> ds = ctx.load("frms6", path='./path_to_file.hdr', ...)  # doctest: +SKIP
     """
 
     def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None,

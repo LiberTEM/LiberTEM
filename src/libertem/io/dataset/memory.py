@@ -207,8 +207,8 @@ class MemoryDataSet(DataSet):
     Examples
     --------
 
-    >>> data = np.zeros((2, 2, 128, 128))
-    >>> ds = ctx.load('memory', data=data, ...)
+    >>> data = np.zeros((2, 2, 64, 64), dtype=np.float32)
+    >>> ds = ctx.load('memory', data=data, sig_dims=2)
     '''
     def __init__(self, tileshape=None, num_partitions=None, data=None, sig_dims=None,
                  check_cast=True, tiledelay=None, datashape=None, base_shape=None,

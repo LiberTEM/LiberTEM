@@ -751,7 +751,7 @@ class K2ISDataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("k2is", path='./path_to_file.bin', ...)
+    >>> ds = ctx.load("k2is", path='./path_to_file.bin', ...)  # doctest: +SKIP
     """
 
     def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=None, io_backend=None):

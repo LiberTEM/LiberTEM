@@ -257,7 +257,7 @@ class NPYDataSet(DataSet):
     Examples
     --------
 
-    >>> ds = ctx.load("npy", path='./path_to_file.npy')
+    >>> ds = ctx.load("npy", path='./path_to_file.npy')  # doctest: +SKIP
     """
     def __init__(
         self,

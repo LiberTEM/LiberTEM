@@ -1,65 +1,27 @@
-import sys
-import logging
-# Changed in 0.5.0: The thread count is set dynamically
-# on the workers. No need for setting environment variables anymore.
-
-import numpy as np
 import matplotlib.pyplot as plt
-
-from libertem import api
-
-logging.basicConfig(level=logging.WARNING)
+import libertem.api as lt
 
 
-# Protect the entry point.
-# LiberTEM uses dask, which uses multiprocessing to
-# start worker processes.
-# https://docs.python.org/3/library/multiprocessing.html
 if __name__ == '__main__':
+    # A path to a Quantum Detectors Merlin header file
+    # Adapt to your data and data format
+    dataset_path = './path_to_dataset.hdr'
 
-    # api.Context() starts a new local cluster.
-    # The "with" clause makes sure we shut it down in the end.
-    with api.Context() as ctx:
-        try:
-            path = sys.argv[1]
-            ds = ctx.load(
-                'auto',
-                path=path,
-            )
-        except IndexError:
-            path = ('C:/Users/weber/Nextcloud/Projects/'
-                    'Open Pixelated STEM framework/Data/EMPAD/'
-                    'scan_11_x256_y256.emd')
-            ds = ctx.load(
-                'hdf5',
-                path=path,
-                ds_path='experimental/science_data/data',
-            )
+    # Create a Context object to load data and run analyses
+    # Here we specify we want to use 4 CPU workers for parallel jobs
+    with lt.Context.make_with(cpus=4) as ctx:
+        # Next we define a dataset, at this time no data is loaded
+        # into memory, we only specify where the files are
+        # The key 'mib' tells LiberTEM which format to load
+        # it is possible to supply 'auto' and the Context will
+        # try to auto-detect the correct dataset format
+        ds = ctx.load('mib', path=dataset_path)
 
-        (scan_y, scan_x, detector_y, detector_x) = ds.shape
-        mask_shape = (detector_y, detector_x)
+        # Create a sum-over-disk analysis, i.e. brightfield image
+        # Values for disk centre x/y and radius in pixels
+        disk_sum_analysis = ctx.create_disk_analysis(ds, cx=32, cy=32, r=8)
+        disk_sum_result = ctx.run(disk_sum_analysis, progress=True)
 
-        # LiberTEM sends functions that create the masks
-        # rather than mask data to the workers in order
-        # to reduce transfers in the cluster.
-        def mask(): return np.ones(shape=mask_shape)
-
-        analysis = ctx.create_mask_analysis(dataset=ds, factories=[mask])
-
-        result = ctx.run(analysis, progress=True)
-
-        # Do something useful with the result:
-        print(result)
-        print(result.mask_0.raw_data)
-
-        # For each mask, one channel is present in the result.
-        # This may be different for other analyses.
-        # You can access the result channels by their key on
-        # the result object:
-        plt.figure()
-        plt.imshow(result.mask_0.raw_data)
+        # Plot the resulting brightfield image
+        plt.imshow(disk_sum_result.intensity.raw_data)
         plt.show()
-
-        # Otherwise, results handle like lists.
-        # For example, you can iterate over the result channels:
-        raw_result_list = [channel.raw_data for channel in result]

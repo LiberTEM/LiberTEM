@@ -1,4 +1,7 @@
 import os
+import sys
+import re
+import subprocess
 
 import numpy as np
 import numba
@@ -196,3 +199,27 @@ def test_threads_per_worker_vanilla(default_raw, monkeypatch):
     assert np.all(res['num_threads'].data == 1)
     print(res_inline['num_threads'].data)
     assert np.all(res_inline['num_threads'].data == psutil.cpu_count(logical=False))
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(
+    'DASK_DISTRIBUTED__LOGGING__DISTRIBUTED' in os.environ,
+    reason='Setting this value could influence test result',
+)
+def test_distributed_log_info():
+    # Check if there are any distributed.<> - INFO
+    # messages in the startup logs
+    # Our default config is log_level == WARN
+    result = subprocess.run(
+        [
+            sys.executable,
+            '-c',
+            'from libertem.api import Context;'
+            'ctx = Context.make_with("dask", cpus=1);'
+        ],
+        timeout=30,
+        capture_output=True,
+        text=True,
+    )
+
+    assert re.search(r'distributed.\S+ - INFO', result.stderr) is None

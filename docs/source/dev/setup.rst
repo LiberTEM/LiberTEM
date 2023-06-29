@@ -26,7 +26,7 @@ Installing from a git clone
 
 .. note::
     Distinguish between installing a released version and installing the latest
-    development version. Both :ref:`installing from PyPI` and :ref:`installing from a git
+    development version. Both :ref:`installing from PyPI <installation>` and :ref:`installing from a git
     clone` use pip, but they do fundamentally different things. :code:`python -m pip
     install libertem` downloads the latest release from PyPI.
 

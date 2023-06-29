@@ -3,6 +3,8 @@ from typing import (
     AsyncGenerator, overload, Tuple
 )
 from typing_extensions import Literal
+import os
+import pathlib
 import warnings
 import weakref
 import atexit
@@ -1510,3 +1512,44 @@ class Context:
             weak_ctx().close()
 
         atexit.register(_exit)
+
+    def convert_dataset(
+        self,
+        dataset: DataSet,
+        path: os.PathLike,
+        progress: bool = False,
+    ):
+        """
+        Convert the dataset to another format on disk
+
+        At this time can only convert to numpy *.npy* format,
+        but future extensions are possible.
+
+        The written data will have any reshaping / sync_offset
+        properties of the DataSet effectively baked into
+        the new file.
+
+        .. versionadded:: 0.12.0
+
+        Parameters
+        ----------
+        path : os.PathLike
+            The file path to export the data to, will
+            raise if the suffix is unrecognized (currently supports
+            only .npy)
+        dataset : lt.Dataset
+            The dataset to save to disk
+        progress : bool, optional
+            Whether to display a progress bar for the export,
+            by default False
+        """
+        path = pathlib.Path(path)
+        if path.suffix != '.npy':
+            raise ValueError(
+                f'Unrecognized file extension {path.suffix}'
+                'only .npy is currently supported.'
+            )
+
+        from libertem.udf.record import RecordUDF
+        udf = RecordUDF(path)
+        self.run_udf(dataset, udf, progress=progress)

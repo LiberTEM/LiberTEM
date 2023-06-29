@@ -434,7 +434,7 @@ class FRMS6DataSet(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
 
-            Examples
+    Examples
     --------
 
     >>> ds = ctx.load("frms6", path='./path_to_file.hdr', ...)  # doctest: +SKIP

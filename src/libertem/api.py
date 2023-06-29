@@ -1529,19 +1529,28 @@ class Context:
         properties of the DataSet effectively baked into
         the new file.
 
+        .. note::
+            All workers used by the Context must have access to the
+            same file path, over a network file system if necessary,
+            in order to correctly save data to the file.
+
         .. versionadded:: 0.12.0
 
         Parameters
         ----------
         path : os.PathLike
             The file path to export the data to, will
-            raise if the suffix is unrecognized (currently supports
-            only .npy)
+            raise ValueError if the suffix is unrecognized
+            (currently supports only .npy)
         dataset : lt.Dataset
             The dataset to save to disk
         progress : bool, optional
             Whether to display a progress bar for the export,
             by default False
+
+        Raises
+        ------
+        ValueError : If the path suffix is not supported
         """
         path = pathlib.Path(path)
         if path.suffix != '.npy':

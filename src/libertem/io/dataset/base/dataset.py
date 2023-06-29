@@ -1,8 +1,5 @@
-import os
-import pathlib
 import typing
 from typing import Generator, Optional, Sequence, Tuple
-from typing_extensions import Literal
 
 import numpy as np
 from sparseconverter import CUDA, NUMPY, ArrayBackend
@@ -12,7 +9,6 @@ from libertem.common.math import prod
 from libertem.io.utils import get_partition_shape
 from libertem.io.dataset.base import DataSetException, MMapBackend
 from libertem.common.messageconverter import MessageConverter
-from libertem.common.writers import file_writers
 from libertem.io.corrections.corrset import CorrectionSet
 from .partition import BasePartition, Partition
 
@@ -321,67 +317,6 @@ class DataSet:
     def get_task_comm_handler(self) -> "TaskCommHandler":
         from libertem.common.executor import NoopCommHandler
         return NoopCommHandler()
-
-    def save_as(
-        self,
-        path: os.PathLike,
-        format: Optional[Literal['raw', 'npy']] = None,
-        progress: bool = False,
-        save_dtype: Optional['nt.DTypeLike'] = None,
-    ):
-        """
-        Export the dataset to another format on disk
-
-        The written data will have any reshaping / sync_offset
-        effectively hard coded into the new file.
-
-        Could be extended to support HDF5 or Zarr export but
-        would need a way to constrain partitions to be compatible
-        with regular chunking.
-
-        This is currently processed sequentially by partition on
-        the main node for simplicity, so could take some time,
-        but could be paralellised if needed in the future
-
-        Parameters
-        ----------
-        path : os.PathLike
-            The path to export to
-        format : Optional[Literal['raw', 'npy']], optional
-            The format to export in, by default None.
-            When not specified this must be inferrable
-            from the suffix of path.
-        progress : bool, optional
-            Whether to display a progress bar for the export,
-            by default False.
-        save_dtype : nt.DTypeLike, optional
-            dtype conversion to apply to the data while saving,
-            by default None in which case the data will be saved
-            with their native dtype
-        """
-        path = pathlib.Path(path)
-        if format is None:
-            format = path.suffix.lstrip('.').strip().lower()
-        available_formats = tuple(file_writers.keys())
-        if format not in available_formats:
-            raise ValueError(f'Cannot export to format {format}, '
-                             f'available are {available_formats}')
-        if save_dtype is None:
-            save_dtype = self.meta.raw_dtype
-        partitions = tuple(self.get_partitions())
-        if progress:
-            from tqdm.auto import tqdm
-            bar = tqdm(total=len(partitions), desc='Save progress')
-        writer = file_writers[format](path, self.meta.shape, save_dtype)
-
-        with writer:
-            for part_idx, part in enumerate(partitions):
-                part_data = part.get_macrotile(dest_dtype=save_dtype)
-                writer.write(part_data)
-                if progress:
-                    bar.update(part_idx)
-        if progress:
-            bar.close()
 
 
 class WritableDataSet:

@@ -1,9 +1,8 @@
 from collections import defaultdict
-from typing import List, Set, TYPE_CHECKING, Iterator
+from typing import List, Set, TYPE_CHECKING, Iterator, Callable
 
 if TYPE_CHECKING:
     from .executor import TaskProtocol, ResourceDef
-    from libertem.io.dataset.base import Partition
 
 
 class WorkerSet:
@@ -23,7 +22,7 @@ class WorkerSet:
             result.append(WorkerSet(workers))
         return result
 
-    def get_by_host(self, host) -> "WorkerSet":
+    def get_by_host(self, host: str) -> "WorkerSet":
         return self.filter(lambda w: w.host == host)
 
     def example(self):
@@ -32,7 +31,7 @@ class WorkerSet:
         """
         return self.workers[0]
 
-    def filter(self, fn) -> "WorkerSet":
+    def filter(self, fn: Callable[["Worker"], bool]) -> "WorkerSet":
         return WorkerSet([
             w
             for w in self.workers
@@ -104,24 +103,32 @@ class Worker:
             return False
         return self.name == other.name and self.host == other.host
 
+    def __hash__(self) -> int:
+        return hash((self.name, self.host))
+
+
+def _task_fits_on_worker(task: "TaskProtocol", worker: Worker) -> bool:
+    worker_resources = worker.resources
+    # all resources of the task must be present in the worker resources:
+    for k, v in task.get_resources().items():
+        if k not in worker_resources:
+            return False
+        if v > worker_resources[k]:
+            return False
+    return True
+
 
 class Scheduler:
     def __init__(self, all_workers: WorkerSet):
         self.workers = all_workers
 
-    def workers_for_task(self, task: "TaskProtocol"):
+    def workers_for_task(self, task: "TaskProtocol") -> WorkerSet:
         """
-        Given a task, return a WorkerSet
+        Given a task, return a `WorkerSet` that can run said task.
         """
-        raise NotImplementedError()
+        return self.workers.filter(lambda worker: _task_fits_on_worker(task, worker))
 
-    def workers_for_partition(self, partition: "Partition"):
-        """
-        Given a partition, return a WorkerSet
-        """
-        pass
-
-    def effective_worker_count(self):
+    def effective_worker_count(self) -> int:
         '''
         Return the effective number of workers for partitioning
 

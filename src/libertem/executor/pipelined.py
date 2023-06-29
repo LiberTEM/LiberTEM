@@ -24,7 +24,7 @@ from libertem.common.executor import (
     WorkerQueueEmpty, TaskCommHandler, SimpleMPWorkerQueue,
     JobCancelledError, ResourceDef,
 )
-from libertem.common.scheduler import Worker, WorkerSet
+from libertem.common.scheduler import Worker, WorkerSet, Scheduler
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
 
 from .utils import assign_cudas
@@ -65,6 +65,30 @@ class PoolWorkerInfo(NamedTuple):
     spec: WorkerSpec
 
 
+class PoolStateError(Exception):
+    """
+    The worker pool is not in the expected state to perform the requested operation
+    """
+    pass
+
+
+def _resources_for_spec(spec: WorkerSpec) -> ResourceDef:
+    worker_resources: "ResourceDef" = {}
+
+    if spec['device_kind'] == 'CPU':
+        worker_resources["compute"] = 1
+        worker_resources["CPU"] = 1
+        worker_resources["ndarray"] = 1
+
+    if spec["device_kind"] == "CUDA":
+        worker_resources["compute"] = 1
+        worker_resources["CUDA"] = 1
+        if spec["has_cupy"]:
+            worker_resources["ndarray"] = 1
+
+    return worker_resources
+
+
 class WorkerPool:
     """
     Combination of worker processes and matching request queues,
@@ -83,9 +107,9 @@ class WorkerPool:
     """
     def __init__(self, worker_fn: Callable, spec: List[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue
-        self._workers: List[PoolWorkerInfo] = []
+        self._workers: Optional[List[PoolWorkerInfo]] = []
         self._worker_fn = worker_fn
-        self._response_q = self._worker_q_cls()
+        self._response_q: Optional[SimpleMPWorkerQueue] = self._worker_q_cls()
         self._message_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
         self._spec = spec
@@ -93,6 +117,8 @@ class WorkerPool:
 
     @property
     def response_queue(self) -> "WorkerQueue":
+        if self._response_q is None:
+            raise PoolStateError("Response queue not available")
         return self._response_q
 
     @property
@@ -115,7 +141,11 @@ class WorkerPool:
                 })
                 p.start()
                 self._workers.append(
-                    PoolWorkerInfo(queues=queues, process=p, spec=spec_item)
+                    PoolWorkerInfo(
+                        queues=queues,
+                        process=p,
+                        spec=spec_item,
+                    )
                 )
 
     def kill_worker(self, worker_info: PoolWorkerInfo, timeout: float = 5.0):
@@ -128,6 +158,8 @@ class WorkerPool:
             worker_info.process.join(30)
 
     def kill(self, timeout: float = 5):
+        if self._workers is None:
+            raise PoolStateError("Cannot kill workers, not running")
         for worker in self._workers:
             self.kill_worker(worker, timeout=timeout)
         exitcodes = [
@@ -135,15 +167,21 @@ class WorkerPool:
             for worker in self._workers
         ]
         self._workers = None
+        if self._response_q is None:
+            raise PoolStateError("Response queue not available")
         self._response_q.close(drain=False, force=True)
         self._response_q = None
         assert all([e is not None for e in exitcodes])
 
     @property
     def workers(self) -> List[PoolWorkerInfo]:
+        if self._workers is None:
+            raise PoolStateError("No workers are running")
         return self._workers
 
     def all_alive(self) -> bool:
+        if self._workers is None:
+            return True  # I mean, technically...
         return all(qp.process.is_alive() for qp in self._workers)
 
     def assert_all_alive(self):
@@ -164,6 +202,8 @@ class WorkerPool:
         self._message_q.close()
 
     def get_worker_queues(self, worker_idx: int) -> WorkerQueues:
+        if self._workers is None:
+            raise PoolStateError("No workers are running")
         return self._workers[worker_idx].queues
 
     def _make_worker_queues(self):
@@ -174,34 +214,49 @@ class WorkerPool:
         )
 
 
-def _task_fits_on_worker(task: TaskProtocol, worker: PoolWorkerInfo) -> bool:
-    spec = worker.spec
-    worker_resources: "ResourceDef" = {}
+WorkerSelector = Callable[
+    [List[PoolWorkerInfo], WorkerPool, TaskProtocol, int],
+    PoolWorkerInfo
+]
 
-    if spec['device_kind'] == 'CPU':
-        worker_resources["compute"] = 1
-        worker_resources["CPU"] = 1
-        worker_resources["ndarray"] = 1
 
-    if spec["device_kind"] == "CUDA":
-        worker_resources["compute"] = 1
-        worker_resources["CUDA"] = 1
-        if spec["has_cupy"]:
-            worker_resources["ndarray"] = 1
+def _select_by_queue_size(
+    eligible: List[PoolWorkerInfo],
+    pool: WorkerPool,
+    task: TaskProtocol,
+    task_idx: int,
+) -> PoolWorkerInfo:
+    # FIXME: I think this introduces some latency currently,
+    # as the workers `get` from their queue as soon as possible,
+    # so the following could happen:
+    # - task 0 becomes available
+    # - all queues have size 0, so task gets assigned to worker 0
+    # - worker 0 picks the task from its queue, so its queue size is 0 again
+    # - task 1 becomes available
+    # - all queues have size 0 (again), so task gets assigned to worker 0
+    # -
+    return min(eligible, key=lambda w: w.queues.request.size())
 
-    # all resources of the task must be present in the worker resources:
-    for k, v in task.get_resources().items():
-        if k not in worker_resources:
-            return False
-        if v > worker_resources[k]:
-            return False
-    return True
+
+def _select_by_round_robin(
+    eligible: List[PoolWorkerInfo],
+    pool: WorkerPool,
+    task: TaskProtocol,
+    task_idx: int,
+) -> PoolWorkerInfo:
+    return eligible[task_idx % len(eligible)]
+
+
+_meh = {}
 
 
 def schedule_task(
     task_idx: int,
     task: TaskProtocol,
-    pool: WorkerPool
+    pool: WorkerPool,
+    scheduler: Scheduler,
+    pool_info_for_worker: Dict[Worker, PoolWorkerInfo],
+    selector: WorkerSelector,
 ) -> Tuple[int, WorkerQueues]:
     """
     Returns the worker index and its queues that this task should be scheduled on.
@@ -209,23 +264,22 @@ def schedule_task(
     Currently selects the worker with the shortest request queue.
     """
 
-    # FIXME: maybe use libertem.common.scheduler.Scheduler
-    # and implement the resources matching logic there?
     eligible = [
-        w for w in pool.workers
-        if _task_fits_on_worker(task, w)
+        pool_info_for_worker[w]
+        for w in scheduler.workers_for_task(task)
     ]
 
-    try:
-        worker = min(eligible, key=lambda w: w.queues.request.size())
-        idx = pool.workers.index(worker)
-        return idx, worker.queues
-    except NotImplementedError:
-        # if the queue doesn't implement the `size` method (hello, Mac OS!),
-        # we fall back to round robin scheduling:
-        idx = task_idx % pool.size
-        worker_queues = pool.get_worker_queues(idx)
-        return idx, worker_queues
+    worker = selector(eligible, pool, task, task_idx)
+
+    # XXX haxx
+    d = _meh.get(selector, {})
+    _meh[selector] = d
+    v = d.get(worker.spec["worker_idx"], 0)
+    d[worker.spec["worker_idx"]] = v + 1
+    # print(worker.spec["worker_idx"])
+
+    idx = pool.workers.index(worker)
+    return idx, worker.queues
 
 
 def set_thread_name(name: str):
@@ -637,16 +691,6 @@ def _make_spec(
     if isinstance(cpus, int):
         cpus = tuple(range(cpus))
 
-    for device_id in cpus:
-        spec.append(WorkerSpec(
-            name=f"cpu-{device_id}",
-            device_id=device_id,
-            device_kind="CPU",
-            worker_idx=worker_idx,
-            has_cupy=False,
-        ))
-        worker_idx += 1
-
     cudas = assign_cudas(cudas)
 
     grouped_cudas = itertools.groupby(cudas, lambda x: x)
@@ -660,6 +704,17 @@ def _make_spec(
                 has_cupy=has_cupy,
             ))
             worker_idx += 1
+
+    for device_id in cpus:
+        spec.append(WorkerSpec(
+            name=f"cpu-{device_id}",
+            device_id=device_id,
+            device_kind="CPU",
+            worker_idx=worker_idx,
+            has_cupy=False,
+        ))
+        worker_idx += 1
+
     return spec
 
 
@@ -729,6 +784,9 @@ class PipelinedExecutor(BaseJobExecutor):
         self._spec = spec
         self._closed = True
         self._early_setup = early_setup
+
+        # for testing via monkeypatching, for example:
+        self._worker_selector: Optional[WorkerSelector] = None
 
         # timeout for cleanup, either from exception or when joining processes
         self._cleanup_timeout = cleanup_timeout
@@ -830,6 +888,20 @@ class PipelinedExecutor(BaseJobExecutor):
         id_to_task = {}
         tasks_uuid = str(uuid.uuid4())
 
+        all_workers = self.get_available_workers()
+        scheduler = Scheduler(all_workers=all_workers)
+        pool_info_for_worker = dict(zip(all_workers, self._pool.workers))
+        selector: WorkerSelector
+
+        if self._worker_selector is None:
+            try:
+                self._pool.workers[0].queues.request.size()
+                selector = _select_by_queue_size
+            except NotImplementedError:
+                selector = _select_by_round_robin
+        else:
+            selector = self._worker_selector
+
         try:
             self._validate_worker_state()
             task_comm_handler.start()
@@ -862,7 +934,14 @@ class PipelinedExecutor(BaseJobExecutor):
 
                 assert len(id_to_task) == in_flight[0]
 
-                _worker_idx, worker_queues = schedule_task(task_idx, task, self._pool)
+                _worker_idx, worker_queues = schedule_task(
+                    task_idx,
+                    task,
+                    self._pool,
+                    scheduler,
+                    pool_info_for_worker,
+                    selector=selector,
+                )
                 worker_queues.request.put({
                     "type": "RUN_TASK",
                     "uuid": tasks_uuid,
@@ -966,17 +1045,6 @@ class PipelinedExecutor(BaseJobExecutor):
                 ))
 
     def get_available_workers(self) -> WorkerSet:
-        resources_by_kind = {
-            "CPU": {"compute": 1, "CPU": 1, "ndarray": 1},
-            "CUDA": {"compute": 1, "CUDA": 1},
-        }
-
-        def _resources_for_spec(worker_spec: WorkerSpec):
-            resources = resources_by_kind[worker_spec["device_kind"]]
-            if worker_spec["has_cupy"]:
-                resources["ndarray"] = 1
-            return resources
-
         return WorkerSet([
             Worker(
                 name=worker_info.spec["name"],

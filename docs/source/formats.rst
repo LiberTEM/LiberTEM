@@ -124,20 +124,19 @@ Dataset conversion
 LiberTEM supports a mechanism to efficiently convert any supported dataset 
 into a Numpy binary file (:code:`.npy`), which can then be loaded into memory
 independently of LiberTEM (or read as a :code:`npy` format dataset as above).
-At this time the support is provided by the :class:`libertem_live.udf.record.RecordUDF`
-found in the `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_ library,
-which must be installed to allow the following to work:
+
+.. versionadded:: 0.12.0
+
+To convert a dataset to npy, use the `Context.convert_dataset` method:
 
 .. code-block:: python
 
-   from libertem_live.udf.record import RecordUDF
-   ctx = lt.Context()
-   dataset = ctx.load("typename", path="/path/to/some/file")
-   udf = RecordUDF('./output_path.npy')
-   ctx.run_udf(dataset, udf)
+   with lt.Context() as ctx:
+       ctx.convert_dataset(dataset, './output_path.npy')
 
-Developments are planned to better integrate this into the normal LiberTEM API
-and support conversion to other formats in addition to :code:`.npy` files.
+
+As of this time only :code:`npy` is supported, but other formats would be
+possible as the need arose.
 
 Alternatively, you can create Dask arrays from LiberTEM datasets via the :ref:`Dask integration <daskarray>`.
 These arrays can then be stored with

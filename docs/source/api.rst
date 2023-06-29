@@ -142,6 +142,11 @@ Specifying executor type, CPU and GPU workers
 
 .. versionadded:: 0.9.0
 
+.. versionchanged:: 0.12.0
+    Added the :code:`cpus` and :code:`gpus` keyword arguments, as well as the
+    explicit :code:`plot_class` keyword argument passed to the Context
+    initializer (replaced the prior :code:`*args, **kwargs` form).
+
 :meth:`libertem.api.Context.make_with` provides a convenient shortcut to start a
 :class:`~libertem.api.Context` with specific executor and customise the number of
 workers it uses.

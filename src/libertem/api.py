@@ -143,7 +143,7 @@ class Context:
 
         See :ref:`executors` for general information on executors.
 
-        .. note::
+        .. versionchanged:: 0.12.0
 
             Prior to version 0.12.0, this function accepted :code:`*args, **kwargs`
             and passed them to the initializer of :class:`Context`. Given that the

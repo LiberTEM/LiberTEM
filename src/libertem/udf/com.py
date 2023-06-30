@@ -1,5 +1,4 @@
 from typing import NamedTuple, Optional, Tuple, Union
-from collections import namedtuple
 
 import numpy as np
 from sparseconverter import CUPY_BACKENDS
@@ -12,11 +11,13 @@ from libertem.common.math import prod
 from libertem.udf.base import UDF
 
 
-COMParams = namedtuple(
-    'COMParams',
-    ('cy', 'cx', 'r', 'ri', 'scan_rotation', 'flip_y'),
-    defaults=(None, None, None, None, None, None)
-)
+class COMParams(NamedTuple):
+    cy: Optional[float] = None
+    cx: Optional[float] = None
+    r: Optional[float] = None
+    ri: Optional[float] = None
+    scan_rotation: Optional[float] = None
+    flip_y: Optional[bool] = None
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):

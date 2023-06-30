@@ -16,8 +16,8 @@ class COMParams(NamedTuple):
     cx: Optional[float] = None
     r: Optional[float] = None
     ri: Optional[float] = None
-    scan_rotation: Optional[float] = None
-    flip_y: Optional[bool] = None
+    scan_rotation: float = 0.
+    flip_y: bool = False
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):
@@ -249,8 +249,94 @@ def guess_corrections(
 
 
 class COMUDF(UDF):
+    """
+    Perform centre-of-mass analysis on the dataset
+
+    This replicates the functionality of `~libertem.api.Context.create_com_analysis`
+    but in UDF form, making it compatible with live processing and more easily
+    sub-classable.
+
+    The implementation differs slightly from :code:`COMAnalysis`
+    in that here results for pixels outside of an ROI will always be NaN,
+    whereas the :code:`COMAnalysis` implementation could provide non-NaN values
+    for :code:`curl` and :code:`divergence` result buffers even in
+    :code:`ROI == False` pixels due to the behaviour of :code:`np.gradient`.
+
+    To parametrise the CoM calculation, use the constructor
+    :classmethod:`COMUDF.with_params`.
+
+    .. versionadded:: 0.12.0
+
+    Parameters
+    ----------
+    com_params : COMParams
+        A :class:`COMParams` instance containing the parameters
+        for this UDF. By default will create a COMParams instance
+        which performs whole-frame CoM with results in the coordinates
+        of the frame # CHECKTHIS
+
+    Examples
+    --------
+    >>> udf = COMUDF()
+    >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+    >>> result["magnitude"].raw_data.shape
+    (32, 32)
+    """
     def __init__(self, com_params: COMParams = COMParams()):
         super().__init__(com_params=com_params)
+
+    @classmethod
+    def with_params(
+        cls,
+        *,
+        cy: Optional[float] = None,
+        cx: Optional[float] = None,
+        r: Optional[float] = None,
+        ri: Optional[float] = None,
+        scan_rotation: float = 0.,
+        flip_y: bool = False,
+    ):
+        """
+        Returns an instantiated COMUDF with a given set of parameters
+
+        Parameters
+        ----------
+        cy : Optional[float], by default None
+            Vertical-Centre of the CoM calculation, if None this
+            performs CoM in the coordinates of the whole frame.
+        cx : Optional[float], by default None
+            Horizontal-Centre of the CoM calculation, if None this
+            performs CoM in the coordinates of the whole frame.
+        r : Optional[float], by default None
+            (Outer) Radius of the disk mask around cy/cx to restrict
+            the CoM calculation. If None, the whole frame is included
+            in the CoM calculation.
+        ri : Optional[float], by default None
+            (Inner) Radius of the disk mask around cy/cx to exclude
+            from the CoM calculation. If None, no inner disk is
+            excluded.
+        scan_rotation : float, by default 0.
+            Scan rotation in degrees.
+            The optics of an electron microscope can rotate the image. Furthermore, scan
+            generators may allow scanning in arbitrary directions. This means that the x and y
+            coordinates of the detector image are usually not parallel to the x and y scan
+            coordinates. For interpretation of center of mass shifts, however, the shift vector
+            in detector coordinates has to be put in relation to the position on the sample.
+            The :code:`scan_rotation` parameter can be used to rotate the detector coordinates
+            to match the scan coordinate system. A positive value rotates the displacement
+            vector clock-wise. That means if the detector seems rotated to the right relative
+            to the scan, this value should be negative to counteract this rotation.
+        flip_y : bool, by default False
+            Flip the Y coordinate. Some detectors, namely Quantum Detectors Merlin,
+            may have pixel (0, 0) at the lower left corner. This has to be corrected
+            to get the sign of the y shift as well as curl and divergence right.
+        """
+        return cls(
+            com_params=COMParams(
+                cy=cy, cx=cx, r=r, ri=ri,
+                scan_rotation=scan_rotation, flip_y=flip_y,
+            )
+        )
 
     def get_backends(self):
         return self.BACKEND_ALL
@@ -279,6 +365,11 @@ class COMUDF(UDF):
         }
 
     def get_params(self) -> COMParams:
+        # Could this not be simplified if we move
+        # the default parameters onto COMParams ?
+        # Would need a flag for the default centering
+        # of cy/cx to be computed at runtime
+        # and ri could remain None
         sig_shape = tuple(self.meta.dataset_shape.sig)
         cy = self.params.com_params.cy
         if cy is None:
@@ -293,14 +384,8 @@ class COMUDF(UDF):
             r = np.inf
 
         ri = self.params.com_params.ri
-
         scan_rotation = self.params.com_params.scan_rotation
-        if scan_rotation is None:
-            scan_rotation = 0
-
         flip_y = self.params.com_params.flip_y
-        if flip_y is None:
-            flip_y = False
 
         return COMParams(
             cy=cy, cx=cx, r=r, ri=ri, scan_rotation=scan_rotation, flip_y=flip_y,

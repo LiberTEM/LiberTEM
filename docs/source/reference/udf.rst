@@ -123,6 +123,14 @@ Sum per frame
 .. autoclass:: libertem.udf.sumsigudf.SumSigUDF
     :members:
 
+.. _`com udf`:
+
+Centre-of-Mass
+##############
+
+.. autoclass:: libertem.udf.com.COMUDF
+    :members:
+
 .. _`masks udf`:
 
 Apply masks

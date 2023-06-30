@@ -139,6 +139,14 @@ Load data
 .. autoclass:: libertem.udf.raw.PickUDF
     :members:
 
+.. _`record udf`:
+
+Save data
+#########
+
+.. autoclass:: libertem.udf.record.RecordUDF
+    :members:
+
 NoOp
 ####
 

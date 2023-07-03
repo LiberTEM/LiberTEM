@@ -247,9 +247,6 @@ def _select_by_round_robin(
     return eligible[task_idx % len(eligible)]
 
 
-_meh = {}
-
-
 def schedule_task(
     task_idx: int,
     task: TaskProtocol,
@@ -270,13 +267,6 @@ def schedule_task(
     ]
 
     worker = selector(eligible, pool, task, task_idx)
-
-    # XXX haxx
-    d = _meh.get(selector, {})
-    _meh[selector] = d
-    v = d.get(worker.spec["worker_idx"], 0)
-    d[worker.spec["worker_idx"]] = v + 1
-    # print(worker.spec["worker_idx"])
 
     idx = pool.workers.index(worker)
     return idx, worker.queues

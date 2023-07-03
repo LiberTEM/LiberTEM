@@ -56,7 +56,7 @@ class WorkerSet:
     def names(self) -> List[str]:
         return [worker.name for worker in self.workers]
 
-    def extend(self, other) -> "WorkerSet":
+    def extend(self, other: "WorkerSet") -> "WorkerSet":
         return WorkerSet(self.workers + other.workers)
 
     def __iter__(self) -> Iterator["Worker"]:

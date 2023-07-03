@@ -155,7 +155,7 @@ setup(
         'scikit-image',
         'cloudpickle',
         'jsonschema',
-        'scikit-learn',
+        'scikit-learn<1.3.0',
         'tqdm',
         'threadpoolctl>=3.0',
         'nbformat',

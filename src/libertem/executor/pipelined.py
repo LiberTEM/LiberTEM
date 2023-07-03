@@ -875,7 +875,7 @@ class PipelinedExecutor(BaseJobExecutor):
         # of exceptions, it becomes a bit harder to keep attribution of messages to
         # tasks, which is why we have a separate counter for now.
         in_flight = [0]
-        id_to_task = {}
+        id_to_task: Dict[int, TaskProtocol] = {}
         tasks_uuid = str(uuid.uuid4())
 
         all_workers = self.get_available_workers()

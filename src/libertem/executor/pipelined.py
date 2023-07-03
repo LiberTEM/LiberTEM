@@ -171,7 +171,8 @@ class WorkerPool:
             raise PoolStateError("Response queue not available")
         self._response_q.close(drain=False, force=True)
         self._response_q = None
-        assert all([e is not None for e in exitcodes])
+        if any([e is None for e in exitcodes]):
+            raise PoolStateError("At least one worker failed to be killed")
 
     @property
     def workers(self) -> List[PoolWorkerInfo]:
@@ -914,7 +915,10 @@ class PipelinedExecutor(BaseJobExecutor):
                         result_task_id = result["task_id"]
                         yield (result["result"], id_to_task[result_task_id], result_task_id)
                         del id_to_task[result_task_id]
-                        assert len(id_to_task) == in_flight[0]
+                        if len(id_to_task) != in_flight[0]:
+                            raise RuntimeError(
+                                "state mismatch; `id_to_task` mapping should match `in_flight`"
+                            )
                 except WorkerQueueEmpty:
                     self._validate_worker_state()
 
@@ -922,7 +926,10 @@ class PipelinedExecutor(BaseJobExecutor):
                 in_flight[0] += 1
                 id_to_task[task_idx] = task
 
-                assert len(id_to_task) == in_flight[0]
+                if len(id_to_task) != in_flight[0]:
+                    raise RuntimeError(
+                        "state mismatch; `id_to_task` mapping should match `in_flight`"
+                    )
 
                 _worker_idx, worker_queues = schedule_task(
                     task_idx,

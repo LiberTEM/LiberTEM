@@ -138,6 +138,7 @@ setup(
         "scipy",
         "sparse",
         "distributed>=2.19.0",
+        "dask!=2023.6.1",  # work around broken ipython exception handler
         "click",
         "tornado>=5",
         "matplotlib",

@@ -2389,10 +2389,10 @@ class UDFRunner:
         damage = BufferWrapper(kind='nav', dtype=bool)
         damage.set_shape_ds(dataset.shape, roi)
         damage.allocate()
-        any_result = False
+        num_results = 0
         try:
             for part_results, task in result_iter:
-                any_result = True
+                num_results += 1
                 with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
                     self._apply_part_result(
                         udfs=self._udfs,
@@ -2405,13 +2405,13 @@ class UDFRunner:
                         udfs=self._udfs,
                         damage=damage
                     )
-            if not any_result or not iterate:
+            if num_results == 0 or not iterate:
                 yield self._make_udf_result(
                     udfs=self._udfs,
                     damage=damage
                 )
         except JobCancelledError:
-            raise UDFRunCancelled
+            raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
 
     async def run_for_dataset_async(
         self,

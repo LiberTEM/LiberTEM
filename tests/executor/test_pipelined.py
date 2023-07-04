@@ -538,8 +538,10 @@ def test_cancellation(pipelined_ex, default_raw):
 
     cancel_ds = CancelledMemoryDataSet(data=np.zeros((16, 16, 16, 16)))
 
-    with pytest.raises(UDFRunCancelled):
+    with pytest.raises(UDFRunCancelled) as ex:
         ctx.run_udf(dataset=cancel_ds, udf=SumUDF())
+
+    assert ex.match(r"^UDF run cancelled after \d+ partitions$")
 
     # after cancellation, the executor is still usable:
     _ = ctx.run_udf(dataset=default_raw, udf=SumUDF())

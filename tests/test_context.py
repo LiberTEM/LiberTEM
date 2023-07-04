@@ -325,6 +325,8 @@ def test_udf_cancellation(default_raw):
     res_iter = ctx.run_udf_iter(dataset=default_raw, udf=DumbUDF())
 
     # TODO: support `res_iter.cancel_run()` or similar
-    with pytest.raises(UDFRunCancelled):
+    with pytest.raises(UDFRunCancelled) as ex:
         for part in res_iter:
             pass
+
+    assert ex.match(r"^UDF run cancelled after \d+ partitions$")

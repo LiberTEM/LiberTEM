@@ -21,6 +21,14 @@ Changelog
 
 .. _latest:
 
+.. _`v0-11-2`:
+
+0.11.2 / 2023-07-04
+###################
+
+This point release works around `issue #597 in hdbscan <https://github.com/scikit-learn-contrib/hdbscan/issues/597>`_,
+which is an incompatibility with the latest scikit-learn release 1.3.0.
+
 .. _`v0-11-1`:
 
 0.11.1 / 2023-05-11

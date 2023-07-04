@@ -1038,6 +1038,13 @@ def concurrent_ctx(concurrent_executor):
     return lt.Context(executor=concurrent_executor)
 
 
+@pytest.fixture(scope='session')
+def pipelined_ctx():
+    # limit the number of CPU workers started by default
+    with lt.Context.make_with('pipelined', cpus=2) as ctx:
+        yield ctx
+
+
 @pytest.fixture
 def points():
     return np.array([

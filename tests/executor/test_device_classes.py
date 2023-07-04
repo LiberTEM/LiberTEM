@@ -1,37 +1,45 @@
-import os
-
 import numpy as np
 import pytest
 import distributed as dd
 
 from libertem import api
-from libertem.udf.base import NoOpUDF
 from utils import _naive_mask_apply, _mk_random
 from libertem.executor.dask import cluster_spec, DaskJobExecutor
+from libertem.executor.pipelined import PipelinedExecutor
 from libertem.utils.devices import detect, has_cupy
 
 from utils import DebugDeviceUDF
 
 
-def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
+@pytest.mark.parametrize('executor', ['pipelined', 'local_cluster'])
+def test_device_classes_with_cupy(
+    hdf5_ds_1,
+    local_cluster_ctx: api.Context,
+    pipelined_ctx: api.Context,
+    executor
+):
+    """
+    This test only runs if GPUs are detected and cupy is available, and
+    makes sure the UDFs run on workers with correct device classes.
+    """
+    if executor == 'pipelined':
+        ctx = pipelined_ctx
+    elif executor == 'local_cluster':
+        ctx = local_cluster_ctx
+    else:
+        raise ValueError(f"invalid executor {executor}")
     mask = _mk_random(size=(16, 16))
     d = detect()
-    cudas = d['cudas']
+    if not d['cudas'] or not d['has_cupy']:
+        pytest.skip('this test only runs with a working cupy installation')
+
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    ctx = local_cluster_ctx
     analysis = ctx.create_mask_analysis(
         dataset=hdf5_ds_1, factories=[lambda: mask]
     )
-
-    num_cores_ds = ctx.load('memory', data=np.zeros((2, 3, 4, 5)))
-    workers = ctx.executor.get_available_workers()
-    cpu_count = len(workers.has_cpu())
-    gpu_count = len(workers.has_cuda())
-
-    assert num_cores_ds._cores == max(cpu_count, gpu_count)
 
     # Based on ApplyMasksUDF, which is CuPy-enabled
     hybrid = ctx.run(analysis)
@@ -39,27 +47,17 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'numpy')), dataset=hdf5_ds_1)
     _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda', 'numpy')), dataset=hdf5_ds_1)
     _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'cuda', 'numpy')), dataset=hdf5_ds_1)
-    if cudas:
-        cuda_only = ctx.run_udf(
-            udf=DebugDeviceUDF(backends=('cuda', 'numpy')),
-            dataset=hdf5_ds_1,
-            backends=('cuda',)
-        )
-        if d['has_cupy']:
-            cupy_only = ctx.run_udf(
-                udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
-                dataset=hdf5_ds_1,
-                backends=('cupy',)
-            )
-        else:
-            with pytest.raises(RuntimeError):
-                cupy_only = ctx.run_udf(
-                    udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
-                    dataset=hdf5_ds_1,
-                    backends=('cupy',)
-                )
-            cupy_only = None
+    cuda_only = ctx.run_udf(
+        udf=DebugDeviceUDF(backends=('cuda', 'numpy')),
+        dataset=hdf5_ds_1,
+        backends=('cuda',)
+    )
 
+    cupy_only = ctx.run_udf(
+        udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
+        dataset=hdf5_ds_1,
+        backends=('cupy',)
+    )
     numpy_only = ctx.run_udf(
         udf=DebugDeviceUDF(backends=('numpy',)),
         dataset=hdf5_ds_1
@@ -69,26 +67,142 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
         hybrid.mask_0.raw_data,
         expected
     )
-    if cudas:
-        assert np.all(cuda_only['device_class'].data == 'cuda')
-        if cupy_only is not None:
-            assert np.all(cupy_only['device_class'].data == 'cuda')
+    assert np.all(cuda_only['device_class'].data == 'cuda')
+    assert np.all(cupy_only['device_class'].data == 'cuda')
+    assert np.all(numpy_only['device_class'].data == 'cpu')
+
+
+@pytest.mark.parametrize('executor', ['pipelined', 'local_cluster'])
+def test_device_classes_cuda_no_cupy(
+    hdf5_ds_1,
+    local_cluster_ctx: api.Context,
+    pipelined_ctx: api.Context,
+    executor
+):
+    """
+    This test only runs if GPUs are detected, but cupy is not available, and
+    makes sure the UDFs run on workers with correct device classes.
+    """
+    if executor == 'pipelined':
+        ctx = pipelined_ctx
+    elif executor == 'local_cluster':
+        ctx = local_cluster_ctx
+    else:
+        raise ValueError(f"invalid executor {executor}")
+    mask = _mk_random(size=(16, 16))
+    d = detect()
+    if not d['cudas'] or d['has_cupy']:
+        pytest.skip('this test only runs with GPU available, but without cupy')
+
+    with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data)
+
+    analysis = ctx.create_mask_analysis(
+        dataset=hdf5_ds_1, factories=[lambda: mask]
+    )
+
+    # Based on ApplyMasksUDF, which is CuPy-enabled
+    hybrid = ctx.run(analysis)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'numpy')), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda', 'numpy')), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'cuda', 'numpy')), dataset=hdf5_ds_1)
+    cuda_only = ctx.run_udf(
+        udf=DebugDeviceUDF(backends=('cuda', 'numpy')),
+        dataset=hdf5_ds_1,
+        backends=('cuda',)
+    )
+    with pytest.raises(RuntimeError):
+        ctx.run_udf(
+            udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
+            dataset=hdf5_ds_1,
+            backends=('cupy',)
+        )
+    numpy_only = ctx.run_udf(
+        udf=DebugDeviceUDF(backends=('numpy',)),
+        dataset=hdf5_ds_1
+    )
+
+    assert np.allclose(
+        hybrid.mask_0.raw_data,
+        expected
+    )
+    assert np.all(cuda_only['device_class'].data == 'cuda')
+    assert np.all(numpy_only['device_class'].data == 'cpu')
+
+
+@pytest.mark.parametrize('executor', ['pipelined', 'local_cluster'])
+def test_device_classes_no_gpu(
+    hdf5_ds_1,
+    local_cluster_ctx: api.Context,
+    pipelined_ctx: api.Context,
+    executor
+):
+    """
+    This test only runs if no GPUs are detected, and makes sure the UDFs run on workers
+    with correct device classes
+    """
+    if executor == 'pipelined':
+        ctx = pipelined_ctx
+    elif executor == 'local_cluster':
+        ctx = local_cluster_ctx
+    else:
+        raise ValueError(f"invalid executor {executor}")
+    mask = _mk_random(size=(16, 16))
+    d = detect()
+    if d['cudas']:
+        pytest.skip('this test only runs without GPUs')
+
+    with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
+        data = h5ds[:]
+        expected = _naive_mask_apply([mask], data)
+
+    analysis = ctx.create_mask_analysis(
+        dataset=hdf5_ds_1, factories=[lambda: mask]
+    )
+
+    # Based on ApplyMasksUDF, which is CuPy-enabled
+    hybrid = ctx.run(analysis)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'numpy')), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda', 'numpy')), dataset=hdf5_ds_1)
+    _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('cupy', 'cuda', 'numpy')), dataset=hdf5_ds_1)
+
+    numpy_only = ctx.run_udf(
+        udf=DebugDeviceUDF(backends=('numpy',)),
+        dataset=hdf5_ds_1
+    )
+    assert np.allclose(
+        hybrid.mask_0.raw_data,
+        expected
+    )
     assert np.all(numpy_only['device_class'].data == 'cpu')
 
 
 @pytest.mark.slow
-def test_start_local_cpuonly(hdf5_ds_1):
+@pytest.mark.parametrize('executor', ['pipelined', 'local_cluster'])
+def test_device_classes_limit_to_cpus(hdf5_ds_1, executor):
+    """
+    This test explicitly starts executors with only CPU workers, and checks that
+    UDFs run on workers with the correct device classes.
+    """
     # We don't use all since that might be too many
+    # create a Context with only cuda workers:
     cpus = (0, 1)
+    if executor == 'pipelined':
+        ctx = api.Context.make_with('pipelined', gpus=0, cpus=cpus)
+    elif executor == 'local_cluster':
+        ctx = api.Context.make_with('dask', gpus=0, cpus=cpus)
+    else:
+        raise ValueError(f"invalid executor {executor}")
     hdf5_ds_1.set_num_cores(len(cpus))
     mask = _mk_random(size=(16, 16))
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False)
-    with DaskJobExecutor.make_local(spec=spec) as executor:
-        ctx = api.Context(executor=executor)
+    with ctx:
         analysis = ctx.create_mask_analysis(
             dataset=hdf5_ds_1, factories=[lambda: mask]
         )
@@ -126,8 +240,16 @@ def test_start_local_cpuonly(hdf5_ds_1):
 @pytest.mark.slow
 @pytest.mark.skipif(not detect()['cudas'], reason="No CUDA devices")
 @pytest.mark.skipif(not has_cupy(), reason="No functional CuPy")
-def test_start_local_cupyonly(hdf5_ds_1):
+@pytest.mark.parametrize('executor', ['pipelined', 'local_cluster'])
+def test_device_classes_only_cupy(hdf5_ds_1, executor):
     cudas = detect()['cudas']
+    # create a Context with only cuda workers:
+    if executor == 'pipelined':
+        ctx = api.Context.make_with('pipelined', gpus=cudas, cpus=0)
+    elif executor == 'local_cluster':
+        ctx = api.Context.make_with('dask', gpus=cudas, cpus=0)
+    else:
+        raise ValueError(f"invalid executor {executor}")
     # Make sure we have enough partitions
     hdf5_ds_1.set_num_cores(len(cudas))
     mask = _mk_random(size=(16, 16))
@@ -135,9 +257,7 @@ def test_start_local_cupyonly(hdf5_ds_1):
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    spec = cluster_spec(cpus=(), cudas=cudas, has_cupy=True)
-    with DaskJobExecutor.make_local(spec=spec) as executor:
-        ctx = api.Context(executor=executor)
+    with ctx:
         # Uses ApplyMasksUDF, which supports CuPy
         analysis = ctx.create_mask_analysis(
             dataset=hdf5_ds_1, factories=[lambda: mask]
@@ -188,33 +308,27 @@ def test_start_local_cupyonly(hdf5_ds_1):
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
 
 
-def test_cluster_spec_cpu_int():
-    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True)
-    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True)
-    assert range_spec == int_spec
-
-
-def test_cluster_spec_cudas_int():
-    spec_n = 4
-    cuda_spec = cluster_spec(cpus=tuple(), cudas=spec_n, has_cupy=True)
-    num_cudas = 0
-    for spec in cuda_spec.values():
-        num_cudas += spec.get('options', {}).get('resources', {}).get('CUDA', 0)
-    assert num_cudas == spec_n
-
-
 @pytest.mark.slow
 @pytest.mark.skipif(not detect()['cudas'], reason="No CUDA devices")
-def test_start_local_cudaonly(hdf5_ds_1):
+@pytest.mark.parametrize('executor', ['pipelined', 'local_cluster'])
+def test_device_classes_limit_to_cuda(hdf5_ds_1, executor):
     cudas = detect()['cudas']
+    # create a Context with only cuda workers (force has_cupy=False):
+    if executor == 'pipelined':
+        spec = PipelinedExecutor.make_spec(cpus=[], cudas=cudas, has_cupy=False)
+        exc = PipelinedExecutor(spec=spec)
+    elif executor == 'local_cluster':
+        spec = cluster_spec(cpus=(), cudas=cudas, has_cupy=False)
+        exc = DaskJobExecutor.make_local(spec=spec)
+    else:
+        raise ValueError(f"invalid executor {executor}")
+    ctx = api.Context(executor=exc)
     # Make sure we have enough partitions
     hdf5_ds_1.set_num_cores(len(cudas))
     with hdf5_ds_1.get_reader().get_h5ds() as h5ds:
         data = h5ds[:]
 
-    spec = cluster_spec(cpus=(), cudas=cudas, has_cupy=False)
-    with DaskJobExecutor.make_local(spec=spec) as executor:
-        ctx = api.Context(executor=executor)
+    with ctx:
         udf_res = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda', )), dataset=hdf5_ds_1)
         # No CPU compute resources
         with pytest.raises(RuntimeError):
@@ -243,28 +357,6 @@ def test_start_local_cudaonly(hdf5_ds_1):
 
     assert np.all(udf_res['device_class'].data == 'cuda')
     assert np.allclose(udf_res['on_device'].data, data.sum(axis=(0, 1)))
-
-
-@pytest.mark.slow
-def test_preload(hdf5_ds_1):
-    # We don't use all since that might be too many
-    cpus = (0, 1)
-    hdf5_ds_1.set_num_cores(len(cpus))
-
-    class CheckEnvUDF(NoOpUDF):
-        def process_tile(self, tile):
-            assert os.environ['LT_TEST_1'] == 'hello'
-            assert os.environ['LT_TEST_2'] == 'world'
-
-    preloads = (
-        "import os; os.environ['LT_TEST_1'] = 'hello'",
-        "import os; os.environ['LT_TEST_2'] = 'world'",
-    )
-
-    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False, preload=preloads)
-    with DaskJobExecutor.make_local(spec=spec) as executor:
-        ctx = api.Context(executor=executor)
-        ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)
 
 
 @pytest.mark.slow

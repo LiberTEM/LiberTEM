@@ -12,9 +12,10 @@ from libertem.executor.dask import (
     CommonDaskMixin
 )
 from libertem.common.scheduler import Worker, WorkerSet
-from libertem.executor.dask import DaskJobExecutor
+from libertem.executor.dask import cluster_spec, DaskJobExecutor
 from libertem.executor.inline import InlineJobExecutor
 from libertem.udf.base import UDFRunner
+from libertem.udf.base import NoOpUDF
 from libertem.udf.sum import SumUDF
 from libertem.udf.raw import PickUDF
 from libertem.io.dataset.memory import MemoryDataSet
@@ -223,3 +224,49 @@ def test_distributed_log_info():
     )
 
     assert re.search(r'distributed.\S+ - INFO', result.stderr) is None
+
+
+def test_num_cores(local_cluster_ctx: Context):
+    ctx = local_cluster_ctx
+    num_cores_ds = ctx.load('memory', data=np.zeros((2, 3, 4, 5)))
+    workers = ctx.executor.get_available_workers()
+    cpu_count = len(workers.has_cpu())
+    gpu_count = len(workers.has_cuda())
+    assert num_cores_ds._cores == max(cpu_count, gpu_count)
+
+
+def test_cluster_spec_cpu_int():
+    int_spec = cluster_spec(cpus=4, cudas=tuple(), has_cupy=True)
+    range_spec = cluster_spec(cpus=range(4), cudas=tuple(), has_cupy=True)
+    assert range_spec == int_spec
+
+
+def test_cluster_spec_cudas_int():
+    spec_n = 4
+    cuda_spec = cluster_spec(cpus=tuple(), cudas=spec_n, has_cupy=True)
+    num_cudas = 0
+    for spec in cuda_spec.values():
+        num_cudas += spec.get('options', {}).get('resources', {}).get('CUDA', 0)
+    assert num_cudas == spec_n
+
+
+@pytest.mark.slow
+def test_preload(hdf5_ds_1):
+    # We don't use all since that might be too many
+    cpus = (0, 1)
+    hdf5_ds_1.set_num_cores(len(cpus))
+
+    class CheckEnvUDF(NoOpUDF):
+        def process_tile(self, tile):
+            assert os.environ['LT_TEST_1'] == 'hello'
+            assert os.environ['LT_TEST_2'] == 'world'
+
+    preloads = (
+        "import os; os.environ['LT_TEST_1'] = 'hello'",
+        "import os; os.environ['LT_TEST_2'] = 'world'",
+    )
+
+    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False, preload=preloads)
+    with DaskJobExecutor.make_local(spec=spec) as executor:
+        ctx = Context(executor=executor)
+        ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)

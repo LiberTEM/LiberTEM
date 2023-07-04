@@ -70,7 +70,7 @@ class PartitionStructure:
     Parameters
     ----------
 
-    slices : List[Tuple[Int]]
+    slices : List[Tuple[Int, ...]]
         List of tuples [start_idx, end_idx) that partition the data set by the flattened
         navigation axis
 

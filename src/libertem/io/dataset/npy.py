@@ -65,7 +65,7 @@ class NPYDatasetParams(MessageConverter):
 
 class NPYInfo(typing.NamedTuple):
     dtype: str
-    shape: typing.Tuple[int]
+    shape: typing.Tuple[int, ...]
     count: int
     offset: int
 

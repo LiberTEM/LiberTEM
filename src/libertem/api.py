@@ -64,8 +64,8 @@ ExecutorSpecType = Literal[
     'delayed',
     'pipelined',
 ]
-IterableRoiT = Iterable[Tuple[Tuple[int], bool]]
-RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int], IterableRoiT]]
+IterableRoiT = Iterable[Tuple[Tuple[int, ...], bool]]
+RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int, ...], IterableRoiT]]
 
 
 class Context:
@@ -832,7 +832,7 @@ class Context:
 
         Returns
         -------
-        dict or Tuple[dict]
+        dict or Tuple[dict, ...]
             Return value of the UDF containing the result buffers of
             type :class:`libertem.common.buffers.BufferWrapper`. Note that a
             :class:`~libertem.common.buffers.BufferWrapper` can be used like
@@ -841,7 +841,7 @@ class Context:
             :attr:`~libertem.common.buffers.BufferWrapper.data` property.
 
             If a list of UDFs was passed in, the returned type is
-            a Tuple[dict[str,BufferWrapper]].
+            a Tuple[dict[str,BufferWrapper], ...].
 
         Examples
         --------

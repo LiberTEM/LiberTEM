@@ -29,7 +29,7 @@
 import os
 import struct
 import warnings
-from typing import Tuple
+from typing import Tuple, Optional
 
 import defusedxml.ElementTree as ET
 import numpy as np
@@ -456,8 +456,15 @@ class SEQDataSet(DataSet):
     FIXME find public documentation of the XML format and dark/gain maps.
     """
 
-    def __init__(self, path: str, scan_size: Tuple[int] = None, nav_shape: Tuple[int] = None,
-                 sig_shape: Tuple[int] = None, sync_offset: int = 0, io_backend=None):
+    def __init__(
+        self,
+        path: str,
+        scan_size: Optional[Tuple[int, ...]] = None,
+        nav_shape: Optional[Tuple[int, ...]] = None,
+        sig_shape: Optional[Tuple[int, ...]] = None,
+        sync_offset: int = 0,
+        io_backend=None,
+    ):
         super().__init__(io_backend=io_backend)
         self._path = path
         # There might be '.seq.seq' and '.seq' in the wild

@@ -243,7 +243,10 @@ def _select_by_queue_size(
     # - worker 0 picks the task from its queue, so its queue size is 0 again
     # - task 1 becomes available
     # - all queues have size 0 (again), so task gets assigned to worker 0
-    # -
+    # => this should only happen in the offline case, as in the live
+    #    processing case, we push more than one message per task into the
+    #    queue, so there should be more than one message in the backlog
+    #    when the `TaskCommHandler` is finished pushing messages for one task.
     return min(eligible, key=lambda w: w.queues.request.size())
 
 

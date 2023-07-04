@@ -124,7 +124,9 @@ class Scheduler:
 
     def workers_for_task(self, task: "TaskProtocol") -> WorkerSet:
         """
-        Given a task, return a `WorkerSet` that can run said task.
+        Given a task, return a `WorkerSet` that can run said task
+        according to the resources requested by the task, and the
+        resources defined to be available on the worker.
         """
         return self.workers.filter(lambda worker: _task_fits_on_worker(task, worker))
 

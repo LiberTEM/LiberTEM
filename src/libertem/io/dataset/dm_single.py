@@ -56,12 +56,12 @@ class SingleDMDataSet(DMDataSet):
     path : PathLike
         The path to the .dm3/.dm4 file
 
-    nav_shape : Tuple[int], optional
+    nav_shape : Tuple[int, ...], optional
         Over-ride the nav_shape provided by the file metadata.
         This can be used to adjust the total
         number of frames.
 
-    sig_shape: Tuple[int], optional
+    sig_shape: Tuple[int, ...], optional
         Over-ride the sig_shape provided by the file metadata.
         Data are read sequentially in all cases, therefore this
         is typically only interesting if the total number of
@@ -290,7 +290,7 @@ class SingleDMDataSet(DMDataSet):
         return tags_nest
 
     @staticmethod
-    def _modify_shape(shape: Tuple[int], sig_dims: int = 2):
+    def _modify_shape(shape: Tuple[int, ...], sig_dims: int = 2):
         # The shape reversal to read in C-ordering applies to DM4/STEM files
         # saved in the new style as well as DM3, 3D image stacks saved
         # in older versions of GMS. Must check whether newer image stacks

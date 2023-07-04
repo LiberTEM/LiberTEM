@@ -100,7 +100,7 @@ def cluster_spec(
     name: str = 'default',
     num_service: int = 1,
     options: Optional[dict] = None,
-    preload: Optional[Tuple[str]] = None
+    preload: Optional[Tuple[str, ...]] = None
 ):
     '''
     Create a worker specification dictionary for a LiberTEM Dask cluster
@@ -254,7 +254,9 @@ def _simple_run_task(task):
 
 
 class CommonDaskMixin:
-    def _task_idx_to_workers(self, workers: WorkerSet, idx) -> WorkerSet:
+    client: dd.Client
+
+    def _task_idx_to_workers(self, workers: WorkerSet, idx: int) -> WorkerSet:
         hosts = list(sorted(workers.hosts()))
         host_idx = idx % len(hosts)
         host = hosts[host_idx]
@@ -772,17 +774,26 @@ class AsyncDaskJobExecutor(AsyncAdapter):
 
 
 def cli_worker(
-        scheduler, local_directory, cpus, cudas, has_cupy, name, log_level, preload: Tuple[str]):
+    scheduler,
+    local_directory,
+    cpus,
+    cudas,
+    has_cupy,
+    name,
+    log_level,
+    preload: Tuple[str, ...]
+):
     import asyncio
 
     options = {
         "silence_logs": log_level,
         "local_directory": local_directory
-
     }
 
     spec = cluster_spec(
-        cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name, options=options, preload=preload)
+        cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name,
+        options=options, preload=preload,
+    )
 
     async def run(spec):
         # Mitigation for https://github.com/dask/distributed/issues/6776

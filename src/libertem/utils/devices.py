@@ -1,7 +1,8 @@
 import functools
 import warnings
 import logging
-from typing import TypedDict, List
+from typing import List
+from typing_extensions import TypedDict
 
 import psutil
 

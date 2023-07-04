@@ -26,6 +26,9 @@ Changelog
 0.11.2 / 2023-07-04
 ###################
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8114529.svg
+   :target: https://doi.org/10.5281/zenodo.8114529
+
 This point release works around `issue #597 in hdbscan <https://github.com/scikit-learn-contrib/hdbscan/issues/597>`_,
 which is an incompatibility with the latest scikit-learn release 1.3.0.
 

@@ -72,6 +72,14 @@ class PoolStateError(Exception):
     pass
 
 
+class ResourceError(RuntimeError):
+    """
+    Thrown when there is a resource mismatch, for example if the task requests
+    resources that are not available in the worker pool.
+    """
+    pass
+
+
 def _resources_for_spec(spec: WorkerSpec) -> ResourceDef:
     worker_resources: "ResourceDef" = {}
 
@@ -266,6 +274,9 @@ def schedule_task(
         pool_info_for_worker[w]
         for w in scheduler.workers_for_task(task)
     ]
+    if len(eligible) == 0:
+        resources = task.get_resources()
+        raise ResourceError(f"No worker available with resources {resources}")
 
     worker = selector(eligible, pool, task, task_idx)
 
@@ -501,6 +512,8 @@ def _setup_device(spec: WorkerSpec, pin: bool):
         set_use_cpu(spec["device_id"])
     elif spec["device_kind"].lower() == "cuda":
         set_use_cuda(spec["device_id"])
+    else:
+        raise RuntimeError(f"unknown device kind: {spec['device_kind']}")
 
 
 def pipelined_worker(
@@ -923,14 +936,6 @@ class PipelinedExecutor(BaseJobExecutor):
                     self._validate_worker_state()
 
             for task_idx, task in enumerate(tasks):
-                in_flight[0] += 1
-                id_to_task[task_idx] = task
-
-                if len(id_to_task) != in_flight[0]:
-                    raise RuntimeError(
-                        "state mismatch; `id_to_task` mapping should match `in_flight`"
-                    )
-
                 _worker_idx, worker_queues = schedule_task(
                     task_idx,
                     task,
@@ -939,6 +944,14 @@ class PipelinedExecutor(BaseJobExecutor):
                     pool_info_for_worker,
                     selector=selector,
                 )
+                in_flight[0] += 1
+                id_to_task[task_idx] = task
+
+                if len(id_to_task) != in_flight[0]:
+                    raise RuntimeError(
+                        "state mismatch; `id_to_task` mapping should match `in_flight`"
+                    )
+
                 worker_queues.request.put({
                     "type": "RUN_TASK",
                     "uuid": tasks_uuid,

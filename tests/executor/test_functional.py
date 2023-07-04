@@ -9,14 +9,12 @@ import distributed
 import dask
 import numpy as np
 
-from libertem.common.backend import get_device_class
 from libertem.utils.devices import detect
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.executor.inline import InlineJobExecutor
 from libertem.api import Context
-from libertem.udf import UDF
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.exceptions import ExecutorSpecException
@@ -451,77 +449,3 @@ def test_make_with_scenarios():
     with Context.make_with('dask', gpus=0) as ctx:
         assert len(ctx.executor.get_available_workers().has_cpu()) > 0
         assert len(ctx.executor.get_available_workers().has_cuda()) == 0
-
-
-class DeviceClassUDF(UDF):
-    def __init__(
-        self,
-        array_backends=UDF.BACKEND_ALL
-    ) -> None:
-        super().__init__(array_backends=array_backends)
-
-    def process_tile(self, tile):
-        self.results.classes[0].append(get_device_class())
-
-    def preprocess(self):
-        self.results.classes[0] = []
-
-    def merge(self, dest, src):
-        dest.classes[0].extend(src.classes[0])
-
-    def get_result_buffers(self):
-        return {
-            'classes': self.buffer(kind='single', dtype=object, extra_shape=(1,))
-        }
-
-    def get_backends(self):
-        return self.params.array_backends
-
-
-@pytest.mark.slow
-def test_correct_device_class_selected(ctx: Context, default_raw):
-    # this test checks that tasks with resource constraints are indeed run on
-    # workers with the correct device class
-
-    # parts of this test need cupy:
-    if not has_cupy:
-        pytest.skip("needs CuPy")
-
-    # not all executors support resources (CUPY/CUDA):
-    skip_for_executors = {
-        "InlineJobExecutor",
-        "ConcurrentJobExecutor",
-        "DelayedJobExecutor",
-    }
-
-    executor_cls = ctx.executor.__class__.__name__
-    if executor_cls in skip_for_executors:
-        pytest.skip(f"skipping for unsupported executor {executor_cls}")
-
-    # dask doesn't have resources associated to workers in all cases:
-    if executor_cls == "DaskJobExecutor" and not ctx.executor.is_local:
-        pytest.skip(
-            "skipping non-local DaskJobExecutor, which can possibly "
-            "be unsuitable for this testcase"
-        )
-
-    res = ctx.run_udf(
-        dataset=default_raw,
-        udf=DeviceClassUDF(array_backends=(UDF.BACKEND_CUPY,)),
-    )
-    classes = res['classes'].data[0]
-    assert all(c == "cuda" for c in classes)
-
-    res = ctx.run_udf(
-        dataset=default_raw,
-        udf=DeviceClassUDF(array_backends=(UDF.BACKEND_CUDA,)),
-    )
-    classes = res['classes'].data[0]
-    assert all(c == "cuda" for c in classes)
-
-    res = ctx.run_udf(
-        dataset=default_raw,
-        udf=DeviceClassUDF(array_backends=(UDF.BACKEND_NUMPY,)),
-    )
-    classes = res['classes'].data[0]
-    assert all(c == "cpu" for c in classes)

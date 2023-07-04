@@ -184,13 +184,13 @@ class StackedDMDataSet(DMDataSet):
         List of paths to the files that should be loaded. The order is important,
         as it determines the order in the navigation axis.
 
-    nav_shape : Tuple[int] or None
+    nav_shape : Tuple[int, ...] or None
         By default, the files are loaded as a 3D stack. You can change this
         by specifying the nav_shape, which reshapes the navigation dimensions.
         Raises a `DataSetException` if the shape is incompatible with the data
         that is loaded.
 
-    sig_shape: Tuple[int], optional
+    sig_shape: Tuple[int, ...], optional
         Signal/detector size (height, width)
 
     sync_offset: int, optional

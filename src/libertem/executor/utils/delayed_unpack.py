@@ -1,4 +1,6 @@
-from typing import Any, Callable, Iterable, Dict, Tuple, List
+from typing import (
+    Any, Callable, Iterable, Dict, Tuple, List, Optional, Generator,
+)
 
 
 def default_unpackable() -> Dict[type, Callable[[Iterable], Iterable[Tuple[Any, Any]]]]:
@@ -55,7 +57,7 @@ class StructDescriptor:
 def flatten_nested(el: Any,
                    unpackable_types: Dict[type, Callable[[Iterable],
                                                          Iterable[Tuple[Any, Any]]]] = None,
-                   ignore_types: Tuple[type] = None) -> List[Any]:
+                   ignore_types: Optional[Tuple[type, ...]] = None) -> List[Any]:
     """
     Recursively unpack the structure el while the type of el is in
     the mapping unpackable_types, which maps between the types that
@@ -93,7 +95,7 @@ def flatten_nested(el: Any,
 def build_mapping(el: Any,
                   unpackable_types: Dict[type, Callable[[Iterable],
                                                         Iterable[Tuple[Any, Any]]]] = None,
-                  ignore_types: Tuple[type] = None,
+                  ignore_types: Optional[Tuple[type, ...]] = None,
                   _pos: List[Tuple[type, Any]] = None) -> List[List[Tuple[type, Any]]]:
     """
     Recursively unpack the structure el and build a flat descriptor of its
@@ -172,7 +174,7 @@ def rebuild_nested(flat: List[Any],
     return nest
 
 
-def pairwise(iterable: Iterable[Any]) -> Tuple[Any, Any]:
+def pairwise(iterable: Iterable[Any]) -> Generator[Tuple[Any, Any], None, None]:
     """
     Yield elements of iterable as tuples of overlapping pairs
     finally yielding (last_element, None)

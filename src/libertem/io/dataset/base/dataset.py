@@ -206,7 +206,7 @@ class DataSet:
 
         Returns
         -------
-        Tuple[int]
+        Tuple[int, ...]
             the shape calculated from the given parameters
         """
         if min_num_partitions is None:

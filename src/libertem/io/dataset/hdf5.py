@@ -86,10 +86,10 @@ def _ensure_2d_nav(nav_shape: Tuple[int, ...]) -> Tuple[int, int]:
 
 class HDF5ArrayDescriptor(typing.NamedTuple):
     name: str
-    shape: Tuple[int]
+    shape: Tuple[int, ...]
     dtype: np.dtype
     compression: Optional[str]
-    chunks: Tuple[int]
+    chunks: Tuple[int, ...]
 
 
 def _get_datasets(path):

@@ -37,7 +37,7 @@ preload_help = (
 @click.option('--preload', help=preload_help,
               default=None, type=str, multiple=True)
 def main(kind, scheduler, local_directory, n_cpus, cudas,
-         has_cupy, name, log_level, preload: Tuple[str]):
+         has_cupy, name, log_level, preload: Tuple[str, ...]):
     from libertem.common.threading import set_num_threads_env
     with set_num_threads_env(1):
         from libertem.utils.devices import detect

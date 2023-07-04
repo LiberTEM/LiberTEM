@@ -44,7 +44,7 @@ class File:
         no direct match is possible (decoding is necessary),
         it falls back to bytes (np.uint8)
 
-    sig_shape : Shape | Tuple[int]
+    sig_shape : Shape | Tuple[int, ...]
         The shape of each signal element
 
     file_header: int
@@ -85,7 +85,7 @@ class File:
         return self._end_idx - self._start_idx
 
     @property
-    def sig_shape(self) -> Tuple[int]:
+    def sig_shape(self) -> Tuple[int, ...]:
         return self._sig_shape
 
     @property

@@ -870,8 +870,13 @@ class PipelinedExecutor(BaseJobExecutor):
         return cls(spec=spec, **kwargs)
 
     @classmethod
-    def make_spec(cls, *args, **kwargs):
-        return _make_spec(*args, **kwargs)
+    def make_spec(
+        cls,
+        cpus: Union[int, Iterable[int]],
+        cudas: Union[int, Iterable[int]],
+        has_cupy: bool = False,
+    ):
+        return _make_spec(cpus=cpus, cudas=cudas, has_cupy=has_cupy)
     make_spec.__doc__ = _make_spec.__doc__
 
     def _validate_worker_state(self):

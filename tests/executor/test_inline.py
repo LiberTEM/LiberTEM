@@ -67,8 +67,10 @@ class CancelledMemoryDataSet(MemoryDataSet):
 def test_cancellation(lt_ctx, default_raw):
     cancel_ds = CancelledMemoryDataSet(data=np.zeros((16, 16, 16, 16)))
 
-    with pytest.raises(UDFRunCancelled):
+    with pytest.raises(UDFRunCancelled) as ex:
         lt_ctx.run_udf(dataset=cancel_ds, udf=SumUDF())
+
+    assert ex.match(r"^UDF run cancelled after \d+ partitions$")
 
     # after cancellation, the executor is still usable:
     _ = lt_ctx.run_udf(dataset=default_raw, udf=SumUDF())

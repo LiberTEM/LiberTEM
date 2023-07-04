@@ -14,8 +14,8 @@ from libertem.udf.base import UDF
 class COMParams(NamedTuple):
     cy: Optional[float] = None
     cx: Optional[float] = None
-    r: Optional[float] = None
-    ri: Optional[float] = None
+    r: float = float('inf')
+    ri: Union[float, None] = 0.
     scan_rotation: float = 0.
     flip_y: bool = False
 
@@ -205,7 +205,6 @@ def guess_corrections(
         By default, everything except the last row and last column are used
         since these contain artefacts.
 
-
     Returns
     -------
     GuessResult : relative to current values
@@ -252,20 +251,46 @@ class COMUDF(UDF):
     """
     Perform centre-of-mass analysis on the dataset
 
-    This replicates the functionality of `~libertem.api.Context.create_com_analysis`
+    This replicates the functionality of
+    :function:`~libertem.api.Context.create_com_analysis`
     but in UDF form, making it compatible with live processing and more easily
     sub-classable.
-
-    The implementation differs slightly from :code:`COMAnalysis`
-    in that here results for pixels outside of an ROI will always be NaN,
-    whereas the :code:`COMAnalysis` implementation could provide non-NaN values
-    for :code:`curl` and :code:`divergence` result buffers even in
-    :code:`ROI == False` pixels due to the behaviour of :code:`np.gradient`.
 
     To parametrise the CoM calculation, use the constructor
     :classmethod:`COMUDF.with_params`.
 
     .. versionadded:: 0.12.0
+
+    The result buffers of this UDF, all of type 'nav', are as follows:
+
+    * raw_com, coordinate (y, x)
+        The centre-of-mass in the pixel coordinate system of the
+        frame, subject to the mask defined by the parameters, if any.
+
+    * raw_shifts, vector (dy, dx)
+        The raw shift in centre-of-mass in axis-aligned pixels, relative
+        to the parameters cy and cx, either as-supplied or from
+        the frame centre, by default.
+
+    * field, vector (2,)
+        The transformed shift in the centre-of-mass in pixels, subject
+        to any corrections (scan rotation, detector flip)
+
+    * magnitude, scalar
+        The magnitude of the field buffer, equivalent to ||raw_shifts||_2
+
+    * divergence, scalar
+        The discrete divergence of the field buffer
+
+    * curl, scalar
+        The discrete curl of the field buffer
+
+    .. note::
+        The implementation of the results 'divergence' and 'curl' differ slightly
+        from :code:`COMAnalysis` in that here results for pixels outside of an ROI
+        will always be NaN. The :code:`COMAnalysis` implementation could provide
+        non-NaN values even in :code:`ROI == False` pixels due to the behaviour
+        of :code:`np.gradient`.
 
     Parameters
     ----------
@@ -291,8 +316,8 @@ class COMUDF(UDF):
         *,
         cy: Optional[float] = None,
         cx: Optional[float] = None,
-        r: Optional[float] = None,
-        ri: Optional[float] = None,
+        r: float = float('inf'),
+        ri: float = 0.,
         scan_rotation: float = 0.,
         flip_y: bool = False,
     ):
@@ -302,19 +327,22 @@ class COMUDF(UDF):
         Parameters
         ----------
         cy : Optional[float], by default None
-            Vertical-Centre of the CoM calculation, if None this
-            performs CoM in the coordinates of the whole frame.
+            Vertical-Centre of the mask applied to the frame, if any,
+            and the reference point from which vertical CoM-shifts are
+            calculated. If None, cy is set to the frame centre at runtime.
         cx : Optional[float], by default None
-            Horizontal-Centre of the CoM calculation, if None this
-            performs CoM in the coordinates of the whole frame.
-        r : Optional[float], by default None
+            Horizontal-Centre of the mask applied to the frame, if any,
+            and the reference point from which horizontal CoM-shifts are
+            calculated. If None, cx is set to the frame centre at runtime.
+        r : float, by default float('inf')
             (Outer) Radius of the disk mask around cy/cx to restrict
-            the CoM calculation. If None, the whole frame is included
-            in the CoM calculation.
-        ri : Optional[float], by default None
-            (Inner) Radius of the disk mask around cy/cx to exclude
-            from the CoM calculation. If None, no inner disk is
-            excluded.
+            the CoM calculation. The default value is :code:`float('inf')` which is
+            equivalent to performing whole-frame CoM with the given
+            origin cy/cx.
+        ri : float, by default 0.
+            (Inner) Radius of the ring mask around cy/cx to exclude
+            from the CoM calculation. If left as 0., no inner disk is
+            excluded and the CoM is calculated within a complete disk of radius r.
         scan_rotation : float, by default 0.
             Scan rotation in degrees.
             The optics of an electron microscope can rotate the image. Furthermore, scan
@@ -331,6 +359,8 @@ class COMUDF(UDF):
             may have pixel (0, 0) at the lower left corner. This has to be corrected
             to get the sign of the y shift as well as curl and divergence right.
         """
+        if ri >= r:
+            raise ValueError('Inner radius must be less than outer radius for annular CoM')
         return cls(
             com_params=COMParams(
                 cy=cy, cx=cx, r=r, ri=ri,
@@ -346,6 +376,9 @@ class COMUDF(UDF):
         return {
             'raw_mask_result': self.buffer(
                 kind='nav', dtype=dtype, extra_shape=(3, ), where='device', use='private'
+            ),
+            'raw_com': self.buffer(
+                kind='nav', dtype=dtype, extra_shape=(2, ), use='result_only'
             ),
             'raw_shifts': self.buffer(
                 kind='nav', dtype=dtype, extra_shape=(2, ), use='result_only'
@@ -365,11 +398,6 @@ class COMUDF(UDF):
         }
 
     def get_params(self) -> COMParams:
-        # Could this not be simplified if we move
-        # the default parameters onto COMParams ?
-        # Would need a flag for the default centering
-        # of cy/cx to be computed at runtime
-        # and ri could remain None
         sig_shape = tuple(self.meta.dataset_shape.sig)
         cy = self.params.com_params.cy
         if cy is None:
@@ -380,16 +408,14 @@ class COMUDF(UDF):
             cx = sig_shape[1] // 2
 
         r = self.params.com_params.r
-        if r is None:
-            r = np.inf
-
         ri = self.params.com_params.ri
         scan_rotation = self.params.com_params.scan_rotation
         flip_y = self.params.com_params.flip_y
 
-        return COMParams(
+        cp = COMParams(
             cy=cy, cx=cx, r=r, ri=ri, scan_rotation=scan_rotation, flip_y=flip_y,
         )
+        return cp
 
     def get_task_data(self):
         sig_shape = tuple(self.meta.dataset_shape.sig)
@@ -399,7 +425,7 @@ class COMUDF(UDF):
         if len(self.meta.dataset_shape.nav) != 2:
             raise ValueError('COMUDF only works with 2D nav shape.')
 
-        if com_params.ri is None:
+        if com_params.ri is None or np.isclose(com_params.ri, 0.):
             mask_factory = com_masks_factory(
                 detector_y=sig_shape[0],
                 detector_x=sig_shape[1],
@@ -435,7 +461,8 @@ class COMUDF(UDF):
         }
 
     def process_tile(self, tile):
-        raw_result = self.task_data.engine.process_tile(tile)
+        engine: ApplyMasksEngine = self.task_data.engine
+        raw_result = engine.process_tile(tile)
         self.results.raw_mask_result[:] += self.forbuf(
             raw_result, self.results.raw_mask_result
         )
@@ -466,6 +493,14 @@ class COMUDF(UDF):
             ref_y=com_params.cy,
             ref_x=com_params.cx,
         )
+        # CoM in the coordinate system of the frame
+        # Ideally should calculate this first then shift
+        # the centre by cy/cx, this is done just for backwards
+        # compatibility of center_shifts
+        raw_com = (
+            raw_shifts[0].copy() + com_params.cy,
+            raw_shifts[1].copy() + com_params.cx,
+        )
         field = apply_correction(
             y_centers=raw_shifts[0],
             x_centers=raw_shifts[1],
@@ -477,12 +512,14 @@ class COMUDF(UDF):
         field_x = field[1]
 
         raw_shifts = np.moveaxis(np.array(raw_shifts), 0, -1)
+        raw_com = np.moveaxis(np.array(raw_com), 0, -1)
         field = np.moveaxis(np.array(field), 0, -1)
 
         nav_size = prod(self.meta.dataset_shape.nav)
 
         results = {
             'raw_shifts': raw_shifts,
+            'raw_com': raw_com,
             'field': field,
         }
 

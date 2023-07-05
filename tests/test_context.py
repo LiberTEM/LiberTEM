@@ -9,12 +9,14 @@ import numpy as np
 import sparse
 import scipy.sparse
 from libertem.common.buffers import BufferWrapper
-
+from libertem.common.executor import (
+    TaskProtocol, WorkerQueue, TaskCommHandler,
+)
 from libertem.io.dataset.base import MMapBackend
 from libertem.udf import UDF, UDFRunCancelled
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
-from libertem.udf.base import NoOpUDF, UDF, MergeAttrMapping
+from libertem.udf.base import NoOpUDF, MergeAttrMapping
 from libertem.api import Context
 from libertem.exceptions import ExecutorSpecException
 
@@ -367,6 +369,74 @@ def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
             print(idx, part_res.buffers[0]['index'].data)
         # `default_raw` has at least two partitions, so there should be
         # something non-zero in the result:
+        assert not np.allclose(part_res.buffers[0]['index'], 0)
+        assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
+
+
+@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])
+def test_dynamic_parameter_update_integration(
+    executor, local_cluster_ctx, pipelined_ctx, concurrent_executor
+):
+    # NOTE: if this test is flaky, try increasing the sleep time in the
+    # TaskCommHandler below!
+
+    # we do this dance to re-use the existing executors, so we don't have to
+    # mark this test as slow:
+    if executor == 'dask':
+        ctx = local_cluster_ctx
+    elif executor == 'pipelined':
+        ctx = pipelined_ctx
+    elif executor == 'inline':
+        ctx = Context.make_with('inline')
+    elif executor == 'concurrent':
+        ctx = Context(executor=concurrent_executor)
+    else:
+        raise ValueError('invalid executor name')
+
+    num_workers = sum(
+        w.nthreads for w in ctx.executor.get_available_workers()
+    )
+    dataset = ctx.load(
+        "memory",
+        num_partitions=num_workers * 3,
+        datashape=(num_workers * 3, 16, 16),
+        sig_dims=2,
+    )
+
+    class DelayingCommHandler(TaskCommHandler):
+        def handle_task(self, task: TaskProtocol, queue: WorkerQueue):
+            # our tests only work if the tasks don't all get submitted at the
+            # beginning of the `run_tasks` call - this simulates the live
+            # processing scenario
+            import time
+            time.sleep(0.025)
+    dataset.get_task_comm_handler = lambda: DelayingCommHandler()
+
+    result_iter = ctx.run_udf_iter(
+        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0)]
+    )
+    with contextlib.closing(result_iter) as result_iter:
+        # because this is using the inline executor, we can guarantee
+        # that the updated parameters are used for the next partition.
+        for idx, part_res in enumerate(result_iter):
+            result_iter.update_parameters_experimental([
+                {"latest_index": idx + 1}
+            ])
+            print(idx, part_res.buffers[0]['index'].data)
+        assert not np.allclose(part_res.buffers[0]['index'], 0)
+        assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
+
+    result_iter = ctx.run_udf_iter(
+        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0)]
+    )
+    with contextlib.closing(result_iter) as result_iter:
+        # because this is using the inline executor, we can guarantee
+        # that the updated parameters are used for the next partition.
+        for idx, part_res in enumerate(result_iter):
+            result_iter.update_parameters_experimental([
+                {"latest_index": idx + 1}
+            ])
+            print(idx, part_res.buffers[0]['index'].data)
         assert not np.allclose(part_res.buffers[0]['index'], 0)
         assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
 

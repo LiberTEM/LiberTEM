@@ -17,6 +17,14 @@ if TYPE_CHECKING:
 T = TypeVar('T')
 
 
+class ResourceError(RuntimeError):
+    """
+    Thrown when there is a resource mismatch, for example if the task requests
+    resources that are not available in the worker pool.
+    """
+    pass
+
+
 class BaseJobExecutor(JobExecutor):
     def get_udf_runner(self) -> Type['UDFRunner']:
         from libertem.udf.base import UDFRunner

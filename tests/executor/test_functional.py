@@ -3,17 +3,23 @@ import sys
 from glob import glob
 import concurrent.futures
 import multiprocessing.pool
+from typing import Any
 
 import pytest
 import distributed
 import dask
 import numpy as np
+from libertem.common.shape import Shape
+from libertem.common.slice import Slice
 
 from libertem.utils.devices import detect
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.dask import DaskJobExecutor
 from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.executor.inline import InlineJobExecutor
+from libertem.common.executor import (
+    Environment, TaskCommHandler, TaskProtocol, WorkerQueue,
+)
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
@@ -449,3 +455,138 @@ def test_make_with_scenarios():
     with Context.make_with('dask', gpus=0) as ctx:
         assert len(ctx.executor.get_available_workers().has_cpu()) > 0
         assert len(ctx.executor.get_available_workers().has_cuda()) == 0
+
+
+class MockPartition:
+    @property
+    def slice(self):
+        return Slice(origin=(0, 0, 0), shape=Shape((16, 16, 16), sig_dims=1))
+
+
+class MockTask:
+    def __call__(self, params, env: Environment) -> Any:
+        import time
+        time.sleep(0.05)
+        # print(f"MockTask.__call__: params={params}, env={env}")
+        return params
+
+    def get_tracing_span_context(self):
+        raise NotImplementedError()
+
+    def get_partition(self):
+        return MockPartition()
+
+    def get_locations(self):
+        return None
+
+    def get_resources(self):
+        return {}
+
+
+class DelayingCommHandler(TaskCommHandler):
+    def handle_task(self, task: TaskProtocol, queue: WorkerQueue):
+        # our tests only work if the tasks don't all get submitted at the
+        # beginning of the `run_tasks` call - this simulates the live
+        # processing scenario
+        import time
+        time.sleep(0.05)
+
+
+@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline'])
+def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx):
+    import uuid
+    cancel_id = str(uuid.uuid4())
+
+    if executor == 'dask':
+        ctx = local_cluster_ctx
+    elif executor == 'pipelined':
+        ctx = pipelined_ctx
+    elif executor == 'inline':
+        ctx = Context.make_with('inline')
+    else:
+        raise ValueError('invalid executor name')
+
+    print(f"starting for {executor}: {ctx.executor} {cancel_id}")
+
+    exc = ctx.executor
+    comm_handler = DelayingCommHandler()
+
+    print(exc.get_available_workers())
+    num_workers = len(exc.get_available_workers())
+
+    results = []
+
+    with exc.scatter('hello scatter') as handle:
+        result_iter = exc.run_tasks(
+            cancel_id=cancel_id,
+            params_handle=handle,
+            task_comm_handler=comm_handler,
+            tasks=[MockTask() for _ in range(3 * num_workers)]
+        )
+        first_result, _task = next(result_iter)
+        print("started")
+        assert first_result == "hello scatter"
+        print(first_result)
+        exc.scatter_update(handle, 'new value')
+        for result, _task in result_iter:
+            results.append(result)
+
+    # eventually, the new value is available to the workers:
+    assert "new value" in results
+
+    print("done")
+
+
+@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline'])
+def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx):
+    import uuid
+    cancel_id = str(uuid.uuid4())
+
+    if executor == 'dask':
+        ctx = local_cluster_ctx
+    elif executor == 'pipelined':
+        ctx = pipelined_ctx
+    elif executor == 'inline':
+        ctx = Context.make_with('inline')
+    else:
+        raise ValueError('invalid executor name')
+
+    print(f"starting for {executor}: {ctx.executor} {cancel_id}")
+
+    exc = ctx.executor
+    comm_handler = DelayingCommHandler()
+
+    num_workers = len(exc.get_available_workers())
+
+    results = []
+
+    class Patchable:
+        def __init__(self, value):
+            self.value = value
+
+        def patch(self, patch):
+            self.value = patch
+
+        def __repr__(self):
+            return f"<Patchable: {self.value}>"
+
+    with exc.scatter(Patchable('hello scatter')) as handle:
+        result_iter = exc.run_tasks(
+            cancel_id=cancel_id,
+            params_handle=handle,
+            task_comm_handler=comm_handler,
+            tasks=[MockTask() for _ in range(3 * num_workers)]
+        )
+        first_result, _task = next(result_iter)
+        print("started")
+        assert first_result.value == "hello scatter"
+        print(first_result)
+        exc.scatter_update_patch(handle, 'new value')
+        for result, _task in result_iter:
+            results.append(result.value)
+
+    # eventually, the new value is available to the workers:
+    assert "new value" in results
+
+    print("done")
+    print(results)

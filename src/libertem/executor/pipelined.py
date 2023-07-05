@@ -1030,7 +1030,6 @@ class PipelinedExecutor(BaseJobExecutor):
 
                 yield from yield_result_if_found(block=False, timeout=None)
 
-            # FIXME: code duplication
             # at the end, block to get the remaining results:
             while in_flight > 0:
                 yield from yield_result_if_found(block=True, timeout=0.1)

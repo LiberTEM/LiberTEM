@@ -1,6 +1,7 @@
 import contextlib
 import functools
 import logging
+import uuid
 from typing import Optional
 import concurrent.futures
 from typing import Iterable, Any, Dict
@@ -36,10 +37,11 @@ class ConcurrentWorkerContext(WorkerContext):
         self._msg_queue.put((topic, msg_dict))
 
 
-def _run_task(task, params, task_id, threaded_executor, msg_queue):
+def _run_task(task, params, task_id, threaded_executor, msg_queue, scatter_map):
     """
     Wraps the task to be run in the pool
     """
+    params = scatter_map[params]
     worker_context = ConcurrentWorkerContext(msg_queue)
     env = Environment(threads_per_worker=1,
                       threaded_executor=threaded_executor,
@@ -70,16 +72,29 @@ class ConcurrentJobExecutor(BaseJobExecutor):
         self.is_local = is_local
         self.client = client
         self._futures = {}
+        self._scatter_map = {}
 
     @contextlib.contextmanager
     def scatter(self, obj):
-        yield obj
+        handle = str(uuid.uuid4())
+        self._scatter_map[handle] = obj
+        try:
+            yield handle
+        finally:
+            del self._scatter_map[handle]
+
+    def scatter_update(self, handle, obj):
+        self._scatter_map[handle] = obj
+
+    def scatter_update_patch(self, handle, patch):
+        self._scatter_map[handle].patch(patch)
 
     def _get_future(self, wrapped_task, idx, params_handle, msg_queue):
         return self.client.submit(
             _run_task,
             task=wrapped_task, params=params_handle, task_id=idx,
             threaded_executor=True, msg_queue=msg_queue,
+            scatter_map=self._scatter_map,
         )
 
     def run_tasks(

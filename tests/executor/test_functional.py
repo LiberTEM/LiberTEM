@@ -492,17 +492,21 @@ class DelayingCommHandler(TaskCommHandler):
         time.sleep(0.05)
 
 
-@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline'])
-def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx):
+@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])
+def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx, concurrent_executor):
     import uuid
     cancel_id = str(uuid.uuid4())
 
+    # we do this dance to re-use the existing executors, so we don't have to
+    # mark this test as slow:
     if executor == 'dask':
         ctx = local_cluster_ctx
     elif executor == 'pipelined':
         ctx = pipelined_ctx
     elif executor == 'inline':
         ctx = Context.make_with('inline')
+    elif executor == 'concurrent':
+        ctx = Context(executor=concurrent_executor)
     else:
         raise ValueError('invalid executor name')
 
@@ -511,8 +515,10 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx):
     exc = ctx.executor
     comm_handler = DelayingCommHandler()
 
-    print(exc.get_available_workers())
-    num_workers = len(exc.get_available_workers())
+    # for concurrent, we need to take the number of threads into account,
+    # otherwise the tasks will start running too soon for the first update
+    # to take place
+    num_workers = sum(w.nthreads for w in exc.get_available_workers())
 
     results = []
 
@@ -521,7 +527,7 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx):
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(3 * num_workers)]
+            tasks=[MockTask() for _ in range(5 * num_workers)]
         )
         first_result, _task = next(result_iter)
         print("started")
@@ -537,17 +543,21 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx):
     print("done")
 
 
-@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline'])
-def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx):
+@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])
+def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx, concurrent_executor):
     import uuid
     cancel_id = str(uuid.uuid4())
 
+    # we do this dance to re-use the existing executors, so we don't have to
+    # mark this test as slow:
     if executor == 'dask':
         ctx = local_cluster_ctx
     elif executor == 'pipelined':
         ctx = pipelined_ctx
     elif executor == 'inline':
         ctx = Context.make_with('inline')
+    elif executor == 'concurrent':
+        ctx = Context(executor=concurrent_executor)
     else:
         raise ValueError('invalid executor name')
 
@@ -556,7 +566,10 @@ def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx):
     exc = ctx.executor
     comm_handler = DelayingCommHandler()
 
-    num_workers = len(exc.get_available_workers())
+    # for concurrent, we need to take the number of threads into account,
+    # otherwise the tasks will start running too soon for the first update
+    # to take place
+    num_workers = sum(w.nthreads for w in exc.get_available_workers())
 
     results = []
 

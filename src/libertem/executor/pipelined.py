@@ -268,9 +268,12 @@ def schedule_task(
     selector: WorkerSelector,
 ) -> Tuple[int, WorkerQueues]:
     """
-    Returns the worker index and its queues that this task should be scheduled on.
+    Returns the worker index and its queues of the worker the given task should
+    be scheduled on.
 
-    Currently selects the worker with the shortest request queue.
+    Workers are first filtered based on requested resources, then the concrete
+    worker is selected by the function specified in the :code:`selector`
+    parameter.
     """
 
     eligible = [
@@ -905,11 +908,14 @@ class PipelinedExecutor(BaseJobExecutor):
         pool_info_for_worker = dict(zip(all_workers, self._pool.workers))
         selector: WorkerSelector
 
+        # feature detect: can we access the queue size? support for this can be
+        # missing depending on platform
         if self._worker_selector is None:
             try:
                 self._pool.workers[0].queues.request.size()
                 selector = _select_by_queue_size
             except NotImplementedError:
+                # fall back to simple round robin worker selection
                 selector = _select_by_round_robin
         else:
             selector = self._worker_selector
@@ -944,6 +950,9 @@ class PipelinedExecutor(BaseJobExecutor):
                     self._validate_worker_state()
 
             for task_idx, task in enumerate(tasks):
+                # important: call `schedule_task` before incrementing number of
+                # in-flight tasks, otherwise, if we run into an exception, we
+                # will wait for a response that never comes.
                 _worker_idx, worker_queues = schedule_task(
                     task_idx,
                     task,

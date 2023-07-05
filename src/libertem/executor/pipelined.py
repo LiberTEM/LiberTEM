@@ -891,7 +891,7 @@ class PipelinedExecutor(BaseJobExecutor):
         # In theory, `in_flight` could be calculated from `id_to_task`, but in case
         # of exceptions, it becomes a bit harder to keep attribution of messages to
         # tasks, which is why we have a separate counter for now.
-        in_flight = [0]
+        in_flight = 0
         id_to_task: Dict[int, TaskProtocol] = {}
         tasks_uuid = str(uuid.uuid4())
 
@@ -919,6 +919,7 @@ class PipelinedExecutor(BaseJobExecutor):
             span_context = span.get_span_context()
 
             def yield_result_if_found(block, timeout):
+                nonlocal in_flight
                 try:
                     with self._pool.response_queue.get(block=block, timeout=timeout) as (result, _):
                         if result.get('uuid') != tasks_uuid:
@@ -928,13 +929,13 @@ class PipelinedExecutor(BaseJobExecutor):
                                 result.get('uuid'), tasks_uuid,
                             )
                             return
-                        in_flight[0] -= 1
+                        in_flight -= 1
                         if result["type"] == "ERROR":
                             _raise_from_msg(result, "failed to run tasks")
                         result_task_id = result["task_id"]
                         yield (result["result"], id_to_task[result_task_id], result_task_id)
                         del id_to_task[result_task_id]
-                        if len(id_to_task) != in_flight[0]:
+                        if len(id_to_task) != in_flight:
                             raise RuntimeError(
                                 "state mismatch; `id_to_task` mapping should match `in_flight`"
                             )
@@ -953,14 +954,6 @@ class PipelinedExecutor(BaseJobExecutor):
                     pool_info_for_worker,
                     selector=selector,
                 )
-                in_flight[0] += 1
-                id_to_task[task_idx] = task
-
-                if len(id_to_task) != in_flight[0]:
-                    raise RuntimeError(
-                        "state mismatch; `id_to_task` mapping should match `in_flight`"
-                    )
-
                 worker_queues.request.put({
                     "type": "RUN_TASK",
                     "uuid": tasks_uuid,
@@ -969,6 +962,13 @@ class PipelinedExecutor(BaseJobExecutor):
                     "params_handle": params_handle,
                     "span_context": span_context,
                 })
+                in_flight += 1
+                id_to_task[task_idx] = task
+                if len(id_to_task) != in_flight:
+                    raise RuntimeError(
+                        "state mismatch; `id_to_task` mapping should match `in_flight`"
+                    )
+
                 # FIXME: semantics of this - is this enough?
                 # does it matter if this is enough? we can change it in the future if not
                 # could be: the function returns once it has forwarded
@@ -999,7 +999,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
             # FIXME: code duplication
             # at the end, block to get the remaining results:
-            while in_flight[0] > 0:
+            while in_flight > 0:
                 yield from yield_result_if_found(block=True, timeout=0.1)
         except JobCancelledError:
             # don't drain here, as the next acquisition could start
@@ -1014,7 +1014,7 @@ class PipelinedExecutor(BaseJobExecutor):
             # `in_flight` and actually sending the task to the queue, we should
             # have a timeout here to not wait infinitely long.
             try:
-                self._drain_response_queue(in_flight=in_flight[0])
+                self._drain_response_queue(in_flight=in_flight)
             except RuntimeError as e2:
                 raise e2 from e
             # if from a worker, this is the first exception that got put into the queue

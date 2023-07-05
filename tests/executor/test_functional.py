@@ -489,7 +489,7 @@ class DelayingCommHandler(TaskCommHandler):
         # beginning of the `run_tasks` call - this simulates the live
         # processing scenario
         import time
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 
 @pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])

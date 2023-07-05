@@ -182,7 +182,7 @@ class WorkerPool:
 
     def all_alive(self) -> bool:
         if self._workers is None:
-            return True  # I mean, technically...
+            raise PoolStateError("No workers are running")
         return all(qp.process.is_alive() for qp in self._workers)
 
     def assert_all_alive(self):

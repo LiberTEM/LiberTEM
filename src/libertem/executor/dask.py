@@ -11,7 +11,7 @@ import dask
 
 from libertem.common.threading import set_num_threads_env
 
-from .base import BaseJobExecutor, AsyncAdapter
+from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
@@ -307,11 +307,11 @@ class CommonDaskMixin:
         # This is set in the constructor of DaskJobExecutor
         if self.lt_resources:
             if not self._resources_available(workers, resources):
-                raise RuntimeError("Requested resources not available in cluster:", resources)
+                raise ResourceError("Requested resources not available in cluster:", resources)
             result = resources
         else:
             if 'CUDA' in resources:
-                raise RuntimeError(
+                raise ResourceError(
                     "Requesting CUDA resource on a cluster without resource management."
                 )
             result = {}

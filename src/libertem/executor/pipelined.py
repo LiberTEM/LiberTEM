@@ -28,7 +28,7 @@ from libertem.common.scheduler import Worker, WorkerSet, Scheduler
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
 
 from .utils import assign_cudas
-from .base import BaseJobExecutor
+from .base import BaseJobExecutor, ResourceError
 
 try:
     import prctl
@@ -68,14 +68,6 @@ class PoolWorkerInfo(NamedTuple):
 class PoolStateError(Exception):
     """
     The worker pool is not in the expected state to perform the requested operation
-    """
-    pass
-
-
-class ResourceError(RuntimeError):
-    """
-    Thrown when there is a resource mismatch, for example if the task requests
-    resources that are not available in the worker pool.
     """
     pass
 

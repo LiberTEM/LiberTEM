@@ -1,4 +1,6 @@
 import os
+import re
+from collections import defaultdict
 
 import numpy as np
 import pytest
@@ -9,8 +11,35 @@ from libertem.udf.base import NoOpUDF
 from utils import _naive_mask_apply, _mk_random
 from libertem.executor.dask import cluster_spec, DaskJobExecutor
 from libertem.utils.devices import detect, has_cupy
+from libertem.executor.utils.gpu_plan import DEFAULT_RAM_PER_WORKER
+from libertem.common.scheduler import Scheduler
 
 from utils import DebugDeviceUDF
+
+
+def characterize(spec):
+    per_resource = defaultdict(lambda: 0)
+    per_cpu_id = defaultdict(lambda: 0)
+    per_cuda_id = defaultdict(lambda: 0)
+
+    for name, worker in spec.items():
+        if 'resources' not in worker['options'] or 'compute' not in worker['options']['resources']:
+            per_resource['service'] += 1
+        if 'preload' in worker['options']:
+            for line in worker['options']['preload']:
+                is_cpu = re.match(r'.*worker_setup\(resource="CPU", device=([0-9]*)\)', line)
+                if is_cpu:
+                    cpu_id = int(is_cpu.groups()[0])
+                    per_cpu_id[cpu_id] += 1
+                is_cuda = re.match(r'.*worker_setup\(resource="CUDA", device=([0-9]*)\)', line)
+                if is_cuda:
+                    cuda_id = int(is_cuda.groups()[0])
+                    per_cuda_id[cuda_id] += 1
+
+        for resource in 'compute', 'CPU', 'CUDA', 'ndarray':
+            if resource in worker['options']['resources']:
+                per_resource[resource] += 1
+    return dict(per_resource), dict(per_cpu_id), dict(per_cuda_id)
 
 
 def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
@@ -27,11 +56,11 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
     )
 
     num_cores_ds = ctx.load('memory', data=np.zeros((2, 3, 4, 5)))
-    workers = ctx.executor.get_available_workers()
-    cpu_count = len(workers.has_cpu())
-    gpu_count = len(workers.has_cuda())
 
-    assert num_cores_ds._cores == max(cpu_count, gpu_count)
+    workers = ctx.executor.get_available_workers()
+    scheduler = Scheduler(workers)
+
+    assert num_cores_ds._cores == scheduler.effective_worker_count()
 
     # Based on ApplyMasksUDF, which is CuPy-enabled
     hybrid = ctx.run(analysis)
@@ -49,7 +78,7 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
             cupy_only = ctx.run_udf(
                 udf=DebugDeviceUDF(backends=('cupy', 'numpy')),
                 dataset=hdf5_ds_1,
-                backends=('cupy',)
+                backends=('cupy', 'cuda')
             )
         else:
             with pytest.raises(RuntimeError):
@@ -73,7 +102,8 @@ def test_start_local_default(hdf5_ds_1, local_cluster_ctx):
         assert np.all(cuda_only['device_class'].data == 'cuda')
         if cupy_only is not None:
             assert np.all(cupy_only['device_class'].data == 'cuda')
-    assert np.all(numpy_only['device_class'].data == 'cpu')
+    np_only = numpy_only['device_class'].data
+    assert np.all((np_only == 'cpu') + (np_only == 'cuda'))
 
 
 @pytest.mark.slow
@@ -86,7 +116,7 @@ def test_start_local_cpuonly(hdf5_ds_1):
         data = h5ds[:]
         expected = _naive_mask_apply([mask], data)
 
-    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False)
+    spec = cluster_spec(cpus=cpus, cudas=[], has_cupy=False)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
         analysis = ctx.create_mask_analysis(
@@ -144,7 +174,7 @@ def test_start_local_cupyonly(hdf5_ds_1):
         )
         results = ctx.run(analysis)
         udf_res = ctx.run_udf(udf=DebugDeviceUDF(), dataset=hdf5_ds_1)
-        # No CPU compute resources
+        # No CPU compute resources since no CPU workers
         with pytest.raises(RuntimeError):
             _ = ctx.run_udf(udf=DebugDeviceUDF(backends=('numpy',)), dataset=hdf5_ds_1)
         cuda_res = ctx.run_udf(udf=DebugDeviceUDF(backends=('cuda',)), dataset=hdf5_ds_1)
@@ -155,6 +185,13 @@ def test_start_local_cupyonly(hdf5_ds_1):
     )
 
     found = {}
+
+    for val in udf_res['device_id'].data[0].values():
+        print(val)
+        # no CPU
+        assert val["cpu"] is None
+        # Register which GPUs got work
+        found[val["cuda"]] = True
 
     for val in udf_res['device_id'].data[0].values():
         print(val)
@@ -195,12 +232,119 @@ def test_cluster_spec_cpu_int():
 
 
 def test_cluster_spec_cudas_int():
-    spec_n = 4
-    cuda_spec = cluster_spec(cpus=tuple(), cudas=spec_n, has_cupy=True)
+    n_cudas = 4
+    cuda_spec = cluster_spec(
+        cpus=tuple(),
+        cudas=n_cudas,
+        has_cupy=True,
+    )
+    print(cuda_spec)
     num_cudas = 0
     for spec in cuda_spec.values():
         num_cudas += spec.get('options', {}).get('resources', {}).get('CUDA', 0)
-    assert num_cudas == spec_n
+    assert num_cudas == n_cudas
+
+
+def test_cluster_spec_1():
+    cuda_info = {
+        0: {'mem_info': (2*DEFAULT_RAM_PER_WORKER, 2*DEFAULT_RAM_PER_WORKER), },
+        1: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER), },
+        2: {'mem_info': (DEFAULT_RAM_PER_WORKER//2, DEFAULT_RAM_PER_WORKER//2), },
+        3: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER), },
+    }
+    spec = cluster_spec(
+        cpus=6, cudas=(0, ), has_cupy=True, cuda_info=cuda_info,
+        ram_per_cuda_worker=DEFAULT_RAM_PER_WORKER, max_workers_per_cuda=1
+    )
+    per_resource, per_cpu_id, per_cuda_id = characterize(spec)
+    assert per_resource == {
+        'compute': 6,
+        'CPU': 6,
+        'CUDA': 1,
+        'ndarray': 6,
+        'service': 1,
+    }
+    assert per_cpu_id == {
+        # 0 is CUDA
+        1: 1,
+        2: 1,
+        3: 1,
+        4: 1,
+        5: 1,
+    }
+    assert per_cuda_id == {0: 1}
+
+
+def test_cluster_spec_2():
+    cuda_info = {
+        0: {'mem_info': (2*DEFAULT_RAM_PER_WORKER, 2*DEFAULT_RAM_PER_WORKER), },
+        1: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER), },
+        2: {'mem_info': (DEFAULT_RAM_PER_WORKER//2, DEFAULT_RAM_PER_WORKER//2), },
+        3: {'mem_info': (DEFAULT_RAM_PER_WORKER*10, DEFAULT_RAM_PER_WORKER*10), },
+    }
+    spec = cluster_spec(
+        cpus=6, cudas=(0, 1, 2, 3, 2), has_cupy=True, cuda_info=cuda_info,
+        ram_per_cuda_worker=DEFAULT_RAM_PER_WORKER, max_workers_per_cuda=7
+    )
+    per_resource, per_cpu_id, per_cuda_id = characterize(spec)
+    assert per_resource == {
+        'compute': 12,
+        'CPU': 6,
+        'CUDA': 12,
+        'ndarray': 12,
+        'service': 1,
+    }
+    assert per_cuda_id == {
+        0: 2,  # RAM
+        1: 1,  # RAM
+        2: 2,  # We forced two workers with cudas=...
+        3: 7,  # max_workers
+    }
+    assert per_cpu_id == {}  # All are hybrid workers assigned to CUDA devices
+
+
+def test_cluster_spec_3():
+    cuda_info = {
+        0: {'mem_info': (2*DEFAULT_RAM_PER_WORKER, 2*DEFAULT_RAM_PER_WORKER), },
+        1: {'mem_info': (DEFAULT_RAM_PER_WORKER, DEFAULT_RAM_PER_WORKER), },
+        2: {'mem_info': (DEFAULT_RAM_PER_WORKER//2, DEFAULT_RAM_PER_WORKER//2), },
+        3: {'mem_info': (DEFAULT_RAM_PER_WORKER*10, DEFAULT_RAM_PER_WORKER*10), },
+    }
+    spec = cluster_spec(
+        cpus=(1, 3, 5, 7, 8, 9, 10, 11, 12, 13, 14, 14, 14, 14, 14),
+        cudas=(0, 1, 2, 3, 2),
+        has_cupy=False, cuda_info=cuda_info,
+        ram_per_cuda_worker=DEFAULT_RAM_PER_WORKER, max_workers_per_cuda=7,
+        num_service=3
+    )
+    per_resource, per_cpu_id, per_cuda_id = characterize(spec)
+    # No hybrid workers since no CuPy
+    assert per_resource == {
+        'compute': 27,
+        'CPU': 15,
+        'CUDA': 12,
+        'ndarray': 15,
+        'service': 3,
+    }
+    assert per_cuda_id == {
+        0: 2,  # RAM
+        1: 1,  # RAM
+        2: 2,  # We forced two workers with cudas=...
+        3: 7,  # max_workers
+    }
+    assert per_cpu_id == {
+        1: 1,
+        3: 1,
+        5: 1,
+        7: 1,
+        8: 1,
+        9: 1,
+        10: 1,
+        11: 1,
+        12: 1,
+        13: 1,
+        14: 5,
+    }
 
 
 @pytest.mark.slow
@@ -261,7 +405,7 @@ def test_preload(hdf5_ds_1):
         "import os; os.environ['LT_TEST_2'] = 'world'",
     )
 
-    spec = cluster_spec(cpus=cpus, cudas=(), has_cupy=False, preload=preloads)
+    spec = cluster_spec(cpus=cpus, cudas=[], has_cupy=False, preload=preloads)
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = api.Context(executor=executor)
         ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)

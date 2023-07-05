@@ -356,44 +356,50 @@ def test_success_with_delay(pipelined_ex):
 
 
 def test_make_spec_multi_cuda():
-    spec = PipelinedExecutor.make_spec(cpus=[0], cudas=[0, 1, 2, 2])
-    assert spec == [
+
+    spec = PipelinedExecutor.make_spec(
+        cpus=[0, 1, 2, 3, 4], cudas=[0, 1, 2, 2]
+    )
+    expected = [
         {
             "device_id": 0,
-            "name": "cpu-0",
-            "device_kind": "CPU",
+            "name": "cpu-0-cuda-0-0",
+            "device_kind": "CUDA",
             "worker_idx": 0,
             "has_cupy": False,
         },
         {
-            "device_id": 0,
-            "name": "cuda-0-0",
+            "device_id": 1,
+            "name": "cpu-1-cuda-1-0",
             "device_kind": "CUDA",
             "worker_idx": 1,
             "has_cupy": False,
         },
         {
-            "device_id": 1,
-            "name": "cuda-1-0",
+            "device_id": 2,
+            "name": "cpu-2-cuda-2-0",
             "device_kind": "CUDA",
             "worker_idx": 2,
             "has_cupy": False,
         },
         {
             "device_id": 2,
-            "name": "cuda-2-0",
+            "name": "cpu-3-cuda-2-1",
             "device_kind": "CUDA",
             "worker_idx": 3,
             "has_cupy": False,
         },
         {
-            "device_id": 2,
-            "name": "cuda-2-1",
-            "device_kind": "CUDA",
+            "device_id": 4,
+            "name": "cpu-4",
+            "device_kind": "CPU",
             "worker_idx": 4,
             "has_cupy": False,
         },
     ]
+    print(spec)
+    print(expected)
+    assert spec == expected
 
 
 def test_make_spec_cpu_int():
@@ -404,7 +410,10 @@ def test_make_spec_cpu_int():
 
 def test_make_spec_cuda_int():
     spec_n = 2
-    cuda_spec = PipelinedExecutor.make_spec(cpus=[0], cudas=spec_n)
+    cuda_spec = PipelinedExecutor.make_spec(
+        cpus=[0, 1, 2],
+        cudas=spec_n,
+    )
     num_cudas = 0
     for spec in cuda_spec:
         if spec['device_kind'] == 'CUDA':

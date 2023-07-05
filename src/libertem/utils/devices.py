@@ -34,14 +34,29 @@ def detect():
         Each containing
         a list of devices. Only physical CPU cores are counted, i.e. no
         hyperthreading.
+
+        FIXME document other return keys!
+
         Additionally it has the key :code:`'has_cupy'`, which signals
         if cupy is installed and available.
     '''
     cores = psutil.cpu_count(logical=False)
     if cores is None:
         cores = 2
+
+    meminfo = psutil.virtual_memory()
+
+    cuda_info = {}
     try:
         cudas = [device.id for device in numba.cuda.gpus]
+        for cuda in cudas:
+            cuda_info[cuda] = {}
+            cuda_ctx = numba.cuda.current_context(cuda)
+            try:
+                cuda_info[cuda]['mem_info'] = cuda_ctx.get_memory_info()
+            finally:
+                cuda_ctx.reset()
+                cuda_ctx.pop()
     except numba.cuda.CudaSupportError as e:
         # Continue running without GPU or in case of errors
         cudas = []
@@ -49,6 +64,8 @@ def detect():
     return {
         "cpus": list(range(cores)),
         "cudas": cudas,
+        "cpu_info": meminfo,
+        "cuda_info": cuda_info,
         "has_cupy": has_cupy(),
     }
 

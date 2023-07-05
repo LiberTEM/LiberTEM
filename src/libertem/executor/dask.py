@@ -4,12 +4,13 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional, Tuple, Union, Dict, Callable, List
+from typing import Dict, Iterable, Any, Optional, Tuple, Union, Callable, List
 
 from dask import distributed as dd
 import dask
 
 from libertem.common.threading import set_num_threads_env
+from libertem.executor.utils.gpu_plan import make_gpu_plan
 
 from .base import BaseJobExecutor, AsyncAdapter
 from libertem.common.executor import (
@@ -19,7 +20,7 @@ from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.async_utils import adjust_event_loop_policy
-from .utils import assign_cudas
+from .utils.gpu_plan import assign_cudas, DEFAULT_RAM_PER_WORKER
 
 log = logging.getLogger(__name__)
 
@@ -100,18 +101,22 @@ def cluster_spec(
     name: str = 'default',
     num_service: int = 1,
     options: Optional[dict] = None,
-    preload: Optional[Tuple[str]] = None
+    preload: Optional[Tuple[str]] = None,
+    cuda_info: Optional[Dict[int, Dict]] = None,
+    max_workers_per_cuda: int = 4,
+    ram_per_cuda_worker: int = DEFAULT_RAM_PER_WORKER,
 ):
     '''
     Create a worker specification dictionary for a LiberTEM Dask cluster
 
-    The return from this function can be passed to :code:`DaskJobExecutor.make_local(spec=spec)`.
+    The return from this function can be passed to
+    :code:`DaskJobExecutor.make_local(spec=spec)`.
 
-    This creates a Dask cluster spec with special initializations and resource tags
-    for CPU + GPU processing in LiberTEM.
-    See :ref:`cluster spec` for an example.
-    See http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
-    for more info on cluster specs.
+    This creates a Dask cluster spec with special initializations and resource
+    tags for CPU + GPU processing in LiberTEM. See :ref:`cluster spec` for an
+    example. See
+    http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster for
+    more info on cluster specs.
 
     Parameters
     ----------
@@ -124,22 +129,38 @@ def cluster_spec(
         create. LiberTEM will use the IDs specified or assign round-robin to the available devices.
         In the iterable case these have to match CUDA device IDs on the system.
         Specify the same ID multiple times to spawn multiple workers on the same CUDA device.
+    cuda_info
+        Dictionary with additional information about the CUDA devices.
+         * Keys: CUDA device IDs as int
+         * Values:
+           * :code:`'mem_info'`: Tuple[int, int] with available and total GPU ram
     has_cupy: bool
         Specify if the cluster should signal that it supports GPU-based array programming using
         CuPy
     name
         Prefix for the worker names
     num_service
-        Number of additional workers that are reserved for service tasks. Computation tasks
-        will not be scheduled on these workers, which guarantees responsive behavior for file
-        browsing etc.
+        Number of additional workers that are reserved for service tasks.
+        Computation tasks will not be scheduled on these workers, which
+        guarantees responsive behavior for file browsing etc.
     options
-        Options to pass through to every worker. See Dask documentation for details
+        Options to pass through to every worker. See Dask documentation for
+        details
     preload
         Items to preload on workers in addition to LiberTEM-internal preloads.
-        This can be used to load libraries, for example HDF5 filter plugins before h5py is used.
-        See https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
+        This can be used to load libraries, for example HDF5 filter plugins
+        before h5py is used. See
+        https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts
         for more information.
+
+    max_workers_per_cuda
+        Maximum number of CUDA workers to create per device. The number of
+        workers is also limited by the available RAM on the device and the
+        number of available CPUs.
+
+    ram_per_cuda_worker
+        Minimum RAM per worker. No worker will be created if not enough RAM
+        is available.
 
     See also
     --------
@@ -171,11 +192,14 @@ def cluster_spec(
         "cls": dd.Nanny,
         "options": service_options
     }
-
-    cuda_options = deepcopy(options)
-    cuda_options["resources"] = {"CUDA": 1, "compute": 1}
     if has_cupy:
-        cuda_options["resources"]["ndarray"] = 1
+        # CUDA worker is a CPU worker with additional resource for CUDA
+        cuda_options = deepcopy(cpu_options)
+        cuda_options["resources"]["CUDA"] = 1
+    else:
+        cuda_options = deepcopy(options)
+        cuda_options["resources"] = {"CUDA": 1, "compute": 1}
+
     cuda_base_spec = {
         "cls": dd.Nanny,
         "options": cuda_options
@@ -189,17 +213,39 @@ def cluster_spec(
 
     if isinstance(cpus, int):
         cpus = tuple(range(cpus))
+    cudas = assign_cudas(cudas)
+
+    gpu_plan = make_gpu_plan(
+        cudas=cudas,
+        cuda_info=cuda_info,
+        max_workers_per_cuda=max_workers_per_cuda,
+        ram_per_cuda_worker=ram_per_cuda_worker,
+    )
 
     for cpu in cpus:
-        worker_name = f'{name}-cpu-{cpu}'
-        cpu_spec = deepcopy(cpu_base_spec)
-        cpu_spec['options']['preload'] = preload + (
-            'from libertem.executor.dask import worker_setup; '
-            + f'worker_setup(resource="CPU", device={cpu})',
-            _get_tracing_setup(worker_name, str(cpu)),
-            'libertem.preload',
-        )
-        workers_spec[worker_name] = cpu_spec
+        if gpu_plan and has_cupy:
+            cuda, i = gpu_plan.pop(0)
+            worker_name = f'{name}-cpu-{cpu}-cuda-{cuda}'
+            worker_spec = deepcopy(cuda_base_spec)
+            worker_spec['options']['preload'] = preload + (
+                'from libertem.executor.dask import worker_setup; '
+                + f'worker_setup(resource="CUDA", device={cuda})',
+                _get_tracing_setup(worker_name, str(cuda)),
+                'libertem.preload',
+            )
+        else:
+            worker_name = f'{name}-cpu-{cpu}'
+            worker_spec = deepcopy(cpu_base_spec)
+            worker_spec['options']['preload'] = preload + (
+                'from libertem.executor.dask import worker_setup; '
+                + f'worker_setup(resource="CPU", device={cpu})',
+                _get_tracing_setup(worker_name, str(cpu)),
+                'libertem.preload',
+            )
+        if worker_name in workers_spec:
+            num_with_name = sum(n.startswith(worker_name) for n in workers_spec)
+            worker_name = f'{worker_name}-{num_with_name - 1}'
+        workers_spec[worker_name] = worker_spec
 
     for service in range(num_service):
         worker_name = f'{name}-service-{service}'
@@ -210,10 +256,12 @@ def cluster_spec(
         )
         workers_spec[worker_name] = service_spec
 
-    cudas = assign_cudas(cudas)
+    # We downgrade the remaining workers to CuPy-only
+    if has_cupy:
+        cuda_base_spec['options']['resources'] = {"CUDA": 1, "compute": 1, "ndarray": 1}
 
-    for cuda in cudas:
-        worker_name = f'{name}-cuda-{cuda}'
+    for cuda, number in gpu_plan:
+        worker_name = f'{name}-cuda-{cuda}-{number}'
         if worker_name in workers_spec:
             num_with_name = sum(n.startswith(worker_name) for n in workers_spec)
             worker_name = f'{worker_name}-{num_with_name - 1}'
@@ -757,17 +805,20 @@ class AsyncDaskJobExecutor(AsyncAdapter):
 
 
 def cli_worker(
-        scheduler, local_directory, cpus, cudas, has_cupy, name, log_level, preload: Tuple[str]):
+    scheduler, local_directory, cpus, cudas, has_cupy,
+    name, log_level, preload: Tuple[str], cuda_info=None
+):
     import asyncio
 
     options = {
         "silence_logs": log_level,
         "local_directory": local_directory
-
     }
 
     spec = cluster_spec(
-        cpus=cpus, cudas=cudas, has_cupy=has_cupy, name=name, options=options, preload=preload)
+        cpus=cpus, cudas=cudas, has_cupy=has_cupy,
+        name=name, options=options, preload=preload, cuda_info=cuda_info
+    )
 
     async def run(spec):
         # Mitigation for https://github.com/dask/distributed/issues/6776

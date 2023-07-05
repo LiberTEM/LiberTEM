@@ -5,6 +5,7 @@ import functools
 import logging
 import signal
 from typing import Iterable, Any, Optional, Tuple, Union, Dict, Callable, List
+import uuid
 
 from dask import distributed as dd
 import dask
@@ -343,6 +344,7 @@ class CommonDaskMixin:
     ):
         if len(workers) == 0:
             raise RuntimeError("no workers available!")
+        params_fut = self._scatter_map[params_handle]
         return self._future_for_location(
             task=task,
             locations=task.get_locations() or self._task_idx_to_workers(
@@ -351,7 +353,7 @@ class CommonDaskMixin:
             resources=task.get_resources(),
             workers=workers,
             task_args=(
-                params_handle,
+                params_fut,
                 idx,
                 threaded_executor,
                 comms_topic,
@@ -441,10 +443,39 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             lt_resources = self.has_libertem_resources()
         self.lt_resources = lt_resources
         self._futures = {}
+        self._scatter_map = {}
 
     @contextlib.contextmanager
     def scatter(self, obj):
-        yield self.client.scatter(obj, broadcast=True)
+        # an additional layer of indirection, because we want to be able to
+        # redirect keys to new values
+        handle = str(uuid.uuid4())
+        try:
+            fut = self.client.scatter(obj, broadcast=True)
+            self._scatter_map[handle] = fut
+            yield handle
+        finally:
+            if handle in self._scatter_map:
+                del self._scatter_map[handle]
+
+    def scatter_update(self, handle, obj):
+        fut = self.client.scatter(obj, broadcast=True)
+        self._scatter_map[handle] = fut
+
+    def scatter_update_patch(self, handle, patch):
+        fut = self._scatter_map[handle]
+
+        def _do_patch(obj):
+            if not hasattr(obj, 'patch'):
+                raise TypeError(f'object is not patcheable: {obj}')
+            obj.patch(patch)
+
+        # can't `client.run` here, as that doesn't resolve the scatter future
+        futures = []
+        for worker in self.get_available_workers().names():
+            futures.append(self.client.submit(_do_patch, fut, pure=False, workers=[worker]))
+        for res in dd.as_completed(futures, loop=self.client.loop):
+            pass
 
     def run_tasks(
         self,

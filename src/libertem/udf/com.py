@@ -304,8 +304,8 @@ class COMUDF(UDF):
     --------
     >>> udf = COMUDF()
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
-    >>> result["magnitude"].raw_data.shape
-    (32, 32)
+    >>> result["magnitude"].data.shape
+    (16, 16)
     """
     def __init__(self, com_params: COMParams = COMParams()):
         super().__init__(com_params=com_params)

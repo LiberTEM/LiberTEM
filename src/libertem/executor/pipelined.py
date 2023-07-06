@@ -946,6 +946,7 @@ class PipelinedExecutor(BaseJobExecutor):
                 # important: call `schedule_task` before incrementing number of
                 # in-flight tasks, otherwise, if we run into an exception, we
                 # will wait for a response that never comes.
+                # select a worker for `task` according to `selector`:
                 _worker_idx, worker_queues = schedule_task(
                     task_idx,
                     task,

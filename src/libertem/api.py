@@ -1561,7 +1561,7 @@ class Context:
         path = pathlib.Path(path)
         if path.suffix != '.npy':
             raise ValueError(
-                f'Unrecognized file extension {path.suffix}'
+                f'Unrecognized file extension {path.suffix} '
                 'only .npy is currently supported.'
             )
 

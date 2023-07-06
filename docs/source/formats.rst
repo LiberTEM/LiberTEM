@@ -127,7 +127,7 @@ independently of LiberTEM (or read as a :code:`npy` format dataset as above).
 
 .. versionadded:: 0.12.0
 
-To convert a dataset to npy, use the `Context.convert_dataset` method:
+To convert a dataset to npy, use the :meth:`~libertem.api.Context.export_dataset` method:
 
 .. code-block:: python
 

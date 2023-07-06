@@ -1519,6 +1519,7 @@ class Context:
         *,
         path: os.PathLike,
         progress: bool = False,
+        overwrite: bool = False,
     ):
         """
         Export the dataset to another format on disk
@@ -1539,25 +1540,35 @@ class Context:
 
         Parameters
         ----------
+        dataset : lt.Dataset
+            The dataset to save to disk
         path : os.PathLike
             The file path to export the data to, will
             raise ValueError if the suffix is unrecognized
             (currently supports only .npy)
-        dataset : lt.Dataset
-            The dataset to save to disk
         progress : bool, optional
             Whether to display a progress bar for the export,
             by default False
+        overwrite : bool , optional
+            If the save path already exists, raise FileExistsError unless
+            overwrite is True, by default False
 
         Raises
         ------
         ValueError : If the path suffix is not supported
+        FileExistsError : If overwrite is True and the save path exists
         """
         path = pathlib.Path(path)
         if path.suffix != '.npy':
             raise ValueError(
                 f'Unrecognized file extension {path.suffix} '
                 'only .npy is currently supported.'
+            )
+
+        if not overwrite and path.is_file():
+            raise FileExistsError(
+                f'Cannot export dataset to existing path {path} .'
+                'Use overwrite=True to force export.'
             )
 
         from libertem.udf.record import RecordUDF

@@ -132,7 +132,7 @@ To convert a dataset to npy, use the :meth:`~libertem.api.Context.export_dataset
 .. code-block:: python
 
    with lt.Context() as ctx:
-       ctx.convert_dataset(dataset, './output_path.npy')
+       ctx.export_dataset(dataset, './output_path.npy')
 
 
 As of this time only exporting to the :code:`npy` format is supported, but other formats would be

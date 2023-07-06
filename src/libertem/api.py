@@ -1516,6 +1516,7 @@ class Context:
     def convert_dataset(
         self,
         dataset: DataSet,
+        *,
         path: os.PathLike,
         progress: bool = False,
     ):

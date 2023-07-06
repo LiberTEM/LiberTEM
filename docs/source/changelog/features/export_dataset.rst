@@ -1,4 +1,4 @@
-[Features] Context.convert_dataset
+[Features] Context.export_dataset
 ==================================
 
 * The :code:`Context.export_dataset` method has been added

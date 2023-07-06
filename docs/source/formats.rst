@@ -135,7 +135,7 @@ To convert a dataset to npy, use the `Context.convert_dataset` method:
        ctx.convert_dataset(dataset, './output_path.npy')
 
 
-As of this time only :code:`npy` is supported, but other formats would be
+As of this time only exporting to the :code:`npy` format is supported, but other formats would be
 possible as the need arose.
 
 Alternatively, you can create Dask arrays from LiberTEM datasets via the :ref:`Dask integration <daskarray>`.

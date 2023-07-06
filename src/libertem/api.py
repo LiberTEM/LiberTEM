@@ -1513,7 +1513,7 @@ class Context:
 
         atexit.register(_exit)
 
-    def convert_dataset(
+    def export_dataset(
         self,
         dataset: DataSet,
         *,
@@ -1521,7 +1521,7 @@ class Context:
         progress: bool = False,
     ):
         """
-        Convert the dataset to another format on disk
+        Export the dataset to another format on disk
 
         At this time can only convert to numpy *.npy* format,
         but future extensions are possible.

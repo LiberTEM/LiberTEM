@@ -19,7 +19,7 @@ def test_write_npy(tmpdir_factory, raw_data_8x8x8x8_path, lt_ctx_fast, sync_offs
         sig_shape=(8, 8),
         sync_offset=sync_offset,
     )
-    lt_ctx_fast.convert_dataset(ds, write_path)
+    lt_ctx_fast.export_dataset(ds, path=write_path)
 
     res = lt_ctx_fast.run_udf(udf=SumSigUDF(), dataset=ds)
     sum_ds = res['intensity'].data
@@ -39,4 +39,4 @@ def test_bad_extension(tmpdir_factory, raw_data_8x8x8x8_path, lt_ctx_fast):
         sig_shape=(8, 8),
     )
     with pytest.raises(ValueError):
-        lt_ctx_fast.convert_dataset(ds, write_path)
+        lt_ctx_fast.export_dataset(ds, path=write_path)

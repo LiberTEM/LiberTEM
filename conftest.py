@@ -591,6 +591,38 @@ data_dtype = "{str(dtype)}"
     yield lt_ctx.load("raw_csr", path=name_sidecar)
 
 
+@pytest.fixture(scope="session")
+def raw_csr_generated_uint64(mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+    orig, data_flat = mock_sparse_data
+    datadir = tmpdir_factory.mktemp('raw_csr')
+    name_indptr = str(datadir / 'indptr_uint64.raw')
+    name_coords = str(datadir / 'coords_uint64.raw')
+    name_values = str(datadir / 'values_uint64.raw')
+    name_sidecar = str(datadir / 'sparse_uint64.toml')
+    with open(name_sidecar, "w") as f:
+        f.write("""
+[params]
+filetype = "raw_csr"
+nav_shape = [13, 17]
+sig_shape = [24, 19]
+
+[raw_csr]
+indptr_file = "indptr_uint64.raw"
+indptr_dtype = "<u8"
+
+indices_file = "coords_uint64.raw"
+indices_dtype = "<u8"
+
+data_file = "values_uint64.raw"
+data_dtype = "<u8"
+""")
+    orig.indptr.astype("<u8").tofile(name_indptr)
+    orig.indices.astype("<u8").tofile(name_coords)
+    orig.data.astype("<u8").tofile(name_values)
+    lt_ctx = lt.Context.make_with('inline')
+    yield lt_ctx.load("raw_csr", path=name_sidecar)
+
+
 @pytest.fixture(scope='session')
 def npy_datadir(tmpdir_factory):
     yield tmpdir_factory.mktemp('data_npy')

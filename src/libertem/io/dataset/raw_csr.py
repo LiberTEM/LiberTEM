@@ -581,8 +581,11 @@ def read_tiles_with_roi(
         # Don't read empty slices
         if indptr_stop - indptr_start <= 0:
             continue
-        indptr_tile_start = start_values[indptr_start:indptr_stop]
-        indptr_tile_stop = stop_values[indptr_start:indptr_stop]
+        # Cast to int64 to avoid later upcasting to float64 in case of uint64
+        # We can safely assume that files have less than 2**63 entries so that casting
+        # from uint64 to int64 should be safe
+        indptr_tile_start = start_values[indptr_start:indptr_stop].astype(np.int64)
+        indptr_tile_stop = stop_values[indptr_start:indptr_stop].astype(np.int64)
         size = sum(indptr_tile_stop - indptr_tile_start)
 
         data = np.zeros(dtype=dest_dtype, shape=size)

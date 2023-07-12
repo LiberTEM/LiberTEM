@@ -167,7 +167,7 @@ setup(
         'opentelemetry-api',
         'tblib',
         'tomli',
-        'sparseconverter>=0.3.0',
+        'sparseconverter>=0.3.2',
     ],
     extras_require={
         # NumPy interfacing issue on Win 11, Python 3.10

@@ -17,6 +17,7 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf.stddev import StdDevUDF
 from libertem.common.math import prod
+from libertem.web.dataset import prime_numba_cache
 
 from utils import _mk_random, get_testdata_path
 
@@ -424,6 +425,10 @@ def test_reshape_sync_offset(
         rtol=1e-5,
         atol=1e-8,
     )
+
+
+def test_uint64ptr(lt_ctx_fast, raw_csr_generated_uint64):
+    prime_numba_cache(raw_csr_generated_uint64)
 
 
 def test_large_file_detect(monkeypatch, default_raw, inline_executor_fast):

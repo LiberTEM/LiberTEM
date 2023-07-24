@@ -174,7 +174,14 @@ setup(
         # Likely caused by other packages constraining NumPy version to <1.23
         # FIXME recheck later again
         'torch': 'torch<1.12',
-        'hdbscan': 'hdbscan',
+        # Typing issue in hdbscan, maybe
+        # https://github.com/scikit-learn-contrib/hdbscan/issues/600
+        # FIXME check if error in tests\test_fullmatch.py persists in a later
+        # hdbscan release
+        'hdbscan': [
+            "hdbscan<=0.8.30;( python_version=='3.11' and platform_system=='Windows')",
+            "hdbscan;( python_version!='3.11' or platform_system!='Windows')",
+        ],
         'cupy': 'cupy',
         'bqplot': ['bqplot', 'bqplot-image-gl', 'ipython'],
         'hdf5plugin': 'hdf5plugin',

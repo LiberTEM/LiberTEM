@@ -491,10 +491,9 @@ class UDFMeta:
     @property
     def array_backend(self) -> Optional[ArrayBackend]:
         """
-        Array backend, one of the constants defined in
-        :mod:`sparseconverter` resp. :code:`BACKEND_*` constants
-        in :class:`libertem.udf.base.UDF`,
-        or None if not known at that time.
+        Array backend, one of the constants defined in :code:`BACKEND_*`
+        constants in :class:`libertem.udf.base.UDF`, or None if not known at
+        that time.
 
         .. versionadded:: 0.11.0
         """

@@ -337,8 +337,8 @@ def test_udf_cancellation(default_raw):
 
 
 class DynamicParamsUDF(UDF):
-    def __init__(self, latest_index):
-        super().__init__(latest_index=latest_index)
+    def __init__(self, latest_index, delay=0.0):
+        super().__init__(latest_index=latest_index, delay=delay)
 
     def get_result_buffers(self) -> Dict[str, BufferWrapper]:
         return {
@@ -348,6 +348,8 @@ class DynamicParamsUDF(UDF):
 
     def process_partition(self, partition):
         print(f"DynamicParamsUDF {self.params.latest_index}")
+        import time
+        time.sleep(self.params.delay)
         self.results.index[:] = self.params.latest_index
 
     def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
@@ -396,10 +398,11 @@ def test_dynamic_parameter_update_integration(
     num_workers = sum(
         w.nthreads for w in ctx.executor.get_available_workers()
     )
+    parts = 5
     dataset = ctx.load(
         "memory",
-        num_partitions=num_workers * 3,
-        datashape=(num_workers * 3, 16, 16),
+        num_partitions=num_workers * parts,
+        datashape=(num_workers * parts, 16, 16),
         sig_dims=2,
     )
 
@@ -413,7 +416,7 @@ def test_dynamic_parameter_update_integration(
     dataset.get_task_comm_handler = lambda: DelayingCommHandler()
 
     result_iter = ctx.run_udf_iter(
-        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0)]
+        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0, delay=0.01)]
     )
     with contextlib.closing(result_iter) as result_iter:
         # because this is using the inline executor, we can guarantee
@@ -427,7 +430,7 @@ def test_dynamic_parameter_update_integration(
         assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
 
     result_iter = ctx.run_udf_iter(
-        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0)]
+        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0, delay=0.01)]
     )
     with contextlib.closing(result_iter) as result_iter:
         # because this is using the inline executor, we can guarantee

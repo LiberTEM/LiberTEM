@@ -3,7 +3,9 @@ from typing_extensions import Protocol, TypedDict, Literal
 from typing import Union
 from sparseconverter import (
     CUDA, CUPY, CUPY_SCIPY_COO, CUPY_SCIPY_CSC, CUPY_SCIPY_CSR, NUMPY,
-    SCIPY_COO, SCIPY_CSC, SCIPY_CSR, SPARSE_COO, SPARSE_DOK, SPARSE_GCXS
+    SCIPY_COO, SCIPY_CSC, SCIPY_CSR, SPARSE_COO, SPARSE_DOK, SPARSE_GCXS,
+    CPU_BACKENDS, CUDA_BACKENDS, CUPY_BACKENDS, SPARSE_BACKENDS, DENSE_BACKENDS,
+    ND_BACKENDS, D2_BACKENDS,
 )
 
 import numpy as np
@@ -53,6 +55,14 @@ class UDFProtocol(Protocol):
         CUPY, NUMPY,
         SPARSE_COO, SPARSE_GCXS,
     )
+
+    CPU_BACKENDS = CPU_BACKENDS
+    CUDA_BACKENDS = CUDA_BACKENDS
+    CUPY_BACKENDS = CUPY_BACKENDS
+    SPARSE_BACKENDS = SPARSE_BACKENDS
+    DENSE_BACKENDS = DENSE_BACKENDS
+    ND_BACKENDS = ND_BACKENDS
+    D2_BACKENDS = D2_BACKENDS
 
     def get_method() -> Literal['tile', 'frame', 'partition']:
         raise NotImplementedError()

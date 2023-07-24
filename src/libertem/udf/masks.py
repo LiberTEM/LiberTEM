@@ -1,6 +1,5 @@
 from libertem.common.math import prod
 import numpy as np
-from sparseconverter import CUPY_BACKENDS, NUMPY, SCIPY_COO, SCIPY_CSC, SCIPY_CSR
 
 from libertem.udf import UDF
 from libertem.common.container import MaskContainer
@@ -130,7 +129,7 @@ class ApplyMasksUDF(UDF):
 
     def _make_mask_container(self):
         p = self.params
-        if self.meta.array_backend in CUPY_BACKENDS:
+        if self.meta.array_backend in self.CUPY_BACKENDS:
             backend = self.BACKEND_CUPY
         else:
             backend = self.BACKEND_NUMPY
@@ -149,7 +148,7 @@ class ApplyMasksUDF(UDF):
         use_torch = self.params.use_torch
         if (torch is None or m.input_dtype.kind != 'f' or m.input_dtype != self.get_mask_dtype()
                 or self.meta.device_class != 'cpu' or self.masks.use_sparse
-                or self.meta.array_backend != NUMPY):
+                or self.meta.array_backend != self.BACKEND_NUMPY):
             use_torch = False
         backend = self.meta.array_backend
         if use_torch:
@@ -168,7 +167,7 @@ class ApplyMasksUDF(UDF):
                 return result
 
         # Required due to https://github.com/scipy/scipy/issues/13211
-        elif (backend == NUMPY
+        elif (backend == self.BACKEND_NUMPY
               and self.masks.use_sparse
               and 'scipy.sparse' in self.masks.use_sparse):
 
@@ -180,7 +179,7 @@ class ApplyMasksUDF(UDF):
                 return result
 
         elif (
-            backend in (SCIPY_COO, SCIPY_CSR, SCIPY_CSC)
+            backend in (self.BACKEND_SCIPY_COO, self.BACKEND_SCIPY_CSR, self.BACKEND_SCIPY_CSC)
             and self.masks.use_sparse
             and 'sparse.pydata' in self.masks.use_sparse
         ):

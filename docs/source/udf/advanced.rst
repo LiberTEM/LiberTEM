@@ -590,10 +590,15 @@ formats. Dense CPU and GPU arrays are specified with the backends described in
 :ref:`udf cuda` so that the extension to sparse arrays is backwards-compatible.
 
 The possible backends supported by LiberTEM are available as the
-:code:`BACKEND_*` constants in :class:`libertem.udf.base.UDF`. Some array backends only
-support 2D matrices. The frame, tile or partition is supplied
-with flattened signal dimensions for these. Furthermore, frames include a nav dimension of
-1 with such 2D-only formats.
+:code:`BACKEND_*` constants in :class:`libertem.udf.base.UDF`. Some array
+backends only support 2D matrices. The frame, tile or partition is supplied with
+flattened signal dimensions for these. Furthermore, frames include a nav
+dimension of 1 with such 2D-only formats.
+
+.. versionadded:: 0.12.0
+    Sets that allow testing if a backend
+    belongs in a certain category are available as :code:`*_BACKENDS` constants in
+    :class:`libertem.udf.base.UDF`.
 
 The backend that is used for a partition is available through
 :attr:`libertem.udf.base.UDF.meta.array_backend` at runtime. Please note that it can be
@@ -623,9 +628,11 @@ demonstrates how support for all array formats can be implemented:
 
     class SumSigUDF(UDF):
         def get_backends(self):
-            # Support all recommended array backends
+            # Support all recommended array backends in LiberTEM.
             # Please note that their APIs can differ so that comprehensive
-            # tests with all supported backends are required
+            # tests with all supported backends are required. Also, the list of
+            # supported backends in LiberTEM may grow in the future, which can
+            # require adaptations in an UDF that uses this constant.
             return self.BACKEND_ALL
 
         def get_result_buffers(self):

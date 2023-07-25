@@ -56,13 +56,13 @@ class UDFProtocol(Protocol):
         SPARSE_COO, SPARSE_GCXS,
     )
 
-    CPU_BACKENDS = CPU_BACKENDS
-    CUDA_BACKENDS = CUDA_BACKENDS
-    CUPY_BACKENDS = CUPY_BACKENDS
-    SPARSE_BACKENDS = SPARSE_BACKENDS
-    DENSE_BACKENDS = DENSE_BACKENDS
-    ND_BACKENDS = ND_BACKENDS
-    D2_BACKENDS = D2_BACKENDS
+    CPU_BACKENDS = CPU_BACKENDS  #: Set of backends that run on device class CPU
+    CUDA_BACKENDS = CUDA_BACKENDS  #: Set of backends that run on device class CUDA
+    CUPY_BACKENDS = CUPY_BACKENDS  #: Set of backends that use CuPy, subset of class CUDA
+    SPARSE_BACKENDS = SPARSE_BACKENDS  #: Set of backends that are sparse arrays
+    DENSE_BACKENDS = DENSE_BACKENDS  #: Set of backends that are dense arrays
+    ND_BACKENDS = ND_BACKENDS  #: Set of backends that support n-dimensional arrays
+    D2_BACKENDS = D2_BACKENDS  #: Set of backends that only support two-dimensional arrays
 
     def get_method() -> Literal['tile', 'frame', 'partition']:
         raise NotImplementedError()

@@ -1,3 +1,4 @@
+import time
 import sys
 import copy
 from typing import Dict
@@ -348,8 +349,9 @@ class DynamicParamsUDF(UDF):
 
     def process_partition(self, partition):
         print(f"DynamicParamsUDF {self.params.latest_index}")
-        import time
-        time.sleep(self.params.delay)
+        # no need to sleep if we have successfully updated the parameter:
+        if self.params.latest_index == 0:
+            time.sleep(self.params.delay)
         self.results.index[:] = self.params.latest_index
 
     def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
@@ -375,12 +377,10 @@ def test_dynamic_parameter_update_sync(lt_ctx, default_raw):
         assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
 
 
-@pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])
+@pytest.mark.parametrize('executor', ['pipelined', 'dask', 'inline', 'concurrent'])
 def test_dynamic_parameter_update_integration(
-    executor, local_cluster_ctx, pipelined_ctx, concurrent_executor
+    executor, local_cluster_ctx, pipelined_ctx, concurrent_executor,
 ):
-    # NOTE: if this test is flaky, try increasing the sleep time in the
-    # TaskCommHandler below!
 
     # we do this dance to re-use the existing executors, so we don't have to
     # mark this test as slow:
@@ -399,6 +399,12 @@ def test_dynamic_parameter_update_integration(
         w.nthreads for w in ctx.executor.get_available_workers()
     )
     parts = 5
+    delay = 0.025
+
+    # this should make it more likely that we wait long enough in the main
+    # process for the first task to finish, meaning we get to update the index
+    # as soon as possible
+    delay_udf = delay / 2
     dataset = ctx.load(
         "memory",
         num_partitions=num_workers * parts,
@@ -411,16 +417,13 @@ def test_dynamic_parameter_update_integration(
             # our tests only work if the tasks don't all get submitted at the
             # beginning of the `run_tasks` call - this simulates the live
             # processing scenario
-            import time
-            time.sleep(0.025)
+            time.sleep(delay)
     dataset.get_task_comm_handler = lambda: DelayingCommHandler()
 
     result_iter = ctx.run_udf_iter(
-        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0, delay=0.01)]
+        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0, delay=delay_udf)]
     )
     with contextlib.closing(result_iter) as result_iter:
-        # because this is using the inline executor, we can guarantee
-        # that the updated parameters are used for the next partition.
         for idx, part_res in enumerate(result_iter):
             result_iter.update_parameters_experimental([
                 {"latest_index": idx + 1}
@@ -429,12 +432,11 @@ def test_dynamic_parameter_update_integration(
         assert not np.allclose(part_res.buffers[0]['index'], 0)
         assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
 
+    # second run, to make sure we don't mess up any state:
     result_iter = ctx.run_udf_iter(
-        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0, delay=0.01)]
+        dataset=dataset, udf=[DynamicParamsUDF(latest_index=0, delay=delay_udf)]
     )
     with contextlib.closing(result_iter) as result_iter:
-        # because this is using the inline executor, we can guarantee
-        # that the updated parameters are used for the next partition.
         for idx, part_res in enumerate(result_iter):
             result_iter.update_parameters_experimental([
                 {"latest_index": idx + 1}

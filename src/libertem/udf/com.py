@@ -11,7 +11,7 @@ from libertem.common.math import prod
 from libertem.udf.base import UDF
 
 
-class COMParams(NamedTuple):
+class CoMParams(NamedTuple):
     cy: Optional[float] = None
     cx: Optional[float] = None
     r: float = float('inf')
@@ -247,7 +247,7 @@ def guess_corrections(
     )
 
 
-class COMUDF(UDF):
+class CoMUDF(UDF):
     """
     Perform centre-of-mass analysis on the dataset
 
@@ -257,7 +257,7 @@ class COMUDF(UDF):
     sub-classable.
 
     To parametrise the CoM calculation, use the constructor
-    :classmethod:`COMUDF.with_params`.
+    :classmethod:`CoMUDF.with_params`.
 
     .. versionadded:: 0.12.0
 
@@ -294,20 +294,20 @@ class COMUDF(UDF):
 
     Parameters
     ----------
-    com_params : COMParams
-        A :class:`COMParams` instance containing the parameters
-        for this UDF. By default will create a COMParams instance
+    com_params : CoMParams
+        A :class:`CoMParams` instance containing the parameters
+        for this UDF. By default will create a CoMParams instance
         which performs whole-frame CoM with results in the coordinates
         of the frame # CHECKTHIS
 
     Examples
     --------
-    >>> udf = COMUDF()
+    >>> udf = CoMUDF()
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
     >>> result["magnitude"].data.shape
     (16, 16)
     """
-    def __init__(self, com_params: COMParams = COMParams()):
+    def __init__(self, com_params: CoMParams = CoMParams()):
         super().__init__(com_params=com_params)
 
     @classmethod
@@ -322,7 +322,7 @@ class COMUDF(UDF):
         flip_y: bool = False,
     ):
         """
-        Returns an instantiated COMUDF with a given set of parameters
+        Returns an instantiated CoMUDF with a given set of parameters
 
         Parameters
         ----------
@@ -362,7 +362,7 @@ class COMUDF(UDF):
         if ri >= r:
             raise ValueError('Inner radius must be less than outer radius for annular CoM')
         return cls(
-            com_params=COMParams(
+            com_params=CoMParams(
                 cy=cy, cx=cx, r=r, ri=ri,
                 scan_rotation=scan_rotation, flip_y=flip_y,
             )
@@ -397,7 +397,7 @@ class COMUDF(UDF):
             ),
         }
 
-    def get_params(self) -> COMParams:
+    def get_params(self) -> CoMParams:
         sig_shape = tuple(self.meta.dataset_shape.sig)
         cy = self.params.com_params.cy
         if cy is None:
@@ -412,7 +412,7 @@ class COMUDF(UDF):
         scan_rotation = self.params.com_params.scan_rotation
         flip_y = self.params.com_params.flip_y
 
-        cp = COMParams(
+        cp = CoMParams(
             cy=cy, cx=cx, r=r, ri=ri, scan_rotation=scan_rotation, flip_y=flip_y,
         )
         return cp
@@ -421,9 +421,9 @@ class COMUDF(UDF):
         sig_shape = tuple(self.meta.dataset_shape.sig)
         com_params = self.get_params()
         if len(sig_shape) != 2:
-            raise ValueError('COMUDF only works with 2D sig shape.')
+            raise ValueError('CoMUDF only works with 2D sig shape.')
         if len(self.meta.dataset_shape.nav) != 2:
-            raise ValueError('COMUDF only works with 2D nav shape.')
+            raise ValueError('CoMUDF only works with 2D nav shape.')
 
         if com_params.ri is None or np.isclose(com_params.ri, 0.):
             mask_factory = com_masks_factory(

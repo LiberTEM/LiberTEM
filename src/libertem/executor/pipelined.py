@@ -392,6 +392,30 @@ def worker_run_function(header, queues, worker_idx):
             })
 
 
+def _drain_after_task(queues: WorkerQueues):
+    """
+    In case of an error, need to drain the request queue
+    (anything that is left over from the detector-specific
+    data that was sent in `TaskCommHandler.handle_task`):
+    """
+    with tracer.start_as_current_span("drain after task") as span:
+        while True:
+            with queues.request.get() as msg:
+                header, payload = msg
+                header_type = header["type"]
+                span.add_event("msg", {"type": header_type})
+                if header_type in (
+                    "RUN_TASK", "SCATTER", "SCATTER_UPDATE",
+                    "SCATTER_UPDATE_PATCH", "RUN_FUNCTION",
+                    "DELETE", "SHUTDOWN", "WARMUP",
+                ):
+                    raise RuntimeError(
+                        f"unexpected message type {header_type}"
+                    )
+                if header_type == "END_TASK":
+                    break
+
+
 def worker_loop(
     queues: WorkerQueues,
     work_mem: Dict,
@@ -426,25 +450,7 @@ def worker_loop(
                 if header_type == "RUN_TASK":
                     with attach_to_parent(header["span_context"]):
                         worker_run_task(header, work_mem, queues, worker_idx, env)
-                        # NOTE: in case of an error, need to drain the request queue
-                        # (anything that is left over from the detector-specific
-                        # data that was sent in `TaskCommHandler.handle_task`):
-                        with tracer.start_as_current_span("drain after task") as span:
-                            while True:
-                                with queues.request.get() as msg:
-                                    header, payload = msg
-                                    header_type = header["type"]
-                                    span.add_event("msg", {"type": header_type})
-                                    if header_type in (
-                                        "RUN_TASK", "SCATTER", "SCATTER_UPDATE",
-                                        "SCATTER_UPDATE_PATCH", "RUN_FUNCTION",
-                                        "DELETE", "SHUTDOWN", "WARMUP",
-                                    ):
-                                        raise RuntimeError(
-                                            f"unexpected message type {header_type}"
-                                        )
-                                    if header_type == "END_TASK":
-                                        break
+                        _drain_after_task(queues)
                 elif header_type == "SCATTER":
                     # FIXME: array data could be transferred and stored in SHM instead
                     key = header["key"]
@@ -498,7 +504,7 @@ def worker_loop(
                     continue
                 elif header_type == "SHUTDOWN":
                     with attach_to_parent(header["span_context"]):
-                        with tracer.start_as_current_span("SHUTDOWN") as span:
+                        with tracer.start_as_current_span("SHUTDOWN"):
                             queues.request.close()
                             queues.response.close(drain=False)
                             queues.message.close(drain=False)

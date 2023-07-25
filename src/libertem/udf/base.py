@@ -13,7 +13,7 @@ import cloudpickle
 import numpy as np
 from opentelemetry import trace, context as opentelemetry_context
 from sparseconverter import (
-    BACKENDS, CUPY_BACKENDS, D2_BACKENDS, DENSE_BACKENDS, ND_BACKENDS, SPARSE_BACKENDS, NUMPY,
+    BACKENDS, CUPY_BACKENDS, D2_BACKENDS, DENSE_BACKENDS, ND_BACKENDS, SPARSE_BACKENDS,
     CUDA_BACKENDS, CPU_BACKENDS, CUDA,
     ArrayBackend, cheapest_pair, check_shape, get_backend,
     make_like, result_type, for_backend
@@ -2050,41 +2050,6 @@ class UDFPartRunner:
         # handled on the main node via ProgressManager.finalize_task(task)
         # as it is the fallback method for executors that don't support comms
         # partition_progress.signal_complete()
-
-    def _udf_lists(self, device_class: DeviceClass) -> Tuple[List[UDF], List[UDF]]:
-        numpy_udfs = []
-        cupy_udfs = []
-        if device_class == 'cuda':
-            for udf in self._udfs:
-                backends = udf.get_backends()
-                if 'cuda' in backends and NUMPY in backends:
-                    numpy_udfs.append(udf)
-                elif 'cupy' in backends and NUMPY in backends:
-                    cupy_udfs.append(udf)
-                elif 'numpy' in backends:
-                    warnings.warn(f"UDF {udf} backends are {backends}, recommended on CUDA are "
-                        "'cuda' and 'cupy'. "
-                        f"UDF formats are {backends}, supported on CUDA is {NUMPY}. "
-                        "Falling back to numpy", RuntimeWarning)
-                    numpy_udfs.append(udf)
-                else:
-                    raise RuntimeError(
-                        f"UDF {udf} backends are {backends}, supported on CUDA are "
-                        "'cuda' and 'cupy', as well as 'numpy' as a compatibility fallback."
-                        f"UDF formats are {backends}, supported on CUDA is {NUMPY}."
-                    )
-        elif device_class == 'cpu':
-            for udf in self._udfs:
-                backends = _get_canonical_backends(udf.get_backends())
-                if CPU_BACKENDS.isdisjoint(backends):
-                    raise RuntimeError(
-                        f"UDF {udf} backends are {backends}, supported on CPU is {CPU_BACKENDS}."
-                    )
-            numpy_udfs = self._udfs
-        else:
-            raise ValueError(f"Unknown device class {device_class}, "
-                "supported are 'cpu' and 'cuda'")
-        return (numpy_udfs, cupy_udfs)
 
     def _init_udfs(
         self,

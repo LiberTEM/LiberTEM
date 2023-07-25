@@ -384,6 +384,7 @@ def test_dynamic_parameter_update_integration(
 
     # we do this dance to re-use the existing executors, so we don't have to
     # mark this test as slow:
+    ctx: Context
     if executor == 'dask':
         ctx = local_cluster_ctx
     elif executor == 'pipelined':

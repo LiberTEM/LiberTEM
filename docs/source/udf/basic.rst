@@ -489,9 +489,15 @@ than making two passes over the whole :code:`DataSet`:
 
    from libertem.udf.sum import SumUDF
 
-   # results are returned as a tuple, so we can unpack them here into
-   # `res` and `res_sum`:
+   # results are returned as a list of dictionaries, so we can unpack them here
+   # into `res` and `res_sum`:
    res, res_sum = ctx.run_udf(udf=[udf, SumUDF()], dataset=dataset)
+
+
+Note the return type: if you pass a list of UDFs, you also get a list of
+dictionaries as a result, with the ordering of results matching the ordering of
+UDFs in the :meth:`~libertem.api.Context.run_udf` call.
+
 
 .. _`udf cancellation`:
 

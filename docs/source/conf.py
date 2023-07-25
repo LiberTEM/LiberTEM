@@ -216,6 +216,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3.10', None),
     'libertem_blobfinder': ('https://libertem.github.io/LiberTEM-blobfinder/', None),
     'ptychography40': ('https://ptychography-4-0.github.io/ptychography/', None),
+    'libertem_live': ('https://libertem.github.io/LiberTEM-live/', None),
 }
 
 # Sphinx' link checker.

@@ -1,6 +1,6 @@
 from typing import (
     TYPE_CHECKING, Any, List, Dict, Optional, Union, Iterable, Generator,
-    Coroutine, AsyncGenerator, overload, Tuple
+    Coroutine, overload, Tuple
 )
 from typing_extensions import Literal
 import os
@@ -54,10 +54,6 @@ RunUDFResultType = UDFResultDict
 RunUDFSyncL = List[UDFResultDict]
 RunUDFAsync = Coroutine[None, None, UDFResultDict]
 RunUDFAsyncL = Coroutine[None, None, List[UDFResultDict]]
-RunUDFGenType = Generator[UDFResults, None, None]
-RunUDFGenTypeL = Generator[UDFResults, None, None]
-RunUDFAGenType = AsyncGenerator[UDFResults, None]
-RunUDFAGenTypeL = AsyncGenerator[UDFResults, None]
 ExecutorSpecType = Literal[
     'synchronous',
     'inline',
@@ -73,7 +69,12 @@ RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int, ...], It
 
 
 class ResultGenerator:
-    def __init__(self, task_results: RunUDFGenType, runner: UDFRunner, result_iter):
+    def __init__(
+        self,
+        task_results: Generator[UDFResults, None, None],
+        runner: UDFRunner,
+        result_iter,
+    ):
         self._task_results = task_results
         self._runner = runner
         self._result_iter = result_iter
@@ -89,6 +90,15 @@ class ResultGenerator:
         self._result_iter.close()
 
     def update_parameters_experimental(self, parameters: List[Dict[str, Any]]):
+        """
+        Update parameters while the UDFs are running.
+
+        `parameters` should be a list of dicts, with one dict for each
+        UDF you are running.
+
+        The dicts should only contain items for those parameters you want to
+        update.
+        """
         logger.debug("ResultGenerator.update_parameters: %s", parameters)
         self._result_iter.update_parameters_experimental(parameters)
 
@@ -129,6 +139,15 @@ class ResultAsyncGenerator:
         return next_result
 
     async def update_parameters_experimental(self, parameters: List[Dict[str, Any]]):
+        """
+        Update parameters while the UDFs are running.
+
+        `parameters` should be a list of dicts, with one dict for each
+        UDF you are running.
+
+        The dicts should only contain items for those parameters you want to
+        update.
+        """
         logger.debug("ResultGenerator.update_parameters_experimental: %s", parameters)
         return await self._run_in_executor(
             self._result_generator.update_parameters_experimental, parameters
@@ -136,6 +155,12 @@ class ResultAsyncGenerator:
 
     async def athrow(self, exc: Exception):
         return await self._run_in_executor(self._result_generator.throw, exc)
+
+
+RunUDFGenType = ResultGenerator
+RunUDFGenTypeL = ResultGenerator
+RunUDFAGenType = ResultAsyncGenerator
+RunUDFAGenTypeL = ResultAsyncGenerator
 
 
 class Context:
@@ -1206,7 +1231,7 @@ class Context:
         else:
             progress_reporter = None
 
-        def _run_sync_wrap() -> Generator[UDFResults, None, None]:
+        def _run_sync_wrap() -> ResultGenerator:
             runner_cls = self.executor.get_udf_runner()
             runner = runner_cls(
                 udfs,

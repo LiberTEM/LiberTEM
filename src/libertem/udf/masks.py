@@ -57,8 +57,11 @@ class ApplyMasksEngine:
                 return result
 
         elif (
-            self.meta.array_backend in (UDF.BACKEND_SCIPY_COO, UDF.BACKEND_SCIPY_CSR, UDF.BACKEND_SCIPY_CSC)
-            and self.masks.use_sparse
+            self.meta.array_backend in (
+                UDF.BACKEND_SCIPY_COO,
+                UDF.BACKEND_SCIPY_CSR,
+                UDF.BACKEND_SCIPY_CSC
+            ) and self.masks.use_sparse
             and 'sparse.pydata' in self.masks.use_sparse
         ):
 

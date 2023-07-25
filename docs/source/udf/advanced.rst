@@ -846,3 +846,71 @@ The return value from :code:`merge_all` must be a dictionary of merged result ar
 with the keys matching the declared result buffers. There is, however, no requirement
 to return merged results for all existing buffers, though any that are missing will not
 contain results from the computation and are likely to be filled with zeros.
+
+Dynamically updating UDF parameters
+-----------------------------------
+
+.. versionadded:: 0.12.0
+
+    This is an experimental API, which we make explicit by naming
+    the method :code:`update_parameters_experimental`. It is not
+    guaranteed to work with all UDFs.
+
+Running UDFs in a feedback loop, for example on a live data stream using
+LiberTEM-live, is not only helpful for adjusting microscope parameters on the
+fly to match the reconstruction, but also for adjusting and fine tuning UDF
+parameters. Usually, this would be implemented like this:
+
+
+.. code-block:: python
+
+    while True:
+        udf = YourUDF(**get_new_parameters())
+        ctx.run_udf(dataset=ds, udf=udf, plots=True)
+
+
+This works, but limits the feedback loop to update once per complete run,
+which can be annoying especially for longer dwell times.
+
+Instead, the feedback loop can be shortened by updating parameters as soon as
+the first results are available. This is accomplished by using
+:meth:`~libertem.api.Context.run_udf_iter` instead of
+:meth:`~libertem.api.Context.run_udf`, and calling the
+:meth:`~libertem.api.ResultGenerator.update_parameters_experimental` method:
+
+.. code-block:: python
+
+    udf = YourUDF(**parameters)
+    while True:
+        result_iter = ctx.run_udf_iter(dataset=ds, udf=[udf])
+        for part_res in result_iter:
+            result_iter.update_parameters_experimental([
+                {'some_parameter': get_new_value()},
+            ])
+
+
+Note that this works when passing multiple UDFs into
+:meth:`~libertem.api.Context.run_udf_iter` as a list -
+we need to pass a :code:`dict` for each of them into
+:meth:`~libertem.api.ResultGenerator.update_parameters_experimental`.
+The :code:`dict` only needs to contain items for the parameters you want to update,
+and can be an empty :code:`dict` if you don't want to update any parameters
+for the corresponding UDF.
+
+The call to :code:`get_new_value` here can be any mechanism to get an updated
+value, be it querying a graphical user interface, or automatically calculating
+a new value based on the latest result from the UDFs.
+
+
+.. note::
+
+    This API is implemented for the following executor types: :code:`'inline'`,
+    :code:`'dask'`, :code:`'pipelined'`, and :code:`'threads'`, as specified
+    in :func:`~libertem.api.Context.make_with`. Meaning that if you don't
+    specify an executor, with either :class:`~libertem.api.Context` or
+    :class:`~libertem_live.api.LiveContext` from LiberTEM-live, it should just
+    work.
+
+    Note also that different executors schedule tasks differently, so especially
+    in the offline case, there may be a bit more latency before the new values for
+    parameters are available in the UDFs.

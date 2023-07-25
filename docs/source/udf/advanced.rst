@@ -589,16 +589,37 @@ device class so that :ref:`udf cuda` works analogously for both dense and sparse
 formats. Dense CPU and GPU arrays are specified with the backends described in
 :ref:`udf cuda` so that the extension to sparse arrays is backwards-compatible.
 
-The possible backends supported by LiberTEM are available as the
-:code:`BACKEND_*` constants in :class:`libertem.udf.base.UDF`. Some array
-backends only support 2D matrices. The frame, tile or partition is supplied with
-flattened signal dimensions for these. Furthermore, frames include a nav
-dimension of 1 with such 2D-only formats.
+The possible backends supported by LiberTEM are available as the following
+constants: :attr:`libertem.udf.base.UDF.BACKEND_NUMPY`,
+:attr:`~libertem.udf.base.UDF.BACKEND_CUPY`,
+:attr:`~libertem.udf.base.UDF.BACKEND_CUDA`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SPARSE_COO`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SPARSE_GCXS`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SPARSE_DOK`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_COO`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSR`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSC`,
+:attr:`~libertem.udf.base.UDF.BACKEND_CUPY_SCIPY_COO`,
+:attr:`~libertem.udf.base.UDF.BACKEND_CUPY_SCIPY_CSR`,
+:attr:`~libertem.udf.base.UDF.BACKEND_CUPY_SCIPY_CSC`.
+
+:attr:`~libertem.udf.base.UDF.BACKEND_ALL` is a tuple of all backends that are
+recommended for use in UDFs.
 
 .. versionadded:: 0.12.0
-    Sets that allow testing if a backend
-    belongs in a certain category are available as :code:`*_BACKENDS` constants in
-    :class:`libertem.udf.base.UDF`.
+    The sets :attr:`~libertem.udf.base.UDF.CPU_BACKENDS`,
+    :attr:`~libertem.udf.base.UDF.CUDA_BACKENDS`, and
+    :attr:`~libertem.udf.base.UDF.CUPY_BACKENDS` categorize backends by device class.
+    :attr:`~libertem.udf.base.UDF.SPARSE_BACKENDS` and
+    :attr:`~libertem.udf.base.UDF.DENSE_BACKENDS` categorize between dense and
+    sparse arrays.
+    The backends in :attr:`~libertem.udf.base.UDF.D2_BACKENDS` only support 2D
+    matrices, while the ones in :attr:`~libertem.udf.base.UDF.ND_BACKENDS` support
+    n-dimensional arrays.
+
+The frame, tile or partition is supplied with flattened
+signal dimensions for 2D-only backends. Furthermore, frames include a nav
+dimension of 1 with these backends.
 
 The backend that is used for a partition is available through
 :attr:`libertem.udf.base.UDF.meta.array_backend` at runtime. Please note that it can be

@@ -398,7 +398,7 @@ def test_dynamic_parameter_update_integration(
     num_workers = sum(
         w.nthreads for w in ctx.executor.get_available_workers()
     )
-    parts = 5
+    parts = 15
     delay = 0.025
 
     # this should make it more likely that we wait long enough in the main

@@ -1,7 +1,7 @@
 [Features] Centre-of-Mass calculation UDF
 =========================================
 
-* Adds COMUDF to perform virtual CoM calculations via
+* Adds CoMUDF to perform virtual CoM calculations via
   the standard `run_udf` interface. This replicates the
   existing :code:`Context.create_com_analysis` functionality
   but without the additional overhead constraints of analyses,

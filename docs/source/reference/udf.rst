@@ -128,7 +128,7 @@ Sum per frame
 Centre-of-Mass
 ##############
 
-.. autoclass:: libertem.udf.com.COMUDF
+.. autoclass:: libertem.udf.com.CoMUDF
     :members:
 
 .. _`masks udf`:

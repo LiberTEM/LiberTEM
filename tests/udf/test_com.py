@@ -15,7 +15,7 @@ from utils import _mk_random, set_device_class
 
 
 @pytest.mark.parametrize(
-    'backend', (None, ) + tuple(com.COMUDF().get_backends())
+    'backend', (None, ) + tuple(com.CoMUDF().get_backends())
 )
 def test_com(lt_ctx, delayed_ctx, backend):
     with set_device_class(get_device_class(backend)):
@@ -31,8 +31,8 @@ def test_com(lt_ctx, delayed_ctx, backend):
             array_backends=(backend, ) if backend is not None else None
         )
 
-        com_result = lt_ctx.run_udf(udf=com.COMUDF(), dataset=dataset)
-        com_delayed = delayed_ctx.run_udf(udf=com.COMUDF(), dataset=dataset)
+        com_result = lt_ctx.run_udf(udf=com.CoMUDF(), dataset=dataset)
+        com_delayed = delayed_ctx.run_udf(udf=com.CoMUDF(), dataset=dataset)
 
         com_analysis = lt_ctx.create_com_analysis(dataset=dataset)
         analysis_result = lt_ctx.run(com_analysis)
@@ -93,7 +93,7 @@ def test_com_params(lt_ctx, repeat):
     scan_rotation = random.choice((0., 13.3, 233))
     flip_y = random.choice((True, False))
 
-    com_udf = com.COMUDF.with_params(
+    com_udf = com.CoMUDF.with_params(
         cy=cy,
         cx=cx,
         r=ro,
@@ -119,7 +119,7 @@ def test_com_params(lt_ctx, repeat):
        or (np.isclose(com_dict['mask_radius_inner'], 0.) and random.choice((True, False)))):
         com_dict['mask_radius_inner'] = None
 
-    com_result = lt_ctx.run_udf(udf=com.COMUDF(com_params), dataset=dataset)
+    com_result = lt_ctx.run_udf(udf=com.CoMUDF(com_params), dataset=dataset)
     com_analysis = lt_ctx.create_com_analysis(dataset=dataset, **com_dict)
     analysis_result = lt_ctx.run(com_analysis)
 
@@ -149,7 +149,7 @@ def test_com_roi(lt_ctx, repeat):
 
     roi = np.random.choice([True, False], dataset.shape.nav)
 
-    com_result = lt_ctx.run_udf(udf=com.COMUDF(), dataset=dataset, roi=roi)
+    com_result = lt_ctx.run_udf(udf=com.CoMUDF(), dataset=dataset, roi=roi)
 
     com_analysis = lt_ctx.create_com_analysis(dataset=dataset)
     analysis_result = lt_ctx.run(com_analysis, roi=roi)

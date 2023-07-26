@@ -528,3 +528,27 @@ def test_dynamic_parameter_aux_data(lt_ctx, default_raw):
         # something non-zero in the result:
         assert not np.allclose(part_res.buffers[0]['index'], 0)
         assert not np.allclose(part_res.buffers[0]['index_merge'], 0)
+
+
+@pytest.mark.asyncio
+async def test_res_iter_athrow(lt_ctx: Context, default_raw):
+    result_iter = lt_ctx.run_udf_iter(
+        dataset=default_raw,
+        udf=SumUDF(),
+        sync=False,
+    )
+
+    with pytest.raises(RuntimeError):
+        async for res in result_iter:
+            await result_iter.athrow(RuntimeError("stuff"))
+
+
+def test_res_iter_throw(lt_ctx: Context, default_raw):
+    result_iter = lt_ctx.run_udf_iter(
+        dataset=default_raw,
+        udf=SumUDF(),
+    )
+
+    with pytest.raises(RuntimeError):
+        for res in result_iter:
+            result_iter.throw(RuntimeError("stuff"))

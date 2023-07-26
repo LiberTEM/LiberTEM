@@ -165,6 +165,11 @@ class MRCDataSet(DataSet):
     def initialize(self, executor):
         return executor.run_function(self._do_initialize)
 
+    def get_diagnostics(self):
+        return [
+            {"name": "dtype", "value": str(self._meta.raw_dtype)},
+        ]
+
     @classmethod
     def get_msg_converter(cls):
         return MRCDatasetParams

@@ -340,6 +340,11 @@ class NPYDataSet(DataSet):
             print(e)
             return False
 
+    def get_diagnostics(self):
+        return [
+            {"name": "dtype", "value": str(self.dtype)}
+        ]
+
     @classmethod
     def get_supported_extensions(cls):
         return {"npy"}

@@ -284,7 +284,10 @@ def test_detect_params(raw_csr_generated, default_raw, inline_executor):
 
 
 def test_diagnostics(raw_csr_generated):
-    raw_csr_generated.diagnostics
+    diags = raw_csr_generated.diagnostics
+    assert {"name": "data dtype", "value": "float32"} in diags
+    assert {"name": "indptr dtype", "value": "int32"} in diags
+    assert {"name": "indices dtype", "value": "int32"} in diags
 
 
 def test_exception_at_detect(tmpdir_factory, dask_executor):

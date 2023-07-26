@@ -866,3 +866,6 @@ def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw, as_sparse):
 
 
 # TODO: test for dataset with more than 2 sig dims
+
+def test_diagnostics(default_raw):
+    assert {"name": "dtype", "value": "float32"} in default_raw.get_diagnostics()

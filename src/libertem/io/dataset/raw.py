@@ -181,6 +181,11 @@ class RawFileDataSet(DataSet):
         )
         return self
 
+    def get_diagnostics(self):
+        return [
+            {"name": "dtype", "value": str(self._meta.raw_dtype)},
+        ]
+
     def _get_filesize(self):
         return os.stat(self._path).st_size
 

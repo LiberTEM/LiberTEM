@@ -461,3 +461,7 @@ def test_correction_default(default_npy, lt_ctx, with_roi):
         roi = None
 
     dataset_correction_verification(ds=ds, roi=roi, lt_ctx=lt_ctx)
+
+
+def test_diagnostics(default_npy):
+    assert {"name": "dtype", "value": "float32"} in default_npy.get_diagnostics()

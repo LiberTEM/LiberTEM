@@ -256,3 +256,7 @@ def test_scheme_too_large(default_mrc):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_mrc.shape.sig)
+
+
+def test_diagnostics(default_mrc):
+    assert {"name": "dtype", "value": "float32"} in default_mrc.get_diagnostics()

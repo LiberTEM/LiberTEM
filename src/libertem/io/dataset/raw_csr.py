@@ -274,7 +274,11 @@ class RawCSRDataSet(DataSet):
         return RawCSRDatasetParams
 
     def get_diagnostics(self):
-        return []  # TODO: nonzero elements?
+        return [
+            {"name": "data dtype", "value": str(self._descriptor.data_dtype)},
+            {"name": "indptr dtype", "value": str(self._descriptor.indptr_dtype)},
+            {"name": "indices dtype", "value": str(self._descriptor.indices_dtype)},
+        ]  # TODO: nonzero elements?
 
     @classmethod
     def get_supported_extensions(cls) -> typing.Set[str]:

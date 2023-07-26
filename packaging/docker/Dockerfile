@@ -1,19 +1,18 @@
 # syntax=docker/dockerfile:1
-FROM python:3.9-slim AS builder0
+FROM python:3.11-slim AS builder0
 
 RUN apt-get update && apt-get install -y \
     python3-venv \
     python3-pip \
-    git \
-    libfftw3-dev
+    git
 
 FROM builder0 as builder
 
-RUN python3.9 -m venv /venv/
+RUN python3.11 -m venv /venv/
 # Update requirements.txt with ./update_reqs.sh
 COPY packaging/docker/requirements.txt /requirements.txt
 RUN /venv/bin/pip install -U pip
-RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt && /venv/bin/pip install --no-cache pyfftw
+RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt
 
 # Only install test requirements if dev is set
 # docker build (...) --build-arg dev=1 (...) for dev build

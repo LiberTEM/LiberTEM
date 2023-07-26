@@ -182,3 +182,97 @@ def test_com_roi(lt_ctx, repeat):
         analysis_result.curl.raw_data[roi],
     )
     assert np.all(np.isnan(com_result['curl'].data[inverted_roi]))
+
+
+@pytest.mark.parametrize(
+    'use_roi', (True, False)
+)
+@pytest.mark.parametrize(
+    'regression', (-1, 0, 1, [[0, 0], [0, 0], [0, 0]])
+)
+def test_com_regression_neutral(lt_ctx, use_roi, regression):
+    data = np.zeros((23, 42, 23, 42))
+    for yy in range(23):
+        for xx in range(42):
+            data[yy, xx, 3, 3] = 1
+    ds = lt_ctx.load('memory', data=data)
+    if use_roi:
+        roi = np.random.choice([True, False], ds.shape.nav)
+    else:
+        roi = None
+
+    udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
+    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
+    assert_allclose(res['regression'], 0, atol=1e-14)
+    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+
+
+@pytest.mark.parametrize(
+    'use_roi', (True, False)
+)
+@pytest.mark.parametrize(
+    'regression', (0, [[-2, 1], [0, 0], [0, 0]])
+)
+def test_com_regression_offset(lt_ctx, use_roi, regression):
+    data = np.zeros((23, 42, 23, 42))
+    for yy in range(23):
+        for xx in range(42):
+            data[yy, xx, 1, 4] = 1
+    ds = lt_ctx.load('memory', data=data)
+    if use_roi:
+        roi = np.random.choice([True, False], ds.shape.nav)
+    else:
+        roi = None
+
+    udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
+    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
+    assert_allclose(res['regression'].data, [[-2, 1], [0, 0], [0, 0]], atol=1e-14)
+    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+
+
+@pytest.mark.parametrize(
+    'use_roi', (True, False)
+)
+@pytest.mark.parametrize(
+    'regression', (1, [[-2, 42], [2, 0], [0, -1]])
+)
+def test_com_regression_linear(lt_ctx, use_roi, regression):
+    data = np.zeros((23, 42, 48, 46))
+    for yy in range(23):
+        for xx in range(42):
+            data[yy, xx, 2*yy+1, 45-xx] = 1
+    ds = lt_ctx.load('memory', data=data)
+    if use_roi:
+        roi = np.random.choice([True, False], ds.shape.nav)
+    else:
+        roi = None
+
+    udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
+    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
+    assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-14)
+    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+
+
+@pytest.mark.parametrize(
+    'use_roi', (True, False)
+)
+@pytest.mark.parametrize(
+    'regression', (1, [[-2, 1], [2, 1], [3, 4]])
+)
+def test_com_regression_linear_2(lt_ctx, use_roi, regression):
+    data = np.zeros((5, 8, 64, 64))
+    for yy in range(5):
+        for xx in range(8):
+            # dy/dy: 2, dx/dy: 1
+            # dy/dx: 3, dx/dx: 4
+            data[yy, xx, 1+2*yy+3*xx, 4+yy+4*xx] = 1
+    ds = lt_ctx.load('memory', data=data)
+    if use_roi:
+        roi = np.random.choice([True, False], ds.shape.nav)
+    else:
+        roi = None
+
+    udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
+    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
+    assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-14)
+    assert_allclose(res['field'].raw_data, 0, atol=1e-13)

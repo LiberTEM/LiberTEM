@@ -18,6 +18,7 @@ class CoMParams(NamedTuple):
     ri: Union[float, None] = 0.
     scan_rotation: float = 0.
     flip_y: bool = False
+    regression: Union[np.ndarray, int] = -1
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):
@@ -285,6 +286,10 @@ class CoMUDF(UDF):
     * curl, scalar
         The discrete curl of the field buffer
 
+    * regression, (3, 2) matrix
+        The regression parameters used to flatten the field:
+        ((y, x), (dy/dy, dx/dy), (dy/dx, dx/dx))
+
     .. note::
         The implementation of the results 'divergence' and 'curl' differ slightly
         from :code:`COMAnalysis` in that here results for pixels outside of an ROI
@@ -320,6 +325,7 @@ class CoMUDF(UDF):
         ri: float = 0.,
         scan_rotation: float = 0.,
         flip_y: bool = False,
+        regression: Union[np.ndarray, int] = -1
     ):
         """
         Returns an instantiated CoMUDF with a given set of parameters
@@ -327,37 +333,59 @@ class CoMUDF(UDF):
         Parameters
         ----------
         cy : Optional[float], by default None
-            Vertical-Centre of the mask applied to the frame, if any,
-            and the reference point from which vertical CoM-shifts are
-            calculated. If None, cy is set to the frame centre at runtime.
+            Vertical-Centre of the mask applied to the frame, if any, and the
+            reference point from which vertical CoM-shifts are calculated. If
+            None, cy is set to the frame centre at runtime.
         cx : Optional[float], by default None
-            Horizontal-Centre of the mask applied to the frame, if any,
-            and the reference point from which horizontal CoM-shifts are
-            calculated. If None, cx is set to the frame centre at runtime.
+            Horizontal-Centre of the mask applied to the frame, if any, and the
+            reference point from which horizontal CoM-shifts are calculated. If
+            None, cx is set to the frame centre at runtime.
         r : float, by default float('inf')
-            (Outer) Radius of the disk mask around cy/cx to restrict
-            the CoM calculation. The default value is :code:`float('inf')` which is
-            equivalent to performing whole-frame CoM with the given
-            origin cy/cx.
+            (Outer) Radius of the disk mask around cy/cx to restrict the CoM
+            calculation. The default value is :code:`float('inf')` which is
+            equivalent to performing whole-frame CoM with the given origin
+            cy/cx.
         ri : float, by default 0.
-            (Inner) Radius of the ring mask around cy/cx to exclude
-            from the CoM calculation. If left as 0., no inner disk is
-            excluded and the CoM is calculated within a complete disk of radius r.
+            (Inner) Radius of the ring mask around cy/cx to exclude from the CoM
+            calculation. If left as 0., no inner disk is excluded and the CoM is
+            calculated within a complete disk of radius r.
         scan_rotation : float, by default 0.
-            Scan rotation in degrees.
-            The optics of an electron microscope can rotate the image. Furthermore, scan
-            generators may allow scanning in arbitrary directions. This means that the x and y
-            coordinates of the detector image are usually not parallel to the x and y scan
-            coordinates. For interpretation of center of mass shifts, however, the shift vector
-            in detector coordinates has to be put in relation to the position on the sample.
-            The :code:`scan_rotation` parameter can be used to rotate the detector coordinates
-            to match the scan coordinate system. A positive value rotates the displacement
-            vector clock-wise. That means if the detector seems rotated to the right relative
-            to the scan, this value should be negative to counteract this rotation.
+            Scan rotation in degrees. The optics of an electron microscope can
+            rotate the image. Furthermore, scan generators may allow scanning in
+            arbitrary directions. This means that the x and y coordinates of the
+            detector image are usually not parallel to the x and y scan
+            coordinates. For interpretation of center of mass shifts, however,
+            the shift vector in detector coordinates has to be put in relation
+            to the position on the sample. The :code:`scan_rotation` parameter
+            can be used to rotate the detector coordinates to match the scan
+            coordinate system. A positive value rotates the displacement vector
+            clock-wise. That means if the detector seems rotated to the right
+            relative to the scan, this value should be negative to counteract
+            this rotation.
         flip_y : bool, by default False
-            Flip the Y coordinate. Some detectors, namely Quantum Detectors Merlin,
-            may have pixel (0, 0) at the lower left corner. This has to be corrected
-            to get the sign of the y shift as well as curl and divergence right.
+            Flip the Y coordinate. Some detectors, namely Quantum Detectors
+            Merlin, may have pixel (0, 0) at the lower left corner. This has to
+            be corrected to get the sign of the y shift as well as curl and
+            divergence right.
+        regression : Union[np.ndarray, int], by default -1
+            Regression to flatten the field. If an ndarray with shape (3, 2) is
+            passed, it specifies the regression to use: ((y, x), (dy/dy, dx/dy),
+            (dy/dx, dx/dx)).
+
+            If an integer is used, it specifies the regression order to
+            calculate and use. -1: No regression. 0: Subtract mean, compensates
+            center offset. 1: Subtract mean and linear regression, compensates
+            center offset and descan error.
+
+            The regression that was used is available in the 'regression' result
+            buffer.
+
+            Please note that a regression calculated on the data itself may
+            distort valid results, such as the effect of long-range fields.
+            Furthermore, it may yield erronerous results due to aliasing on
+            periodic structures or boundary effects. Subtracting a reference
+            measurement or regression on a reference measurement instead of a
+            regression on the data may give more reliable results.
         """
         if ri >= r:
             raise ValueError('Inner radius must be less than outer radius for annular CoM')
@@ -365,6 +393,7 @@ class CoMUDF(UDF):
             com_params=CoMParams(
                 cy=cy, cx=cx, r=r, ri=ri,
                 scan_rotation=scan_rotation, flip_y=flip_y,
+                regression=regression,
             )
         )
 
@@ -395,6 +424,9 @@ class CoMUDF(UDF):
             'curl': self.buffer(
                 kind='nav', dtype=dtype, use='result_only'
             ),
+            'regression': self.buffer(
+                kind='single', extra_shape=(3, 2), dtype=np.float64, use='result_only'
+            ),
         }
 
     def get_params(self) -> CoMParams:
@@ -411,9 +443,11 @@ class CoMUDF(UDF):
         ri = self.params.com_params.ri
         scan_rotation = self.params.com_params.scan_rotation
         flip_y = self.params.com_params.flip_y
+        regression = self.params.com_params.regression
 
         cp = CoMParams(
             cy=cy, cx=cx, r=r, ri=ri, scan_rotation=scan_rotation, flip_y=flip_y,
+            regression=regression,
         )
         return cp
 
@@ -483,6 +517,58 @@ class CoMUDF(UDF):
             'curl': curl,
         }
 
+    def get_regression(self, field):
+        valid = None
+        inp = None
+        result = np.zeros((3, 2))
+
+        com_params = self.get_params()
+
+        def get_valid():
+            return np.all(np.isfinite(field), axis=-1)
+
+        def get_inp():
+            inp = np.ones(field.shape[:-1] + (3, ))
+            y, x = np.ogrid[:field.shape[0], :field.shape[1]]
+            inp[..., 1] = y
+            inp[..., 2] = x
+            return inp
+
+        if isinstance(com_params.regression, int):
+            if com_params.regression == -1:
+                pass
+            elif com_params.regression == 0:
+                valid = get_valid()
+                valid_field = field[valid]
+                result[0] = np.mean(valid_field, axis=0)
+            elif com_params.regression == 1:
+                valid, inp = get_valid(), get_inp()
+                valid_field = field[valid]
+                res = np.linalg.lstsq(inp[valid], valid_field, rcond=None)
+                result[:] = res[0]
+        else:
+            regression = np.array(com_params.regression)
+            if regression.shape != (3, 2):
+                raise ValueError(
+                    f"Regression parameter {com_params.regression} "
+                    "doesn't have required shape (3, 2)."
+                )
+            result[:] = regression
+        has_lin_regression = not np.allclose(result[1:], 0)
+        if has_lin_regression and inp is None:
+            inp = get_inp()
+        if not has_lin_regression:
+            inp = None
+        return result, inp
+
+    def apply_mean_regression(self, regression, field_inout):
+        field_inout -= regression[0]
+
+    def apply_lin_regression(self, regression, inp, field_inout):
+        corr = inp.reshape((-1, 3)) @ regression
+        corr = corr.reshape(field_inout.shape)
+        field_inout -= corr
+
     def get_results(self):
         com_params = self.get_params()
         raw_mask_result = self.results.get_buffer('raw_mask_result')
@@ -508,27 +594,37 @@ class CoMUDF(UDF):
             flip_y=com_params.flip_y,
         )
         roi = self.meta.roi
-        field_y = field[0]
-        field_x = field[1]
 
         raw_shifts = np.moveaxis(np.array(raw_shifts), 0, -1)
         raw_com = np.moveaxis(np.array(raw_com), 0, -1)
         field = np.moveaxis(np.array(field), 0, -1)
-
         nav_size = prod(self.meta.dataset_shape.nav)
+
+        regression, inp = self.get_regression(field)
+        if inp is not None:
+            self.apply_lin_regression(regression, inp, field)
+        elif not np.allclose(regression[0], 0):
+            self.apply_mean_regression(regression, field)
 
         results = {
             'raw_shifts': raw_shifts,
             'raw_com': raw_com,
             'field': field,
+            'regression': regression.astype(np.float64),
         }
 
-        results.update(self.get_field_results(field_y=field_y, field_x=field_x))
+        results.update(self.get_field_results(field_y=field[..., 0], field_x=field[..., 1]))
 
+        # Since we have circumvented the ROI mechanism by getting a raw buffer
+        # so that we can calculate gradients, we have to filter and reshape the
+        # results manually to bring them into the expected format.
+        buffers = self.get_result_buffers()
         if self.meta.roi is not None:
-            for key in results:
-                results[key] = results[key][roi]
+            for key, buf in buffers.items():
+                if buf.kind == 'nav' and key in results:
+                    results[key] = results[key][roi]
         else:
-            for key in results:
-                results[key] = results[key].reshape((nav_size, -1))
+            for key, buf in buffers.items():
+                if buf.kind == 'nav' and key in results:
+                    results[key] = results[key].reshape((nav_size, -1))
         return results

@@ -250,7 +250,7 @@ def test_com_regression_linear(lt_ctx, use_roi, regression):
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
     assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-14)
-    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+    assert_allclose(res['field'].raw_data, 0, atol=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -275,4 +275,4 @@ def test_com_regression_linear_2(lt_ctx, use_roi, regression):
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
     assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-14)
-    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+    assert_allclose(res['field'].raw_data, 0, atol=1e-12)

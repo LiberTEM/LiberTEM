@@ -89,15 +89,6 @@ class ResultsForDataSet:
     def throw(self, exc: Exception):
         return self._gen.throw(exc)
 
-    def update_parameters_experimental_full(self, parameters: List[Dict[str, Any]]):
-        log.debug("ResultsForDataSet.update_parameters_experimental_full: %s", parameters)
-        # update parameters on workers (via the executor):
-        self._params.update_parameters(parameters=parameters)
-        self._executor.scatter_update(self._params_handle, self._params)
-        # update UDFs on the main node:
-        for udf, params in zip(self._udfs, parameters):
-            udf._update_parameters(new_kwargs=params)
-
     def update_parameters_experimental(self, patch: List[Dict[str, Any]]):
         log.debug("ResultsForDataSet.update_parameters_experimental: %s", patch)
         # update parameters on workers (via the executor):
@@ -1671,12 +1662,6 @@ class UDFParams:
     ):
         kwargs = [udf._kwargs for udf in udfs]
         return cls(kwargs, roi, corrections, tiling_scheme)
-
-    def update_from_udfs(self, udfs):
-        self._kwargs = [udf._kwargs for udf in udfs]
-
-    def update_parameters(self, parameters):
-        self._kwargs = parameters
 
     def patch(self, patch):
         for p, kwargs in zip(patch, self._kwargs):

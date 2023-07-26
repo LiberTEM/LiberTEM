@@ -67,6 +67,11 @@ RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int, ...], It
 
 
 class ResultGenerator:
+    """
+    Yields partial results from one or more UDFs currently running,
+    with methods to control some aspects of the UDF run.
+    """
+
     def __init__(
         self,
         task_results: Generator[UDFResults, None, None],
@@ -97,7 +102,7 @@ class ResultGenerator:
         The dicts should only contain items for those parameters you want to
         update.
         """
-        logger.debug("ResultGenerator.update_parameters: %s", parameters)
+        logger.debug("ResultGenerator.update_parameters_experimental: %s", parameters)
         self._result_iter.update_parameters_experimental(parameters)
 
     def throw(self, exc: Exception):
@@ -105,6 +110,10 @@ class ResultGenerator:
 
 
 class ResultAsyncGenerator:
+    """
+    async wrapper of `ResultGenerator`.
+    """
+
     def __init__(self, result_generator: ResultGenerator):
         from concurrent.futures import ThreadPoolExecutor
         self._result_generator = result_generator

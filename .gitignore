@@ -31,3 +31,4 @@ junit.xml
 .vscode-server
 *.sif
 examples/generated/
+packaging/docker/requirements.txt

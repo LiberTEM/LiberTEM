@@ -94,28 +94,38 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push (libertem/libertem:triage)
+      - name: Build and export (libertem/libertem:triage)
         uses: docker/build-push-action@v4
         with:
           file: packaging/docker/Dockerfile
           context: .
-          push: ${{ github.event_name == 'push' }}
+          push: false
           tags: ghcr.io/libertem/libertem:triage
           cache-from: type=registry,ref=ghcr.io/libertem/libertem-dev:latest
           cache-to: type=inline
-      - name: Build and push (libertem/libertem-dev)
+          outputs: type=docker,dest=/tmp/docker-image-libertem-triage.tar
+      - name: Upload (libertem:triage)
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-libertem-triage
+          path: /tmp/docker-image-libertem-triage.tar
+      - name: Build and export (libertem/libertem-dev)
         uses: docker/build-push-action@v4
         with:
           file: packaging/docker/Dockerfile
           context: .
-          push: ${{ github.event_name == 'push' }}
+          push: false
           tags: ghcr.io/libertem/libertem-dev:latest
           cache-from: type=registry,ref=ghcr.io/libertem/libertem-dev:latest
           cache-to: type=inline
           build-args: |
             dev=1
-        # TODO: export as tarball and add additional job to tag on CI success (push only)
-        # https://docs.docker.com/build/ci/github-actions/share-image-jobs/
+          outputs: type=docker,dest=/tmp/docker-image-libertem-dev.tar
+      - name: Upload (libertem-dev:latest)
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-libertem-dev
+          path: /tmp/docker-image-libertem-dev.tar
 
   build-docs:
     runs-on: ubuntu-latest
@@ -137,7 +147,7 @@ jobs:
 
   deploy-docs:
     runs-on: ubuntu-latest
-    needs: [build-docs, additional, tests, node]
+    needs: [build-docs, additional, tests, node, build-docker-image]
     if: github.ref  == 'refs/heads/master'
     permissions:
       pages: write
@@ -154,7 +164,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: [build-docs, additional, tests, node]
+    needs: [build-docs, additional, tests, node, build-docker-image]
     # master branch, stable branches or release tags:
     if: startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/v') || github.ref == 'refs/heads/master'
     env:
@@ -179,3 +189,26 @@ jobs:
         run: ./scripts/release status
       - name: run release script
         run: ./scripts/release --verbose upload --no-dry-run --pypi-user __token__ --pypi-test-user __token__ --build-appimage
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download libertem-dev image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-libertem-dev
+          path: /tmp
+      - name: Download libertem:triage image
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-libertem-triage
+          path: /tmp
+      - name: Load images
+        run: |
+          docker load --input /tmp/docker-image-libertem-triage.tar
+          docker load --input /tmp/docker-image-libertem-dev.tar
+          docker image ls -a

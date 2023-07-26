@@ -890,7 +890,7 @@ class UDFMergeAllMixin(Protocol):
 
 
 def _default_merge_all(udf, ordered_results: 'OrderedDict[Slice, MergeAttrMapping]'):
-    if udf.requires_custom_merge:
+    if udf.requires_custom_merge_all:
         raise NotImplementedError(
             "Default merging only works for kind='nav' buffers. "
             "Please implement a suitable custom merge_all function."
@@ -1160,6 +1160,7 @@ class UDF(UDFBase):
         self.task_data = UDFData({})
         self.results = UDFData({})
         self._requires_custom_merge = None
+        self._requires_custom_merge_all = None
 
     def copy(self) -> "UDF":
         return self.__class__(**self._kwargs)
@@ -1237,15 +1238,36 @@ class UDF(UDFBase):
     @property
     def requires_custom_merge(self):
         """
-        Determine if buffers with :code:`kind != 'nav'` are present where
-        the default merge doesn't work
+        Determine if buffers with :code:`kind != 'nav'` that are not :code:`use
+        != 'result_only'` are present where the default merge doesn't work
 
         .. versionadded:: 0.5.0
+
+        .. versionchanged:: 0.12.0
+            Ignore :code:`use != 'result_only'` buffer since they are not present
+            in the merge function
         """
         if self._requires_custom_merge is None:
             buffers = self.get_result_buffers()
-            self._requires_custom_merge = any(buffer.kind != 'nav' for buffer in buffers.values())
+            self._requires_custom_merge = any(
+                buffer.kind != 'nav' and buffer.use != 'result_only' for buffer in buffers.values()
+            )
         return self._requires_custom_merge
+
+    @property
+    def requires_custom_merge_all(self):
+        """
+        Determine if buffers with :code:`kind != 'nav'` are present where
+        the default merge doesn't work
+
+        .. versionadded:: 0.12.0
+        """
+        if self._requires_custom_merge_all is None:
+            buffers = self.get_result_buffers()
+            self._requires_custom_merge_all = any(
+                buffer.kind != 'nav' for buffer in buffers.values()
+            )
+        return self._requires_custom_merge_all
 
     def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
         """

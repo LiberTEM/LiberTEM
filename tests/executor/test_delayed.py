@@ -29,7 +29,19 @@ class CountUDF(UDF):
         self.results.count[:] = np.ones(tile.shape[:1], dtype=np.int32)
 
     def get_result_buffers(self):
-        return {'count': self.buffer(kind='nav', dtype=np.int32)}
+        return {
+            'count': self.buffer(kind='nav', dtype=np.int32),
+            'total': self.buffer(
+                kind='single',
+                dtype=np.int32,
+                use='result_only'
+            ),
+        }
+
+    def get_results(self):
+        return {
+            'total': self.results.count.sum()
+        }
 
 
 class StrUDF(UDF):
@@ -43,7 +55,7 @@ class StrUDF(UDF):
 class MySumUDF(UDF):
     def get_result_buffers(self):
         return {
-            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype)
+            'intensity': self.buffer(kind='sig', dtype=self.meta.input_dtype),
         }
 
     def process_tile(self, tile):
@@ -163,7 +175,13 @@ def count(udf_params, ds_dict):
     udf = CountUDF(**udf_params)
     naive_result = np.ones(flat_nav_data.shape[:1], dtype=np.int32)
     naive_result = fill_nav_with_roi(ds_shape, naive_result, roi, fill=0)
-    return {'udf': udf, 'naive_result': {'count': naive_result}}
+    return {
+        'udf': udf,
+        'naive_result': {
+            'count': naive_result,
+            'total': naive_result.sum(),
+        }
+    }
 
 
 def string(udf_params, ds_dict):

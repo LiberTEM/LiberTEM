@@ -58,7 +58,7 @@ class DelayedUDFRunner(UDFRunner):
             # to udf.merge at once and in the correct order, so I am accumulating
             # results in self._part_results[udf] = {partition_slice_roi: part_results, ...}
             if (isinstance(udf, UDFMergeAllMixin)
-                    or type(udf).merge is UDF.merge and not udf.requires_custom_merge):
+                    or (type(udf).merge is UDF.merge and not udf.requires_custom_merge_all)):
                 if self._accumulate_part_results(udf, part_results_udf, task):
                     try:
                         parts = {
@@ -89,7 +89,12 @@ class DelayedUDFRunner(UDFRunner):
             src_dict = {k: b for k, b in src._dict.items()}
 
             dest_dict = {}
-            for k, b in udf.results.items():
+            for k, b_decl in udf.get_result_buffers().items():
+                # We skip result_only buffers since they are not expected
+                # in the dest_dict by the default merge function
+                if b_decl.use == 'result_only':
+                    continue
+                b = udf.results.get_buffer(k)
                 view = b.get_view_for_partition(task.partition)
                 # Handle result-only buffers
                 if view is not None:

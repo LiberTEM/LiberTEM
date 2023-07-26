@@ -955,20 +955,11 @@ class UDFBase(UDFProtocol):
         self.params = UDFKwargsWrapper({})
         self.results = UDFData({})
 
-    def _update_parameters(self, new_kwargs):
-        """
-        Update the parameters _for this UDF instance_ to `new_kwargs`.
-
-        For properly supporting AUX data (i.e. `BufferWrapper`-typed parameters),
-        make sure to set the correct views afterwards.
-
-        :meta private:
-        """
-        self.params = UDFKwargsWrapper(new_kwargs)
-
     def _update_parameters_patch(self, kwargs_patch):
         """
-        Update the parameters _for this UDF instance_ to `new_kwargs`.
+        Update the parameters _for this UDF instance_ by applying the patch in
+        `kwargs_patch`, which is a dict containing the key/value combinations to
+        update.
 
         For properly supporting AUX data (i.e. `BufferWrapper`-typed parameters),
         make sure to set the correct views afterwards.

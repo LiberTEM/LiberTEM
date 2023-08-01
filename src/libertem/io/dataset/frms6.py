@@ -165,7 +165,7 @@ def _read_file_header(path):
     header_raw = np.fromfile(path, dtype=file_header_dtype, count=1)
     header = {}
     for field, dtype in file_header_dtype:
-        if type(dtype) != str:
+        if type(dtype) is not str:
             continue
         header[field] = header_raw[field][0]
         # to prevent overflows in following computations:

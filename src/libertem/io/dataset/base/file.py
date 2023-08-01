@@ -159,9 +159,9 @@ class File:
         else:
             mem = mem[slicing.file_offset:]
         itemsize = np.dtype(self._native_dtype).itemsize
-        assert len(mem) % itemsize == 0,\
+        assert len(mem) % itemsize == 0, \
             "len(mem) must fit the dtype"
-        assert len(mem) // itemsize % self.num_frames == 0,\
+        assert len(mem) // itemsize % self.num_frames == 0, \
             "len(mem) must fit the number of frames"
         assert len(mem) // itemsize // self.num_frames % (
             slicing.frame_size + (self._frame_header + self._frame_footer) // itemsize
@@ -170,7 +170,7 @@ class File:
             (self.num_frames, -1)
         )
         arr = arr_uncut[:, slicing.frame_offset:slicing.frame_offset + slicing.frame_size]
-        assert arr.shape[1] == slicing.frame_size,\
+        assert arr.shape[1] == slicing.frame_size, \
             "array shape must fit the signal shape"
         assert arr.size > 0
         return arr

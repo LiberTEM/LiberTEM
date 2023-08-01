@@ -275,7 +275,7 @@ def test_executors(ctx, load_kwargs, reference):
             # To see what type we actually test
             print("is allclose", np.allclose(left, right))
             print("dtypes", left.dtype, right.dtype)
-            assert np.allclose(left, right),\
+            assert np.allclose(left, right), \
                 f"mismatching result for buffer {buf_key} in UDF {udfs[i]}"
 
 

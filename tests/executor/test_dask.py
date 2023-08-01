@@ -168,7 +168,7 @@ class ThreadsPerWorkerUDF(UDF):
         something(1)
 
     def process_frame(self, frame):
-        assert self.meta.threads_per_worker is not None,\
+        assert self.meta.threads_per_worker is not None, \
             "threads_per_worker should be an integer"
         self.results.num_threads[:] = self.meta.threads_per_worker
 

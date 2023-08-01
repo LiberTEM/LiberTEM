@@ -25,7 +25,7 @@ async def test_missing_token(base_url, path, method, http_client):
     full_url_without_token = base_url + path
 
     async with http_client.request(method, full_url_without_token) as resp:
-        assert resp.status == 400 or resp.status == 405,\
+        assert resp.status == 400 or resp.status == 405, \
             f"response code must be 'bad request' or 'method not allowed', got '{resp.status}'"
 
 
@@ -45,7 +45,7 @@ async def test_wrong_token(base_url, path, method, http_client):
     full_url_wrong_token = base_url + path + "?token=wrong"
 
     async with http_client.request(method, full_url_wrong_token) as resp:
-        assert resp.status == 400 or resp.status == 405,\
+        assert resp.status == 400 or resp.status == 405, \
             f"response code must be 'bad request' or 'method not allowed', got '{resp.status}'"
 
 
@@ -105,7 +105,7 @@ async def test_wrong_token_full(base_url, path, method, http_client):
     full_url_wrong_token = base_url + path + "?token=wrong"
 
     async with http_client.request(method, full_url_wrong_token) as resp:
-        assert resp.status == 400 or resp.status == 405,\
+        assert resp.status == 400 or resp.status == 405, \
             f"response code must be 'bad request' or 'method not allowed', got '{resp.status}'"
 
 
@@ -129,5 +129,5 @@ async def test_missing_token_full(base_url, path, method, http_client):
     full_url_without_token = base_url + path
 
     async with http_client.request(method, full_url_without_token) as resp:
-        assert resp.status == 400 or resp.status == 405,\
+        assert resp.status == 400 or resp.status == 405, \
             f"response code must be 'bad request' or 'method not allowed', got '{resp.status}'"

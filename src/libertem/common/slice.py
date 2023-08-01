@@ -266,7 +266,7 @@ class Slice:
             )
             new_shape = Shape(new_shape_tuple, sig_dims=sig_dims)
             for x in new_shape_tuple:
-                assert x > 0,\
+                assert x > 0, \
                     "invalid shape: {!r} while subslicing {!r} with {!r} (origin={!r})".format(
                         new_shape, self.shape, shape, origin
                     )

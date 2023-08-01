@@ -624,7 +624,7 @@ class DataBlock:
             return self._header
         header = {}
         for field, dtype in self.header_dtype:
-            if type(dtype) != str:
+            if type(dtype) is not str:
                 continue
             header[field] = self._header_raw[field][0]
         self._header = header

@@ -595,7 +595,7 @@ def pipelined_worker(
         maybe_setup_tracing(service_name="pipelined_worker", service_id=f"worker-{worker_idx}")
 
         # attach to parent span context for startup:
-        with attach_to_parent(span_context),\
+        with attach_to_parent(span_context), \
                 tracer.start_as_current_span("pipelined_worker.startup") as span:
             _setup_device(spec, pin)
             work_mem: Dict[str, Any] = {}

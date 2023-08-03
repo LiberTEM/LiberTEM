@@ -94,38 +94,26 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and export (libertem/libertem:triage)
+      - name: Build and export (libertem/libertem-triage)
         uses: docker/build-push-action@v4
         with:
           file: packaging/docker/Dockerfile
           context: .
-          push: false
-          tags: ghcr.io/libertem/libertem:triage
+          push: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/v') || github.ref == 'refs/heads/master' }}
+          tags: ghcr.io/libertem/libertem-triage:pre-${{ github.sha }}
           cache-from: type=registry,ref=ghcr.io/libertem/libertem-dev:latest
           cache-to: type=inline
-          outputs: type=docker,dest=/tmp/docker-image-libertem-triage.tar
-      - name: Upload (libertem:triage)
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker-libertem-triage
-          path: /tmp/docker-image-libertem-triage.tar
       - name: Build and export (libertem/libertem-dev)
         uses: docker/build-push-action@v4
         with:
           file: packaging/docker/Dockerfile
           context: .
-          push: false
-          tags: ghcr.io/libertem/libertem-dev:latest
+          push: ${{ startsWith(github.ref, 'refs/tags/v') || startsWith(github.ref, 'refs/heads/v') || github.ref == 'refs/heads/master' }}
+          tags: ghcr.io/libertem/libertem-dev:pre-${{ github.sha }}
           cache-from: type=registry,ref=ghcr.io/libertem/libertem-dev:latest
           cache-to: type=inline
           build-args: |
             dev=1
-          outputs: type=docker,dest=/tmp/docker-image-libertem-dev.tar
-      - name: Upload (libertem-dev:latest)
-        uses: actions/upload-artifact@v3
-        with:
-          name: docker-libertem-dev
-          path: /tmp/docker-image-libertem-dev.tar
 
   build-docs:
     runs-on: ubuntu-latest
@@ -197,18 +185,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Download libertem-dev image
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-libertem-dev
-          path: /tmp
-      - name: Download libertem:triage image
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-libertem-triage
-          path: /tmp
-      - name: Load images
+      - name: Pull docker images from build stage
         run: |
-          docker load --input /tmp/docker-image-libertem-triage.tar
-          docker load --input /tmp/docker-image-libertem-dev.tar
-          docker image ls -a
+          docker pull ghcr.io/libertem/libertem-triage:pre-${{ github.sha }}
+          docker pull ghcr.io/libertem/libertem-dev:pre-${{ github.sha }}
+      - name: Push images to GHCR
+        run: |
+          ./scripts/release docker-retag ghcr.io/libertem/libertem-triage:pre-${{ github.sha }} ghcr.io/libertem/libertem
+          docker buildx imagetools create --tag ghcr.io/libertem/libertem-dev:latest ghcr.io/libertem/libertem-dev:pre-${{ github.sha }}

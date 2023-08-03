@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from glob import glob
 import concurrent.futures
 import multiprocessing.pool
@@ -465,8 +466,7 @@ class MockPartition:
 
 class MockTask:
     def __call__(self, params, env: Environment) -> Any:
-        import time
-        time.sleep(0.05)
+        time.sleep(0.025 / 2)
         # print(f"MockTask.__call__: params={params}, env={env}")
         return params
 
@@ -488,8 +488,7 @@ class DelayingCommHandler(TaskCommHandler):
         # our tests only work if the tasks don't all get submitted at the
         # beginning of the `run_tasks` call - this simulates the live
         # processing scenario
-        import time
-        time.sleep(0.1)
+        time.sleep(0.025)
 
 
 @pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])
@@ -527,7 +526,7 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx, concurrent_e
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(5 * num_workers)]
+            tasks=[MockTask() for _ in range(15 * num_workers)]
         )
         first_result, _task = next(result_iter)
         print("started")
@@ -588,7 +587,7 @@ def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx, concurrent_ex
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(3 * num_workers)]
+            tasks=[MockTask() for _ in range(15 * num_workers)]
         )
         first_result, _task = next(result_iter)
         print("started")

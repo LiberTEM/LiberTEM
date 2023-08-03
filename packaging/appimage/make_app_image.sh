@@ -19,7 +19,7 @@ conda create -n libertem python=3.11 -y || exit 1
 # FIXME: install specific version (for example from pypi, or continuous build, ...)
 
 # Build wheel & sdist
-( cd "$BASE_DIR" && python -m build )
+( cd "$BASE_DIR" && python -m pip install build && python -m build )
 
 pip install "$BASE_DIR"/dist/*.whl || exit 1
 

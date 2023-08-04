@@ -1,4 +1,6 @@
+from enum import IntEnum
 from typing import NamedTuple, Optional, Tuple, Union
+from typing_extensions import Literal
 
 import numpy as np
 from sparseconverter import CUPY_BACKENDS
@@ -11,6 +13,20 @@ from libertem.common.math import prod
 from libertem.udf.base import UDF
 
 
+class RegressionOptions(IntEnum):
+    """
+    Possible values of the regression functionality
+    implemented in :class:`~libertem.udf.com.CoMUDF`
+    """
+    NO_REGRESSION = -1
+    SUBTRACT_MEAN = 0
+    SUBTRACT_LINEAR = 1
+
+
+# Needed because poor enum support in mypy?
+RegressionOptionsT = Union[np.ndarray, Literal[-1, 0, 1]]
+
+
 class CoMParams(NamedTuple):
     cy: Optional[float] = None
     cx: Optional[float] = None
@@ -18,7 +34,7 @@ class CoMParams(NamedTuple):
     ri: Union[float, None] = 0.
     scan_rotation: float = 0.
     flip_y: bool = False
-    regression: Union[np.ndarray, int] = -1
+    regression: RegressionOptionsT = RegressionOptions.NO_REGRESSION
 
 
 def com_masks_factory(detector_y, detector_x, cy, cx, r):
@@ -325,7 +341,7 @@ class CoMUDF(UDF):
         ri: float = 0.,
         scan_rotation: float = 0.,
         flip_y: bool = False,
-        regression: Union[np.ndarray, int] = -1
+        regression: RegressionOptionsT = RegressionOptions.NO_REGRESSION,
     ):
         """
         Returns an instantiated CoMUDF with a given set of parameters

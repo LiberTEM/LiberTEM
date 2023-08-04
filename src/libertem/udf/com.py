@@ -28,6 +28,13 @@ RegressionOptionsT = Union[np.ndarray, Literal[-1, 0, 1]]
 
 
 class CoMParams(NamedTuple):
+    """
+    Used to instantiate :class:`~libertem.udf.com.CoMUDF`.
+
+    See :meth:`~libertem.udf.com.CoMUDF.with_params`
+    for descriptions of each parameter. In most cases use this
+    method rather than instantiating this class directly.
+    """
     cy: Optional[float] = None
     cx: Optional[float] = None
     r: float = float('inf')
@@ -181,6 +188,14 @@ def coordinate_check(y_centers, x_centers, roi=None):
 
 
 class GuessResult(NamedTuple):
+    """
+    Container for CoM parameters inferred from results,
+    which can be passed to :meth:`~libertem.udf.com.CoMUDF.with_params`
+    to create a new :class:`~libertem.udf.com.CoMUDF` better-adapted
+    to the data.
+
+    Return type of :func:`~libertem.udf.com.guess_corrections`
+    """
     scan_rotation: int
     flip_y: bool
     cy: float
@@ -193,7 +208,8 @@ def guess_corrections(
     roi: Optional[Union[np.ndarray, Tuple[slice, ...]]] = None,
 ) -> GuessResult:
     '''
-    Guess corrections for center shift, :code:`scan_rotation` and :code:`flip_y` from CoM data
+    Guess values for center offset (:code:`(cy, cx)`), :code:`scan_rotation` and
+    :code:`flip_y` from existing CoM data.
 
     This function can generate a CoM parameter guess for atomic resolution 4D STEM data
     by using the following assumptions:
@@ -205,26 +221,39 @@ def guess_corrections(
       and consequently the histogram of divergence will have a stronger tail towards
       negative values than towards positive values.
 
-    If any corrections were applied when generating the input data, please note that the corrections
-    should be applied relative to these previous value. In particular, the
-    center corrections returned by this function have to be back-transformed to the uncorrected
-    coordinate system, for example with :code:`apply_correction(..., forward=False)`
+    If any corrections were applied when generating the input data please note that
+    the new parameters should be applied relative to these previous values. In particular,
+    the values for :code:`(cy, cx)` returned by this function are the means of the inputs
+    :code:`y_centers` and :code:`x_centers`. If these inputs are CoM-shifts relative
+    to a given position, then the guessed correction will also be relative to this same
+    position.
 
     Parameters
     ----------
     y_centers, x_centers : numpy.ndarray
-        2D arrays with y and x component of the center of mass shift for each
-        scan position, as returned by :meth:`center_shifts` or
-        :meth:`apply_correction`
+        2D arrays with y and x component of the center of mass for each scan position
     roi : Optional[numpy.ndarray]
         Selector for values to consider in the statistics, compatible
         with indexing an array with the shape of y_centers and x_centers.
         By default, everything except the last row and last column are used
         since these contain artefacts.
 
+    Examples
+    --------
+    >>> # Perform default, whole-frame CoM on a dataset
+    >>> udf = CoMUDF()
+    >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+    >>> # Pass the `raw_com` result to this function
+    >>> y_centers = result['raw_com'].data[..., 0]
+    >>> x_centers = result['raw_com'].data[..., 1]
+    >>> guess_result = guess_corrections(y_centers, x_centers)
+    >>> # Create a new CoMUDF with the guessed parameters
+    >>> param_udf = CoMUDF.with_params(**guess_result._asdict())
+    >>> result_corrected = ctx.run_udf(dataset=dataset, udf=param_udf)
+
     Returns
     -------
-    GuessResult : relative to current values
+    GuessResult : computed corrections
     '''
     if roi is None:
         # The last row and column contain artefacts
@@ -269,12 +298,12 @@ class CoMUDF(UDF):
     Perform centre-of-mass analysis on the dataset
 
     This replicates the functionality of
-    :function:`~libertem.api.Context.create_com_analysis`
+    :func:`~libertem.api.Context.create_com_analysis`
     but in UDF form, making it compatible with live processing and more easily
     sub-classable.
 
     To parametrise the CoM calculation, use the constructor
-    :classmethod:`CoMUDF.with_params`.
+    :meth:`CoMUDF.with_params`.
 
     .. versionadded:: 0.12.0
 
@@ -316,16 +345,23 @@ class CoMUDF(UDF):
     Parameters
     ----------
     com_params : CoMParams
-        A :class:`CoMParams` instance containing the parameters
-        for this UDF. By default will create a CoMParams instance
-        which performs whole-frame CoM with results in the coordinates
-        of the frame # CHECKTHIS
+        A :class:`~libertem.udf.com.CoMParams` instance containing the parameters
+        for this UDF. By default a :code:`CoMParams` instance is created
+        which performs whole-frame CoM giving shifts relative to the
+        frame centre with no corrections.
 
     Examples
     --------
-    >>> udf = CoMUDF()
+    >>> # CoM in a disk r=4. centred on (7.2, 6.8)
+    >>> udf = CoMUDF.with_params(cy=7.2, cx=6.8, r=4.)
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
-    >>> result["magnitude"].data.shape
+    >>> result["raw_shifts"].data.shape
+    (16, 16)
+
+    >>> # Whole-frame CoM corrected to have zero-mean shift
+    >>> udf = CoMUDF.with_params(regression=0)
+    >>> result = ctx.run_udf(dataset=dataset, udf=udf)
+    >>> result["raw_shifts"].data.shape
     (16, 16)
     """
     def __init__(self, com_params: CoMParams = CoMParams()):
@@ -356,7 +392,7 @@ class CoMUDF(UDF):
             Horizontal-Centre of the mask applied to the frame, if any, and the
             reference point from which horizontal CoM-shifts are calculated. If
             None, cx is set to the frame centre at runtime.
-        r : float, by default float('inf')
+        r : float, by default :code:`float('inf')`
             (Outer) Radius of the disk mask around cy/cx to restrict the CoM
             calculation. The default value is :code:`float('inf')` which is
             equivalent to performing whole-frame CoM with the given origin
@@ -383,20 +419,29 @@ class CoMUDF(UDF):
             Merlin, may have pixel (0, 0) at the lower left corner. This has to
             be corrected to get the sign of the y shift as well as curl and
             divergence right.
-        regression : Union[np.ndarray, int], by default -1
-            Regression to flatten the field. If an ndarray with shape (3, 2) is
-            passed, it specifies the regression to use: ((y, x), (dy/dy, dx/dy),
-            (dy/dx, dx/dx)).
+        regression : Union[np.ndarray, Literal[-1, 0, 1]], by default -1
+            Regression to a background CoM field used to flatten the results
 
-            If an integer is used, it specifies the regression order to
-            calculate and use. -1: No regression. 0: Subtract mean, compensates
-            center offset. 1: Subtract mean and linear regression, compensates
-            center offset and descan error.
+            Can be an ndarray with shape (3, 2) which specifies a correction
+            to subtract in the form: :code:`[[y, x], [dy/dy, dx/dy], [dy/dx, dx/dx]]`.
 
-            The regression that was used is available in the 'regression' result
-            buffer.
+            Otherwise a member of the :class:`~libertem.udf.com.RegressionOptions`
+            enum or an integer in :code:`(-1, 0, 1)`. This specifies the regression
+            order to calculate and apply to the results. With the following effects:
 
-            Please note that a regression calculated on the data itself may
+              - :code:`RegressionOptions.NO_REGRESSION` or :code:`-1`: No regression
+              - :code:`RegressionOptions.SUBTRACT_MEAN` or :code:`0`: Subtract the mean
+                to compensate for center offset.
+              - :code:`RegressionOptions.SUBTRACT_LINEAR` or :code:`1`: Subtract the mean
+                and a linear regression, to compensate for center offset and descan
+                error.
+
+            The regression that was used is available in the :code:`'regression'`
+            result buffer.
+
+
+        .. note::
+            Using a regression correction calculated on the data itself may
             distort valid results, such as the effect of long-range fields.
             Furthermore, it may yield erronerous results due to aliasing on
             periodic structures or boundary effects. Subtracting a reference

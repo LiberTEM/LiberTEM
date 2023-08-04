@@ -607,6 +607,8 @@ class CoMUDF(UDF):
                 valid_field = field[valid]
                 res = np.linalg.lstsq(inp[valid], valid_field, rcond=None)
                 result[:] = res[0]
+            else:
+                raise ValueError(f'Unrecognized regression option {com_params.regression}')
         else:
             regression = np.array(com_params.regression)
             if regression.shape != (3, 2):

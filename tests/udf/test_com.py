@@ -141,6 +141,40 @@ def test_com_params(lt_ctx, repeat):
     )
 
 
+def test_com_invalid_annulus_params():
+    with pytest.raises(ValueError):
+        com.CoMUDF.with_params(
+            r=5.,
+            ri=10.,
+        )
+
+
+def test_invalid_sig_shape(lt_ctx):
+    ds = lt_ctx.load(
+        'memory',
+        data=np.zeros((2, 2, 4, 4, 4)),
+        sig_dims=3,
+        num_partitions=1,  # avoid a warning
+    )
+    udf = com.CoMUDF()
+    with pytest.raises(ValueError):
+        lt_ctx.run_udf(ds, udf)
+
+
+@pytest.mark.parametrize('dims', (1, 3))
+def test_invalid_nav_shape(lt_ctx, dims):
+    nav_shape = (2,) * dims
+    ds = lt_ctx.load(
+        'memory',
+        data=np.zeros(nav_shape + (4, 4)),
+        sig_dims=2,
+        num_partitions=1,  # avoid a warning
+    )
+    udf = com.CoMUDF()
+    with pytest.raises(ValueError):
+        lt_ctx.run_udf(ds, udf)
+
+
 @pytest.mark.parametrize('repeat', range(10))
 def test_com_roi(lt_ctx, repeat):
 

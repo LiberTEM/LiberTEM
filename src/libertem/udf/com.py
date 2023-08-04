@@ -356,13 +356,13 @@ class CoMUDF(UDF):
     >>> udf = CoMUDF.with_params(cy=7.2, cx=6.8, r=4.)
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
     >>> result["raw_shifts"].data.shape
-    (16, 16)
+    (16, 16, 2)
 
     >>> # Whole-frame CoM corrected to have zero-mean shift
     >>> udf = CoMUDF.with_params(regression=0)
     >>> result = ctx.run_udf(dataset=dataset, udf=udf)
     >>> result["raw_shifts"].data.shape
-    (16, 16)
+    (16, 16, 2)
     """
     def __init__(self, com_params: CoMParams = CoMParams()):
         super().__init__(com_params=com_params)

@@ -133,16 +133,15 @@ Centre-of-Mass
 
 The :code:`CoMUDF` has two helper classes used to parametrise it:
 
-.. autoclass:: libertem.udf.com.CoMParams
+.. autonamedtuple:: libertem.udf.com.CoMParams
 
-.. autoclass:: libertem.udf.com.RegressionOptions
-    :members:
+.. autoenum:: libertem.udf.com.RegressionOptions
 
 There is also a function available to guess sensible CoM parameters:
 
 .. autofunction:: libertem.udf.com.guess_corrections
 
-.. autoclass:: libertem.udf.com.GuessResult
+.. autonamedtuple:: libertem.udf.com.GuessResult
 
 .. _`masks udf`:
 

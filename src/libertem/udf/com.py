@@ -439,7 +439,6 @@ class CoMUDF(UDF):
             The regression that was used is available in the :code:`'regression'`
             result buffer.
 
-
         .. note::
             Using a regression correction calculated on the data itself may
             distort valid results, such as the effect of long-range fields.

@@ -5,6 +5,8 @@ sphinxcontrib-bibtex>=2
 # https://github.com/sloria/sphinx-issues/issues/125
 sphinx-issues!=3.0.0
 sphinx-rtd-theme
+sphinx-toolbox
+enum-tools[sphinx]
 nbsphinx!=0.8.8
 nbsphinx_link
 ipython

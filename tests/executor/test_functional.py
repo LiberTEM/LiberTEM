@@ -526,7 +526,7 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx, concurrent_e
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(15 * num_workers)]
+            tasks=[MockTask() for _ in range(30 * num_workers)]
         )
         first_result, _task = next(result_iter)
         print("started")
@@ -587,7 +587,7 @@ def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx, concurrent_ex
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(15 * num_workers)]
+            tasks=[MockTask() for _ in range(30 * num_workers)]
         )
         first_result, _task = next(result_iter)
         print("started")

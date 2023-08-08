@@ -67,6 +67,8 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx_issues',
     'sphinx_rtd_theme',
+    'sphinx_toolbox.more_autodoc.autonamedtuple',
+    'enum_tools.autoenum',
 ]
 
 bibtex_bibfiles = ['references-libertem.bib']

@@ -669,7 +669,9 @@ def _order_results(results_in: ResultWithID) -> ResultT:
     span = trace.get_current_span()
     for result, task, task_id in results_in:
         if task_id == last_sent_id + 1:
-            span.add_event("_order_results.yield")
+            span.add_event("_order_results.yield", {
+                'task_id': task_id,
+            })
             yield (result, task)
             last_sent_id = task_id
         else:
@@ -684,6 +686,9 @@ def _order_results(results_in: ResultWithID) -> ResultT:
         # top of the stack looks good, yield as long as it matches:
         while len(result_stack) > 0 and result_stack[0][2] == last_sent_id + 1:
             res = result_stack.pop(0)
+            span.add_event("_order_results.yield", {
+                'task_id': res[2],
+            })
             yield res[0], res[1]
             last_sent_id = res[2]
 
@@ -980,61 +985,65 @@ class PipelinedExecutor(BaseJobExecutor):
                 except WorkerQueueEmpty:
                     self._validate_worker_state()
 
-            for task_idx, task in enumerate(tasks):
-                # important: call `schedule_task` before incrementing number of
-                # in-flight tasks, otherwise, if we run into an exception, we
-                # will wait for a response that never comes.
-                # select a worker for `task` according to `selector`:
-                _worker_idx, worker_queues = schedule_task(
-                    task_idx,
-                    task,
-                    self._pool,
-                    scheduler,
-                    pool_info_for_worker,
-                    selector=selector,
-                )
-                worker_queues.request.put({
-                    "type": "RUN_TASK",
-                    "uuid": tasks_uuid,
-                    "task": cloudpickle.dumps(task),
-                    "task_id": task_idx,
-                    "params_handle": params_handle,
-                    "span_context": span_context,
-                })
-                in_flight += 1
-                id_to_task[task_idx] = task
-                if len(id_to_task) != in_flight:
-                    raise RuntimeError(
-                        "state mismatch; `id_to_task` mapping should match `in_flight`"
+            with tracer.start_as_current_span('schedule_tasks') as span:
+                for task_idx, task in enumerate(tasks):
+                    # important: call `schedule_task` before incrementing number of
+                    # in-flight tasks, otherwise, if we run into an exception, we
+                    # will wait for a response that never comes.
+                    # select a worker for `task` according to `selector`:
+                    _worker_idx, worker_queues = schedule_task(
+                        task_idx,
+                        task,
+                        self._pool,
+                        scheduler,
+                        pool_info_for_worker,
+                        selector=selector,
                     )
+                    worker_queues.request.put({
+                        "type": "RUN_TASK",
+                        "uuid": tasks_uuid,
+                        "task": cloudpickle.dumps(task),
+                        "task_id": task_idx,
+                        "params_handle": params_handle,
+                        "span_context": span_context,
+                    })
+                    span.add_event('RUN_TASK', {
+                        'task_id': task_idx,
+                    })
+                    in_flight += 1
+                    id_to_task[task_idx] = task
+                    if len(id_to_task) != in_flight:
+                        raise RuntimeError(
+                            "state mismatch; `id_to_task` mapping should match `in_flight`"
+                        )
 
-                # FIXME: semantics of this - is this enough?
-                # does it matter if this is enough? we can change it in the future if not
-                # could be: the function returns once it has forwarded
-                # all the data necessary for the given task,
-                # (or, in the offline case, immediately)
-                try:
-                    task_comm_handler.handle_task(task, worker_queues.request)
-                except JobCancelledError:
+                    # FIXME: semantics of this - is this enough?
+                    # does it matter if this is enough? we can change it in the future if not
+                    # could be: the function returns once it has forwarded
+                    # all the data necessary for the given task,
+                    # (or, in the offline case, immediately)
+                    try:
+                        task_comm_handler.handle_task(task, worker_queues.request)
+                    except JobCancelledError:
+                        worker_queues.request.put({
+                            "type": "END_TASK",
+                            "task_id": task_idx,
+                            "params_handle": params_handle,
+                            "span_context": span_context,
+                        })
+                        raise
+
+                    # NOTE: sentinel message; in case of errors, the worker
+                    # needs to discard the data from the queue until it receives
+                    # this message:
                     worker_queues.request.put({
                         "type": "END_TASK",
                         "task_id": task_idx,
                         "params_handle": params_handle,
                         "span_context": span_context,
                     })
-                    raise
 
-                # NOTE: sentinel message; in case of errors, the worker
-                # needs to discard the data from the queue until it receives
-                # this message:
-                worker_queues.request.put({
-                    "type": "END_TASK",
-                    "task_id": task_idx,
-                    "params_handle": params_handle,
-                    "span_context": span_context,
-                })
-
-                yield from yield_result_if_found(block=False, timeout=None)
+                    yield from yield_result_if_found(block=False, timeout=None)
 
             # at the end, block to get the remaining results:
             while in_flight > 0:
@@ -1186,12 +1195,13 @@ class PipelinedExecutor(BaseJobExecutor):
     def scatter(self, obj):
         self._validate_worker_state()
         key = str(uuid.uuid4())
-        for worker_info in self._pool.workers:
-            worker_info.queues.request.put({
-                "type": "SCATTER",
-                "key": key,
-                "value": obj,
-            })
+        with tracer.start_as_current_span("scatter_put_to_workers"):
+            for worker_info in self._pool.workers:
+                worker_info.queues.request.put({
+                    "type": "SCATTER",
+                    "key": key,
+                    "value": obj,
+                })
         try:
             yield key
         finally:

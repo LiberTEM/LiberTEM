@@ -142,6 +142,19 @@ class TileConverter:
         return res
 
 
+def _format_plan(plan: ExecutionPlan) -> List[str]:
+    res = []
+    for k, v in plan.items():
+        udf_classes = ",".join([
+            str(c.__class__.__name__)
+            for c in v
+        ])
+        res.append(
+            f"{str(k)}: {udf_classes}"
+        )
+    return res
+
+
 def _execution_plan(
     udfs, ds: Union[DataSet, DataSetMeta], device_class: Optional[DeviceClass] = None,
     available_backends: Iterable[ArrayBackend] = BACKENDS
@@ -306,7 +319,7 @@ def _execution_plan(
     trace.get_current_span().add_event(
         'execution_plan', {
             'ds_backend': ds_backend,
-            'execution_plan': reordered_plan,
+            'execution_plan': _format_plan(reordered_plan),
         }
     )
     return ds_backend, reordered_plan
@@ -2287,19 +2300,20 @@ class UDFRunner:
             if isinstance(udf, UDFPreprocessMixin):
                 udf.set_views_for_dataset(dataset)
                 udf.preprocess()
-        neg = Negotiator()
-        # FIXME take compute backend into consideration as well
-        # Other boundary conditions when moving input data to device
-        # FIXME: approximate partition shape here
-        partition = next(dataset.get_partitions())
-        tiling_scheme = neg.get_scheme(
-            udfs=self._udfs,
-            approx_partition_shape=partition.shape,
-            dataset=dataset,
-            read_dtype=meta.input_dtype,
-            roi=roi,
-            corrections=corrections,
-        )
+        with tracer.start_as_current_span('tileshape negotiation'):
+            neg = Negotiator()
+            # FIXME take compute backend into consideration as well
+            # Other boundary conditions when moving input data to device
+            # FIXME: approximate partition shape here
+            partition = next(dataset.get_partitions())
+            tiling_scheme = neg.get_scheme(
+                udfs=self._udfs,
+                approx_partition_shape=partition.shape,
+                dataset=dataset,
+                read_dtype=meta.input_dtype,
+                roi=roi,
+                corrections=corrections,
+            )
         params = UDFParams.from_udfs(
             udfs=self._udfs,
             roi=roi,
@@ -2354,14 +2368,16 @@ class UDFRunner:
             tasks, params = self._prepare_run_for_dataset(
                 dataset, executor, roi, corrections, backends, dry
             )
-        cancel_id = str(uuid.uuid4())
-        self._debug_task_pickling(tasks)
 
-        executor = executor.ensure_sync()
-        if dry:
-            task_comm_handler: TaskCommHandler = NoopCommHandler()
-        else:
-            task_comm_handler = dataset.get_task_comm_handler()
+        with tracer.start_as_current_span("before inner work"):
+            cancel_id = str(uuid.uuid4())
+            self._debug_task_pickling(tasks)
+
+            executor = executor.ensure_sync()
+            if dry:
+                task_comm_handler: TaskCommHandler = NoopCommHandler()
+            else:
+                task_comm_handler = dataset.get_task_comm_handler()
 
         def _inner():
             try:

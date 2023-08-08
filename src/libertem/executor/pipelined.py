@@ -22,10 +22,12 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
     WorkerQueueEmpty, TaskCommHandler, SimpleMPWorkerQueue,
-    JobCancelledError, ResourceDef,
+    JobCancelledError, ResourceDef, PreparedParameter,
 )
 from libertem.common.scheduler import Worker, WorkerSet, Scheduler
-from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
+from libertem.common.tracing import (
+    add_partition_to_span, attach_to_parent, maybe_setup_tracing,
+)
 
 from .utils import assign_cudas
 from .base import BaseJobExecutor, ResourceError
@@ -296,6 +298,13 @@ def set_thread_name(name: str):
     prctl.set_name(name)
 
 
+def _resolve_prepared_parameter(item, work_mem: Dict):
+    k, v = item
+    if type(v) is PreparedParameter:
+        return (k, work_mem[v.key])
+    return item
+
+
 def worker_run_task(
     header: Dict,
     work_mem: Dict,
@@ -333,6 +342,7 @@ def worker_run_task(
             task: TaskProtocol = cloudpickle.loads(header["task"])
             params_handle = header["params_handle"]
             params = work_mem[params_handle]
+            params.map(lambda item: _resolve_prepared_parameter(item, work_mem))
             partition = task.get_partition()
             add_partition_to_span(partition)
             result = task(params, env)

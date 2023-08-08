@@ -1713,6 +1713,19 @@ class UDFParams:
         for p, kwargs in zip(patch, self._kwargs):
             kwargs.update(p)
 
+    def map(self, fn):
+        """
+        map a function over all (k, v) pairs, and build a new dict from the
+        returned items
+        """
+        self._kwargs = [
+            dict(
+                fn(item)
+                for item in kwargs.items()
+            )
+            for kwargs in self._kwargs
+        ]
+
     @property
     def roi(self):
         return self._roi

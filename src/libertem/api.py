@@ -9,10 +9,12 @@ import warnings
 import weakref
 import atexit
 import logging
+import contextlib
 
 from opentelemetry import trace
 import numpy as np
 from libertem.executor.pipelined import PipelinedExecutor
+from libertem.common.executor import PreparedParameter
 
 from libertem.io.corrections import CorrectionSet
 from libertem.executor.concurrent import ConcurrentJobExecutor
@@ -800,6 +802,11 @@ class Context:
         loc = locals()
         parameters = {name: loc[name] for name in ['x', 'y', 'z'] if loc[name] is not None}
         return PickFrameAnalysis(dataset=dataset, parameters=parameters)
+
+    @contextlib.contextmanager
+    def prepare_parameter(self, param):
+        with self.executor.scatter(param) as key:
+            yield PreparedParameter(key)
 
     def run(
         self, job: Analysis,

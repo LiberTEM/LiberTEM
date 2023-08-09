@@ -413,6 +413,37 @@ def test_multi_mask_stack_force_sparse_pydata(lt_ctx, backend):
 
 
 @pytest.mark.parametrize(
+    'backend', (None, ) + tuple(ApplyMasksUDF(lambda x: None).get_backends())
+)
+def test_multi_mask_stack_force_sparse_pydata_GCXS(lt_ctx, backend):
+    with set_device_class(get_device_class(backend)):
+        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
+        masks = _mk_random(size=(2, 16, 16))
+        expected = _naive_mask_apply(masks, data)
+
+        dataset = MemoryDataSet(
+            data=data, tileshape=(4 * 4, 4, 4), num_partitions=2,
+            array_backends=(backend, ) if backend is not None else None
+        )
+        analysis = lt_ctx.create_mask_analysis(
+            dataset=dataset, factories=lambda: masks, use_sparse='sparse.pydata.GCXS', mask_count=2
+        )
+        if backend in CUPY_BACKENDS:
+            with pytest.raises(ValueError):
+                results = lt_ctx.run(analysis)
+        else:
+            results = lt_ctx.run(analysis)
+            assert np.allclose(
+                results.mask_0.raw_data,
+                expected[0],
+            )
+            assert np.allclose(
+                results.mask_1.raw_data,
+                expected[1],
+            )
+
+
+@pytest.mark.parametrize(
     'backend', ['numpy', 'cupy']
 )
 def test_multi_mask_stack_force_dense(lt_ctx, backend):

@@ -216,6 +216,8 @@ def get_latest_stable_tag():
             key=parse_version
         )
     )
+    if len(sorted_stable_tags) == 0:
+        return None
     return sorted_stable_tags[-1]
 
 

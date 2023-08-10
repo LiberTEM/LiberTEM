@@ -1667,8 +1667,10 @@ class Context:
 
         Raises
         ------
-        ValueError : If the path suffix is not supported
-        FileExistsError : If overwrite is True and the save path exists
+        ValueError
+            If the path suffix is not supported
+        FileExistsError
+            If overwrite is True and the save path exists
         """
         path = pathlib.Path(path)
         if path.suffix != '.npy':

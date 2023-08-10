@@ -5,7 +5,6 @@ import subprocess
 import distutils
 import shutil
 from setuptools.command.sdist import sdist
-from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages
 
 
@@ -70,13 +69,6 @@ class BakedRevisionBuilderSdist(sdist):
         super().make_release_tree(base_dir, files)
 
 
-class BakedRevisionBuilderBuildPy(build_py):
-    def run(self):
-        if not self.dry_run:
-            write_baked_revision(self.build_lib)
-        super().run()
-
-
 def mkpath(path):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -106,7 +98,7 @@ def get_git_rev():
 
 
 def write_baked_revision(base_dir):
-    dest_dir = os.path.join(base_dir, 'libertem')
+    dest_dir = os.path.join(base_dir, 'src', 'libertem')
     baked_dest = os.path.join(dest_dir, '_baked_revision.py')
     mkpath(dest_dir)
 
@@ -202,7 +194,6 @@ setup(
         'build_client': BuildClientCommand,
         'copy_client': CopyClientCommand,
         'sdist': BakedRevisionBuilderSdist,
-        'build_py': BakedRevisionBuilderBuildPy,
     },
     keywords="electron microscopy",
     description="Open pixelated STEM framework",

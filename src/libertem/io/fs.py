@@ -80,7 +80,7 @@ def get_fs_listing(path):
         full_path = os.path.join(path, name)
         try:
             s = os.stat(full_path)
-        except FileNotFoundError:
+        except (FileNotFoundError, PermissionError):
             # this can happen either because of a TOCTOU-like race condition
             # or for example for things like broken softlinks
             continue

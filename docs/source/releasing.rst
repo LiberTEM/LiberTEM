@@ -45,6 +45,10 @@ When planning a release, create a new issue with the following checklist:
     * #YYY
     * #ZZZ
 
+    ## Step 0
+
+    * [ ] Create a release candidate using `scripts/release`. See `scripts/release --help` for details.
+
     ## Before (using a release candidate package)
 
     * [ ] Review open issues and pull requests
@@ -70,7 +74,6 @@ When planning a release, create a new issue with the following checklist:
           snippets in `docs/source/changelog/*/` as appropriate.
     * [ ] Update the JSON files in the ``packaging/`` folder with author and project information
     * [ ] Edit `pytest.ini` to exclude flaky tests temporarily from release builds
-    * [ ] Create a release candidate using `scripts/release`. See `scripts/release --help` for details.
     * [ ] `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
           GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
     * [ ] Confirm that a new version with the most recent release candidate is created in the
@@ -137,3 +140,4 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Bump version in master branch to next .dev0 (`./scripts/release bump v0.X.0.dev0 --commit`)
     * [ ] Add to institutional publication databases
     * [ ] Add the current LiberTEM version to [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software>) - add both the singularity and the .desktop file!
+    * [ ] Conda packaging: review PRs on https://github.com/conda-forge/libertem-feedstock/pulls

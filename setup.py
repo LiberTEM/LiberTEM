@@ -153,6 +153,7 @@ setup(
         'nbformat',
         'nbconvert',
         'autopep8',
+        'pycodestyle<2.11',  # FIXME: workaround for incompatibility w/ autopep8, remove this line once that's fixed!  # NOQA
         'empyre>=0.3.0',
         'defusedxml',
         'typing-extensions',  # backwards-compatibility for newer typing constructs

@@ -297,13 +297,13 @@ class CoMUDF(UDF):
     """
     Perform centre-of-mass analysis on the dataset
 
+    To parametrise the CoM calculation, use the constructor
+    :meth:`CoMUDF.with_params`.
+
     This replicates the functionality of
     :func:`~libertem.api.Context.create_com_analysis`
     but in UDF form, making it compatible with live processing and more easily
     sub-classable.
-
-    To parametrise the CoM calculation, use the constructor
-    :meth:`CoMUDF.with_params`.
 
     .. versionadded:: 0.12.0
 
@@ -345,7 +345,7 @@ class CoMUDF(UDF):
     Parameters
     ----------
     com_params : CoMParams
-        A :class:`~libertem.udf.com.CoMParams` instance containing the parameters
+        A :class:`CoMParams` instance containing the parameters
         for this UDF. By default a :code:`CoMParams` instance is created
         which performs whole-frame CoM giving shifts relative to the
         frame centre with no corrections.
@@ -438,6 +438,12 @@ class CoMUDF(UDF):
 
             The regression that was used is available in the :code:`'regression'`
             result buffer.
+
+        Returns
+        -------
+        CoMUDF : libertem.udf.com.CoMUDF
+            the UDF with the provided parameters
+
 
         .. note::
             Using a regression correction calculated on the data itself may

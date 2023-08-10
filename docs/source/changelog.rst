@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.12.0.dev0
+0.13.0.dev0
 ###########
 
 .. toctree::
@@ -20,6 +20,87 @@ Changelog
   changelog/*/*
 
 .. _latest:
+
+.. _`v0-12-0`:
+
+0.12.0 / 2023-08-11
+###################
+
+..
+  Commented the DOI button until it is defined!
+  .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8114529.svg
+    :target: https://doi.org/10.5281/zenodo.8114529
+
+The 0.12 release introduces a dedicated Centre-of-Mass analysis UDF
+with additional features compared to the existing
+:meth:`~libertem.api.Context.create_com_analysis()` API. The dedicated
+UDF allows more straightforward live processing support, and can be
+subclassed as in the `LiberTEM-iCoM <https://github.com/LiberTEM/LiberTEM-iCoM>`_
+project.
+
+Also included are two usability improvements aimed at simplifying
+interaction with LiberTEM:
+
+* :code:`ctx.export_dataset()` for conversion of any supported
+  LiberTEM dataset to the Numpy binary format *.npy*.
+* :code:`lt.Context.make_with(cpus=n, gpus=m)` to simplify creation
+  of a LiberTEM :code:`Context` with a specfic number of workers
+  (rather than using all available resources by default).
+
+This release also contains numerous fixes and backend changes
+across the codebase, improving the robustness of support for
+both sparse data and live processing in particular.
+
+Many thanks to everyone who has contributed to this release!
+
+Features
+--------
+
+* Adds :class:`~libertem.udf.com.CoMUDF` as an extension from
+  :meth:`~libertem.api.Context.create_com_analysis`, with support for automatic
+  correction of flat field effects (beam offset and descan
+  error) (:pr:`1392`).
+* Adds :meth:`libertem.api.Context.export_dataset` for export of any supported
+  LiberTEM dataset to another format. At this time only exporting to
+  the Numpy binary fomat *.npy* is supported, but other formats
+  can later be added according to need (:pr:`1379`).
+* The :meth:`libertem.api.Context.make_with` constructor method has been improved
+  to allow simple specification of the number CPU and GPU workers to use,
+  as well as the type of executor to create (:pr:`1443`).
+* Experimental API for dynamic updates to parameters while UDFs
+  are running, allowing for faster feedback loops during live processing,
+  notably (:pr:`1441`).
+
+Miscellaneous
+-------------
+
+* The :class:`~libertem.executor.pipelined.PipelinedExecutor` executor now
+  schedules tasks on the worker with the smallest request queue size (:pr:`1451`).
+* Update :class:`~libertem.executor.pipelined.PipelinedExecutor` to properly
+  match tasks to workers based on resources requested, including GPU workers
+  (:pr:`1453`).
+* Array backend categories are now available in
+  :class:`~libertem.udf.base.UDF` (:pr:`1470`).
+* The UDF runner internals will now raise :class:`~libertem.exceptions.UDFRunCancelled`
+  if a UDF run is cancelled, allowing the user to handle this case (:pr:`1448`).
+* Introduce option for :code:`sparse.GCXS` in
+  :class:`~libertem.common.container.MaskContainer` (:pr:`1447`).
+
+Bugfixes
+--------
+
+* We now properly forward the logging level to :code:`dask.distributed` workers
+  during initialization. This prevents a substantial amount of logging
+  information being printed to :code:`stderr` at cluster startup. (:pr:`1438`).
+* When processing *raw_csr* datasets, we now avoid upcasting to
+  float64 when reading an indptr of type uint64 (:pr:`1465`).
+
+Deployment
+----------
+
+* Starting with version 0.12, LiberTEM container images will be available
+  `from the GitHub container registry <https://ghcr.io/libertem/libertem>`_.
+
 
 .. _`v0-11-2`:
 

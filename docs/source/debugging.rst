@@ -19,9 +19,9 @@ Debugging the Web GUI
 
 For debugging the GUI, you can use all standard debugging tools for web development. Most useful
 in this context are the `Chrome DevTools <https://developer.chrome.com/docs/devtools/>`_
-or `Firefox Developer Tools <https://developer.mozilla.org/en-US/docs/Tools>`_, which can be
+or `Firefox Developer Tools <https://firefox-source-docs.mozilla.org/devtools-user/index.html>`_, which can be
 accessed by pressing F12. You can extend these with additional panels
-`for React <https://reactjs.org/blog/2019/08/15/new-react-devtools.html>`_
+`for React <https://legacy.reactjs.org/blog/2019/08/15/new-react-devtools.html>`_
 and `for Redux <https://github.com/reduxjs/redux-devtools>`_.
 
 These tools can be used for inspecting all frontend-related processes, from network traffic
@@ -216,9 +216,9 @@ On Windows
 ~~~~~~~~~~
 
 The easiest way to get the tracing services up and running is using
-`Windows Subsystem for Linux <https://docs.microsoft.com/en-us/windows/wsl/install>`_
+`Windows Subsystem for Linux <https://learn.microsoft.com/en-us/windows/wsl/install>`_
 to install Linux and Docker. This allows to run the tracing services as described above.
-Alternatively, `Docker Desktop for Windows <https://docs.docker.com/desktop/windows/install/>`_
+Alternatively, `Docker Desktop for Windows <https://docs.docker.com/desktop/install/windows-install/>`_
 could be an option.
 
 Clients running natively on Windows can then connect to these services:

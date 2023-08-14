@@ -111,7 +111,7 @@ def cluster_spec(
     This creates a Dask cluster spec with special initializations and resource tags
     for CPU + GPU processing in LiberTEM.
     See :ref:`cluster spec` for an example.
-    See http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
+    See https://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
     for more info on cluster specs.
 
     Parameters
@@ -711,7 +711,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         ----------
         spec
             Dask cluster spec, see
-            http://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
+            https://distributed.dask.org/en/stable/api.html#distributed.SpecCluster
             for more info.
             :func:`libertem.utils.devices.detect` allows to detect devices that can be used
             with LiberTEM, and :func:`cluster_spec` can be used to create a :code:`spec`

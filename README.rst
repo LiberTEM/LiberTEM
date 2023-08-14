@@ -3,7 +3,7 @@
 .. |docs| image:: https://img.shields.io/badge/%F0%9F%95%AE-docs-green.svg
 .. _docs: https://libertem.github.io/LiberTEM/
 
-.. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+.. |gitter| image:: https://badges.gitter.im/join_chat.svg
 .. _gitter: https://gitter.im/LiberTEM/Lobby
 
 .. |azure| image:: https://dev.azure.com/LiberTEM/LiberTEM/_apis/build/status/LiberTEM.LiberTEM-data?branchName=master
@@ -159,9 +159,9 @@ information!
 - Raw binary files
 - NumPy .npy binary files
 - Thermo Fisher EMPAD detector :cite:`Tate2016` files
-- `Quantum Detectors MIB format <http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf>`_
+- `Quantum Detectors MIB format <https://quantumdetectors.com/products/merlinem/>`_
 - Nanomegas .blo block files
-- Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for `DE-Series <http://www.directelectron.com/de-series/>`_ detectors
+- Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for `DE-Series <https://directelectron.com/de-series-cameras/>`_ detectors
 - `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
 - Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - Single-file Gatan DM4 scans when saved using C-ordering

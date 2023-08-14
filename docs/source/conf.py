@@ -225,8 +225,6 @@ intersphinx_mapping = {
 linkcheck_ignore = [
     # Local URLs:
     r'^http://localhost.*',
-    # Freezes the link checker for unknown reasons within CI, hard to reproduce
-    r'http://quantumdetectors.com/wp-content/uploads/2017/01/1532-Merlin-for-EM-Technical-Datasheet-v2.pdf',  # NOQA: E501
     # Apparently only for project members
     r'https://github.com/LiberTEM/LiberTEM/security/dependabot',
 ]

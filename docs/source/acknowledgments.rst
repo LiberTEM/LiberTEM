@@ -23,7 +23,7 @@ Notable upstream projects
 `Ncempy <https://openncem.readthedocs.io/>`_
 
 `TypeScript <https://www.typescriptlang.org/>`_, `React
-<https://reactjs.org/>`_, `React Window <https://react-window.vercel.app/>`_, `Redux
+<https://react.dev/>`_, `React Window <https://react-window.vercel.app/>`_, `Redux
 <https://redux.js.org/>`_, `Redux-saga <https://redux-saga.js.org/>`_, `Semantic
 UI <https://semantic-ui.com/>`_
 

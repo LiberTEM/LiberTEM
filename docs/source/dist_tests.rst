@@ -12,7 +12,7 @@ Requirements
 
 To run the distributed tests, you need to install (a current version of) :code:`docker`
 and :code:`docker-compose`. See
-`the official docker documentation <https://docs.docker.com/install/>`_ to get started.
+`the official docker documentation <https://docs.docker.com/get-docker/>`_ to get started.
 To start the test environment, change to the :code:`packaging/docker/` directory and
 run the following:
 

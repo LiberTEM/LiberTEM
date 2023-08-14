@@ -334,7 +334,7 @@ Mypy type annotations
 ~~~~~~~~~~~~~~~~~~~~~
 
 We are starting to introduce type annotations and checking them in CI with
-`mypy <http://mypy-lang.org/>`_.
+`mypy <https://mypy-lang.org/>`_.
 Adding type annotations improves developer experience, especially by improving
 auto completion and type information on hover in IDEs. Type checking is
 currently quite lax and opt-in. See the file

@@ -247,7 +247,7 @@ New features
 * Integrate :ref:`tracing` that allows to debug and trace distribted operation
   of LiberTEM (:issue:`691`, :pr:`1266`).
 * :code:`libertem-server` picks a free port if the default is in use and no port
-  was specified (:pr:`1184`).
+  was specified (:issue:`1184`, :pr:`1279`).
 * :func:`~libertem.executor.dask.cluster_spec` now accepts the same CUDA device
   ID multiple times to spawn multiple workers on the same GPU. This can help
   increase GPU resource utilisation for some workloads (:pr:`1270`).

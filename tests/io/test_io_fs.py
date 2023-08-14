@@ -13,10 +13,10 @@ def test_get_fs_listing_permission_of_subdir(tmpdir_factory):
 
     orig_stat = os.stat
 
-    def mock_stat(path):
+    def mock_stat(path, *args, **kwargs):
         if os.path.normpath(path) == os.path.normpath(no_access_dir):
             raise PermissionError(f"[Errno 13] Access is denied: '{path}'")
-        return orig_stat(path)
+        return orig_stat(path, *args, **kwargs)
 
     # patch os.stat to fail for `sub2`:
     with mock.patch('os.stat', side_effect=mock_stat):

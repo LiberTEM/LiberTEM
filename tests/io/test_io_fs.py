@@ -20,11 +20,11 @@ def test_get_fs_listing_permission_of_subdir(tmpdir_factory):
 
     # patch os.stat to fail for `sub2`:
     with mock.patch('os.stat', side_effect=mock_stat):
-        listing = get_fs_listing(tmpdir)
+        get_fs_listing(tmpdir)
 
         # no direct access to `sub2`
         with pytest.raises(PermissionError):
             os.stat(no_access_dir)
-    
+
         with pytest.raises(FSError):
             get_fs_listing(no_access_dir)

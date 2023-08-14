@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from libertem.io.fs import get_fs_listing, FSError
+from libertem.io.fs import get_fs_listing
 
 
 def test_get_fs_listing_permission_of_subdir(tmpdir_factory):
@@ -20,11 +20,14 @@ def test_get_fs_listing_permission_of_subdir(tmpdir_factory):
 
     # patch os.stat to fail for `sub2`:
     with mock.patch('os.stat', side_effect=mock_stat):
-        get_fs_listing(tmpdir)
+        listing = get_fs_listing(tmpdir)
+
+        dir_names = [
+            entry['name']
+            for entry in listing['dirs']
+        ]
+        assert 'sub2' not in dir_names
 
         # no direct access to `sub2`
         with pytest.raises(PermissionError):
             os.stat(no_access_dir)
-
-        with pytest.raises(FSError):
-            get_fs_listing(no_access_dir)

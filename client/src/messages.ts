@@ -389,12 +389,12 @@ export type MsgPartInitialDataset = DatasetOpen
 // type alias to add client-side state to datasets (currently empty)
 export type DatasetState = Dataset
 
-export enum ShapeLengths {
-    NAV_SHAPE_MIN_LENGTH = 2,
-    NAV_SHAPE_MAX_LENGTH = 2,
-    SIG_SHAPE_MIN_LENGTH = 2,
-    SIG_SHAPE_MAX_LENGTH = 2
-}
+export const ShapeLengths = {
+    NAV_SHAPE_MIN_LENGTH: 2,
+    NAV_SHAPE_MAX_LENGTH: 2,
+    SIG_SHAPE_MIN_LENGTH: 2,
+    SIG_SHAPE_MAX_LENGTH: 2
+};
 
 /*
  * Job

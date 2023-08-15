@@ -6,7 +6,7 @@ import { AnalysisState } from '../analysis/types';
 import * as channelActions from '../channel/actions';
 import * as jobActions from '../job/actions';
 import { cancelJob, startJob } from '../job/api';
-import { JobState } from '../job/types';
+import { JobRunning, JobState } from '../job/types';
 import { AnalysisDetails, DatasetState, DatasetStatus } from '../messages';
 import { RootReducer } from '../store';
 import * as compoundAnalysisActions from './actions';
@@ -74,7 +74,7 @@ export function* cancelOldJob(analysis: AnalysisState, jobIndex: number) {
         return;
     } else {
         const job = (yield select(selectJob, jobId)) as JobState;
-        if (job.running !== "DONE") {
+        if (job.running !==  JobRunning.DONE) {
             yield call(cancelJob, jobId);
         }
     }
@@ -97,7 +97,7 @@ export function* createOrUpdate(
 
         for (const oldJobId of jobs) {
             const job = (yield select(selectJob, oldJobId)) as JobState;
-            if (job && job.running !== "DONE") {
+            if (job && job.running !== JobRunning.DONE) {
                 // wait until the job is cancelled:
                 yield call(cancelJob, oldJobId);
             }
@@ -198,7 +198,7 @@ export function* analysisSidecar(compoundAnalysisId: string /* , options: { doAu
 function* removeJobsForAnalysis(analysis: AnalysisState) {
     for (const oldJobId of analysis.jobs) {
         const job = (yield select(selectJob, oldJobId)) as JobState;
-        if (job && job.running !== "DONE") {
+        if (job && job.running !== JobRunning.DONE) {
             // wait until the job is cancelled:
             yield call(cancelJob, oldJobId);
         }

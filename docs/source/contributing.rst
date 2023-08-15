@@ -293,7 +293,7 @@ Then, in the same directory, to run the tests execute:
 
 .. code-block:: shell
 
-   $ npm test -- --coverage
+   $ npm run coverage
 
 This will run all tests and report code coverage. If you want to run the tests
 while developing the client, you can run them in watch mode, which is the
@@ -427,6 +427,8 @@ changing to the client directory and running the install command:
    It is always a good idea to start development with installing the current
    dependencies with the above command. Having old versions of dependencies
    installed may cause the build to fail or cause unpredictable failures.
+   In some cases, it makes sense to completely remove the ``node_modules``
+   folder before installing the node dependencies.
 
 Once this command finished without errors, you can start a development server
 (also from the client directory):

@@ -3,6 +3,7 @@ import os
 import codecs
 import subprocess
 import distutils
+import pathlib
 import shutil
 from setuptools.command.sdist import sdist
 from setuptools import setup, find_packages
@@ -44,17 +45,18 @@ class CopyClientCommand(distutils.cmd.Command):
         pass
 
     def run(self):
-        cwd = os.path.dirname(__file__)
-        cwd_client = os.path.join(cwd, 'client')
-        client = os.path.join(cwd, 'src', 'libertem', 'web', 'client')
+        cwd = pathlib.Path(__file__).absolute().parent
+        cwd_client = cwd / 'client'
+        client = cwd / 'src' / 'libertem' / 'web' / 'client'
 
         self.announce(
             "preparing output directory: %s" % client,
             level=distutils.log.INFO
         )
-        shutil.rmtree(client)
+        if client.exists():
+            shutil.rmtree(client)
 
-        build = os.path.join(cwd_client, "build")
+        build = cwd_client / "dist"
         self.announce(
             f"copying client: {build} -> {client}",
             level=distutils.log.INFO

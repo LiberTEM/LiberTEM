@@ -11,7 +11,7 @@ export const defaultDebounce = <T extends (...args: any[]) => any>(fn: T, delay 
     _.debounce(fn, delay, { maxWait: delay })
 );
 
-export const getEnumValues = <E>(e: E): Array<keyof E> => (
+export const getEnumValues = <E extends object>(e: E): Array<keyof E> => (
     Object.keys(e) as Array<keyof E>
 );
 

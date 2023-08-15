@@ -3,6 +3,7 @@ import BusySpinner from "./BusySpinner";
 
 interface BusyWrapperProps {
     busy: boolean,
+    children?: React.ReactNode,
 }
 
 const BusyWrapper: React.FC<BusyWrapperProps> = ({ children, busy }) => {

@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import * as ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { applyMiddleware, compose, createStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
@@ -21,11 +21,13 @@ const store = createStore(rootReducer, composeEnhancers(
     )
 ));
 
-ReactDOM.render(
+const container = document.getElementById('root') as HTMLElement;
+const root = createRoot(container);
+
+root.render(
     <Provider store={store}>
         <App />
     </Provider>,
-    document.getElementById('root') as HTMLElement
 );
 
 sagaMiddleware.run(rootSaga);

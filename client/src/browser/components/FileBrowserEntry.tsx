@@ -65,7 +65,7 @@ export const FileSize: React.FC<FileSizeProps> = ({ size, si }) => {
     );
 }
 
-export const Cell: React.FC<{ title?: string }> = ({ children, title }) => {
+export const Cell: React.FC<{ title?: string, children?: React.ReactNode }> = ({ children, title }) => {
     const styles: React.CSSProperties = {
         whiteSpace: "nowrap",
         overflow: "hidden",

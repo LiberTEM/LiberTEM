@@ -5,6 +5,7 @@ interface FixedSizeListProps {
     itemCount: number,
     itemSize: number,
     style: React.CSSProperties,
+    children?: (arg: {index: number, style: Record<string, unknown>}) => void,
 }
 
 interface VariableSizeGridProps {

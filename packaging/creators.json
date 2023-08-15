@@ -151,7 +151,15 @@
         "affiliation": "Columbia University",
         "github": "saisunku",
         "contribution": "Bug fixes"
-    }, 
+    },
+    {
+        "displayname": "Håkon Wiik Ånes",
+        "authorname": "Ånes, Håkon W.",
+        "affiliation": "Norwegian University of Science and Technology",
+        "github": "hakonanes",
+        "contribution": "Continuous integration",
+        "orcid": "0000-0002-1213-2911"
+    },
     {
         "displayname": "Knut Müller-Caspary",
         "authorname": "Müller-Caspary, Knut",
@@ -165,13 +173,5 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    },
-    {
-        "displayname": "Håkon Wiik Ånes",
-        "authorname": "Ånes, Håkon W.",
-        "affiliation": "Norwegian University of Science and Technology",
-        "github": "hakonanes",
-        "contribution": "Continuous integration",
-        "orcid": "0000-0002-1213-2911"
     }
 ]

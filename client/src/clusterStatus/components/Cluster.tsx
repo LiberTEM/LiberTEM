@@ -34,12 +34,12 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
         if (channelStatus === ChannelStatusCodes.CONNECTED || channelStatus === ChannelStatusCodes.READY) {
             setStatus(clusterConnection.status)
             setDisable(false)
-            if (clusterConnection.status === "connected"){
+            if (clusterConnection.status === "connected") {
                 setColor(ColorType.blue)
             }else{
                 setColor(ColorType.grey)
             }
-        }else{
+        } else {
             setDisable(true)
             setStatus("unknown")
             setColor(ColorType.grey)
@@ -51,7 +51,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
     const clusterDetails = () => {
         if (clusterConnection.status === "connected") {
             if (type ===ClusterTypes.LOCAL) {
-                return <LocalStatus cudas={cudas} localCore={localcore} />;
+                return <LocalStatus cudas={cudas} localCores={localcore} />;
             } else {
                 return <TCPStatus address={address} />;
             }

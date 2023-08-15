@@ -8,11 +8,11 @@ import { getClusterDetail } from "../api"
 import * as errorActions from "../../errors/actions";
 
 interface LocalStatusProps {
-    localCore: number;
-    cudas: number[];
+    localCores: number;
+    cudas: Record<number, number>;
 }
 
-const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas }) => {
+const LocalStatus: React.FC<LocalStatusProps> = ({ localCores: localCores, cudas }) => {
     let cudaText: string;
 
     const intialDetails: HostDetails[] = [
@@ -31,20 +31,22 @@ const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas }) => {
     useEffect(() => {
         getClusterDetail().then(newDetails => {
             setDetails(newDetails.details);
-        }).catch(() => {
+        }).catch((e: Error) => {
             const id = uuid();
             const timestamp = Date.now();
-            dispatch(errorActions.Actions.generic(id, "Could not copy to clipboard", timestamp));
+            dispatch(errorActions.Actions.generic(id, `Could not fetch cluster details: ${e.toString()}`, timestamp));
         })
     }, []);
 
-    if (cudas.length === 0) {
+    const nonEmptyCudas = Object.entries(cudas)
+        .filter(([, num_workers]) => num_workers > 0)
+
+    if (Object.keys(nonEmptyCudas).length === 0) {
         cudaText = "None selected";
     } else {
-        const ids = cudas
-            .map(id => ` ${id}`)
-            .join(",");
-        cudaText = `GPU ${ids}`;
+        cudaText = nonEmptyCudas
+            .map(([id, num_workers]) => `GPU ${id} (${num_workers} workers)`)
+            .join(',');
     }
 
     return (
@@ -54,7 +56,7 @@ const LocalStatus: React.FC<LocalStatusProps> = ({ localCore, cudas }) => {
                     <List.Content as="h4">Connected to local cluster</List.Content>
                 </List.Item>
                 <List.Item>
-                    <List.Content>Number of local core : {localCore}</List.Content>
+                    <List.Content>Number of local core : {localCores}</List.Content>
                 </List.Item>
                 <List.Item>
                     <List.Content>Number of CPU workers : {clustDetails[0].cpu} </List.Content>

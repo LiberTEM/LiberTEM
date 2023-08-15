@@ -2,6 +2,8 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { connect } from "react-redux";
 import { Button, Modal, Popup } from "semantic-ui-react";
+import { ChannelStatusCodes } from "../../channel/reducers";
+import { ClusterTypes } from "../../messages";
 import { RootReducer } from "../../store";
 import LocalStatus from "./LocalStatus";
 import NotConnected from "./NotConnected";
@@ -29,7 +31,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
     const [disable, setDisable] = useState(true)
 
     useEffect(()=>{
-        if (channelStatus === "connected"|| channelStatus === "ready"){
+        if (channelStatus === ChannelStatusCodes.CONNECTED || channelStatus === ChannelStatusCodes.READY) {
             setStatus(clusterConnection.status)
             setDisable(false)
             if (clusterConnection.status === "connected"){
@@ -48,7 +50,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
 
     const clusterDetails = () => {
         if (clusterConnection.status === "connected") {
-            if (type === "LOCAL") {
+            if (type ===ClusterTypes.LOCAL) {
                 return <LocalStatus cudas={cudas} localCore={localcore} />;
             } else {
                 return <TCPStatus address={address} />;

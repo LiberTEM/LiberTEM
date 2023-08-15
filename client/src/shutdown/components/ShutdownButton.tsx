@@ -5,6 +5,7 @@ import * as channelActions from "../../channel/actions";
 import { DispatchProps } from "../../helpers/props";
 import { RootReducer } from "../../store";
 import { doShutdown } from "../api";
+import { ChannelStatusCodes } from "../../channel/reducers";
 
 const mapDispatchToProps = {
     closeLoopAction: channelActions.Actions.closeloop,
@@ -40,7 +41,7 @@ class ShutdownButton extends React.Component<MergedProps> {
     };
 
     public componentDidUpdate() {
-        if (this.props.channel === "waiting" && this.state.shutdown) {
+        if (this.props.channel === ChannelStatusCodes.WAITING && this.state.shutdown) {
             const timestamp = Date.now();
             this.modalClose();
             this.props.shutdownAction(timestamp);

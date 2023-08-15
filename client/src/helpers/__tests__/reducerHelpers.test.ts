@@ -1,3 +1,5 @@
+import { test, expect, describe } from 'vitest';
+
 import freeze from 'deep-freeze';
 import { ById, insertById, updateById } from "../reducerHelpers";
 
@@ -6,7 +8,7 @@ interface O {
 }
 
 describe('insertById', () => {
-    it('works on empty initial state', () => {
+    test('works on empty initial state', () => {
         const state: ById<O> = {
             ids: [],
             byId: {},
@@ -24,7 +26,7 @@ describe('insertById', () => {
 })
 
 describe('updateById', () => {
-    it('updates the payload', () => {
+    test('updates the payload', () => {
         const state = {
             ids: ["42"],
             byId: { "42": { payload: "wat" } }

@@ -1,9 +1,12 @@
+
+import { test, expect, describe } from 'vitest';
+
 import { ErrorObject } from "ajv";
 import { framesInfoAfterOffsetCorrection, productOfShapeInCommaSeparatedString } from "../helpers";
 import { convertErrors } from "../validate";
 
 describe('convertErrors', () => {
-    it('properly removes the dot and brackets', () => {
+    test('properly removes the dot and brackets', () => {
         const inputErrors: ErrorObject[] = [
             {
                 "keyword": "minimum",
@@ -17,7 +20,7 @@ describe('convertErrors', () => {
         expect(res).toEqual({ "nav_shape": "should be >= 1" })
     });
 
-    it('handles inputs without brackets', () => {
+    test('handles inputs without brackets', () => {
         const inputErrors: ErrorObject[] = [
             {
                 "keyword": "minimum",
@@ -33,7 +36,7 @@ describe('convertErrors', () => {
 });
 
 describe('check frames with offset', () => {
-    it('properly handles positive offset', () => {
+    test('properly handles positive offset', () => {
 
         const navShapeProduct = productOfShapeInCommaSeparatedString("8,8");
         const imageCount = 64;
@@ -49,7 +52,7 @@ describe('check frames with offset', () => {
         });
     });
 
-    it('properly handles negative offset', () => {
+    test('properly handles negative offset', () => {
 
         const navShapeProduct = productOfShapeInCommaSeparatedString("8,8");
         const imageCount = 64;
@@ -65,7 +68,7 @@ describe('check frames with offset', () => {
         });
     });
 
-    it('properly handles missing frames', () => {
+    test('properly handles missing frames', () => {
 
         const navShapeProduct = productOfShapeInCommaSeparatedString("10,8");
         const imageCount = 64;

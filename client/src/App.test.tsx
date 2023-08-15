@@ -3,8 +3,9 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
 */
+import { test } from 'vitest'
 
-it('renders without crashing', () => {
+test('renders without crashing', () => {
   /*
   const div = document.createElement('div');
   ReactDOM.render(<App />, div);

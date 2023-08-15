@@ -29,7 +29,7 @@
     "start": "vite",
     "build": "tsc && vite build",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage.enabled --coverage.all"
   },
   "devDependencies": {
     "@types/node": "^20.5.0",

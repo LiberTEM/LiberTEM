@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Any
 
 import tornado.web
 from opentelemetry import trace
@@ -19,6 +19,21 @@ tracer = trace.get_tracer(__name__)
 
 if TYPE_CHECKING:
     from libertem.web.events import EventRegistry
+
+
+def _int_or_zero(value) -> int:
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
+
+def _convert_device_map(raw_cudas: Dict[int, Any]) -> List[int]:
+    return [
+        this_id
+        for dev_id, num in raw_cudas.items()
+        for this_id in [dev_id]*_int_or_zero(num)
+    ]
 
 
 class ConnectHandler(tornado.web.RequestHandler):
@@ -75,7 +90,9 @@ class ConnectHandler(tornado.web.RequestHandler):
                         if not isinstance(num_workers, int) or num_workers < 1:
                             raise ValueError('Number of workers must be positive integer')
                         devices["cpus"] = range(num_workers)
-                    devices["cudas"] = connection.get("cudas", [])
+                    raw_cudas = connection.get("cudas", {})
+                    cudas = _convert_device_map(raw_cudas)
+                    devices["cudas"] = cudas
                     sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
                         spec=cluster_spec(**devices,
                                           options=options,

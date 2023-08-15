@@ -437,8 +437,10 @@ Once this command finished without errors, you can start a development server
 
    $ npm run start
 
+You can then press the :code:`o` key to open the LiberTEM GUI in your default browser.
+
 This server watches all source files for changes and automatically starts the
-build process. The development server, which listens on port 3000, will only be
+build process. The development server will only be
 able to serve requests for JavaScript and other static files. For handling HTTP
 API requests you still need to run the Python :code:`libertem-server` process on
 the default port (9000) alongside the development server:
@@ -451,7 +453,15 @@ This allows proxying the HTTP API requests from the front-end server to the API
 server without opening an additional browser window that could interfere with
 the development server.
 
-To learn more about the build process, please see `the README in the client
+You can influence where the web API requests end up using environment variables,
+for example if you run it on a non-standard port, or if you are running the API server
+on another host:
+
+.. code-block:: shell
+
+   $ API_HOST=127.0.0.1 API_PORT=9001 npm run start
+
+To learn more about the build process, please see also `the README in the client
 directory <https://github.com/LiberTEM/LiberTEM/blob/master/client/README.md>`_.
 
 You can then use any editor you like to change the client source files, in the

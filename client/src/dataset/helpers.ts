@@ -106,7 +106,7 @@ interface WithValidationOpts<SubmitParams, FormParams, FormInfo> {
     // WrappedComponent: React.FunctionComponent<FormikProps<FormParams> & OpenFormProps<SubmitParams>>
 }
 
-export const withValidation = <SubmitParams, FormParams, FormInfo>(
+export const withValidation = <SubmitParams, FormParams extends FormikValues, FormInfo>(
     opts: WithValidationOpts<SubmitParams, FormParams, FormInfo>
 ) => withFormik<OpenFormProps<SubmitParams, FormInfo>, FormParams, FormInfo>({
     mapPropsToValues: opts.mapPropsToValues,

@@ -14,6 +14,7 @@ interface ResultListProps {
     extraHandles?: HandleRenderFunction,
     extraWidgets?: React.ReactElement<SVGElement>,
     subtitle?: React.ReactNode,
+    children?: React.ReactNode,
 }
 
 interface ExternalResultListProps {

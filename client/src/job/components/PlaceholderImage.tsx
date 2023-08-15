@@ -1,21 +1,20 @@
 import { ReactElement } from "react";
 import * as React from "react";
-import styled from 'styled-components';
 
 interface PlaceholderProps {
     width: number,
     height: number,
+    children?: React.ReactNode,
 }
 
 interface AspectPaddingProps {
     aspect: number,
+    children?: React.ReactNode,
 }
 
-const AspectPadding = styled.div`
-    padding-bottom: ${(props: AspectPaddingProps) => `${props.aspect}%`};
-    width: 100%;
-    position: relative;
-`;
+const AspectPadding = ({aspect, children} : AspectPaddingProps) => (
+    <div style={{width: '100%', position: 'relative', paddingBottom: `${aspect}%`}}>{children}</div>
+)
 
 const PlaceholderImage: React.FC<PlaceholderProps> = ({ children, width, height }) => {
     const aspect = 100 * (height / width);

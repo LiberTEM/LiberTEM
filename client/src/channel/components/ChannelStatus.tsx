@@ -37,7 +37,7 @@ const ConnectedNotReady: React.FC = () => {
     return null;
 }
 
-const ChannelStatus: React.FC = ({ children }) => {
+const ChannelStatus: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     const channelStatus = useSelector((state: RootReducer) => state.channelStatus);
 
     switch (channelStatus.status) {

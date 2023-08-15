@@ -16,7 +16,7 @@ export interface LocalConfig {
     lastConnection: {
         type: ClusterTypes,
         address: string,
-        cudas: number[],
+        cudas: Record<number, number>,
     },
     starred: string[],
 }
@@ -44,7 +44,7 @@ export const initialConfigState: ConfigState = {
     lastConnection: {
         type: ClusterTypes.LOCAL,
         address: "tcp://localhost:8786",
-        cudas: [] as number[],
+        cudas: {},
     },
     starred: [],
     datasetTypes: {},

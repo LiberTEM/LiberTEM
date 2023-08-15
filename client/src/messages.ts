@@ -68,7 +68,7 @@ export const ClusterTypeMetadata: { [s: string]: { [s: string]: string } } = {
 export interface ConnectRequestLocalCluster {
     type: ClusterTypes.LOCAL,
     numWorkers?: number,
-    cudas: number[],
+    cudas: Record<number, number>
 }
 
 export interface ConnectRequestTCP {

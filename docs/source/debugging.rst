@@ -21,7 +21,7 @@ For debugging the GUI, you can use all standard debugging tools for web developm
 in this context are the `Chrome DevTools <https://developer.chrome.com/docs/devtools/>`_
 or `Firefox Developer Tools <https://firefox-source-docs.mozilla.org/devtools-user/index.html>`_, which can be
 accessed by pressing F12. You can extend these with additional panels
-`for React <https://legacy.reactjs.org/blog/2019/08/15/new-react-devtools.html>`_
+`for React <https://react.dev/learn/react-developer-tools>`_
 and `for Redux <https://github.com/reduxjs/redux-devtools>`_.
 
 These tools can be used for inspecting all frontend-related processes, from network traffic

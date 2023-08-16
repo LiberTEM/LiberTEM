@@ -24,6 +24,12 @@
 .. |precommit| image:: https://results.pre-commit.ci/badge/github/LiberTEM/LiberTEM/master.svg
 .. _precommit: https://results.pre-commit.ci/latest/github/LiberTEM/LiberTEM/master
 
+.. |pypi| image:: https://badge.fury.io/py/libertem.svg
+.. _pypi: https://pypi.org/project/libertem/
+
+.. |condaforge| image:: https://anaconda.org/conda-forge/libertem/badges/version.svg
+.. _condaforge: https://anaconda.org/conda-forge/libertem
+
 LiberTEM is an open source platform for high-throughput distributed processing
 of large-scale binary data sets and live data streams using a modified
 `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_. The

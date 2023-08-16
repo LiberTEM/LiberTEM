@@ -51,6 +51,11 @@ both sparse data and live processing in particular.
 
 Many thanks to everyone who has contributed to this release!
 
+The 0.12.0 release is also the first major release for which
+LiberTEM is available on `conda-forge <https://anaconda.org/conda-forge/libertem>`_.
+See `the documentation <https://libertem.github.io/LiberTEM/install.html>`_
+for installation instructions using :code:`pip` or :code:`conda`.
+
 Features
 --------
 

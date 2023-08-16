@@ -26,10 +26,8 @@ Changelog
 0.12.0 / 2023-08-11
 ###################
 
-..
-  Commented the DOI button until it is defined!
-  .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8114529.svg
-    :target: https://doi.org/10.5281/zenodo.8114529
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8252548.svg
+   :target: https://doi.org/10.5281/zenodo.8252548
 
 The 0.12 release introduces a dedicated Centre-of-Mass analysis UDF
 with additional features compared to the existing

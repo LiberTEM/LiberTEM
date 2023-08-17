@@ -24,7 +24,8 @@
   },
   "include": [
     "src",
-    "types"
+    "types",
+    "tests"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

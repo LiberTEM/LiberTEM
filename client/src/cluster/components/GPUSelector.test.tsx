@@ -65,6 +65,7 @@ describe('GPUSelector', () => {
         );
         expect(screen.queryByText(/No cupy installation found/)).toBeNull();
         expect(screen.queryByText(/Number of workers for CUDA device/)).toBeNull();
+        expect(screen.queryByText(/No CUDA devices found/)).toBeInTheDocument();
         expect(screen.queryByRole('spinbutton')).toBeNull();
     });
 

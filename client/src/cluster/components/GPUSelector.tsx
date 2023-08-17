@@ -50,6 +50,15 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
                     </p>
                 </Message> : ''
             }
+            {!haveCudaDevices ? 
+            <Message info visible>
+                <Message.Header>No CUDA devices found</Message.Header>
+                <p>
+                    GPU support requires one or more CUDA compatible devices, and a working
+                    CUDA installation. 
+                </p>
+            </Message>
+            : ''}
             <ul style={{paddingLeft: 0}}>
                 {cudaIds.map(id => (
                     value[id] !== undefined ?

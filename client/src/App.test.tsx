@@ -1,16 +1,16 @@
-/*
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import { render } from '@testing-library/react';
+import { test, describe } from 'vitest'
+import { Provider } from 'react-redux';
+import { store } from './store';
 import App from './App';
-*/
-import { test } from 'vitest'
 
-test('renders without crashing', () => {
-  /*
-  const div = document.createElement('div');
-  ReactDOM.render(<App />, div);
-  ReactDOM.unmountComponentAtNode(div);
-  */
-});
-
-export {};
+describe('App', () => {
+  test('renders without crashing', () => {
+    render(
+      <Provider store={store}>
+        <App />
+      </Provider>,
+    );
+    // screen.debug();
+  });
+})

@@ -67,10 +67,18 @@ const LocalConnectionForm: React.FC<MergedProps> = ({
 )
 
 export default withFormik<FormProps, FormValues>({
-    mapPropsToValues: (ownProps: FormProps) => ({
-        numWorkers: ownProps.config.localCores,
-        cudas: ownProps.config.lastConnection.cudas,
-    }),
+    mapPropsToValues: (ownProps: FormProps) => {
+        const cudas = Object.fromEntries(
+            ownProps.config.devices.cudas.map(id => [id, 1])
+        );
+        return {
+            numWorkers: ownProps.config.localCores,
+            cudas: {
+                ...cudas,
+                ...ownProps.config.lastConnection.cudas,
+            },
+        }
+    },
     handleSubmit: (values, formikBag) => {
         const { onSubmit } = formikBag.props;
         onSubmit({

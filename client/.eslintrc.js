@@ -109,6 +109,14 @@ module.exports = {
             }
         ],
         "@typescript-eslint/no-unused-expressions": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "caughtErrorsIgnorePattern": "^_",
+            }
+        ],
         "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/no-var-requires": "error",
         "@typescript-eslint/prefer-for-of": "error",
@@ -179,7 +187,6 @@ module.exports = {
         "no-console": "error",
         "no-debugger": "error",
         "no-empty": "error",
-        "no-empty-function": "error",
         "no-eval": "error",
         "no-extra-semi": "off",
         "no-fallthrough": "off",

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { ConfigState } from '../../config/reducers';
@@ -42,7 +43,7 @@ describe('GPUSelector', () => {
         };
         const value = {
         };
-        const setFieldValue = (name: string, value: any) => { };
+        const setFieldValue = (_name: string, _value: any) => { };
         render(
             <GPUSelector config={config} name="gpus" value={value} setFieldValue={setFieldValue} />
         );
@@ -90,7 +91,7 @@ describe('GPUSelector', () => {
             1: 1,
             2: 1,
         };
-        const setFieldValue = (name: string, value: any) => { };
+        const setFieldValue = (_name: string, _value: any) => { };
         render(
             <GPUSelector config={config} name="gpus" value={value} setFieldValue={setFieldValue} />
         );
@@ -140,7 +141,7 @@ describe('GPUSelector', () => {
         const value = {
             0: 42,  // initial value from lastConnection
         };
-        const setFieldValue = (name: string, value: any) => { };
+        const setFieldValue = (_name: string, _value: any) => { };
         render(
             <GPUSelector config={config} name="gpus" value={value} setFieldValue={setFieldValue} />
         );
@@ -188,7 +189,7 @@ describe('GPUSelector', () => {
             0: 42,  // initial value from lastConnection
             1: 1,
         };
-        const setFieldValue = (name: string, value: any) => { };
+        const setFieldValue = (_name: string, _value: any) => { };
         render(
             <GPUSelector config={config} name="gpus" value={value} setFieldValue={setFieldValue} />
         );

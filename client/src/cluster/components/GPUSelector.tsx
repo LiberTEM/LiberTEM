@@ -54,8 +54,8 @@ export const GPUSelector: React.FC<GPUSelectorProps> = ({
             <Message info visible>
                 <Message.Header>No CUDA devices found</Message.Header>
                 <p>
-                    GPU support requires one or more CUDA compatible devices, and a working
-                    CUDA installation. 
+                    GPU support requires one or more CUDA compatible devices, and working
+                    CUDA and cupy installations. 
                 </p>
             </Message>
             : ''}

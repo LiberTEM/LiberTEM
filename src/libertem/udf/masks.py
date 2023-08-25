@@ -60,7 +60,7 @@ class ApplyMasksEngine:
         # CuPy back-end disables torch in get_task_data
         # FIXME use GPU torch with CuPy array?
         return torch.mm(
-            torch.from_numpy(flat_tile, masks),
+            torch.from_numpy(flat_tile),
             torch.from_numpy(masks),
         ).numpy()
 

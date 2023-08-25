@@ -988,7 +988,7 @@ def test_numerics_succeed(lt_ctx):
 @pytest.mark.parametrize(
     'backend', (None, NUMPY, CUPY)
 )
-def test_shifted_masks_udf_no_shift(lt_ctx, kwargs, backend):
+def test_shifted_masks_udf_no_shifts(lt_ctx, kwargs, backend):
     with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         mask0 = _mk_random(size=(16, 16))
@@ -1028,7 +1028,7 @@ def test_shifted_masks_udf_no_shift(lt_ctx, kwargs, backend):
 @pytest.mark.parametrize(
     'backend', (None, NUMPY, CUPY)
 )
-def test_shifted_masks_udf_constant_shift(lt_ctx, kwargs, backend):
+def test_shifted_masks_udf_constant_shifts(lt_ctx, kwargs, backend):
     with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         mask0 = _mk_random(size=(16, 16))

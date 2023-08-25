@@ -1,3 +1,4 @@
+from typing import Optional
 from libertem.common.math import prod
 import numpy as np
 
@@ -81,7 +82,7 @@ class ApplyMasksEngine:
             masks = self._get_masks()
         return flat_tile @ masks
 
-    def process_tile(self, tile, masks: np.ndarray | None = None):
+    def process_tile(self, tile, masks: Optional[np.ndarray] = None):
         flat_shape = (tile.shape[0], prod(tile.shape[1:]))
         # Avoid reshape since older versions of scipy.sparse don't support it
         flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile

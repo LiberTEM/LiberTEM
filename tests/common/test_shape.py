@@ -91,3 +91,14 @@ def test_shape_add_2():
     s = Shape((12, 13, 14, 15), sig_dims=2)
     s_add = s + (1, 2)
     assert tuple(s_add) == (12, 13, 14, 15, 1, 2) and s_add.sig.dims == 4
+
+
+def test_can_hash():
+    shape = (12, 13, 14, 15)
+    sd1 = Shape(shape, sig_dims=1)
+    mapping = {sd1: 55}
+    sd2 = Shape(shape, sig_dims=2)
+    mapping[sd2] = 66
+    assert len(mapping) == 2
+    mapping.pop(sd1)
+    assert sd1 not in mapping.keys()

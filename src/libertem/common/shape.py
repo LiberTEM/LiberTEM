@@ -162,6 +162,9 @@ class Shape:
     def __getitem__(self, k):
         return tuple(self)[k]
 
+    def __hash__(self):
+        return hash(((self._nav_shape + self._sig_shape), self._sig_dims))
+
     def __len__(self) -> int:
         return len(self._sig_shape) + len(self._nav_shape)
 

@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, Tuple
+from typing_extensions import Literal
 from libertem.common.math import prod
 import numpy as np
 
+from libertem.common.udf import UDFMethodEnum
 from libertem.udf import UDF, UDFMeta
 from libertem.common.container import MaskContainer
 from libertem.common.numba import rmatmul
@@ -87,9 +89,30 @@ class ApplyMasksEngine:
         # Avoid reshape since older versions of scipy.sparse don't support it
         flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
         return self.process_flat(flat_data, masks)
+    
+    def process_frame_shifted(self, frame, shifts: Tuple[int, ...]):
+        masks = self._get_masks()
+        mask_transposed = self.needs_transpose
+        shifted_slice = self.meta.sig_slice.shift_by(shifts)
+        left, right = self.meta.sig_slice.intersection_pair(shifted_slice)
+        data = left.get(frame)
+        if mask_transposed:
+            mask_slice = right.get() + (slice(None), )
+            num_masks = masks.shape[-1]
+            masks = masks.reshape((*frame.shape[::-1], masks.shape[-1]))
+            masks = masks[mask_slice].reshape((-1, num_masks))
+        else:
+            mask_slice = (slice(None), ) + right.get()
+            num_masks = masks.shape[0]
+            masks = masks.reshape((masks.shape[0], *frame.shape))
+            masks = masks[mask_slice].reshape((num_masks, -1))
+
+        # FIXME This reshape is incompatible with older versions of scipy.sparse
+        flat_data = data.reshape(1, prod(data.shape))
+        return self.process_flat(flat_data, masks)[0]
 
 
-class BaseMasksUDF(UDF):
+class ApplyMasksUDF(UDF):
     '''
     Apply masks to signals/frames in the dataset. This can not only be used to integrate
     over regions with a binary mask - the integration can be weighted by using
@@ -166,8 +189,16 @@ class BaseMasksUDF(UDF):
     .. versionadded:: 0.4.0
     '''
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
-                mask_dtype=None, preferred_dtype=None, backends=None, **kwargs):
-        if use_sparse is True:
+                mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
+
+        if shifts is not None:
+            if use_sparse is True:
+                use_sparse = 'sparse.pydata'
+            elif isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
+                raise ValueError(
+                    f'Sparse backend {use_sparse} not supported for shifts, use sparse.pydata instead.'
+                )
+        elif use_sparse is True:
             use_sparse = 'scipy.sparse'
 
         if backends is None:
@@ -183,6 +214,7 @@ class BaseMasksUDF(UDF):
             mask_dtype=mask_dtype,
             preferred_dtype=preferred_dtype,
             backends=backends,
+            shifts=shifts,
             **kwargs
         )
 
@@ -243,214 +275,27 @@ class BaseMasksUDF(UDF):
         ''
         return self.params.backends
 
-
-class ApplyMasksUDF(BaseMasksUDF):
-    '''
-    Apply masks to signals/frames in the dataset. This can not only be used to integrate
-    over regions with a binary mask - the integration can be weighted by using
-    float or complex valued masks.
-
-    The result will be returned in a single nav-shaped buffer called intensity.
-    Its shape will be :code:`(*nav_shape, len(masks))`.
-
-    Parameters
-    ----------
-
-    mask_factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
-        Function or list of functions that take no arguments and create masks. The returned
-        masks can be
-        numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
-        factories should not reference large objects because they can create significant
-        overheads when they are pickled and unpickled. Each factory function should, when
-        called, return a numpy array with the same shape as frames in the dataset
-        (so dataset.shape.sig).
-    use_torch : bool, optional
-        Use pytorch back-end if available. Default True
-    use_sparse : Union[None, False, True, 'scipy.sparse', 'scipy.sparse.csc', \
-            'sparse.pydata'], optional
-        Which sparse back-end to use.
-        * None (default): Use sparse matrix multiplication if all factory functions return a \
-            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
-            multiplication
-        * True: Convert all masks to sparse matrices and use default sparse back-end.
-        * False: Convert all masks to dense matrices.
-        * 'scipy.sparse': Use scipy.sparse.csr_matrix (default sparse)
-        * 'scipy.sparse.csc': Use scipy.sparse.csc_matrix
-        * 'sparse.pydata': Use sparse.pydata COO matrix
-    mask_count : int, optional
-        Specify the number of masks if a single factory function is used so that the
-        number of masks can be determined without calling the factory function.
-    mask_dtype : numpy.dtype, optional
-        Specify the dtype of the masks so that mask dtype
-        can be determined without calling the mask factory functions. This can be used to
-        override the mask dtype in the result dtype determination. As an example, setting
-        this to np.float32 means that masks of type float64 will not switch the calculation
-        and result dtype to float64 or complex128.
-    preferred_dtype : numpy.dtype, optional
-        Let :meth:`get_preferred_input_dtype` return the specified type instead of the
-        default `float32`. This can perform the calculation with integer types if both input
-        data and mask data are compatible with this.
-    backends : Iterable containing strings "numpy" and/or "cupy", or None
-        Control which back-ends are used. Default is numpy and cupy
-
-    Examples
-    --------
-
-    >>> dataset.shape
-    (16, 16, 32, 32)
-    >>> def my_masks():
-    ...     return [np.ones((32, 32)), np.zeros((32, 32))]
-    >>> udf = ApplyMasksUDF(mask_factories=my_masks)
-    >>> res = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
-    >>> res.data.shape
-    (16, 16, 2)
-    >>> np.allclose(res.data[..., 1], 0)  # same order as in the mask factory
-    True
-
-    Mask factories can also return all masks as a single array, stacked on the first axis:
-
-    >>> def my_masks_2():
-    ...     masks = np.zeros((2, 32, 32))
-    ...     masks[1, ...] = 1
-    ...     return masks
-    >>> udf = ApplyMasksUDF(mask_factories=my_masks_2)
-    >>> res_2 = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
-    >>> np.allclose(res_2.data, res.data)
-    True
-
-    .. versionadded:: 0.4.0
-    '''
-    def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
-                mask_dtype=None, preferred_dtype=None, backends=None):
-
-        super().__init__(
-            mask_factories=mask_factories,
-            use_torch=use_torch,
-            use_sparse=use_sparse,
-            mask_count=mask_count,
-            mask_dtype=mask_dtype,
-            preferred_dtype=preferred_dtype,
-            backends=backends,
-        )
+    def get_method(self) -> Literal[UDFMethodEnum.FRAME, UDFMethodEnum.TILE]:
+        if self.params.get('shifts') is not None:
+            return UDFMethodEnum.FRAME
+        else:
+            return UDFMethodEnum.TILE
 
     def process_tile(self, tile):
-        ''
+        """
+        Used for simple mask application, without shifts
+        """
         self.results.intensity[:] += self.forbuf(
             self.task_data.engine.process_tile(tile),
             self.results.intensity,
         )
 
-
-class ApplyShiftedMasksUDF(BaseMasksUDF):
-    '''
-    Apply masks to signals/frames in the dataset, with a shift that can be specified per-frame
-    through an aux data parameter.
-
-    Regions without overlap between masks and frame due to shift will be ignored.
-
-    This UDF can only compensate integer shifts. The residual of float shifts
-    will be returned in the nav-shaped buffer called residual.
-    Its shape will be :code:`(*nav_shape, dataset.shape.sig.dims)`.
-
-    The result will be returned in a nav-shaped buffer called intensity.
-    Its shape will be :code:`(*nav_shape, len(masks))`.
-
-    Parameters
-    ----------
-
-    mask_factories : Union[Callable[[], array_like], Iterable[Callable[[], array_like]]]
-        Function or list of functions that take no arguments and create masks. The returned
-        masks can be
-        numpy arrays, scipy.sparse or sparse https://sparse.pydata.org/ matrices. The mask
-        factories should not reference large objects because they can create significant
-        overheads when they are pickled and unpickled. Each factory function should, when
-        called, return a numpy array with the same shape as frames in the dataset
-        (so dataset.shape.sig).
-    shifts : AUXBufferWrapper
-        Shift per frame, kind nav, extra_shape (dataset.shape.sig.dims, )
-    use_torch : bool, optional
-        Use pytorch back-end if available. Default True
-    use_sparse : Union[None, False, True, 'sparse.pydata'], optional
-        Which sparse back-end to use.
-        * None (default): Use sparse matrix multiplication if all factory functions return a \
-            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
-            multiplication
-        * True: Convert all masks to sparse matrices and use default sparse back-end.
-        * False: Convert all masks to dense matrices.
-        * 'sparse.pydata': Use sparse.pydata COO matrix (default sparse)
-    mask_count : int, optional
-        Specify the number of masks if a single factory function is used so that the
-        number of masks can be determined without calling the factory function.
-    mask_dtype : numpy.dtype, optional
-        Specify the dtype of the masks so that mask dtype
-        can be determined without calling the mask factory functions. This can be used to
-        override the mask dtype in the result dtype determination. As an example, setting
-        this to np.float32 means that masks of type float64 will not switch the calculation
-        and result dtype to float64 or complex128.
-    preferred_dtype : numpy.dtype, optional
-        Let :meth:`get_preferred_input_dtype` return the specified type instead of the
-        default `float32`. This can perform the calculation with integer types if both input
-        data and mask data are compatible with this.
-    backends : Iterable containing strings "numpy" and/or "cupy", or None
-        Control which back-ends are used. Default is numpy and cupy
-    '''
-    def __init__(self, mask_factories, shifts=None, use_torch=True, use_sparse=None,
-                mask_count=None, mask_dtype=None, preferred_dtype=None, backends=None):
-        if use_sparse is True:
-            use_sparse = 'sparse.pydata'
-        if isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
-            raise ValueError(
-                f'Sparse backend {use_sparse} not supported for shifts, use sparse.pydata instead.'
-            )
-        super().__init__(
-            mask_factories=mask_factories,
-            shifts=shifts,
-            use_torch=use_torch,
-            use_sparse=use_sparse,
-            mask_count=mask_count,
-            mask_dtype=mask_dtype,
-            preferred_dtype=preferred_dtype,
-            backends=backends,
-        )
-
-    @property
-    def shift(self):
-        if self.params.shifts is None:
-            return ((0, ) * self.meta.dataset_shape.sig.dims, ) * 2
-        else:
-            int_shifts = np.round(self.params.shifts).astype(int)
-            return int_shifts, self.params.shifts - int_shifts
-
-    def get_result_buffers(self):
-        super_buffers = super().get_result_buffers()
-        super_buffers['residual'] = self.buffer(
-            kind='nav', extra_shape=(self.meta.dataset_shape.sig.dims, )
-        )
-        return super_buffers
-
     def process_frame(self, frame):
-        ''
-        masks = self.task_data.engine._get_masks()
-        mask_transposed = self.task_data.engine.needs_transpose
-        shift, residual = self.shift
-        shifted_slice = self.meta.sig_slice.shift_by(shift)
-        left, right = self.meta.sig_slice.intersection_pair(shifted_slice)
-        data = left.get(frame)
-        if mask_transposed:
-            mask_slice = right.get() + (slice(None), )
-            num_masks = masks.shape[-1]
-            masks = masks.reshape((*frame.shape[::-1], masks.shape[-1]))
-            masks = masks[mask_slice].reshape((-1, num_masks))
-        else:
-            mask_slice = (slice(None), ) + right.get()
-            num_masks = masks.shape[0]
-            masks = masks.reshape((masks.shape[0], *frame.shape))
-            masks = masks[mask_slice].reshape((num_masks, -1))
-
-        # Fake tile processing to use ApplyMasksEngine
-        tile_data = data.reshape(1, *data.shape)
+        """
+        Apply shifted masks to a frame
+        """
+        shifts = self.params.shifts.astype(int)
         self.results.intensity[:] += self.forbuf(
-            self.task_data.engine.process_tile(tile_data, masks=masks)[0],
+            self.task_data.engine.process_frame_shifted(frame, shifts),
             self.results.intensity,
         )
-        self.results.residual = residual

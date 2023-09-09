@@ -25,6 +25,12 @@ class TilingPreferences(TypedDict):
     total_size: Union[float, int]
 
 
+class UDFMethodEnum(Enum):
+    TILE = 'tile'
+    FRAME = 'frame'
+    PARTITION = 'partition'
+
+
 class UDFProtocol(Protocol):
     '''
     Parts of the UDF interface required for MIT code in LiberTEM
@@ -64,7 +70,7 @@ class UDFProtocol(Protocol):
     ND_BACKENDS = ND_BACKENDS  #: Set of backends that support n-dimensional arrays
     D2_BACKENDS = D2_BACKENDS  #: Set of backends that only support two-dimensional arrays
 
-    def get_method() -> Literal['tile', 'frame', 'partition']:
+    def get_method() -> Literal[UDFMethodEnum.TILE, UDFMethodEnum.FRAME, UDFMethodEnum.PARTITION]:
         raise NotImplementedError()
 
     def get_tiling_preferences() -> TilingPreferences:

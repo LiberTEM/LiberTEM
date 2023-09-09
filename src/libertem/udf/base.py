@@ -31,7 +31,7 @@ from libertem.common.buffers import (
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
-from libertem.common.udf import TilingPreferences, UDFProtocol
+from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethodEnum
 from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
@@ -1096,13 +1096,17 @@ class UDFBase(UDFProtocol):
         else:
             raise ValueError(f"Backend can be {BACKENDS}, got {self._backend}")
 
-    def get_method(self) -> Literal['tile', 'frame', 'partition']:
-        if hasattr(self, 'process_tile'):
-            return 'tile'
-        elif hasattr(self, 'process_frame'):
-            return 'frame'
-        elif hasattr(self, 'process_partition'):
-            return 'partition'
+    def get_method(self) -> Literal[
+        UDFMethodEnum.TILE,
+        UDFMethodEnum.FRAME,
+        UDFMethodEnum.PARTITION
+    ]:
+        if isinstance(self, UDFTileMixin):
+            return UDFMethodEnum.TILE
+        elif isinstance(self, UDFFrameMixin):
+            return UDFMethodEnum.FRAME
+        elif isinstance(self, UDFPartitionMixin):
+            return UDFMethodEnum.PARTITION
         else:
             raise TypeError("UDF should implement one of the `process_*` methods")
 

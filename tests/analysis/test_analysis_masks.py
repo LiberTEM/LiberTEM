@@ -11,7 +11,7 @@ from utils import _naive_mask_apply, _mk_random, set_device_class
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.udf.masks import ApplyMasksUDF, ApplyShiftedMasksUDF
+from libertem.udf.masks import ApplyMasksUDF, ApplyMasksUDF
 from libertem.udf import UDF, UDFMeta
 
 
@@ -988,47 +988,7 @@ def test_numerics_succeed(lt_ctx):
 @pytest.mark.parametrize(
     'backend', (None, NUMPY, CUPY)
 )
-def test_shifted_masks_udf_no_shifts(lt_ctx, kwargs, backend):
-    with set_device_class(get_device_class(backend)):
-        data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
-        mask0 = _mk_random(size=(16, 16))
-        mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
-        mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
-        # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
-        # different from ApplyMasksJob
-        expected = np.moveaxis(_naive_mask_apply([mask0, mask1, mask2], data), (0, 1), (2, 0))
-
-        dataset = MemoryDataSet(data=data, num_partitions=2)
-        udf = ApplyShiftedMasksUDF(
-            mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
-            **kwargs
-        )
-        if backend == CUPY and kwargs.get('use_sparse', False) in (True, 'sparse.pydata'):
-            # Implement like this so we can test the implementation
-            # once CUPY + sparse.pydata is actually supported
-            with pytest.raises(ValueError):
-                results = lt_ctx.run_udf(udf=udf, dataset=dataset)
-            pytest.xfail('CuPy + sparse.pydata not yet supported')
-        else:
-            results = lt_ctx.run_udf(udf=udf, dataset=dataset)
-
-        assert np.allclose(results['intensity'].data, expected)
-        assert np.allclose(results['residual'].data, 0)
-
-
-@pytest.mark.parametrize(
-    'kwargs', (
-        {},
-        {'use_sparse': True},
-        {'use_sparse': False},
-        {'use_sparse': 'sparse.pydata'},
-        {'use_torch': True},
-    )
-)
-@pytest.mark.parametrize(
-    'backend', (None, NUMPY, CUPY)
-)
-def test_shifted_masks_udf_constant_shifts(lt_ctx, kwargs, backend):
+def test_shifted_masks_constant_shifts(lt_ctx, kwargs, backend):
     with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(16, 16, 16, 16), dtype="<u2")
         mask0 = _mk_random(size=(16, 16))
@@ -1042,9 +1002,9 @@ def test_shifted_masks_udf_constant_shifts(lt_ctx, kwargs, backend):
         ), (0, 1), (2, 0))
 
         dataset = MemoryDataSet(data=data, num_partitions=2)
-        udf = ApplyShiftedMasksUDF(
+        udf = ApplyMasksUDF(
             mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
-            shifts=(1.1, -1.7),
+            shifts=np.round((1.1, -1.7)),
             **kwargs
         )
         if backend == CUPY and kwargs.get('use_sparse', False) in (True, 'sparse.pydata'):
@@ -1057,7 +1017,6 @@ def test_shifted_masks_udf_constant_shifts(lt_ctx, kwargs, backend):
             results = lt_ctx.run_udf(udf=udf, dataset=dataset)
 
         assert np.allclose(results['intensity'].data, expected)
-        assert np.allclose(results['residual'].data, (0.1, 0.3))
 
 
 @pytest.mark.parametrize(
@@ -1072,7 +1031,7 @@ def test_shifted_masks_udf_constant_shifts(lt_ctx, kwargs, backend):
 @pytest.mark.parametrize(
     'backend', (None, NUMPY, CUPY)
 )
-def test_shifted_masks_udf_aux_shifts(lt_ctx, kwargs, backend):
+def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend):
     with set_device_class(get_device_class(backend)):
         data = _mk_random(size=(2, 16, 16), dtype="<u2")
         mask0 = _mk_random(size=(16, 16))
@@ -1089,10 +1048,10 @@ def test_shifted_masks_udf_aux_shifts(lt_ctx, kwargs, backend):
         expected[1, 1] = (mask1[2:16, 0:15].toarray() * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
         expected[1, 2] = (mask2[2:16, 0:15] * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
         dataset = MemoryDataSet(data=data)
-        udf = ApplyShiftedMasksUDF(
+        udf = ApplyMasksUDF(
             mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
-            shifts=ApplyShiftedMasksUDF.aux_data(
-                data=np.array([(1.1, -2.1), (-1.7, 0.9)]),
+            shifts=ApplyMasksUDF.aux_data(
+                data=np.round(np.array([(1.1, -2.1), (-1.7, 0.9)])),
                 kind='nav',
                 extra_shape=(2, ),
                 dtype=float,
@@ -1109,4 +1068,3 @@ def test_shifted_masks_udf_aux_shifts(lt_ctx, kwargs, backend):
             results = lt_ctx.run_udf(udf=udf, dataset=dataset)
 
         assert np.allclose(results['intensity'].data, expected)
-        assert np.allclose(results['residual'].data, [(0.1, -0.1), (0.3, -0.1)])

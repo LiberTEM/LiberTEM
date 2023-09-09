@@ -2115,12 +2115,12 @@ class UDFPartRunner:
         roi: Optional[np.ndarray],
     ) -> None:
         for udf in udfs:
-            if isinstance(udf, UDFTileMixin):
+            if udf.get_method() == UDFMethodEnum.TILE:
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.set_tile_idx(tile.scheme_idx)
                 udf.process_tile(device_tile)
-            elif isinstance(udf, UDFFrameMixin):
+            elif udf.get_method() == UDFMethodEnum.FRAME:
                 tile_slice = tile.tile_slice
                 for frame_idx, frame in enumerate(device_tile):
                     frame_slice = Slice(
@@ -2141,7 +2141,7 @@ class UDFPartRunner:
                     udf.set_slice(frame_slice)
                     udf.set_views_for_frame(partition, tile, frame_idx)
                     udf.process_frame(frame)
-            elif isinstance(udf, UDFPartitionMixin):
+            elif udf.get_method() == UDFMethodEnum.PARTITION:
                 # Internal checks for dataset consistency
                 assert partition.slice.adjust_for_roi(roi) == tile.tile_slice
                 udf.set_views_for_tile(partition, tile)

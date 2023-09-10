@@ -6,6 +6,7 @@ from typing_extensions import Literal
 
 import numpy as np
 
+from libertem.exceptions import UDFException
 from libertem.io.corrections import CorrectionSet
 from libertem.common import Shape, Slice
 from libertem.common.math import prod
@@ -442,24 +443,17 @@ class Negotiator:
         return size
 
     def _get_intent(self, udfs: Sequence[UDFProtocol]) -> TilingIntent:
-        intent: Optional[TilingIntent] = None
-        if any(
-            udf.get_method() == UDFMethodEnum.TILE
-            for udf in udfs
-        ):
-            intent = "tile"
-        if any(
-            udf.get_method() == UDFMethodEnum.FRAME
-            for udf in udfs
-        ):
-            intent = "frame"
-        if any(
-            udf.get_method() == UDFMethodEnum.PARTITION
-            for udf in udfs
-        ):
-            intent = "partition"
-        assert intent is not None
-        return intent
+        udf_methods = tuple(udf.get_method() for udf in udfs)
+        if any(m not in tuple(UDFMethodEnum) for m in udf_methods):
+            raise UDFException('A UDF declared an invalid processing method')
+        if UDFMethodEnum.PARTITION in udf_methods:
+            return "partition"
+        elif UDFMethodEnum.FRAME in udf_methods:
+            return "frame"
+        elif UDFMethodEnum.TILE in udf_methods:
+            return "tile"
+        else:
+            raise ValueError('No recognized UDF method, empty udfs arg?')
 
     def _get_size(
             self, io_max_size, udf: UDFProtocol, itemsize,
@@ -485,6 +479,9 @@ class Negotiator:
             # we need to increase the size:
             base_size = itemsize * prod(base_shape)
             size = max(base_size, size)
+        else:
+            # Should never be reached, this is checked earlier in UDFRunner
+            raise UDFException(f'UDF.get_method() returned unrecognized method: {udf_method}')
         return size
 
     def _get_base_shape(
@@ -495,11 +492,10 @@ class Negotiator:
         roi: Optional[np.ndarray],
     ):
         methods = [
-            # This .value could be removed if using StrEnum rather than Enum
-            udf.get_method().value
+            udf.get_method()
             for udf in udfs
         ]
-        if any(m == "frame" or m == "partition" for m in methods):
+        if any(m in (UDFMethodEnum.FRAME, UDFMethodEnum.PARTITION) for m in methods):
             base_shape = approx_partition_shape.sig
         else:
             # only by tile:

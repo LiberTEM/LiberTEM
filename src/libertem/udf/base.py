@@ -2093,8 +2093,10 @@ class UDFPartRunner:
             )
             for udf in udfs:
                 udf.set_backend(backend)
-                udf.get_method()  # validate that one of the `process_*` methods is implemented
                 udf.set_meta(meta)
+                # validate that one of the `process_*` methods is implemented
+                if udf.get_method() not in tuple(UDFMethodEnum):
+                    raise UDFException('UDF.get_method() returned unrecognized')
                 udf.set_slice(pslice_for_roi)
                 udf.init_result_buffers()
                 udf.allocate_for_part(partition, roi)
@@ -2147,6 +2149,10 @@ class UDFPartRunner:
                 udf.set_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_partition(device_tile)
+            else:
+                # Should never be reached!
+                raise UDFException('UDF.get_method() return unrecognized '
+                                   'method during _run_udfs')
 
     def _wrapup_udfs(
         self,
@@ -2320,6 +2326,11 @@ class UDFRunner:
         )
         for udf in self._udfs:
             udf.set_meta(meta)
+            # ideally the UDF would know the set of workers it might run on
+            # here, e.g. backend information, to choose the best method,
+            # as-is the backend will always be numpy by default
+            if udf.get_method() not in tuple(UDFMethodEnum):
+                raise UDFException('UDF.get_method() returned unrecognized value')
             udf.init_result_buffers(executor=executor)
             udf.allocate_for_full(dataset, roi)
 

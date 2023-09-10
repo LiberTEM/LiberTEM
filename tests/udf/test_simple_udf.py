@@ -9,6 +9,7 @@ from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
 from libertem.io.dataset.raw import RawFileDataSet, RawPartition
 from libertem.utils.devices import detect
+from libertem.exceptions import UDFException
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
@@ -770,3 +771,16 @@ def test_previous_attrs(lt_ctx, cls):
     # the current alternative
     with pytest.raises(AttributeError, match='self.meta.'):
         lt_ctx.run_udf(dataset=ds, udf=cls())
+
+
+class BadGetMethodUDF(SumUDF):
+    def get_method(self):
+        return 42
+
+
+def test_bad_get_method(lt_ctx):
+    ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
+    # Check that we get an attribute error that points to
+    # the current alternative
+    with pytest.raises(UDFException):
+        lt_ctx.run_udf(dataset=ds, udf=BadGetMethodUDF())

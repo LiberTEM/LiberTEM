@@ -2,6 +2,7 @@ import sparse
 import pytest
 import numpy as np
 
+from libertem.exceptions import UDFException
 from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import Negotiator
 from libertem.io.dataset.memory import MemoryDataSet
@@ -523,3 +524,27 @@ def test_base_shape_adjustment_invalid(lt_ctx_fast):
     )
     with pytest.raises(ValueError):
         lt_ctx_fast.run_udf(dataset=ds, udf=NoOpUDF(), corrections=corr)
+
+
+class BadGetMethodUDF(UDF):
+    def get_method(self):
+        return 42
+
+
+def test_unrecognized_udf_method(default_raw):
+    p = next(default_raw.get_partitions())
+    with pytest.raises(UDFException):
+        Negotiator().get_scheme(
+            udfs=[BadGetMethodUDF()],
+            dataset=default_raw,
+            approx_partition_shape=p.shape,
+            read_dtype=np.float32,
+            roi=None
+        )
+
+
+def test_missing_udfs_get_intent():
+    with pytest.raises(ValueError):
+        Negotiator()._get_intent(
+            udfs=[],
+        )

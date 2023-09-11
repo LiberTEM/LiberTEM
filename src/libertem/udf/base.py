@@ -2094,7 +2094,8 @@ class UDFPartRunner:
             for udf in udfs:
                 udf.set_backend(backend)
                 udf.set_meta(meta)
-                # validate that one of the `process_*` methods is implemented
+                # validate that get_method returns a valid method type
+                # the presence of the method was checked on the main node
                 if udf.get_method() not in tuple(UDFMethodEnum):
                     raise UDFException('UDF.get_method() returned unrecognized')
                 udf.set_slice(pslice_for_roi)
@@ -2333,8 +2334,18 @@ class UDFRunner:
             # ideally the UDF would know the set of workers it might run on
             # here, e.g. backend information, to choose the best method,
             # as-is the backend will always be numpy by default
-            if udf.get_method() not in tuple(UDFMethodEnum):
+            udf_method = udf.get_method()
+            if udf_method not in tuple(UDFMethodEnum):
                 raise UDFException('UDF.get_method() returned unrecognized value')
+            elif udf_method == UDFMethodEnum.TILE and not isinstance(udf, UDFTileMixin):
+                raise UDFException(f'UDF declared method {udf_method.value} but '
+                                   'does not implement process_tile.')
+            elif udf_method == UDFMethodEnum.FRAME and not isinstance(udf, UDFFrameMixin):
+                raise UDFException(f'UDF declared method {udf_method.value} but '
+                                   'does not implement process_frame.')
+            elif udf_method == UDFMethodEnum.PARTITION and not isinstance(udf, UDFPartitionMixin):
+                raise UDFException(f'UDF declared method {udf_method.value} but '
+                                   'does not implement process_partition.')
             udf.init_result_buffers(executor=executor)
             udf.allocate_for_full(dataset, roi)
 

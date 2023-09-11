@@ -779,7 +779,7 @@ class BadGetMethodUDF(UDF):
         return {}
 
     def get_method(self):
-        return self.params.get('METHOD', 42)
+        return self.params.get('method', 42)
 
 
 @pytest.mark.parametrize(

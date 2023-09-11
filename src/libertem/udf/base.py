@@ -2097,6 +2097,7 @@ class UDFPartRunner:
                 # validate that get_method returns a valid method type
                 # the presence of the method was checked on the main node
                 if udf.get_method() not in tuple(UDFMethodEnum):
+                    # Should never be reached
                     raise UDFException('UDF.get_method() returned unrecognized')
                 udf.set_slice(pslice_for_roi)
                 udf.init_result_buffers()

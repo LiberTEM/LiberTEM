@@ -5,6 +5,7 @@ import cloudpickle
 from sparseconverter import BACKENDS
 from libertem.udf.base import UDF, NoOpUDF, UDFPartRunner, UDFParams, UDFMeta
 from libertem.common.executor import Environment
+from libertem.common.udf import UDFMethodEnum
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
 from libertem.io.dataset.raw import RawFileDataSet, RawPartition
@@ -773,14 +774,24 @@ def test_previous_attrs(lt_ctx, cls):
         lt_ctx.run_udf(dataset=ds, udf=cls())
 
 
-class BadGetMethodUDF(SumUDF):
+class BadGetMethodUDF(UDF):
+    def get_result_buffers(self):
+        return {}
+
     def get_method(self):
-        return 42
+        return self.params.get('METHOD', 42)
 
 
-def test_bad_get_method(lt_ctx):
+@pytest.mark.parametrize(
+    'method',
+    [
+        42,
+        UDFMethodEnum.FRAME,
+        UDFMethodEnum.PARTITION,
+        UDFMethodEnum.TILE,
+    ]
+)
+def test_bad_get_method(lt_ctx, method):
     ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
-    # Check that we get an attribute error that points to
-    # the current alternative
     with pytest.raises(UDFException):
-        lt_ctx.run_udf(dataset=ds, udf=BadGetMethodUDF())
+        lt_ctx.run_udf(dataset=ds, udf=BadGetMethodUDF(method=method))

@@ -795,3 +795,12 @@ def test_bad_get_method(lt_ctx, method):
     ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
     with pytest.raises(UDFException):
         lt_ctx.run_udf(dataset=ds, udf=BadGetMethodUDF(method=method))
+
+
+class NoImplemUDF(UDF):
+    ...
+
+
+def test_no_implementation():
+    with pytest.raises(TypeError):
+        NoImplemUDF().get_method()

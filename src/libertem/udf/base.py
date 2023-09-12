@@ -32,7 +32,7 @@ from libertem.common.buffers import (
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
-from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethodEnum
+from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethod
 from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
@@ -1098,16 +1098,16 @@ class UDFBase(UDFProtocol):
             raise ValueError(f"Backend can be {BACKENDS}, got {self._backend}")
 
     def get_method(self) -> Literal[
-        UDFMethodEnum.TILE,
-        UDFMethodEnum.FRAME,
-        UDFMethodEnum.PARTITION
+        UDFMethod.TILE,
+        UDFMethod.FRAME,
+        UDFMethod.PARTITION
     ]:
         if isinstance(self, UDFTileMixin):
-            return UDFMethodEnum.TILE
+            return UDFMethod.TILE
         elif isinstance(self, UDFFrameMixin):
-            return UDFMethodEnum.FRAME
+            return UDFMethod.FRAME
         elif isinstance(self, UDFPartitionMixin):
-            return UDFMethodEnum.PARTITION
+            return UDFMethod.PARTITION
         else:
             raise TypeError("UDF should implement one of the `process_*` methods")
 
@@ -2097,7 +2097,7 @@ class UDFPartRunner:
                 udf.set_meta(meta)
                 # validate that get_method returns a valid method type
                 # the presence of the method was checked on the main node
-                if udf.get_method() not in tuple(UDFMethodEnum):  # pragma: no cover
+                if udf.get_method() not in tuple(UDFMethod):  # pragma: no cover
                     # Should never be reached
                     raise UDFException('UDF.get_method() returned unrecognized')
                 udf.set_slice(pslice_for_roi)
@@ -2121,13 +2121,13 @@ class UDFPartRunner:
     ) -> None:
         for udf in udfs:
             udf_method = udf.get_method()
-            if udf_method == UDFMethodEnum.TILE:
+            if udf_method == UDFMethod.TILE:
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.set_tile_idx(tile.scheme_idx)
                 udf_tile = typing.cast(UDFTileMixin, udf)
                 udf_tile.process_tile(device_tile)
-            elif udf_method == UDFMethodEnum.FRAME:
+            elif udf_method == UDFMethod.FRAME:
                 tile_slice = tile.tile_slice
                 udf_frame = typing.cast(UDFFrameMixin, udf)
                 for frame_idx, frame in enumerate(device_tile):
@@ -2149,7 +2149,7 @@ class UDFPartRunner:
                     udf.set_slice(frame_slice)
                     udf.set_views_for_frame(partition, tile, frame_idx)
                     udf_frame.process_frame(frame)
-            elif udf_method == UDFMethodEnum.PARTITION:
+            elif udf_method == UDFMethod.PARTITION:
                 # Internal checks for dataset consistency
                 assert partition.slice.adjust_for_roi(roi) == tile.tile_slice
                 udf.set_views_for_tile(partition, tile)
@@ -2337,15 +2337,15 @@ class UDFRunner:
             # here, e.g. backend information, to choose the best method,
             # as-is the backend will always be numpy by default
             udf_method = udf.get_method()
-            if udf_method not in tuple(UDFMethodEnum):
+            if udf_method not in tuple(UDFMethod):
                 raise UDFException('UDF.get_method() returned unrecognized value')
-            elif udf_method == UDFMethodEnum.TILE and not isinstance(udf, UDFTileMixin):
+            elif udf_method == UDFMethod.TILE and not isinstance(udf, UDFTileMixin):
                 raise UDFException(f'UDF declared method {udf_method.value} but '
                                    'does not implement process_tile.')
-            elif udf_method == UDFMethodEnum.FRAME and not isinstance(udf, UDFFrameMixin):
+            elif udf_method == UDFMethod.FRAME and not isinstance(udf, UDFFrameMixin):
                 raise UDFException(f'UDF declared method {udf_method.value} but '
                                    'does not implement process_frame.')
-            elif udf_method == UDFMethodEnum.PARTITION and not isinstance(udf, UDFPartitionMixin):
+            elif udf_method == UDFMethod.PARTITION and not isinstance(udf, UDFPartitionMixin):
                 raise UDFException(f'UDF declared method {udf_method.value} but '
                                    'does not implement process_partition.')
             udf.init_result_buffers(executor=executor)

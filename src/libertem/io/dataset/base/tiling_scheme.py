@@ -10,7 +10,7 @@ from libertem.exceptions import UDFException
 from libertem.io.corrections import CorrectionSet
 from libertem.common import Shape, Slice
 from libertem.common.math import prod
-from libertem.common.udf import UDFProtocol, UDFMethodEnum
+from libertem.common.udf import UDFProtocol, UDFMethod
 
 if TYPE_CHECKING:
     from numpy import typing as nt
@@ -444,13 +444,13 @@ class Negotiator:
 
     def _get_intent(self, udfs: Sequence[UDFProtocol]) -> TilingIntent:
         udf_methods = tuple(udf.get_method() for udf in udfs)
-        if any(m not in tuple(UDFMethodEnum) for m in udf_methods):
+        if any(m not in tuple(UDFMethod) for m in udf_methods):
             raise UDFException('A UDF declared an invalid processing method')
-        if UDFMethodEnum.PARTITION in udf_methods:
+        if UDFMethod.PARTITION in udf_methods:
             return "partition"
-        elif UDFMethodEnum.FRAME in udf_methods:
+        elif UDFMethod.FRAME in udf_methods:
             return "frame"
-        elif UDFMethodEnum.TILE in udf_methods:
+        elif UDFMethod.TILE in udf_methods:
             return "tile"
         else:
             raise ValueError('No recognized UDF method, empty udfs arg?')
@@ -464,11 +464,11 @@ class Negotiator:
         udf_method = udf.get_method()
         partition_size = itemsize * prod(tuple(approx_partition_shape))
         partition_size_sig = itemsize * prod(tuple(approx_partition_shape.sig))
-        if udf_method == UDFMethodEnum.FRAME:
+        if udf_method == UDFMethod.FRAME:
             size = max(self._get_default_size(), partition_size_sig)
-        elif udf_method == UDFMethodEnum.PARTITION:
+        elif udf_method == UDFMethod.PARTITION:
             size = partition_size
-        elif udf_method == UDFMethodEnum.TILE:
+        elif udf_method == UDFMethod.TILE:
             # start with the UDF size preference:
             size = self._get_udf_size_pref(udf)
 
@@ -495,7 +495,7 @@ class Negotiator:
             udf.get_method()
             for udf in udfs
         ]
-        if any(m in (UDFMethodEnum.FRAME, UDFMethodEnum.PARTITION) for m in methods):
+        if any(m in (UDFMethod.FRAME, UDFMethod.PARTITION) for m in methods):
             base_shape = approx_partition_shape.sig
         else:
             # only by tile:
@@ -517,8 +517,8 @@ class Negotiator:
     def _get_min_depth(self, udf: "UDFProtocol", approx_partition_shape: Shape) -> int:
         udf_method = udf.get_method()
 
-        if udf_method == UDFMethodEnum.PARTITION:
+        if udf_method == UDFMethod.PARTITION:
             return approx_partition_shape[0]
-        elif udf_method == UDFMethodEnum.TILE:
+        elif udf_method == UDFMethod.TILE:
             return self._get_udf_depth_pref(udf, approx_partition_shape)
         return 1

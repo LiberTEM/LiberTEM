@@ -2155,7 +2155,7 @@ class UDFPartRunner:
                 udf.set_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.process_partition(device_tile)
-            else:
+            else:  # pragma: no cover
                 # Should never be reached!
                 raise UDFException('UDF.get_method() return unrecognized '
                                    'method during _run_udfs')

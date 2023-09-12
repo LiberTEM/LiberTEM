@@ -1,5 +1,6 @@
 from collections import defaultdict, OrderedDict
 from contextlib import contextmanager
+import typing
 from typing import (
     Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List, Sequence,
     Tuple, Type, Iterable, TypeVar, Union, TYPE_CHECKING
@@ -2121,14 +2122,14 @@ class UDFPartRunner:
         for udf in udfs:
             udf_method = udf.get_method()
             if udf_method == UDFMethodEnum.TILE:
-                assert isinstance(udf, UDFTileMixin)  # mypy!
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
                 udf.set_tile_idx(tile.scheme_idx)
-                udf.process_tile(device_tile)
+                udf_tile = typing.cast(UDFTileMixin, udf)
+                udf_tile.process_tile(device_tile)
             elif udf_method == UDFMethodEnum.FRAME:
-                assert isinstance(udf, UDFFrameMixin)  # mypy!
                 tile_slice = tile.tile_slice
+                udf_frame = typing.cast(UDFFrameMixin, udf)
                 for frame_idx, frame in enumerate(device_tile):
                     frame_slice = Slice(
                         origin=(tile_slice.origin[0] + frame_idx,) + tile_slice.origin[1:],
@@ -2147,14 +2148,14 @@ class UDFPartRunner:
                         assert check_shape(frame, frame_slice.shape) or True
                     udf.set_slice(frame_slice)
                     udf.set_views_for_frame(partition, tile, frame_idx)
-                    udf.process_frame(frame)
+                    udf_frame.process_frame(frame)
             elif udf_method == UDFMethodEnum.PARTITION:
-                assert isinstance(udf, UDFPartitionMixin)  # mypy!
                 # Internal checks for dataset consistency
                 assert partition.slice.adjust_for_roi(roi) == tile.tile_slice
                 udf.set_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)
-                udf.process_partition(device_tile)
+                udf_partition = typing.cast(UDFPartitionMixin, udf)
+                udf_partition.process_partition(device_tile)
             else:  # pragma: no cover
                 # Should never be reached!
                 raise UDFException('UDF.get_method() return unrecognized '

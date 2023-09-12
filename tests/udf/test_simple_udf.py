@@ -804,3 +804,38 @@ class NoImplemUDF(UDF):
 def test_no_implementation():
     with pytest.raises(TypeError):
         NoImplemUDF().get_method()
+
+
+class MultiImplemUDF(UDF):
+    def get_result_buffers(self):
+        return {'val': self.buffer(kind='nav', dtype=int)}
+
+    def process_tile(self, tile):
+        self.results.val[:] = 42
+
+    def process_frame(self, frame):
+        self.results.val[:] = 53
+
+    def process_partition(self, partition):
+        self.results.val[:] = 64
+
+    def get_method(self):
+        if self.params.method == 'frame':
+            return UDF.UDF_METHOD.FRAME
+        elif self.params.method == 'partition':
+            return UDF.UDF_METHOD.PARTITION
+        else:
+            return UDF.UDF_METHOD.TILE
+
+
+def test_multi_implem(lt_ctx):
+    ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
+    method = None
+    res = lt_ctx.run_udf(dataset=ds, udf=MultiImplemUDF(method=method))
+    assert (res['val'].data == 42).all()
+    method = 'frame'
+    res = lt_ctx.run_udf(dataset=ds, udf=MultiImplemUDF(method=method))
+    assert (res['val'].data == 53).all()
+    method = 'partition'
+    res = lt_ctx.run_udf(dataset=ds, udf=MultiImplemUDF(method=method))
+    assert (res['val'].data == 64).all()

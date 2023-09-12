@@ -70,6 +70,8 @@ class UDFProtocol(Protocol):
     ND_BACKENDS = ND_BACKENDS  #: Set of backends that support n-dimensional arrays
     D2_BACKENDS = D2_BACKENDS  #: Set of backends that only support two-dimensional arrays
 
+    UDF_METHOD = UDFMethod  # Enum of process_ methods accepted by the UDF interface
+
     def get_method() -> Literal[UDFMethod.TILE, UDFMethod.FRAME, UDFMethod.PARTITION]:
         raise NotImplementedError()
 

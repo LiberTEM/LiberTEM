@@ -5,7 +5,7 @@ import cloudpickle
 from sparseconverter import BACKENDS
 from libertem.udf.base import UDF, NoOpUDF, UDFPartRunner, UDFParams, UDFMeta
 from libertem.common.executor import Environment
-from libertem.common.udf import UDFMethodEnum
+from libertem.common.udf import UDFMethod
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
 from libertem.io.dataset.raw import RawFileDataSet, RawPartition
@@ -786,9 +786,9 @@ class BadGetMethodUDF(UDF):
     'method',
     [
         42,
-        UDFMethodEnum.FRAME,
-        UDFMethodEnum.PARTITION,
-        UDFMethodEnum.TILE,
+        UDFMethod.FRAME,
+        UDFMethod.PARTITION,
+        UDFMethod.TILE,
     ]
 )
 def test_bad_get_method(lt_ctx, method):

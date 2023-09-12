@@ -479,7 +479,7 @@ class Negotiator:
             # we need to increase the size:
             base_size = itemsize * prod(base_shape)
             size = max(base_size, size)
-        else:
+        else:  # pragma: no cover
             # Should never be reached, this is checked earlier in UDFRunner
             raise UDFException(f'UDF.get_method() returned unrecognized method: {udf_method}')
         return size

@@ -1097,11 +1097,27 @@ class UDFBase(UDFProtocol):
         else:
             raise ValueError(f"Backend can be {BACKENDS}, got {self._backend}")
 
-    def get_method(self) -> Literal[
-        UDFMethod.TILE,
-        UDFMethod.FRAME,
-        UDFMethod.PARTITION
-    ]:
+    def get_method(self) -> Literal[UDFMethod.TILE, UDFMethod.FRAME, UDFMethod.PARTITION]:
+        """
+        Return a member of the :attr:`libertem.udf.base.UDF.UDF_METHOD`
+        enum to indicate which processing method to use during :code:`run_udf`.
+
+        By default, this method returns based on the process method
+        precedence of tile > frame > partition.
+
+        The return is checked at runtime to ensure the requested method
+        is impemented on the UDF itself.
+
+        .. versionchanged:: 0.13.0
+            :meth:`~libertem.udf.base.UDF.get_method()` was exposed to enable
+            choice of processing method at runtime
+
+        Returns
+        -------
+
+        UDFMethod
+            A member of the enum :attr:`libertem.udf.base.UDF.UDF_METHOD`
+        """
         if isinstance(self, UDFTileMixin):
             return UDFMethod.TILE
         elif isinstance(self, UDFFrameMixin):

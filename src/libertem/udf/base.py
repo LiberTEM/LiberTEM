@@ -2059,12 +2059,24 @@ class UDFPartRunner:
             partition_progress = PartitionTrackerNoOp()
         partition_progress.signal_start()
 
+        # Save udf process_ method to avoid repeated isinstance() checks
+        # in the future could be computed along with the execution_plan
+        # or better still computed on the main node to ensure consistency
+        # with the tiling scheme
+        udf_methods = {
+            backend: tuple(udf.get_method() for udf in udfs)
+            for backend, udfs in execution_plan.items()
+        }
+
         try:
             for tile in tiles:
                 converter = TileConverter(tile)
                 for backend, udfs in execution_plan.items():
+                    methods = udf_methods[backend]
                     device_tile = converter.get(backend)
-                    self._run_tile(udfs, partition, tile, backend, device_tile, roi=roi)
+                    self._run_tile(
+                        zip(udfs, methods), partition, tile, backend, device_tile, roi=roi
+                    )
                 partition_progress.signal_tile_complete(tile)
         except AttributeError as e:
             removed = {
@@ -2128,15 +2140,19 @@ class UDFPartRunner:
 
     def _run_tile(
         self,
-        udfs: Iterable[UDF],
+        udfs_and_methods: Iterable[
+            Tuple[
+                UDF,
+                Literal[UDFMethod.TILE, UDFMethod.FRAME, UDFMethod.PARTITION],
+            ]
+        ],
         partition: Partition,
         tile: DataTile,
         array_backend: ArrayBackend,
         device_tile: Any,
         roi: Optional[np.ndarray],
     ) -> None:
-        for udf in udfs:
-            udf_method = udf.get_method()
+        for udf, udf_method in udfs_and_methods:
             if udf_method == UDFMethod.TILE:
                 udf.set_contiguous_views_for_tile(partition, tile)
                 udf.set_slice(tile.tile_slice)

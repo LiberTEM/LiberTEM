@@ -117,14 +117,22 @@ per-partition processing for an UDF.
 Precedence
 ----------
 
-The UDF interface looks for methods in the order
+By default the UDF interface looks for methods in the order
 :meth:`~libertem.udf.base.UDFTileMixin.process_tile`,
 :meth:`~libertem.udf.base.UDFFrameMixin.process_frame`,
-:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition`. For now, the first in
-that order is executed. In the future, composition of UDFs may allow to use
-different methods depending on the circumstances.
-:meth:`~libertem.udf.base.UDFTileMixin.process_tile` is the most general method and
-allows by-frame and by-partition processing as well.
+:meth:`~libertem.udf.base.UDFPartitionMixin.process_partition` and will use the first
+matching implementation. :meth:`~libertem.udf.base.UDFTileMixin.process_tile` is
+the most general method and should allow by-frame and by-partition processing as well.
+
+If a UDF requires more than one implementation depending on how it is
+parametrised or the data it is supplied with, the :meth:`~libertem.udf.base.UDF.get_method`
+method can be overridden to influence how the UDF will be run. This method must
+return a member of the :attr:`libertem.udf.base.UDF.UDF_METHOD` enum and have
+the corresponding processing method implemented.
+
+.. versionchanged:: 0.13.0
+    :meth:`~libertem.udf.base.UDF.get_method()` was exposed to enable
+    choice of processing method at runtime
 
 Post-processing of partition results
 ------------------------------------

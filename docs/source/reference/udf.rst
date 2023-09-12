@@ -29,6 +29,8 @@ Base UDF classes
     :members:
     :inherited-members:
 
+.. autoenum:: libertem.common.udf.UDFMethod
+
 Alternative merging for Dask arrays
 ###################################
 

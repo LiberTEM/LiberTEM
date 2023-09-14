@@ -3,7 +3,7 @@ from typing_extensions import Literal
 from libertem.common.math import prod
 import numpy as np
 
-from libertem.common.udf import UDFMethodEnum
+from libertem.common.udf import UDFMethod
 from libertem.udf import UDF, UDFMeta
 from libertem.common.container import MaskContainer
 from libertem.common.numba import rmatmul
@@ -89,7 +89,7 @@ class ApplyMasksEngine:
         # Avoid reshape since older versions of scipy.sparse don't support it
         flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
         return self.process_flat(flat_data, masks)
-    
+
     def process_frame_shifted(self, frame, shifts: Tuple[int, ...]):
         masks = self._get_masks()
         mask_transposed = self.needs_transpose
@@ -196,7 +196,8 @@ class ApplyMasksUDF(UDF):
                 use_sparse = 'sparse.pydata'
             elif isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
                 raise ValueError(
-                    f'Sparse backend {use_sparse} not supported for shifts, use sparse.pydata instead.'
+                    f'Sparse backend {use_sparse} not supported for '
+                    'shifts, use sparse.pydata instead.'
                 )
         elif use_sparse is True:
             use_sparse = 'scipy.sparse'
@@ -275,11 +276,11 @@ class ApplyMasksUDF(UDF):
         ''
         return self.params.backends
 
-    def get_method(self) -> Literal[UDFMethodEnum.FRAME, UDFMethodEnum.TILE]:
+    def get_method(self) -> Literal[UDFMethod.FRAME, UDFMethod.TILE]:
         if self.params.get('shifts') is not None:
-            return UDFMethodEnum.FRAME
+            return UDFMethod.FRAME
         else:
-            return UDFMethodEnum.TILE
+            return UDFMethod.TILE
 
     def process_tile(self, tile):
         """

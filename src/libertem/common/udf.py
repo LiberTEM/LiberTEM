@@ -31,6 +31,9 @@ class UDFMethod(Enum):
     PARTITION = 'partition'
 
 
+UDFMethodT = Literal[UDFMethod.TILE, UDFMethod.FRAME, UDFMethod.PARTITION]
+
+
 class UDFProtocol(Protocol):
     '''
     Parts of the UDF interface required for MIT code in LiberTEM
@@ -72,7 +75,7 @@ class UDFProtocol(Protocol):
 
     UDF_METHOD = UDFMethod  #: Enum of process_ methods accepted by the UDF interface
 
-    def get_method() -> Literal[UDFMethod.TILE, UDFMethod.FRAME, UDFMethod.PARTITION]:
+    def get_method() -> UDFMethodT:
         raise NotImplementedError()
 
     def get_tiling_preferences() -> TilingPreferences:

@@ -791,7 +791,11 @@ class BadGetMethodUDF(UDF):
         UDFMethod.TILE,
     ]
 )
-def test_bad_get_method(lt_ctx, method):
+def test_bad_custom_get_method(lt_ctx, method):
+    # UDF implements no methods, so even if get_method()
+    # returns a valid member of the enum the UDF interface
+    # should raise the exception somewhere during initialization
+    # also checks that the invalid return '42' causes the raise
     ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
     with pytest.raises(UDFException):
         lt_ctx.run_udf(dataset=ds, udf=BadGetMethodUDF(method=method))
@@ -801,7 +805,8 @@ class NoImplemUDF(UDF):
     ...
 
 
-def test_no_implementation():
+def test_no_implementation_default_raises():
+    # Checks the default get_method() raises when no method is implemented
     with pytest.raises(TypeError):
         NoImplemUDF().get_method()
 

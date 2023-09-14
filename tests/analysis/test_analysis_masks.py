@@ -11,7 +11,7 @@ from utils import _naive_mask_apply, _mk_random, set_device_class
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.udf.masks import ApplyMasksUDF, ApplyMasksUDF
+from libertem.udf.masks import ApplyMasksUDF
 from libertem.udf import UDF, UDFMeta
 
 

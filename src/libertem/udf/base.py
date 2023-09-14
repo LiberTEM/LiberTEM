@@ -32,7 +32,7 @@ from libertem.common.buffers import (
     BufferKind, BufferUse, BufferLocation,
 )
 from libertem.common import Shape, Slice
-from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethod, UDFMethodT
+from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethod
 from libertem.common.math import prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
@@ -1097,7 +1097,7 @@ class UDFBase(UDFProtocol):
         else:
             raise ValueError(f"Backend can be {BACKENDS}, got {self._backend}")
 
-    def get_method(self) -> UDFMethodT:
+    def get_method(self) -> UDFMethod:
         """
         Return a member of the :attr:`libertem.udf.base.UDF.UDF_METHOD`
         enum to indicate which processing method to use during :code:`run_udf`.
@@ -2143,7 +2143,7 @@ class UDFPartRunner:
         udfs_and_methods: Iterable[
             Tuple[
                 UDF,
-                UDFMethodT,
+                UDFMethod,
             ]
         ],
         partition: Partition,

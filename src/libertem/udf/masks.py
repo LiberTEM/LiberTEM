@@ -152,6 +152,14 @@ class ApplyMasksUDF(UDF):
         data and mask data are compatible with this.
     backends : Iterable containing strings "numpy" and/or "cupy", or None
         Control which back-ends are used. Default is numpy and cupy
+    shifts : Union[Tuple[int, int], AuxBufferWrapper], optional
+        (Y/X)-shifts to apply to all masks before multiplying with each frame. Can be either a
+        len(2) array-like for a constant shift :code:`(Y, X)`, or an AuxBufferWrapper of
+        :code:`kind='nav'` and :code:`extra_shape=(2,)` defining a per-frame shift to apply.
+        A positive y-shift moves the mask 'down' relative to the frame, while a positive
+        x-shift moves the mask 'right' relative to the frame. Shift values are rounded to
+        the nearest integer before application, as such passing integer shifts is advised
+        if you need to know the exact shift values used during the analysis.
 
     Examples
     --------

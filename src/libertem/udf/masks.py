@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Tuple
 from typing_extensions import Literal
 from libertem.common.math import prod
 import numpy as np
@@ -58,8 +58,6 @@ class ApplyMasksEngine:
 
     def _process_flat_torch(self, flat_tile, masks):
         import torch
-        if masks is None:
-            masks = self._get_masks()
         # CuPy back-end disables torch in get_task_data
         # FIXME use GPU torch with CuPy array?
         return torch.mm(
@@ -68,27 +66,21 @@ class ApplyMasksEngine:
         ).numpy()
 
     def _process_flat_spsp(self, flat_tile, masks):
-        if masks is None:
-            masks = self._get_masks()
         return rmatmul(flat_tile, masks)
 
     def _process_flat_sparsepyd(self, flat_tile, masks):
-        if masks is None:
-            masks = self._get_masks()
         # Make sure the sparse.pydata mask comes first
         # to choose the right multiplication method
         return (masks @ flat_tile.T).T
 
     def _process_flat_standard(self, flat_tile, masks):
-        if masks is None:
-            masks = self._get_masks()
         return flat_tile @ masks
 
-    def process_tile(self, tile, masks: Optional[np.ndarray] = None):
+    def process_tile(self, tile):
         flat_shape = (tile.shape[0], prod(tile.shape[1:]))
         # Avoid reshape since older versions of scipy.sparse don't support it
         flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
-        return self.process_flat(flat_data, masks)
+        return self.process_flat(flat_data, self._get_masks())
 
     def process_frame_shifted(self, frame, shifts: Tuple[int, ...]):
         masks = self._get_masks()

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing_extensions import Protocol, TypedDict, Literal
+from typing_extensions import Protocol, TypedDict
 from typing import Union
 from sparseconverter import (
     CUDA, CUPY, CUPY_SCIPY_COO, CUPY_SCIPY_CSC, CUPY_SCIPY_CSR, NUMPY,
@@ -29,9 +29,6 @@ class UDFMethod(Enum):
     TILE = 'tile'
     FRAME = 'frame'
     PARTITION = 'partition'
-
-
-UDFMethodT = Literal[UDFMethod.TILE, UDFMethod.FRAME, UDFMethod.PARTITION]
 
 
 class UDFProtocol(Protocol):
@@ -75,7 +72,7 @@ class UDFProtocol(Protocol):
 
     UDF_METHOD = UDFMethod  #: Enum of process_ methods accepted by the UDF interface
 
-    def get_method() -> UDFMethodT:
+    def get_method() -> UDFMethod:
         raise NotImplementedError()
 
     def get_tiling_preferences() -> TilingPreferences:

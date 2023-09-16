@@ -5,6 +5,7 @@ import numpy as np
 
 from libertem.common.udf import UDFMethod
 from libertem.udf import UDF, UDFMeta
+from libertem.common.buffers import AuxBufferWrapper
 from libertem.common.container import MaskContainer
 from libertem.common.numba import rmatmul
 
@@ -202,6 +203,8 @@ class ApplyMasksUDF(UDF):
                 )
             if use_sparse is True:
                 use_sparse = 'sparse.pydata'
+            if not isinstance(shifts, AuxBufferWrapper):
+                shifts = np.asarray(shifts)
         elif use_sparse is True:
             use_sparse = 'scipy.sparse'
 
@@ -218,7 +221,7 @@ class ApplyMasksUDF(UDF):
             mask_dtype=mask_dtype,
             preferred_dtype=preferred_dtype,
             backends=backends,
-            shifts=np.asarray(shifts),
+            shifts=shifts,
             **kwargs
         )
 

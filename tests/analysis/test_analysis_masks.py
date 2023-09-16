@@ -1036,20 +1036,22 @@ def _make_lambda(mask):
 @pytest.mark.parametrize(
     'backend', (None, NUMPY, CUPY)
 )
-def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend):
+@pytest.mark.parametrize(
+    'num_masks', (3,)
+)
+def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, num_masks):
     with set_device_class(get_device_class(backend)):
-        mask_types = (np.asarray, sp.csr_matrix, sparse.COO.from_numpy)
-        num_masks = 3
-        num_frames, h, w = 2, 16, 16
-        shifts = np.array(
-            [
-                (1.1, -2.1),
-                (-1.7, 0.9),
-            ]
-        )
-        assert shifts.shape == (num_frames, 2)
-
+        # nonsquare frames to test ordering is correct
+        num_frames, h, w = 2, 18, 12
         data = _mk_random(size=(num_frames, h, w))
+        shifts = np.random.uniform(
+            low=-5.,
+            high=5.,
+            size=(num_frames, 2),
+        )
+
+        mask_types = [np.asarray, sp.csr_matrix, sparse.COO.from_numpy]
+        np.random.shuffle(mask_types)
         masks = []
         mask_factories = []
         for _, mask_type in zip(range(num_masks), itertools.cycle(mask_types)):
@@ -1060,7 +1062,6 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend):
         # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
         # different from ApplyMasksJob
         expected = np.zeros((num_frames, num_masks), dtype=np.float64)
-
         for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
             my0 = min(max(0, -dy), h)
             mx0 = min(max(0, -dx), w)

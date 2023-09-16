@@ -1132,11 +1132,8 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
         )
 
         use_sparse = kwargs.get('use_sparse', None)  # default value
-        all_sparse_masks = all(is_sparse(m) for m in masks)
-        if backend == CUPY and (
-            use_sparse in (True, 'sparse.pydata')
-            or use_sparse is None and all_sparse_masks
-        ):
+        # if forcing sparse on CuPy, raise, else densify to process
+        if backend == CUPY and use_sparse in (True, 'sparse.pydata'):
             with pytest.raises(ValueError):
                 # Implement like this so we can test the implementation
                 # once CUPY + sparse.pydata is actually supported
@@ -1160,3 +1157,35 @@ def test_shifted_masks_zero_overlap(lt_ctx):
 
     results = lt_ctx.run_udf(udf=udf, dataset=dataset)
     assert np.isnan(results['intensity'].data).all()
+
+
+@pytest.mark.parametrize(
+    'backend', (None, NUMPY, CUPY)
+)
+def test_shifted_masks_stacked(lt_ctx, backend):
+    with set_device_class(get_device_class(backend)):
+        # nonsquare frames to test ordering is correct
+        num_frames, h, w = 2, 18, 12
+        data = _mk_random(size=(num_frames, h, w))
+        shifts = np.random.uniform(
+            low=-5.,
+            high=5.,
+            size=(num_frames, 2),
+        )
+
+        masks = _mk_random(size=(3, h, w))
+
+        expected = naive_shifted_mask_apply(masks, data, shifts)
+        dataset = MemoryDataSet(data=data)
+        udf = ApplyMasksUDF(
+            mask_factories=lambda: masks,
+            shifts=ApplyMasksUDF.aux_data(
+                data=shifts.ravel(),
+                kind='nav',
+                extra_shape=(2, ),
+                dtype=float,
+            ),
+        )
+
+        results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+        assert np.allclose(results['intensity'].data, expected)

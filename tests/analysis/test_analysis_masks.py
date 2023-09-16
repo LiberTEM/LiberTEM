@@ -1019,6 +1019,15 @@ def test_shifted_masks_constant_shifts(lt_ctx, kwargs, backend):
         assert np.allclose(results['intensity'].data, expected)
 
 
+def test_shifted_masks_scipy_sparse_raises(lt_ctx):
+    with pytest.raises(ValueError):
+        ApplyMasksUDF(
+            mask_factories=lambda: np.ones((5, 6)),
+            shifts=(1.2, -3.1),
+            use_sparse='scipy.sparse',
+        )
+
+
 def _make_lambda(mask):
     return lambda: mask
 
@@ -1112,3 +1121,17 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
             results = lt_ctx.run_udf(udf=udf, dataset=dataset)
 
         assert np.allclose(results['intensity'].data, expected)
+
+
+def test_shifted_masks_zero_overlap(lt_ctx):
+    num_frames, h, w = 2, 18, 12
+    data = _mk_random(size=(num_frames, h, w))
+
+    dataset = MemoryDataSet(data=data)
+    udf = ApplyMasksUDF(
+        mask_factories=[lambda: _mk_random(size=(h, w))],
+        shifts=(-20, 15),
+    )
+
+    results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+    assert np.isnan(results['intensity'].data).all()

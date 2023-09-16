@@ -1,4 +1,5 @@
 import pytest
+import itertools
 import numpy as np
 import scipy.sparse as sp
 import sparse
@@ -1019,6 +1020,10 @@ def test_shifted_masks_constant_shifts(lt_ctx, kwargs, backend):
         assert np.allclose(results['intensity'].data, expected)
 
 
+def _make_lambda(mask):
+    return lambda: mask
+
+
 @pytest.mark.parametrize(
     'kwargs', (
         {},
@@ -1033,25 +1038,53 @@ def test_shifted_masks_constant_shifts(lt_ctx, kwargs, backend):
 )
 def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend):
     with set_device_class(get_device_class(backend)):
-        data = _mk_random(size=(2, 16, 16), dtype="<u2")
-        mask0 = _mk_random(size=(16, 16))
-        mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
-        mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
+        mask_types = (np.asarray, sp.csr_matrix, sparse.COO.from_numpy)
+        num_masks = 3
+        num_frames, h, w = 2, 16, 16
+        shifts = np.array(
+            [
+                (1.1, -2.1),
+                (-1.7, 0.9),
+            ]
+        )
+        assert shifts.shape == (num_frames, 2)
+
+        data = _mk_random(size=(num_frames, h, w))
+        masks = []
+        mask_factories = []
+        for _, mask_type in zip(range(num_masks), itertools.cycle(mask_types)):
+            mask = mask_type(_mk_random(size=(h, w)))
+            masks.append(mask)
+            mask_factories.append(_make_lambda(mask))
+
         # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
         # different from ApplyMasksJob
-        expected = np.empty((2, 3))
-        expected[0, 0] = (mask0[0:15, 2:16] * data[0, 1:16, 0:14]).sum(axis=(-1, -2))
-        expected[0, 1] = (mask1[0:15, 2:16].toarray() * data[0, 1:16, 0:14]).sum(axis=(-1, -2))
-        expected[0, 2] = (mask2[0:15, 2:16] * data[0, 1:16, 0:14]).sum(axis=(-1, -2))
+        expected = np.zeros((num_frames, num_masks), dtype=np.float64)
 
-        expected[1, 0] = (mask0[2:16, 0:15] * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
-        expected[1, 1] = (mask1[2:16, 0:15].toarray() * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
-        expected[1, 2] = (mask2[2:16, 0:15] * data[1, 0:14, 1:16]).sum(axis=(-1, -2))
+        for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
+            my0 = min(max(0, -dy), h)
+            mx0 = min(max(0, -dx), w)
+            my1 = max(min(h, h - dy), 0)
+            mx1 = max(min(w, w - dx), 0)
+            dy0 = min(max(0, dy), h)
+            dx0 = min(max(0, dx), w)
+            dy1 = max(min(h, h + dy), 0)
+            dx1 = max(min(w, w + dx), 0)
+            for mask_idx, mask in enumerate(masks):
+                mask_sub = masks[mask_idx][np.s_[my0: my1, mx0: mx1]]
+                try:
+                    # for sp.csr_matrix
+                    mask_sub = mask_sub.toarray()
+                except AttributeError:
+                    pass
+                data_sub = data[frame_idx][np.s_[dy0: dy1, dx0: dx1]]
+                expected[frame_idx, mask_idx] = (mask_sub * data_sub).sum(axis=(-1, -2))
+
         dataset = MemoryDataSet(data=data)
         udf = ApplyMasksUDF(
-            mask_factories=[lambda: mask0, lambda: mask1, lambda: mask2],
+            mask_factories=mask_factories,
             shifts=ApplyMasksUDF.aux_data(
-                data=np.round(np.array([(1.1, -2.1), (-1.7, 0.9)])),
+                data=shifts.ravel(),
                 kind='nav',
                 extra_shape=(2, ),
                 dtype=float,

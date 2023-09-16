@@ -214,7 +214,7 @@ class ApplyMasksUDF(UDF):
             mask_dtype=mask_dtype,
             preferred_dtype=preferred_dtype,
             backends=backends,
-            shifts=shifts,
+            shifts=np.asarray(shifts),
             **kwargs
         )
 

@@ -191,13 +191,13 @@ class ApplyMasksUDF(UDF):
                 mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
 
         if shifts is not None:
-            if use_sparse is True:
-                use_sparse = 'sparse.pydata'
-            elif isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
+            if isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
                 raise ValueError(
                     f'Sparse backend {use_sparse} not supported for '
                     'shifts, use sparse.pydata instead.'
                 )
+            if use_sparse is True:
+                use_sparse = 'sparse.pydata'
         elif use_sparse is True:
             use_sparse = 'scipy.sparse'
 

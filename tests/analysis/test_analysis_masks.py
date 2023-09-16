@@ -1032,6 +1032,51 @@ def _make_lambda(mask):
     return lambda: mask
 
 
+def naive_shifted_mask_apply(masks, data, shifts):
+    num_frames, h, w = data.shape
+    num_masks = len(masks)
+
+    if shifts.shape == (2,):
+        shifts = np.repeat(shifts[np.newaxis, ...], num_frames, axis=0)
+    assert shifts.shape == (num_frames, 2)
+
+    expected = np.full((num_frames, num_masks), np.nan, dtype=np.float64)
+    for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
+        my0 = min(max(0, -dy), h)
+        mx0 = min(max(0, -dx), w)
+        my1 = max(min(h, h - dy), 0)
+        mx1 = max(min(w, w - dx), 0)
+        dy0 = min(max(0, dy), h)
+        dx0 = min(max(0, dx), w)
+        dy1 = max(min(h, h + dy), 0)
+        dx1 = max(min(w, w + dx), 0)
+        for mask_idx, mask in enumerate(masks):
+            mask_sub = mask[np.s_[my0: my1, mx0: mx1]]
+            if mask_sub.size == 0:
+                # zero intersection
+                continue
+            try:
+                # for sp.csr_matrix
+                mask_sub = mask_sub.toarray()
+            except AttributeError:
+                pass
+            data_sub = data[frame_idx][np.s_[dy0: dy1, dx0: dx1]]
+            expected[frame_idx, mask_idx] = (mask_sub * data_sub).sum(axis=(-1, -2))
+    return expected
+
+
+def test_naive_shifted_apply():
+    shifts = np.asarray([1, -2]).astype(int)
+    mask_s = np.s_[0:15, 2:16]
+    data_s = np.s_[:, 1:16, 0:14]
+    data = _mk_random(size=(2, 16, 16))
+    mask = _mk_random(size=(16, 16))
+    assert np.allclose(
+        naive_shifted_mask_apply([mask], data, shifts).squeeze(),
+        (data[data_s] * mask[mask_s][np.newaxis, ...]).sum(axis=(-1, -2)),
+    )
+
+
 @pytest.mark.parametrize(
     'kwargs', (
         {},  # equivalent to use_sparse=None
@@ -1072,28 +1117,8 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
             mask = mask_type(_mk_random(size=(h, w)))
             masks.append(mask)
             mask_factories.append(_make_lambda(mask))
-        num_masks = len(masks)
 
-        expected = np.zeros((num_frames, num_masks), dtype=np.float64)
-        for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
-            my0 = min(max(0, -dy), h)
-            mx0 = min(max(0, -dx), w)
-            my1 = max(min(h, h - dy), 0)
-            mx1 = max(min(w, w - dx), 0)
-            dy0 = min(max(0, dy), h)
-            dx0 = min(max(0, dx), w)
-            dy1 = max(min(h, h + dy), 0)
-            dx1 = max(min(w, w + dx), 0)
-            for mask_idx, mask in enumerate(masks):
-                mask_sub = masks[mask_idx][np.s_[my0: my1, mx0: mx1]]
-                try:
-                    # for sp.csr_matrix
-                    mask_sub = mask_sub.toarray()
-                except AttributeError:
-                    pass
-                data_sub = data[frame_idx][np.s_[dy0: dy1, dx0: dx1]]
-                expected[frame_idx, mask_idx] = (mask_sub * data_sub).sum(axis=(-1, -2))
-
+        expected = naive_shifted_mask_apply(masks, data, shifts)
         dataset = MemoryDataSet(data=data)
         udf = ApplyMasksUDF(
             mask_factories=mask_factories,

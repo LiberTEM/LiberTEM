@@ -1,5 +1,4 @@
 import pytest
-import itertools
 import numpy as np
 import scipy.sparse as sp
 import sparse
@@ -1026,20 +1025,28 @@ def _make_lambda(mask):
 
 @pytest.mark.parametrize(
     'kwargs', (
-        {},
+        {},  # equivalent to use_sparse=None
         {'use_sparse': True},
         {'use_sparse': False},
         {'use_sparse': 'sparse.pydata'},
-        {'use_torch': True},
+        {'use_torch': True},  # with use_sparse=None
     )
 )
 @pytest.mark.parametrize(
     'backend', (None, NUMPY, CUPY)
 )
 @pytest.mark.parametrize(
-    'num_masks', (3,)
+    'mask_types', [
+        (np.asarray,),
+        (np.asarray, np.asarray),
+        (sp.csr_matrix,),
+        (sparse.COO.from_numpy,),
+        (np.asarray, sp.csr_matrix),
+        (np.asarray, sparse.COO.from_numpy),
+        (sparse.COO.from_numpy, sp.csc_matrix,),
+    ]
 )
-def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, num_masks):
+def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
     with set_device_class(get_device_class(backend)):
         # nonsquare frames to test ordering is correct
         num_frames, h, w = 2, 18, 12
@@ -1050,17 +1057,14 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, num_masks):
             size=(num_frames, 2),
         )
 
-        mask_types = [np.asarray, sp.csr_matrix, sparse.COO.from_numpy]
-        np.random.shuffle(mask_types)
         masks = []
         mask_factories = []
-        for _, mask_type in zip(range(num_masks), itertools.cycle(mask_types)):
+        for mask_type in mask_types:
             mask = mask_type(_mk_random(size=(h, w)))
             masks.append(mask)
             mask_factories.append(_make_lambda(mask))
+        num_masks = len(masks)
 
-        # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
-        # different from ApplyMasksJob
         expected = np.zeros((num_frames, num_masks), dtype=np.float64)
         for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
             my0 = min(max(0, -dy), h)
@@ -1092,7 +1096,13 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, num_masks):
             ),
             **kwargs
         )
-        if backend == CUPY and kwargs.get('use_sparse', False) in (True, 'sparse.pydata'):
+
+        use_sparse = kwargs.get('use_sparse', None)  # default value
+        all_sparse_masks = all(is_sparse(m) for m in masks)
+        if backend == CUPY and (
+            use_sparse in (True, 'sparse.pydata')
+            or use_sparse is None and all_sparse_masks
+        ):
             with pytest.raises(ValueError):
                 # Implement like this so we can test the implementation
                 # once CUPY + sparse.pydata is actually supported

@@ -211,7 +211,17 @@ class MaskContainer:
                     default_sparse = False
                 mask_slices.append(m)
 
-        if self._use_sparse is None:
+        if (
+            self._use_sparse is None
+            and default_sparse == 'sparse.pydata'
+            and self.backend in CUPY_BACKENDS
+        ):
+            # The case for shifts, must use sparse.pydata but cannot
+            # run this as sparse on CuPy, so densify to allow calculation
+            # If we reach this, all masks were sparse as default_sparse
+            # remained as 'sparse.pydata' and not False
+            self._use_sparse = False
+        elif self._use_sparse is None:
             self._use_sparse = default_sparse
 
         if self.use_sparse:

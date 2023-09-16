@@ -85,13 +85,15 @@ class MaskContainer:
     use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc',
     'sparse.pydata', or 'sparse.pydata.GCXS'
     '''
-    def __init__(self, mask_factories, dtype=None, use_sparse=None, count=None, backend=None):
+    def __init__(self, mask_factories, dtype=None, use_sparse=None,
+                 count=None, backend=None, default_sparse='scipy.sparse'):
         self.mask_factories = mask_factories
         # If we generate a whole mask stack with one function call,
         # we should know the length without generating the mask stack
         self._length = count
         self._dtype = dtype
         self._use_sparse = use_sparse
+        self._default_sparse = default_sparse
         self._mask_cache = {}
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
@@ -188,7 +190,7 @@ class MaskContainer:
         # If it is None, use sparse only if all masks are sparse
         # and set the use_sparse property accordingly
 
-        default_sparse = 'scipy.sparse'
+        default_sparse = self._default_sparse
 
         if callable(self.mask_factories):
             raw_masks = self.mask_factories()

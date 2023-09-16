@@ -84,23 +84,24 @@ class ApplyMasksEngine:
 
     def process_frame_shifted(self, frame, shifts: Tuple[int, ...]):
         masks = self._get_masks()
+        num_masks = len(self.masks)
         shifted_slice = self.meta.sig_slice.shift_by(shifts)
         left, right = self.meta.sig_slice.intersection_pair(shifted_slice)
+        mask_slice = right.get()
         if self.needs_transpose:
-            mask_slice = right.get() + (slice(None), )
-            num_masks = len(self.masks)
+            mask_slice = mask_slice + (slice(None), )
             masks = masks.reshape((*frame.shape, num_masks))
-            masks = masks[mask_slice].reshape((-1, num_masks))
+            final_mask_shape = (-1, num_masks)
         else:
-            mask_slice = (slice(None), ) + right.get()
-            num_masks = len(self.masks)
+            mask_slice = (slice(None), ) + mask_slice
             masks = masks.reshape((num_masks, *frame.shape))
-            masks = masks[mask_slice].reshape((num_masks, -1))
+            final_mask_shape = (num_masks, -1)
 
+        sliced_masks = masks[mask_slice].reshape(final_mask_shape)
         data = left.get(frame)
-        # FIXME This reshape is incompatible with older versions of scipy.sparse
+        # NOTE This reshape is incompatible with older versions of scipy.sparse ?
         flat_data = data.reshape(1, prod(data.shape))
-        return self.process_flat(flat_data, masks)[0]
+        return self.process_flat(flat_data, sliced_masks)[0]
 
 
 class ApplyMasksUDF(UDF):

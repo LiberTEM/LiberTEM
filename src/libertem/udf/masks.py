@@ -249,9 +249,13 @@ class ApplyMasksUDF(UDF):
             backend = self.BACKEND_CUPY
         else:
             backend = self.BACKEND_NUMPY
+        # In the default case defer to default kwarg on MaskContainer
+        default_sparse = {}
+        if p.shifts is not None:
+            default_sparse['default_sparse'] = 'sparse.pydata'
         return MaskContainer(
             p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,
-            backend=backend
+            backend=backend, **default_sparse,
         )
 
     def get_task_data(self):

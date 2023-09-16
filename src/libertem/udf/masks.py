@@ -133,9 +133,9 @@ class ApplyMasksUDF(UDF):
     use_sparse : Union[None, False, True, 'scipy.sparse', 'scipy.sparse.csc', \
             'sparse.pydata'], optional
         Which sparse back-end to use.
-        * None (default): Use sparse matrix multiplication if all factory functions return a \
-            sparse mask, otherwise convert all masks to dense matrices and use dense matrix \
-            multiplication
+        * None (default): Where possible use sparse matrix multiplication if all factory \
+            functions return a sparse mask, otherwise convert all masks to dense matrices \
+            and use dense matrix multiplication
         * True: Convert all masks to sparse matrices and use default sparse back-end.
         * False: Convert all masks to dense matrices.
         * 'scipy.sparse': Use scipy.sparse.csr_matrix (default sparse)
@@ -158,12 +158,24 @@ class ApplyMasksUDF(UDF):
         Control which back-ends are used. Default is numpy and cupy
     shifts : Union[Tuple[int, int], AuxBufferWrapper], optional
         (Y/X)-shifts to apply to all masks before multiplying with each frame. Can be either a
-        len(2) array-like for a constant shift :code:`(Y, X)`, or an AuxBufferWrapper of
-        :code:`kind='nav'` and :code:`extra_shape=(2,)` defining a per-frame shift to apply.
+        length-2 array-like for a constant :code:`(Y, X)` shift, or an
+        :class:`~libertem.common.buffers.AuxBufferWrapper` of
+        :code:`(kind='nav', extra_shape=(2,), dtype=int)` defining a per-frame shift to apply.
         A positive y-shift moves the mask 'down' relative to the frame, while a positive
-        x-shift moves the mask 'right' relative to the frame. Shift values are rounded to
-        the nearest integer before application, as such passing integer shifts is advised
-        if you need to know the exact shift values used during the analysis.
+        x-shift moves the mask 'right' relative to the frame. Float shift values are cast to
+        integers internally; round values before passing the shifts argument to better control
+        the exact shifts used.
+
+        .. note::
+            The :code:`shifts` parameter requires frame-by-frame processing to function, and so
+            adds a performance penalty compared to unshifted mask application. Furthermore, the
+            feature is currently incompatible with :code:`scipy.sparse` processing. If sparse
+            processing is required then where possible :code:`scipy.sparse` masks are converted to
+            :code:`sparse.pydata` equivalents. A consequence of this is that sparse processing
+            is not yet supported through CuPy when shifts are enabled, as :code:`sparse.pydata`
+            has no current CuPy implementation. If sparse masks are supplied on a CuPy backend
+            when :code:`use_sparse=None` (the default) they will be densified to allow the
+            calculation to take place.
 
     Examples
     --------
@@ -190,7 +202,34 @@ class ApplyMasksUDF(UDF):
     >>> np.allclose(res_2.data, res.data)
     True
 
+    Masks can be shifted relative to the data using the :code:`shifts` parameter,
+    this can either be a constant shift for all frames:
+
+    >>> udf = ApplyMasksUDF(mask_factories=my_masks(), shifts=(2, -5))
+    >>> res_shift_constant = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
+    >>> not np.allclose(res_shift_constant.data, res.data)
+    True
+
+    or a per-frame shift supplied using an :class:`~libertem.common.buffers.AuxBufferWrapper`
+    created using :meth:`~libertem.udf.base.UDF.aux_data`:
+
+    >>> udf = ApplyMasksUDF(
+    ...         mask_factories=my_masks(),
+    ...         shifts=ApplyMasksUDF.aux_data(
+    ...             np.random.randint(-8, 8, size=(16, 16, 2)).ravel(),
+    ...             kind='nav',
+    ...             extra_shape=(2,),
+    ...             dtype=int,
+    ...         )
+    ...     )
+    >>> res_shift_aux = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
+    >>> not np.allclose(res_shift_constant.data, res_shift_aux.data)
+    True
+
     .. versionadded:: 0.4.0
+
+    .. versionchanged:: 0.13.0
+        Added the :code:`shifts` parameter
     '''
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
@@ -287,6 +326,9 @@ class ApplyMasksUDF(UDF):
         return self.params.backends
 
     def get_method(self) -> Literal[UDFMethod.FRAME, UDFMethod.TILE]:
+        """
+        :meta private:
+        """
         if self.params.get('shifts') is not None:
             return UDFMethod.FRAME
         else:
@@ -295,6 +337,8 @@ class ApplyMasksUDF(UDF):
     def process_tile(self, tile):
         """
         Used for simple mask application, without shifts
+
+        :meta private:
         """
         self.results.intensity[:] += self.forbuf(
             self.task_data.engine.process_tile(tile),
@@ -304,6 +348,8 @@ class ApplyMasksUDF(UDF):
     def process_frame(self, frame):
         """
         Apply shifted masks to a frame
+
+        :meta private:
         """
         shifts = self.params.shifts.astype(int)
         self.results.intensity[:] += self.forbuf(

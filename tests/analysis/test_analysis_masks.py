@@ -8,6 +8,7 @@ from sparseconverter import (
 
 from utils import _naive_mask_apply, _mk_random, set_device_class
 
+from libertem.masks import circular
 from libertem.common.sparse import to_dense, to_sparse, is_sparse
 from libertem.common import Shape, Slice
 from libertem.io.dataset.memory import MemoryDataSet
@@ -1190,3 +1191,35 @@ def test_shifted_masks_stacked(lt_ctx, backend):
 
         results = lt_ctx.run_udf(udf=udf, dataset=dataset)
         assert np.allclose(results['intensity'].data, expected)
+
+
+def test_shifted_masks_descan(lt_ctx):
+    # simulate a descan error on a constant frame
+    # check that unshifted ApplyMasksUDF has aliasing effects and that
+    # applying the shift values gives the correct constant result
+    h, w = (9, 9)
+    frame = np.zeros((h, w), dtype=int)
+    frame = circular(4, 4, w, h, 1)
+    frame_sum = frame.sum()
+    frames = []
+    shifts = np.moveaxis(np.mgrid[-2:4:2, -2:4:2], 0, -1)
+    for yroll, xroll in shifts.reshape(-1, 2):
+        frames.append(np.roll(frame, (yroll, xroll), axis=(0, 1)))
+    data = np.stack(frames, axis=0)
+    ds = lt_ctx.load('memory', data=data)
+    mask = circular(4, 4, w, h, 2)
+    udf = ApplyMasksUDF(mask_factories=[lambda: mask])
+    results = lt_ctx.run_udf(udf=udf, dataset=ds)
+    assert not (results['intensity'].data == frame_sum).all()
+    assert results['intensity'].data.reshape(3, 3)[1, 1] == frame_sum
+    udf = ApplyMasksUDF(
+        mask_factories=[lambda: mask],
+        shifts=ApplyMasksUDF.aux_data(
+            data=shifts.ravel(),
+            kind='nav',
+            extra_shape=(2, ),
+            dtype=int,
+        ),
+    )
+    results = lt_ctx.run_udf(udf=udf, dataset=ds)
+    assert (results['intensity'].data == frame_sum).all()

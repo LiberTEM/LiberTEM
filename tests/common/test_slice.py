@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 from libertem.common import Slice, Shape
 
@@ -377,3 +378,61 @@ def test_intersection_pair_3():
     assert right.origin == (0, 2, 0)
     assert left.shape == right.shape
     assert left.shape == Shape((1, 14, 13), sig_dims=s1.shape.sig.dims)
+
+
+def test_slice_raises_not_shape():
+    with pytest.raises(ValueError):
+        Slice(
+            origin=(1, 1, 1, 1),
+            shape=(2, 2, 2, 2),
+        )
+
+
+def test_slice_raises_mismatching():
+    with pytest.raises(ValueError):
+        Slice(
+            origin=(1, 1, 1),
+            shape=Shape((2, 2, 2, 2), sig_dims=2),
+        )
+
+
+def test_intersections_raises_mismatching():
+    s1 = Slice(
+        origin=(1, 1, 1, 1),
+        shape=Shape((2, 2, 2, 2), sig_dims=2),
+    )
+    s2 = Slice(
+        origin=(1, 1, 1),
+        shape=Shape((2, 2, 2), sig_dims=2),
+    )
+    s3 = Slice(
+        origin=(1, 1, 1, 1),
+        shape=Shape((2, 2, 2, 2), sig_dims=1),
+    )
+    with pytest.raises(ValueError):
+        s1.intersection_with(s2)
+    with pytest.raises(ValueError):
+        s1.intersection_with(s3)
+    with pytest.raises(ValueError):
+        s1.intersection_pair(s2)
+    with pytest.raises(ValueError):
+        s1.intersection_pair(s3)
+
+
+def test_shifts_raises_mismatching():
+    s1 = Slice(
+        origin=(1, 1, 1, 1),
+        shape=Shape((2, 2, 2, 2), sig_dims=2),
+    )
+    s2 = Slice(
+        origin=(1, 1, 1),
+        shape=Shape((2, 2, 2), sig_dims=2),
+    )
+    with pytest.raises(ValueError):
+        s1.shift(s2)
+    with pytest.raises(ValueError):
+        s1.offset(s2)
+    with pytest.raises(ValueError):
+        s1.shift_to(s2.origin)
+    with pytest.raises(ValueError):
+        s1.shift_by(s2.origin)

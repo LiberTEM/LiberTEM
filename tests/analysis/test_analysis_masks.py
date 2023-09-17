@@ -1094,6 +1094,7 @@ def test_naive_shifted_apply():
         (np.asarray,),
         (np.asarray, np.asarray),
         (sp.csr_matrix,),
+        (sp.csr_matrix, sp.csc_matrix,),
         (sparse.COO.from_numpy,),
         (np.asarray, sp.csr_matrix),
         (np.asarray, sparse.COO.from_numpy),
@@ -1104,7 +1105,7 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
     with set_device_class(get_device_class(backend)):
         # nonsquare frames to test ordering is correct
         num_frames, h, w = 2, 18, 12
-        data = _mk_random(size=(num_frames, h, w))
+        data = np.random.uniform(size=(num_frames, h, w)).astype(np.float32)
         shifts = np.random.uniform(
             low=-5.,
             high=5.,

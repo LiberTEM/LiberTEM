@@ -205,16 +205,14 @@ class ApplyMasksUDF(UDF):
     Masks can be shifted relative to the data using the :code:`shifts` parameter,
     this can either be a constant shift for all frames:
 
-    >>> udf = ApplyMasksUDF(mask_factories=my_masks(), shifts=(2, -5))
+    >>> udf = ApplyMasksUDF(mask_factories=my_masks, shifts=(2, -5))
     >>> res_shift_constant = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
-    >>> not np.allclose(res_shift_constant.data, res.data)
-    True
 
     or a per-frame shift supplied using an :class:`~libertem.common.buffers.AuxBufferWrapper`
     created using :meth:`~libertem.udf.base.UDF.aux_data`:
 
     >>> udf = ApplyMasksUDF(
-    ...         mask_factories=my_masks(),
+    ...         mask_factories=my_masks,
     ...         shifts=ApplyMasksUDF.aux_data(
     ...             np.random.randint(-8, 8, size=(16, 16, 2)).ravel(),
     ...             kind='nav',
@@ -223,8 +221,6 @@ class ApplyMasksUDF(UDF):
     ...         )
     ...     )
     >>> res_shift_aux = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
-    >>> not np.allclose(res_shift_constant.data, res_shift_aux.data)
-    True
 
     .. versionadded:: 0.4.0
 

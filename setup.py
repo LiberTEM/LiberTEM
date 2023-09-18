@@ -149,13 +149,12 @@ setup(
         'scikit-image',
         'cloudpickle',
         'jsonschema',
-        'scikit-learn<1.3.0',
+        'scikit-learn',
         'tqdm',
         'threadpoolctl>=3.0',
         'nbformat',
         'nbconvert',
         'autopep8',
-        'pycodestyle<2.11',  # FIXME: workaround for incompatibility w/ autopep8, remove this line once that's fixed!  # NOQA
         'empyre>=0.3.0',
         'defusedxml',
         'typing-extensions',  # backwards-compatibility for newer typing constructs
@@ -163,6 +162,7 @@ setup(
         'tblib',
         'tomli',
         'sparseconverter>=0.3.3',
+        'numexpr!=2.8.6',  # work around broken sanitization, remove this line when fixed
     ],
     extras_require={
         # NumPy interfacing issue on Win 11, Python 3.10

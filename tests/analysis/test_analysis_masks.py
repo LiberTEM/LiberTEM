@@ -1041,7 +1041,7 @@ def naive_shifted_mask_apply(masks, data, shifts):
         shifts = np.repeat(shifts[np.newaxis, ...], num_frames, axis=0)
     assert shifts.shape == (num_frames, 2)
 
-    expected = np.full((num_frames, num_masks), np.nan, dtype=np.float64)
+    expected = np.zeros((num_frames, num_masks), dtype=np.float64)
     for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
         my0 = min(max(0, -dy), h)
         mx0 = min(max(0, -dx), w)
@@ -1158,7 +1158,7 @@ def test_shifted_masks_zero_overlap(lt_ctx):
     )
 
     results = lt_ctx.run_udf(udf=udf, dataset=dataset)
-    assert np.isnan(results['intensity'].data).all()
+    assert np.allclose(results['intensity'].data, 0.)
 
 
 @pytest.mark.parametrize(

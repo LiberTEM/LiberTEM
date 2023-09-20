@@ -7,6 +7,12 @@ from libertem.common.math import prod, count_nonzero
 from libertem.common.shape import Shape, ShapeLike
 
 
+class SliceUsageError(ValueError):
+    """
+    Raised when a Slice is incorrectly instantiated or used
+    """
+
+
 class Slice:
     """
     A n-dimensional slice, defined by origin and shape
@@ -25,14 +31,14 @@ class Slice:
         self.origin = tuple(origin)
         self.shape = shape
         if len(self.origin) != len(self.shape):
-            raise ValueError(
+            raise SliceUsageError(
                 ("cannot build slice with dimensionality of shape/origin mismatch (%d vs %d); "
                  "origin=%r, shape=%r") % (
                      len(self.origin), len(self.shape), self.origin, self.shape,
                  )
             )
         if not isinstance(shape, Shape):
-            raise ValueError("please use libertem.common.Shape instance as shape parameter")
+            raise SliceUsageError("please use libertem.common.Shape instance as shape parameter")
 
     def __repr__(self) -> str:
         return f"<Slice origin={self.origin!r} shape={self.shape!r}>"
@@ -68,14 +74,14 @@ class Slice:
             the intersection between this and the other slice
         """
         if len(self.origin) != len(other.origin):
-            raise ValueError(
+            raise SliceUsageError(
                 ("cannot intersect slices with different dimensionality (%s vs %s); "
                  "self.origin=%r, other.origin=%r") % (
                     len(self.origin), len(other.origin), self.origin, other.origin,
                 )
             )
         if self.shape.sig.dims != other.shape.sig.dims:
-            raise ValueError(
+            raise SliceUsageError(
                 "cannot intersect slices with different signal dimensionality ({} vs {})".format(
                     self.shape.sig.dims, other.shape.sig.dims
                 )
@@ -114,18 +120,20 @@ class Slice:
         useful for translating to the local coordinate system of ``other``
         """
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot shift slices with different dimensionality ({} vs {})".format(
-                self.origin, other.origin
-            ))
+            raise SliceUsageError(
+                "cannot shift slices with different "
+                f"dimensionality ({self.origin} vs {other.origin})"
+            )
         return Slice(origin=tuple(our_coord - their_coord
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
 
     def offset(self, other: "Slice") -> Sequence[int]:
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot shift slices with different dimensionality ({} vs {})".format(
-                self.origin, other.origin
-            ))
+            raise SliceUsageError(
+                "cannot shift slices with different dimensionality "
+                f"({self.origin} vs {other.origin})"
+            )
         return tuple(
             other_coord - our_coord
             for (our_coord, other_coord) in zip(self.origin, other.origin)
@@ -133,25 +141,28 @@ class Slice:
 
     def shift_by(self, offset: Sequence[int]) -> "Slice":
         if len(self.origin) != len(offset):
-            raise ValueError("cannot shift slices with different dimensionality ({} vs {})".format(
-                self.origin, offset
-            ))
+            raise SliceUsageError(
+                "cannot shift slices with different "
+                f"dimensionality ({self.origin} vs {offset})"
+            )
         return Slice(origin=tuple(our_coord + off
                                   for (our_coord, off) in zip(self.origin, offset)),
                      shape=self.shape)
 
     def shift_to(self, origin: Sequence[int]) -> "Slice":
         if len(self.origin) != len(origin):
-            raise ValueError("cannot shift slices with different dimensionality ({} vs {})".format(
-                self.origin, origin
-            ))
+            raise SliceUsageError(
+                "cannot shift slices with different "
+                f"dimensionality ({self.origin} vs {origin})"
+            )
         return Slice(origin=origin, shape=self.shape)
 
     def intersection_pair(self, other: "Slice") -> Tuple["Slice", "Slice"]:
         if len(self.origin) != len(other.origin):
-            raise ValueError("cannot shift slices with different dimensionality ({} vs {})".format(
-                self.origin, other.origin
-            ))
+            raise SliceUsageError(
+                "cannot shift slices with different "
+                f"dimensionality ({self.origin} vs {other.origin})"
+            )
         intersection = self.intersection_with(other)
         zerotup = (0,)*len(self.origin)
         if np.prod(intersection.shape) == 0:
@@ -294,7 +305,7 @@ class Slice:
         # math.ceil(3/2) = math.ceil(1.5) = 2 -> we need two subslices across the y dimension
         shape = Shape(shape, sig_dims=self.shape.sig.dims)
         if self.shape.dims != shape.dims:
-            raise ValueError(
+            raise SliceUsageError(
                 ("cannot create subslices with different dimensionality (%d vs %d); "
                  "self.shape=%r, shape=%r") % (
                     self.shape.dims, shape.dims, self.shape, shape,

@@ -1,4 +1,4 @@
-from .slice import Slice
+from .slice import Slice, SliceUsageError
 from .shape import Shape
 
-__all__ = ["Slice", "Shape"]
+__all__ = ["Slice", "Shape", "SliceUsageError"]

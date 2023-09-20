@@ -84,6 +84,7 @@ class ApplyMasksEngine:
         return self.process_flat(flat_data, self._get_masks())
 
     def process_frame_shifted(self, frame, shifts: Tuple[int, ...]):
+        sig_shape = self.meta.dataset_shape.sig
         masks = self._get_masks()
         num_masks = len(self.masks)
         shifted_slice = self.meta.sig_slice.shift_by(shifts)
@@ -93,18 +94,19 @@ class ApplyMasksEngine:
             return np.zeros((num_masks,), dtype=np.float32)
         mask_slice = right.get()
         if self.needs_transpose:
+            # expects masks in shape (sig_size, num_masks)
             mask_slice = mask_slice + (slice(None), )
-            masks = masks.reshape((*frame.shape, num_masks))
+            masks = masks.reshape((*sig_shape, num_masks))
             final_mask_shape = (-1, num_masks)
         else:
+            # expects masks in shape (num_masks, sig_size)
+            # NOTE unexpectedly don't need to reverse sig_shape or mask_slice ?
+            masks = masks.reshape((num_masks, *sig_shape))
             mask_slice = (slice(None), ) + mask_slice
-            masks = masks.reshape((num_masks, *frame.shape))
             final_mask_shape = (num_masks, -1)
 
         sliced_masks = masks[mask_slice].reshape(final_mask_shape)
-        data = left.get(frame)
-        # NOTE This reshape is incompatible with older versions of scipy.sparse ?
-        flat_data = data.reshape(1, prod(data.shape))
+        flat_data = left.get(frame).reshape(1, -1)
         return self.process_flat(flat_data, sliced_masks)[0]
 
 

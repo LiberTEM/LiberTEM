@@ -129,7 +129,7 @@ setup(
     python_requires='>=3.7,!=3.9.0,!=3.9.1,!=3.9.2',
     install_requires=[
         "numpy",
-        "scipy",
+        "scipy>=1.4.1",
         "sparse",
         "distributed>=2.19.0",
         "dask!=2023.6.1",  # work around broken ipython exception handler

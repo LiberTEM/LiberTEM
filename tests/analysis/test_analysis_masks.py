@@ -1032,20 +1032,51 @@ def _make_lambda(mask):
     return lambda: mask
 
 
-def naive_shifted_mask_apply(masks, data, shifts):
-    num_frames, h, w = data.shape
-    num_masks = len(masks)
+def naive_shifted_mask_apply(
+    masks: list[np.ndarray],
+    data: np.ndarray,
+    shifts: np.ndarray,
+) -> np.ndarray:
+    """
+    Manually compute the intersection of masks with data when
+    shifts are applied, and return the dot product between them
+    as an array of shape (num_frames, num_masks)
 
+    Inputs must all be array-like with shapes
+        masks: np.array(num_masks, h, w) or [num_masks * np.array(h, w)]
+        data: (num_frames, h, w)
+        shifts: (2,) or (num_frames, 2) of (y/x shifts of the mask)
+    Sparse input masks or data are densified
+    If shifts has shape (2,) then the same shift is applied to all frames/masks
+    A zero-overlap between mask and frame returns zero
+    for the dot product for that pair
+    """
+    # Densify inputs just in case!
+    data = to_dense(np.asarray(data))
+    masks = np.asarray([to_dense(m) for m in masks])
+    num_frames, h, w = data.shape
+    num_masks, mh, mw = masks.shape
+    assert h == mh
+    assert w == mw
+
+    # Ensure we have one shift pair per frame even if constant shift
     if shifts.shape == (2,):
         shifts = np.repeat(shifts[np.newaxis, ...], num_frames, axis=0)
     assert shifts.shape == (num_frames, 2)
 
     expected = np.zeros((num_frames, num_masks), dtype=np.float64)
     for frame_idx, (dy, dx) in enumerate(shifts.astype(int)):
-        my0 = min(max(0, -dy), h)
-        mx0 = min(max(0, -dx), w)
+        # A positive shift value moves the mask down/right
+        # so we need a slice from (0, 0) to (h-sy, w-sx)
+        # A negative shift value moves the mask up/left
+        # so we need a slice from (abs(sy), abs(sy)) to (h, w)
+        # The min(max(...)) etc ensure we never slice beyond the
+        # edge of the frame/mask in any situation
+        my0 = min(max(0, -dy), h)  # the negative survives max(0, ...) only when dy is negative
+        mx0 = min(max(0, -dx), w)  # the negative survives max(0, ...) only when dx is negative
         my1 = max(min(h, h - dy), 0)
         mx1 = max(min(w, w - dx), 0)
+        # The frame is sliced in exactly the opposite way
         dy0 = min(max(0, dy), h)
         dx0 = min(max(0, dx), w)
         dy1 = max(min(h, h + dy), 0)
@@ -1053,13 +1084,8 @@ def naive_shifted_mask_apply(masks, data, shifts):
         for mask_idx, mask in enumerate(masks):
             mask_sub = mask[np.s_[my0: my1, mx0: mx1]]
             if mask_sub.size == 0:
-                # zero intersection
+                # zero intersection, neutral element 0. already in expected
                 continue
-            try:
-                # for sp.csr_matrix
-                mask_sub = mask_sub.toarray()
-            except AttributeError:
-                pass
             data_sub = data[frame_idx][np.s_[dy0: dy1, dx0: dx1]]
             expected[frame_idx, mask_idx] = (mask_sub * data_sub).sum(axis=(-1, -2))
     return expected

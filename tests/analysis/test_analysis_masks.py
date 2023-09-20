@@ -996,7 +996,6 @@ def test_shifted_masks_constant_shifts(lt_ctx, kwargs, backend):
         mask1 = sp.csr_matrix(_mk_random(size=(16, 16)))
         mask2 = sparse.COO.from_numpy(_mk_random(size=(16, 16)))
         # The ApplyMasksUDF returns data with shape ds.shape.nav + (mask_count, ),
-        # different from ApplyMasksJob
         expected = np.moveaxis(_naive_mask_apply(
             [mask0[0:15, 2:16], mask1[0:15, 2:16], mask2[0:15, 2:16]],
             data[..., 1:16, 0:14]

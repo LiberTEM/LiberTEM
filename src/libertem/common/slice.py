@@ -128,17 +128,6 @@ class Slice:
                                   for (our_coord, their_coord) in zip(self.origin, other.origin)),
                      shape=self.shape)
 
-    def offset(self, other: "Slice") -> Sequence[int]:
-        if len(self.origin) != len(other.origin):
-            raise SliceUsageError(
-                "cannot shift slices with different dimensionality "
-                f"({self.origin} vs {other.origin})"
-            )
-        return tuple(
-            other_coord - our_coord
-            for (our_coord, other_coord) in zip(self.origin, other.origin)
-        )
-
     def shift_by(self, offset: Sequence[int]) -> "Slice":
         if len(self.origin) != len(offset):
             raise SliceUsageError(
@@ -172,7 +161,7 @@ class Slice:
             )
         # We measure by how much we have clipped the zero point
         # This is zero if we didn't shift into the negative region beyond the original array
-        clip = other.offset(intersection)
+        clip = intersection.shift(other).origin
         # Now we move the intersection to origin plus the amount we clipped
         # so that the overlap region is moved by the correct amount, in total
         targetslice = self.intersection_with(intersection.shift_to(zerotup).shift_by(clip))

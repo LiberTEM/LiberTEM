@@ -330,7 +330,7 @@ def test_shift_offset_consistency():
     )
     s2 = s1.shift_to(offset1)
     s3 = s2.shift_by(offset2)
-    assert s1.offset(s3) == total_offset
+    assert s3.shift(s1).origin == total_offset
 
 
 def test_intersection_pair_1():
@@ -430,8 +430,6 @@ def test_shifts_raises_mismatching():
     )
     with pytest.raises(SliceUsageError):
         s1.shift(s2)
-    with pytest.raises(SliceUsageError):
-        s1.offset(s2)
     with pytest.raises(SliceUsageError):
         s1.shift_to(s2.origin)
     with pytest.raises(SliceUsageError):

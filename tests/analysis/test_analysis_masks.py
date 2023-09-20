@@ -1129,19 +1129,20 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
                 extra_shape=(2, ),
                 dtype=float,
             ),
-            **kwargs
+            **kwargs,
         )
 
+        backends_kwarg = dict(backends=(backend,)) if backend is not None else {}
         use_sparse = kwargs.get('use_sparse', None)  # default value
         # if forcing sparse on CuPy, raise, else densify to process
         if backend == CUPY and use_sparse in (True, 'sparse.pydata'):
             with pytest.raises(ValueError):
                 # Implement like this so we can test the implementation
                 # once CUPY + sparse.pydata is actually supported
-                results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+                results = lt_ctx.run_udf(udf=udf, dataset=dataset, **backends_kwarg)
             pytest.xfail('CuPy + sparse.pydata not yet supported')
         else:
-            results = lt_ctx.run_udf(udf=udf, dataset=dataset)
+            results = lt_ctx.run_udf(udf=udf, dataset=dataset, **backends_kwarg)
 
         assert np.allclose(results['intensity'].data, expected)
 

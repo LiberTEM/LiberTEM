@@ -2,6 +2,7 @@ from typing import Tuple
 from typing_extensions import Literal
 from libertem.common.math import prod
 import numpy as np
+import scipy.sparse as sp
 
 from libertem.common.udf import UDFMethod
 from libertem.udf import UDF, UDFMeta
@@ -106,7 +107,20 @@ class ApplyMasksEngine:
             final_mask_shape = (num_masks, -1)
 
         sliced_masks = masks[mask_slice].reshape(final_mask_shape)
-        flat_data = left.get(frame).reshape(1, -1)
+        # shift slicing requires sig_shape frames
+        # sparse array backend can provide flat frame
+        frame = frame.reshape(*sig_shape)
+        try:
+            data = left.get(frame)
+        except TypeError as e:
+            # frame is in a form which doesn't support slicing
+            # the only recognized case is scipy.sparse.coo
+            if not sp.issparse(frame):
+                raise e
+            assert frame.getformat() == 'coo'
+            frame = frame.tocsr()
+            data = left.get(frame)
+        flat_data = data.reshape(1, -1)
         return self.process_flat(flat_data, sliced_masks)[0]
 
 

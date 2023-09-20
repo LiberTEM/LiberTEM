@@ -328,56 +328,10 @@ def test_shift_offset_consistency():
         (1, 16, 16),
         sig_dims=2
     )
-    s2 = s1.shift_to(offset1)
+    s2 = s1.shift_by(offset1)
     s3 = s2.shift_by(offset2)
-    assert s3.shift(s1).origin == total_offset
-
-
-def test_intersection_pair_1():
-    s1 = Slice.from_shape(
-        (1, 16, 16),
-        sig_dims=2
-    )
-    s2 = Slice.from_shape(
-        (1, 16, 16),
-        sig_dims=2
-    )
-    left, right = s1.intersection_pair(s2)
-    assert s1 == s2
-    assert left == s1
-    assert right == s1
-
-
-def test_intersection_pair_2():
-    s1 = Slice.from_shape(
-        (2, 16, 16),
-        sig_dims=2
-    )
-    s2 = Slice.from_shape(
-        (2, 16, 16),
-        sig_dims=2
-    ).shift_by((1, 2, 3))
-    left, right = s1.intersection_pair(s2)
-    assert left.origin == (1, 2, 3)
-    assert right.origin == (0, 0, 0)
-    assert left.shape == right.shape
-    assert left.shape == Shape((1, 14, 13), sig_dims=s1.shape.sig.dims)
-
-
-def test_intersection_pair_3():
-    s1 = Slice.from_shape(
-        (2, 16, 16),
-        sig_dims=2
-    )
-    s2 = Slice.from_shape(
-        (2, 16, 16),
-        sig_dims=2
-    ).shift_by((1, -2, 3))
-    left, right = s1.intersection_pair(s2)
-    assert left.origin == (1, 0, 3)
-    assert right.origin == (0, 2, 0)
-    assert left.shape == right.shape
-    assert left.shape == Shape((1, 14, 13), sig_dims=s1.shape.sig.dims)
+    assert s3.origin == total_offset
+    assert s3.shape == s1.shape
 
 
 def test_slice_raises_not_shape():
@@ -413,10 +367,6 @@ def test_intersections_raises_mismatching():
         s1.intersection_with(s2)
     with pytest.raises(SliceUsageError):
         s1.intersection_with(s3)
-    with pytest.raises(SliceUsageError):
-        s1.intersection_pair(s2)
-    with pytest.raises(SliceUsageError):
-        s1.intersection_pair(s3)
 
 
 def test_shifts_raises_mismatching():
@@ -430,7 +380,5 @@ def test_shifts_raises_mismatching():
     )
     with pytest.raises(SliceUsageError):
         s1.shift(s2)
-    with pytest.raises(SliceUsageError):
-        s1.shift_to(s2.origin)
     with pytest.raises(SliceUsageError):
         s1.shift_by(s2.origin)

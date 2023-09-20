@@ -89,7 +89,9 @@ class ApplyMasksEngine:
         masks = self._get_masks()
         num_masks = len(self.masks)
         shifted_slice = self.meta.sig_slice.shift_by(shifts)
-        left, right = self.meta.sig_slice.intersection_pair(shifted_slice)
+        inverse_shifted_slice = self.meta.sig_slice.shift_by(-1 * shifts)
+        left = self.meta.sig_slice.intersection_with(shifted_slice)
+        right = self.meta.sig_slice.intersection_with(inverse_shifted_slice)
         if left.is_null():
             # Zero overlap after shifts, shortcut return
             return np.zeros((num_masks,), dtype=np.float32)

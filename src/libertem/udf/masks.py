@@ -177,15 +177,23 @@ class ApplyMasksUDF(UDF):
         length-2 array-like for a constant :code:`(Y, X)` shift, or an
         :class:`~libertem.common.buffers.AuxBufferWrapper` of
         :code:`(kind='nav', extra_shape=(2,), dtype=int)` defining a per-frame shift to apply.
+
         A positive y-shift moves the mask 'down' relative to the frame, while a positive
-        x-shift moves the mask 'right' relative to the frame. Float shift values are cast to
-        integers internally; round values before passing the shifts argument to better control
-        the exact shifts used.
+        x-shift moves the mask 'right' relative to the frame. Elements of the mask and frame
+        which do not overlap after the shift are discarded. A shift resulting in no overlap
+        at all will return a sum of :code:`0.` for that frame.
+
+        .. note::
+            Float shift values are cast to integers internally; round values before
+            passing the shifts argument to better control the exact shifts used.
 
         .. note::
             The :code:`shifts` parameter requires frame-by-frame processing to function, and so
-            adds a performance penalty compared to unshifted mask application. Furthermore, the
-            feature is currently incompatible with :code:`scipy.sparse` processing. If sparse
+            adds a performance penalty compared to unshifted mask application. If applying a
+            constant shift it may be worthwhile to manually create a new, pre-shifted mask
+            rather than relying on this feature.
+
+            Shifting is also currently incompatible with :code:`scipy.sparse` masks. If sparse
             processing is required then where possible :code:`scipy.sparse` masks are converted to
             :code:`sparse.pydata` equivalents. A consequence of this is that sparse processing
             is not yet supported through CuPy when shifts are enabled, as :code:`sparse.pydata`

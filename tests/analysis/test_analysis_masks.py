@@ -1087,7 +1087,7 @@ def test_naive_shifted_apply():
     )
 )
 @pytest.mark.parametrize(
-    'backend', (None, NUMPY, CUPY)
+    'backend', (None, CUPY, UDF.BACKEND_SCIPY_CSR)
 )
 @pytest.mark.parametrize(
     'mask_types', [

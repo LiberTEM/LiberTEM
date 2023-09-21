@@ -40,7 +40,9 @@ class TestChunking:
         nblock_params,
         ids=tuple(f'nblocks: {c}' for c in nblock_params)
     )
-    def test_dask_nav_chunking(shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark):
+    def test_dask_nav_chunking(
+        self, shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark
+    ):
         _run_benchmark(shared_dist_ctx_globaldask, large_raw_file, nblocks, benchmark,
                     preserve_dim=True, min_size=None)
 
@@ -216,7 +218,7 @@ def _delayed_libertem_bench(ctx, ds, benchmark):
             dataset=ds,
             udf=SumUDF()
         )
-        result['intensity'].raw_data.compute()
+        result['intensity'].raw_data
     benchmark(doit)
 
 

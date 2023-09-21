@@ -10,7 +10,7 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 class NoopSigUDF(UDF):
     def get_result_buffers(self):
         return {
-            "sigbuf": self.buffer(kind="sig", dtype=np.int, where="device")
+            "sigbuf": self.buffer(kind="sig", dtype=int, where="device")
         }
 
     def process_tile(self, tile):

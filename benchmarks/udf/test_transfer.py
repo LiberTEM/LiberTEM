@@ -125,7 +125,7 @@ class Test:
     @pytest.mark.parametrize(
         'method', ('preshared_file', 'file', 'executor')
     )
-    def test_param(shared_dist_ctx, benchmark, tmp_path, method):
+    def test_param(self, shared_dist_ctx, benchmark, tmp_path, method):
         data = np.zeros(1024*1024, dtype=np.float32)
 
         ds = shared_dist_ctx.load(
@@ -162,7 +162,7 @@ class Test:
     @pytest.mark.parametrize(
         'method', ('file', 'executor')
     )
-    def test_result(shared_dist_ctx, benchmark, tmp_path, method):
+    def test_result(self, shared_dist_ctx, benchmark, tmp_path, method):
         if method == 'file':
             udf = CheatResultUDF(str(tmp_path))
         else:

@@ -2,6 +2,7 @@ import numpy as np
 import scipy.sparse as sp
 import sparse
 import pytest
+from sparseconverter import CUPY
 
 from libertem.common.container import MaskContainer
 from libertem.io.dataset.base import DataTile
@@ -138,3 +139,16 @@ def test_for_datatile_with_frame_origin(masks):
 
 def test_merge_masks(masks):
     assert masks.computed_masks.shape == (5, 128, 128)
+
+
+def test_sparse_pydata_cupy_default_unsupported():
+    input_masks = [
+        lambda: np.ones((128, 128)),
+    ]
+    factory = MaskContainer(
+        mask_factories=input_masks,
+        use_sparse=None,
+        default_sparse='sparse.pydata',
+        backend=CUPY,
+    )
+    assert factory.use_sparse is False

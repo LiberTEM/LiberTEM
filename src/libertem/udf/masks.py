@@ -255,11 +255,16 @@ class ApplyMasksUDF(UDF):
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
 
+        _backends = backends
         if backends is None:
             backends = self.BACKEND_ALL
+        backends = tuple(b for b in backends if b in self.BACKEND_ALL)
 
         if shifts is not None:
             if isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
+                # This is 'unsupported' because we need to slice the mask stack
+                # in the signal dimensions to shift it, and sig is flattened
+                # to give to 2D matrix in scipy.sparse
                 raise ValueError(
                     f'Sparse backend {use_sparse} not supported for '
                     'shifts, use sparse.pydata instead.'
@@ -270,10 +275,18 @@ class ApplyMasksUDF(UDF):
             backends = tuple(
                 b for b in backends
                 if b not in (
+                    # Here we are doing frame-by-frame processing, so we can
+                    # accept scipy.sparse-style frames, however we need to
+                    # perform a reshape into sig-shaped frames which normally
+                    # casts the frame into coo_matrix form, which then
+                    # has to be re-cast into csr_matrix form to be sliced (i.e. shifted)
                     self.BACKEND_SCIPY_COO,  # cannot be sliced
                     self.BACKEND_CUPY_SCIPY_COO,  # cannot be sliced
                 )
             )
+
+        if len(backends) == 0:
+            raise ValueError(f'No compatible backend found in {_backends}')
 
         self._mask_container = None
 

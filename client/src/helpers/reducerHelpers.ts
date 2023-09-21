@@ -64,7 +64,7 @@ export const insertOrReplace = <R>(state: ById<R>, id: string, record: R): ById<
 
 export const removeById = <R>(state: ById<R>, id: string): ById<R> => {
     const {[id]: _, ...newById} = state.byId;
-    const newIds = state.ids.filter(thisId => thisId != id);
+    const newIds = state.ids.filter(thisId => thisId !== id);
     return { byId: newById, ids: newIds };
 }
 

@@ -1,9 +1,9 @@
 import React from "react";
-import { RootReducer } from "../../store";
 import { connect } from "react-redux";
-import { getTotalProgress } from "../helpers";
-import { ProgressDetails } from "../../messages";
 import { Progress as ProgressBar, Transition } from "semantic-ui-react";
+import { ProgressDetails } from "../../messages";
+import { RootReducer } from "../../store";
+import { getTotalProgress } from "../helpers";
 
 const mapStateToProps = (state: RootReducer) => ({
     progress: state.progress,
@@ -11,9 +11,7 @@ const mapStateToProps = (state: RootReducer) => ({
 
 type MergedProps = ReturnType<typeof mapStateToProps>;
 
-const progressAsFract = (prog: ProgressDetails): number => {
-    return prog.numFramesComplete / prog.numFrames;
-}
+const progressAsFract = (prog: ProgressDetails): number => prog.numFramesComplete / prog.numFrames
 
 const Progress: React.FC<MergedProps> = ({ progress }) => {
     const totalProgres = getTotalProgress(progress);

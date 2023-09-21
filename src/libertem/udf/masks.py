@@ -118,7 +118,7 @@ class ApplyMasksEngine:
             # frame is in a form which doesn't support slicing
             # the only recognized case is scipy.sparse.coo
             if not sp.issparse(frame):
-                raise e
+                raise e  # pragma: no cover
             assert frame.getformat() == 'coo'
             frame = frame.tocsr()
             data = left.get(frame)

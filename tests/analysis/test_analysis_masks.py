@@ -1254,3 +1254,11 @@ def test_shifted_masks_descan(lt_ctx):
     )
     results = lt_ctx.run_udf(udf=udf, dataset=ds)
     assert (results['intensity'].data == frame_sum).all()
+
+
+def test_backend_unknown():
+    with pytest.raises(ValueError):
+        ApplyMasksUDF(
+            mask_factories=[lambda: np.ones((5, 5))],
+            backends=('BACKEND_DOES_NOT_EXIST',)
+        )

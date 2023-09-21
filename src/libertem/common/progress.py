@@ -227,8 +227,9 @@ class TQDMProgressReporter(ProgressReporter):
 
 class ProgressManager:
     """
-    Handle construction and updating of a tqdm.tqdm progress bar
-    for a set of UDFTasks, to be completed in any order
+    Handle updating of a progress reporter for a set of :code:`UDFTasks`, to be
+    completed in any order. By default constructs a
+    :code:`TQDMProgressReporter`, if no instance is passed in.
 
     The bar displays as such:
 
@@ -350,7 +351,7 @@ class ProgressManager:
     def handle_tile_update(self, topic: str, message: Dict[str, Any]):
         """
         Update the frame progress counter for the task
-        and push the increment to the tqdm bar
+        and push the increment to the progress reporter
 
         Tile stacks are converted to pseudo-frames via the sig_size
         """

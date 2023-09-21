@@ -48,7 +48,7 @@ def _naive_mask_apply(masks, data):
 
 # This function introduces asymmetries so that errors won't average out so
 # easily with large data sets
-def _mk_random(size, dtype='float32', array_backend=NUMPY):
+def _mk_random(size, dtype='float32', array_backend=NUMPY, sparse_density=None):
     size = tuple(size)
     if array_backend not in ND_BACKENDS and len(size) != 2:
         raise ValueError(f"Format {array_backend} does not support size {size}")
@@ -58,7 +58,12 @@ def _mk_random(size, dtype='float32', array_backend=NUMPY):
             form = 'gcxs'
         else:
             form = 'coo'
-        data = for_backend(sparse.random(size, format=form).astype(dtype), array_backend)
+        data = for_backend(
+            sparse.random(
+                size, format=form, density=sparse_density,
+            ).astype(dtype),
+            array_backend,
+        )
     elif array_backend in DENSE_BACKENDS:
         if dtype.kind == 'c':
             choice = [0, 1, -1, 0+1j, 0-1j, 2.3+17j, -23+42j]

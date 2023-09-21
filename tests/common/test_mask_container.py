@@ -152,3 +152,14 @@ def test_sparse_pydata_cupy_default_unsupported():
         backend=CUPY,
     )
     assert factory.use_sparse is False
+
+
+def test_raises_unknown_use_sparse():
+    input_masks = [
+        lambda: np.ones((128, 128)),
+    ]
+    with pytest.raises(ValueError):
+        MaskContainer(
+            mask_factories=input_masks,
+            use_sparse='unknown',
+        )

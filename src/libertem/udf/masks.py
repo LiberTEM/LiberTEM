@@ -35,8 +35,8 @@ class ApplyMasksEngine:
             self.process_flat = self._process_flat_torch
         elif (
             self.meta.array_backend == UDF.BACKEND_NUMPY
-            and self.masks.use_sparse
-            and 'scipy.sparse' in self.masks.use_sparse
+            and isinstance(self.masks.use_sparse, str)
+            and self.masks.use_sparse.startswith('scipy.sparse')
         ):
             # Due to https://github.com/scipy/scipy/issues/13211
             self.process_flat = self._process_flat_spsp
@@ -45,8 +45,8 @@ class ApplyMasksEngine:
                 UDF.BACKEND_SCIPY_COO,
                 UDF.BACKEND_SCIPY_CSR,
                 UDF.BACKEND_SCIPY_CSC
-            ) and self.masks.use_sparse
-            and 'sparse.pydata' in self.masks.use_sparse
+            ) and isinstance(self.masks.use_sparse, str)
+            and self.masks.use_sparse.startswith('sparse.pydata')
         ):
             self.process_flat = self._process_flat_sparsepyd
             self.needs_transpose = False

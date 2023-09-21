@@ -1,6 +1,3 @@
-// this is a job that is currently in progress, for which
-// we have progress information:
-
 import * as channelActions from '../channel/actions';
 import { AllActions } from "../actions";
 import { ById, insertOrReplace, removeById } from "../helpers/reducerHelpers";

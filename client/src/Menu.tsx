@@ -18,7 +18,6 @@ const HeaderMenu: React.FC = () => (
         </Menu.Item>
         <Menu.Item position="right" style={{flexGrow: 1}}>
             <MyProgress /> 
-            { /* <Progress percent={75} indicating /> */ }
         </Menu.Item>
         <Menu.Menu position="right">
             <Menu.Item>

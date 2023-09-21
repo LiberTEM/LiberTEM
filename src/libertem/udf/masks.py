@@ -111,7 +111,7 @@ class ApplyMasksEngine:
         sliced_masks = masks[mask_slice].reshape(final_mask_shape)
         # shift slicing requires sig_shape frames
         # sparse array backend can provide flat frame
-        frame = frame.reshape(*sig_shape)
+        frame = frame.reshape(sig_shape)
         try:
             data = left.get(frame)
         except TypeError as e:
@@ -122,8 +122,8 @@ class ApplyMasksEngine:
             assert frame.getformat() == 'coo'
             frame = frame.tocsr()
             data = left.get(frame)
-        flat_data = data.reshape(1, -1)
-        return self.process_flat(flat_data, sliced_masks)[0]
+        flat_data = data.reshape((1, -1))
+        return self.process_flat(flat_data, sliced_masks).reshape((num_masks,))
 
 
 class ApplyMasksUDF(UDF):

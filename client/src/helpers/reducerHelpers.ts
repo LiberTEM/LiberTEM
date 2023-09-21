@@ -50,6 +50,24 @@ export const insertById = <R>(state: ById<R>, id: string, record: R): ById<R> =>
     return { byId: newById, ids: newIds };
 }
 
+export const insertOrReplace = <R>(state: ById<R>, id: string, record: R): ById<R> => {
+    const newById = Object.assign({}, state.byId, { [id]: record });
+    // keep the order stable, and insert the new id only if needed
+    let newIds;
+    if(state.ids.includes(id)) {
+        newIds = [...state.ids];
+    } else {
+        newIds = [...state.ids, id];
+    }
+    return Object.assign({}, state, { byId: newById, ids: newIds });
+}
+
+export const removeById = <R>(state: ById<R>, id: string): ById<R> => {
+    const {[id]: _, ...newById} = state.byId;
+    const newIds = state.ids.filter(thisId => thisId != id);
+    return { byId: newById, ids: newIds };
+}
+
 export const constructById = <R>(items: R[], key: (k: R) => string): IdMap<R> => {
     const byId = items.reduce((acc, item) => Object.assign(acc, {
         [key(item)]: item,

@@ -1,4 +1,3 @@
-
 export interface JobResultType {
     imageURL: string,
     description: { title: string, desc: string, includeInDownload: boolean },
@@ -26,7 +25,7 @@ export interface JobStateCommon {
     results: JobResultType[],
 }
 
-export type JobStateStart = JobStateCommon & {
+export type JobStateStarted = JobStateCommon & {
     running: JobRunning.CREATING | JobRunning.RUNNING,
 }
 
@@ -35,4 +34,4 @@ export type JobStateDone = JobStateCommon & {
     endTimestamp: number,
 }
 
-export type JobState = JobStateStart | JobStateDone;
+export type JobState = JobStateStarted | JobStateDone;

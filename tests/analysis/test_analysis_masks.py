@@ -1,4 +1,5 @@
 import pytest
+from typing import Sequence
 import numpy as np
 import scipy.sparse as sp
 import sparse
@@ -1033,7 +1034,7 @@ def _make_lambda(mask):
 
 
 def naive_shifted_mask_apply(
-    masks: list[np.ndarray],
+    masks: Sequence[np.ndarray],
     data: np.ndarray,
     shifts: np.ndarray,
 ) -> np.ndarray:

@@ -1,12 +1,15 @@
 import functools
 import logging
+from typing import Union, Callable, Sequence, Optional
+from typing_extensions import Literal
 
 import sparse
 import scipy.sparse
 import numpy as np
+import numpy.typing as npt
 import cloudpickle
 from sparseconverter import (
-    CPU_BACKENDS, CUDA, CUPY_BACKENDS, for_backend
+    CPU_BACKENDS, CUDA, CUPY_BACKENDS, for_backend, ArrayT, ArrayBackend, NUMPY
 )
 from libertem.io.dataset.base.tiling_scheme import TilingScheme
 
@@ -16,13 +19,22 @@ from libertem.common import Slice
 
 log = logging.getLogger(__name__)
 
+FactoryT = Callable[[], ArrayT]
+SparseSupportedT = Literal[
+    'sparse.pydata',
+    'sparse.pydata.GCXS',
+    'scipy.sparse',
+    'scipy.sparse.csc',
+    'scipy.sparse.csr',
+]
 
-def _build_sparse(m, dtype, sparse_backend, backend):
-    if sparse_backend == 'sparse.pydata' and backend == 'numpy':
+
+def _build_sparse(m, dtype: npt.DTypeLike, sparse_backend: SparseSupportedT, backend: ArrayBackend):
+    if sparse_backend == 'sparse.pydata' and backend == NUMPY:
         # sparse.pydata.org is fastest for masks with few layers
         # and few entries
         return m.astype(dtype)
-    elif sparse_backend == 'sparse.pydata.GCXS' and backend == 'numpy':
+    elif sparse_backend == 'sparse.pydata.GCXS' and backend == NUMPY:
         # sparse.pydata.org is fastest for masks with few layers
         # and few entries
         return sparse.GCXS(m.astype(dtype))
@@ -58,7 +70,13 @@ def _build_sparse(m, dtype, sparse_backend, backend):
     )
 
 
-def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend):
+def _make_mask_slicer(
+    computed_masks: ArrayT,
+    dtype: npt.DTypeLike,
+    sparse_backend: Union[Literal[False], SparseSupportedT],
+    transpose: bool,
+    backend: ArrayBackend,
+):
     @functools.lru_cache(maxsize=None)
     def _get_masks_for_slice(slice_):
         stack_height = computed_masks.shape[0]
@@ -68,10 +86,10 @@ def _make_mask_slicer(computed_masks, dtype, sparse_backend, transpose, backend)
         if transpose:
             # We need the stack transposed in the next step
             m = m.T
-        if is_sparse(m):
-            return _build_sparse(m, dtype, sparse_backend, backend)
-        else:
+        if sparse_backend is False:
             return for_backend(m, backend).astype(dtype)
+        else:
+            return _build_sparse(m, dtype, sparse_backend, backend)
     return _get_masks_for_slice
 
 
@@ -82,18 +100,38 @@ class MaskContainer:
     It allows stacking, cached slicing, transposing and conversion
     to condition the masks for high-performance dot products.
 
-    use_sparse can be None, 'scipy.sparse', 'scipy.sparse.csc',
-    'sparse.pydata', or 'sparse.pydata.GCXS'
+    Computation of masks is delayed until as late as possible,
+    but is done automatically when necessary. Methods which can trigger
+    mask instantiation include:
+
+      - container.use_sparse
+      - len(container) [if the count argument is None at __init__]
+      - container.dtype [if the dtype argument is None at __init__]
+      - any of the get() methods
+
+    use_sparse at init can be None, False, True or any supported
+    sparse backend as a string in {'scipy.sparse', 'scipy.sparse.csc',
+    'scipy.sparse.csr', 'sparse.pydata', 'sparse.pydata.GCXS'}
+
+    use_sparse as None means the sparse mode will be chosen only after
+    the masks are instantiated. All masks being sparse will activate sparse
+    processing using the backend in default_sparse, else dense processing
+    will be used on the appropriate backend.
     '''
-    def __init__(self, mask_factories, dtype=None, use_sparse=None,
-                 count=None, backend=None, default_sparse='scipy.sparse'):
+    def __init__(
+        self,
+        mask_factories: Union[FactoryT, Sequence[FactoryT]],
+        dtype: Optional[npt.DTypeLike] = None,
+        use_sparse: Optional[Union[bool, SparseSupportedT]] = None,
+        count: Optional[int] = None,
+        backend: Optional[ArrayBackend] = None,
+        default_sparse: SparseSupportedT = 'scipy.sparse',
+    ):
         self.mask_factories = mask_factories
         # If we generate a whole mask stack with one function call,
         # we should know the length without generating the mask stack
         self._length = count
         self._dtype = dtype
-        self._use_sparse = use_sparse
-        self._default_sparse = default_sparse
         self._mask_cache = {}
         # lazily initialized in the worker process, to keep task size small:
         self._computed_masks = None
@@ -101,6 +139,42 @@ class MaskContainer:
             backend = 'numpy'
         self.backend = backend
         self._get_masks_for_slice = {}
+        # from Python 3.8....
+        # assert default_sparse in typing.get_args(SparseSupportedT)
+        self._default_sparse = default_sparse
+        self._use_sparse: Union[Literal[False], None, SparseSupportedT]
+        # Try to resolve if we are actually using sparse upfront,
+        # this is not always possible as it depends on whether the
+        # mask_factories will all return sparse matrices
+        if use_sparse is True:
+            self._use_sparse = default_sparse
+        elif use_sparse is False:
+            self._use_sparse = False
+        elif isinstance(use_sparse, str) and (
+            # This should be rendered compatible with SPARSE_BACKENDS frozenset
+            # but there are issues of capitalization and naming
+            use_sparse.lower().startswith('scipy.sparse')
+            or use_sparse.lower().startswith('sparse.pydata')
+        ):
+            self._use_sparse = use_sparse
+        elif use_sparse is None:
+            # User doesn't specify, will use sparse if masks
+            # are sparse and we are on a compatible backend
+            if (
+                default_sparse.startswith('sparse.pydata')
+                and self.backend in CUPY_BACKENDS
+            ):
+                # sparse.pydata cannot run on CuPy, so densify to allow calculation
+                self._use_sparse = False
+            else:
+                # we can't determine _use_sparse without creating the masks
+                # themselves and we want to delay this as late as possible
+                # leave as None for now and resolve on first access to
+                # the self.use_sparse property
+                self._use_sparse = None
+        else:
+            raise ValueError(f'use_sparse not an allowed value: {use_sparse}')
+
         self.validate_mask_functions()
 
     def __getstate__(self):
@@ -168,37 +242,41 @@ class MaskContainer:
             return self._dtype
 
     @property
-    def use_sparse(self):
+    def use_sparse(self) -> Union[SparseSupportedT, Literal[False]]:
+        # As far as possible use_sparse was resolved at __init__
+        # but if we don't know if the masks are sparse we may still arrive
+        # here with self._use_sparse is None
         if self._use_sparse is None:
-            # Computing the masks sets _use_sparse
-            self.computed_masks
+            if is_sparse(self.computed_masks):
+                # The first time the condition is hit will cause
+                # mask computation but on subsequent tries we will
+                # fall through to the normal return
+                self._use_sparse = self._default_sparse
+            else:
+                self._use_sparse = False
         return self._use_sparse
 
-    def _compute_masks(self):
+    def _compute_masks(self) -> Union[np.ndarray, sparse.COO, sparse.GCXS]:
         """
-        Call mask factories and combine to mask stack
+        Call mask factories and combine into a mask stack
+
+        Uses the internal attr self._use_sparse, which could be None
+        if we were unable to resolve the sparse mode at __init__
+        If self._use_sparse is None and all masks are sparse then will
+        return a sparse stack else return a dense stack
+        Otherwise if self._use_sparse is simply False then return
+        dense, anything else return as a sparse stack
 
         Returns
         -------
-        a list of masks with contents as they were created by the factories
-        and converted uniformly to dense or sparse matrices depending on
-        ``self.use_sparse``.
+        an array-like mask stack with contents as they were
+        created by the factories
         """
-        # Make sure all the masks are either sparse or dense
-        # If the use_sparse property is set to Ture or False,
-        # it takes precedence.
-        # If it is None, use sparse only if all masks are sparse
-        # and set the use_sparse property accordingly
-
-        default_sparse = self._default_sparse
-
+        mask_slices = []
         if callable(self.mask_factories):
             raw_masks = self.mask_factories()
-            if not is_sparse(raw_masks):
-                default_sparse = False
-            mask_slices = [raw_masks]
+            mask_slices.append(raw_masks)
         else:
-            mask_slices = []
             for f in self.mask_factories:
                 m = f()
                 # Scipy.sparse is always 2D, so we have to convert here
@@ -207,24 +285,21 @@ class MaskContainer:
                     m = sparse.COO.from_scipy_sparse(m)
                 # We reshape to be a stack of 1 so that we can unify code below
                 m = m.reshape((1, ) + m.shape)
-                if not is_sparse(m):
-                    default_sparse = False
                 mask_slices.append(m)
 
-        if (
-            self._use_sparse is None
-            and default_sparse == 'sparse.pydata'
-            and self.backend in CUPY_BACKENDS
-        ):
-            # The case for shifts, must use sparse.pydata but cannot
-            # run this as sparse on CuPy, so densify to allow calculation
-            # If we reach this, all masks were sparse as default_sparse
-            # remained as 'sparse.pydata' and not False
-            self._use_sparse = False
-        elif self._use_sparse is None:
-            self._use_sparse = default_sparse
+        # Fully resolve _use_sparse based on sparsity of masks.
+        # The return type (sparse or dense) from this function
+        # is used to resolve _use_sparse permanently in the
+        # self.use_sparse property method
+        masks_are_sparse = all(is_sparse(m) for m in mask_slices)
+        use_sparse = self._use_sparse
+        if use_sparse is None:
+            if masks_are_sparse:
+                use_sparse = self._default_sparse
+            else:
+                use_sparse = False
 
-        if self.use_sparse:
+        if use_sparse is not False:
             # Conversion to correct back-end will happen later
             # Use sparse.pydata because it implements the array interface
             # which makes mask handling easier

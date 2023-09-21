@@ -2,7 +2,6 @@ from typing import Tuple
 from typing_extensions import Literal
 from libertem.common.math import prod
 import numpy as np
-import scipy.sparse as sp
 
 from libertem.common.udf import UDFMethod
 from libertem.udf import UDF, UDFMeta
@@ -117,7 +116,7 @@ class ApplyMasksEngine:
         except TypeError as e:
             # frame is in a form which doesn't support slicing
             # the only recognized case is scipy.sparse.coo
-            if not sp.issparse(frame):
+            if not hasattr(frame, 'getformat'):
                 raise e  # pragma: no cover
             assert frame.getformat() == 'coo'
             frame = frame.tocsr()
@@ -273,8 +272,6 @@ class ApplyMasksUDF(UDF):
                 if b not in (
                     self.BACKEND_SCIPY_COO,  # cannot be sliced
                     self.BACKEND_CUPY_SCIPY_COO,  # cannot be sliced
-                    self.BACKEND_CUPY_SCIPY_CSR,  # internally cast to BACKEND_CUPY_SCIPY_COO
-                    self.BACKEND_CUPY_SCIPY_CSC,  # internally cast to BACKEND_CUPY_SCIPY_COO
                 )
             )
 

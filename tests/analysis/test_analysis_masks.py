@@ -1166,7 +1166,7 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
 
         use_sparse = kwargs.get('use_sparse', None)  # default value
         # if forcing sparse on CuPy, raise, else densify to process
-        if backend == CUPY and use_sparse in (True, 'sparse.pydata'):
+        if backend in CUPY_BACKENDS and use_sparse in (True, 'sparse.pydata'):
             with pytest.raises(ValueError):
                 # Implement like this so we can test the implementation
                 # once CUPY + sparse.pydata is actually supported

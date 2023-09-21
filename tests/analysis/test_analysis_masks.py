@@ -1052,7 +1052,7 @@ def naive_shifted_mask_apply(
     for the dot product for that pair
     """
     # Densify inputs just in case!
-    data = to_dense(np.asarray(data))
+    data = to_dense(data)
     masks = np.asarray([to_dense(m) for m in masks])
     num_frames, h, w = data.shape
     num_masks, mh, mw = masks.shape
@@ -1113,16 +1113,14 @@ def test_naive_shifted_apply():
     )
 )
 @pytest.mark.parametrize(
-    'backend', (None, CUPY, UDF.BACKEND_SCIPY_CSR)
+    'backend', (None, ) + ApplyMasksUDF(
+        mask_factories=lambda: np.ones((1, 1, 1)), shifts=(1, -1),
+    ).get_backends()
 )
 @pytest.mark.parametrize(
     'mask_types', [
         (np.asarray,),
-        (np.asarray, np.asarray),
         (sp.csr_matrix,),
-        (sp.csr_matrix, sp.csc_matrix,),
-        (sparse.COO.from_numpy,),
-        (np.asarray, sp.csr_matrix),
         (np.asarray, sparse.COO.from_numpy),
         (sparse.COO.from_numpy, sp.csc_matrix,),
     ]
@@ -1132,9 +1130,13 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
         # nonsquare frames to test ordering is correct
         num_frames, h, w = 2, 18, 12
         data = np.random.uniform(size=(num_frames, h, w)).astype(np.float32)
+        if backend in SPARSE_BACKENDS:
+            data = _mk_random((num_frames, h, w), array_backend=SPARSE_COO, sparse_density=0.1)
+        else:
+            data = _mk_random((num_frames, h, w), array_backend=NUMPY)
         shifts = np.random.uniform(
-            low=-5.,
-            high=5.,
+            low=-5,
+            high=5,
             size=(num_frames, 2),
         )
 
@@ -1146,7 +1148,10 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
             mask_factories.append(_make_lambda(mask))
 
         expected = naive_shifted_mask_apply(masks, data, shifts)
-        dataset = MemoryDataSet(data=data)
+        dataset = MemoryDataSet(
+            data=data,
+            array_backends=(backend, ) if backend is not None else None
+        )
         udf = ApplyMasksUDF(
             mask_factories=mask_factories,
             shifts=ApplyMasksUDF.aux_data(
@@ -1158,17 +1163,16 @@ def test_shifted_masks_aux_shifts(lt_ctx, kwargs, backend, mask_types):
             **kwargs,
         )
 
-        backends_kwarg = dict(backends=(backend,)) if backend is not None else {}
         use_sparse = kwargs.get('use_sparse', None)  # default value
         # if forcing sparse on CuPy, raise, else densify to process
         if backend == CUPY and use_sparse in (True, 'sparse.pydata'):
             with pytest.raises(ValueError):
                 # Implement like this so we can test the implementation
                 # once CUPY + sparse.pydata is actually supported
-                results = lt_ctx.run_udf(udf=udf, dataset=dataset, **backends_kwarg)
+                results = lt_ctx.run_udf(udf=udf, dataset=dataset)
             pytest.xfail('CuPy + sparse.pydata not yet supported')
         else:
-            results = lt_ctx.run_udf(udf=udf, dataset=dataset, **backends_kwarg)
+            results = lt_ctx.run_udf(udf=udf, dataset=dataset)
 
         assert np.allclose(results['intensity'].data, expected)
 

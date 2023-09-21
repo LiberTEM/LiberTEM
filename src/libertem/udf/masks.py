@@ -256,6 +256,9 @@ class ApplyMasksUDF(UDF):
     def __init__(self, mask_factories, use_torch=True, use_sparse=None, mask_count=None,
                 mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
 
+        if backends is None:
+            backends = self.BACKEND_ALL
+
         if shifts is not None:
             if isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):
                 raise ValueError(
@@ -265,8 +268,15 @@ class ApplyMasksUDF(UDF):
             if not isinstance(shifts, AuxBufferWrapper):
                 shifts = np.asarray(shifts)
 
-        if backends is None:
-            backends = self.BACKEND_ALL
+            backends = tuple(
+                b for b in backends
+                if b not in (
+                    self.BACKEND_SCIPY_COO,  # cannot be sliced
+                    self.BACKEND_CUPY_SCIPY_COO,  # cannot be sliced
+                    self.BACKEND_CUPY_SCIPY_CSR,  # internally cast to BACKEND_CUPY_SCIPY_COO
+                    self.BACKEND_CUPY_SCIPY_CSC,  # internally cast to BACKEND_CUPY_SCIPY_COO
+                )
+            )
 
         self._mask_container = None
 

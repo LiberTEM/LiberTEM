@@ -1,5 +1,6 @@
 from .state import SharedState
 from libertem.common.messageconverter import MessageConverter  # NOQA: F401
+from libertem.common.progress import ProgressState
 
 
 class Message:
@@ -96,6 +97,17 @@ class Message:
             "messageType": "JOB_ERROR",
             "job": job_id,
             "msg": msg,
+        }
+
+    def job_progress(self, job_id: str, state: ProgressState):
+        return {
+            "status": "ok",
+            "messageType": "JOB_PROGRESS",
+            "job": job_id,
+            "details": {
+                "numFrames": state.num_frames_total,
+                "numFramesComplete": state.num_frames_complete,
+            }
         }
 
     def finish_job(self, job_id, num_images, image_descriptions):

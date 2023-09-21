@@ -1,13 +1,14 @@
 import time
 import logging
 import asyncio
-from typing import TYPE_CHECKING, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, Callable, Optional, TypeVar, Set
 
 from opentelemetry import trace
 
 from libertem.analysis.base import Analysis, AnalysisResultSet
 from libertem.common.executor import JobCancelledError
 from libertem.common.tracing import TracedThreadPoolExecutor
+from libertem.common.progress import ProgressReporter, ProgressState
 from libertem.udf.base import UDFResults
 from libertem.io.dataset.base.dataset import DataSet
 from libertem.web.models import AnalysisDetails
@@ -23,6 +24,50 @@ if TYPE_CHECKING:
     from .events import EventRegistry
 
 T = TypeVar('T')
+
+
+class WebProgressReporter(ProgressReporter):
+    """
+    Progress reporter that pumps `ProgressState`
+    messages out via the event registry mechanism.
+
+    The `start`/`update`/`end` callbacks are invoked from
+    the context of the `UDFRunner` implementation, so
+    we need to make sure we schedule the websocket
+    response tasks on the correct event loop
+    (the one used by the web API)
+    """
+
+    def __init__(
+        self,
+        state: SharedState,
+        event_registry: "EventRegistry",
+        loop: asyncio.AbstractEventLoop,
+        job_id: str,
+    ):
+        self.event_registry = event_registry
+        self.state = state
+        self.loop = loop
+        self.job_id = job_id
+        self.tasks: Set[asyncio.Task] = set()
+
+    def start(self, state: ProgressState):
+        self.handle_state_update(state)
+
+    def update(self, state: ProgressState):
+        self.handle_state_update(state)
+
+    def end(self, state: ProgressState):
+        self.handle_state_update(state)
+
+    def handle_state_update(self, state: ProgressState):
+        msg = Message(self.state).job_progress(job_id=self.job_id, state=state)
+
+        async def _task():
+            await self.event_registry.broadcast_event(msg)
+        task = self.loop.create_task(_task())
+        self.tasks.add(task)  # keep a reference, the one from asyncio is weak
+        task.add_done_callback(self.tasks.discard)
 
 
 class JobEngine:
@@ -165,8 +210,21 @@ class JobEngine:
         # FIXME: allow to set correction data for a dataset via upload and local loading
         corrections = dataset.get_correction_data()
         runner_cls = executor.get_udf_runner()
-        result_iter = runner_cls([udf]).run_for_dataset_async(
-            dataset, executor, roi=roi, cancel_id=job_id, corrections=corrections,
+        progress_reporter = WebProgressReporter(
+            state=self.state,
+            event_registry=self.event_registry,
+            loop=asyncio.get_event_loop(),
+            job_id=job_id,
+        )
+        result_iter = runner_cls(
+            udfs=[udf],
+            progress_reporter=progress_reporter
+        ).run_for_dataset_async(
+            dataset, executor,
+            roi=roi,
+            cancel_id=job_id,
+            corrections=corrections,
+            progress=True,
         )
         async for udf_results in result_iter:
             window = min(max(window, 2*(t - post_t)), 5)

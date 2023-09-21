@@ -2466,6 +2466,7 @@ class UDFRunner:
                 task_comm_handler = dataset.get_task_comm_handler()
 
         def _inner():
+            pman = None
             try:
                 if progress and tasks:
                     pman = ProgressManager(tasks, cancel_id, reporter=self._progress_reporter)
@@ -2487,7 +2488,7 @@ class UDFRunner:
                                 pman.finalize_task(res[1])
                             yield res
             finally:
-                if progress and tasks:
+                if progress and tasks and pman is not None:
                     pman.close()
 
         it = _inner()

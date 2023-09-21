@@ -14,6 +14,11 @@ export interface ResultFileFormat {
     description: string,
 }
 
+export interface ProgressDetails {
+    numFrames: number,
+    numFramesComplete: number,
+}
+
 export type JsonSchema = Record<string, unknown>;
 
 export interface DatasetTypeInfo {

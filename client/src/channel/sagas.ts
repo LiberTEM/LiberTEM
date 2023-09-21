@@ -106,6 +106,10 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                     yield put(channelActions.Actions.jobStarted(msg.job, timestamp));
                     break;
                 }
+                case channelMessages.MessageTypes.JOB_PROGRESS: {
+                    yield put(channelActions.Actions.jobProgress(msg.job, msg.details));
+                    break;
+                }
                 case channelMessages.MessageTypes.FINISH_JOB: {
                     yield call(handleFinishJob, msg, socketChannel, timestamp);
                     break;

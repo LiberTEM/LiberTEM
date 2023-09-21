@@ -9,6 +9,7 @@ import { configReducer } from "./config/reducers";
 import { datasetReducer, openDatasetReducer } from "./dataset/reducers";
 import { errorReducer } from "./errors/reducers";
 import { jobReducer } from "./job/reducers";
+import { progressReducer } from "./progress/reducers";
 
 export const rootReducer = combineReducers({
     compoundAnalyses: compoundAnalysisReducer,
@@ -18,6 +19,7 @@ export const rootReducer = combineReducers({
     datasets: datasetReducer,
     openDataset: openDatasetReducer,
     jobs: jobReducer,
+    progress: progressReducer,
     errors: errorReducer,
     config: configReducer,
     browser: directoryBrowserReducer,

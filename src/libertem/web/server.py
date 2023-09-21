@@ -90,6 +90,7 @@ def make_app(event_registry, shared_state, token=None):
     settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "client"),
     }
+    assets_path = os.path.join(os.path.dirname(__file__), "client", "assets")
     common_kwargs = {
         "state": shared_state,
         "event_registry": event_registry,
@@ -115,6 +116,7 @@ def make_app(event_registry, shared_state, token=None):
         (r"/api/config/", ConfigHandler, common_kwargs),
         (r"/api/config/cluster/", ClusterDetailHandler, common_kwargs),
         (r"/api/config/connection/", ConnectHandler, common_kwargs),
+        (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": assets_path}),
     ], **settings)
     app = check_token_auth_middleware(app, token)
     return app

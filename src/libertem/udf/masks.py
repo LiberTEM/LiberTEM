@@ -262,12 +262,8 @@ class ApplyMasksUDF(UDF):
                     f'Sparse backend {use_sparse} not supported for '
                     'shifts, use sparse.pydata instead.'
                 )
-            if use_sparse is True:
-                use_sparse = 'sparse.pydata'
             if not isinstance(shifts, AuxBufferWrapper):
                 shifts = np.asarray(shifts)
-        elif use_sparse is True:
-            use_sparse = 'scipy.sparse'
 
         if backends is None:
             backends = self.BACKEND_ALL
@@ -319,7 +315,9 @@ class ApplyMasksUDF(UDF):
             backend = self.BACKEND_NUMPY
         # In the default case defer to default kwarg on MaskContainer
         default_sparse = {}
-        if p.shifts is not None:
+        if p.shifts is None:
+            default_sparse['default_sparse'] = 'scipy.sparse'
+        else:
             default_sparse['default_sparse'] = 'sparse.pydata'
         return MaskContainer(
             p.mask_factories, dtype=p.mask_dtype, use_sparse=p.use_sparse, count=p.mask_count,

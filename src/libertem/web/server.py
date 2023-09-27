@@ -23,7 +23,7 @@ from .shutdown import ShutdownHandler
 from .state import SharedState
 from .config import ConfigHandler, ClusterDetailHandler
 from .dataset import DataSetDetailHandler, DataSetDetectHandler
-from .browse import LocalFSBrowseHandler
+from .browse import LocalFSBrowseHandler, LocalFSStatHandler
 from .jobs import JobDetailHandler
 from .events import ResultEventHandler, EventRegistry
 from .connect import ConnectHandler
@@ -100,6 +100,7 @@ def make_app(event_registry, shared_state, token=None):
         (r"/api/datasets/detect/", DataSetDetectHandler, common_kwargs),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, common_kwargs),
         (r"/api/browse/localfs/", LocalFSBrowseHandler, common_kwargs),
+        (r"/api/browse/localfs/stat/", LocalFSStatHandler, common_kwargs),
         (r"/api/jobs/([^/]+)/", JobDetailHandler, common_kwargs),
         (r"/api/compoundAnalyses/([^/]+)/analyses/([^/]+)/", AnalysisDetailHandler, common_kwargs),
         (

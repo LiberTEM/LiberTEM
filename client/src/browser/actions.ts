@@ -12,12 +12,14 @@ export enum ActionTypes {
     CANCEL = 'BROWSER_CANCEL',
     SELECT = 'BROWSER_SELECT',
     SELECT_FULL_PATH = 'BROWSER_SELECT_FULL_PATH',
+    OPEN_FROM_URL = 'BROWSER_OPEN_FROM_URL',  // path from URL fragment, goto "open" or "browse" dialogs
 }
 
 export const Actions = {
     list: (path: string, name?: string) => createAction(ActionTypes.LIST_DIRECTORY, { path, name }),
     dirListing: (path: string, dirs: DirectoryListingDetails[], files: DirectoryListingDetails[], drives: string[], places: FSPlace[]) => createAction(ActionTypes.DIRECTORY_LISTING, { path, dirs, files, drives, places }),
     open: () => createAction(ActionTypes.OPEN),
+    openFromUrl: () => createAction(ActionTypes.OPEN_FROM_URL),
     cancel: () => createAction(ActionTypes.CANCEL),
     select: (path: string, name: string) => createAction(ActionTypes.SELECT, { path, name }),
     selectFullPath: (path: string) => createAction(ActionTypes.SELECT_FULL_PATH, { path }),

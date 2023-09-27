@@ -1,3 +1,6 @@
+import os
+import stat
+
 from .state import SharedState
 from libertem.common.messageconverter import MessageConverter  # NOQA: F401
 from libertem.common.progress import ProgressState
@@ -178,6 +181,38 @@ class Message:
                 _details(d)
                 for d in dirs
             ],
+        }
+
+    def browse_stat_result(
+        self,
+        path: str,
+        dirname: str,
+        basename: str,
+        stat_result: os.stat_result,
+    ):
+        return {
+            "status": "ok",
+            "messageType": "STAT_RESULT",
+            "path": path,
+            "dirname": dirname,
+            "basename": basename,
+            "stat": {
+                "size":  stat_result.st_size,
+                "ctime": stat_result.st_ctime,
+                "mtime": stat_result.st_mtime,
+                "isdir": bool(stat.S_ISDIR(stat_result.st_mode)),
+                "isreg": bool(stat.S_ISREG(stat_result.st_mode)),
+            }
+        }
+
+    def stat_failed(self, path, code, msg, alternative=None):
+        return {
+            "status": "error",
+            "messageType": "STAT_FAILED",
+            "path": path,
+            "code": code,
+            "msg": msg,
+            "alternative": alternative,
         }
 
     def browse_failed(self, path, code, msg, alternative=None):

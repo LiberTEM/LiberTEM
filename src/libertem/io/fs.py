@@ -49,6 +49,17 @@ def _get_alt_path(path):
     return cur_path
 
 
+def stat_path(path: str):
+    try:
+        return Path(path).resolve().stat()
+    except PermissionError as e:
+        raise FSError(
+            code="PERMISSION_ERROR",
+            msg=str(e),
+            alternative=str(_get_alt_path(path)),
+        )
+
+
 def get_fs_listing(path):
     try:
         Path(path).resolve()

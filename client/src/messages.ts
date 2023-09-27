@@ -715,6 +715,33 @@ export interface DirectoryListingResponseError {
 
 export type DirectoryListingResponse = DirectoryListingResponseOK | DirectoryListingResponseError;
 
+
+export interface StatResponseOK {
+    status: "ok",
+    path: string,
+    dirname: string,
+    basename: string,
+    stat: {
+        size: number,
+        ctime: number,
+        mtime: number,
+        owner: string,
+        isdir: boolean,
+        isreg: boolean,
+    },
+}
+
+export interface StatResponseError {
+    status: "error",
+    path: string,
+    code: string,
+    msg: string,
+    alternative?: string,
+}
+
+export type StatResponse = StatResponseError | StatResponseOK;
+
+
 export interface ShutdownResponse {
     status: "ok",
     messageType: "SERVER_SHUTDOWN",

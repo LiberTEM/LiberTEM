@@ -13,10 +13,9 @@ from aio_utils import (
 from libertem.io.writers.results import formats  # NOQA: F401
 
 
-pytestmark = [pytest.mark.slow]
+pytestmark = [pytest.mark.web_api]
 
 
-@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_copy_notebook(
     default_raw, base_url, tmpdir_factory, http_client, server_port, local_cluster_url,

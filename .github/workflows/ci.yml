@@ -57,7 +57,7 @@ jobs:
   additional:
     strategy:
       matrix:
-        envs: ["numba_coverage", "docs-check"]
+        envs: ["numba_coverage", "docs-check", "web_api"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

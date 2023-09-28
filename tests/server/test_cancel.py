@@ -11,7 +11,7 @@ from aio_utils import (
 )
 
 
-pytestmark = [pytest.mark.slow]
+pytestmark = [pytest.mark.web_api]
 
 
 def _get_ds_params():

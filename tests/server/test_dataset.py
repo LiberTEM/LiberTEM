@@ -9,7 +9,7 @@ from aio_utils import create_connection
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.base import AsyncAdapter
 
-pytestmark = [pytest.mark.slow]
+pytestmark = [pytest.mark.web_api]
 
 
 def _get_raw_params(path):

@@ -8,7 +8,7 @@ from aio_utils import (
     create_connection, create_analysis, create_update_compound_analysis,
 )
 
-pytestmark = [pytest.mark.slow]
+pytestmark = [pytest.mark.web_api]
 
 
 def _get_raw_params(path):

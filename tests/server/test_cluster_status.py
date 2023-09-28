@@ -1,7 +1,7 @@
 import pytest
 import random
 
-pytestmark = [pytest.mark.slow]
+pytestmark = [pytest.mark.web_api]
 
 
 @pytest.mark.dist

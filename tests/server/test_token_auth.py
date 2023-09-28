@@ -85,7 +85,7 @@ paths_full = paths + [
 ]
 
 
-@pytest.mark.slow
+@pytest.mark.web_api
 @pytest.mark.parametrize(
     'path', paths_full,
 )
@@ -109,7 +109,7 @@ async def test_wrong_token_full(base_url, path, method, http_client):
             f"response code must be 'bad request' or 'method not allowed', got '{resp.status}'"
 
 
-@pytest.mark.slow
+@pytest.mark.web_api
 @pytest.mark.parametrize(
     'path', paths_full,
 )

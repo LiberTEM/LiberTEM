@@ -45,7 +45,7 @@ async def create_connection(base_url, http_client, scheduler_url=None, token=Non
             'connection': {
                 'type': 'local',
                 'numWorkers': 2,
-                'cudas': [],
+                'cudas': {},
             }
         }
     else:
@@ -58,7 +58,8 @@ async def create_connection(base_url, http_client, scheduler_url=None, token=Non
     print("checkpoint 0")
     async with http_client.put(conn_url, json=conn_details) as response:
         assert response.status == 200
-        assert (await response.json())['status'] == 'ok'
+        response_json = await response.json()
+        assert response_json['status'] == 'ok'
 
 
 async def consume_task_results(ws, job_uuid):

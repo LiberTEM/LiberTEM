@@ -1,4 +1,5 @@
 import os
+import stat
 
 import tornado.web
 
@@ -45,10 +46,14 @@ class LocalFSStatHandler(tornado.web.RequestHandler):
         path = path[0].decode("utf8")
         try:
             stat_result = await executor.run_function(stat_path, path)
+            if stat.S_ISDIR(stat_result.st_mode) and not path.endswith(os.path.sep):
+                path_slash = path + os.path.sep
+            else:
+                path_slash = path
             msg = Message(self.state).browse_stat_result(
                 path=path,
-                dirname=os.path.dirname(path),
-                basename=os.path.basename(path),
+                dirname=os.path.dirname(path_slash),
+                basename=os.path.basename(path_slash),
                 stat_result=stat_result,
             )
             self.write(msg)

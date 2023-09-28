@@ -52,6 +52,12 @@ def _get_alt_path(path):
 def stat_path(path: str):
     try:
         return Path(path).resolve().stat()
+    except FileNotFoundError:
+        raise FSError(
+            code="NOT_FOUND",
+            msg="path %s could not be found" % path,
+            alternative=str(_get_alt_path(path)),
+        )
     except PermissionError as e:
         raise FSError(
             code="PERMISSION_ERROR",

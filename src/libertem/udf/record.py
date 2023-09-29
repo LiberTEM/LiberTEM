@@ -1,5 +1,7 @@
+from typing import Tuple
 import numpy as np
 
+from libertem.common import Shape
 from libertem.udf.base import UDF
 from libertem.common.math import prod
 from libertem.common.buffers import reshaped_view
@@ -25,6 +27,16 @@ class RecordUDF(UDF):
         ''
         return self.USE_NATIVE_DTYPE
 
+    @property
+    def _ds_shape(self) -> Shape:
+        # only valid during run_udf hence _ property
+        return self.meta.dataset_shape
+
+    @property
+    def _memmap_flat_shape(self) -> Tuple[int, ...]:
+        # only valid during run_udf hence _ property
+        return (prod(self._ds_shape.nav), *self._ds_shape.sig)
+
     def preprocess(self):
         ''
         if self.meta.roi is not None:
@@ -35,7 +47,7 @@ class RecordUDF(UDF):
                 self.params.filename,
                 mode='w+',
                 dtype=self.meta.input_dtype,
-                shape=tuple(self.meta.dataset_shape),
+                shape=tuple(self._ds_shape),
             )
 
     def get_result_buffers(self):
@@ -44,15 +56,14 @@ class RecordUDF(UDF):
 
     def get_task_data(self):
         ''
-        flat_shape = (prod(self.meta.dataset_shape.nav), *self.meta.dataset_shape.sig)
         m = np.lib.format.open_memmap(
                 self.params.filename,
                 mode='r+',
                 dtype=self.meta.input_dtype,
-                shape=tuple(self.meta.dataset_shape)
+                shape=tuple(self._ds_shape)
         )
         return {
-            'memmap': reshaped_view(m, flat_shape)
+            'memmap': reshaped_view(m, self._memmap_flat_shape)
         }
 
     def process_tile(self, tile):

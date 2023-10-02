@@ -11,6 +11,7 @@ from libertem.io.dataset.base.tiling_scheme import TilingScheme
 from libertem.udf.base import UDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.io.dataset.dm_single import SingleDMDataSet
+from libertem.contrib.convert_transposed import convert_dm4_transposed
 
 try:
     import hyperspy.api as hs
@@ -521,3 +522,34 @@ def test_sig_reshaping_c(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
     partial_array = flat_array[:nel].reshape(array.shape[:2] + manual_sig_shape)
     partial_sum = partial_array.sum(axis=(2, 3))
     assert np.allclose(result_array, partial_sum)
+
+
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
+def test_convert_not_transposed_raises(lt_ctx, dm4_c_order_4d_path):
+    with pytest.raises(DataSetException):
+        convert_dm4_transposed(
+            dm4_c_order_4d_path,
+            'out.npy',
+            ctx=lt_ctx,
+        )
+
+
+def test_convert_f_ordered(monkeypatch, dm4_mockfile_f, lt_ctx, tmpdir_factory):
+    tdir = tmpdir_factory.mktemp('convert_transposed')
+
+    # the mockfile array in memory is already c-ordered
+    (array, filename), mock_fileDM = dm4_mockfile_f
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    converted_path = os.path.join(tdir, 'out_dm4_f.npy')
+    convert_dm4_transposed(
+        filename,
+        converted_path,
+        ctx=lt_ctx,
+    )
+
+    ds_npy = lt_ctx.load('npy', path=converted_path)
+    pick_a = lt_ctx.create_pick_analysis(ds_npy, 4, 3)
+    pick_frame = lt_ctx.run(pick_a).intensity.raw_data
+    # flipped coords because pick_a takes x, y arguments
+    assert np.allclose(pick_frame, array[3, 4, :, :])

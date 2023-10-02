@@ -63,6 +63,50 @@ def convert_dm4_transposed(
     dataset_index: Optional[int] = None,
     progress: bool = False,
 ):
+    """
+    Convenience function to convert a transposed Gatan Digital Micrograph
+    (.dm4) STEM dataset into a numpy (.npy) file with standard ordering for
+    processing with LiberTEM.
+
+    Transposed .dm4 files are stored in :code:`(sig, nav)` order, i.e.
+    all frame values for a given signal pixel are stored as blocks,
+    which means that extracting a single frame requires traversal of the
+    whole file. LiberTEM requires :code:`(nav, sig)` order for processing
+    using the UDF interface, i.e. each frame is stored sequentially.
+
+    .. versionadded:: 0.13.0
+
+    Parameters
+    ----------
+
+    dm4_path : PathLike
+        The path to the .dm4 file
+    out_path : PathLike
+        The path to the output .npy file
+    ctx : libertem.api.Context, optional
+        The Context to use to perform the conversion, by default None
+        in which case a Dask-based context will be created (optionally)
+        following the :code:`num_cpus` argument.
+    num_cpus : int, optional
+        When :code:`ctx` is not supplied, this argument limits
+        the number of CPUs to perform the conversion. This can be
+        important as conversion is a RAM-intensive operation and limiting
+        the number of CPUs can help reduce bottlenecking.
+    dataset_index : int, optional
+        If the .dm4 file contains multiple datasets, this can be used
+        to select the dataset to convert
+        (see :class:`~libertem.io.dataset.dm_single.SingleDMDataSet`)
+        for more information.
+    progress : bool, optional
+        Whether to display a progress bar during conversion, by default False
+
+    Raises
+    ------
+    DataSetException
+        If the DM4 dataset is not stored as transposed
+    ValueError
+        If both :code:`ctx` and :code:`num_cpus` are supplied
+    """
     if ctx is not None and num_cpus is not None:
         raise ValueError('Either supply a Context or number of cpus to use in conversion')
     elif ctx is None:

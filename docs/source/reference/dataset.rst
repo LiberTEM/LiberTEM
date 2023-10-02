@@ -67,6 +67,10 @@ be inferred from the parameters.
 
 .. autoclass:: libertem.io.dataset.dm.StackedDMDataSet
 
+DM4 datsets stored in a transposed format :code:`(sig, nav)` can
+be converted to C-ordered data compatible with LiberTEM using the contrib function
+:function:`~libertem.contrib.convert_transposed.convert_dm4_transposed`.
+
 .. _`empad`:
 
 EMPAD
@@ -143,6 +147,11 @@ Dask
 ~~~~
 
 .. autoclass:: libertem.io.dataset.dask.DaskDataSet
+
+Converters
+~~~~~~~~~~
+
+.. autofunction:: libertem.contrib.convert_transposed.convert_dm4_transposed
 
 Internal DataSet API
 --------------------

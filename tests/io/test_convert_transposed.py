@@ -4,7 +4,7 @@ import pytest
 
 from libertem.udf.raw import PickUDF
 from libertem.udf.sum import SumUDF
-from libertem.contrib.convert_transposed import _convert_transposed_ds
+from libertem.contrib.convert_transposed import convert_dm4_transposed, _convert_transposed_ds
 
 from utils import _mk_random
 
@@ -64,3 +64,17 @@ def test_functional(lt_ctx, nav_shape, sig_shape, tmpdir_factory):
 
     sum_res = lt_ctx.run_udf(ds_npy, SumUDF())['intensity'].data
     assert np.allclose(sum_res, converted_data.sum(axis=tuple(range(nav_dims))))
+
+
+def test_both_args_raise(lt_ctx):
+    with pytest.raises(ValueError):
+        convert_dm4_transposed(
+            'tata.dm4',
+            'out.npy',
+            ctx=lt_ctx,
+            num_cpus=42,
+        )
+
+
+# Tests on actual DM4 datasets are in tests/io/datasets/test_dm_single.py
+# to use the dm4 file fixtures defined there

@@ -39,6 +39,9 @@ class SingleDMDataSet(DMDataSet):
     :code:`(flat_sig, flat_nav)` then the dataset will raise an exception
     unless the `force_c_order` argument. is set to true.
 
+    A converted for F/C-hybrid files is provided as
+    :meth:`~libertem.contrib.convert_transposed.convert_dm4_transposed`.
+
     Note
     ----
     In the Web-GUI a 2D-image or 3D-stack/spectrum image will have extra

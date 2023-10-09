@@ -113,7 +113,7 @@ class BufferPool:
     allocation pool for explicitly re-using (aligned) allocations
     """
     def __init__(self):
-        self._buffers = collections.defaultdict(lambda: [])
+        self._buffers = collections.defaultdict(list)
 
     @contextmanager
     def zeros(self, size, dtype, alignment=4096):

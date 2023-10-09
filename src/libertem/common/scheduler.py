@@ -13,7 +13,7 @@ class WorkerSet:
         """
         returns a list of `WorkerSet`s, each containing the workers for a single host
         """
-        by_host = defaultdict(lambda: [])
+        by_host = defaultdict(list)
         for worker in self.workers:
             by_host[worker.host].append(worker)
 

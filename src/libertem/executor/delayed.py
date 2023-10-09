@@ -29,7 +29,7 @@ from .utils import delayed_unpack
 
 class DelayedUDFRunner(UDFRunner):
     def __init__(self, udfs: List[UDF], debug: bool = False, progress_reporter: Any = None):
-        self._part_results = defaultdict(lambda: {})
+        self._part_results = defaultdict(dict)
         super().__init__(udfs, debug=debug)
 
     @staticmethod

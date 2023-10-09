@@ -181,7 +181,7 @@ def _execution_plan(
     else:
         raise ValueError(f"Unknown device class{device_class}, allowed are 'cuda' and 'cpu'.")
 
-    aggregate_udf_aversion: Dict[ArrayBackend, float] = defaultdict(lambda: 0.)
+    aggregate_udf_aversion: Dict[ArrayBackend, float] = defaultdict(float)
     for udf in remaining:
         backends = _get_canonical_backends(udf.get_backends())
         for i, b in enumerate(backends):
@@ -946,7 +946,7 @@ def _default_merge_all(udf, ordered_results: 'OrderedDict[Slice, MergeAttrMappin
             "Default merging only works for kind='nav' buffers. "
             "Please implement a suitable custom merge_all function."
         )
-    result_chunks = defaultdict(lambda: [])
+    result_chunks = defaultdict(list)
     for b in ordered_results.values():
         for key in b:
             result_chunks[key].append(getattr(b, key))

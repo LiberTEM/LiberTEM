@@ -334,7 +334,7 @@ class StdDevUDF(UDF):
 
     def get_task_data(self):
         return {
-            'num_frames': defaultdict(lambda: 0)
+            'num_frames': defaultdict(int)
         }
 
     def postprocess(self):

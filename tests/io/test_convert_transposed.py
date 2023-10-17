@@ -2,8 +2,6 @@ import pathlib
 import numpy as np
 import pytest
 
-from libertem.udf.raw import PickUDF
-from libertem.udf.sum import SumUDF
 from libertem.contrib.convert_transposed import convert_dm4_transposed, _convert_transposed_ds
 
 from utils import _mk_random
@@ -52,18 +50,7 @@ def test_functional(lt_ctx, nav_shape, sig_shape, tmpdir_factory):
     # Now that we are transposed sig_dims=sig_dims
     ds_npy = lt_ctx.load('npy', path=convert_path, sig_dims=sig_dims)
     assert ds_npy.shape.to_tuple() == converted_data.shape
-
-    for _ in range(3):
-        check_slice = tuple(
-            np.random.randint(0, n) for n in nav_shape
-        )
-        roi = np.zeros(ds_npy.shape.nav, dtype=bool)
-        roi[check_slice] = True
-        frame = lt_ctx.run_udf(ds_npy, PickUDF(), roi=roi)['intensity'].data.squeeze()
-        assert np.allclose(frame, converted_data[check_slice])
-
-    sum_res = lt_ctx.run_udf(ds_npy, SumUDF())['intensity'].data
-    assert np.allclose(sum_res, converted_data.sum(axis=tuple(range(nav_dims))))
+    assert np.allclose(converted_data, np.load(convert_path))
 
 
 def test_both_args_raise(lt_ctx):

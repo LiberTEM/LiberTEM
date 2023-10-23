@@ -50,7 +50,7 @@ export const parseHashParameters = (hash: string): HashParameters => {
 }
 
 export const getUrlAction = (): URLAction => {
-    const hash = window.location.hash.slice(1);
+    const hash = decodeURIComponent(window.location.hash.slice(1));
     const params = parseHashParameters(hash);
     const action = params.action;
 

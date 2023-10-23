@@ -55,6 +55,16 @@ describe('getUrlAction', () => {
         expect(getUrlAction()).toEqual({'action': 'none'});
     });
 
+    it('works ok if we pass in something sensible', () => {
+        window.location.hash = "action=open&path=/stuff";
+        expect(getUrlAction()).toEqual({'action': 'open', 'path': '/stuff'});
+    });
+
+    it('correctly decodes URI components', () => {
+        window.location.hash = "action=open&path=/stuff%20stuff";
+        expect(getUrlAction()).toEqual({'action': 'open', 'path': '/stuff stuff'});
+    });
+
     it('returns an error if an invalid action was given', () => {
         window.location.hash = "#action=something";
         expect(getUrlAction()).toEqual({

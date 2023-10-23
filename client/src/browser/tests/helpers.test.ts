@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseHashParameters, splitLikePython } from "../helpers";
+import { beforeEach, describe, expect, it } from "vitest";
+import { getUrlAction, parseHashParameters, splitLikePython } from "../helpers";
 
 describe('splitLikePython', () => {
     it('supports exact matches', () => {
@@ -43,4 +43,31 @@ describe('parseHashParameters', () => {
     it('works correctly if the values contain equal signs', () => {
         expect(parseHashParameters('a=b=c')).toEqual({ a: 'b=c' })
     })
+})
+
+describe('getUrlAction', () => {
+    beforeEach(() => {
+        window.location.hash = "";
+    });
+
+    it('returns URLActionNone if no action is given in the URL', () => {
+        window.location.hash = "";
+        expect(getUrlAction()).toEqual({'action': 'none'});
+    });
+
+    it('returns an error if an invalid action was given', () => {
+        window.location.hash = "#action=something";
+        expect(getUrlAction()).toEqual({
+            'action': 'error',
+            'msg': 'Unknown action specified in URL: "something"',
+        });
+    });
+    
+    it('returns an error if an invalid path is given to the open action', () => {
+        window.location.hash = "#action=open&path=";
+        expect(getUrlAction()).toEqual({
+            'action': 'error',
+            'msg': 'Invalid path given in URL: ""',
+        });
+    });
 })

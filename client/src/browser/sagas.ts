@@ -92,6 +92,12 @@ function* actionOnConnect() {
                 yield fork(actionOpenOnConnect, action.path);
                 break;
 
+            case 'error':
+                const timestamp = Date.now();
+                const id = uuid();
+                yield put(browserActions.Actions.error(action.msg, timestamp, id));
+                break;
+
             case 'none':
                 // do nothing.
                 break;

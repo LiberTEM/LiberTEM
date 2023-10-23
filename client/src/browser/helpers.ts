@@ -26,7 +26,12 @@ interface URLActionNone {
     action: 'none',
 }
 
-type URLAction = URLActionOpen | URLActionNone;
+interface URLActionError {
+    action: 'error',
+    msg: string,
+}
+
+type URLAction = URLActionOpen | URLActionNone | URLActionError;
 
 interface HashParameters {
     [key: string]: string,
@@ -53,9 +58,13 @@ export const getUrlAction = (): URLAction => {
         return { action: 'none' };
     }
 
-    if (action === 'open' && params.path !== undefined && params.path !== "") {
-        return { action: 'open', path: params.path };
+    if (action === 'open') {
+        if (params.path !== undefined && params.path !== "") {
+            return { action: 'open', path: params.path };
+        } else {
+            return { action: 'error', msg: `Invalid path given in URL: "${params.path}"` }
+        }
     }
 
-    return { 'action': 'none' };
+    return { action: 'error', msg: `Unknown action specified in URL: "${action}"` };
 }

@@ -86,6 +86,8 @@ async def test_cancel_udf_job(
             if msg['messageType'] == 'TASK_RESULT':
                 assert_msg(msg, 'TASK_RESULT')
                 assert msg['job'] == job_uuid
+            elif msg['messageType'] == 'JOB_PROGRESS':
+                assert msg['job'] == job_uuid
             elif msg['messageType'] == 'CANCEL_JOB':
                 # this is the confirmation sent from the DELETE method handler:
                 assert_msg(msg, 'CANCEL_JOB')
@@ -115,6 +117,8 @@ async def test_cancel_udf_job(
             if msg['messageType'] == 'TASK_RESULT':
                 assert_msg(msg, 'TASK_RESULT')
                 assert msg['job'] == job_uuid
+            elif msg['messageType'] == 'JOB_PROGRESS':
+                assert msg['job'] == job_uuid
             elif msg['messageType'] == 'CANCEL_JOB_DONE':
                 assert msg['job'] == job_uuid
                 done = True
@@ -128,8 +132,14 @@ async def test_cancel_udf_job(
                 for i in range(msg['followup']['numMessages']):
                     # drain binary messages:
                     msg = await ws.recv()
-        assert set(types_seen) == {"CANCEL_JOB_DONE"}
-        assert num_seen < 4
+        for mtype in types_seen:
+            assert mtype in {"CANCEL_JOB_DONE", "JOB_PROGRESS"}
+        msgs_without_progress = [
+            msg
+            for msg in msgs
+            if msg['messageType'] != "JOB_PROGRESS"
+        ]
+        assert len(msgs_without_progress) < 4
 
         # get rid of the dataset:
         async with http_client.delete(ds_url) as resp:

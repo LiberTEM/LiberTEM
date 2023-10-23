@@ -1,7 +1,7 @@
 import time
 import logging
 import asyncio
-from typing import TYPE_CHECKING, Callable, Optional, TypeVar, Set
+from typing import TYPE_CHECKING, Callable, Optional, TypeVar
 
 from opentelemetry import trace
 
@@ -49,7 +49,6 @@ class WebProgressReporter(ProgressReporter):
         self.state = state
         self.loop = loop
         self.job_id = job_id
-        self.tasks: Set[asyncio.Task] = set()
 
     def start(self, state: ProgressState):
         self.handle_state_update(state)
@@ -65,9 +64,7 @@ class WebProgressReporter(ProgressReporter):
 
         async def _task():
             await self.event_registry.broadcast_event(msg)
-        task = self.loop.create_task(_task())
-        self.tasks.add(task)  # keep a reference, the one from asyncio is weak
-        task.add_done_callback(self.tasks.discard)
+        asyncio.run_coroutine_threadsafe(_task(), loop=self.loop)
 
 
 class JobEngine:

@@ -72,6 +72,8 @@ async def consume_task_results(ws, job_uuid):
             assert msg['job'] == job_uuid
         elif msg['messageType'] == 'FINISH_JOB':
             done = True  # but we still need to check followup messages below
+        elif msg['messageType'] == 'JOB_PROGRESS':
+            assert msg['job'] == job_uuid
         elif msg['messageType'] == 'JOB_ERROR':
             raise Exception('JOB_ERROR: {}'.format(msg['msg']))
         else:

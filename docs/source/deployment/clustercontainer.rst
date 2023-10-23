@@ -6,6 +6,10 @@ Containers and clusters
     <https://hub.docker.com/r/libertem/libertem/tags>`_ with images
     for public use.
 
+.. versionchanged:: 0.12.0
+    Container images are now available from `the GitHub container registry
+    <https://ghcr.io/libertem/libertem>`_ instead.
+
 .. note::
     The LiberTEM server will only bind to localhost by default, unless
     token-based authentication is enabled or the :code:`--insecure` flag is

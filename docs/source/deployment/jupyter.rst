@@ -13,12 +13,8 @@ to Jupyter notebooks.
 
 .. note::
 
-    Currently, Jupyter integration is only supported on Unix, not on Windows
-    because of outstanding issues in some dependencies. See `simpervisor/6
-    <https://github.com/jupyterhub/simpervisor/issues/6>`_ and
-    `jupyter-server-proxy/181
-    <https://github.com/jupyterhub/jupyter-server-proxy/pull/181>`_ for more
-    details.
+    Currently, Jupyter integration is only tested on Unix, not on Windows.
+
 
 Installation
 ------------

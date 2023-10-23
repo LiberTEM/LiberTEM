@@ -214,3 +214,4 @@ Integration and deployment
 
     deployment/jupyter
     deployment/clustercontainer
+    deployment/as-a-service

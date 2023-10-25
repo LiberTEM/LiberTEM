@@ -233,6 +233,9 @@ def run(
         port = _port
 
     main(bound_sockets, event_registry, shared_state, token)
+    if executor_spec is not None:
+        # Must happen after main() so that Dask uses our event loop
+        shared_state.add_executor(executor_spec)
 
     try:
         is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)

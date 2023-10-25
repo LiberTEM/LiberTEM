@@ -46,6 +46,12 @@ class ExecutorState:
     async def set_executor(self, executor: JobExecutor, params):
         if self.executor is not None:
             await self.executor.close()
+            self.executor = None
+        self._set_executor(executor, params)
+
+    def _set_executor(self, executor: JobExecutor, params):
+        if self.executor is not None:
+            self.executor.ensure_sync().close()
         self.executor = executor
         self.cluster_params = params
         self.context = Context(executor=executor.ensure_sync())
@@ -405,3 +411,12 @@ class SharedState:
 
     def get_preload(self) -> typing.Tuple[str, ...]:
         return self.preload
+
+    def add_executor(self, executor_spec):
+        from .connect import create_executor  # circular import
+        executor, params = create_executor(
+            executor_spec,
+            self.get_local_directory(),
+            self.get_preload(),
+        )
+        self.executor_state._set_executor(executor, params)

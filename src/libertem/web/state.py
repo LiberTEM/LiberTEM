@@ -2,6 +2,7 @@ import os
 import copy
 import typing
 import itertools
+import logging
 
 import psutil
 
@@ -18,6 +19,8 @@ from .models import (
     AnalysisDetails, AnalysisInfo, AnalysisResultInfo, CompoundAnalysisInfo, AnalysisParameters,
     DatasetInfo, JobInfo, SerializedJobInfo,
 )
+
+log = logging.getLogger(__name__)
 
 
 class ExecutorState:
@@ -46,6 +49,13 @@ class ExecutorState:
         self.executor = executor
         self.cluster_params = params
         self.context = Context(executor=executor.ensure_sync())
+        try:
+            # Exposing the scheduler address allows use of
+            # libertem-server to spin up a LT-compatible
+            # persistent dask cluster
+            log.info(f'Scheduler at {self.context.executor.client.scheduler.address}')
+        except AttributeError:
+            pass
 
     def get_cluster_params(self):
         return self.cluster_params

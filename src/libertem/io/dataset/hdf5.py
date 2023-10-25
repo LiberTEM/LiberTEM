@@ -1,3 +1,4 @@
+import os
 import contextlib
 import typing
 from typing import Optional, Tuple, List
@@ -95,7 +96,11 @@ class HDF5ArrayDescriptor(typing.NamedTuple):
 def _get_datasets(path):
     datasets: List[HDF5ArrayDescriptor] = []
 
-    timeout = 3
+    try:
+        timeout = int(os.environ.get('LIBERTEM_IO_HDF5_TIMEOUT_DEBUG', 3))
+    except ValueError:
+        timeout = 3
+
     t0 = current_time()
 
     def _make_list(name, obj):

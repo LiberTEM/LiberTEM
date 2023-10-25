@@ -29,6 +29,12 @@ def get_token(token_path):
               default='dask-worker-space', type=str)
 @click.option('-b/-n', '--browser/--no-browser',
               help='enable/disable opening the browser', default='True')
+@click.option('-c', '--cpus', help='number of cpu worker processes to use,[default: select in GUI]',
+              default=None, type=int)
+@click.option('-g', '--gpus', help='number of gpu worker processes to use,[default: select in GUI]',
+              default=None, type=int)
+@click.option('-o', '--open_ds', help='dataset to preload via URL action',
+              default=None, type=str)
 @click.option('-l', '--log-level',
               help=f"set logging level. Default is 'info'. {log_values}",
               default='INFO')
@@ -43,11 +49,18 @@ def get_token(token_path):
                   "(use `--insecure -h 0.0.0.0` to accept any connection)"
               ),
               default=False, is_flag=True)
-def main(port, local_directory, browser, log_level, insecure, host="localhost",
-        token_path=None, preload: Tuple[str, ...] = ()):
+def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
+         insecure, host="localhost", token_path=None, preload: Tuple[str, ...] = ()):
     is_custom_port = port is not None
     if port is None:
         port = 9000
+
+    executor_spec = None
+    if cpus is not None or gpus is not None:
+        executor_spec = dict(
+            cpus=cpus if cpus is not None else 0,
+            cudas=gpus if gpus is not None else 0,
+        )
 
     from libertem.common.threading import set_num_threads_env
     from libertem.common.tracing import maybe_setup_tracing
@@ -66,4 +79,7 @@ def main(port, local_directory, browser, log_level, insecure, host="localhost",
         numeric_level = getattr(logging, log_level.upper(), None)
         if not isinstance(numeric_level, int):
             raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
-        run(host, port, browser, local_directory, numeric_level, token, preload, is_custom_port)
+        run(
+            host, port, browser, local_directory, numeric_level,
+            token, preload, is_custom_port, executor_spec, open_ds,
+        )

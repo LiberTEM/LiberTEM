@@ -41,7 +41,7 @@ async def test_job_state_remove(async_executor):
     assert len(job_state.jobs) == 0
 
 
-@pytest.mark.slow
+@pytest.mark.web_api
 def test_preload_executor(tmpdir_factory):
     workdir = tmpdir_factory.mktemp('preload_workdir')
     state = SharedState()

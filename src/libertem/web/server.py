@@ -3,6 +3,7 @@ import sys
 import logging
 import asyncio
 import signal
+import socket
 import select
 import threading
 import webbrowser
@@ -205,7 +206,10 @@ def port_from_sockets(*sockets):
     return ports[0]
 
 
-def run(host, port, browser, local_directory, numeric_level, token, preload, strict_port):
+def run(
+    host, port, browser, local_directory, numeric_level,
+    token, preload, strict_port, executor_spec, open_ds,
+):
     logging.basicConfig(
         level=numeric_level,
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
@@ -235,7 +239,15 @@ def run(host, port, browser, local_directory, numeric_level, token, preload, str
     except ValueError:
         is_ipv6 = False
     url = f'http://[{host}]:{port}' if is_ipv6 else f'http://{host}:{port}'
-    log.info(f"listening on {url}")
+    if open_ds is not None:
+        url = f'{url}/#action=open&path={open_ds}'
+    hostname = socket.gethostname()
+    msg = f"""
+
+LiberTEM listening on {url}
+                      {url.replace(host, hostname)}
+"""
+    log.info(msg)
     if browser:
         webbrowser.open(url)
     loop = asyncio.get_event_loop()

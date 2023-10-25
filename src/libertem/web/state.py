@@ -1,7 +1,6 @@
 import os
 import copy
 import typing
-from typing import Dict
 import itertools
 import logging
 
@@ -413,10 +412,18 @@ class SharedState:
     def get_preload(self) -> typing.Tuple[str, ...]:
         return self.preload
 
-    def add_executor(self, executor_spec: Dict[str, int]):
+    def create_and_set_executor(self, spec: typing.Dict[str, int]):
+        """
+        Create a new executor from spec, a dict[str, int]
+        compatible with the main arguments of cluster_spec().
+        Any values not in spec are filled from a call to detect()
+
+        Any existing executor will first closed by the call
+        to self.executor_state._set_executor
+        """
         from .connect import create_executor  # circular import
         executor, params = create_executor(
-            executor_spec,
+            spec,
             self.get_local_directory(),
             self.get_preload(),
         )

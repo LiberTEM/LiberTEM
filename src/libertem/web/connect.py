@@ -36,6 +36,33 @@ def _convert_device_map(raw_cudas: Dict[int, Any]) -> List[int]:
     ]
 
 
+def create_executor(executor_spec, local_directory, preload):
+    devices = detect()  # needed for has_cupy
+    devices.update(executor_spec)
+    sync_executor = DaskJobExecutor.make_local(
+        spec=cluster_spec(
+            **devices,
+            options={
+                "local_directory": local_directory,
+            },
+            preload=preload,
+        )
+    )
+    pool = AsyncAdapter.make_pool()
+    executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
+    num_gpus = {}
+    if devices['cudas']:
+        num_gpus[0] = devices['cudas']
+    params = {
+        "connection": {
+            "type": "LOCAL",
+            "numWorkers": devices['cpus'],
+            "cudas": num_gpus,
+        }
+    }
+    return executor, params
+
+
 class ConnectHandler(tornado.web.RequestHandler):
     def initialize(self, state: SharedState, event_registry: "EventRegistry"):
         self.state = state

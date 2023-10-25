@@ -340,7 +340,7 @@ def test_timeout_1(hdf5, lt_ctx):
 
 def test_timeout_2(hdf5, lt_ctx):
     print(threading.enumerate())
-    with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[1, 30]):
+    with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[1, 60]):
         params = H5DataSet.detect_params(hdf5.filename, executor=lt_ctx.executor)["parameters"]
         assert list(params.keys()) == ["path"]
 
@@ -350,7 +350,7 @@ def test_timeout_2(hdf5, lt_ctx):
     ds = ds.initialize(lt_ctx.executor)
 
     print(threading.enumerate())
-    with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[30, 60]):
+    with mock.patch('libertem.io.dataset.hdf5.current_time', side_effect=[30, 90]):
         diags = ds.diagnostics
         print(diags)
 

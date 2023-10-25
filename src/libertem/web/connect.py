@@ -1,6 +1,6 @@
 import logging
 from functools import partial
-from typing import TYPE_CHECKING, Dict, List, Any
+from typing import TYPE_CHECKING, Dict, List, Any, Tuple
 
 import tornado.web
 from opentelemetry import trace
@@ -36,30 +36,50 @@ def _convert_device_map(raw_cudas: Dict[int, Any]) -> List[int]:
     ]
 
 
-def create_executor(executor_spec, local_directory, preload):
-    devices = detect()  # needed for has_cupy
-    devices.update(executor_spec)
-    sync_executor = DaskJobExecutor.make_local(
+def create_executor(*, connection, local_directory, preload) -> DaskJobExecutor:
+    devices = detect()
+    options = {
+        "local_directory": local_directory,
+    }
+    if "numWorkers" in connection:
+        num_workers = connection["numWorkers"]
+        if not isinstance(num_workers, int) or num_workers < 1:
+            raise ValueError('Number of workers must be positive integer')
+        devices["cpus"] = range(num_workers)
+    raw_cudas = connection.get("cudas", {})
+    cudas = _convert_device_map(raw_cudas)
+    devices["cudas"] = cudas
+    return DaskJobExecutor.make_local(
         spec=cluster_spec(
             **devices,
-            options={
-                "local_directory": local_directory,
-            },
+            options=options,
             preload=preload,
         )
     )
-    pool = AsyncAdapter.make_pool()
-    executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
-    num_gpus = {}
-    if devices['cudas']:
-        num_gpus[0] = devices['cudas']
+
+
+def create_executor_external(
+    executor_spec: Dict[str, int],
+    local_directory,
+    preload,
+) -> Tuple[AsyncAdapter, Dict[str, Dict[str, Any]]]:
+    cudas = {}
+    if executor_spec['cudas']:
+        cudas[0] = executor_spec['cudas']
     params = {
         "connection": {
             "type": "LOCAL",
-            "numWorkers": devices['cpus'],
-            "cudas": num_gpus,
+            "numWorkers": executor_spec['cpus'],
+            "cudas": cudas,
         }
     }
+    sync_executor = create_executor(
+        connection=params['connection'],
+        local_directory=local_directory,
+        preload=preload
+    )
+    pool = AsyncAdapter.make_pool()
+    executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
     return executor, params
 
 
@@ -107,24 +127,14 @@ class ConnectHandler(tornado.web.RequestHandler):
                     self.write(msg)
                     return None
             elif connection["type"].lower() == "local":
-                devices = detect()
-                options = {
-                    "local_directory": self.state.get_local_directory()
-                }
                 try:
-                    if "numWorkers" in connection:
-                        num_workers = connection["numWorkers"]
-                        if not isinstance(num_workers, int) or num_workers < 1:
-                            raise ValueError('Number of workers must be positive integer')
-                        devices["cpus"] = range(num_workers)
-                    raw_cudas = connection.get("cudas", {})
-                    cudas = _convert_device_map(raw_cudas)
-                    devices["cudas"] = cudas
-                    sync_executor = await sync_to_async(partial(DaskJobExecutor.make_local,
-                        spec=cluster_spec(**devices,
-                                          options=options,
-                                          preload=self.state.get_preload())
-                    ), pool=pool)
+                    sync_executor = await sync_to_async(
+                        create_executor,
+                        pool=pool,
+                        connection=connection,
+                        local_directory=self.state.get_local_directory(),
+                        preload=self.state.get_preload(),
+                    )
                 except Exception as e:
                     msg = Message(self.state).cluster_conn_error(msg=str(e))
                     log_message(msg)

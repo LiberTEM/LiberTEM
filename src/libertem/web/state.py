@@ -421,8 +421,8 @@ class SharedState:
         Any existing executor will first closed by the call
         to self.executor_state._set_executor
         """
-        from .connect import create_executor  # circular import
-        executor, params = create_executor(
+        from .connect import create_executor_external  # circular import
+        executor, params = create_executor_external(
             spec,
             self.get_local_directory(),
             self.get_preload(),

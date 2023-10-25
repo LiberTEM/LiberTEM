@@ -1,6 +1,7 @@
 import os
 import copy
 import typing
+from typing import Dict
 import itertools
 import logging
 
@@ -412,7 +413,7 @@ class SharedState:
     def get_preload(self) -> typing.Tuple[str, ...]:
         return self.preload
 
-    def add_executor(self, executor_spec):
+    def add_executor(self, executor_spec: Dict[str, int]):
         from .connect import create_executor  # circular import
         executor, params = create_executor(
             executor_spec,

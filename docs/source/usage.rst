@@ -216,6 +216,12 @@ To modify the configuration of the server (address, port, autorization etc.), th
     :code:`-t, --token-path` was added and :code:`-h, --host` was re-enabled.
 .. versionadded:: 0.9.0
     :code:`--preload` and :code:`--insecure` were added.
+.. versionadded:: 0.13.0
+    :code:`--cpus <int>` and :code:`--gpus <int>` were added to preconfigure
+    the cluster resources
+.. versionadded:: 0.13.0
+    :code:`--open_ds <path>` was added to preconfigure the dataset opened
+    when connecting to the server
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`
 or our :ref:`jupyter integration`, if you already have JupyterHub or JupyterLab

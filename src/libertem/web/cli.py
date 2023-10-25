@@ -33,7 +33,7 @@ def get_token(token_path):
               default=None, type=int)
 @click.option('-g', '--gpus', help='number of gpu worker processes to use,[default: select in GUI]',
               default=None, type=int)
-@click.option('-o', '--open_ds', help='dataset to preload via URL action',
+@click.option('-o', '--open-ds', help='dataset to preload via URL action',
               default=None, type=str)
 @click.option('-l', '--log-level',
               help=f"set logging level. Default is 'info'. {log_values}",

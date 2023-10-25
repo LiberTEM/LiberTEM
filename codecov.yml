@@ -10,3 +10,5 @@ coverage:
     project:
       default:
         threshold: 1
+codecov:
+  token: 9636efc6-7fff-40a5-91a7-d835cd22ecf9

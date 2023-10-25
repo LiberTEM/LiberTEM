@@ -37,7 +37,11 @@ def get_token(token_path):
               type=click.Path(exists=True))
 @click.option('--preload', help=preload_help, default=(), type=str, multiple=True)
 @click.option('--insecure',
-              help="allow to bind to non-localhost without token auth",
+              help=(
+                  "Allow connections from non-localhost without token authorization. "
+                  "Applies only when combined with --host <address> "
+                  "(use `--insecure -h 0.0.0.0` to accept any connection)"
+              ),
               default=False, is_flag=True)
 def main(port, local_directory, browser, log_level, insecure, host="localhost",
         token_path=None, preload: Tuple[str, ...] = ()):

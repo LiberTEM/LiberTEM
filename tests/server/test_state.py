@@ -47,7 +47,7 @@ def test_preload_executor(tmpdir_factory):
     state = SharedState()
     state.set_local_directory(workdir)
     state.set_preload(())
-    state.add_executor(
+    state.create_and_set_executor(
         {
             'cpus': 2,
             'cudas': 0,

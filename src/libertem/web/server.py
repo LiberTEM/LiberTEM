@@ -238,9 +238,11 @@ def run(
         port = _port
 
     main(bound_sockets, event_registry, shared_state, token)
-    if executor_spec is not None:
-        # Must happen after main() so that Dask uses our event loop
-        shared_state.create_and_set_executor(executor_spec)
+
+    async def create_and_set_executor():
+        if executor_spec is not None:
+            # Must happen after main() so that Dask uses our event loop
+            shared_state.create_and_set_executor(executor_spec)
 
     try:
         is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)
@@ -270,4 +272,5 @@ LiberTEM listening on {url}"""
     # Strictly necessary only on Windows, but doesn't do harm in any case.
     # FIXME check later if the unknown root cause was fixed upstream
     asyncio.ensure_future(nannynanny())
+    asyncio.ensure_future(create_and_set_executor())
     loop.run_forever()

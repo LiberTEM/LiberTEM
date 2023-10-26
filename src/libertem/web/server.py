@@ -8,6 +8,7 @@ import select
 import threading
 import webbrowser
 import ipaddress
+import urllib.parse
 from functools import partial
 import hmac
 import hashlib
@@ -44,6 +45,10 @@ class IndexHandler(tornado.web.RequestHandler):
 
     def get(self):
         self.render("client/index.html")
+
+
+def is_localhost(host):
+    return host in ['localhost', '127.0.0.1', '::1']
 
 
 def _get_token(request):
@@ -244,11 +249,15 @@ def run(
     url = f'http://[{host}]:{port}' if is_ipv6 else f'http://{host}:{port}'
     if open_ds is not None:
         url = f'{url}/#action=open&path={open_ds}'
-    hostname = socket.gethostname()
     msg = f"""
 
-LiberTEM listening on {url}
-                      {url.replace(host, hostname)}
+LiberTEM listening on {url}"""
+    if not is_localhost(host):
+        hostname = socket.gethostname()
+        parts = urllib.parse.urlsplit(url)
+        mod_url = parts._replace(netloc=f'{hostname}:{parts.port}')
+        msg = msg + f"""
+                      {urllib.parse.urlunsplit(mod_url)}
 """
     log.info(msg)
     if browser:

@@ -1,4 +1,6 @@
 from typing import Tuple
+import os
+import platform
 
 import click
 import logging
@@ -51,6 +53,11 @@ def get_token(token_path):
               default=False, is_flag=True)
 def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
          insecure, host="localhost", token_path=None, preload: Tuple[str, ...] = ()):
+    # Mitigation for https://stackoverflow.com/questions/71283820/
+    #   directory-parameter-on-windows-has-trailing-backslash-replaced-with-double-quote
+    if (open_ds and platform.system() == 'Windows' and open_ds[-1] == '"'
+            and not os.path.exists(open_ds) and os.path.exists(open_ds[:-1])):
+        open_ds = open_ds[:-1]
     is_custom_port = port is not None
     if port is None:
         port = 9000

@@ -252,13 +252,16 @@ def run(
     msg = f"""
 
 LiberTEM listening on {url}"""
-    if not is_localhost(host):
+    parts = urllib.parse.urlsplit(url)
+    if parts.hostname in ('0.0.0.0', '::'):
         hostname = socket.gethostname()
-        parts = urllib.parse.urlsplit(url)
         mod_url = parts._replace(netloc=f'{hostname}:{parts.port}')
         msg = msg + f"""
                       {urllib.parse.urlunsplit(mod_url)}
 """
+    else:
+        # For display consistency
+        msg = msg + "\n"
     log.info(msg)
     if browser:
         webbrowser.open(url)

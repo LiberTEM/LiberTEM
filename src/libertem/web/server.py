@@ -241,7 +241,10 @@ def run(
 
     async def create_and_set_executor():
         if executor_spec is not None:
-            # Must happen after main() so that Dask uses our event loop
+            # Executor creation is blocking (and slow) but we
+            # need to run this within the main loop so that Distributed
+            # attaches to that rather than trying to create its own, see:
+            # https://github.com/LiberTEM/LiberTEM/pull/1535#pullrequestreview-1699340445
             shared_state.create_and_set_executor(executor_spec)
 
     try:

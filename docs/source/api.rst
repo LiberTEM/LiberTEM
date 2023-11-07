@@ -167,7 +167,7 @@ to quickly create a synchronous executor for debugging.
 .. note::
     Not all executor types allow specifying number of workers, and
     not all executor types are GPU-capable. In these cases the :code:`make_with`
-    method will raise an :class:`~libertem.exceptions.ExecutorSpecException`.
+    method will raise an :class:`~libertem.common.exceptions.ExecutorSpecException`.
 
 See the :meth:`API documentation <libertem.api.Context.make_with>`
 for more information.

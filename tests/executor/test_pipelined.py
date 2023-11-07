@@ -19,7 +19,7 @@ from libertem.executor.pipelined import (
 )
 import libertem.executor.pipelined
 from libertem.udf import UDF
-from libertem.exceptions import UDFRunCancelled
+from libertem.common.exceptions import UDFRunCancelled
 from libertem.io.dataset.memory import MemoryDataSet
 
 

@@ -84,7 +84,7 @@ Miscellaneous
   (:pr:`1453`).
 * Array backend categories are now available in
   :class:`~libertem.udf.base.UDF` (:pr:`1470`).
-* The UDF runner internals will now raise :class:`~libertem.exceptions.UDFRunCancelled`
+* The UDF runner internals will now raise :class:`~libertem.common.exceptions.UDFRunCancelled`
   if a UDF run is cancelled, allowing the user to handle this case (:pr:`1448`).
 * Introduce option for :code:`sparse.GCXS` in
   :class:`~libertem.common.container.MaskContainer` (:pr:`1447`).

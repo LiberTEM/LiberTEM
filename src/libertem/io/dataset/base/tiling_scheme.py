@@ -6,7 +6,7 @@ from typing_extensions import Literal
 
 import numpy as np
 
-from libertem.exceptions import UDFException
+from libertem.common.exceptions import UDFException
 from libertem.io.corrections import CorrectionSet
 from libertem.common import Shape, Slice
 from libertem.common.math import prod

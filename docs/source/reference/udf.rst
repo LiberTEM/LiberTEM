@@ -52,6 +52,11 @@ Pre- and postprocessing
 .. autoclass:: libertem.udf.base.UDFPostprocessMixin
     :members:
 
+Exceptions
+##########
+
+.. autoclass:: libertem.common.exceptions.UDFException
+
 .. _`run udf ref`:
 
 Running UDFs
@@ -67,6 +72,10 @@ Result type for UDF result iterators:
 
 .. autoclass:: libertem.udf.base.UDFResults
     :members:
+
+Exception for cancelled UDF run:
+
+.. autoclass:: libertem.common.exceptions.UDFRunCancelled
 
 .. _`buffer udf ref`:
 

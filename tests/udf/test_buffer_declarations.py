@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from libertem.warnings import UseDiscouragedWarning
-from libertem.exceptions import UDFException
+from libertem.common.exceptions import UDFException
 from libertem.udf.base import UDF
 from libertem.common.buffers import BufferWrapper
 

@@ -19,7 +19,7 @@ from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF, MergeAttrMapping
 from libertem.api import Context
-from libertem.exceptions import ExecutorSpecException
+from libertem.common.exceptions import ExecutorSpecException
 
 
 def test_ctx_load(lt_ctx, default_raw):

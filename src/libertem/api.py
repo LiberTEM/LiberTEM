@@ -39,7 +39,7 @@ from libertem.udf.base import UDFResultDict, UDF, UDFResults, UDFRunner
 from libertem.udf.auto import AutoUDF
 from libertem.common.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 from libertem.common.sparse import sparse_to_coo, to_dense
-from libertem.exceptions import ExecutorSpecException
+from libertem.common.exceptions import ExecutorSpecException
 
 if TYPE_CHECKING:
     import numpy.typing as nt
@@ -312,7 +312,7 @@ class Context:
 
         Raises
         ------
-        libertem.exceptions.ExecutorSpecException :
+        libertem.common.exceptions.ExecutorSpecException :
             for invalid executor choice or unsupported worker specifications
 
         Returns

@@ -512,12 +512,12 @@ preview scan is stopped, or scan parameters are changed while the scan is
 running.
 
 In this case, the exception
-:class:`~libertem.exceptions.UDFRunCancelled` is raised, which you can
+:class:`~libertem.common.exceptions.UDFRunCancelled` is raised, which you can
 handle in an appropriate way for your application:
 
 .. testcode:: run
 
-   from libertem.exceptions import UDFRunCancelled
+   from libertem.common.exceptions import UDFRunCancelled
 
    try:
        res = ctx.run_udf(udf=udf, dataset=dataset)

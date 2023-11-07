@@ -10,7 +10,7 @@ from libertem.io.dataset.memory import MemoryDataSet
 from libertem.io.dataset.base import TilingScheme, DataTile
 from libertem.io.dataset.raw import RawFileDataSet, RawPartition
 from libertem.utils.devices import detect
-from libertem.exceptions import UDFException
+from libertem.common.exceptions import UDFException
 from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF

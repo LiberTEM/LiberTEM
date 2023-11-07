@@ -7,7 +7,7 @@ from libertem.udf.sum import SumUDF
 from libertem.common.executor import (
     TaskCommHandler, TaskProtocol, WorkerQueue, JobCancelledError,
 )
-from libertem.exceptions import UDFRunCancelled
+from libertem.common.exceptions import UDFRunCancelled
 from libertem.io.dataset.memory import MemoryDataSet
 
 

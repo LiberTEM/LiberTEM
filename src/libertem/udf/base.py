@@ -26,7 +26,7 @@ from libertem.io.dataset.base.tiling import DataTile
 from libertem.io.dataset.base import DataSetMeta
 from libertem.utils.devices import has_cupy
 from libertem.warnings import UseDiscouragedWarning
-from libertem.exceptions import UDFException
+from libertem.common.exceptions import UDFException
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
     BufferKind, BufferUse, BufferLocation,
@@ -46,7 +46,7 @@ from libertem.common.executor import (
     Environment, JobExecutor, TaskCommHandler, NoopCommHandler, TaskProtocol,
     JobCancelledError, ResourceDef,
 )
-from libertem.exceptions import UDFRunCancelled
+from libertem.common.exceptions import UDFRunCancelled
 
 if TYPE_CHECKING:
     from numpy import typing as nt

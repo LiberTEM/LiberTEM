@@ -24,7 +24,7 @@ from libertem.common.executor import (
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
-from libertem.exceptions import ExecutorSpecException
+from libertem.common.exceptions import ExecutorSpecException
 from sparseconverter import (
     BACKENDS, CUPY, CUPY_BACKENDS, CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO
 )

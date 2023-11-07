@@ -2,7 +2,7 @@ import sparse
 import pytest
 import numpy as np
 
-from libertem.exceptions import UDFException
+from libertem.common.exceptions import UDFException
 from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import Negotiator
 from libertem.io.dataset.memory import MemoryDataSet

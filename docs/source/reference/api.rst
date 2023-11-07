@@ -9,6 +9,8 @@ Context
 .. automodule:: libertem.api
    :members:
 
+.. autoclass:: libertem.common.exceptions.ExecutorSpecException
+
 Analysis API
 ~~~~~~~~~~~~
 

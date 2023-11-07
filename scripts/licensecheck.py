@@ -14,6 +14,8 @@ if __name__ == '__main__':
             mit_key, [
                 k for k in deps[mit_key].get('imports', [])
                 if not k.startswith('libertem.common')
-                and not k.startswith('libertem.io') and k.startswith('libertem')
+                and not k.startswith('libertem.io')
+                and k != 'libertem'  # only contains version info
+                and k.startswith('libertem')
             ]
         )

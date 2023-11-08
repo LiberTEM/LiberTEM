@@ -206,7 +206,7 @@ setup(
     author_email="libertem-dev@googlegroups.com",
     author="the LiberTEM team",
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

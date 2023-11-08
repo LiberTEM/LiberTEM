@@ -82,7 +82,8 @@ async def test_cancel_udf_job(
         num_seen = 0
         while not done:
             msg = json.loads(await ws.recv())
-            num_seen += 1
+            if msg['messageType'] != "JOB_PROGRESS":
+                num_seen += 1
             if msg['messageType'] == 'TASK_RESULT':
                 assert_msg(msg, 'TASK_RESULT')
                 assert msg['job'] == job_uuid

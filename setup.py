@@ -133,7 +133,9 @@ setup(
         "sparse",
         "distributed>=2.19.0",
         "dask!=2023.6.1",  # work around broken ipython exception handler
-        "click",
+        # dask-scheduler is incompatible with newer click versions
+        "click<8.1;( python_version<'3.8')",
+        "click;( python_version>='3.8')",
         "tornado>=5",
         "matplotlib",
         "pillow",

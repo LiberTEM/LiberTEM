@@ -307,7 +307,7 @@ default:
 Code style
 ----------
 
-We try to keep our code `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_
+We try to keep our code `PEP8 <https://peps.python.org/pep-0008/>`_
 -compliant, with line-length relaxed to 100 chars, and some rules ignored. See
 the flake8 section in :code:`setup.cfg` for the current PEP8 settings. As a
 general rule, try to keep your changes in a similar style as the surrounding
@@ -351,7 +351,7 @@ You can run mypy locally on all files that opt in with:
 Please note that in many cases the type for classes is specified with a string
 instead of the class itself. That allows to import classes for typing only if
 type checking is performed. See `the section on forward references in PEP484
-<https://www.python.org/dev/peps/pep-0484/#forward-references>`_ for more
+<https://peps.python.org/pep-0484/#forward-references>`_ for more
 information.
 
 For general information on type annotations in Python, including best

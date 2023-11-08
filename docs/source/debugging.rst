@@ -149,7 +149,7 @@ events and functions executing concurrently. Crucially, it is possible to
 gather traces in distributed systems, from different nodes.
 
 For an overview of opentelemetry, please see `the official opentelemetry documentation
-<https://opentelemetry.io/docs/reference/specification/overview/>`_ - here, we
+<https://opentelemetry.io/docs/specs/otel/overview/>`_ - here, we
 will document the practical setup and usage. For the Python API docs, please
 see the `opentelemetry Python API docs <https://opentelemetry-python.readthedocs.io/en/latest/>`_.
 

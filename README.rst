@@ -34,7 +34,7 @@ LiberTEM is an open source platform for high-throughput distributed processing
 of large-scale binary data sets and live data streams using a modified
 `MapReduce programming model <https://en.wikipedia.org/wiki/MapReduce>`_. The
 current focus is `pixelated
-<https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors_(4D_STEM)>`_
+<https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_
 scanning transmission electron microscopy (`STEM
 <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_)
 :cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus_2019` and scanning electron

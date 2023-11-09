@@ -96,13 +96,13 @@ Alternatively, to run the `LiberTEM Docker image
 
 .. code-block:: shell
 
-    $ docker run -p localhost:9000:9000 --mount type=bind,source=/path/to/your/data/,dst=/data/,ro libertem/libertem
+    $ docker run -p localhost:9000:9000 --mount type=bind,source=/path/to/your/data/,dst=/data/,ro ghcr.io/libertem/libertem
 
 or
 
 .. code-block:: shell
 
-    $ singularity exec docker://libertem/libertem /venv/bin/libertem-server
+    $ singularity exec docker://ghcr.io/libertem/libertem /venv/bin/libertem-server
 
 Deployment for offline data processing on a single-node system for a local user
 is thoroughly tested and can be considered stable. Deployment on a cluster is

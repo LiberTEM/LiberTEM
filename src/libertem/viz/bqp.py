@@ -73,8 +73,6 @@ class BQLive2DPlot(Live2DPlot):
         # Make sure y points down
         # See https://libertem.github.io/LiberTEM/concepts.html#coordinate-system
         scale_y = LinearScale(min=1, max=0)
-        scales = {'x': scale_x,
-                  'y': scale_y}
         axis_x = Axis(scale=scale_x, label='x')
         axis_y = Axis(scale=scale_y, label='y', orientation='vertical')
 
@@ -82,7 +80,6 @@ class BQLive2DPlot(Live2DPlot):
         aspect = s[1] / s[0]
 
         figure = Figure(
-            scales=scales,
             axes=[axis_x, axis_y],
             scale_x=scale_x,
             scale_y=scale_y,

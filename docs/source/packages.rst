@@ -24,3 +24,7 @@ This list provides an overview of the current sub-packages and is constantly upd
 :ptychography40:
     Ptychography implementations within the Ptychography 4.0 project.
     https://ptychography-4-0.github.io/ptychography/
+
+:libertem-icom:
+    Since 0.13.0: Integrated center of mass (early work in progress, not
+    released yet). https://github.com/LiberTEM/LiberTEM-iCoM/

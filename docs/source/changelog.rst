@@ -42,7 +42,7 @@ Web Interface
 - A progress bar has been added to the web GUI to give feedback on the state of any
   in-flight computations. (:issue:`1500`, :pr:`1514`)
 - The cluster launcher in the web interface now allows specification
-  of multiple workers per-GPU, allowing better utilisation of large
+  of multiple workers-per-GPU, allowing better utilisation of large
   GPUs. (:issue:`1489`, :pr:`1499`)
 - Direct opening of datasets from URL parameters. The web interface
   now responds to arguments passed to it by URL, namely instructions
@@ -78,7 +78,7 @@ Misc
 
 - A function :meth:`libertem.contrib.convert_transposed.convert_dm4_transposed`
   has been added to efficiently convert Gatan Digital Micrograph STEM datasets
-  stored in :code:`(sig, nav)` ordering to numpy .npy files in :code:`(nav_sig)`
+  stored in :code:`(sig, nav)` ordering to numpy .npy files in :code:`(nav, sig)`
   ordering (:pr:`1520`).
 - Several Exception types were moved to :mod:`libertem.common` for MIT
   license compatibility. They are re-exported to

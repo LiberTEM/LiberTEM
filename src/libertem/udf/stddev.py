@@ -259,14 +259,14 @@ class StdDevUDF(UDF):
     The one-pass algorithm used in this code is taken from the following
     paper: :cite:`Schubert2018`.
 
-    ..versionchanged:: 0.5.0
+    .. versionchanged:: 0.5.0
         Result buffers have been renamed
 
-    ..versionchanged:: 0.7.0
+    .. versionchanged:: 0.7.0
         :code:`var`, :code:`mean`, and :code:`std` are now returned directly
         from the UDF via :code:`get_results`.
 
-    ..versionchanged:: 0.11
+    .. versionchanged:: 0.11
         added dtype and use_numba parameters, added support for sparse input.
 
     Parameters
@@ -505,10 +505,10 @@ def run_stddev(ctx, dataset, roi=None, progress=False, use_numba=True):
     One-pass algorithm used in this code is taken from the following paper:
     :cite:`Schubert2018`.
 
-    ..versionchanged:: 0.5.0
+    .. versionchanged:: 0.5.0
         Result buffers have been renamed
 
-    ..versionchanged:: 0.5.0
+    .. versionchanged:: 0.5.0
         Added :code:`progress` parameter for progress bar
 
     Parameters

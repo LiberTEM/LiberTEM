@@ -35,4 +35,5 @@ def test_empty(monkeypatch, lt_ctx, default_raw):
 
     plot = GMSLive2DPlot(dataset=default_raw, udf=udf, channel=extract)
 
-    lt_ctx.run_udf(dataset=default_raw, udf=udf, plots=[plot])
+    with pytest.warns(UserWarning, match='^Plot is not displayed, not plotting'):
+        lt_ctx.run_udf(dataset=default_raw, udf=udf, plots=[plot])

@@ -60,6 +60,7 @@ When planning a release, create a new issue with the following checklist:
         * [ ] LiberTEM-holo
         * [ ] LiberTEM-blobfinder
         * [ ] ptychography40
+        * [ ] LiberTEM-iCoM
     * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.
     * [ ] GUI dependency update with `npm install`

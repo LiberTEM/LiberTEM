@@ -26,8 +26,8 @@ Changelog
 0.13.0 / 2023-11-09
 ###################
 
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8252548.svg
-   :target: https://doi.org/10.5281/zenodo.8252548
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.10091431.svg
+  :target: https://doi.org/10.5281/zenodo.10091431
 
 The 0.13 release adds a number of improvements to the :code:`libertem-server`
 web interface and its user experience, as well as laying the foundation

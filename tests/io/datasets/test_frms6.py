@@ -122,6 +122,7 @@ def default_frms6_raw(tmpdir_factory):
     # Might be needed for windows, so we don't keep any views, mmaps or open
     # file handles around:
     del view
+    data._mmap.close()
     del data
     os.unlink(fn)
 

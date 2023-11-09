@@ -23,13 +23,24 @@ Changelog
 
 .. _`v0-13-0`:
 
+0.13.1 / 2023-11-09
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.10091765.svg
+  :target: https://doi.org/10.5281/zenodo.10091765
+
+The 0.13.1 point-release fixes an issue with loading assets when
+connecting to the :code:`libertem-server` web interface via a proxy (:pr:`1554`).
+
+.. _`v0-13-0`:
+
 0.13.0 / 2023-11-09
 ###################
 
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.10091431.svg
   :target: https://doi.org/10.5281/zenodo.10091431
 
-The 0.13 release adds a number of improvements to the :code:`libertem-server`
+The 0.13.0 release adds a number of improvements to the :code:`libertem-server`
 web interface and its user experience, as well as laying the foundation
 for descan error compensation in all UDFs based on integration over masked
 regions of a frame.

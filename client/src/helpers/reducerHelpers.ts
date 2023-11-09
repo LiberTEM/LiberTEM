@@ -62,6 +62,17 @@ export const insertOrReplace = <R>(state: ById<R>, id: string, record: R): ById<
     return Object.assign({}, state, { byId: newById, ids: newIds });
 }
 
+export const updateIfExists = <R>(state: ById<R>, id: string, record: R): ById<R> => {
+    const newById = Object.assign({}, state.byId, { [id]: record });
+    if(state.ids.includes(id)) {
+        const newIds = [...state.ids, id];
+        return Object.assign({}, state, { byId: newById, ids: newIds });
+    } else {
+        // don't do enything if the id is not found
+        return state;
+    }
+}
+
 export const removeById = <R>(state: ById<R>, id: string): ById<R> => {
     const {[id]: _, ...newById} = state.byId;
     const newIds = state.ids.filter(thisId => thisId !== id);

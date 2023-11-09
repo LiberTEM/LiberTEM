@@ -136,9 +136,9 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Publish new version on zenodo.org
     * [ ] Update documentation with new links, if necessary
         * [ ] Add zenodo badge for the new release to Changelog page
+    * [ ] Conda packaging: review PRs on https://github.com/conda-forge/libertem-feedstock/pulls
     * [ ] Send announcement message on mailing list
     * [ ] Edit `pytest.ini` to include flaky tests again
     * [ ] Bump version in master branch to next .dev0 (`./scripts/release bump v0.X.0.dev0 --commit`)
     * [ ] Add to institutional publication databases
     * [ ] Add the current LiberTEM version to [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software>) - add both the singularity and the .desktop file!
-    * [ ] Conda packaging: review PRs on https://github.com/conda-forge/libertem-feedstock/pulls

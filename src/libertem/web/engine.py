@@ -51,16 +51,18 @@ class WebProgressReporter(ProgressReporter):
         self.job_id = job_id
 
     def start(self, state: ProgressState):
-        self.handle_state_update(state)
+        self.handle_state_update(state, "start")
 
     def update(self, state: ProgressState):
-        self.handle_state_update(state)
+        self.handle_state_update(state, "update")
 
     def end(self, state: ProgressState):
-        self.handle_state_update(state)
+        self.handle_state_update(state, "end")
 
-    def handle_state_update(self, state: ProgressState):
-        msg = Message(self.state).job_progress(job_id=self.job_id, state=state)
+    def handle_state_update(self, state: ProgressState, event: str):
+        msg = Message(self.state).job_progress(
+            job_id=self.job_id, state=state, event=event
+        )
 
         async def _task():
             await self.event_registry.broadcast_event(msg)

@@ -15,6 +15,7 @@ export interface ResultFileFormat {
 }
 
 export interface ProgressDetails {
+    event: "start" | "update" | "end",
     numFrames: number,
     numFramesComplete: number,
 }

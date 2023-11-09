@@ -102,12 +102,13 @@ class Message:
             "msg": msg,
         }
 
-    def job_progress(self, job_id: str, state: ProgressState):
+    def job_progress(self, job_id: str, state: ProgressState, event: str):
         return {
             "status": "ok",
             "messageType": "JOB_PROGRESS",
             "job": job_id,
             "details": {
+                "event": event,
                 "numFrames": state.num_frames_total,
                 "numFramesComplete": state.num_frames_complete,
             }

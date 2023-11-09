@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.13.0.dev0
+0.14.0.dev0
 ###########
 
 .. toctree::
@@ -20,6 +20,72 @@ Changelog
   changelog/*/*
 
 .. _latest:
+
+.. _`v0-13-0`:
+
+0.13.0 / 2023-11-09
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.8252548.svg
+   :target: https://doi.org/10.5281/zenodo.8252548
+
+The 0.13 release adds a number of improvements to the :code:`libertem-server`
+web interface and its user experience, as well as laying the foundation
+for descan error compensation in all UDFs based on integration over masked
+regions of a frame.
+
+Many thanks to everyone who has contributed to this release!
+
+Web Interface
+-------------
+
+- A progress bar has been added to the web GUI to give feedback on the state of any
+  in-flight computations. (:issue:`1500`, :pr:`1514`)
+- The cluster launcher in the web interface now allows specification
+  of multiple workers per-GPU, allowing better utilisation of large
+  GPUs. (:issue:`1489`, :pr:`1499`)
+- Direct opening of datasets from URL parameters. The web interface
+  now responds to arguments passed to it by URL, namely instructions
+  to load a particular dataset, e.g. :code:`#action=open&path=/path/to/your/data/`.
+  (:issue:`1085`, :pr:`1518`)
+- When launching :code:`libertem-server` additional parameters are now accepted
+  to preload a cluster with a given number of CPU and GPU workers, and also preload data. See
+  `the documentation <https://libertem.github.io/LiberTEM/usage.html#configuring-the-libertem-server-advanced>`_
+  for more detail.(:issue:`1419`, :pr:`1535`)
+
+Descan compensation
+-------------------
+
+- The backend and interface of :code:`ApplyMasksUDF` has been extended to allow
+  compensation for descan error in the form of a :code:`shifts` parameter.
+  The shifts information is used to translate any applied masks
+  relative to the given frame being processed. This lays the groundwork
+  for future support for :code:`shifts` in all UDFs which rely on
+  the backend of :code:`ApplyMasksUDF`, including :code:`CoMUDF` and
+  all virtual imaging analyses. (:pr:`1304`)
+
+UDF Interface
+-------------
+
+- The UDF interface was extended to allow a UDF to declare
+  multiple processing methods (:code:`process_tile`, :code:`process_frame` etc)
+  and choose at runtime the most appropriate one to use. See
+  `the documentation <https://libertem.github.io/LiberTEM/udf/advanced.html#precedence>`_
+  for more detail. (:issue:`1508`, :pr:`1509`)
+
+Misc
+----
+
+- A function :meth:`libertem.contrib.convert_transposed.convert_dm4_transposed`
+  has been added to efficiently convert Gatan Digital Micrograph STEM datasets
+  stored in :code:`(sig, nav)` ordering to numpy .npy files in :code:`(nav_sig)`
+  ordering (:pr:`1520`).
+- Several Exception types were moved to :mod:`libertem.common` for MIT
+  license compatibility. They are re-exported to
+  the old import location for backwards compatibility (:pr:`1543`).
+- The :code:`Shape` class is now hashable allowing it to be used as key
+  in a :code:`dict` and :code:`set`. (:pr:`1507`).
+
 
 .. _`v0-12-0`:
 

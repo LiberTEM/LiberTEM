@@ -7,6 +7,7 @@ const API_HOST = process.env.API_HOST ? process.env.API_HOST : 'localhost';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '',  // use relative paths when referencing assets
   test: {
     globals: true,
     environment: 'jsdom',

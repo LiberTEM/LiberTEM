@@ -81,11 +81,12 @@ this method as a descriptor for feature extraction from images. The angle of a
 pixel relative to the user-defined center point of the diffraction pattern is
 used as a phase angle for the Fourier series.
 
-Since diffraction patterns usually show characteristic `symmetries
-<https://en.wikipedia.org/wiki/Friedel%27s_law>`_, the strength of the Fourier
-coefficients of orders 2, 4 and 6 highlight regions with crystalline order for
-even the lowest intensities. With the `relationship between variance in real
-space and power spectral density in frequency space
+Since `diffraction patterns usually show characteristic
+<https://web.archive.org/web/20221106164939/http://xrayweb.chem.ou.edu/notes/symmetry.html>`_
+`symmetries <https://en.wikipedia.org/wiki/Friedel%27s_law>`_, the strength of
+the Fourier coefficients of orders 2, 4 and 6 highlight regions with crystalline
+order for even the lowest intensities. With the `relationship between variance
+in real space and power spectral density in frequency space
 <https://en.wikipedia.org/wiki/Parseval%27s_theorem>`_, the sum of all
 coefficients that are larger than zero is equivalent to the standard deviation,
 i.e. Fluctuation EM. Only summing coefficients from lower orders corresponds

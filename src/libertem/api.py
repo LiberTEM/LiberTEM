@@ -98,7 +98,7 @@ class ResultGenerator:
         """
         Update parameters while the UDFs are running.
 
-        `parameters` should be a list of dicts, with one dict for each
+        :code:`parameters` should be a list of dicts, with one dict for each
         UDF you are running.
 
         The dicts should only contain items for those parameters you want to
@@ -151,7 +151,7 @@ class ResultAsyncGenerator:
         """
         Update parameters while the UDFs are running.
 
-        `parameters` should be a list of dicts, with one dict for each
+        :code:`parameters` should be a list of dicts, with one dict for each
         UDF you are running.
 
         The dicts should only contain items for those parameters you want to

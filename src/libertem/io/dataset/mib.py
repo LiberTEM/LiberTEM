@@ -1,5 +1,6 @@
 import re
 import os
+import platform
 from glob import glob, escape
 import logging
 from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
@@ -9,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from numba.typed import List as NumbaList
 import numba
+import psutil
 import numpy as np
 
 from libertem.common.math import prod, make_2D_square, flat_nonzero
@@ -1073,7 +1075,8 @@ class MIBDataSet(DataSet):
         self._disable_glob = disable_glob
 
     def _do_initialize(self):
-        self._headers = self._preread_headers()
+        filenames = self._filenames()
+        self._headers = self._preread_headers(filenames)
         self._files_sorted = list(sorted(self._files(),
                                          key=lambda f: f.fields['sequence_first_image']))
 
@@ -1163,19 +1166,24 @@ class MIBDataSet(DataSet):
             }
         }
 
-    def _preread_headers(self):
-        fnames = self._filenames()
-
-        if len(fnames) > 512:
+    @staticmethod
+    def _preread_headers(filenames):
+        # Avoid overhead of creating the Pool on low-file-count datasets
+        if len(filenames) > 512:
             # Default ThreadPoolExecutor allocates 5 threads per CPU on the machine
-            with ThreadPoolExecutor(max_workers=2) as p:
-                header_and_size = p.map(MIBHeaderReader._read_header_bytes, fnames)
+            # In testing this was found to be far too many on Linux, and sometimes
+            # a good number on Windows but sometimes too many
+            max_workers = 2
+            if platform.system() == "Windows":
+                num_cores = psutil.cpu_count(logical=False)
+                max_workers = max(max_workers, int(num_cores * 0.5))
+            with ThreadPoolExecutor(max_workers=max_workers) as p:
+                header_and_size = p.map(MIBHeaderReader._read_header_bytes, filenames)
         else:
-            # Avoid overhead of creating the Pool
-            header_and_size = tuple(map(MIBHeaderReader._read_header_bytes, fnames))
+            header_and_size = tuple(map(MIBHeaderReader._read_header_bytes, filenames))
 
         res = {}
-        for path, (header, filesize) in zip(fnames, header_and_size):
+        for path, (header, filesize) in zip(filenames, header_and_size):
             res[path] = MIBHeaderReader._parse_header_bytes(header, filesize)
         return res
 

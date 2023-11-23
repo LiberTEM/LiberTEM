@@ -2,9 +2,10 @@ import re
 import os
 from glob import glob, escape
 import logging
-from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union, Any, Dict
 from typing_extensions import Literal, TypedDict
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 
 from numba.typed import List as NumbaList
 import numba
@@ -758,7 +759,8 @@ class MIBHeaderReader:
     def __repr__(self) -> str:
         return "<MIBHeaderReader: %s>" % self.path
 
-    def _get_np_dtype(self, dtype: str, bit_depth: int) -> "nt.DTypeLike":
+    @staticmethod
+    def _get_np_dtype(dtype: str, bit_depth: int) -> "nt.DTypeLike":
         dtype = dtype.lower()
         num_bits = int(dtype[1:])
         if dtype[0] == "u":
@@ -781,12 +783,16 @@ class MIBHeaderReader:
         with open(file=self.path, encoding="ascii", errors='ignore') as f:
             header = f.read(1024)
             filesize = os.fstat(f.fileno()).st_size
+
+        self._fields = self._parse_header_bytes(header, filesize)
+
+    @staticmethod
+    def _parse_header_bytes(header: str, filesize: int) -> Dict[str, Any]:
         parts = header.split(",")
         header_size_bytes = int(parts[2])
         parts = [p
                 for p in header[:header_size_bytes].split(",")
                 if '\x00' not in p]
-        self._header_parts = parts
         dtype = parts[6].lower()
         mib_kind: Literal['u', 'r']
         # To make mypy Literal check happy...
@@ -857,9 +863,9 @@ class MIBHeaderReader:
                         f"(original image size: {image_size_orig})"
                     )
 
-        self._fields = {
+        return {
             'header_size_bytes': header_size_bytes,
-            'dtype': self._get_np_dtype(parts[6], bits_per_pixel_raw),
+            'dtype': MIBHeaderReader._get_np_dtype(parts[6], bits_per_pixel_raw),
             'mib_dtype': dtype,
             'mib_kind': mib_kind,
             'bits_per_pixel': bits_per_pixel_raw,
@@ -871,7 +877,6 @@ class MIBHeaderReader:
             'num_chips': num_chips,
             'sensor_layout': sensor_layout,
         }
-        return self._fields
 
     @property
     def num_frames(self) -> int:
@@ -879,7 +884,15 @@ class MIBHeaderReader:
 
     @property
     def start_idx(self) -> int:
-        return self.fields['sequence_first_image'] - self._sequence_start
+        return self.fields['sequence_first_image'] - self.sequence_start
+
+    @property
+    def sequence_start(self) -> Optional[int]:
+        return self._sequence_start
+
+    @sequence_start.setter
+    def sequence_start(self, val: int):
+        self._sequence_start = val
 
     @property
     def fields(self) -> HeaderDict:
@@ -1047,9 +1060,7 @@ class MIBDataSet(DataSet):
                 )
         self._filename_cache = None
         self._files_sorted: Optional[Sequence[MIBHeaderReader]] = None
-        # ._preread_headers() calls ._files() which passes the cached headers down to
-        # MIBHeaderReader, if they exist. So we need to make sure to initialize self._headers
-        # before calling _preread_headers!
+        # ._preread_headers() in _do_initialize() filles self._headers
         self._headers = {}
         self._meta = None
         self._total_filesize = None
@@ -1065,6 +1076,13 @@ class MIBDataSet(DataSet):
             first_file = self._files_sorted[0]
         except IndexError:
             raise DataSetException("no files found")
+
+        self._sequence_start = first_file.fields['sequence_first_image']
+        # _files_sorted is initially created with _sequence_start = None
+        # now that we know the first file we can set the correct value
+        for f in self._files_sorted:
+            f.sequence_start = self._sequence_start
+
         if self._nav_shape is None:
             hdr = read_hdr_file(self._path)
             self._nav_shape = nav_shape_from_hdr(hdr)
@@ -1078,12 +1096,9 @@ class MIBDataSet(DataSet):
         shape = Shape(self._nav_shape + self._sig_shape, sig_dims=self._sig_dims)
         dtype = first_file.fields['dtype']
         self._total_filesize = sum(
-            os.stat(path).st_size
-            for path in self._filenames()
+            f.fields['filesize']
+            for f in self._files_sorted
         )
-        self._sequence_start = first_file.fields['sequence_first_image']
-        self._files_sorted = list(sorted(self._files(),
-                                         key=lambda f: f.fields['sequence_first_image']))
         self._image_count = self._num_images()
         self._nav_shape_product = int(prod(self._nav_shape))
         self._sync_offset_info = self.get_sync_offset_info()
@@ -1143,10 +1158,25 @@ class MIBDataSet(DataSet):
             }
         }
 
+    @staticmethod
+    def _read_header_bytes(path):
+        with open(file=path, encoding="ascii", errors='ignore') as f:
+            return f.read(1024)
+
     def _preread_headers(self):
+        fnames = self._filenames()
+
+        with ThreadPoolExecutor() as p:
+            header_bytes = p.map(self._read_header_bytes, fnames)
+
+        filesizes = {}
+        for entry in os.scandir(os.path.dirname(self._path)):
+            if entry.is_file() and entry.path.endswith('.mib'):
+                filesizes[entry.path] = entry.stat().st_size
+
         res = {}
-        for f in self._files():
-            res[f.path] = f.fields
+        for path, header in zip(fnames, header_bytes):
+            res[path] = MIBHeaderReader._parse_header_bytes(header, filesizes[path])
         return res
 
     def _filenames(self):
@@ -1163,13 +1193,13 @@ class MIBDataSet(DataSet):
         return fns
 
     def _files(self) -> Generator[MIBHeaderReader, None, None]:
-        for path in self._filenames():
-            f = MIBHeaderReader(path, fields=self._headers.get(path),
+        for path, fields in self._headers.items():
+            f = MIBHeaderReader(path, fields=fields,
                         sequence_start=self._sequence_start)
             yield f
 
     def _num_images(self):
-        return sum(f.fields['num_images'] for f in self._files())
+        return sum(f.fields['num_images'] for f in self._files_sorted)
 
     @property
     def dtype(self):

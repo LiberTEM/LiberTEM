@@ -1,7 +1,6 @@
 import re
 import os
 import platform
-import resource
 from glob import glob, escape
 import logging
 from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
@@ -1274,6 +1273,7 @@ class MIBDataSet(DataSet):
         # Try to limit the partition to some fraction of the max_open files limit
         limit_n_files = float('inf')
         if platform.system() != "Windows":
+            import resource
             # Windows has no problem opening huge numbers of files
             limit_n_files, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
             # Being too close to the NOFILE limit is risky!

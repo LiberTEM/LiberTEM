@@ -2,7 +2,7 @@ import re
 import os
 from glob import glob, escape
 import logging
-from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union, Any, Dict
+from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
 from typing_extensions import Literal, TypedDict
 import warnings
 from concurrent.futures import ThreadPoolExecutor
@@ -785,9 +785,10 @@ class MIBHeaderReader:
             filesize = os.fstat(f.fileno()).st_size
 
         self._fields = self._parse_header_bytes(header, filesize)
+        return self._fields
 
     @staticmethod
-    def _parse_header_bytes(header: str, filesize: int) -> Dict[str, Any]:
+    def _parse_header_bytes(header: str, filesize: int) -> HeaderDict:
         parts = header.split(",")
         header_size_bytes = int(parts[2])
         parts = [p

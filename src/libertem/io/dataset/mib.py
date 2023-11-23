@@ -784,14 +784,15 @@ class MIBHeaderReader:
         return self._fields
 
     @staticmethod
-    def _read_header_bytes(path) -> Tuple[str, int]:
+    def _read_header_bytes(path) -> Tuple[bytes, int]:
         # FIXME: do this read via the IO backend!
-        with open(file=path, encoding="ascii", errors='ignore') as f:
+        with open(file=path, mode='rb') as f:
             filesize = os.fstat(f.fileno()).st_size
             return f.read(1024), filesize
 
     @staticmethod
-    def _parse_header_bytes(header: str, filesize: int) -> HeaderDict:
+    def _parse_header_bytes(header: bytes, filesize: int) -> HeaderDict:
+        header: str = header.decode(encoding='ascii', errors='ignore')
         parts = header.split(",")
         header_size_bytes = int(parts[2])
         parts = [p
@@ -1167,9 +1168,10 @@ class MIBDataSet(DataSet):
 
         if len(fnames) > 512:
             # Default ThreadPoolExecutor allocates 5 threads per CPU on the machine
-            with ThreadPoolExecutor() as p:
+            with ThreadPoolExecutor(max_workers=2) as p:
                 header_and_size = p.map(MIBHeaderReader._read_header_bytes, fnames)
         else:
+            # Avoid overhead of creating the Pool
             header_and_size = tuple(map(MIBHeaderReader._read_header_bytes, fnames))
 
         res = {}

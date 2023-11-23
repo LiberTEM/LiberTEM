@@ -779,13 +779,16 @@ class MIBHeaderReader:
             raise NotImplementedError(f"unknown dtype: {dtype}")
 
     def read_header(self) -> HeaderDict:
-        # FIXME: do this read via the IO backend!
-        with open(file=self.path, encoding="ascii", errors='ignore') as f:
-            header = f.read(1024)
-            filesize = os.fstat(f.fileno()).st_size
-
+        header, filesize = self._read_header_bytes(self.path)
         self._fields = self._parse_header_bytes(header, filesize)
         return self._fields
+
+    @staticmethod
+    def _read_header_bytes(path) -> Tuple[str, int]:
+        # FIXME: do this read via the IO backend!
+        with open(file=path, encoding="ascii", errors='ignore') as f:
+            filesize = os.fstat(f.fileno()).st_size
+            return f.read(1024), filesize
 
     @staticmethod
     def _parse_header_bytes(header: str, filesize: int) -> HeaderDict:
@@ -1159,25 +1162,15 @@ class MIBDataSet(DataSet):
             }
         }
 
-    @staticmethod
-    def _read_header_bytes(path):
-        with open(file=path, encoding="ascii", errors='ignore') as f:
-            return f.read(1024)
-
     def _preread_headers(self):
         fnames = self._filenames()
 
         with ThreadPoolExecutor() as p:
-            header_bytes = p.map(self._read_header_bytes, fnames)
-
-        filesizes = {}
-        for entry in os.scandir(os.path.dirname(self._path)):
-            if entry.is_file() and entry.path.endswith('.mib'):
-                filesizes[str(entry.path)] = entry.stat().st_size
+            header_and_size = p.map(MIBHeaderReader._read_header_bytes, fnames)
 
         res = {}
-        for path, header in zip(fnames, header_bytes):
-            res[path] = MIBHeaderReader._parse_header_bytes(header, filesizes[str(path)])
+        for path, (header, filesize) in zip(fnames, header_and_size):
+            res[path] = MIBHeaderReader._parse_header_bytes(header, filesize)
         return res
 
     def _filenames(self):

@@ -1173,11 +1173,11 @@ class MIBDataSet(DataSet):
         filesizes = {}
         for entry in os.scandir(os.path.dirname(self._path)):
             if entry.is_file() and entry.path.endswith('.mib'):
-                filesizes[entry.path] = entry.stat().st_size
+                filesizes[str(entry.path)] = entry.stat().st_size
 
         res = {}
         for path, header in zip(fnames, header_bytes):
-            res[path] = MIBHeaderReader._parse_header_bytes(header, filesizes[path])
+            res[path] = MIBHeaderReader._parse_header_bytes(header, filesizes[str(path)])
         return res
 
     def _filenames(self):

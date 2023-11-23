@@ -1192,10 +1192,11 @@ class MIBDataSet(DataSet):
         if self._filename_cache is not None:
             return self._filename_cache
         fns = get_filenames(self._path, disable_glob=self._disable_glob)
-        if len(fns) > 16384:
+        num_files = len(fns)
+        if num_files > 16384:
             warnings.warn(
-                "Saving data in many small files (here: %d) is not efficient, please increase "
-                "the \"Images Per File\" parameter when acquiring data",
+                f"Saving data in many small files (here: {num_files}) is not efficient, "
+                "please increase the \"Images Per File\" parameter when acquiring data",
                 RuntimeWarning
             )
         self._filename_cache = fns

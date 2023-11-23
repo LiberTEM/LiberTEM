@@ -1037,7 +1037,7 @@ class MIBDataSet(DataSet):
                  nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
         super().__init__(io_backend=io_backend)
         self._sig_dims = 2
-        self._path = path
+        self._path = str(path)
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
         self._sync_offset = sync_offset

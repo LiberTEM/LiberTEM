@@ -1165,8 +1165,12 @@ class MIBDataSet(DataSet):
     def _preread_headers(self):
         fnames = self._filenames()
 
-        with ThreadPoolExecutor() as p:
-            header_and_size = p.map(MIBHeaderReader._read_header_bytes, fnames)
+        if len(fnames) > 512:
+            # Default ThreadPoolExecutor allocates 5 threads per CPU on the machine
+            with ThreadPoolExecutor() as p:
+                header_and_size = p.map(MIBHeaderReader._read_header_bytes, fnames)
+        else:
+            header_and_size = tuple(map(MIBHeaderReader._read_header_bytes, fnames))
 
         res = {}
         for path, (header, filesize) in zip(fnames, header_and_size):

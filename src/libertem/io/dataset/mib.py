@@ -133,10 +133,11 @@ def get_image_count_and_sig_shape(
     disable_glob: bool = False,
 ) -> Tuple[int, Tuple[int, int]]:
     fns = get_filenames(path, disable_glob=disable_glob)
+    headers = MIBDataSet._preread_headers(fns)
     count = 0
     files = []
-    for path in fns:
-        f = MIBHeaderReader(path)
+    for path, fields in headers.items():
+        f = MIBHeaderReader(path, fields=fields)
         count += f.fields['num_images']
         files.append(f)
     try:

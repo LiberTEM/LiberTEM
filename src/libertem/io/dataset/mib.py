@@ -1,6 +1,7 @@
 import re
 import os
 import platform
+import resource
 from glob import glob, escape
 import logging
 from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
@@ -1268,6 +1269,28 @@ class MIBDataSet(DataSet):
         base_shape = super().get_base_shape(roi)
         assert self.meta is not None and base_shape[-1] == self.meta.shape[-1]
         return base_shape
+
+    def get_num_partitions(self) -> int:
+        # Try to limit the partition to some fraction of the max_open files limit
+        limit_n_files = float('inf')
+        if platform.system() != "Windows":
+            # Windows has no problem opening huge numbers of files
+            limit_n_files, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
+            # Being too close to the NOFILE limit is risky!
+            # Even 50% seems to be too much, sometimes
+            limit_n_files = max(1, int(limit_n_files * 0.33))
+        # Get the num partitions based on sensible chunk byte-sizes
+        num_part_standard = super().get_num_partitions()
+        # Assume the files are evenly sized. Given we already have
+        # the filesizes stored in the MIBHeader we could do a
+        # better approximation here but this will generally be correct.
+        fileset = self._get_fileset()
+        num_files = len(fileset)
+        files_per_part = max(1, num_files // num_part_standard)
+        if files_per_part > limit_n_files:
+            # The +1 is to account for an eventual partial file at the end
+            return (num_files // limit_n_files) + 1
+        return num_part_standard
 
     def get_partitions(self):
         first_file = self._files_sorted[0]

@@ -24,3 +24,6 @@ except ImportError:
     pass
 
 import numba.cuda  # see also: #1432
+
+from libertem.common.backend import set_file_limit
+set_file_limit()

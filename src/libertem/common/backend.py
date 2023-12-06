@@ -1,4 +1,5 @@
 import os
+import platform
 from typing import Optional
 
 
@@ -106,3 +107,13 @@ def get_device_class():
         return "cuda"
     else:
         return "cpu"
+
+
+def set_file_limit():
+    if platform.system() == "Windows":
+        # Windows has no problem opening huge numbers of files
+        return
+
+    import resource
+    _, hard_lim = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (hard_lim, hard_lim))

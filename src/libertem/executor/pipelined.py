@@ -17,7 +17,7 @@ import time
 from tblib import pickling_support
 import cloudpickle
 from opentelemetry import trace
-from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.common.backend import set_use_cpu, set_use_cuda, set_file_limit
 
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
@@ -588,6 +588,8 @@ def pipelined_worker(
     try:
         if early_setup:
             early_setup()
+
+        set_file_limit()
 
         # FIXME: explicitly propagate exporter settings to the workers?
         # right now taken care of by environment variables...

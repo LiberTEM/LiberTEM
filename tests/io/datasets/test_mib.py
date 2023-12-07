@@ -584,7 +584,7 @@ def test_compare_backends_sparse(lt_ctx, default_mib, buffered_mib, as_sparse):
 
 @needsdata
 @pytest.mark.slow
-def test_run_many_files(lt_ctx, tmpdir_factory):
+def test_run_many_files(lt_ctx):
     # import tarfile
     # archive = pathlib.Path(MIB_TESTDATA_PATH).parent / 'many_mib.tar.gz'
     # outdir = pathlib.Path(tmpdir_factory.mktemp('many_mib_files'))

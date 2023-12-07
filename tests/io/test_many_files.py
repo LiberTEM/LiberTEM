@@ -22,7 +22,7 @@ def generate_many_files(tmpdir_factory):
     # limits on a system where this is not set to the hard limit globally
     datadir = tmpdir_factory.mktemp('many_raw_files')
     frame = np.arange(64).astype(np.uint8)
-    nav_shape = (128, 128)
+    nav_shape = (128, 100)
     for idx in range(np.prod(nav_shape)):
         frame.tofile(os.path.join(datadir, f'f{idx:>05d}.raw'))
     yield datadir
@@ -66,7 +66,7 @@ def test_many_files_read(local_cluster_ctx, generate_many_files):
     """
     ds = ManyRawFileDataSetMock(
         path=generate_many_files,
-        nav_shape=(128, 128),
+        nav_shape=(128, 100),
         sig_shape=(8, 8),
         dtype=np.uint8,
     )

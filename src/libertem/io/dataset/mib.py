@@ -1196,8 +1196,8 @@ class MIBDataSet(DataSet):
         if num_files > 16384:
             warnings.warn(
                 f"Saving data in many small files (here: {num_files}) is not efficient, "
-                "please increase the \"Images Per File\" parameter when acquiring data. If ",
-                "this leads to \"Too many open files\" errors, on POSIX systems you can increase ",
+                "please increase the \"Images Per File\" parameter when acquiring data. If "
+                "this leads to \"Too many open files\" errors, on POSIX systems you can increase "
                 "the maximum open files limit using the \"ulimit\" shell command.",
                 RuntimeWarning
             )

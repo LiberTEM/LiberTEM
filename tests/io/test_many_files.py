@@ -5,6 +5,15 @@ import numpy as np
 from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 
 
+try:
+    import resource
+    _, hard_lim = resource.getrlimit(resource.RLIMIT_NOFILE)
+    pytestmark = pytest.mark.skipif(hard_lim < 2 ** 14, reason="hard file limit is too low")  # NOQA
+except ModuleNotFoundError:
+    # Not available on Windows
+    pass
+
+
 @pytest.fixture(scope='session')
 def generate_many_files(tmpdir_factory):
     # Generates 16k 8x8 uint8 frames

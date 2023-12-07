@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sys
 import json
 from unittest import mock
@@ -579,3 +580,19 @@ def test_compare_backends_sparse(lt_ctx, default_mib, buffered_mib, as_sparse):
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_mib, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+@needsdata
+@pytest.mark.slow
+def test_run_many_files(lt_ctx, tmpdir_factory):
+    # import tarfile
+    # archive = pathlib.Path(MIB_TESTDATA_PATH).parent / 'many_mib.tar.gz'
+    # outdir = pathlib.Path(tmpdir_factory.mktemp('many_mib_files'))
+
+    # with tarfile.open(archive, mode='r:gz') as tp:
+    #     tp.extractall(path=outdir)
+
+    out_dir = pathlib.Path(MIB_TESTDATA_PATH).parent / 'many_mib'
+    hdr_path = out_dir / 'w_140 h_139-2map.hdr'
+    nav_shape = (139, 141)
+    lt_ctx.load('mib', path=hdr_path, nav_shape=nav_shape)

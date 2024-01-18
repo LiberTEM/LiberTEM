@@ -9,3 +9,4 @@ websockets
 pytest-benchmark
 ipykernel
 joblib
+setuptools  # for pkg_resources

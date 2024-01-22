@@ -22,7 +22,7 @@ import tornado.escape
 from tornado import httputil
 
 from .shutdown import ShutdownHandler
-from .state import SharedState
+from .state import SharedState, ExecutorState
 from .config import ConfigHandler, ClusterDetailHandler
 from .dataset import DataSetDetailHandler, DataSetDetectHandler
 from .browse import LocalFSBrowseHandler, LocalFSStatHandler
@@ -222,10 +222,11 @@ def run(
 
     # shared state:
     event_registry = EventRegistry()
-    shared_state = SharedState()
+    executor_state = ExecutorState(snooze_timeout=12.0*3600)
+    shared_state = SharedState(executor_state=executor_state)
 
-    shared_state.set_local_directory(local_directory)
-    shared_state.set_preload(preload)
+    executor_state.set_local_directory(local_directory)
+    executor_state.set_preload(preload)
 
     try:
         bound_sockets = tornado.netutil.bind_sockets(port, host)
@@ -245,6 +246,8 @@ def run(
             # need to run this within the main loop so that Distributed
             # attaches to that rather than trying to create its own, see:
             # https://github.com/LiberTEM/LiberTEM/pull/1535#pullrequestreview-1699340445
+            # TL;DR: without this, our call to `loop.run_forever` causes
+            # `RuntimeError: This event loop is already running`
             shared_state.create_and_set_executor(executor_spec)
 
     try:

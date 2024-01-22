@@ -3,6 +3,8 @@ import copy
 import typing
 import itertools
 import logging
+import asyncio
+import time
 
 import psutil
 
@@ -10,6 +12,8 @@ import libertem
 from libertem.api import Context
 from libertem.analysis.base import AnalysisResultSet
 from libertem.common.executor import JobExecutor
+from libertem.executor.base import AsyncAdapter
+from libertem.executor.dask import DaskJobExecutor
 from libertem.io.dataset.base import DataSetException, DataSet
 from libertem.io.writers.results.base import ResultFormatRegistry
 from libertem.io.writers.results import formats  # NOQA
@@ -19,31 +23,108 @@ from .models import (
     AnalysisDetails, AnalysisInfo, AnalysisResultInfo, CompoundAnalysisInfo, AnalysisParameters,
     DatasetInfo, JobInfo, SerializedJobInfo,
 )
+from .helpers import create_executor
 
 log = logging.getLogger(__name__)
 
 
 class ExecutorState:
-    def __init__(self):
+    def __init__(self, snooze_timeout: typing.Optional[float] = None):
         self.executor = None
         self.cluster_params = {}
         self.context: typing.Optional[Context] = None
+        self._snooze_timeout = snooze_timeout
+        self._pool = AsyncAdapter.make_pool()
+        self._is_snoozing = False
+        self._last_activity = time.monotonic()
+        self._snooze_check_interval = 30.0
+        self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
+        self.local_directory = "dask-worker-space"
+        self.preload: typing.Tuple[str, ...] = ()
+
+    def set_preload(self, preload: typing.Tuple[str, ...]) -> None:
+        self.preload = preload
+
+    def get_preload(self) -> typing.Tuple[str, ...]:
+        return self.preload
+
+    def set_local_directory(self, local_directory: str) -> None:
+        if local_directory is not None:
+            self.local_directory = local_directory
+
+    def get_local_directory(self):
+        return self.local_directory
+
+    def _update_last_activity(self):
+        self._last_activity = time.monotonic()
+
+    def snooze(self):
+        if self.executor is None:
+            return
+        self.executor.ensure_sync().close()
+        self.context = None
+        self.executor = None
+        self._is_snoozing = True
+
+    def unsnooze(self):
+        if not self._is_snoozing:
+            return
+        executor = self.make_executor(self.cluster_params, self._pool)
+        self._set_executor(executor, self.cluster_params)
+        self._is_snoozing = False
+
+    async def _snooze_check_task(self):
+        """
+        Periodically check if we need to snooze the executor
+        """
+        while True:
+            await asyncio.sleep(self._snooze_check_interval)
+            if not self._is_snoozing and self._snooze_timeout is not None:
+                since_last_activity = time.monotonic() - self._last_activity
+                if since_last_activity > self._snooze_timeout:
+                    self.snooze()
+
+    def make_executor(self, params, pool) -> AsyncAdapter:
+        connection = params['connection']
+        if connection["type"].lower() == "tcp":
+            # FIXME: do we need to run this in `pool`?
+            sync_executor = DaskJobExecutor.connect(
+                scheduler_uri=connection['address'],
+            )
+        elif connection["type"].lower() == "local":
+            sync_executor = create_executor(
+                connection=connection,
+                local_directory=self.get_local_directory(),
+                preload=self.get_preload(),
+            )
+        else:
+            raise ValueError("unknown connection type")
+        executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
+        return executor
 
     def get_executor(self):
+        self._update_last_activity()
+        self.unsnooze()
         if self.executor is None:
             # TODO: exception type, conversion into 400 response
             raise RuntimeError("wrong state: executor is None")
         return self.executor
 
     def have_executor(self):
-        return self.executor is not None
+        return self.executor is not None or self._is_snoozing
 
     def get_context(self) -> Context:
+        self.unsnooze()
+        self._update_last_activity()
         if self.context is None:
             raise RuntimeError("cannot get context, please call `set_executor` before")
         return self.context
 
+    def shutdown(self):
+        self._snooze_task.cancel()
+
     async def set_executor(self, executor: JobExecutor, params):
+        self._update_last_activity()
         if self.executor is not None:
             await self.executor.close()
             self.executor = None
@@ -55,6 +136,7 @@ class ExecutorState:
         self.executor = executor
         self.cluster_params = params
         self.context = Context(executor=executor.ensure_sync())
+        self._is_snoozing = False  # if we were snoozing before, we no longer are
         try:
             # Exposing the scheduler address allows use of
             # libertem-server to spin up a LT-compatible
@@ -64,6 +146,7 @@ class ExecutorState:
             pass
 
     def get_cluster_params(self):
+        self._update_last_activity()
         return self.cluster_params
 
 
@@ -345,8 +428,8 @@ class JobState:
 
 
 class SharedState:
-    def __init__(self):
-        self.executor_state = ExecutorState()
+    def __init__(self, executor_state: "ExecutorState"):
+        self.executor_state = executor_state
         self.job_state = JobState(self.executor_state)
         self.analysis_state = AnalysisState(self.executor_state, job_state=self.job_state)
         self.compound_analysis_state = CompoundAnalysisState(self.analysis_state)
@@ -355,21 +438,12 @@ class SharedState:
             analysis_state=self.analysis_state,
             compound_analysis_state=self.compound_analysis_state,
         )
-        self.local_directory = "dask-worker-space"
-        self.preload: typing.Tuple[str, ...] = ()
 
     def get_local_cores(self, default: int = 2) -> int:
         cores: typing.Optional[int] = psutil.cpu_count(logical=False)
         if cores is None:
             cores = default
         return cores
-
-    def set_local_directory(self, local_directory: str) -> None:
-        if local_directory is not None:
-            self.local_directory = local_directory
-
-    def get_local_directory(self):
-        return self.local_directory
 
     def get_ds_type_info(self, ds_type_id: str):
         from libertem.io.dataset import get_dataset_cls
@@ -406,12 +480,6 @@ class SharedState:
             "separator": '/'
         }
 
-    def set_preload(self, preload: typing.Tuple[str, ...]) -> None:
-        self.preload = preload
-
-    def get_preload(self) -> typing.Tuple[str, ...]:
-        return self.preload
-
     def create_and_set_executor(self, spec: typing.Dict[str, int]):
         """
         Create a new executor from spec, a dict[str, int]
@@ -421,10 +489,10 @@ class SharedState:
         Any existing executor will first closed by the call
         to self.executor_state._set_executor
         """
-        from .connect import create_executor_external  # circular import
+        from .helpers import create_executor_external  # circular import
         executor, params = create_executor_external(
             spec,
-            self.get_local_directory(),
-            self.get_preload(),
+            self.executor_state.get_local_directory(),
+            self.executor_state.get_preload(),
         )
         self.executor_state._set_executor(executor, params)

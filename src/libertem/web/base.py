@@ -17,6 +17,8 @@ def log_message(message, exception=False):
         log_fn("message: {} (analysis={})".format(message["messageType"], message["analysis"]))
     elif "dataset" in message:
         log_fn("message: {} (dataset={})".format(message["messageType"], message["dataset"]))
+    elif "msg" in message:
+        log_fn("message: %s: %s", message["messageType"], message['msg'])
     else:
         log_fn("message: %s" % message["messageType"])
 

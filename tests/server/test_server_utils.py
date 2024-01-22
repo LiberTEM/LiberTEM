@@ -1,4 +1,4 @@
-from libertem.web.connect import _convert_device_map
+from libertem.web.helpers import _convert_device_map
 
 
 def test_convert_device_map():

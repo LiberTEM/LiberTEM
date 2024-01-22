@@ -106,8 +106,8 @@ async def test_cluster_create_error(base_url, http_client, default_token):
         }
     }
     async with http_client.put(url, json=conn_details) as response:
-        assert response.status == 200
         conn_resp = await response.json()
+        assert response.status == 500
         assert_msg(conn_resp, 'CLUSTER_CONN_ERROR', status='error')
 
 
@@ -121,8 +121,8 @@ async def test_cluster_connect_error(base_url, http_client, default_token):
         }
     }
     async with http_client.put(url, json=conn_details) as response:
-        assert response.status == 200
         conn_resp = await response.json()
+        assert response.status == 500
         assert_msg(conn_resp, 'CLUSTER_CONN_ERROR', status='error')
 
 

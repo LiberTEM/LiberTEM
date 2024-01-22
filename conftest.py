@@ -38,7 +38,7 @@ from libertem.viz.base import Dummy2DPlot
 from libertem.utils.devices import detect
 
 from libertem.web.server import make_app, EventRegistry
-from libertem.web.state import SharedState
+from libertem.web.state import SharedState, ExecutorState
 from libertem.executor.base import AsyncAdapter
 from libertem.common.async_utils import sync_to_async
 from libertem.common.async_utils import adjust_event_loop_policy
@@ -777,38 +777,6 @@ def shared_dist_ctx_globaldask():
 
 
 @pytest.fixture(autouse=True)
-def fixup_event_loop():
-    import nest_asyncio
-    nest_asyncio.apply()
-    adjust_event_loop_policy()
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """
-    We need to use a session-scoped event loop, otherwise we get
-    errors like `RuntimeError: Cannot close a running event loop`.
-    """
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    print("event loop teardown")
-    loop.run_until_complete(loop.shutdown_asyncgens())
-    if hasattr(loop, 'shutdown_default_executor'):
-        loop.run_until_complete(loop.shutdown_default_executor())
-    loop.close()
-
-    # Work around: pytest-asyncio sets an empty event loop policy here,
-    # which breaks on windows, where we have to supply a specific
-    # event loop policy. Until this is fixed in pytest-asyncio, manually re-set
-    # the event policy here.
-    # See also: https://github.com/pytest-dev/pytest-asyncio/pull/192
-    # (this is probably fixed in the current version of pytest-asyncio,
-    # TODO check if still applicable for Python 3.7)
-    asyncio.set_event_loop_policy(None)
-    adjust_event_loop_policy()
-
-
-@pytest.fixture(autouse=True)
 def auto_ctx(doctest_namespace):
     ctx = lt.Context(executor=InlineJobExecutor())
     doctest_namespace["ctx"] = ctx
@@ -872,7 +840,6 @@ def lt_ctx_fast(inline_executor_fast):
 
 @pytest.fixture
 async def async_executor(local_cluster_url):
-
     pool = AsyncAdapter.make_pool()
     sync_executor = await sync_to_async(
         partial(
@@ -919,8 +886,10 @@ async def http_client():
 
 
 @pytest.fixture
-def shared_state():
-    return SharedState()
+async def shared_state():
+    executor_state = ExecutorState()
+    yield SharedState(executor_state=executor_state)
+    executor_state.shutdown()
 
 
 class ServerThread(threading.Thread):

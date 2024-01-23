@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 import os
 import platform
 
@@ -51,8 +51,12 @@ def get_token(token_path):
                   "(use `--insecure -h 0.0.0.0` to accept any connection)"
               ),
               default=False, is_flag=True)
+@click.option('--snooze-timeout', type=float,
+              help='Free resources after periods of no activity, in seconds',
+              default=None)
 def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
-         insecure, host="localhost", token_path=None, preload: Tuple[str, ...] = ()):
+         insecure, host="localhost", token_path=None, preload: Tuple[str, ...] = (),
+         snooze_timeout: Optional[float] = None):
     # Mitigation for https://stackoverflow.com/questions/71283820/
     #   directory-parameter-on-windows-has-trailing-backslash-replaced-with-double-quote
     if (open_ds and platform.system() == 'Windows' and open_ds[-1] == '"'
@@ -89,4 +93,5 @@ def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
         run(
             host, port, browser, local_directory, numeric_level,
             token, preload, is_custom_port, executor_spec, open_ds,
+            snooze_timeout,
         )

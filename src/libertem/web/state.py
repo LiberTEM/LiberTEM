@@ -47,7 +47,7 @@ class ExecutorState:
         self._last_activity = time.monotonic()
         self._snooze_check_interval = min(
             30.0,
-            snooze_timeout * 0.1,
+            snooze_timeout and (snooze_timeout * 0.1) or 30.0,
         )
         self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
         self.local_directory = "dask-worker-space"

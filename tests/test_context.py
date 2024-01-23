@@ -57,6 +57,8 @@ def test_run_udf_with_io_backend(lt_ctx, default_raw):
     assert np.array(res['intensity']).shape == (128, 128)
 
 
+# ignore 'no plottable channels' from NoOpUDF:
+@pytest.mark.filterwarnings('ignore:no plottable channels:UserWarning')
 @pytest.mark.parametrize('progress', (True, False))
 @pytest.mark.parametrize('plots', (None, True))
 def test_multi_udf(lt_ctx, default_raw, progress, plots):
@@ -74,6 +76,7 @@ def test_multi_udf(lt_ctx, default_raw, progress, plots):
             assert np.all(res[key].data == combined_res[index][key].data)
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')  # ignore 'no plottable channels' from NoOpUDF
 @pytest.mark.parametrize('progress', (True, False))
 @pytest.mark.parametrize('plots', (None, True))
 @pytest.mark.asyncio
@@ -99,6 +102,7 @@ async def test_multi_udf_async(lt_ctx, default_raw, progress, plots):
             assert np.all(single_res[index][key].data == combined_res[index][key].data)
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')  # ignore 'no plottable channels' from NoOpUDF
 @pytest.mark.parametrize('progress', (True, False))
 @pytest.mark.parametrize('plots', (None, True))
 def test_udf_iter(lt_ctx, default_raw, progress, plots):
@@ -118,6 +122,7 @@ def test_udf_iter(lt_ctx, default_raw, progress, plots):
             assert np.all(ref_item == res_item)
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')  # ignore 'no plottable channels' from NoOpUDF
 @pytest.mark.parametrize('progress', (True, False))
 @pytest.mark.parametrize('plots', (None, True))
 @pytest.mark.asyncio
@@ -140,6 +145,7 @@ async def test_udf_iter_async(lt_ctx, default_raw, progress, plots):
             assert np.all(ref_item == res_item)
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')  # ignore 'no plottable channels' from NoOpUDF
 @pytest.mark.parametrize(
     'plots', (
         True,

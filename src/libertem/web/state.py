@@ -45,7 +45,10 @@ class ExecutorState:
         self._pool = AsyncAdapter.make_pool()
         self._is_snoozing = False
         self._last_activity = time.monotonic()
-        self._snooze_check_interval = 30.0
+        self._snooze_check_interval = min(
+            30.0,
+            snooze_timeout * 0.1,
+        )
         self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
         self.local_directory = "dask-worker-space"
         self.preload: typing.Tuple[str, ...] = ()
@@ -65,10 +68,12 @@ class ExecutorState:
 
     def _update_last_activity(self):
         self._last_activity = time.monotonic()
+        log.debug("_update_last_activity")
 
     def snooze(self):
         if self.executor is None:
             return
+        log.info("Snoozing...")
         self.executor.ensure_sync().close()
         self.context = None
         self.executor = None
@@ -77,6 +82,7 @@ class ExecutorState:
     def unsnooze(self):
         if not self._is_snoozing:
             return
+        log.info("Unsnoozing...")
         executor = self.make_executor(self.cluster_params, self._pool)
         self._set_executor(executor, self.cluster_params)
         self._is_snoozing = False

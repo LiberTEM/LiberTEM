@@ -10,6 +10,7 @@ import webbrowser
 import ipaddress
 import urllib.parse
 from functools import partial
+from typing import Optional
 import hmac
 import hashlib
 import time
@@ -214,6 +215,7 @@ def port_from_sockets(*sockets):
 def run(
     host, port, browser, local_directory, numeric_level,
     token, preload, strict_port, executor_spec, open_ds,
+    snooze_timeout: Optional[float] = None,
 ):
     logging.basicConfig(
         level=numeric_level,
@@ -222,7 +224,7 @@ def run(
 
     # shared state:
     event_registry = EventRegistry()
-    executor_state = ExecutorState(snooze_timeout=12.0*3600)
+    executor_state = ExecutorState(snooze_timeout=snooze_timeout)
     shared_state = SharedState(executor_state=executor_state)
 
     executor_state.set_local_directory(local_directory)
@@ -238,45 +240,48 @@ def run(
         log.info(f"port {port} already in use, using random open port {_port}")
         port = _port
 
-    main(bound_sockets, event_registry, shared_state, token)
-
-    async def create_and_set_executor():
-        if executor_spec is not None:
-            # Executor creation is blocking (and slow) but we
-            # need to run this within the main loop so that Distributed
-            # attaches to that rather than trying to create its own, see:
-            # https://github.com/LiberTEM/LiberTEM/pull/1535#pullrequestreview-1699340445
-            # TL;DR: without this, our call to `loop.run_forever` causes
-            # `RuntimeError: This event loop is already running`
-            shared_state.create_and_set_executor(executor_spec)
-
     try:
-        is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)
-    except ValueError:
-        is_ipv6 = False
-    url = f'http://[{host}]:{port}' if is_ipv6 else f'http://{host}:{port}'
-    if open_ds is not None:
-        url = f'{url}/#action=open&path={open_ds}'
-    msg = f"""
+        main(bound_sockets, event_registry, shared_state, token)
 
-LiberTEM listening on {url}"""
-    parts = urllib.parse.urlsplit(url)
-    if parts.hostname in ('0.0.0.0', '::'):
-        hostname = socket.gethostname()
-        mod_url = parts._replace(netloc=f'{hostname}:{parts.port}')
-        msg = msg + f"""
-                      {urllib.parse.urlunsplit(mod_url)}
-"""
-    else:
-        # For display consistency
-        msg = msg + "\n"
-    log.info(msg)
-    if browser:
-        webbrowser.open(url)
-    loop = asyncio.get_event_loop()
-    handle_signal(shared_state)
-    # Strictly necessary only on Windows, but doesn't do harm in any case.
-    # FIXME check later if the unknown root cause was fixed upstream
-    asyncio.ensure_future(nannynanny())
-    asyncio.ensure_future(create_and_set_executor())
-    loop.run_forever()
+        async def create_and_set_executor():
+            if executor_spec is not None:
+                # Executor creation is blocking (and slow) but we
+                # need to run this within the main loop so that Distributed
+                # attaches to that rather than trying to create its own, see:
+                # https://github.com/LiberTEM/LiberTEM/pull/1535#pullrequestreview-1699340445
+                # TL;DR: without this, our call to `loop.run_forever` causes
+                # `RuntimeError: This event loop is already running`
+                shared_state.create_and_set_executor(executor_spec)
+
+        try:
+            is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)
+        except ValueError:
+            is_ipv6 = False
+        url = f'http://[{host}]:{port}' if is_ipv6 else f'http://{host}:{port}'
+        if open_ds is not None:
+            url = f'{url}/#action=open&path={open_ds}'
+        msg = f"""
+
+    LiberTEM listening on {url}"""
+        parts = urllib.parse.urlsplit(url)
+        if parts.hostname in ('0.0.0.0', '::'):
+            hostname = socket.gethostname()
+            mod_url = parts._replace(netloc=f'{hostname}:{parts.port}')
+            msg = msg + f"""
+                        {urllib.parse.urlunsplit(mod_url)}
+    """
+        else:
+            # For display consistency
+            msg = msg + "\n"
+        log.info(msg)
+        if browser:
+            webbrowser.open(url)
+        loop = asyncio.get_event_loop()
+        handle_signal(shared_state)
+        # Strictly necessary only on Windows, but doesn't do harm in any case.
+        # FIXME check later if the unknown root cause was fixed upstream
+        asyncio.ensure_future(nannynanny())
+        asyncio.ensure_future(create_and_set_executor())
+        loop.run_forever()
+    finally:
+        executor_state.shutdown()

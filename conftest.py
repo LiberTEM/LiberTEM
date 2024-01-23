@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import os
 import importlib.util
 import platform
@@ -988,6 +989,15 @@ def find_unused_port():
     with contextlib.closing(socket.socket()) as sock:
         sock.bind(('127.0.0.1', 0))
         return sock.getsockname()[1]
+
+
+if sys.version_info < (3, 8):
+    @pytest.fixture(scope='session')
+    def event_loop():
+        """Create an instance of the default event loop for each test case."""
+        loop = asyncio.get_event_loop_policy().new_event_loop()
+        yield loop
+        loop.close()
 
 
 @pytest.fixture(scope='session')

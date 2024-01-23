@@ -222,6 +222,9 @@ To modify the configuration of the server (address, port, autorization etc.), th
 .. versionadded:: 0.13.0
     :code:`--open-ds <path>` was added to preconfigure the dataset opened
     when connecting to the server
+.. versionadded:: 0.14.0
+   :code:`--snooze-timeout` was added, keeping the old behaviour by default.
+
 
 To access LiberTEM remotely, you can use :ref:`use SSH forwarding <ssh forwarding>`
 or our :ref:`jupyter integration`, if you already have JupyterHub or JupyterLab

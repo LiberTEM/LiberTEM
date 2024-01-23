@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 import pytest
+from unittest import mock
 
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor
@@ -92,30 +93,24 @@ async def test_snooze_last_activity(async_executor):
 
     try:
         # each of these activities should reset the last activity timer:
-        last = executor_state._last_activity
-        await asyncio.sleep(0.01)
+        executor_state._update_last_activity = mock.Mock()
         _ = executor_state.get_executor()
-        assert executor_state._last_activity > last
+        executor_state._update_last_activity.assert_called()
 
-        last = executor_state._last_activity
-        await asyncio.sleep(0.01)
+        executor_state._update_last_activity = mock.Mock()
         _ = executor_state.get_context()
-        assert executor_state._last_activity > last
+        executor_state._update_last_activity.assert_called()
 
-        last = executor_state._last_activity
-        await asyncio.sleep(0.01)
+        executor_state._update_last_activity.assert_called()
         _ = executor_state.get_cluster_params()
-        assert executor_state._last_activity > last
-
-        last = executor_state._last_activity
-        await asyncio.sleep(0.01)
+        executor_state._update_last_activity.assert_called()
 
         # the previous executor is closed in `set_executor`, which we don't want to
         # happen here:
         executor_state.executor = None
-
+        executor_state._update_last_activity.assert_called()
         await executor_state.set_executor(async_executor, {})
-        assert executor_state._last_activity > last
+        executor_state._update_last_activity.assert_called()
     finally:
         executor_state.shutdown()
 

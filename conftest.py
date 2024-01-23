@@ -992,12 +992,42 @@ def find_unused_port():
 
 
 if sys.version_info < (3, 8):
+    # pytest-asyncio on Python 3.7 needs a bit of help...
+    # don't do this on current versions, as overriding event_loop
+    # on current pytest-asyncio is deprecated.
     @pytest.fixture(scope='session')
     def event_loop():
         """Create an instance of the default event loop for each test case."""
         loop = asyncio.get_event_loop_policy().new_event_loop()
         yield loop
         loop.close()
+
+if (
+    sys.version_info >= (3, 8)
+    and sys.version_info < (3, 11)
+    and sys.platform.startswith("win")
+):
+    # Py3.{8,9,10} on Windows need some help with the event loop policy:
+    @pytest.fixture(scope="session", autouse=True)
+    def event_loop_policy():
+        # see also: libertem.common.async_utils.adjust_event_loop_policy
+        try:
+            from asyncio import (
+                WindowsProactorEventLoopPolicy,
+                WindowsSelectorEventLoopPolicy,
+            )
+        except ImportError:
+            return asyncio.get_event_loop_policy()
+        else:
+            # FIXME this might fail if the event loop policy has been overridden by something
+            # incompatible that is not a WindowsProactorEventLoopPolicy. Dask.distributed creates
+            # a custom event loop policy, for example. Fortunately that one should be compatible.
+            # Better would be "duck typing", i.e. to check if the required add_reader() method
+            # of the loop throws a NotImplementedError.
+            if type(asyncio.get_event_loop_policy()) is WindowsProactorEventLoopPolicy:
+                # WindowsProactorEventLoopPolicy is not compatible with tornado 6
+                # fallback to the pre-3.8 default of Selector
+                return WindowsSelectorEventLoopPolicy()
 
 
 @pytest.fixture(scope='session')

@@ -1625,7 +1625,7 @@ class Context:
                 return
             try:
                 weak_ctx().close()
-            except Exception:
+            except Exception:  # pragma: no cover
                 # can't be sure that logging is still alive,
                 # so we have to fall back to a normal print here:
                 print("\n\n\n\n\n")

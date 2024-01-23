@@ -1004,10 +1004,9 @@ if sys.version_info < (3, 8):
 
 if (
     sys.version_info >= (3, 8)
-    and sys.version_info < (3, 11)
     and sys.platform.startswith("win")
 ):
-    # Py3.{8,9,10} on Windows need some help with the event loop policy:
+    # Py3.8+ on Windows need some help with the event loop policy:
     @pytest.fixture(scope="session", autouse=True)
     def event_loop_policy():
         # see also: libertem.common.async_utils.adjust_event_loop_policy

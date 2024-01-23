@@ -220,10 +220,12 @@ class Context:
     """
 
     def __init__(self, executor: Optional[JobExecutor] = None, plot_class=None):
+        import traceback
         if executor is None:
             executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
+        self._created_at = traceback.format_stack()
         self._register_at_exit()
 
     @classmethod
@@ -1621,7 +1623,16 @@ class Context:
         def _exit():
             if weak_ctx() is None:
                 return
-            weak_ctx().close()
+            try:
+                weak_ctx().close()
+            except Exception:
+                # can't be sure that logging is still alive,
+                # so we have to fall back to a normal print here:
+                print("\n\n\n\n\n")
+                print("Exception in atexit handler for Context created here:")
+                print("".join(weak_ctx()._created_at))
+                print("\n\n\n\n\n")
+                raise
 
         atexit.register(_exit)
 

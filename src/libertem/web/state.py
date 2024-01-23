@@ -29,6 +29,14 @@ log = logging.getLogger(__name__)
 
 
 class ExecutorState:
+    """
+    Executor management for the web API. This class is used by `SharedState` to
+    manage executor instances and related state.  Executors passed into
+    `set_executors` will be taken over, and managed directly by this class.
+
+    Be sure to explicitly call the `shutdown` method to clean up, otherwise
+    there may be dangling resources preventing a clean shutdown.
+    """
     def __init__(self, snooze_timeout: typing.Optional[float] = None):
         self.executor = None
         self.cluster_params = {}
@@ -122,8 +130,17 @@ class ExecutorState:
 
     def shutdown(self):
         self._snooze_task.cancel()
+        if self.context is not None:
+            self.context.close()
 
     async def set_executor(self, executor: JobExecutor, params):
+        """
+        Set the new executor used to run jobs, and the parameters used
+        to create/connect.
+
+        After the executor is set, we take "ownership" of it, and ensure
+        that it is properly cleaned up in the `shutdown` method.
+        """
         self._update_last_activity()
         if self.executor is not None:
             await self.executor.close()

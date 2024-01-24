@@ -5,6 +5,7 @@ import itertools
 import logging
 import asyncio
 import time
+import contextlib
 
 import psutil
 
@@ -50,6 +51,7 @@ class ExecutorState:
             snooze_timeout and (snooze_timeout * 0.1) or 30.0,
         )
         self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
+        self._keep_alive = 0
         self.local_directory = "dask-worker-space"
         self.preload: typing.Tuple[str, ...] = ()
 
@@ -70,8 +72,20 @@ class ExecutorState:
         self._last_activity = time.monotonic()
         log.debug("_update_last_activity")
 
+    @contextlib.contextmanager
+    def keep_alive(self):
+        self._keep_alive += 1
+        try:
+            yield
+        finally:
+            self._keep_alive -= 1
+
     def snooze(self):
         if self.executor is None:
+            log.debug("not snoozing: no executor")
+            return
+        if self._keep_alive > 0:
+            log.debug("not snoozing: _keep_alive=%d", self._keep_alive)
             return
         log.info("Snoozing...")
         self.executor.ensure_sync().close()

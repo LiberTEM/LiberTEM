@@ -150,6 +150,59 @@ async def test_snooze_explicit(local_cluster_url):
 
 
 @pytest.mark.asyncio
+async def test_snooze_explicit_keep_alive(local_cluster_url):
+    """
+    We can't snooze if keep-alive is nonzero
+    """
+    executor_state = ExecutorState()
+    pool = AsyncAdapter.make_pool()
+    try:
+        params = {
+            "connection": {
+                "type": "tcp",
+                "address": local_cluster_url,
+            }
+        }
+        executor = executor_state.make_executor(params, pool)
+        await executor_state.set_executor(executor, params)
+
+        # if we are in at least one keep-alive section, we can't snooze:
+        with executor_state.keep_alive():
+            assert executor_state._keep_alive > 0
+            executor_state.snooze()
+            assert not executor_state._is_snoozing
+            assert executor_state.executor is not None
+            assert executor_state.context is not None
+
+        # keep-alive can nest:
+        with executor_state.keep_alive():
+            with executor_state.keep_alive():
+                assert executor_state._keep_alive > 0
+                executor_state.snooze()
+                assert not executor_state._is_snoozing
+                assert executor_state.executor is not None
+                assert executor_state.context is not None
+
+        # afterwards, we can snooze again:
+        assert executor_state._keep_alive == 0
+        executor_state.snooze()
+        assert executor_state._is_snoozing
+        assert executor_state.executor is None
+        assert executor_state.context is None
+
+        executor_state.unsnooze()
+        assert not executor_state._is_snoozing
+        assert executor_state.executor is not None
+        assert executor_state.context is not None
+        # these two work without raising an exception:
+        executor_state.get_executor()
+        executor_state.get_context()
+    finally:
+        pool.shutdown()
+        executor_state.shutdown()
+
+
+@pytest.mark.asyncio
 async def test_snooze_by_activity(local_cluster_url):
     """
     Test that timer-based snoozing works

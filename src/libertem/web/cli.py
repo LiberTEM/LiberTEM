@@ -52,7 +52,11 @@ def get_token(token_path):
               ),
               default=False, is_flag=True)
 @click.option('--snooze-timeout', type=float,
-              help='Free resources after periods of no activity, in seconds',
+              help=(
+                'Free resources after periods of no activity, in minutes. '
+                'Depending on your system, re-starting these resources might '
+                'take some time, so typical values are 10 to 30 minutes.'
+              ),
               default=None)
 def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
          insecure, host="localhost", token_path=None, preload: Tuple[str, ...] = (),
@@ -90,6 +94,8 @@ def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
         numeric_level = getattr(logging, log_level.upper(), None)
         if not isinstance(numeric_level, int):
             raise click.UsageError(f'Invalid log level: {log_level}.\n{log_values}')
+        if snooze_timeout is not None:
+            snooze_timeout *= 60.0
         run(
             host, port, browser, local_directory, numeric_level,
             token, preload, is_custom_port, executor_spec, open_ds,

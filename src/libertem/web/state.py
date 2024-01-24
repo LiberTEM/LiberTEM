@@ -74,11 +74,13 @@ class ExecutorState:
 
     @contextlib.contextmanager
     def keep_alive(self):
+        self._update_last_activity()
         self._keep_alive += 1
         try:
             yield
         finally:
             self._keep_alive -= 1
+            self._update_last_activity()
 
     def snooze(self):
         if self.executor is None:

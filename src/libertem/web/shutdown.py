@@ -13,9 +13,7 @@ class ShutdownHandler(tornado.web.RequestHandler):
 
     async def delete(self):
         log.info("Handling shutdown button")
-        if self.state.executor_state.executor is not None:
-            await self.state.executor_state.executor.close()
-            self.state.executor_state.executor = None
+        self.state.executor_state.shutdown()
         await self.finish({
             "status": "ok",
             "messageType": "SERVER_SHUTDOWN"

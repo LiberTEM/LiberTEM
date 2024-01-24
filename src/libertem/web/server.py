@@ -132,9 +132,7 @@ def make_app(event_registry, shared_state, token=None):
 
 async def do_stop(shared_state):
     log.warning("Exiting...")
-    log.debug("closing executor")
-    if shared_state.executor_state.executor is not None:
-        await shared_state.executor_state.executor.close()
+    shared_state.executor_state.shutdown()
     loop = asyncio.get_event_loop()
     log.debug("stopping event loop")
     loop.stop()

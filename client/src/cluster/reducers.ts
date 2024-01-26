@@ -11,6 +11,8 @@ export type ClusterConnectionState = {
     status: "unknown"
 } | {
     status: "connecting"
+} | {
+    status: "snoozed"
 }
 
 const initialClusterConnectionState: ClusterConnectionState = {
@@ -25,6 +27,17 @@ export const clusterConnectionReducer = (state: ClusterConnectionState = initial
             };
         }
         case clusterActions.ActionTypes.CONNECTED: {
+            return {
+                status: "connected",
+                params: action.payload.params,
+            }
+        }
+        case clusterActions.ActionTypes.SNOOZE: {
+            return {
+                status: "snoozed",
+            }
+        }
+        case clusterActions.ActionTypes.UNSNOOZE: {
             return {
                 status: "connected",
                 params: action.payload.params,

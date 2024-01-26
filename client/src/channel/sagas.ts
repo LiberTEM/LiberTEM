@@ -137,6 +137,14 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                 }
                 case channelMessages.MessageTypes.CANCEL_JOB_FAILED: {
                     yield put(channelActions.Actions.cancelFailed(msg.job));
+                    break;
+                }
+                case channelMessages.MessageTypes.SNOOZE: {
+                    yield put(channelActions.Actions.snooze(timestamp));
+                    break;
+                }
+                case channelMessages.MessageTypes.UNSNOOZE: {
+                    yield put(channelActions.Actions.unsnooze(timestamp));
                 }
                 /*
                 // FIXME: server needs to know about compount analyses

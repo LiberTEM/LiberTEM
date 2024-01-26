@@ -23,7 +23,8 @@ type MergedProps = ReturnType<typeof mapStateToProps>;
 const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus, type, localcore, cudas, address }) => {
     enum ColorType {
         blue = "blue",
-        grey = "grey"
+        grey = "grey",
+        red = "red",
     }
 
     const [color, setColor] = useState<ColorType>(ColorType.grey)
@@ -31,13 +32,19 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
     const [disable, setDisable] = useState(true)
 
     useEffect(() => {
-        if (channelStatus === ChannelStatusCodes.CONNECTED || channelStatus === ChannelStatusCodes.READY) {
+        if (channelStatus === ChannelStatusCodes.CONNECTED || channelStatus === ChannelStatusCodes.READY || channelStatus === ChannelStatusCodes.SNOOZED) {
             setStatus(clusterConnection.status)
             setDisable(false)
-            if (clusterConnection.status === "connected") {
+            if (channelStatus === "ready") {
                 setColor(ColorType.blue)
+                setStatus("connected")
+            }
+            else if (channelStatus === "snoozed") {
+                setColor(ColorType.red)
+                setStatus("snoozed")
             } else {
                 setColor(ColorType.grey)
+                setStatus("unknown")
             }
         } else {
             setDisable(true)

@@ -14,7 +14,8 @@ const messages = {
 const clusterMessages = {
     connected: "Connected, waiting for initial state...",
     unknown: "Connected, fetching cluster status...",
-    connecting: "Connecting to cluster"
+    connecting: "Connecting to cluster",
+    snoozed: "Cluster is snoozed"
 }
 
 const ConnectedNotReady: React.FC = () => {
@@ -32,6 +33,8 @@ const ConnectedNotReady: React.FC = () => {
         return <ChannelConnecting msg={clusterMessages.unknown} />;
     } else if (clusterConnection.status === "connecting") {
         return <ChannelConnecting msg={clusterMessages.connecting} />
+    } else if (clusterConnection.status === "snoozed") {
+        return <ChannelConnecting msg={clusterMessages.snoozed} />
     }
     assertNotReached("should not happen");
     return null;
@@ -52,6 +55,8 @@ const ChannelStatus: React.FC<{ children?: React.ReactNode }> = ({ children }) =
             return <>{children}</>;
         case "disconnected":
             return <ChannelShutdown />
+        case "snoozed":
+            return <>{children}</>;
         default:
             assertNotReached("should not happen");
             return null;

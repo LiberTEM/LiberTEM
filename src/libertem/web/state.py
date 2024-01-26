@@ -97,6 +97,9 @@ class ExecutorState:
             log.debug("not snoozing: _keep_alive=%d", self._keep_alive)
             return
         log.info("Snoozing...")
+        # from .messages import Message
+        # msg = Message(self.state).snooze("snoozing")
+        # self.event_registry.broadcast_event(msg)
         self.executor.ensure_sync().close()
         self.context = None
         self.executor = None
@@ -106,6 +109,9 @@ class ExecutorState:
         if not self._is_snoozing:
             return
         log.info("Unsnoozing...")
+        # from .messages import Message
+        # msg = Message(self.state).unsnooze("unsnoozing")
+        # self.event_registry.broadcast_event(msg)
         executor = self.make_executor(self.cluster_params, self._pool)
         self._set_executor(executor, self.cluster_params)
         self._is_snoozing = False

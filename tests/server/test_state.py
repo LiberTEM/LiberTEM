@@ -101,14 +101,14 @@ async def test_snooze_last_activity(async_executor):
         _ = executor_state.get_context()
         executor_state._update_last_activity.assert_called()
 
-        executor_state._update_last_activity.assert_called()
+        executor_state._update_last_activity = mock.Mock()
         _ = executor_state.get_cluster_params()
         executor_state._update_last_activity.assert_called()
 
         # the previous executor is closed in `set_executor`, which we don't want to
         # happen here:
         executor_state.executor = None
-        executor_state._update_last_activity.assert_called()
+        executor_state._update_last_activity = mock.Mock()
         await executor_state.set_executor(async_executor, {})
         executor_state._update_last_activity.assert_called()
     finally:

@@ -30,6 +30,11 @@ ResourceDef = Dict[
 tracer = trace.get_tracer(__name__)
 
 
+class PreparedParameter:
+    def __init__(self, key):
+        self.key = key
+
+
 class ExecutorError(Exception):
     pass
 

@@ -4,7 +4,7 @@ Installation
 ============
 
 .. note::
-    LiberTEM can currently be used on Python 3.7, 3.8, >=3.9.3, 3.10 and 3.11.
+    LiberTEM can currently be used on Python 3.7, 3.8, >=3.9.3, 3.10, 3.11 and 3.12.
 
     If you would like to install the latest development version, please also
     see :ref:`installing from a git clone`.

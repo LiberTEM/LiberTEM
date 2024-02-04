@@ -20,12 +20,12 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         path = path[0].decode("utf8")
         try:
             listing = await executor.run_function(get_fs_listing, path)
-            msg = Message(self.state).directory_listing(
+            msg = Message().directory_listing(
                 **listing
             )
             self.write(msg)
         except FSError as e:
-            msg = Message(self.state).browse_failed(
+            msg = Message().browse_failed(
                 path=path,
                 code=e.code,
                 msg=str(e),
@@ -50,7 +50,7 @@ class LocalFSStatHandler(tornado.web.RequestHandler):
                 path_slash = path + os.path.sep
             else:
                 path_slash = path
-            msg = Message(self.state).browse_stat_result(
+            msg = Message().browse_stat_result(
                 path=path,
                 dirname=os.path.dirname(path_slash),
                 basename=os.path.basename(path_slash),
@@ -58,7 +58,7 @@ class LocalFSStatHandler(tornado.web.RequestHandler):
             )
             self.write(msg)
         except FSError as e:
-            msg = Message(self.state).stat_failed(
+            msg = Message().stat_failed(
                 path=path,
                 code=e.code,
                 msg=str(e),

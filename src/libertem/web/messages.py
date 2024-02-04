@@ -11,9 +11,6 @@ class Message:
     possible messages - the translation of our python datatypes to json types
     """
 
-    def __init__(self, state: SharedState):
-        self.state = state
-
     def initial_state(self, jobs, datasets, analyses, compound_analyses):
         return {
             "status": "ok",
@@ -99,13 +96,13 @@ class Message:
             "msg": reason,
         }
 
-    def start_job(self, job_id, analysis_id):
+    def start_job(self, serialized_job, analysis_id):
         return {
             "status": "ok",
             "messageType": "JOB_STARTED",
-            "job": job_id,
+            "job": serialized_job["id"],
             "analysis": analysis_id,
-            "details": self.state.job_state.serialize(job_id),
+            "details": serialized_job,
         }
 
     def job_error(self, job_id, msg):
@@ -128,12 +125,12 @@ class Message:
             }
         }
 
-    def finish_job(self, job_id, num_images, image_descriptions):
+    def finish_job(self, serialized_job, num_images, image_descriptions):
         return {
             "status": "ok",
             "messageType": "FINISH_JOB",
-            "job": job_id,
-            "details": self.state.job_state.serialize(job_id),
+            "job": serialized_job["id"],
+            "details": serialized_job,
             "followup": {
                 "numMessages": num_images,
                 "descriptions": image_descriptions,

@@ -98,7 +98,7 @@ class ExecutorState:
             return
         log.info("Snoozing...")
         # from .messages import Message
-        # msg = Message(self.state).snooze("snoozing")
+        # msg = Message().snooze("snoozing")
         # self.event_registry.broadcast_event(msg)
         self.executor.ensure_sync().close()
         self.context = None
@@ -110,7 +110,7 @@ class ExecutorState:
             return
         log.info("Unsnoozing...")
         # from .messages import Message
-        # msg = Message(self.state).unsnooze("unsnoozing")
+        # msg = Message().unsnooze("unsnoozing")
         # self.event_registry.broadcast_event(msg)
         executor = self.make_executor(self.cluster_params, self._pool)
         self._set_executor(executor, self.cluster_params)

@@ -28,8 +28,9 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
             request_data = tornado.escape.json_decode(self.request.body)
             analysis_id = request_data['job']['analysis']
             await self.engine.register_job(analysis_id, job_id)
-            msg = Message(self.state).start_job(
-                job_id=job_id, analysis_id=analysis_id,
+            serialized_job = self.state.job_state.serialize(job_id)
+            msg = Message().start_job(
+                serialized_job=serialized_job, analysis_id=analysis_id,
             )
             span.set_attributes({
                 "libertem.job_id": job_id,
@@ -43,13 +44,13 @@ class JobDetailHandler(CORSMixin, tornado.web.RequestHandler):
     async def delete(self, job_id):
         result = await self.state.job_state.remove(job_id)
         if result:
-            msg = Message(self.state).cancel_job(job_id)
+            msg = Message().cancel_job(job_id)
             log_message(msg)
             self.event_registry.broadcast_event(msg)
             self.write(msg)
         else:
             log.warning("tried to remove unknown job %s", job_id)
-            msg = Message(self.state).cancel_failed(job_id)
+            msg = Message().cancel_failed(job_id)
             log_message(msg)
             self.event_registry.broadcast_event(msg)
             self.write(msg)

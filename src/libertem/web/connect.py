@@ -52,7 +52,7 @@ class ConnectHandler(tornado.web.RequestHandler):
             try:
                 executor = self.state.executor_state.make_executor(request_data, pool)
             except Exception as e:
-                msg = Message(self.state).cluster_conn_error(msg=str(e))
+                msg = Message().cluster_conn_error(msg=str(e))
                 log_message(msg, exception=True)
                 self.set_status(500)
                 self.write(msg)
@@ -60,7 +60,7 @@ class ConnectHandler(tornado.web.RequestHandler):
             await self.state.executor_state.set_executor(executor, request_data)
         await self.state.dataset_state.verify()
         datasets = await self.state.dataset_state.serialize_all()
-        msg = Message(self.state).initial_state(
+        msg = Message().initial_state(
             jobs=self.state.job_state.serialize_all(),
             datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
             compound_analyses=self.state.compound_analysis_state.serialize_all(),

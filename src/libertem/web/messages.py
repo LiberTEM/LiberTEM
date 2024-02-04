@@ -1,7 +1,6 @@
 import os
 import stat
 
-from .state import SharedState
 from libertem.common.messageconverter import MessageConverter  # NOQA: F401
 from libertem.common.progress import ProgressState
 

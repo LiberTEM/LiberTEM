@@ -40,7 +40,7 @@ from libertem.utils.devices import detect
 
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState, ExecutorState
-from libertem.web.event_bus import EventBus, MessagePump
+from libertem.web.event_bus import EventBus
 from libertem.executor.base import AsyncAdapter
 from libertem.common.async_utils import sync_to_async
 from libertem.common.async_utils import adjust_event_loop_policy

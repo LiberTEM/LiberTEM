@@ -246,7 +246,7 @@ async def test_snooze_by_activity(local_cluster_url):
         assert executor_state.context is not None
 
         # should not raise an exception, there should be a snooze message
-        # in here:
-        msg = event_bus.get()
+        # in here (raises Empty otherwise):
+        event_bus.get()
     finally:
         executor_state.shutdown()

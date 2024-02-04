@@ -40,6 +40,7 @@ from libertem.utils.devices import detect
 
 from libertem.web.server import make_app, EventRegistry
 from libertem.web.state import SharedState, ExecutorState
+from libertem.web.event_bus import EventBus, MessagePump
 from libertem.executor.base import AsyncAdapter
 from libertem.common.async_utils import sync_to_async
 from libertem.common.async_utils import adjust_event_loop_policy
@@ -888,7 +889,8 @@ async def http_client():
 
 @pytest.fixture
 async def shared_state():
-    executor_state = ExecutorState()
+    event_bus = EventBus()
+    executor_state = ExecutorState(event_bus=event_bus)
     yield SharedState(executor_state=executor_state)
     executor_state.shutdown()
 

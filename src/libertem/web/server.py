@@ -35,6 +35,7 @@ from .analysis import (
     AnalysisRPCHandler,
 )
 from .generator import DownloadScriptHandler, CopyScriptHandler
+from .event_bus import EventBus, MessagePump
 
 log = logging.getLogger(__name__)
 
@@ -223,8 +224,10 @@ def run(
     loop = asyncio.get_event_loop()
 
     # shared state:
+    event_bus = EventBus()
     event_registry = EventRegistry()
-    executor_state = ExecutorState(snooze_timeout=snooze_timeout, loop=loop)
+    pump = MessagePump(event_bus=event_bus, event_registry=event_registry)
+    executor_state = ExecutorState(event_bus=event_bus, snooze_timeout=snooze_timeout, loop=loop)
     shared_state = SharedState(executor_state=executor_state)
 
     executor_state.set_local_directory(local_directory)
@@ -277,6 +280,7 @@ def run(
         if browser:
             webbrowser.open(url)
         handle_signal(shared_state)
+        asyncio.ensure_future(pump.run())
         # Strictly necessary only on Windows, but doesn't do harm in any case.
         # FIXME check later if the unknown root cause was fixed upstream
         asyncio.ensure_future(nannynanny())

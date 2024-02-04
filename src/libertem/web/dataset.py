@@ -73,7 +73,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             self.set_status(404, "dataset with uuid %s not found" % uuid)
             return
         await self.dataset_state.remove(uuid)
-        msg = Message(self.state).delete_dataset(uuid)
+        msg = Message().delete_dataset(uuid)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
@@ -122,14 +122,14 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
                 converted=dataset_params,
             )
             details = await self.dataset_state.serialize(dataset_id=uuid)
-            msg = Message(self.state).create_dataset(dataset=uuid, details=details)
+            msg = Message().create_dataset(dataset=uuid, details=details)
             log_message(msg)
             self.write(msg)
             self.event_registry.broadcast_event(msg)
         except Exception as e:
             if uuid in self.dataset_state:
                 await self.dataset_state.remove(uuid)
-            msg = Message(self.state).create_dataset_error(uuid, str(e))
+            msg = Message().create_dataset_error(uuid, str(e))
             log_message(msg, exception=True)
             self.write(msg)
             return
@@ -149,7 +149,7 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         )
 
         if not detected_params:
-            msg = Message(self.state).dataset_detect_failed(path=path)
+            msg = Message().dataset_detect_failed(path=path)
             log_message(msg)
             self.write(msg)
             return
@@ -159,6 +159,6 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
             info = detected_params["info"]
         params.update({"type": detected_params["type"].upper()})
         info.update({"type": detected_params["type"].upper()})
-        msg = Message(self.state).dataset_detect(params=params, info=info)
+        msg = Message().dataset_detect(params=params, info=info)
         log_message(msg)
         self.write(msg)

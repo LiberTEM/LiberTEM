@@ -55,7 +55,7 @@ class ResultEventHandler(tornado.websocket.WebSocketHandler):
         if self.state.executor_state.have_executor():
             await self.state.dataset_state.verify()
             datasets = await self.state.dataset_state.serialize_all()
-            msg = Message(self.state).initial_state(
+            msg = Message().initial_state(
                 jobs=self.state.job_state.serialize_all(),
                 datasets=datasets, analyses=self.state.analysis_state.serialize_all(),
                 compound_analyses=self.state.compound_analysis_state.serialize_all(),

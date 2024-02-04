@@ -60,7 +60,7 @@ class WebProgressReporter(ProgressReporter):
         self.handle_state_update(state, "end")
 
     def handle_state_update(self, state: ProgressState, event: str):
-        msg = Message(self.state).job_progress(
+        msg = Message().job_progress(
             job_id=self.job_id, state=state, event=event
         )
 
@@ -115,13 +115,13 @@ class JobEngine:
                     details=analysis_details,
                 )
             except JobCancelledError:
-                msg = Message(self.state).cancel_done(job_id)
+                msg = Message().cancel_done(job_id)
                 log_message(msg)
                 await self.event_registry.broadcast_event(msg)
                 return
             except Exception as e:
                 log.exception("error running job, params=%r", params)
-                msg = Message(self.state).job_error(job_id, "error running job: %s" % str(e))
+                msg = Message().job_error(job_id, "error running job: %s" % str(e))
                 self.event_registry.broadcast_event(msg)
                 await self.state.job_state.remove(job_id)
 
@@ -166,8 +166,9 @@ class JobEngine:
         roi = analysis.get_roi()
 
         executor = self.state.executor_state.get_executor()
-        msg = Message(self.state).start_job(
-            job_id=job_id, analysis_id=analysis_id,
+        serialized_job = self.state.job_state.serialize(job_id)
+        msg = Message().start_job(
+            serialized_job=serialized_job, analysis_id=analysis_id,
         )
         self.event_registry.broadcast_event(msg)
 
@@ -272,8 +273,9 @@ class JobEngine:
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()
         if finished:
-            msg = Message(self.state).finish_job(
-                job_id=job_id,
+            serialized_job = self.state.job_state.serialize(job_id)
+            msg = Message().finish_job(
+                serialized_job=serialized_job,
                 num_images=len(results),
                 image_descriptions=[
                     {"title": result.title, "desc": result.desc,
@@ -285,7 +287,7 @@ class JobEngine:
                 analysis_id, details, results, job_id, udf_results
             )
         else:
-            msg = Message(self.state).task_result(
+            msg = Message().task_result(
                 job_id=job_id,
                 num_images=len(results),
                 image_descriptions=[
@@ -312,9 +314,10 @@ class JobEngine:
     async def send_existing_job_results(self):
         results = self.state.analysis_state.get_all_results()
         for analysis_id, (details, result_set, job_id, udf_results) in results:
+            serialized_job = self.state.job_state.serialize(job_id)
             await self.event_registry.broadcast_event(
-                Message(self.state).start_job(
-                    job_id=job_id, analysis_id=analysis_id,
+                Message().start_job(
+                    serialized_job=serialized_job, analysis_id=analysis_id,
                 )
             )
             await self.send_results(

@@ -55,14 +55,14 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
 
     async def _create(self, uuid, dataset_id, analysis_type, params):
         self.state.analysis_state.create(uuid, dataset_id, analysis_type, params)
-        msg = Message(self.state).create_analysis(uuid, dataset_id, analysis_type, params)
+        msg = Message().create_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
 
     async def _update(self, uuid, dataset_id, analysis_type, existing_analysis, params):
         self.state.analysis_state.update(uuid, analysis_type, params)
-        msg = Message(self.state).update_analysis(uuid, dataset_id, analysis_type, params)
+        msg = Message().update_analysis(uuid, dataset_id, analysis_type, params)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
@@ -74,10 +74,10 @@ class AnalysisDetailHandler(CORSMixin, tornado.web.RequestHandler):
         """
         result = await self.state.analysis_state.remove(uuid)
         if result:
-            msg = Message(self.state).analysis_removed(uuid)
+            msg = Message().analysis_removed(uuid)
         else:
             # FIXME: concrete error message?
-            msg = Message(self.state).analysis_removal_failed(uuid, "analysis could not be removed")
+            msg = Message().analysis_removal_failed(uuid, "analysis could not be removed")
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
@@ -126,9 +126,9 @@ class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
         )
         serialized = self.state.compound_analysis_state.serialize(uuid)
         if created:
-            msg = Message(self.state).compound_analysis_created(serialized)
+            msg = Message().compound_analysis_created(serialized)
         else:
-            msg = Message(self.state).compound_analysis_updated(serialized)
+            msg = Message().compound_analysis_updated(serialized)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)
@@ -138,10 +138,10 @@ class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
         for analysis_id in ca["details"]["analyses"]:
             result = await self.state.analysis_state.remove(analysis_id)
             if result:
-                msg = Message(self.state).analysis_removed(analysis_id)
+                msg = Message().analysis_removed(analysis_id)
             else:
                 # FIXME: concrete error message?
-                msg = Message(self.state).analysis_removal_failed(
+                msg = Message().analysis_removal_failed(
                     analysis_id, "analysis could not be removed"
                 )
             log_message(msg)
@@ -149,7 +149,7 @@ class CompoundAnalysisHandler(CORSMixin, tornado.web.RequestHandler):
 
         self.state.compound_analysis_state.remove(uuid)
 
-        msg = Message(self.state).compound_analysis_removed(uuid)
+        msg = Message().compound_analysis_removed(uuid)
         log_message(msg)
         self.event_registry.broadcast_event(msg)
         self.write(msg)

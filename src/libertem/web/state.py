@@ -51,6 +51,7 @@ class ExecutorState:
             snooze_timeout and (snooze_timeout * 0.1) or 30.0,
         )
         self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
+        self._loop = asyncio.get_running_loop()
         self._keep_alive = 0
         self.local_directory = "dask-worker-space"
         self.preload: typing.Tuple[str, ...] = ()
@@ -151,7 +152,7 @@ class ExecutorState:
         return self.context
 
     def shutdown(self):
-        self._snooze_task.cancel()
+        self._loop.call_soon_threadsafe(self._snooze_task.cancel)
         if self.context is not None:
             self.context.close()
 

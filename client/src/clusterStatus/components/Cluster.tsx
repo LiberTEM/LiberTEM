@@ -35,11 +35,11 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
         if (channelStatus === ChannelStatusCodes.CONNECTED || channelStatus === ChannelStatusCodes.READY || channelStatus === ChannelStatusCodes.SNOOZED) {
             setStatus(clusterConnection.status)
             setDisable(false)
-            if (channelStatus === "ready") {
+            if (channelStatus === ChannelStatusCodes.READY) {
                 setColor(ColorType.blue)
                 setStatus("connected")
             }
-            else if (channelStatus === "snoozed") {
+            else if (channelStatus ===ChannelStatusCodes.SNOOZED) {
                 setColor(ColorType.red)
                 setStatus("snoozed")
             } else {

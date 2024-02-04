@@ -25,6 +25,7 @@ from .models import (
     DatasetInfo, JobInfo, SerializedJobInfo,
 )
 from .helpers import create_executor
+from .event_bus import EventBus
 
 log = logging.getLogger(__name__)
 
@@ -40,12 +41,14 @@ class ExecutorState:
     """
     def __init__(
         self,
+        event_bus: EventBus,
         loop: typing.Optional[asyncio.AbstractEventLoop] = None,
         snooze_timeout: typing.Optional[float] = None,
     ):
         self.executor = None
         self.cluster_params = {}
         self.context: typing.Optional[Context] = None
+        self._event_bus = event_bus
         self._snooze_timeout = snooze_timeout
         self._pool = AsyncAdapter.make_pool()
         self._is_snoozing = False
@@ -97,9 +100,9 @@ class ExecutorState:
             log.debug("not snoozing: _keep_alive=%d", self._keep_alive)
             return
         log.info("Snoozing...")
-        # from .messages import Message
-        # msg = Message().snooze("snoozing")
-        # self.event_registry.broadcast_event(msg)
+        from .messages import Message
+        msg = Message().snooze("snoozing")
+        self._event_bus.send(msg)
         self.executor.ensure_sync().close()
         self.context = None
         self.executor = None
@@ -109,9 +112,9 @@ class ExecutorState:
         if not self._is_snoozing:
             return
         log.info("Unsnoozing...")
-        # from .messages import Message
-        # msg = Message().unsnooze("unsnoozing")
-        # self.event_registry.broadcast_event(msg)
+        from .messages import Message
+        msg = Message().unsnooze("unsnoozing")
+        self._event_bus.send(msg)
         executor = self.make_executor(self.cluster_params, self._pool)
         self._set_executor(executor, self.cluster_params)
         self._is_snoozing = False

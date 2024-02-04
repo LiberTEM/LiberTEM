@@ -5,6 +5,7 @@ from unittest import mock
 
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor
+from libertem.web.event_bus import EventBus
 from libertem.web.state import JobState, ExecutorState, SharedState
 
 
@@ -13,7 +14,8 @@ pytestmark = []
 
 @pytest.mark.asyncio
 async def test_job_state_remove(async_executor):
-    executor_state = ExecutorState()
+    event_bus = EventBus()
+    executor_state = ExecutorState(event_bus=event_bus)
     try:
         await executor_state.set_executor(async_executor, {})
         job_state = JobState(executor_state=executor_state)
@@ -50,7 +52,8 @@ async def test_job_state_remove(async_executor):
 @pytest.mark.asyncio
 async def test_preload_executor(tmpdir_factory):
     workdir = tmpdir_factory.mktemp('preload_workdir')
-    executor_state = ExecutorState()
+    event_bus = EventBus()
+    executor_state = ExecutorState(event_bus=event_bus)
     sync_exec = None
     try:
         state = SharedState(executor_state=executor_state)
@@ -88,7 +91,8 @@ async def test_preload_executor(tmpdir_factory):
 
 @pytest.mark.asyncio
 async def test_snooze_last_activity(async_executor):
-    executor_state = ExecutorState()
+    event_bus = EventBus()
+    executor_state = ExecutorState(event_bus=event_bus)
     await executor_state.set_executor(async_executor, {})
 
     try:
@@ -120,7 +124,8 @@ async def test_snooze_explicit(local_cluster_url):
     """
     We can snooze and unsnooze the executor that is part of the ExecutorState:
     """
-    executor_state = ExecutorState()
+    event_bus = EventBus()
+    executor_state = ExecutorState(event_bus=event_bus)
     pool = AsyncAdapter.make_pool()
     try:
         params = {
@@ -154,7 +159,8 @@ async def test_snooze_explicit_keep_alive(local_cluster_url):
     """
     We can't snooze if keep-alive is nonzero
     """
-    executor_state = ExecutorState()
+    event_bus = EventBus()
+    executor_state = ExecutorState(event_bus=event_bus)
     pool = AsyncAdapter.make_pool()
     try:
         params = {
@@ -208,7 +214,8 @@ async def test_snooze_by_activity(local_cluster_url):
     Test that timer-based snoozing works
     """
     pool = AsyncAdapter.make_pool()
-    executor_state = ExecutorState(snooze_timeout=0.01)
+    event_bus = EventBus()
+    executor_state = ExecutorState(snooze_timeout=0.01, event_bus=event_bus)
     try:
         params = {
             "connection": {
@@ -237,5 +244,9 @@ async def test_snooze_by_activity(local_cluster_url):
         assert not executor_state._is_snoozing
         assert executor_state.executor is not None
         assert executor_state.context is not None
+
+        # should not raise an exception, there should be a snooze message
+        # in here:
+        msg = event_bus.get()
     finally:
         executor_state.shutdown()

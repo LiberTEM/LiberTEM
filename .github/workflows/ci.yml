@@ -36,6 +36,8 @@ jobs:
         run: tox -e 'py${{ matrix.python_version }}'
       - name: submit code coverage
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   node:
     runs-on: ubuntu-latest
@@ -53,6 +55,8 @@ jobs:
       - run: (cd client && npm run lint)
       - name: submit code coverage
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   additional:
     strategy:
@@ -73,6 +77,8 @@ jobs:
         run: tox -e '${{ matrix.envs }}'
       - name: submit code coverage
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   build-docker-image:
     runs-on: ubuntu-latest

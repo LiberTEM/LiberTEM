@@ -8,7 +8,7 @@ from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 try:
     import resource
     _, hard_lim = resource.getrlimit(resource.RLIMIT_NOFILE)
-    pytestmark = pytest.mark.skipif(hard_lim < 2 ** 14, reason="hard file limit is too low")  # NOQA
+    pytestmark = pytest.mark.skipif(hard_lim < 2 ** 15, reason="hard file limit is too low")  # NOQA
 except ModuleNotFoundError:
     # Not available on Windows
     pass

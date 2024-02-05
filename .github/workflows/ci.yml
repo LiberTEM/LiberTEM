@@ -150,7 +150,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
       - run: |
           curl -XPOST -u "sk1p:${{secrets.PAGES_TRIGGER_GH_TOKEN}}" -H "Accept: application/vnd.github.everest-preview+json" -H 'Content-Type: application/json' https://api.github.com/repos/LiberTEM/libertem.github.io/dispatches --data '{"event_type":"build_pages","client_payload":{"from":"LiberTEM"}}'
 

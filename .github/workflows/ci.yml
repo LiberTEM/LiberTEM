@@ -87,7 +87,7 @@ jobs:
       - name: generate requirements.txt
         run: cd packaging/docker && ./update_reqs.sh
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -182,7 +182,7 @@ jobs:
       - name: run release script
         run: ./scripts/release --verbose upload --no-dry-run --pypi-user __token__ --pypi-test-user __token__ --build-appimage
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:

@@ -74,7 +74,9 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
 
 
     const clusterDetails = () => {
-        if (clusterConnection.status === "connected") {
+        if (clusterConnection.status === "connected" ||
+            clusterConnection.status === "snoozed" ||
+            clusterConnection.status === "unsnoozing") {
             if (type === ClusterTypes.LOCAL) {
                 return <LocalStatus cudas={cudas} localCores={localcore} />;
             } else {

@@ -15,6 +15,7 @@ variables:
   - name: PIP_CACHE_DIR
     value: $(Pipeline.Workspace)/.pip
   - group: Packaging
+  - group: Coverage
   - name: npm_config_cache
     value: $(Pipeline.Workspace)/.npm
   - name: tox_dir
@@ -77,6 +78,8 @@ stages:
 
       - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
+        env:
+          CODECOV_TOKEN: $(CODECOV_TOKEN)
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()
@@ -149,6 +152,8 @@ stages:
 
       - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
+        env:
+          CODECOV_TOKEN: $(CODECOV_TOKEN)
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()
@@ -195,6 +200,8 @@ stages:
 
       - bash: ./scripts/codecov.sh -f ./coverage.xml
         displayName: 'Submit coverage to codecov.io'
+        env:
+          CODECOV_TOKEN: $(CODECOV_TOKEN)
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()

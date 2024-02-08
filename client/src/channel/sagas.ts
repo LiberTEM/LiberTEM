@@ -145,7 +145,11 @@ export function* actionsFromChannel(socketChannel: SocketChannel) {
                 }
                 case channelMessages.MessageTypes.UNSNOOZE: {
                     yield put(channelActions.Actions.unsnooze(timestamp));
+                    break;
                 }
+                case channelMessages.MessageTypes.UNSNOOZE_DONE: {
+                    yield put(channelActions.Actions.unsnooze_done(timestamp));
+                }                
                 /*
                 // FIXME: server needs to know about compount analyses
                 case channelMessages.MessageTypes.ANALYSIS_CREATED: {

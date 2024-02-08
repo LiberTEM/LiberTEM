@@ -27,7 +27,13 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
         red = "red",
     }
 
+    enum IconType {
+        plug = "plug",
+        broken = "broken chain",
+    }
+
     const [color, setColor] = useState<ColorType>(ColorType.grey)
+    const [icon, setIcon] = useState<IconType>(IconType.plug)
     const [status, setStatus] = useState(clusterConnection.status)
     const [disable, setDisable] = useState(true)
 
@@ -38,13 +44,16 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
             if (channelStatus === ChannelStatusCodes.READY) {
                 setColor(ColorType.blue)
                 setStatus("connected")
+                setIcon(IconType.plug)
             }
             else if (channelStatus ===ChannelStatusCodes.SNOOZED) {
-                setColor(ColorType.red)
+                setColor(ColorType.grey)
                 setStatus("snoozed")
+                setIcon(IconType.broken)
             } else {
                 setColor(ColorType.grey)
                 setStatus("unknown")
+                setIcon(IconType.broken)
             }
         } else {
             setDisable(true)
@@ -73,7 +82,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
                 <Button
                     color={color}
                     content="Cluster info"
-                    icon="plug"
+                    icon={icon}
                     labelPosition="left"
                     disabled={disable}
                     label={{ as: "a", basic: true, content: status }} />}

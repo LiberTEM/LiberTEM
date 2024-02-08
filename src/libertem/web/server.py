@@ -220,9 +220,11 @@ def run(
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
 
+    loop = asyncio.get_event_loop()
+
     # shared state:
     event_registry = EventRegistry()
-    executor_state = ExecutorState(snooze_timeout=snooze_timeout)
+    executor_state = ExecutorState(snooze_timeout=snooze_timeout, loop=loop)
     shared_state = SharedState(executor_state=executor_state)
 
     executor_state.set_local_directory(local_directory)
@@ -274,7 +276,6 @@ def run(
         log.info(msg)
         if browser:
             webbrowser.open(url)
-        loop = asyncio.get_event_loop()
         handle_signal(shared_state)
         # Strictly necessary only on Windows, but doesn't do harm in any case.
         # FIXME check later if the unknown root cause was fixed upstream

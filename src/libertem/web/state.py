@@ -38,7 +38,11 @@ class ExecutorState:
     Be sure to explicitly call the `shutdown` method to clean up, otherwise
     there may be dangling resources preventing a clean shutdown.
     """
-    def __init__(self, snooze_timeout: typing.Optional[float] = None):
+    def __init__(
+        self,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+        snooze_timeout: typing.Optional[float] = None,
+    ):
         self.executor = None
         self.cluster_params = {}
         self.context: typing.Optional[Context] = None
@@ -51,7 +55,9 @@ class ExecutorState:
             snooze_timeout and (snooze_timeout * 0.1) or 30.0,
         )
         self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
-        self._loop = asyncio.get_running_loop()
+        if loop is None:
+            loop = asyncio.get_event_loop()
+        self._loop = loop
         self._keep_alive = 0
         self.local_directory = "dask-worker-space"
         self.preload: typing.Tuple[str, ...] = ()

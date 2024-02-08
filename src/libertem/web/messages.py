@@ -41,6 +41,13 @@ class Message:
             "msg": msg,
         }
 
+    def unsnooze_done(self, msg):
+        return {
+            "status": "ok",
+            "messageType": "UNSNOOZE_DONE",
+            "msg": msg,
+        }
+
     def config(self, config):
         return {
             "status": "ok",

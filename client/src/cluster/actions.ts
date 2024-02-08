@@ -8,7 +8,7 @@ export enum ActionTypes {
     CONNECTED = 'CLUSTER_CONNECTED',
     ERROR = 'CLUSTER_ERROR',
     SNOOZE = 'CLUSTER_SNOOZE',
-    UNSNOOZE = 'CLUSTER_UNSNOOZE',
+    UNSNOOZING = 'CLUSTER_UNSNOOZING',
 }
 
 export const Actions = {
@@ -18,7 +18,7 @@ export const Actions = {
     connected: (params: ConnectRequestParams ) => createAction(ActionTypes.CONNECTED, { params }),
     error: (msg: string, timestamp: number, id: string) => createAction(ActionTypes.ERROR, { msg, timestamp, id }),
     snooze: () => createAction(ActionTypes.SNOOZE),
-    unsnooze: (params: ConnectRequestParams) => createAction(ActionTypes.UNSNOOZE, { params },),
+    unsnooze: () => createAction(ActionTypes.UNSNOOZING),
 }
 
 export type Actions = ActionsUnion<typeof Actions>;

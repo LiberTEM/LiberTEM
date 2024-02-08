@@ -30,6 +30,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
     enum IconType {
         plug = "plug",
         broken = "broken chain",
+        wait = "refresh",
     }
 
     const [color, setColor] = useState<ColorType>(ColorType.grey)
@@ -38,7 +39,10 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
     const [disable, setDisable] = useState(true)
 
     useEffect(() => {
-        if (channelStatus === ChannelStatusCodes.CONNECTED || channelStatus === ChannelStatusCodes.READY || channelStatus === ChannelStatusCodes.SNOOZED) {
+        if (channelStatus === ChannelStatusCodes.CONNECTED 
+            || channelStatus === ChannelStatusCodes.READY
+            || channelStatus === ChannelStatusCodes.SNOOZED
+            || channelStatus === ChannelStatusCodes.UNSNOOZING) {
             setStatus(clusterConnection.status)
             setDisable(false)
             if (channelStatus === ChannelStatusCodes.READY) {
@@ -50,6 +54,11 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
                 setColor(ColorType.grey)
                 setStatus("snoozed")
                 setIcon(IconType.broken)
+            }
+            else if (channelStatus === ChannelStatusCodes.UNSNOOZING) {
+                setColor(ColorType.grey)
+                setStatus("unsnoozing")
+                setIcon(IconType.wait)
             } else {
                 setColor(ColorType.grey)
                 setStatus("unknown")

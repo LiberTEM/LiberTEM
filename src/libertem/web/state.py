@@ -118,6 +118,8 @@ class ExecutorState:
         executor = self.make_executor(self.cluster_params, self._pool)
         self._set_executor(executor, self.cluster_params)
         self._is_snoozing = False
+        msg = Message().unsnooze_done("unsnooze done")
+        self._event_bus.send(msg)
 
     async def _snooze_check_task(self):
         """

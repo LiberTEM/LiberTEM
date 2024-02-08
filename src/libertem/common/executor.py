@@ -312,7 +312,7 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
-    def get_resource_details(self):
+    def get_resource_details(self) -> List[Dict[str, Any]]:
         """
         Returns a list of dicts with cluster details
 

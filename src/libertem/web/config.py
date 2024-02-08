@@ -31,8 +31,7 @@ class ClusterDetailHandler(tornado.web.RequestHandler):
         self.event_registry = event_registry
 
     async def get(self):
-        executor = self.state.executor_state.get_executor()
-        details = await executor.get_resource_details()
+        details = await self.state.executor_state.get_resource_details()
         msg = Message().cluster_details(details=details)
         log_message(msg)
         self.write(msg)

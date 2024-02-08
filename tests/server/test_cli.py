@@ -8,11 +8,14 @@ import pytest
 
 @pytest.fixture(scope="module")
 def event_loop_policy(request):
+    if sys.platform.startswith("win"):
+        return asyncio.WindowsProactorEventLoopPolicy()
     return asyncio.get_event_loop_policy()  # TODO: windows fixes
 
 
 @pytest.mark.asyncio
 async def test_libertem_server_cli_startup():
+    CTRL_C = signal.SIGINT
     # make sure we can start `libertem-server` and stop it again using ctrl+c
     # this is kind of a smoke test, which should cover the main cli functions.
     p = await asyncio.create_subprocess_exec(
@@ -42,23 +45,36 @@ async def test_libertem_server_cli_startup():
             line = line.decode("utf8")
             print('Line@_debug:', line, end='')
 
-    asyncio.ensure_future(_debug())
+    debug_task = asyncio.ensure_future(_debug())
 
     try:
-        # now, let's kill the subprocess:
-        # ctrl+s twice should do the job:
-        p.send_signal(signal.SIGINT)
-        await asyncio.sleep(0.5)
-        if p.returncode is None:
-            p.send_signal(signal.SIGINT)
+        # windows likes to be special, so we just kill the subprocess instead:
+        if sys.platform.startswith("win"):
+            if p.returncode is None:
+                p.terminate()
+                await asyncio.sleep(0.2)
+                await asyncio.wait_for(p.wait(), 1)
+            if p.returncode is None:
+                p.kill()
+                await asyncio.wait_for(p.wait(), 1)
+        else:
+            # now, let's kill the subprocess:
+            # ctrl+c twice should do the job:
+            p.send_signal(CTRL_C)
+            await asyncio.sleep(0.5)
+            if p.returncode is None:
+                p.send_signal(CTRL_C)
 
-        # wait for the process to stop, but max. 1 second:
-        ret = await asyncio.wait_for(p.wait(), 1)
-        assert ret == 0
+            # wait for the process to stop, but max. 1 second:
+            ret = await asyncio.wait_for(p.wait(), 1)
+            assert ret == 0
     except Exception:
         if p.returncode is None:
             p.terminate()
             await asyncio.sleep(0.2)
         if p.returncode is None:
             p.kill()
+        await asyncio.wait_for(p.wait(), 1)
         raise
+    finally:
+        debug_task.cancel()

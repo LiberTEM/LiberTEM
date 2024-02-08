@@ -101,3 +101,9 @@ def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
             token, preload, is_custom_port, executor_spec, open_ds,
             snooze_timeout,
         )
+
+
+# to enable calling this without using the entry point script,
+# for example using `python -m libertem.web.cli`:
+if __name__ == "__main__":
+    main()

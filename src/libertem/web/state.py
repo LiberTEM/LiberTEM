@@ -47,6 +47,7 @@ class ExecutorState:
     ):
         self.executor = None
         self.cluster_params = {}
+        self.cluster_details: typing.Optional[typing.List] = None
         self.context: typing.Optional[Context] = None
         self._event_bus = event_bus
         self._snooze_timeout = snooze_timeout
@@ -160,6 +161,14 @@ class ExecutorState:
 
     def have_executor(self):
         return self.executor is not None or self._is_snoozing
+
+    async def get_resource_details(self):
+        # memoize the cluster details, if ever we support
+        # dynamic resources this will need to change
+        if self.cluster_details is None:
+            executor = self.get_executor()
+            self.cluster_details = await executor.get_resource_details()
+        return self.cluster_details
 
     def get_context(self) -> Context:
         self.unsnooze()

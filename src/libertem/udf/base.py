@@ -358,7 +358,8 @@ class UDFMeta:
         corrections: Optional[CorrectionSet] = None,
         device_class: Optional[DeviceClass] = None,
         threads_per_worker: Optional[int] = None,
-        array_backend: Optional[ArrayBackend] = None
+        array_backend: Optional[ArrayBackend] = None,
+        valid_nav_mask: Optional[np.ndarray] = None,
     ):
         self._partition_slice = partition_slice
         self._dataset_shape = dataset_shape
@@ -379,6 +380,7 @@ class UDFMeta:
         self._corrections = corrections
         self._threads_per_worker = threads_per_worker
         self._array_backend = array_backend
+        self._valid_nav_mask = valid_nav_mask
 
     @property
     def slice(self) -> Optional[Slice]:
@@ -551,6 +553,24 @@ class UDFMeta:
         .. versionadded:: 0.11.0
         """
         return self._array_backend
+
+    @property
+    def valid_nav_mask(self) -> Optional[np.ndarray]:
+        """
+        Return a mask of the already computed nav positions.
+
+        Only available in :meth:`~libertem.udf.base.UDF.merge` and
+        :meth:`~libertem.udf.base.UDF.get_results`.
+
+        In case of :meth:`~libertem.udf.base.UDF.merge`, the mask does not yet
+        contain the positions of the data that will be merged into the result,
+        but only those positions that have already been merged into result.
+        """
+        return self._valid_nav_mask
+
+    @valid_nav_mask.setter
+    def valid_nav_mask(self, new_valid_nav_mask: np.ndarray):
+        self._valid_nav_mask = new_valid_nav_mask
 
 
 class MergeAttrMapping:
@@ -2226,6 +2246,7 @@ class UDFRunner:
     @staticmethod
     def _apply_part_result(udfs, damage, part_results, task):
         for results, udf in zip(part_results, udfs):
+            udf.meta.valid_nav_mask = damage
             udf.set_views_for_partition(task.partition)
             udf.merge(
                 dest=udf.results.get_proxy(),
@@ -2237,6 +2258,7 @@ class UDFRunner:
     @staticmethod
     def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
         for udf in udfs:
+            udf.meta.valid_nav_mask = damage
             udf.clear_views()
         return UDFResults(
             buffers=tuple(

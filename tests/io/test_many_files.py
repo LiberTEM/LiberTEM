@@ -5,7 +5,7 @@ import numpy as np
 from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 
 
-if os.environ.get("RUNNER_OS", False) == "macOS" and os.environ.get("RUNNER_ARCH", False) == "ARM":
+if os.environ.get("RUNNER_OS", "").lower().startswith("macos") and os.environ.get("RUNNER_ARCH", "").lower().startswith("arm"):  # NOQA
     pytestmark = pytest.mark.skip(reason="Hard limit not compatible on macos-14 runner")  # NOQA
 else:
     try:

@@ -12,7 +12,7 @@ class ValidNavMaskUDF(UDF):
     def get_result_buffers(self):
         return {
             'buf_sig': self.buffer(kind='sig', dtype=np.float32),
-            'buf_nav': self.buffer(kind='sig', dtype=np.float32),
+            'buf_nav': self.buffer(kind='nav', dtype=np.float32),
             'buf_single': self.buffer(kind='single', dtype=np.float32, extra_shape=(1,)),
         }
 
@@ -56,3 +56,67 @@ def test_valid_nav_mask_available_roi():
     for res in ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(debug=False), roi=roi):
         print("damage", res.damage.data)
         print("raw damage", res.damage.raw_data)
+
+
+class AdjustValidMaskUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'all_valid': self.buffer(kind='sig', dtype=np.float32),
+            'all_invalid': self.buffer(kind='sig', dtype=np.float32),
+            'keep': self.buffer(kind='nav', dtype=np.float32),
+            'custom_2d': self.buffer(kind='single', dtype=np.float32, extra_shape=(64, 64)),
+        }
+
+    def get_results(self):
+        custom_mask = np.zeros((64, 64), dtype=bool)
+        custom_mask[:, 32:] = True
+
+        return {
+            'all_valid': np.ma.array(self.results.all_valid, mask=1),
+            'all_invalid': np.ma.array(self.results.all_invalid, mask=0),
+            'keep': self.results.keep,
+            'custom_2d': np.ma.array(self.results.custom_2d, mask=custom_mask),
+        }
+
+    def process_frame(self, frame):
+        self.results.all_valid += frame
+        self.results.all_invalid += frame
+        self.results.keep[:] = frame.sum()
+        self.results.custom_2d[:] = 42
+
+    def merge(self, dest, src):
+        dest.all_valid += src.all_valid
+        dest.all_invalid += src.all_invalid
+        dest.custom_2d += src.custom_2d
+        dest.keep[:] = src.keep
+
+
+def test_adjust_valid_mask():
+    """
+    Test that we can adjust the valid mask in `get_results`
+    """
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    ctx = Context.make_with('inline')
+
+    custom_expected = np.zeros((64, 64), dtype=bool)
+    custom_expected[:, 32:] = True
+
+    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
+        # invariants that hold for any intermediate results:
+        # all-valid result:
+        valid_mask = np.ma.getmask(res.buffers[0]['all_valid'].masked_data)
+        assert np.allclose(valid_mask, True)
+        assert valid_mask.shape == res.buffers[0]['valid'].data.shape
+
+        # all-invalid result:
+        invalid_mask = np.ma.getmask(res.buffers[0]['all_invalid'].masked_data)
+        assert np.allclose(invalid_mask, False)
+        assert invalid_mask.shape == res.buffers[0]['all_invalid'].data.shape
+
+        # same as "damage", default for kind='nav' buffers:
+        keep_mask = np.ma.getmask(res.buffers[0]['keep'].masked_data)
+        assert np.allclose(keep_mask, res.damage.data)
+
+        # custom 2d mask:
+        custom_mask = np.ma.getmask(res.buffers[0]['custom_2d'].masked_data)
+        assert np.allclose(custom_mask, custom_expected)

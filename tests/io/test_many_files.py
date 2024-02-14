@@ -5,16 +5,16 @@ import numpy as np
 from libertem.io.dataset.raw import RawFileDataSet, RawFileSet, RawFile
 
 
-if os.environ.get("RUNNER_OS", "").lower().startswith("macos") and os.environ.get("RUNNER_ARCH", "").lower().startswith("arm"):  # NOQA
-    pytestmark = pytest.mark.skip(reason="Hard limit not compatible on macos-14 runner")  # NOQA
-else:
-    try:
-        import resource
-        _, hard_lim = resource.getrlimit(resource.RLIMIT_NOFILE)
-        pytestmark = pytest.mark.skipif(hard_lim < 2 ** 15, reason="hard file limit is too low")  # NOQA
-    except ModuleNotFoundError:
-        # Not available on Windows
-        pass
+RUNNER_OS = os.environ.get("RUNNER_OS", "").lower().strip()
+RUNNER_ARCH = os.environ.get("RUNNER_ARCH", "").lower().strip()
+
+try:
+    import resource
+    _, hard_lim = resource.getrlimit(resource.RLIMIT_NOFILE)
+    pytestmark = pytest.mark.skipif(hard_lim < 2 ** 15, reason="hard file limit is too low")  # NOQA
+except ModuleNotFoundError:
+    # Not available on Windows
+    pass
 
 
 @pytest.fixture(scope='session')
@@ -61,6 +61,10 @@ class ManyRawFileDataSetMock(RawFileDataSet):
         return 2
 
 
+@pytest.mark.skipif(
+    RUNNER_OS.startswith('macos') and RUNNER_ARCH.startswith("arm"),
+    reason="Hard limit not compatible on macos-14 runner"
+)
 def test_many_files_read(local_cluster_ctx, generate_many_files):
     """
     Tests if we can load 8k files per process in a Dask cluster

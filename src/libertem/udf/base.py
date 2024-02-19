@@ -2246,7 +2246,7 @@ class UDFRunner:
     @staticmethod
     def _apply_part_result(udfs, damage, part_results, task):
         for results, udf in zip(part_results, udfs):
-            udf.meta.valid_nav_mask = damage
+            udf.meta.valid_nav_mask = damage.raw_data
             udf.set_views_for_partition(task.partition)
             udf.merge(
                 dest=udf.results.get_proxy(),
@@ -2258,7 +2258,7 @@ class UDFRunner:
     @staticmethod
     def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
         for udf in udfs:
-            udf.meta.valid_nav_mask = damage
+            udf.meta.valid_nav_mask = damage.raw_data
             udf.clear_views()
         return UDFResults(
             buffers=tuple(

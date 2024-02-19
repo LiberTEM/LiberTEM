@@ -18,10 +18,10 @@ class ValidNavMaskUDF(UDF):
 
     def get_results(self):
         assert self.meta.valid_nav_mask is not None
-        assert self.meta.valid_nav_mask.data.sum() > 0, \
+        assert self.meta.valid_nav_mask.sum() > 0, \
             "get_results is not called with an empty valid nav mask"
         if self.params.debug:
-            print("get_results", self.meta.valid_nav_mask.data)
+            print("get_results", self.meta.valid_nav_mask)
         results = super().get_results()
         # import pdb; pdb.set_trace()
         return results
@@ -34,7 +34,7 @@ class ValidNavMaskUDF(UDF):
     def merge(self, dest, src):
         assert self.meta.valid_nav_mask is not None
         if self.params.debug:
-            print("merge", self.meta.valid_nav_mask.data)
+            print("merge", self.meta.valid_nav_mask)
         dest.buf_sig += src.buf_sig
         dest.buf_single += src.buf_single
         dest.buf_nav[:] = src.buf_nav

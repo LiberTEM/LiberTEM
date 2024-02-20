@@ -36,10 +36,10 @@ jobs:
            [[ "${{ matrix.os }}" = "ubuntu-latest" ]] && sudo apt-get install -y libcap-dev || true
         shell: bash
       - name: install tox (with uv)
-        if: ${{ python_version != "3.7" }}
+        if: ${{ matrix.python_version != "3.7" }}
         run: python3 -m pip install tox tox-uv
       - name: install tox
-        if: ${{ python_version == "3.7" }}
+        if: ${{ matrix.python_version == "3.7" }}
         run: python3 -m pip install tox
       - name: run tox
         run: tox -e 'py${{ matrix.python_version }}'

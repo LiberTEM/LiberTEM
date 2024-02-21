@@ -1,5 +1,6 @@
 import logging
 import warnings
+from contextlib import contextmanager
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,21 @@ from .base import Live2DPlot
 
 
 logger = logging.getLogger(__name__)
+
+try:
+    with ui_events() as poll:
+        pass
+except Exception:
+    logger.info(
+            'Deactivating Jupyter UI event polling, '
+            'possibly not running in IPython?',
+            exc_info=True
+        )
+
+    # Replacing jupyter_ui_poll with a dummy
+    @contextmanager
+    def ui_events():
+        yield lambda x: None
 
 
 class MPLLive2DPlot(Live2DPlot):

@@ -3,6 +3,7 @@ import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
+from jupyter_ui_poll import ui_events
 
 from .base import Live2DPlot
 
@@ -71,12 +72,15 @@ class MPLLive2DPlot(Live2DPlot):
         self.im_obj = None
 
     def display(self):
-        self.fig, self.axes = plt.subplots()
-        self.im_obj = self.axes.imshow(self.data, **self.kwargs)
-        # Set values compatible with log norm
-        self.im_obj.norm.vmin = 1
-        self.im_obj.norm.vmax = 1 + 1e-12
-        self.axes.set_title(self.title)
+        with ui_events() as poll:
+            self.fig, self.axes = plt.subplots()
+            self.im_obj = self.axes.imshow(self.data, **self.kwargs)
+            # Set values compatible with log norm
+            self.im_obj.norm.vmin = 1
+            self.im_obj.norm.vmax = 1 + 1e-12
+            self.axes.set_title(self.title)
+            self.fig.show()
+            poll(1000)
 
     def update(self, damage, force=False):
         """
@@ -104,5 +108,8 @@ class MPLLive2DPlot(Live2DPlot):
         if len(valid_data) > 0:
             i_o.norm.vmin = np.min(valid_data)
             i_o.norm.vmax = np.max(valid_data)
-        i_o.changed()
-        self.fig.canvas.draw()
+        with ui_events() as poll:
+            i_o.changed()
+            self.fig.canvas.draw_idle()
+            self.fig.canvas.flush_events()
+            poll(1000)

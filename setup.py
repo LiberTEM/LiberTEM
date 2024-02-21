@@ -165,6 +165,8 @@ setup(
         'tomli',
         'sparseconverter>=0.3.3',
         'numexpr!=2.8.6',  # work around broken sanitization, remove this line when fixed
+        'jupyter_ui_poll',  # Make live matplotlib plots work with the widget backend
+        'ipympl',  # Support the widget backend
     ],
     extras_require={
         # NumPy interfacing issue on Win 11, Python 3.10

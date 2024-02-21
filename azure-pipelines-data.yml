@@ -65,7 +65,7 @@ stages:
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
 
-      - bash: ./venv/bin/pip install tox
+      - bash: ./venv/bin/pip install tox tox-uv
         displayName: 'install tox'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -124,20 +124,16 @@ stages:
         inputs:
           versionSpec: '$(python.version)'
 
-#      - task: Cache@2
-#        inputs:
-#          key: 'python | "$(Agent.OS)" | test_requirements.txt'
-#          restoreKeys: |
-#            python | "$(Agent.OS)"
-#            python
-#          path: $(PIP_CACHE_DIR)
-#        displayName: 'cache pip packages'
-
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
 
       - bash: ./venv/bin/pip install tox
         displayName: 'install tox'
+        condition: or(eq(variables['python.version'], '3.7'), eq(variables['python.version'], '3.8'))
+
+      - bash: ./venv/bin/pip install tox tox-uv
+        displayName: 'install tox (w/ uv)'
+        condition: not(or(eq(variables['python.version'], '3.7'), eq(variables['python.version'], '3.8')))
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
         - bash: ./venv/bin/tox -r
@@ -173,23 +169,7 @@ stages:
         inputs:
           versionSpec: '3.9'
 
-#      - task: Cache@2
-#        inputs:
-#          key: 'python | "$(Agent.OS)" | "3.9" | setup.py | test_requirements.txt'
-#          restoreKeys: |
-#            python | "$(Agent.OS)" | "3.9"
-#            python | "$(Agent.OS)"
-#            python
-#          path: $(PIP_CACHE_DIR)
-#        displayName: 'cache pip packages'
-
-#      - task: Cache@2
-#        inputs:
-#          key: 'tox_numba_coverage | "$(Agent.OS)" | test_requirements.txt | setup.py'
-#          path: $(tox_dir)
-#        displayName: 'cache tox environment'
-
-      - bash: pip install -U tox
+      - bash: pip install -U tox tox-uv
         displayName: 'install requirements'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -228,23 +208,7 @@ stages:
       - bash: apt-get update && apt-get install -y pandoc graphviz
         displayName: install required debian packages
 
-#      - task: Cache@2
-#        inputs:
-#          key: 'lint | "$(Agent.OS)"'
-#          restoreKeys: |
-#            lint | "$(Agent.OS)"
-#            lint
-#          path: $(PIP_CACHE_DIR)
-#        displayName: 'cache pip packages'
-#
-#      - task: Cache@2
-#        inputs:
-#          key: 'tox_lint | "$(Agent.OS)" | docs_requirements.txt | test_requirements.txt | setup.py | "$(TOXENV)"'
-#          path: $(tox_dir)
-#        displayName: 'cache tox environment'
-
-
-      - bash: pip install -U tox
+      - bash: pip install -U tox tox-uv
         displayName: 'install requirements'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -271,13 +235,16 @@ stages:
       - bash: python3 -m venv $(Agent.TempDirectory)/venv/
         displayName: create virtualenv
 
-      - bash: $(Agent.TempDirectory)/venv/bin/pip install $(Build.SourcesDirectory)/LiberTEM/
+      - bash: $(Agent.TempDirectory)/venv/bin/pip install uv
+        displayName: install uv
+
+      - bash: $(Agent.TempDirectory)/venv/bin/uv pip install $(Build.SourcesDirectory)/LiberTEM/
         displayName: install LiberTEM
 
-      - bash: $(Agent.TempDirectory)/venv/bin/pip install "$(Build.SourcesDirectory)/LiberTEM-live/[dectris]"
+      - bash: $(Agent.TempDirectory)/venv/bin/uv pip install "$(Build.SourcesDirectory)/LiberTEM-live/[dectris]"
         displayName: install LiberTEM-live
 
-      - bash: $(Agent.TempDirectory)/venv/bin/pip install -r $(Build.SourcesDirectory)/LiberTEM-live/test_requirements.txt
+      - bash: $(Agent.TempDirectory)/venv/bin/uv pip install -r $(Build.SourcesDirectory)/LiberTEM-live/test_requirements.txt
         displayName: install LiberTEM-live test requirements
 
       - bash: cd $(Build.SourcesDirectory)/LiberTEM-live/ && $(Agent.TempDirectory)/venv/bin/pytest

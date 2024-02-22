@@ -4,13 +4,13 @@ import os
 import importlib.util
 import platform
 import threading
-import pkg_resources
 from functools import partial
 import warnings
 import contextlib
 import socket
 import logging
 
+from importlib_metadata import distributions
 import numpy as np
 import pytest
 import h5py
@@ -1121,7 +1121,10 @@ def b():
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_benchmark_generate_json(config, benchmarks, include_data, machine_info, commit_info):
-    machine_info["freeze"] = [(d.key, d.version) for d in pkg_resources.working_set]
+    machine_info["freeze"] = [
+        (d.metadata['Name'], d.version)
+        for d in distributions()
+    ]
     yield
 
 

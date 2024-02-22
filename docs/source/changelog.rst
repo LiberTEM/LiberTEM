@@ -81,7 +81,7 @@ UDF Interface
 - The UDF interface was extended to allow a UDF to declare
   multiple processing methods (:code:`process_tile`, :code:`process_frame` etc)
   and choose at runtime the most appropriate one to use. See
-  `the documentation <https://libertem.github.io/LiberTEM/udf/advanced.html#precedence>`_
+  `the UDF documentation <https://libertem.github.io/LiberTEM/udf/advanced.html#precedence>`_
   for more detail. (:issue:`1508`, :pr:`1509`)
 
 Misc

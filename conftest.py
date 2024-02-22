@@ -1091,34 +1091,6 @@ def points():
     ])
 
 
-@pytest.fixture
-def indices():
-    return np.array([
-        (0, 0),
-        (1, 0),
-        (0, 1),
-        (1, 1),
-        (-1, 0),
-        (0, -1),
-        (-1, -1)
-    ])
-
-
-@pytest.fixture
-def zero():
-    return np.array([0, 0])
-
-
-@pytest.fixture
-def a():
-    return np.array([0, 1])
-
-
-@pytest.fixture
-def b():
-    return np.array([1, 0])
-
-
 @pytest.hookimpl(hookwrapper=True)
 def pytest_benchmark_generate_json(config, benchmarks, include_data, machine_info, commit_info):
     machine_info["freeze"] = [

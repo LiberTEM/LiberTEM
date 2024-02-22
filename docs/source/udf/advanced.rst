@@ -187,7 +187,7 @@ Post-processing after merging
 
 If you want to implement a post-processing step that is run on the main node
 after merging result buffers, you can override
-:meth:`libertem.udf.base.UDF.get_results`:
+:meth:`~libertem.udf.base.UDF.get_results`:
 
 .. testsetup::
 
@@ -222,22 +222,23 @@ after merging result buffers, you can override
 
     ctx.run_udf(dataset=dataset, udf=AverageUDF())
 
-Note that :meth:`UDF.get_result_buffers` returns a placeholder entry for the
+Note that :meth:`~libertem.udf.base.UDF.get_result_buffers` returns a placeholder entry for the
 :code:`average` result using :code:`use='result_only'`, which is then filled in
-:code:`get_results`.  We don't need to repeat those buffers that should be
+:meth:`~libertem.udf.base.UDF.get_results`.  We don't need to repeat those buffers that should be
 returned unchanged; if you want to omit a buffer from the results completely,
 you can declare it as private with :code:`self.buffer(..., use='private')` in
-:code:`get_result_buffers`.
+:meth:`~libertem.udf.base.UDF.get_result_buffers`.
 
-:meth:`UDF.get_results` should return the results as a dictionary of numpy
+:meth:`~libertem.udf.base.UDF.get_results` should return the results as a dictionary of numpy
 arrays, with the keys matching those returned by
-:meth:`UDF.get_result_buffers`.
+:meth:`~libertem.udf.base.UDF.get_result_buffers`.
 
-When returned from :meth:`Context.run_udf`, all results are wrapped into
-:code:`BufferWrapper` instances. This is done primarily to get convenient
-access to a version of the result that is suitable for visualization, even if
+When returned from :meth:`~libertem.api.Context.run_udf`, all results are wrapped into
+:class:`~libertem.common.buffers.BufferWrapper` instances. This is done primarily to get convenient
+access to a version of the result that is suitable for visualization using
+:attr:`~libertem.common.buffers.BufferWrapper.data`, even if
 a :code:`roi` was used, but still allow access to the raw result using
-:attr:`BufferWrapper.raw_data` attribute.
+:attr:`~libertem.common.buffers.BufferWrapper.raw_data` attribute.
 
 The detailed rules for buffer declarations, :code:`get_result_buffers` and :code:`get_results` are:
 

@@ -31,7 +31,7 @@ from libertem.warnings import UseDiscouragedWarning
 from libertem.common.exceptions import UDFException
 from libertem.common.buffers import (
     BufferWrapper, AuxBufferWrapper, PlaceholderBufferWrapper,
-    BufferKind, BufferUse, BufferLocation,
+    BufferKind, BufferUse, BufferLocation, ArrayWithMask,
 )
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethod
@@ -565,6 +565,8 @@ class UDFMeta:
         In case of :meth:`~libertem.udf.base.UDF.merge`, the mask does not yet
         contain the positions of the data that will be merged into the result,
         but only those positions that have already been merged into result.
+
+        NOTE: these positions may include dropped frames or missing data.
         """
         return self._valid_nav_mask
 
@@ -1216,12 +1218,26 @@ class UDFBase(UDFProtocol):
         # wrap numpy results into `ResultBuffer`s:
         results = {}
         for name, arr in results_tmp.items():
+            import dask.array.core
+            mask = None
+            if isinstance(arr, ArrayWithMask):
+                mask = arr.mask
+                arr = arr.arr
+            assert isinstance(arr, (np.ndarray, dask.array.core.Array))
             self._check_results(decl, arr, name)
             buf_decl = decl[name]
+            if mask is None:
+                if buf_decl.kind in ('single', 'sig'):
+                    mask = 1
+                elif buf_decl.kind == 'nav':
+                    mask = self.meta.valid_nav_mask
+                else:
+                    raise RuntimeError(f"invalid buffer type {buf_decl.kind}")
             buf = results_buffer_cls[name](
                 kind=buf_decl.kind, extra_shape=buf_decl.extra_shape,
                 dtype=buf_decl.dtype,
                 data=arr,
+                valid_mask=mask,
             )
             buf.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
             results[name] = buf
@@ -1613,6 +1629,9 @@ class UDF(UDFBase):
         if use is not None and use.lower() == "result_only":
             return PlaceholderBufferWrapper(kind, extra_shape, dtype, use=use)
         return BufferWrapper(kind, extra_shape, dtype, where, use=use)
+
+    def with_mask(self, data, mask: np.ndarray) -> ArrayWithMask:
+        return ArrayWithMask(data, mask=mask)
 
     @classmethod
     def aux_data(cls, data, kind, extra_shape=(), dtype="float32"):

@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, TYPE_CHECKING
+from typing import Any, Optional, Union, TYPE_CHECKING, Generic, TypeVar
 from collections.abc import Iterable
 from typing_extensions import Literal
 import mmap
@@ -167,6 +167,33 @@ class ManagedBuffer:
         self.pool.checkin_bytes(self.size, self.alignment, self.buf)
 
 
+T = TypeVar('T')
+
+
+class ArrayWithMask(Generic[T]):
+    """
+    An opaque type representing an array together with a
+    mask (for example, defining a region in the array
+    where there are valid entries)
+
+    This is meant for usage in :meth:`UDF.get_results`,
+    and you can use the convenience method :meth:`UDF.with_mask`
+    to instantiate it.
+    """
+
+    def __init__(self, arr: T, mask: np.ndarray):
+        self._arr = arr
+        self._mask = mask
+
+    @property
+    def mask(self) -> np.ndarray:
+        return np.broadcast_to(self._mask, self._arr.shape)
+
+    @property
+    def arr(self) -> T:
+        return self._arr
+
+
 class BufferWrapper:
     """
     Helper class to automatically allocate buffers, either for partitions or
@@ -218,8 +245,13 @@ class BufferWrapper:
         :code:`None` means the buffer is used both as a final and intermediate result.
 
         .. versionadded:: 0.7.0
+
+    valid_mask:
+        FIXME
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None) -> None:
+    def __init__(
+        self, kind, extra_shape=(), dtype="float32", where=None, use=None, valid_mask=None,
+    ) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
@@ -233,6 +265,7 @@ class BufferWrapper:
         self._roi = None
         self._roi_is_zero = None
         self._contiguous_cache = dict()
+        self._valid_mask = valid_mask
         self.use = use
 
     def set_roi(self, roi):
@@ -342,6 +375,18 @@ class BufferWrapper:
         may be even filtered to a ROI
         """
         return self._data
+
+    @property
+    def valid_mask(self) -> np.ndarray:
+        if self._valid_mask is None:
+            valid_mask = np.array([1])
+        else:
+            valid_mask = np.array(self._valid_mask)
+        if valid_mask.shape == (1,):
+            return np.broadcast_to(valid_mask, self.data.shape)
+        else:
+            # FIXME: fails if `roi is not None` for `kind='nav'`?
+            return valid_mask.reshape(self.data.shape)
 
     @property
     def kind(self):

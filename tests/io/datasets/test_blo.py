@@ -19,9 +19,10 @@ from libertem.udf.raw import PickUDF
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    import hyperspy.api as hs
+    import rsciio
+    import rsciio.blockfile
 except ModuleNotFoundError:
-    hs = None
+    rsciio = None
 
 
 BLO_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.blo')
@@ -64,8 +65,8 @@ def direct_blo(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_blo_raw():
-    res = hs.load(str(BLO_TESTDATA_PATH))
-    return res.data
+    res = rsciio.blockfile.file_reader(str(BLO_TESTDATA_PATH), lazy=True)
+    return res[0]['data']
 
 
 def test_simple_open(default_blo):
@@ -127,7 +128,7 @@ def test_scheme_too_large(default_blo):
         pass
 
 
-@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.skipif(rsciio is None, reason="No rosettasciio found")
 def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_blo_raw, (-1, *tuple(default_blo.shape.sig)))
@@ -135,7 +136,7 @@ def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
     lt_ctx_fast.run_udf(udf=udf, dataset=default_blo)
 
 
-@pytest.mark.skipif(hs is None, reason="No HyperSpy found")
+@pytest.mark.skipif(rsciio is None, reason="No rosettasciio found")
 def test_comparison_roi(default_blo, default_blo_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

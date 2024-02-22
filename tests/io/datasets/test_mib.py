@@ -23,9 +23,9 @@ from libertem.io.dataset.base import (
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    import pyxem
+    import rsciio
 except ModuleNotFoundError:
-    pyxem = None
+    rsciio = None
 
 
 MIB_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.mib')
@@ -86,10 +86,10 @@ def direct_mib(lt_ctx):
 
 @pytest.fixture(scope='module')
 def default_mib_raw():
-    data = pyxem.utils.io_utils.load_mib(MIB_TESTDATA_PATH)
+    from rsciio.quantumdetector import load_mib_data
+    data = load_mib_data(MIB_TESTDATA_PATH, lazy=True)
     shape = (32, 32, 256, 256)
-    # pyxem always opens lazy, therefore compute()
-    return data.data.reshape(shape).compute()
+    return data.reshape(shape)
 
 
 def test_glob(tmp_path, naughty_filename):
@@ -333,7 +333,7 @@ def test_read_ahead(default_mib_readahead):
 
 
 @needsdata
-@pytest.mark.skipif(pyxem is None, reason="No PyXem found")
+@pytest.mark.skipif(rsciio is None, reason="No rosettasciio found")
 def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
     udf = ValidationUDF(
         reference=reshaped_view(default_mib_raw, (-1, *tuple(default_mib.shape.sig)))
@@ -342,7 +342,7 @@ def test_comparison(default_mib, default_mib_raw, lt_ctx_fast):
 
 
 @needsdata
-@pytest.mark.skipif(pyxem is None, reason="No PyXem found")
+@pytest.mark.skipif(rsciio is None, reason="No rosettasciio found")
 def test_comparison_roi(default_mib, default_mib_raw, lt_ctx_fast):
     roi = np.random.choice(
         [True, False],

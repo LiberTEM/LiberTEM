@@ -13,8 +13,7 @@ import libertem.web.server
 import libertem.web.cli
 import libertem.api
 import libertem.preload
-import libertem.udf
-import libertem.analysis.gridmatching   # NOQA: F401
+import libertem.udf  # NOQA: F401
 
 # old imports, refs #1031
 from libertem.corrections import CorrectionSet  # NOQA: F401

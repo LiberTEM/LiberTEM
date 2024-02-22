@@ -141,9 +141,9 @@ class BloDataSet(DataSet):
 
     def initialize(self, executor):
         self._header = h = executor.run_function(self._read_header)
-        NY = int(h['NY'])
-        NX = int(h['NX'])
-        DP_SZ = int(h['DP_SZ'])
+        NY = int(h['NY'][0])
+        NX = int(h['NX'][0])
+        DP_SZ = int(h['DP_SZ'][0])
         self._image_count = NY * NX
         if self._nav_shape is None:
             self._nav_shape = (NY, NX)
@@ -247,7 +247,7 @@ class BloDataSet(DataSet):
                 native_dtype=self._endianess + "u1",
                 sig_shape=self.shape.sig,
                 frame_header=6,
-                file_header=int(self.header['Data_offset_2']),
+                file_header=int(self.header['Data_offset_2'][0]),
             )
         ], frame_header_bytes=6)
 

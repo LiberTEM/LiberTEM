@@ -126,32 +126,32 @@ class SeriesHeader(NamedTuple):
 def read_series_header(path: str) -> SeriesHeader:
     with open(path, 'rb') as f:
         arr = np.fromfile(f, dtype=series_header_dtype, count=1)
-    version = int(arr['IVersion'])
+    version = int(arr['IVersion'][0])
     if version not in [1, 2]:
         raise DataSetException(f"Unknown TVIPS header version: {version}")
-    size = int(arr['ISize'])
+    size = int(arr['ISize'][0])
     if size != SERIES_HEADER_SIZE:
         raise DataSetException(
             f"Invalid header size {size}, should be 256. Maybe not a TVIPS file?"
         )
-    bpp = int(arr['IBPP'])
+    bpp = int(arr['IBPP'][0])
     if bpp not in [8, 16]:
         raise DataSetException(
             f"unknown bpp value: {bpp} (should be either 8 or 16)"
         )
-    img_header_bytes = int(arr['IImgHeaderBytes'])
+    img_header_bytes = int(arr['IImgHeaderBytes'][0])
     if version == 1:
         img_header_bytes = 12
     return SeriesHeader(
-        version=int(arr['IVersion']),
-        xdim=int(arr['IXDim']),
-        ydim=int(arr['IYDim']),
-        xbin=int(arr['IXBin']),
-        ybin=int(arr['IYBin']),
+        version=int(arr['IVersion'][0]),
+        xdim=int(arr['IXDim'][0]),
+        ydim=int(arr['IYDim'][0]),
+        xbin=int(arr['IXBin'][0]),
+        ybin=int(arr['IYBin'][0]),
         bpp=bpp,
-        pixel_size_nm=int(arr['IPixelSize']),
-        high_tension_kv=int(arr['IHT']),
-        mag_total=int(arr['IMagTotal']),
+        pixel_size_nm=int(arr['IPixelSize'][0]),
+        high_tension_kv=int(arr['IHT'][0]),
+        mag_total=int(arr['IMagTotal'][0]),
         frame_header_bytes=img_header_bytes,
     )
 
@@ -206,8 +206,8 @@ def _image_header_for_idx(f: IO[bytes], series_header: SeriesHeader, idx: int) -
 def _scan_for_idx(f: IO[bytes], series_header: SeriesHeader, idx: int) -> tuple[int, int]:
     arr = _image_header_for_idx(f, series_header, idx)
     # this assumes integer scan coordinates:
-    scan_y = int(arr['Scan_y'])
-    scan_x = int(arr['Scan_x'])
+    scan_y = int(arr['Scan_y'][0])
+    scan_x = int(arr['Scan_x'][0])
     scan = (scan_y, scan_x)
     return scan
 

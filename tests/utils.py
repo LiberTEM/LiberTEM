@@ -11,7 +11,6 @@ from sparseconverter import (
     DENSE_BACKENDS, ND_BACKENDS, NUMPY, SPARSE_BACKENDS, SPARSE_GCXS, ArrayBackend, for_backend
 )
 from libertem.common.sparse import to_dense
-from libertem.analysis.gridmatching import calc_coords
 from libertem.udf import UDF
 import libertem.common.backend as bae
 from libertem.udf.raw import PickUDF
@@ -85,15 +84,6 @@ def _mk_random(size, dtype='float32', array_backend=NUMPY, sparse_density=None):
             f"got shape {data.shape}."
         )
     return data
-
-
-def _fullgrid(zero, a, b, index, skip_zero=False):
-    i, j = np.mgrid[-index:index, -index:index]
-    indices = np.concatenate(np.array((i, j)).T)
-    if skip_zero:
-        select = (np.not_equal(indices[:, 0], 0) + np.not_equal(indices[:, 1], 0))
-        indices = indices[select]
-    return calc_coords(zero, a, b, indices)
 
 
 def assert_msg(msg, msg_type, status='ok'):

@@ -1,10 +1,16 @@
 import logging
+import warnings
+warnings.warn(
+    'gridmatching and fullmatch are moved to '
+    'libertem_blobfinder.common.',
+    DeprecationWarning
+)
 
-import numpy as np
-import hdbscan
+import numpy as np  # NOQA: 402
+import hdbscan  # NOQA: 402
 
-import libertem.analysis.gridmatching as grm
-from libertem.utils import make_polar, make_cartesian
+import libertem.analysis.gridmatching as grm  # NOQA: 402
+from libertem.utils import make_polar, make_cartesian  # NOQA: 402
 
 
 log = logging.getLogger(__name__)

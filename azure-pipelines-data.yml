@@ -245,7 +245,7 @@ stages:
       - bash: $(Agent.TempDirectory)/venv/bin/pip install "$(Build.SourcesDirectory)/LiberTEM-live/[dectris]"
         displayName: install LiberTEM-live
 
-      - bash: $(Agent.TempDirectory)/venv/bin/uv pip install -r $(Build.SourcesDirectory)/LiberTEM-live/test_requirements.txt
+      - bash: . $(Agent.TempDirectory)/venv/bin/activate &&  $(Agent.TempDirectory)/venv/bin/uv pip install -r $(Build.SourcesDirectory)/LiberTEM-live/test_requirements.txt
         displayName: install LiberTEM-live test requirements
 
       - bash: cd $(Build.SourcesDirectory)/LiberTEM-live/ && $(Agent.TempDirectory)/venv/bin/pytest

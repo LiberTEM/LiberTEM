@@ -97,7 +97,7 @@ Installing extra dependencies works just like when installing LiberTEM from PyPI
 
 .. code-block:: shell
 
-    (libertem) $ python -m pip install -e .[torch,hdbscan,cupy]
+    (libertem) $ python -m pip install -e .[torch,cupy]
 
 Updating
 ~~~~~~~~

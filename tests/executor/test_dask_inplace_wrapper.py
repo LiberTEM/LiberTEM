@@ -310,6 +310,9 @@ def test_random_set_with_array(repeat_number, shape):
         # tests failing for things outside of our control
         return
 
+    if set_values.size == 1:
+        set_values = set_values.item()
+
     # Strange-ish case of Dask supporting an assignment but Numpy raises!
     if np.isscalar(slice_into):
         # Would raise TypeError if using subslice even if None

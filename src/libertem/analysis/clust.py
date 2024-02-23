@@ -114,7 +114,7 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         feature_vector = f / np.abs(f).mean(axis=0)
 
         clustering = AgglomerativeClustering(
-            affinity='euclidean', n_clusters=n_clust, linkage='ward',
+            metric='euclidean', n_clusters=n_clust, linkage='ward',
             connectivity=connectivity
         ).fit(feature_vector)
         labels = np.array(clustering.labels_+1)

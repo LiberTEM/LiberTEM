@@ -1,4 +1,3 @@
-hdbscan>=0.8.28
 sphinx>=5
 sphinx-autobuild
 sphinxcontrib-bibtex>=2

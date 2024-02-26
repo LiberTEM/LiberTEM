@@ -329,26 +329,6 @@ def test_sig_nav_shape(raw_csr_generated, lt_ctx):
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    'sync_offset', (
-        0, 1, -1, -10, 13, 13*15, -13*14,
-        np.random.randint(low=-13*17+1, high=13*17),
-        -13*17+1,
-        13*17-1,
-    ),
-)
-@pytest.mark.parametrize(
-    'nav_shape', (
-        None, (14, 14), (47, 13),
-        (np.random.randint(low=1, high=13*18), ),
-        (np.random.randint(low=1, high=13*18), np.random.randint(low=1, high=13*18)),
-        (
-            np.random.randint(low=1, high=13*18),
-            np.random.randint(low=1, high=13*18),
-            np.random.randint(low=1, high=13*18)
-        ),
-    ),
-)
-@pytest.mark.parametrize(
     'sig_shape', (
         None, (24, 19), (24*19, )
     ),
@@ -357,77 +337,93 @@ def test_sig_nav_shape(raw_csr_generated, lt_ctx):
     'use_roi', (False, True)
 )
 def test_reshape_sync_offset(
-        raw_csr_generated, mock_sparse_data, lt_ctx, sync_offset, nav_shape, sig_shape, use_roi):
-    orig, data_flat = mock_sparse_data
-    data = data_flat.reshape(raw_csr_generated.shape)
-    # Otherwise memory and raw_csr use different approach to determine shape
-    # that yields different results
-    if nav_shape is None and sig_shape is not None:
-        mem_nav_shape = raw_csr_generated.shape.nav
-    else:
-        mem_nav_shape = nav_shape
-    if sig_shape is None and nav_shape is not None:
-        mem_sig_shape = raw_csr_generated.shape.sig
-    else:
-        mem_sig_shape = sig_shape
-    ref_ds = lt_ctx.load(
-        'memory',
-        data=data,
-        nav_shape=mem_nav_shape,
-        sig_shape=mem_sig_shape,
-        sync_offset=sync_offset,
-    )
+        raw_csr_generated, mock_sparse_data, lt_ctx, sig_shape, use_roi):
+    for sync_offset in (
+        0, 1, -1, -10, 13, 13*15, -13*14,
+        np.random.randint(low=-13*17+1, high=13*17),
+        -13*17+1,
+        13*17-1,
+    ):
+        for nav_shape in (
+            None, (14, 14), (47, 13),
+            (np.random.randint(low=1, high=13*18), ),
+            (np.random.randint(low=1, high=13*18), np.random.randint(low=1, high=13*18)),
+            (
+                np.random.randint(low=1, high=13*18),
+                np.random.randint(low=1, high=13*18),
+                np.random.randint(low=1, high=13*18)
+            ),
+        ):
+            orig, data_flat = mock_sparse_data
+            data = data_flat.reshape(raw_csr_generated.shape)
+            # Otherwise memory and raw_csr use different approach to determine shape
+            # that yields different results
+            if nav_shape is None and sig_shape is not None:
+                mem_nav_shape = raw_csr_generated.shape.nav
+            else:
+                mem_nav_shape = nav_shape
+            if sig_shape is None and nav_shape is not None:
+                mem_sig_shape = raw_csr_generated.shape.sig
+            else:
+                mem_sig_shape = sig_shape
+            ref_ds = lt_ctx.load(
+                'memory',
+                data=data,
+                nav_shape=mem_nav_shape,
+                sig_shape=mem_sig_shape,
+                sync_offset=sync_offset,
+            )
 
-    if use_roi:
-        roi = np.random.choice([True, False], size=ref_ds.shape.nav)
-    else:
-        roi = None
+            if use_roi:
+                roi = np.random.choice([True, False], size=ref_ds.shape.nav)
+            else:
+                roi = None
 
-    print('nav_shape', nav_shape)
-    print('sig_shape', sig_shape)
-    print('sync_offset', sync_offset)
-    print('roi', roi)
+            print('nav_shape', nav_shape)
+            print('sig_shape', sig_shape)
+            print('sync_offset', sync_offset)
+            print('roi', roi)
 
-    ds = lt_ctx.load(
-        'raw_csr', path=raw_csr_generated._path,
-        sync_offset=sync_offset, nav_shape=nav_shape, sig_shape=sig_shape
-    )
+            ds = lt_ctx.load(
+                'raw_csr', path=raw_csr_generated._path,
+                sync_offset=sync_offset, nav_shape=nav_shape, sig_shape=sig_shape
+            )
 
-    assert tuple(ref_ds.shape.sig) == tuple(ds.shape.sig)
-    assert tuple(ref_ds.shape.nav) == tuple(ds.shape.nav)
+            assert tuple(ref_ds.shape.sig) == tuple(ds.shape.sig)
+            assert tuple(ref_ds.shape.nav) == tuple(ds.shape.nav)
 
-    masks = np.random.random(size=(3, *ref_ds.shape.sig))
-    udf_masks = ApplyMasksUDF(mask_factories=lambda: masks)
-    udf_std = StdDevUDF()
+            masks = np.random.random(size=(3, *ref_ds.shape.sig))
+            udf_masks = ApplyMasksUDF(mask_factories=lambda: masks)
+            udf_std = StdDevUDF()
 
-    ref_result = lt_ctx.run_udf(udf=(udf_masks, udf_std), dataset=ref_ds)
-    result = lt_ctx.run_udf(udf=(udf_masks, udf_std), dataset=ds)
+            ref_result = lt_ctx.run_udf(udf=(udf_masks, udf_std), dataset=ref_ds)
+            result = lt_ctx.run_udf(udf=(udf_masks, udf_std), dataset=ds)
 
-    r1 = ref_result[0]['intensity'].raw_data
-    r2 = result[0]['intensity'].raw_data
+            r1 = ref_result[0]['intensity'].raw_data
+            r2 = result[0]['intensity'].raw_data
 
-    print(
-        np.max((r1 - r2) / np.maximum(0.00001, (np.abs(r1) + np.abs(r2))))
-    )
+            print(
+                np.max((r1 - r2) / np.maximum(0.00001, (np.abs(r1) + np.abs(r2))))
+            )
 
-    assert_allclose(
-        ref_result[0]['intensity'].raw_data,
-        result[0]['intensity'].raw_data,
-        rtol=1e-5,
-        atol=1e-8,
-    )
-    assert_allclose(
-        ref_result[1]['std'].raw_data,
-        result[1]['std'].raw_data,
-        rtol=1e-5,
-        atol=1e-8,
-    )
-    assert_allclose(
-        ref_result[1]['num_frames'].raw_data,
-        result[1]['num_frames'].raw_data,
-        rtol=1e-5,
-        atol=1e-8,
-    )
+            assert_allclose(
+                ref_result[0]['intensity'].raw_data,
+                result[0]['intensity'].raw_data,
+                rtol=1e-5,
+                atol=1e-8,
+            )
+            assert_allclose(
+                ref_result[1]['std'].raw_data,
+                result[1]['std'].raw_data,
+                rtol=1e-5,
+                atol=1e-8,
+            )
+            assert_allclose(
+                ref_result[1]['num_frames'].raw_data,
+                result[1]['num_frames'].raw_data,
+                rtol=1e-5,
+                atol=1e-8,
+            )
 
 
 def test_uint64ptr(lt_ctx_fast, raw_csr_generated_uint64):

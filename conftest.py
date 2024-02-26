@@ -908,8 +908,10 @@ class ServerThread(threading.Thread):
     async def stop(self):
         self.server.stop()
         await self.server.close_all_connections()
-        if self.shared_state.executor_state.have_executor():
-            await self.shared_state.executor_state.get_executor().close()
+        exstate = self.shared_state.executor_state
+        if exstate.have_executor() and not exstate.is_snoozing():
+            executor = await exstate.get_executor()
+            await executor.close()
         self.loop.stop()
 
     async def wait_for_stop(self):
@@ -917,11 +919,15 @@ class ServerThread(threading.Thread):
         background task to periodically check if the main thread wants
         us to stop
         """
-        while True:
-            if self.stop_event.is_set():
-                await self.stop()
-                break
-            await asyncio.sleep(0.1)
+        try:
+            while True:
+                if self.stop_event.is_set():
+                    await self.stop()
+                    break
+                await asyncio.sleep(0.1)
+        except Exception:
+            await self.stop()
+            raise
 
     def run(self):
         try:

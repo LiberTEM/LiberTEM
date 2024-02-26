@@ -248,13 +248,7 @@ def run(
 
         async def create_and_set_executor():
             if executor_spec is not None:
-                # Executor creation is blocking (and slow) but we
-                # need to run this within the main loop so that Distributed
-                # attaches to that rather than trying to create its own, see:
-                # https://github.com/LiberTEM/LiberTEM/pull/1535#pullrequestreview-1699340445
-                # TL;DR: without this, our call to `loop.run_forever` causes
-                # `RuntimeError: This event loop is already running`
-                shared_state.create_and_set_executor(executor_spec)
+                await shared_state.create_and_set_executor(executor_spec)
 
         try:
             is_ipv6 = isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address)

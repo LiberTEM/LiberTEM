@@ -59,7 +59,7 @@ async def test_local_cluster_details(shared_state, base_url, http_client, defaul
     async with http_client.put(url, json=conn_details) as response:
         assert response.status == 200
 
-    executor = shared_state.executor_state.get_executor()
+    executor = await shared_state.executor_state.get_executor()
     worker_set = await executor.get_available_workers()
     host = worker_set.hosts().pop()
 

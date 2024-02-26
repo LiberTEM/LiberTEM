@@ -165,7 +165,7 @@ class JobEngine:
         udf = analysis.get_udf()
         roi = analysis.get_roi()
 
-        executor = self.state.executor_state.get_executor()
+        executor = await self.state.executor_state.get_executor()
         serialized_job = self.state.job_state.serialize(job_id)
         msg = Message().start_job(
             serialized_job=serialized_job, analysis_id=analysis_id,

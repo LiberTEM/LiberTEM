@@ -79,7 +79,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         self.write(msg)
 
     async def prime_numba_caches(self, ds):
-        executor = self.state.executor_state.get_executor()
+        executor = await self.state.executor_state.get_executor()
 
         log.info("starting warmup")
 
@@ -108,7 +108,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
         converter = ConverterCls()
         try:
             dataset_params = converter.to_python(params)
-            executor = self.state.executor_state.get_executor()
+            executor = await self.state.executor_state.get_executor()
 
             ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
 
@@ -142,7 +142,7 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
 
     async def get(self):
         path = self.request.arguments['path'][0].decode("utf8")
-        executor = self.state.executor_state.get_executor()
+        executor = await self.state.executor_state.get_executor()
 
         detected_params = await sync_to_async(
             detect, path=path, executor=executor.ensure_sync()

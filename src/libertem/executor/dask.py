@@ -451,7 +451,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         # redirect keys to new values
         handle = str(uuid.uuid4())
         try:
-            fut = self.client.scatter(obj, broadcast=True)
+            fut = self.client.scatter(obj, broadcast=True, hash=False)
             self._scatter_map[handle] = fut
             yield handle
         finally:
@@ -459,7 +459,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
                 del self._scatter_map[handle]
 
     def scatter_update(self, handle, obj):
-        fut = self.client.scatter(obj, broadcast=True)
+        fut = self.client.scatter(obj, broadcast=True, hash=False)
         self._scatter_map[handle] = fut
 
     def scatter_update_patch(self, handle, patch):
@@ -522,6 +522,10 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             as_completed = dd.as_completed(initial, with_results=True, loop=self.client.loop)
             for future, result_wrap in as_completed:
                 if future.cancelled():
+                    log.debug(
+                        "future %r is cancelled, stopping",
+                        future,
+                    )
                     del self._futures[cancel_id]
                     raise JobCancelledError()
                 result = result_wrap['task_result']
@@ -541,6 +545,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
                 self.client.unsubscribe_topic(topic_id)
 
     def cancel(self, cancel_id):
+        log.debug("cancelling with cancel_id=`%s`", cancel_id)
         if cancel_id in self._futures:
             futures = self._futures[cancel_id]
             self.client.cancel(futures)

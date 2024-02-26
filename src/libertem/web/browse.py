@@ -14,7 +14,7 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         self.event_registry = event_registry
 
     async def get(self):
-        executor = self.state.executor_state.get_executor()
+        executor = await self.state.executor_state.get_executor()
         path = self.request.arguments['path']
         assert len(path) == 1
         path = path[0].decode("utf8")
@@ -40,7 +40,7 @@ class LocalFSStatHandler(tornado.web.RequestHandler):
         self.event_registry = event_registry
 
     async def get(self):
-        executor = self.state.executor_state.get_executor()
+        executor = await self.state.executor_state.get_executor()
         path = self.request.arguments['path']
         assert len(path) == 1
         path = path[0].decode("utf8")

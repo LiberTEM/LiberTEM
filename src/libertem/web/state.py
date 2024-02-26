@@ -13,6 +13,7 @@ import libertem
 from libertem.api import Context
 from libertem.analysis.base import AnalysisResultSet
 from libertem.common.executor import JobExecutor
+from libertem.common.async_utils import sync_to_async
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor
 from libertem.io.dataset.base import DataSetException, DataSet
@@ -93,7 +94,7 @@ class ExecutorState:
             self._keep_alive -= 1
             self._update_last_activity()
 
-    def snooze(self):
+    async def snooze(self):
         if self.executor is None:
             log.debug("not snoozing: no executor")
             return
@@ -109,39 +110,49 @@ class ExecutorState:
         self.executor = None
         self._is_snoozing = True
 
-    def unsnooze(self):
+    async def unsnooze(self):
         if not self._is_snoozing:
             return
         log.info("Unsnoozing...")
         from .messages import Message
         msg = Message().unsnooze("unsnoozing")
         self._event_bus.send(msg)
-        executor = self.make_executor(self.cluster_params, self._pool)
+        executor = await self.make_executor(self.cluster_params, self._pool)
         self._set_executor(executor, self.cluster_params)
         self._is_snoozing = False
         msg = Message().unsnooze_done("unsnooze done")
         self._event_bus.send(msg)
 
+    def is_snoozing(self):
+        return self._is_snoozing
+
     async def _snooze_check_task(self):
         """
         Periodically check if we need to snooze the executor
         """
-        while True:
-            await asyncio.sleep(self._snooze_check_interval)
-            if not self._is_snoozing and self._snooze_timeout is not None:
-                since_last_activity = time.monotonic() - self._last_activity
-                if since_last_activity > self._snooze_timeout:
-                    self.snooze()
+        try:
+            while True:
+                await asyncio.sleep(self._snooze_check_interval)
+                if not self._is_snoozing and self._snooze_timeout is not None:
+                    since_last_activity = time.monotonic() - self._last_activity
+                    if since_last_activity > self._snooze_timeout:
+                        await self.snooze()
+        except asyncio.CancelledError:
+            log.debug("shutting down snooze check task")
+            return
 
-    def make_executor(self, params, pool) -> AsyncAdapter:
+    async def make_executor(self, params, pool) -> AsyncAdapter:
         connection = params['connection']
         if connection["type"].lower() == "tcp":
-            # FIXME: do we need to run this in `pool`?
-            sync_executor = DaskJobExecutor.connect(
+            sync_executor = await sync_to_async(
+                DaskJobExecutor.connect,
+                pool=self._pool,
                 scheduler_uri=connection['address'],
             )
         elif connection["type"].lower() == "local":
-            sync_executor = create_executor(
+            sync_executor = await sync_to_async(
+                create_executor,
+                pool=self._pool,
                 connection=connection,
                 local_directory=self.get_local_directory(),
                 preload=self.get_preload(),
@@ -151,9 +162,9 @@ class ExecutorState:
         executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
         return executor
 
-    def get_executor(self):
+    async def get_executor(self):
         self._update_last_activity()
-        self.unsnooze()
+        await self.unsnooze()
         if self.executor is None:
             # TODO: exception type, conversion into 400 response
             raise RuntimeError("wrong state: executor is None")
@@ -166,12 +177,12 @@ class ExecutorState:
         # memoize the cluster details, if ever we support
         # dynamic resources this will need to change
         if self.cluster_details is None:
-            executor = self.get_executor()
+            executor = await self.get_executor()
             self.cluster_details = await executor.get_resource_details()
         return self.cluster_details
 
-    def get_context(self) -> Context:
-        self.unsnooze()
+    async def get_context(self) -> Context:
+        await self.unsnooze()
         self._update_last_activity()
         if self.context is None:
             raise RuntimeError("cannot get context, please call `set_executor` before")
@@ -382,7 +393,7 @@ class DatasetState:
         return self
 
     async def serialize(self, dataset_id):
-        executor = self.executor_state.get_executor()
+        executor = await self.executor_state.get_executor()
         dataset = self.datasets[dataset_id]
         diag = await executor.run_function(lambda: dataset["dataset"].diagnostics)
         return {
@@ -410,7 +421,7 @@ class DatasetState:
         return uuid in self.datasets
 
     async def verify(self):
-        executor = self.executor_state.get_executor()
+        executor = await self.executor_state.get_executor()
         for uuid, params in self.datasets.items():
             dataset = params["dataset"]
             try:
@@ -453,7 +464,7 @@ class JobState:
 
     async def remove(self, uuid: str) -> bool:
         try:
-            executor = self.executor_state.get_executor()
+            executor = await self.executor_state.get_executor()
             await executor.cancel(uuid)
             del self.jobs[uuid]
             for ds, jobs in itertools.chain(self.jobs_for_dataset.items(),
@@ -546,7 +557,7 @@ class SharedState:
             "separator": '/'
         }
 
-    def create_and_set_executor(self, spec: typing.Dict[str, int]):
+    async def create_and_set_executor(self, spec: typing.Dict[str, int]):
         """
         Create a new executor from spec, a dict[str, int]
         compatible with the main arguments of cluster_spec().

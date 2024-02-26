@@ -64,7 +64,7 @@ async def test_preload_executor(tmpdir_factory):
         io_loop = tornado.ioloop.IOLoop.current()
         assert io_loop is not None
 
-        state.create_and_set_executor(
+        await state.create_and_set_executor(
             {
                 'cpus': 2,
                 'cudas': 0,
@@ -98,11 +98,11 @@ async def test_snooze_last_activity(async_executor):
     try:
         # each of these activities should reset the last activity timer:
         executor_state._update_last_activity = mock.Mock()
-        _ = executor_state.get_executor()
+        _ = await executor_state.get_executor()
         executor_state._update_last_activity.assert_called()
 
         executor_state._update_last_activity = mock.Mock()
-        _ = executor_state.get_context()
+        _ = await executor_state.get_context()
         executor_state._update_last_activity.assert_called()
 
         executor_state._update_last_activity = mock.Mock()
@@ -134,21 +134,21 @@ async def test_snooze_explicit(local_cluster_url):
                 "address": local_cluster_url,
             }
         }
-        executor = executor_state.make_executor(params, pool)
+        executor = await executor_state.make_executor(params, pool)
         await executor_state.set_executor(executor, params)
 
-        executor_state.snooze()
+        await executor_state.snooze()
         assert executor_state._is_snoozing
         assert executor_state.executor is None
         assert executor_state.context is None
 
-        executor_state.unsnooze()
+        await executor_state.unsnooze()
         assert not executor_state._is_snoozing
         assert executor_state.executor is not None
         assert executor_state.context is not None
         # these two work without raising an exception:
-        executor_state.get_executor()
-        executor_state.get_context()
+        await executor_state.get_executor()
+        await executor_state.get_context()
     finally:
         pool.shutdown()
         executor_state.shutdown()
@@ -169,13 +169,13 @@ async def test_snooze_explicit_keep_alive(local_cluster_url):
                 "address": local_cluster_url,
             }
         }
-        executor = executor_state.make_executor(params, pool)
+        executor = await executor_state.make_executor(params, pool)
         await executor_state.set_executor(executor, params)
 
         # if we are in at least one keep-alive section, we can't snooze:
         with executor_state.keep_alive():
             assert executor_state._keep_alive > 0
-            executor_state.snooze()
+            await executor_state.snooze()
             assert not executor_state._is_snoozing
             assert executor_state.executor is not None
             assert executor_state.context is not None
@@ -184,25 +184,25 @@ async def test_snooze_explicit_keep_alive(local_cluster_url):
         with executor_state.keep_alive():
             with executor_state.keep_alive():
                 assert executor_state._keep_alive > 0
-                executor_state.snooze()
+                await executor_state.snooze()
                 assert not executor_state._is_snoozing
                 assert executor_state.executor is not None
                 assert executor_state.context is not None
 
         # afterwards, we can snooze again:
         assert executor_state._keep_alive == 0
-        executor_state.snooze()
+        await executor_state.snooze()
         assert executor_state._is_snoozing
         assert executor_state.executor is None
         assert executor_state.context is None
 
-        executor_state.unsnooze()
+        await executor_state.unsnooze()
         assert not executor_state._is_snoozing
         assert executor_state.executor is not None
         assert executor_state.context is not None
         # these two work without raising an exception:
-        executor_state.get_executor()
-        executor_state.get_context()
+        await executor_state.get_executor()
+        await executor_state.get_context()
     finally:
         pool.shutdown()
         executor_state.shutdown()
@@ -223,7 +223,7 @@ async def test_snooze_by_activity(local_cluster_url):
                 "address": local_cluster_url,
             }
         }
-        executor = executor_state.make_executor(params, pool)
+        executor = await executor_state.make_executor(params, pool)
         # we must check very frequently; by default we only check twice a minute
         # to keep activity low:
         executor_state._snooze_check_interval = 0.01
@@ -240,7 +240,7 @@ async def test_snooze_by_activity(local_cluster_url):
         # (we need to change the timeout etc. here, before we trigger the unsnooze,
         # to make sure we don't directly snooze again):
         executor_state._snooze_timeout = 3600.0
-        _ = executor_state.get_executor()
+        _ = await executor_state.get_executor()
         assert not executor_state._is_snoozing
         assert executor_state.executor is not None
         assert executor_state.context is not None

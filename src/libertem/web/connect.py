@@ -26,7 +26,7 @@ class ConnectHandler(tornado.web.RequestHandler):
     async def get(self):
         log.info("ConnectHandler.get")
         try:
-            self.state.executor_state.get_executor()
+            await self.state.executor_state.get_executor()
             params = self.state.executor_state.get_cluster_params()
             # TODO: extract into Message class
             self.write({
@@ -50,7 +50,7 @@ class ConnectHandler(tornado.web.RequestHandler):
         pool = AsyncAdapter.make_pool()
         with tracer.start_as_current_span("executor setup"):
             try:
-                executor = self.state.executor_state.make_executor(request_data, pool)
+                executor = await self.state.executor_state.make_executor(request_data, pool)
             except Exception as e:
                 msg = Message().cluster_conn_error(msg=str(e))
                 log_message(msg, exception=True)

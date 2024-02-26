@@ -24,6 +24,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
     enum ColorType {
         blue = "blue",
         grey = "grey",
+        orange = "orange",
         red = "red",
     }
 
@@ -56,7 +57,7 @@ const ClusterStatus: React.FC<MergedProps> = ({ clusterConnection, channelStatus
                 setIcon(IconType.broken)
             }
             else if (channelStatus === ChannelStatusCodes.UNSNOOZING) {
-                setColor(ColorType.grey)
+                setColor(ColorType.orange)
                 setStatus("unsnoozing")
                 setIcon(IconType.wait)
             } else {

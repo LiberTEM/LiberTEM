@@ -113,10 +113,16 @@ class ClusterAnalysis(BaseAnalysis, id_="CLUST"):
         f = udf_results['intensity'].raw_data
         feature_vector = f / np.abs(f).mean(axis=0)
 
-        clustering = AgglomerativeClustering(
-            metric='euclidean', n_clusters=n_clust, linkage='ward',
-            connectivity=connectivity
-        ).fit(feature_vector)
+        try:
+            clustering = AgglomerativeClustering(
+                metric='euclidean', n_clusters=n_clust, linkage='ward',
+                connectivity=connectivity
+            ).fit(feature_vector)
+        except TypeError:  # Python 3.7: old sklearn -> old API:
+            clustering = AgglomerativeClustering(
+                affinity='euclidean', n_clusters=n_clust, linkage='ward',
+                connectivity=connectivity
+            ).fit(feature_vector)
         labels = np.array(clustering.labels_+1)
         return AnalysisResultSet([
             AnalysisResult(raw_data=labels.reshape(self.dataset.shape.nav),

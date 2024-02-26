@@ -1037,17 +1037,25 @@ if (
                 return WindowsSelectorEventLoopPolicy()
 
 
+# for ordering, depend on `event_loop` on Python 3.7:
+if sys.version_info < (3, 8):
+    @pytest.fixture(scope='session')
+    def maybe_event_loop(event_loop):
+        pass
+else:
+    @pytest.fixture(scope='session')
+    def maybe_event_loop():
+        pass
+
+
 @pytest.fixture(scope='session')
-def local_cluster_url(request):
+def local_cluster_url(maybe_event_loop):
     """
     Shared dask cluster, can be used repeatedly by different executors.
 
     This allows numba caching across tests, without sharing the executor,
     for example
     """
-    if sys.version_info < (3, 8):
-        request.fixturenames.append('event_loop')
-
     cluster_port = find_unused_port()
     devices = detect()
     spec = cluster_spec(

@@ -1038,13 +1038,16 @@ if (
 
 
 @pytest.fixture(scope='session')
-def local_cluster_url():
+def local_cluster_url(request):
     """
     Shared dask cluster, can be used repeatedly by different executors.
 
     This allows numba caching across tests, without sharing the executor,
     for example
     """
+    if sys.version_info < (3, 8):
+        request.fixturenames.append('event_loop')
+
     cluster_port = find_unused_port()
     devices = detect()
     spec = cluster_spec(
@@ -1062,18 +1065,18 @@ def local_cluster_url():
         },
     }
 
-    with set_num_threads_env(1, set_numba=False):
-        cluster = dd.SpecCluster(
-            workers=spec,
-            **(cluster_kwargs or {})
-        )
-        client = dd.Client(cluster, set_as_default=False)
-        client.wait_for_workers(len(spec))
-        client.close()
+    # use the context manager of SpecCluster here to properly
+    # shut down the LoopRunner in case of older distributed versions:
+    with dd.SpecCluster(
+        workers=spec,
+        **(cluster_kwargs or {})
+    ) as cluster:
+        with set_num_threads_env(1, set_numba=False):
+            client = dd.Client(cluster, set_as_default=False)
+            client.wait_for_workers(len(spec))
+            client.close()
 
-    yield 'tcp://localhost:%d' % cluster_port
-
-    cluster.close()
+        yield 'tcp://localhost:%d' % cluster_port
 
 
 @pytest.fixture(scope='function')

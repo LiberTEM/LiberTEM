@@ -17,11 +17,9 @@ jobs:
   tests:
     strategy:
       matrix:
-        python_version: ["3.7", "3.9", "3.10", "3.11", "3.12"]
+        python_version: ["3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-latest, windows-latest, macos-14]
         exclude:
-          - os: macos-14
-            python_version: "3.7"
           - os: macos-14
             python_version: "3.9"
     runs-on: ${{ matrix.os }}
@@ -36,11 +34,7 @@ jobs:
            [[ "${{ matrix.os }}" = "ubuntu-latest" ]] && sudo apt-get install -y libcap-dev || true
         shell: bash
       - name: install tox (with uv)
-        if: ${{ matrix.python_version != '3.7' }}
         run: python3 -m pip install tox tox-uv
-      - name: install tox
-        if: ${{ matrix.python_version == '3.7' }}
-        run: python3 -m pip install tox
       - name: run tox
         run: tox -e 'py${{ matrix.python_version }}'
       - name: submit code coverage

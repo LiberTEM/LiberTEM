@@ -37,7 +37,7 @@ has_gpus = len(d['cudas']) > 0
 
 
 @pytest.fixture(
-    scope='session',
+    scope='module',
     params=[
         "inline", "dask_executor", "dask_make_default", "dask_integration",
         "concurrent", "delayed", "pipelined",
@@ -60,7 +60,10 @@ def ctx(request, local_cluster_url):
             yield Context(executor=DelayedJobExecutor())
     elif request.param == "dask_make_default":
         try:
-            ctx = Context.make_with('dask-make-default')
+            ctx = Context.make_with(
+                'dask-make-default',
+                cpus=4,
+            )
             yield ctx
         finally:
             # cleanup: Close cluster and client
@@ -91,7 +94,7 @@ def ctx(request, local_cluster_url):
 
 
 @pytest.fixture(
-    scope='session',
+    scope='function',
     params=[
         # Only testing a selection of backends to keep the number of tests under control
         "HDF5", "RAW", "memory", SCIPY_COO, SPARSE_COO, CUPY, CUPY_SCIPY_CSR, "NPY", "BLO",
@@ -248,8 +251,10 @@ def _calculate(ctx, load_kwargs):
     return result, udfs
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def reference(load_kwargs):
+    # This must be function-scoped because load_kwargs is
+    # Could refactor the tests to avoid this recalculate if needed
     ctx = Context(executor=InlineJobExecutor())
     return _calculate(ctx, load_kwargs)
 

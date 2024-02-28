@@ -301,10 +301,10 @@ def test_make_default():
 
 @pytest.mark.slow
 def test_make_dask_implicit():
-    ctx = Context.make_with(cpus=(4, 7))
-    assert ctx.executor.__class__ == DaskJobExecutor
-    assert ctx.executor.client is not None
-    assert len(ctx.executor.get_available_workers().has_cpu()) == 2
+    with Context.make_with(cpus=(4, 7)) as ctx:
+        assert ctx.executor.__class__ == DaskJobExecutor
+        assert ctx.executor.client is not None
+        assert len(ctx.executor.get_available_workers().has_cpu()) == 2
 
 
 def test_connect_default(local_cluster_url):

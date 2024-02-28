@@ -10,4 +10,3 @@ pytest-benchmark
 ipykernel
 joblib
 setuptools  # for pkg_resources
-jupyter_core<5;( python_version~='3.8')

@@ -1,5 +1,4 @@
 import time
-import sys
 import copy
 from unittest import mock
 import contextlib
@@ -243,14 +242,11 @@ roi_types = (
     sparse.DOK,
     scipy.sparse.coo_matrix,
     scipy.sparse.csr_matrix,
+    scipy.sparse.csr_array,
     list,
     tuple,
     int,
 )
-
-if sys.version_info >= (3, 8) and hasattr(scipy.sparse, 'csr_array'):
-    # csr_array was added ~scipy 1.8, which needs Python 3.8
-    roi_types = roi_types + (scipy.sparse.csr_array,)
 
 
 @pytest.mark.parametrize(

@@ -277,7 +277,7 @@ def adjust_event_loop_policy():
     work for us by default, so call this as early as possible!
     """
     # stolen from ipykernel:
-    if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+    if sys.platform.startswith("win"):
         try:
             from asyncio import (
                 WindowsProactorEventLoopPolicy,

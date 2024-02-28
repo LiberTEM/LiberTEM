@@ -998,10 +998,7 @@ def find_unused_port():
         return sock.getsockname()[1]
 
 
-if (
-    sys.version_info >= (3, 8)
-    and sys.platform.startswith("win")
-):
+if sys.platform.startswith("win"):
     # Py3.8+ on Windows need some help with the event loop policy:
     @pytest.fixture(scope="session", autouse=True)
     def event_loop_policy():
@@ -1025,14 +1022,8 @@ if (
                 return WindowsSelectorEventLoopPolicy()
 
 
-# for ordering, depend on `event_loop` on Python 3.7:
 @pytest.fixture(scope='session')
-def maybe_event_loop():
-    pass
-
-
-@pytest.fixture(scope='session')
-def local_cluster_url(maybe_event_loop):
+def local_cluster_url():
     """
     Shared dask cluster, can be used repeatedly by different executors.
 

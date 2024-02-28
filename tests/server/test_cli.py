@@ -13,18 +13,6 @@ def event_loop_policy(request):
     return asyncio.get_event_loop_policy()  # TODO: windows fixes
 
 
-if sys.version_info < (3, 8) and sys.platform.startswith("win"):
-    # pytest-asyncio on Python 3.7 needs a bit of help...
-    # don't do this on current versions, as overriding event_loop
-    # on current pytest-asyncio is deprecated.
-    @pytest.fixture(scope='session')
-    def event_loop():
-        """Create an instance of the default event loop for each test case."""
-        loop = asyncio.WindowsProactorEventLoopPolicy().new_event_loop()
-        yield loop
-        loop.close()
-
-
 @pytest.mark.asyncio
 async def test_libertem_server_cli_startup():
     CTRL_C = signal.SIGINT

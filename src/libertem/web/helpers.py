@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Tuple
+from typing import Any
 
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
@@ -12,7 +12,7 @@ def _int_or_zero(value) -> int:
         return 0
 
 
-def _convert_device_map(raw_cudas: Dict[int, Any]) -> List[int]:
+def _convert_device_map(raw_cudas: dict[int, Any]) -> list[int]:
     return [
         this_id
         for dev_id, num in raw_cudas.items()
@@ -43,10 +43,10 @@ def create_executor(*, connection, local_directory, preload) -> DaskJobExecutor:
 
 
 def create_executor_external(
-    executor_spec: Dict[str, int],
+    executor_spec: dict[str, int],
     local_directory,
     preload,
-) -> Tuple[AsyncAdapter, Dict[str, Dict[str, Any]]]:
+) -> tuple[AsyncAdapter, dict[str, dict[str, Any]]]:
     cudas = {}
     if executor_spec['cudas']:
         cudas[0] = executor_spec['cudas']

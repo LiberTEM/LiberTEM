@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 from libertem.common import Shape
 from libertem.common.math import prod
 
@@ -21,7 +21,7 @@ def get_partition_shape(
     dataset_shape: Shape,
     target_size_items: int,
     min_num: Optional[int] = None
-) -> Tuple[int, ...]:
+) -> tuple[int, ...]:
     """
     Calculate partition shape for the given ``target_size_items``
 
@@ -38,7 +38,7 @@ def get_partition_shape(
         minimum number of partitions
     """
     sig_size = dataset_shape.sig.size
-    current_p_shape: Tuple[int, ...] = ()
+    current_p_shape: tuple[int, ...] = ()
 
     if min_num is None:
         min_num = 1

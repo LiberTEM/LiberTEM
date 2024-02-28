@@ -9,7 +9,6 @@ import tempfile
 import subprocess
 import contextlib
 from os.path import join
-from typing import List
 
 from github import Github, UnknownObjectException
 from pkg_resources import parse_version
@@ -633,7 +632,7 @@ def do_build_appimage(ctx):
     print("success, files=", appimage_files)
 
 
-def get_docker_tags() -> List[str]:
+def get_docker_tags() -> list[str]:
     version = get_release_tag()
     is_latest_stable = version and (version["full"] == get_latest_stable_tag())
 

@@ -1,6 +1,7 @@
 import time
 import logging
-from typing import Optional, Sequence, Tuple, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
+from collections.abc import Sequence
 
 import psutil
 import numpy as np
@@ -359,8 +360,8 @@ class MemoryDataSet(DataSet):
         return super().get_base_shape(roi)
 
     def adjust_tileshape(
-        self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray],
-    ) -> Tuple[int, ...]:
+        self, tileshape: tuple[int, ...], roi: Optional[np.ndarray],
+    ) -> tuple[int, ...]:
         if self.tileshape is not None:
             return tuple(self.tileshape)
         return super().adjust_tileshape(tileshape, roi)

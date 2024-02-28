@@ -1,7 +1,6 @@
 import os
 import mmap
 import contextlib
-import typing
 
 import numpy as np
 from numba.typed import List
@@ -167,7 +166,7 @@ class MMapFile(MMapFileBase):
 
 
 class MMapBackendImpl(IOBackendImpl):
-    FILE_CLS: typing.Type = MMapFile
+    FILE_CLS: type = MMapFile
 
     def __init__(self, enable_readahead_hints=False):
         super().__init__()
@@ -185,7 +184,7 @@ class MMapBackendImpl(IOBackendImpl):
             f.close()
 
     def _get_tiles_straight(
-        self, tiling_scheme, open_files: typing.List[MMapFile], read_ranges,
+        self, tiling_scheme, open_files: list[MMapFile], read_ranges,
         sync_offset=0
     ):
         """

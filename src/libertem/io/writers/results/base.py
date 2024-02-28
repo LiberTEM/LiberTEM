@@ -1,5 +1,3 @@
-from typing import Type, Dict
-
 from libertem.common.analysis import AnalysisResultSet
 
 
@@ -12,7 +10,7 @@ class ResultFormatRegistry(type):
     """
 
     # FIXME: TypedDict, needs typing-extensions
-    registry: Dict = {}
+    registry: dict = {}
 
     def __init__(cls, name, args, bases):
         format_info = cls.format_info()
@@ -34,7 +32,7 @@ class ResultFormatRegistry(type):
         }
 
     @classmethod
-    def get_format_by_id(cls, identifier) -> Type['ResultFormat']:
+    def get_format_by_id(cls, identifier) -> type['ResultFormat']:
         return cls.registry[identifier]['class']
 
 

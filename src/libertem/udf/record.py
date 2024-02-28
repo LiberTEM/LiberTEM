@@ -1,4 +1,3 @@
-from typing import Tuple
 import numpy as np
 
 from libertem.common import Shape
@@ -33,7 +32,7 @@ class RecordUDF(UDF):
         return self.meta.dataset_shape
 
     @property
-    def _memmap_flat_shape(self) -> Tuple[int, ...]:
+    def _memmap_flat_shape(self) -> tuple[int, ...]:
         # only valid during run_udf hence _ property
         return (prod(self._ds_shape.nav), *self._ds_shape.sig)
 

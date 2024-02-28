@@ -1,4 +1,3 @@
-from typing import Tuple
 from typing_extensions import Literal
 from libertem.common.math import prod
 import numpy as np
@@ -83,7 +82,7 @@ class ApplyMasksEngine:
         flat_data = tile.reshape(flat_shape) if tile.shape != flat_shape else tile
         return self.process_flat(flat_data, self._get_masks())
 
-    def process_frame_shifted(self, frame, shifts: Tuple[int, ...]):
+    def process_frame_shifted(self, frame, shifts: tuple[int, ...]):
         sig_shape = self.meta.dataset_shape.sig
         masks = self._get_masks()
         num_masks = len(self.masks)

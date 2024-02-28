@@ -1,4 +1,5 @@
-from typing import Union, Callable, Iterable
+from typing import Union, Callable
+from collections.abc import Iterable
 
 import numpy as np
 import scipy.sparse as sp

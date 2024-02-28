@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 import sparse
-from typing import Union, TYPE_CHECKING, Optional, Tuple
+from typing import Union, TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from libertem.common.shape import Shape
@@ -16,7 +16,7 @@ def to_dense(a):
         return np.array(a)
 
 
-def to_sparse(a, shape: Optional[Union['Shape', Tuple[int, ...]]] = None):
+def to_sparse(a, shape: Optional[Union['Shape', tuple[int, ...]]] = None):
     if isinstance(a, sparse.COO):
         return a
     elif isinstance(a, sparse.SparseArray):
@@ -37,7 +37,7 @@ def to_sparse(a, shape: Optional[Union['Shape', Tuple[int, ...]]] = None):
         return sparse.COO.from_numpy(np.array(a))
 
 
-def sparse_to_coo(a, shape: Optional[Union['Shape', Tuple[int, ...]]] = None):
+def sparse_to_coo(a, shape: Optional[Union['Shape', tuple[int, ...]]] = None):
     if a is None or isinstance(a, np.ndarray):
         return a
     return to_sparse(a, shape=shape)

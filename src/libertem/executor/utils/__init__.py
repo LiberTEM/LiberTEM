@@ -1,4 +1,5 @@
-from typing import Iterable, Union
+from typing import Union
+from collections.abc import Iterable
 import itertools
 import warnings
 

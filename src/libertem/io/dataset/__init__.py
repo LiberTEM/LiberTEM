@@ -1,5 +1,5 @@
 import typing
-from typing import Dict, List, Union, Any
+from typing import Union, Any
 import pathlib
 from functools import lru_cache
 import importlib
@@ -32,8 +32,8 @@ filetypes = {
 }
 
 
-@lru_cache()
-def build_extension_map() -> Dict[str, List[str]]:
+@lru_cache
+def build_extension_map() -> dict[str, list[str]]:
     ext_map = {}
     for typ_ in filetypes:
         cls = get_dataset_cls(typ_)
@@ -165,7 +165,7 @@ def unregister_dataset_cls(filetype: str) -> None:
     del filetypes[filetype]
 
 
-def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
+def get_dataset_cls(filetype: str) -> type[DataSet]:
     if not isinstance(filetype, str):
         return filetype
     try:
@@ -181,11 +181,11 @@ def get_dataset_cls(filetype: str) -> typing.Type[DataSet]:
         module = importlib.import_module(module_name)
     except ImportError as e:
         raise DataSetException("could not load dataset: %s" % str(e))
-    cls: typing.Type[DataSet] = getattr(module, cls_name)
+    cls: type[DataSet] = getattr(module, cls_name)
     return cls
 
 
-def get_search_order(path: Union[str, np.ndarray]) -> List[str]:
+def get_search_order(path: Union[str, np.ndarray]) -> list[str]:
     """
     Return the keys from filetypes in an order which
     is perhaps optimal for dataset auto-detection
@@ -220,7 +220,7 @@ def get_search_order(path: Union[str, np.ndarray]) -> List[str]:
     return search_order
 
 
-def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
+def detect(path: Union[str, np.ndarray], executor) -> dict[str, Any]:
     """
     Returns dataset's detected type, parameters and
     additional info.
@@ -239,13 +239,13 @@ def detect(path: Union[str, np.ndarray], executor) -> Dict[str, Any]:
     return {}
 
 
-def get_extensions() -> typing.Set[str]:
+def get_extensions() -> set[str]:
     """
     Return supported extensions as a set of strings.
 
     Plain extensions only, no pattern!
     """
-    types: typing.Set[str] = set()
+    types: set[str] = set()
     for filetype in filetypes.keys():
         cls = get_dataset_cls(filetype)
         types = types.union({ext.lower() for ext in cls.get_supported_extensions()})

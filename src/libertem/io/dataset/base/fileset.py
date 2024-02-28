@@ -17,7 +17,7 @@ class FileSet:
         files that are part of a partition or dataset
     """
     def __init__(
-        self, files: typing.List[File],
+        self, files: list[File],
         frame_header_bytes: int = 0, frame_footer_bytes: int = 0,
     ):
         self._files = files

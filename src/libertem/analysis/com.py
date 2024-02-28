@@ -1,6 +1,6 @@
 import logging
 import inspect
-from typing import Dict, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -138,7 +138,7 @@ class COMResultSet(AnalysisResultSet):
 
 
 class ParameterGuessProc:
-    async def __call__(self, rpc_context: "RPCContext") -> Dict:
+    async def __call__(self, rpc_context: "RPCContext") -> dict:
         comp_ana = rpc_context.get_compound_analysis()
         analyses = comp_ana["details"]["analyses"]
         analysis_details = [
@@ -311,7 +311,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                 r=self.parameters['r'],
             )
 
-    def get_parameters(self, parameters: Dict) -> Dict:
+    def get_parameters(self, parameters: dict) -> dict:
         (detector_y, detector_x) = self.dataset.shape.sig
 
         cx = parameters.get('cx', detector_x / 2)
@@ -335,16 +335,16 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
         }
 
     @classmethod
-    def get_template_helper(cls) -> Type[GeneratorHelper]:
+    def get_template_helper(cls) -> type[GeneratorHelper]:
         return ComTemplate
 
     @classmethod
-    def get_rpc_definitions(cls) -> Dict[str, Type[ProcedureProtocol]]:
+    def get_rpc_definitions(cls) -> dict[str, type[ProcedureProtocol]]:
         return {
             "guess_parameters": ParameterGuessProc,
         }
 
-    def need_rerun(self, old_params: Dict, new_params: Dict) -> bool:
+    def need_rerun(self, old_params: dict, new_params: dict) -> bool:
         """
         Don't need to re-run UDF if only `flip_y` or `scan_rotation`
         have changed.

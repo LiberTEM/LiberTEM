@@ -4,7 +4,6 @@ import os
 import importlib.util
 import platform
 import threading
-from typing import Tuple
 import pkg_resources
 from functools import partial
 import warnings
@@ -528,7 +527,7 @@ def mock_sparse_data():
 
 
 @pytest.fixture(scope="session")
-def raw_csr_generated(mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+def raw_csr_generated(mock_sparse_data: tuple[csr_matrix, np.ndarray], tmpdir_factory):
     orig, data_flat = mock_sparse_data
     datadir = tmpdir_factory.mktemp('raw_csr')
     name_indptr = str(datadir / 'indptr.raw')
@@ -561,7 +560,7 @@ data_dtype = "{str(orig.data.dtype)}"
 
 @pytest.fixture(scope="session")
 def raw_csr_generated_bigendian(
-        mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+        mock_sparse_data: tuple[csr_matrix, np.ndarray], tmpdir_factory):
     orig, data_flat = mock_sparse_data
     dtype = np.dtype('>i4')
     datadir = tmpdir_factory.mktemp('raw_csr')
@@ -594,7 +593,7 @@ data_dtype = "{str(dtype)}"
 
 
 @pytest.fixture(scope="session")
-def raw_csr_generated_uint64(mock_sparse_data: Tuple[csr_matrix, np.ndarray], tmpdir_factory):
+def raw_csr_generated_uint64(mock_sparse_data: tuple[csr_matrix, np.ndarray], tmpdir_factory):
     orig, data_flat = mock_sparse_data
     datadir = tmpdir_factory.mktemp('raw_csr')
     name_indptr = str(datadir / 'indptr_uint64.raw')
@@ -999,17 +998,6 @@ def find_unused_port():
         return sock.getsockname()[1]
 
 
-if sys.version_info < (3, 8):
-    # pytest-asyncio on Python 3.7 needs a bit of help...
-    # don't do this on current versions, as overriding event_loop
-    # on current pytest-asyncio is deprecated.
-    @pytest.fixture(scope='session')
-    def event_loop():
-        """Create an instance of the default event loop for each test case."""
-        loop = asyncio.get_event_loop_policy().new_event_loop()
-        yield loop
-        loop.close()
-
 if (
     sys.version_info >= (3, 8)
     and sys.platform.startswith("win")
@@ -1038,14 +1026,9 @@ if (
 
 
 # for ordering, depend on `event_loop` on Python 3.7:
-if sys.version_info < (3, 8):
-    @pytest.fixture(scope='session')
-    def maybe_event_loop(event_loop):
-        pass
-else:
-    @pytest.fixture(scope='session')
-    def maybe_event_loop():
-        pass
+@pytest.fixture(scope='session')
+def maybe_event_loop():
+    pass
 
 
 @pytest.fixture(scope='session')

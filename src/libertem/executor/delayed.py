@@ -1,5 +1,6 @@
 from functools import partial
-from typing import Any, Iterable, List, Type, Optional
+from typing import Any, Optional
+from collections.abc import Iterable
 import contextlib
 from collections import defaultdict, OrderedDict
 
@@ -28,7 +29,7 @@ from .utils import delayed_unpack
 
 
 class DelayedUDFRunner(UDFRunner):
-    def __init__(self, udfs: List[UDF], debug: bool = False, progress_reporter: Any = None):
+    def __init__(self, udfs: list[UDF], debug: bool = False, progress_reporter: Any = None):
         self._part_results = defaultdict(dict)
         super().__init__(udfs, debug=debug)
 
@@ -346,7 +347,7 @@ class DelayedJobExecutor(BaseJobExecutor):
                                 for el in flat_mapping]
         return delayed_unpack.rebuild_nested(res_unpack, flat_mapping_reduced)
 
-    def get_udf_runner(self) -> Type['UDFRunner']:
+    def get_udf_runner(self) -> type['UDFRunner']:
         return DelayedUDFRunner
 
 

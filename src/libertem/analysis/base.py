@@ -1,5 +1,5 @@
 from typing import (
-    Dict, Optional, Type, TYPE_CHECKING
+    Optional, TYPE_CHECKING
 )
 from typing_extensions import Literal
 
@@ -35,9 +35,9 @@ class Analysis:
         Removed deprecated methods :code:`get_results` and :code:`get_job`
     """
     TYPE: Literal["UDF"] = "UDF"
-    registry: Dict[str, "Type[Analysis]"] = {}
+    registry: dict[str, "type[Analysis]"] = {}
 
-    def __init__(self, dataset: DataSet, parameters: Dict):
+    def __init__(self, dataset: DataSet, parameters: dict):
         self.dataset = dataset
 
     def __init_subclass__(cls, id_=None, **kwargs):
@@ -51,15 +51,15 @@ class Analysis:
             cls.registry[id_] = cls
 
     @classmethod
-    def get_analysis_by_type(cls, id_: str) -> Type["Analysis"]:
+    def get_analysis_by_type(cls, id_: str) -> type["Analysis"]:
         return cls.registry[id_]
 
     @classmethod
-    def get_template_helper(cls) -> Type["GeneratorHelper"]:
+    def get_template_helper(cls) -> type["GeneratorHelper"]:
         raise NotImplementedError()
 
     @classmethod
-    def get_rpc_definitions(cls) -> Dict[str, Type["ProcedureProtocol"]]:
+    def get_rpc_definitions(cls) -> dict[str, type["ProcedureProtocol"]]:
         return {}
 
     async def controller(self, cancel_id, executor, job_is_cancelled, send_results):
@@ -110,13 +110,13 @@ class Analysis:
     def get_complex_results(self, job_result, key_prefix, title, desc, damage, default_lin=True):
         raise NotImplementedError()
 
-    def get_parameters(self, parameters: Dict) -> Dict:
+    def get_parameters(self, parameters: dict) -> dict:
         """
         Get analysis parameters. Override to set defaults
         """
         raise NotImplementedError()
 
-    def need_rerun(self, old_params: Dict, new_params: Dict) -> bool:
+    def need_rerun(self, old_params: dict, new_params: dict) -> bool:
         """
         Determine if the analysis needs to be re-run on the data. If not,
         we can just call `get_udf_results` again, for example if the parameters
@@ -203,7 +203,7 @@ class BaseAnalysis(Analysis):
             ),
         ]
 
-    def get_parameters(self, parameters: Dict):
+    def get_parameters(self, parameters: dict):
         """
         Get analysis parameters. Override to set defaults
         """

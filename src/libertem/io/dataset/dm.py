@@ -63,7 +63,7 @@ class SingleDMDatasetParams(MessageConverter):
 
 
 class StackedDMDatasetParams(MessageConverter):
-    SCHEMA: typing.Dict = {}
+    SCHEMA: dict = {}
 
     def convert_from_python(self, raw_data):
         return super().convert_from_python(raw_data)
@@ -341,7 +341,7 @@ class StackedDMDataSet(DMDataSet):
         return {"dm3", "dm4"}
 
     @classmethod
-    def get_msg_converter(cls) -> typing.Type[MessageConverter]:
+    def get_msg_converter(cls) -> type[MessageConverter]:
         return StackedDMDatasetParams
 
     @classmethod

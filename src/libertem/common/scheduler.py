@@ -1,15 +1,16 @@
 from collections import defaultdict
-from typing import List, Set, TYPE_CHECKING, Iterator, Callable
+from typing import TYPE_CHECKING, Callable
+from collections.abc import Iterator
 
 if TYPE_CHECKING:
     from .executor import TaskProtocol, ResourceDef
 
 
 class WorkerSet:
-    def __init__(self, workers: List["Worker"]):
+    def __init__(self, workers: list["Worker"]):
         self.workers = workers
 
-    def group_by_host(self) -> List["WorkerSet"]:
+    def group_by_host(self) -> list["WorkerSet"]:
         """
         returns a list of `WorkerSet`s, each containing the workers for a single host
         """
@@ -50,10 +51,10 @@ class WorkerSet:
     def concurrency(self) -> int:
         return sum(w.nthreads for w in self.workers)
 
-    def hosts(self) -> Set[str]:
+    def hosts(self) -> set[str]:
         return {worker.host for worker in self.workers}
 
-    def names(self) -> List[str]:
+    def names(self) -> list[str]:
         return [worker.name for worker in self.workers]
 
     def extend(self, other: "WorkerSet") -> "WorkerSet":

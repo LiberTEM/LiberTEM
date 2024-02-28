@@ -1,6 +1,6 @@
 from io import BytesIO
 from typing import (
-    Callable, Dict, List, Optional, Union
+    Callable, Optional, Union
 )
 
 import numpy as np
@@ -53,7 +53,7 @@ class AnalysisResult:
     def __array__(self):
         return np.array(self.raw_data)
 
-    def get_image(self, save_kwargs: Optional[Dict] = None) -> BytesIO:
+    def get_image(self, save_kwargs: Optional[dict] = None) -> BytesIO:
         from libertem.common.viz import encode_image
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 
@@ -64,7 +64,7 @@ class AnalysisResult:
         return self._visualized
 
 
-_ResultsType = Union[List[AnalysisResult], Callable[[], List[AnalysisResult]]]
+_ResultsType = Union[list[AnalysisResult], Callable[[], list[AnalysisResult]]]
 
 
 class AnalysisResultSet:

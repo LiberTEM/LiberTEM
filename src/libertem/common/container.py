@@ -1,6 +1,7 @@
 import functools
 import logging
-from typing import Union, Callable, Sequence, Optional
+from typing import Union, Callable, Optional
+from collections.abc import Sequence
 from typing_extensions import Literal
 
 import sparse
@@ -77,7 +78,7 @@ def _make_mask_slicer(
     transpose: bool,
     backend: ArrayBackend,
 ):
-    @functools.lru_cache(maxsize=None)
+    @functools.cache
     def _get_masks_for_slice(slice_):
         stack_height = computed_masks.shape[0]
         m = slice_.get(computed_masks, sig_only=True)

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional, Type
+from typing import Optional
 import contextlib
 
 import numpy as np
@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class IOBackend:
-    registry: Dict[str, Type["IOBackend"]] = {}
+    registry: dict[str, type["IOBackend"]] = {}
     id_: Optional[str] = None
 
     def __init_subclass__(cls, id_: Optional[str] = None):

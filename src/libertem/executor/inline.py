@@ -1,4 +1,5 @@
-from typing import Any, Iterable, Dict
+from typing import Any
+from collections.abc import Iterable
 import contextlib
 
 import cloudpickle
@@ -21,7 +22,7 @@ class InlineWorkerContext(WorkerContext):
     def get_worker_queue(self) -> WorkerQueue:
         return self._queue
 
-    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+    def signal(self, ident: str, topic: str, msg_dict: dict[str, Any]):
         if 'ident' in msg_dict:
             raise ValueError('ident is a reserved name')
         msg_dict.update({'ident': ident})

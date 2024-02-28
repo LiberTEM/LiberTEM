@@ -1,7 +1,6 @@
 import time
 import sys
 import copy
-from typing import Dict
 from unittest import mock
 import contextlib
 
@@ -341,7 +340,7 @@ class DynamicParamsUDF(UDF):
     def __init__(self, latest_index, delay=0.0):
         super().__init__(latest_index=latest_index, delay=delay)
 
-    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+    def get_result_buffers(self) -> dict[str, BufferWrapper]:
         return {
             'index': self.buffer(kind='nav', dtype=int),
             'index_merge': self.buffer(kind='nav', dtype=int),
@@ -476,7 +475,7 @@ class DynamicParamsAuxUDF(UDF):
     def __init__(self, latest_index):
         super().__init__(latest_index=latest_index)
 
-    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+    def get_result_buffers(self) -> dict[str, BufferWrapper]:
         return {
             'index': self.buffer(kind='nav', dtype=int),
             'index_merge': self.buffer(kind='nav', dtype=int),

@@ -1,6 +1,6 @@
 import functools
 import asyncio
-from typing import Callable, TYPE_CHECKING, Type, TypeVar
+from typing import Callable, TYPE_CHECKING, TypeVar
 
 from contextlib import asynccontextmanager
 
@@ -26,7 +26,7 @@ class ResourceError(RuntimeError):
 
 
 class BaseJobExecutor(JobExecutor):
-    def get_udf_runner(self) -> Type['UDFRunner']:
+    def get_udf_runner(self) -> type['UDFRunner']:
         from libertem.udf.base import UDFRunner
         return UDFRunner
 
@@ -142,6 +142,6 @@ class AsyncAdapter(AsyncJobExecutor):
     async def get_resource_details(self):
         return await sync_to_async(self._wrapped.get_resource_details)
 
-    def get_udf_runner(self) -> Type['UDFRunner']:
+    def get_udf_runner(self) -> type['UDFRunner']:
         from libertem.udf.base import UDFRunner
         return UDFRunner

@@ -1,4 +1,5 @@
-from typing import Any, Iterable, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, Optional, Union, TYPE_CHECKING
+from collections.abc import Iterable
 from typing_extensions import Literal
 import mmap
 import math
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 BufferKind = Literal['nav', 'sig', 'single']
 BufferLocation = Optional[Literal['device']]
 BufferUse = Literal['private', 'result_only']
-BufferSize = Union[int, Tuple[int, ...]]
+BufferSize = Union[int, tuple[int, ...]]
 
 
 def _alloc_aligned(size: int, blocksize: int = 4096) -> mmap.mmap:

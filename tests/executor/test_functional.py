@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 from glob import glob
 import concurrent.futures
@@ -82,16 +81,13 @@ def ctx(request, local_cluster_url):
     elif request.param == "delayed":
         yield Context(executor=DelayedJobExecutor())
     elif request.param == "pipelined":
-        if sys.version_info < (3, 8):
-            pytest.skip("PipelinedExecutor only supported from Python 3.8 onwards")
-        else:
-            ctx = None
-            try:
-                ctx = Context.make_with('pipelined', cpus=range(2))
-                yield ctx
-            finally:
-                if ctx is not None:
-                    ctx.close()
+        ctx = None
+        try:
+            ctx = Context.make_with('pipelined', cpus=range(2))
+            yield ctx
+        finally:
+            if ctx is not None:
+                ctx.close()
 
 
 @pytest.fixture(

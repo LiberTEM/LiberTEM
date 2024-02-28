@@ -48,7 +48,7 @@ class ExecutorState:
     ):
         self.executor = None
         self.cluster_params = {}
-        self.cluster_details: typing.Optional[typing.List] = None
+        self.cluster_details: typing.Optional[list] = None
         self.context: typing.Optional[Context] = None
         self._event_bus = event_bus
         self._snooze_timeout = snooze_timeout
@@ -65,12 +65,12 @@ class ExecutorState:
         self._loop = loop
         self._keep_alive = 0
         self.local_directory = "dask-worker-space"
-        self.preload: typing.Tuple[str, ...] = ()
+        self.preload: tuple[str, ...] = ()
 
-    def set_preload(self, preload: typing.Tuple[str, ...]) -> None:
+    def set_preload(self, preload: tuple[str, ...]) -> None:
         self.preload = preload
 
-    def get_preload(self) -> typing.Tuple[str, ...]:
+    def get_preload(self) -> tuple[str, ...]:
         return self.preload
 
     def set_local_directory(self, local_directory: str) -> None:
@@ -229,8 +229,8 @@ class ExecutorState:
 
 class AnalysisState:
     def __init__(self, executor_state: ExecutorState, job_state: 'JobState'):
-        self.analyses: typing.Dict[str, AnalysisInfo] = {}
-        self.results: typing.Dict[str, AnalysisResultInfo] = {}
+        self.analyses: dict[str, AnalysisInfo] = {}
+        self.results: dict[str, AnalysisResultInfo] = {}
         self.job_state = job_state
 
     def create(
@@ -260,7 +260,7 @@ class AnalysisState:
     ) -> typing.Optional[AnalysisInfo]:
         return self.analyses.get(uuid, default)
 
-    def filter(self, predicate: typing.Callable[[AnalysisInfo], bool]) -> typing.List[AnalysisInfo]:
+    def filter(self, predicate: typing.Callable[[AnalysisInfo], bool]) -> list[AnalysisInfo]:
         return [
             analysis
             for analysis in self.analyses.values()
@@ -320,7 +320,7 @@ class AnalysisState:
         ]
         return result
 
-    def serialize_all(self) -> typing.List[AnalysisInfo]:
+    def serialize_all(self) -> list[AnalysisInfo]:
         return [
             self.serialize(analysis_id)
             for analysis_id in self.analyses
@@ -330,10 +330,10 @@ class AnalysisState:
 class CompoundAnalysisState:
     def __init__(self, analysis_state: AnalysisState):
         self.analysis_state = analysis_state
-        self.analyses: typing.Dict[str, CompoundAnalysisInfo] = {}
+        self.analyses: dict[str, CompoundAnalysisInfo] = {}
 
     def create_or_update(
-        self, uuid: str, main_type: str, dataset_id: str, analyses: typing.List[str]
+        self, uuid: str, main_type: str, dataset_id: str, analyses: list[str]
     ) -> bool:
         created = uuid not in self.analyses
         self.analyses[uuid] = {
@@ -354,7 +354,7 @@ class CompoundAnalysisState:
 
     def filter(
         self, predicate: typing.Callable[[CompoundAnalysisInfo], bool]
-    ) -> typing.List[CompoundAnalysisInfo]:
+    ) -> list[CompoundAnalysisInfo]:
         return [
             ca
             for ca in self.analyses.values()
@@ -364,7 +364,7 @@ class CompoundAnalysisState:
     def serialize(self, uuid: str) -> CompoundAnalysisInfo:
         return self[uuid]
 
-    def serialize_all(self) -> typing.List[CompoundAnalysisInfo]:
+    def serialize_all(self) -> list[CompoundAnalysisInfo]:
         return [
             self.serialize(uuid)
             for uuid in self.analyses
@@ -374,14 +374,14 @@ class CompoundAnalysisState:
 class DatasetState:
     def __init__(self, executor_state: ExecutorState, analysis_state: AnalysisState,
                  compound_analysis_state: CompoundAnalysisState):
-        self.datasets: typing.Dict[str, DatasetInfo] = {}
-        self.dataset_to_id: typing.Dict[DataSet, str] = {}
+        self.datasets: dict[str, DatasetInfo] = {}
+        self.dataset_to_id: dict[DataSet, str] = {}
         self.executor_state = executor_state
         self.analysis_state = analysis_state
         self.compound_analysis_state = compound_analysis_state
 
     def register(
-        self, uuid: str, dataset: DataSet, params: typing.Dict, converted: typing.Dict
+        self, uuid: str, dataset: DataSet, params: dict, converted: dict
     ):
         assert uuid not in self.datasets
         self.datasets[uuid] = {
@@ -446,10 +446,10 @@ class DatasetState:
 
 class JobState:
     def __init__(self, executor_state: ExecutorState):
-        self.jobs: typing.Dict[str, JobInfo] = {}
+        self.jobs: dict[str, JobInfo] = {}
         self.executor_state = executor_state
-        self.jobs_for_dataset = typing.DefaultDict[str, typing.Set[str]](lambda: set())
-        self.jobs_for_analyses = typing.DefaultDict[str, typing.Set[str]](lambda: set())
+        self.jobs_for_dataset = typing.DefaultDict[str, set[str]](lambda: set())
+        self.jobs_for_analyses = typing.DefaultDict[str, set[str]](lambda: set())
 
     def register(self, job_id: str, analysis_id, dataset_id):
         assert job_id not in self.jobs
@@ -475,10 +475,10 @@ class JobState:
         except KeyError:
             return False
 
-    def get_for_dataset_id(self, dataset_id: str) -> typing.Set[str]:
+    def get_for_dataset_id(self, dataset_id: str) -> set[str]:
         return self.jobs_for_dataset[dataset_id]
 
-    def get_for_analysis_id(self, analysis_id: str) -> typing.Set[str]:
+    def get_for_analysis_id(self, analysis_id: str) -> set[str]:
         return self.jobs_for_analyses[analysis_id]
 
     def __getitem__(self, uuid: str) -> JobInfo:
@@ -497,7 +497,7 @@ class JobState:
             "analysis": job["analysis"],
         }
 
-    def serialize_all(self) -> typing.List[SerializedJobInfo]:
+    def serialize_all(self) -> list[SerializedJobInfo]:
         return [
             self.serialize(job_id)
             for job_id in self.jobs.keys()
@@ -557,7 +557,7 @@ class SharedState:
             "separator": '/'
         }
 
-    async def create_and_set_executor(self, spec: typing.Dict[str, int]):
+    async def create_and_set_executor(self, spec: dict[str, int]):
         """
         Create a new executor from spec, a dict[str, int]
         compatible with the main arguments of cluster_spec().

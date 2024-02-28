@@ -1,7 +1,8 @@
 import functools
 import time
 import random
-from typing import Generator, Optional, TypeVar
+from typing import Optional, TypeVar
+from collections.abc import Generator
 from multiprocessing import Process
 import sys
 import subprocess

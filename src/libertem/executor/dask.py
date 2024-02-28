@@ -4,7 +4,8 @@ from copy import deepcopy
 import functools
 import logging
 import signal
-from typing import Iterable, Any, Optional, Tuple, Union, Dict, Callable, List
+from typing import Any, Optional, Union, Callable
+from collections.abc import Iterable
 import uuid
 
 from dask import distributed as dd
@@ -40,7 +41,7 @@ class DaskWorkerContext(WorkerContext):
             self._worker = dd.get_worker()
             return self._worker
 
-    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+    def signal(self, ident: str, topic: str, msg_dict: dict[str, Any]):
         if self._comms_topic is None:
             # Scheduler Dask does not have comms so don't send
             return
@@ -101,7 +102,7 @@ def cluster_spec(
     name: str = 'default',
     num_service: int = 1,
     options: Optional[dict] = None,
-    preload: Optional[Tuple[str, ...]] = None
+    preload: Optional[tuple[str, ...]] = None
 ):
     '''
     Create a worker specification dictionary for a LiberTEM Dask cluster
@@ -409,7 +410,7 @@ class CommonDaskMixin:
         return details_sorted
 
 
-def _dispatch_messages(subscribers: Dict[str, List[Callable]], dask_message: Tuple[float, Dict]):
+def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tuple[float, dict]):
     """
     Unpacks the Dask message format and forwards the message
     to all subscribed callbacks for that topic (if any)
@@ -708,7 +709,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
     @classmethod
     def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
-            client_kwargs: Optional[dict] = None, preload: Optional[Tuple[str]] = None):
+            client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None):
         """
         Spin up a local dask cluster
 
@@ -817,7 +818,7 @@ def cli_worker(
     has_cupy,
     name,
     log_level,
-    preload: Tuple[str, ...]
+    preload: tuple[str, ...]
 ):
     import asyncio
 

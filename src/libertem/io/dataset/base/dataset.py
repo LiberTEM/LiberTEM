@@ -1,5 +1,6 @@
 import typing
-from typing import Generator, Optional, Sequence, Tuple
+from typing import Optional
+from collections.abc import Generator, Sequence
 
 import numpy as np
 from sparseconverter import CUDA, NUMPY, ArrayBackend
@@ -150,7 +151,7 @@ class DataSet:
         raise NotImplementedError()
 
     @classmethod
-    def get_msg_converter(cls) -> typing.Type[MessageConverter]:
+    def get_msg_converter(cls) -> type[MessageConverter]:
         raise NotImplementedError()
 
     @property
@@ -189,7 +190,7 @@ class DataSet:
         target_size: int,
         min_num_partitions: Optional[int] = None,
         containing_shape: Optional[Shape] = None,
-    ) -> typing.Tuple[int, ...]:
+    ) -> tuple[int, ...]:
         """
         Calculate partition shape for the given ``target_size``
 
@@ -220,7 +221,7 @@ class DataSet:
         )
 
     @classmethod
-    def get_supported_extensions(cls) -> typing.Set[str]:
+    def get_supported_extensions(cls) -> set[str]:
         """
         Return supported extensions as a set of strings.
 
@@ -240,7 +241,7 @@ class DataSet:
         return MMapBackend()
 
     @classmethod
-    def get_supported_io_backends(cls) -> typing.List[str]:
+    def get_supported_io_backends(cls) -> list[str]:
         """
         Get the supported I/O backends as list of their IDs. Some DataSet
         implementations with a custom backend may return an empty list here.
@@ -270,12 +271,12 @@ class DataSet:
     def get_decoder(self) -> Optional["Decoder"]:
         return None
 
-    def get_base_shape(self, roi: Optional[np.ndarray]) -> Tuple[int, ...]:
+    def get_base_shape(self, roi: Optional[np.ndarray]) -> tuple[int, ...]:
         return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
 
     def adjust_tileshape(
-        self, tileshape: Tuple[int, ...], roi: Optional[np.ndarray]
-    ) -> Tuple[int, ...]:
+        self, tileshape: tuple[int, ...], roi: Optional[np.ndarray]
+    ) -> tuple[int, ...]:
         """
         Final veto of the DataSet in the tileshape negotiation process,
         make sure that corrections are taken into account!

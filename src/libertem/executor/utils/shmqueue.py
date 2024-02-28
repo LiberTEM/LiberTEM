@@ -2,7 +2,8 @@ import multiprocessing as mp
 import contextlib
 import math
 import queue
-from typing import TYPE_CHECKING, Any, Generator, NamedTuple, Optional, Tuple
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional
+from collections.abc import Generator
 
 import cloudpickle
 import numpy as np
@@ -145,7 +146,7 @@ class ShmQueue(WorkerQueue):
             payload_shm = None
         self.q.put((cloudpickle.dumps(header), 'bytes', payload_shm))
 
-    def _get_buf_for_writing(self, size: int) -> Tuple[PoolAllocation, memoryview]:
+    def _get_buf_for_writing(self, size: int) -> tuple[PoolAllocation, memoryview]:
         if self._pool_shm_allocator is None:
             # FIXME: config item size, pool size
             self._pool_shm_allocator = PoolShmAllocator(

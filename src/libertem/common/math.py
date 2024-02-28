@@ -1,4 +1,5 @@
-from typing import Iterable, Union, Tuple
+from typing import Union
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -48,7 +49,7 @@ def flat_nonzero(array):
     return array.flatten().nonzero()[0]
 
 
-def make_2D_square(shape: Tuple[int, ...]) -> Tuple[int, ...]:
+def make_2D_square(shape: tuple[int, ...]) -> tuple[int, ...]:
     """
     Convert the 1D shape tuple into a square 2D shape tuple
     if the size of shape is a square number

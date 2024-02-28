@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Optional
 import os
 import platform
 
@@ -59,7 +59,7 @@ def get_token(token_path):
               ),
               default=None)
 def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
-         insecure, host="localhost", token_path=None, preload: Tuple[str, ...] = (),
+         insecure, host="localhost", token_path=None, preload: tuple[str, ...] = (),
          snooze_timeout: Optional[float] = None):
     # Mitigation for https://stackoverflow.com/questions/71283820/
     #   directory-parameter-on-windows-has-trailing-backslash-replaced-with-double-quote

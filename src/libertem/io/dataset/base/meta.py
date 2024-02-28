@@ -1,4 +1,5 @@
-from typing import Any, Optional, TYPE_CHECKING, Sequence
+from typing import Any, Optional, TYPE_CHECKING
+from collections.abc import Sequence
 
 import jsonschema
 import numpy as np

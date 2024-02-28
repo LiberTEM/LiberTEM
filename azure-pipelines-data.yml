@@ -92,15 +92,6 @@ stages:
       pool: DataAccess
       strategy:
         matrix:
-          # 3.7: oldest version
-          Python37:
-            python.version: '3.7'
-            TOXENV: 'py37-data'
-          ${{ if eq(parameters.run_slow, true) }}:
-            Python38:
-              python.version: '3.8'
-              TOXENV: 'py38-data'
-          # 3.9: default in current Debian stable
           Python39:
             python.version: '3.9'
             TOXENV: 'py39-data'
@@ -127,13 +118,8 @@ stages:
       - bash: python3.9 -m venv venv
         displayName: 'create venv'
 
-      - bash: ./venv/bin/pip install tox
-        displayName: 'install tox'
-        condition: or(eq(variables['python.version'], '3.7'), eq(variables['python.version'], '3.8'))
-
       - bash: ./venv/bin/pip install tox tox-uv
         displayName: 'install tox (w/ uv)'
-        condition: not(or(eq(variables['python.version'], '3.7'), eq(variables['python.version'], '3.8')))
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
         - bash: ./venv/bin/tox -r

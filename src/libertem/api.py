@@ -1,7 +1,7 @@
 from typing import (
-    TYPE_CHECKING, Any, List, Dict, Optional, Union, Iterable, Generator,
-    Coroutine, overload, Tuple
+    TYPE_CHECKING, Any, Optional, Union, overload
 )
+from collections.abc import Iterable, Generator, Coroutine
 from typing_extensions import Literal
 import os
 import pathlib
@@ -51,9 +51,9 @@ tracer = trace.get_tracer(__name__)
 logger = logging.getLogger(__name__)
 
 RunUDFResultType = UDFResultDict
-RunUDFSyncL = List[UDFResultDict]
+RunUDFSyncL = list[UDFResultDict]
 RunUDFAsync = Coroutine[None, None, UDFResultDict]
-RunUDFAsyncL = Coroutine[None, None, List[UDFResultDict]]
+RunUDFAsyncL = Coroutine[None, None, list[UDFResultDict]]
 ExecutorSpecType = Literal[
     'synchronous',
     'inline',
@@ -64,8 +64,8 @@ ExecutorSpecType = Literal[
     'delayed',
     'pipelined',
 ]
-IterableRoiT = Iterable[Tuple[Tuple[int, ...], bool]]
-RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', Tuple[int, ...], IterableRoiT]]
+IterableRoiT = Iterable[tuple[tuple[int, ...], bool]]
+RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', tuple[int, ...], IterableRoiT]]
 
 
 class ResultGenerator:
@@ -94,7 +94,7 @@ class ResultGenerator:
         self._task_results.close()
         self._result_iter.close()
 
-    def update_parameters_experimental(self, parameters: List[Dict[str, Any]]):
+    def update_parameters_experimental(self, parameters: list[dict[str, Any]]):
         """
         Update parameters while the UDFs are running.
 
@@ -147,7 +147,7 @@ class ResultAsyncGenerator:
         next_result = await loop.run_in_executor(self._pool, f, *args)
         return next_result
 
-    async def update_parameters_experimental(self, parameters: List[Dict[str, Any]]):
+    async def update_parameters_experimental(self, parameters: list[dict[str, Any]]):
         """
         Update parameters while the UDFs are running.
 
@@ -1401,7 +1401,7 @@ class Context:
             udf_results = await run_agen_get_last(async_generator(sync_generator))
             return udf_results.buffers[0]
 
-        async def _run_async_wrap_l() -> List[UDFResultDict]:
+        async def _run_async_wrap_l() -> list[UDFResultDict]:
             udf_results = await run_agen_get_last(async_generator(sync_generator))
             return udf_results.buffers
 

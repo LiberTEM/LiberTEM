@@ -2,10 +2,12 @@ from collections import defaultdict, OrderedDict
 from contextlib import contextmanager
 import typing
 from typing import (
-    Any, AsyncGenerator, Dict, Generator, Iterator, Mapping, Optional, List, Sequence,
-    Tuple, Type, Iterable, TypeVar, Union, TYPE_CHECKING
+    Any, Optional,
+    TypeVar, Union, TYPE_CHECKING
 )
-from typing_extensions import Protocol, runtime_checkable, Literal
+from collections.abc import AsyncGenerator, Generator, Iterator, Mapping, Sequence, Iterable
+from typing_extensions import Protocol, Literal
+from typing import runtime_checkable
 import warnings
 import logging
 import uuid
@@ -59,18 +61,18 @@ log = logging.getLogger(__name__)
 BackendSpec = Union[ArrayBackend, Iterable[ArrayBackend]]
 DeviceClass = Literal['cpu', 'cuda']
 UDFKwarg = Union[Any, AuxBufferWrapper]
-UDFKwargs = Dict[str, UDFKwarg]
-ExecutionPlan = Dict[ArrayBackend, Iterable["UDF"]]
+UDFKwargs = dict[str, UDFKwarg]
+ExecutionPlan = dict[ArrayBackend, Iterable["UDF"]]
 
 
 class ResultsForDataSet:
     def __init__(
         self,
-        gen: Generator[Tuple[Tuple["UDFData", ...], TaskProtocol], None, None],
+        gen: Generator[tuple[tuple["UDFData", ...], TaskProtocol], None, None],
         params: "UDFParams",
         params_handle,
         executor: JobExecutor,
-        udfs: List["UDF"],
+        udfs: list["UDF"],
     ):
         self._gen = gen
         self._params = params
@@ -81,7 +83,7 @@ class ResultsForDataSet:
     def __iter__(self):
         return self
 
-    def __next__(self) -> Tuple[Tuple["UDFData", ...], TaskProtocol]:
+    def __next__(self) -> tuple[tuple["UDFData", ...], TaskProtocol]:
         return next(self._gen)
 
     def close(self):
@@ -90,7 +92,7 @@ class ResultsForDataSet:
     def throw(self, exc: Exception):
         return self._gen.throw(exc)
 
-    def update_parameters_experimental(self, patch: List[Dict[str, Any]]):
+    def update_parameters_experimental(self, patch: list[dict[str, Any]]):
         log.debug("ResultsForDataSet.update_parameters_experimental: %s", patch)
         # update parameters on workers (via the executor):
         self._params.patch(patch=patch)
@@ -101,7 +103,7 @@ class ResultsForDataSet:
 
 
 def _get_dtype(
-    udfs: List["UDF"],
+    udfs: list["UDF"],
     dtype: "nt.DTypeLike",
     corrections: Optional[CorrectionSet],
     array_backends: Iterable[ArrayBackend],
@@ -143,7 +145,7 @@ class TileConverter:
         return res
 
 
-def _format_plan(plan: ExecutionPlan) -> List[str]:
+def _format_plan(plan: ExecutionPlan) -> list[str]:
     res = []
     for k, v in plan.items():
         udf_classes = ",".join([
@@ -159,7 +161,7 @@ def _format_plan(plan: ExecutionPlan) -> List[str]:
 def _execution_plan(
     udfs, ds: Union[DataSet, DataSetMeta], device_class: Optional[DeviceClass] = None,
     available_backends: Iterable[ArrayBackend] = BACKENDS
-) -> Tuple[ArrayBackend, ExecutionPlan]:
+) -> tuple[ArrayBackend, ExecutionPlan]:
     '''
     Calculate which array format to use for which UDFs
     '''
@@ -181,7 +183,7 @@ def _execution_plan(
     else:
         raise ValueError(f"Unknown device class{device_class}, allowed are 'cuda' and 'cpu'.")
 
-    aggregate_udf_aversion: Dict[ArrayBackend, float] = defaultdict(float)
+    aggregate_udf_aversion: dict[ArrayBackend, float] = defaultdict(float)
     for udf in remaining:
         backends = _get_canonical_backends(udf.get_backends())
         for i, b in enumerate(backends):
@@ -552,8 +554,8 @@ class UDFMeta:
 
 
 class MergeAttrMapping:
-    def __init__(self, dict_input: Dict[str, np.ndarray]):
-        self._dict: Dict[str, np.ndarray] = dict_input
+    def __init__(self, dict_input: dict[str, np.ndarray]):
+        self._dict: dict[str, np.ndarray] = dict_input
 
     def __iter__(self) -> Iterator[str]:
         return iter(self._dict)
@@ -588,9 +590,9 @@ class UDFData:
     Container for result buffers, return value from running UDFs
     '''
 
-    def __init__(self, data: Dict[str, BufferWrapper]):
+    def __init__(self, data: dict[str, BufferWrapper]):
         self._data = data
-        self._views: Dict[str, np.ndarray] = {}
+        self._views: dict[str, np.ndarray] = {}
 
     def __repr__(self) -> str:
         return "<UDFData: %r>" % (
@@ -665,7 +667,7 @@ class UDFData:
     def values(self):
         return self._data.values()
 
-    def as_dict(self) -> Dict[str, BufferWrapper]:
+    def as_dict(self) -> dict[str, BufferWrapper]:
         return dict(self.items())
 
     def get_proxy(self) -> MergeAttrMapping:
@@ -677,7 +679,7 @@ class UDFData:
 
     def _get_buffers(
         self, filter_allocated: bool = False
-    ) -> Generator[Tuple[str, BufferWrapper], None, None]:
+    ) -> Generator[tuple[str, BufferWrapper], None, None]:
         for k, buf in self._data.items():
             if not hasattr(buf, 'has_data') or (buf.has_data() and filter_allocated):
                 continue
@@ -747,7 +749,7 @@ class UDFKwargsWrapper(UDFData):
 
     def _get_buffers(
         self, filter_allocated: bool = False
-    ) -> Generator[Tuple[str, AuxBufferWrapper], None, None]:
+    ) -> Generator[tuple[str, AuxBufferWrapper], None, None]:
         for k, buf in self._data.items():
             if isinstance(buf, AuxBufferWrapper):
                 if buf.has_data() and filter_allocated:
@@ -985,10 +987,10 @@ class UDFBase(UDFProtocol):
         new_kwargs.update(kwargs_patch)
         self.params = UDFKwargsWrapper(new_kwargs)
 
-    def get_task_data(self) -> Dict[str, Any]:
+    def get_task_data(self) -> dict[str, Any]:
         raise NotImplementedError()
 
-    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+    def get_result_buffers(self) -> dict[str, BufferWrapper]:
         raise NotImplementedError()
 
     def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray]) -> None:
@@ -1152,7 +1154,7 @@ class UDFBase(UDFProtocol):
                 )
             )
 
-    def get_results(self) -> Dict[str, np.ndarray]:
+    def get_results(self) -> dict[str, np.ndarray]:
         raise NotImplementedError()
 
     _default_merge_all = UDFMergeAllMixin.merge_all
@@ -1255,7 +1257,7 @@ class UDF(UDFBase):
     @classmethod
     def new_for_partition(
         cls,
-        kwargs: Dict[str, Any],
+        kwargs: dict[str, Any],
         partition: Partition,
         roi: np.ndarray,
     ) -> "UDF":
@@ -1270,7 +1272,7 @@ class UDF(UDFBase):
         """
         return self.__class__.new_for_partition(self._kwargs, partition, roi)
 
-    def get_task_data(self) -> Dict[str, Any]:
+    def get_task_data(self) -> dict[str, Any]:
         """
         Initialize per-task data.
 
@@ -1295,7 +1297,7 @@ class UDF(UDFBase):
         """
         return {}
 
-    def get_result_buffers(self) -> Dict[str, BufferWrapper]:
+    def get_result_buffers(self) -> dict[str, BufferWrapper]:
         """
         Return result buffer declaration.
 
@@ -1391,7 +1393,7 @@ class UDF(UDFBase):
             check_cast(getattr(src, k), getattr(dest, k))
             getattr(dest, k)[:] = getattr(src, k)
 
-    def get_results(self) -> Dict[str, np.ndarray]:
+    def get_results(self) -> dict[str, np.ndarray]:
         """
         Get results, allowing a postprocessing step on the main node after
         a result has been merged. See also: :class:`UDFPostprocessMixin`.
@@ -1545,7 +1547,7 @@ class UDF(UDFBase):
     def buffer(
         self,
         kind: BufferKind,
-        extra_shape: Tuple[int, ...] = (),
+        extra_shape: tuple[int, ...] = (),
         dtype: "nt.DTypeLike" = "float32",
         where: BufferLocation = None,
         use: Optional[BufferUse] = None,
@@ -1675,7 +1677,7 @@ def check_cast(fromvar, tovar):
 class UDFParams:
     def __init__(
         self,
-        kwargs: List[dict],
+        kwargs: list[dict],
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
         tiling_scheme: TilingScheme,
@@ -1832,7 +1834,7 @@ def _get_canonical_backends(backends: Optional[BackendSpec]) -> Sequence[ArrayBa
 
 
 def get_resources_for_backends(
-    udf_backends: List[BackendSpec],
+    udf_backends: list[BackendSpec],
     user_backends: Optional[BackendSpec]
 ) -> ResourceDef:
     """
@@ -1889,10 +1891,10 @@ class UDFTask(Task):
         self,
         partition: Partition,
         idx: int,
-        udf_classes: List[Type[UDF]],
-        udf_backends: List[BackendSpec],
+        udf_classes: list[type[UDF]],
+        udf_backends: list[BackendSpec],
         user_backends: Optional[BackendSpec],
-        runner_cls: Type['UDFPartRunner'],
+        runner_cls: type['UDFPartRunner'],
         span_context: "SpanContext",
         task_frames: int,
     ):
@@ -1921,7 +1923,7 @@ class UDFTask(Task):
         self._runner_cls = runner_cls
         self._task_frames = task_frames
 
-    def __call__(self, params: UDFParams, env: Environment) -> Tuple[UDFData, ...]:
+    def __call__(self, params: UDFParams, env: Environment) -> tuple[UDFData, ...]:
         with self._propagate_tracing(), tracer.start_as_current_span("UDFTask.__call__"):
             udfs = [
                 cls.new_for_partition(kwargs, self.partition, params.roi)
@@ -1944,10 +1946,10 @@ class UDFTask(Task):
             with attach_to_parent(self._span_context):
                 yield
 
-    def get_runner_cls(self) -> Type["UDFPartRunner"]:
+    def get_runner_cls(self) -> type["UDFPartRunner"]:
         return self._runner_cls
 
-    def get_udf_classes(self) -> List[Type["UDF"]]:
+    def get_udf_classes(self) -> list[type["UDF"]]:
         return self._udf_classes
 
     def get_resources(self) -> ResourceDef:
@@ -1971,7 +1973,7 @@ class UDFTask(Task):
 
 
 class UDFPartRunner:
-    def __init__(self, udfs: List[UDF], debug: bool = False, progress: bool = False):
+    def __init__(self, udfs: list[UDF], debug: bool = False, progress: bool = False):
         self._udfs = udfs
         self._debug = debug
         self._progress = progress
@@ -1982,7 +1984,7 @@ class UDFPartRunner:
         params: UDFParams,
         env: Environment,
         backend_choice: BackendSpec
-    ) -> Tuple[UDFData, ...]:
+    ) -> tuple[UDFData, ...]:
         roi = params.roi
         corrections = params.corrections
         if backend_choice is None:
@@ -2141,7 +2143,7 @@ class UDFPartRunner:
     def _run_tile(
         self,
         udfs_and_methods: Iterable[
-            Tuple[
+            tuple[
                 UDF,
                 UDFMethod,
             ]
@@ -2244,7 +2246,7 @@ class UDFRunner:
             damage=damage
         )
 
-    def __init__(self, udfs: List[UDF], debug: bool = False,
+    def __init__(self, udfs: list[UDF], debug: bool = False,
                  progress_reporter: Optional['ProgressReporter'] = None):
         self._udfs = udfs
         self._debug = debug
@@ -2257,7 +2259,7 @@ class UDFRunner:
         udf: UDF,
         dataset: DataSet,
         roi: Optional[np.ndarray] = None,
-    ) -> Dict[str, BufferWrapper]:
+    ) -> dict[str, BufferWrapper]:
         """
         Return result buffer declarations for a given UDF/DataSet/roi combination
         """
@@ -2315,7 +2317,7 @@ class UDFRunner:
             )
             return res
 
-    def _debug_task_pickling(self, tasks: List[UDFTask]) -> None:
+    def _debug_task_pickling(self, tasks: list[UDFTask]) -> None:
         if self._debug:
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
@@ -2335,7 +2337,7 @@ class UDFRunner:
         corrections: Optional[CorrectionSet],
         backends: Optional[BackendSpec],
         dry: bool,
-    ) -> Tuple[List[UDFTask], UDFParams]:
+    ) -> tuple[list[UDFTask], UDFParams]:
         self._check_preconditions(dataset, roi)
         if backends is None:
             backends = BACKENDS
@@ -2445,8 +2447,8 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
-    ) -> Tuple[
-        Iterable[Tuple[Tuple[UDFData, ...], TaskProtocol]],
+    ) -> tuple[
+        Iterable[tuple[tuple[UDFData, ...], TaskProtocol]],
         Any,
         UDFParams
     ]:
@@ -2618,7 +2620,7 @@ class UDFRunner:
             yield tasks
 
     @classmethod
-    def get_part_runner_cls(cls) -> Type['UDFPartRunner']:
+    def get_part_runner_cls(cls) -> type['UDFPartRunner']:
         return UDFPartRunner
 
 

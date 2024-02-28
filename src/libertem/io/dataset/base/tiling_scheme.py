@@ -1,7 +1,8 @@
 import math
 import logging
 import warnings
-from typing import List, TYPE_CHECKING, Optional, Tuple, Union, Sequence
+from typing import TYPE_CHECKING, Optional, Union
+from collections.abc import Sequence
 from typing_extensions import Literal
 
 import numpy as np
@@ -23,7 +24,7 @@ TilingIntent = Union[Literal["partition"], Literal["frame"], Literal["tile"]]
 
 class TilingScheme:
     def __init__(
-        self, slices: List[Slice],
+        self, slices: list[Slice],
         tileshape: Shape, dataset_shape: Shape, intent: Optional[TilingIntent] = None, debug=None
     ):
         self._slices = slices
@@ -179,12 +180,12 @@ class Negotiator:
 
     def validate(
         self,
-        shape: Tuple[int, ...],
-        ds_sig_shape: Tuple[int, ...],
+        shape: tuple[int, ...],
+        ds_sig_shape: tuple[int, ...],
         size: int,
         io_max_size: int,
         itemsize: int,
-        base_shape: Tuple[int, ...],
+        base_shape: tuple[int, ...],
         corrections: Optional[CorrectionSet],
     ):
         sig_shape = shape[1:]

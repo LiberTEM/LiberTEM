@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:
 class TrackingTQDM(TQDMProgressReporter):
     def __init__(self):
         super().__init__()
-        self._history: typing.List[ProgressState] = []
+        self._history: list[ProgressState] = []
 
     def start(self, state):
         self._history.append(state)

@@ -146,8 +146,8 @@ class RawCSRDataSet(DataSet):
     def __init__(
         self,
         path: str,
-        nav_shape: typing.Optional[typing.Tuple[int, ...]] = None,
-        sig_shape: typing.Optional[typing.Tuple[int, ...]] = None,
+        nav_shape: typing.Optional[tuple[int, ...]] = None,
+        sig_shape: typing.Optional[tuple[int, ...]] = None,
         sync_offset: int = 0,
         io_backend: typing.Optional["IOBackend"] = None
     ):
@@ -270,7 +270,7 @@ class RawCSRDataSet(DataSet):
             return False
 
     @classmethod
-    def get_msg_converter(cls) -> typing.Type["MessageConverter"]:
+    def get_msg_converter(cls) -> type["MessageConverter"]:
         return RawCSRDatasetParams
 
     def get_diagnostics(self):
@@ -281,21 +281,21 @@ class RawCSRDataSet(DataSet):
         ]  # TODO: nonzero elements?
 
     @classmethod
-    def get_supported_extensions(cls) -> typing.Set[str]:
+    def get_supported_extensions(cls) -> set[str]:
         return {"toml"}
 
     def get_cache_key(self) -> str:
         raise NotImplementedError()  # TODO
 
     @classmethod
-    def get_supported_io_backends(cls) -> typing.List[str]:
+    def get_supported_io_backends(cls) -> list[str]:
         return []  # FIXME: we may want to read using a backend in the future
 
     def adjust_tileshape(
         self,
-        tileshape: typing.Tuple[int, ...],
+        tileshape: tuple[int, ...],
         roi: typing.Optional[np.ndarray]
-    ) -> typing.Tuple[int, ...]:
+    ) -> tuple[int, ...]:
         return (tileshape[0],) + tuple(self._sig_shape)
 
     def need_decode(

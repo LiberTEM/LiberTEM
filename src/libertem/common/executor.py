@@ -1,8 +1,9 @@
 import queue
 from typing import (
-    Callable, Generator, Optional, Any, Iterable, TYPE_CHECKING, Tuple,
-    TypeVar, Type, Dict, List
+    Callable, Optional, Any, TYPE_CHECKING,
+    TypeVar,
 )
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 import multiprocessing as mp
 
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from libertem.udf.base import UDFParams, UDFRunner
     from opentelemetry.trace import SpanContext
 
-ResourceDef = Dict[
+ResourceDef = dict[
     Literal[
         'CPU', 'compute', 'ndarray', 'CUDA',
     ],
@@ -312,7 +313,7 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
-    def get_resource_details(self) -> List[Dict[str, Any]]:
+    def get_resource_details(self) -> list[dict[str, Any]]:
         """
         Returns a list of dicts with cluster details
 
@@ -346,7 +347,7 @@ class JobExecutor:
         """
         return buf
 
-    def get_udf_runner(self) -> Type['UDFRunner']:
+    def get_udf_runner(self) -> type['UDFRunner']:
         raise NotImplementedError
 
 
@@ -432,7 +433,7 @@ class AsyncJobExecutor:
         """
         return self
 
-    def get_udf_runner(self) -> Type['UDFRunner']:
+    def get_udf_runner(self) -> type['UDFRunner']:
         raise NotImplementedError()
 
 
@@ -453,7 +454,7 @@ class WorkerQueue:
         self,
         block: bool = True,
         timeout: Optional[float] = None,
-    ) -> Generator[Tuple[Any, memoryview], None, None]:
+    ) -> Generator[tuple[Any, memoryview], None, None]:
         raise NotImplementedError()
 
     def put(self, header: Any, payload: Optional[memoryview] = None):
@@ -605,7 +606,7 @@ class WorkerContext:
     def get_worker_queue(self) -> WorkerQueue:
         raise NotImplementedError()
 
-    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+    def signal(self, ident: str, topic: str, msg_dict: dict[str, Any]):
         raise NotImplementedError()
 
 
@@ -656,7 +657,7 @@ class TaskCommHandler:
         ...
 
     @property
-    def subscriptions(self) -> Dict[str, List[Callable]]:
+    def subscriptions(self) -> dict[str, list[Callable]]:
         # Instantiate on first get to avoid creating __init__
         try:
             return self._subscriptions
@@ -664,7 +665,7 @@ class TaskCommHandler:
             self._subscriptions = {}
             return self._subscriptions
 
-    def subscribe(self, topic: str, callback: Callable[[str, Dict], None]):
+    def subscribe(self, topic: str, callback: Callable[[str, dict], None]):
         """
         Register a callback to run in response to messages
         matching the topic string identifier

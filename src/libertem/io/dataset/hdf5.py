@@ -1,7 +1,7 @@
 import os
 import contextlib
 import typing
-from typing import Optional, Tuple, List
+from typing import Optional
 import warnings
 import logging
 import time
@@ -68,7 +68,7 @@ class HDF5DatasetParams(MessageConverter):
         return data
 
 
-def _ensure_2d_nav(nav_shape: Tuple[int, ...]) -> Tuple[int, int]:
+def _ensure_2d_nav(nav_shape: tuple[int, ...]) -> tuple[int, int]:
     # For any iterable shape, reduce or pad it to a 2-tuple
     # with the same prod(shape). Reduction from left to right
     # (final dimension preserved). Special case for empty
@@ -87,14 +87,14 @@ def _ensure_2d_nav(nav_shape: Tuple[int, ...]) -> Tuple[int, int]:
 
 class HDF5ArrayDescriptor(typing.NamedTuple):
     name: str
-    shape: Tuple[int, ...]
+    shape: tuple[int, ...]
     dtype: np.dtype
     compression: Optional[str]
-    chunks: Tuple[int, ...]
+    chunks: tuple[int, ...]
 
 
 def _get_datasets(path):
-    datasets: List[HDF5ArrayDescriptor] = []
+    datasets: list[HDF5ArrayDescriptor] = []
 
     try:
         timeout = int(os.environ.get('LIBERTEM_IO_HDF5_TIMEOUT_DEBUG', 3))

@@ -3,7 +3,8 @@ import os
 import platform
 from glob import glob, escape
 import logging
-from typing import TYPE_CHECKING, Generator, List, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Union
+from collections.abc import Generator, Sequence
 from typing_extensions import Literal, TypedDict
 import warnings
 from concurrent.futures import ThreadPoolExecutor
@@ -117,7 +118,7 @@ def _pattern(path: str) -> str:
     return pattern
 
 
-def get_filenames(path: str, disable_glob=False) -> List[str]:
+def get_filenames(path: str, disable_glob=False) -> list[str]:
     if disable_glob:
         return [path]
     else:
@@ -131,7 +132,7 @@ def _get_sequence(f: "MIBHeaderReader"):
 def get_image_count_and_sig_shape(
     path: str,
     disable_glob: bool = False,
-) -> Tuple[int, Tuple[int, int]]:
+) -> tuple[int, tuple[int, int]]:
     fns = get_filenames(path, disable_glob=disable_glob)
     headers = MIBDataSet._preread_headers(fns)
     count = 0
@@ -736,13 +737,13 @@ class HeaderDict(TypedDict):
     mib_dtype: str
     mib_kind: MIBKind
     bits_per_pixel: int
-    image_size: Tuple[int, int]
+    image_size: tuple[int, int]
     image_size_bytes: int
     sequence_first_image: int
     filesize: int
     num_images: int
     num_chips: int
-    sensor_layout: Tuple[int, int]
+    sensor_layout: tuple[int, int]
 
 
 class MIBHeaderReader:
@@ -787,7 +788,7 @@ class MIBHeaderReader:
         return self._fields
 
     @staticmethod
-    def _read_header_bytes(path) -> Tuple[bytes, int]:
+    def _read_header_bytes(path) -> tuple[bytes, int]:
         # FIXME: do this read via the IO backend!
         with open(file=path, mode='rb') as f:
             filesize = os.fstat(f.fileno()).st_size
@@ -1263,7 +1264,7 @@ class MIBDataSet(DataSet):
             for f in self._files_sorted
         ], header=first_file.fields, frame_header_bytes=header_size)
 
-    def get_base_shape(self, roi: Optional[np.ndarray]) -> Tuple[int, ...]:
+    def get_base_shape(self, roi: Optional[np.ndarray]) -> tuple[int, ...]:
         # With R-mode files, we are constrained to tile sizes that are a
         # multiple of 64px in the fastest dimension!
         # If we make sure full "x-lines" are taken, we are fine (this is the

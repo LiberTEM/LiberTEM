@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 from typing_extensions import Literal
 
 import numpy as np
@@ -205,7 +205,7 @@ class GuessResult(NamedTuple):
 def guess_corrections(
     y_centers: np.ndarray,
     x_centers: np.ndarray,
-    roi: Optional[Union[np.ndarray, Tuple[slice, ...]]] = None,
+    roi: Optional[Union[np.ndarray, tuple[slice, ...]]] = None,
 ) -> GuessResult:
     '''
     Guess values for center offset (:code:`(cy, cx)`), :code:`scan_rotation` and

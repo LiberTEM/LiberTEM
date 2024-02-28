@@ -1,7 +1,7 @@
 import os
 import warnings
 import typing
-from typing import Dict, Any, Tuple, Optional
+from typing import Any, Optional
 import logging
 
 import ncempy.io.dm
@@ -93,8 +93,8 @@ class SingleDMDataSet(DMDataSet):
     def __init__(
         self,
         path: os.PathLike,
-        nav_shape: Optional[Tuple[int, ...]] = None,
-        sig_shape: Optional[Tuple[int, ...]] = None,
+        nav_shape: Optional[tuple[int, ...]] = None,
+        sig_shape: Optional[tuple[int, ...]] = None,
         sync_offset: int = 0,
         io_backend: Optional[IOBackend] = None,
         force_c_order: bool = False,
@@ -278,7 +278,7 @@ class SingleDMDataSet(DMDataSet):
         return array_meta
 
     @staticmethod
-    def _tags_to_nest(tags: Dict[str, Any]):
+    def _tags_to_nest(tags: dict[str, Any]):
         tags_nest = {}
         for tag, element in tags.items():
             tag = tag.strip('.')
@@ -293,7 +293,7 @@ class SingleDMDataSet(DMDataSet):
         return tags_nest
 
     @staticmethod
-    def _modify_shape(shape: Tuple[int, ...], sig_dims: int = 2):
+    def _modify_shape(shape: tuple[int, ...], sig_dims: int = 2):
         # The shape reversal to read in C-ordering applies to DM4/STEM files
         # saved in the new style as well as DM3, 3D image stacks saved
         # in older versions of GMS. Must check whether newer image stacks

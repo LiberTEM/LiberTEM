@@ -1,5 +1,6 @@
 import math
-from typing import Any, Dict, Generator, Optional, Sequence, Tuple, overload
+from typing import Any, Optional, overload
+from collections.abc import Generator, Sequence
 
 import numpy as np
 
@@ -153,7 +154,7 @@ class Slice:
         arr: None = None,
         sig_only: bool = False,
         nav_only: bool = False
-    ) -> Tuple[slice, ...]: ...
+    ) -> tuple[slice, ...]: ...
 
     @overload
     def get(
@@ -244,7 +245,7 @@ class Slice:
         new_shape = Shape(s, sig_dims=sig_dims)
         return Slice(origin=o, shape=new_shape)
 
-    def _discard_nav_key(self) -> Tuple[Tuple[int, ...], Tuple[int, ...], int]:
+    def _discard_nav_key(self) -> tuple[tuple[int, ...], tuple[int, ...], int]:
         """
         Construct a hashable tuple of the Slice with a zero-length nav dimensions
 
@@ -283,7 +284,7 @@ class Slice:
         ni = tuple(math.ceil(s1 / s)
                    for (s1, s) in zip(self.shape, shape))
 
-        def _make_slice(origin: Tuple[int, ...], new_shape: Shape) -> Slice:
+        def _make_slice(origin: tuple[int, ...], new_shape: Shape) -> Slice:
             sig_dims = new_shape.sig.dims
             # this makes sure that the border tiles have the correct shape set
             new_shape_tuple = tuple(
@@ -397,12 +398,12 @@ class Slice:
         other_slice = Slice((0,) * shape.dims, shape)
         return self.intersection_with(other_slice)
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         return {
             k: getattr(self, k)
             for k in self.__slots__
         }
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         for k, v in state.items():
             setattr(self, k, v)

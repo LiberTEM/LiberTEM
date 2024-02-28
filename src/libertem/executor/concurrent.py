@@ -4,7 +4,8 @@ import logging
 import uuid
 from typing import Optional
 import concurrent.futures
-from typing import Iterable, Any, Dict
+from typing import Any
+from collections.abc import Iterable
 
 from opentelemetry import trace
 
@@ -30,7 +31,7 @@ class ConcurrentWorkerContext(WorkerContext):
     def __init__(self, msg_queue: WorkerQueue):
         self._msg_queue = msg_queue
 
-    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+    def signal(self, ident: str, topic: str, msg_dict: dict[str, Any]):
         if 'ident' in msg_dict:
             raise ValueError('ident is a reserved name')
         msg_dict.update({'ident': ident})

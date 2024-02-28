@@ -2,7 +2,7 @@ import io
 import os
 import sys
 import typing
-from typing import Optional, Tuple
+from typing import Optional
 import logging
 
 import numpy as np
@@ -65,7 +65,7 @@ class NPYDatasetParams(MessageConverter):
 
 class NPYInfo(typing.NamedTuple):
     dtype: str
-    shape: typing.Tuple[int, ...]
+    shape: tuple[int, ...]
     count: int
     offset: int
 
@@ -263,8 +263,8 @@ class NPYDataSet(DataSet):
         self,
         path: str,
         sig_dims: Optional[int] = 2,
-        nav_shape: Optional[Tuple[int, int]] = None,
-        sig_shape: Optional[Tuple[int, int]] = None,
+        nav_shape: Optional[tuple[int, int]] = None,
+        sig_shape: Optional[tuple[int, int]] = None,
         sync_offset: int = 0,
         io_backend: Optional[IOBackend] = None,
     ):

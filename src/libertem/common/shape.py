@@ -1,6 +1,7 @@
 import operator
 import functools
-from typing import Any, Dict, Iterator, Sequence, Tuple, Union, overload
+from typing import Any, Union, overload
+from collections.abc import Iterator, Sequence
 
 
 class Shape:
@@ -68,7 +69,7 @@ class Shape:
         """
         return SigOnlyShape(shape=self._sig_shape)
 
-    def to_tuple(self) -> Tuple[int, ...]:
+    def to_tuple(self) -> tuple[int, ...]:
         return tuple(self)
 
     @property
@@ -157,7 +158,7 @@ class Shape:
     def __getitem__(self, k: int) -> int: ...
 
     @overload
-    def __getitem__(self, k: slice) -> Tuple[int, ...]: ...
+    def __getitem__(self, k: slice) -> tuple[int, ...]: ...
 
     def __getitem__(self, k):
         return tuple(self)[k]
@@ -201,13 +202,13 @@ class Shape:
         else:
             return NotImplemented
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         return {
             k: getattr(self, k)
             for k in self.__slots__
         }
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         for k, v in state.items():
             setattr(self, k, v)
 
@@ -227,7 +228,7 @@ class SigOnlyShape(Shape):
     def __len__(self) -> int:
         return len(self._sig_shape)
 
-    def to_tuple(self) -> Tuple[int, ...]:
+    def to_tuple(self) -> tuple[int, ...]:
         return self._sig_shape
 
     @property
@@ -261,7 +262,7 @@ class NavOnlyShape(Shape):
     def __len__(self) -> int:
         return len(self._nav_shape)
 
-    def to_tuple(self) -> Tuple[int, ...]:
+    def to_tuple(self) -> tuple[int, ...]:
         return self._nav_shape
 
     @property

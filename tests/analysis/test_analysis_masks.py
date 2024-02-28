@@ -1,5 +1,5 @@
 import pytest
-from typing import Sequence
+from collections.abc import Sequence
 import numpy as np
 import scipy.sparse as sp
 import sparse

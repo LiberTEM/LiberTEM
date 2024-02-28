@@ -4,7 +4,7 @@ import threading
 import itertools
 from unittest import mock
 import sys
-from typing import Optional, Tuple
+from typing import Optional
 
 import cloudpickle
 import numpy as np
@@ -715,7 +715,7 @@ def test_hdf5_filters(local_cluster_ctx, lt_ctx, tmpdir_factory):
 
 def _place_results(
     data: np.ndarray,
-    nav_shape: Tuple[int],
+    nav_shape: tuple[int],
     sync_offset: int = 0,
     roi: Optional[np.ndarray] = None
 ) -> np.ndarray:

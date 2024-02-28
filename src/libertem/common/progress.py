@@ -1,5 +1,6 @@
 import threading
-from typing import TYPE_CHECKING, Iterable, Dict, Callable, List, Any, NamedTuple, Optional
+from typing import TYPE_CHECKING, Callable, Any, NamedTuple, Optional
+from collections.abc import Iterable
 import time
 
 from libertem.common.executor import WorkerQueueEmpty
@@ -26,7 +27,7 @@ class CommsDispatcher:
     feature, which has a similar message => topic => callback
     model running in the client event loop
     """
-    def __init__(self, queue: 'WorkerQueue', subscriptions: Dict[str, List[Callable]]):
+    def __init__(self, queue: 'WorkerQueue', subscriptions: dict[str, list[Callable]]):
         self._message_q = queue
         self._subscriptions = subscriptions
         self._thread = None
@@ -314,7 +315,7 @@ class ProgressManager:
         comms.subscribe('partition_complete', self.handle_end_task)
         comms.subscribe('tile_complete', self.handle_tile_update)
 
-    def handle_start_task(self, topic: str, message: Dict[str, Any]):
+    def handle_start_task(self, topic: str, message: dict[str, Any]):
         """
         Increment the num_in_progress counter
 
@@ -333,7 +334,7 @@ class ProgressManager:
             self._in_progress.add(t_id)
         self.reporter.update(self.state)
 
-    def handle_end_task(self, topic: str, message: Dict[str, Any]):
+    def handle_end_task(self, topic: str, message: dict[str, Any]):
         """
         Increment the counter for the task to the max value
         and update the various counters / description
@@ -348,7 +349,7 @@ class ProgressManager:
         self._complete.add(t_id)
         self.reporter.update(self.state)
 
-    def handle_tile_update(self, topic: str, message: Dict[str, Any]):
+    def handle_tile_update(self, topic: str, message: dict[str, Any]):
         """
         Update the frame progress counter for the task
         and push the increment to the progress reporter

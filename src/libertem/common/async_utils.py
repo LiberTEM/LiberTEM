@@ -2,7 +2,8 @@ import sys
 import queue
 import asyncio
 import threading
-from typing import AsyncGenerator, Callable, Generator, Optional, TypeVar
+from typing import Callable, Optional, TypeVar
+from collections.abc import AsyncGenerator, Generator
 from concurrent.futures import ThreadPoolExecutor
 
 from opentelemetry import trace

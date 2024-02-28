@@ -126,16 +126,14 @@ setup(
     license='GPL v3',
     include_package_data=True,
     zip_safe=False,
-    python_requires='>=3.7,!=3.9.0,!=3.9.1,!=3.9.2',
+    python_requires='>=3.9.3',
     install_requires=[
         "numpy",
         "scipy>=1.4.1",
         "sparse",
         "distributed>=2.19.0",
         "dask!=2023.6.1",  # work around broken ipython exception handler
-        # dask-scheduler is incompatible with newer click versions
-        "click<8.1;( python_version<'3.8')",
-        "click;( python_version>='3.8')",
+        "click",
         "tornado>=5",
         "matplotlib",
         "pillow",
@@ -211,8 +209,6 @@ setup(
     author="the LiberTEM team",
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',

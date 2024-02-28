@@ -1,4 +1,3 @@
-import typing
 import itertools
 
 import pytest
@@ -191,7 +190,7 @@ def test_decode_swap_4_u64():
     ),
 )
 @pytest.mark.with_numba
-def test_default_decoder_from_uint(dtypes: typing.Tuple[np.dtype], in_byteorder, out_byteorder):
+def test_default_decoder_from_uint(dtypes: tuple[np.dtype], in_byteorder, out_byteorder):
     in_dtype, out_dtype = dtypes
     decoder = DtypeConversionDecoder()
     in_dtype = np.dtype(in_dtype)

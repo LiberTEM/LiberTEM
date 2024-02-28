@@ -6,9 +6,9 @@ import functools
 import contextlib
 import multiprocessing as mp
 from typing import (
-    TYPE_CHECKING, Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple,
-    Generator, TypeVar, Union,
+    TYPE_CHECKING, Any, Callable, NamedTuple, Optional, TypeVar, Union,
 )
+from collections.abc import Iterable, Generator
 from typing_extensions import TypedDict, Literal
 import uuid
 import warnings
@@ -105,9 +105,9 @@ class WorkerPool:
     we need to coordinate the sending and receiving side for each task,
     and we need to keep state on the worker, pin processes to cores etc.
     """
-    def __init__(self, worker_fn: Callable, spec: List[WorkerSpec]):
+    def __init__(self, worker_fn: Callable, spec: list[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue
-        self._workers: Optional[List[PoolWorkerInfo]] = []
+        self._workers: Optional[list[PoolWorkerInfo]] = []
         self._worker_fn = worker_fn
         self._response_q: Optional[SimpleMPWorkerQueue] = self._worker_q_cls()
         self._message_q = self._worker_q_cls()
@@ -175,7 +175,7 @@ class WorkerPool:
             raise PoolStateError("At least one worker failed to be killed")
 
     @property
-    def workers(self) -> List[PoolWorkerInfo]:
+    def workers(self) -> list[PoolWorkerInfo]:
         if self._workers is None:
             raise PoolStateError("No workers are running")
         return self._workers
@@ -216,13 +216,13 @@ class WorkerPool:
 
 
 WorkerSelector = Callable[
-    [List[PoolWorkerInfo], WorkerPool, TaskProtocol, int],
+    [list[PoolWorkerInfo], WorkerPool, TaskProtocol, int],
     PoolWorkerInfo
 ]
 
 
 def _select_by_queue_size(
-    eligible: List[PoolWorkerInfo],
+    eligible: list[PoolWorkerInfo],
     pool: WorkerPool,
     task: TaskProtocol,
     task_idx: int,
@@ -243,7 +243,7 @@ def _select_by_queue_size(
 
 
 def _select_by_round_robin(
-    eligible: List[PoolWorkerInfo],
+    eligible: list[PoolWorkerInfo],
     pool: WorkerPool,
     task: TaskProtocol,
     task_idx: int,
@@ -256,9 +256,9 @@ def schedule_task(
     task: TaskProtocol,
     pool: WorkerPool,
     scheduler: Scheduler,
-    pool_info_for_worker: Dict[Worker, PoolWorkerInfo],
+    pool_info_for_worker: dict[Worker, PoolWorkerInfo],
     selector: WorkerSelector,
-) -> Tuple[int, WorkerQueues]:
+) -> tuple[int, WorkerQueues]:
     """
     Returns the worker index and its queues of the worker the given task should
     be scheduled on.
@@ -297,8 +297,8 @@ def set_thread_name(name: str):
 
 
 def worker_run_task(
-    header: Dict,
-    work_mem: Dict,
+    header: dict,
+    work_mem: dict,
     queues: WorkerQueues,
     worker_idx: int,
     env: Environment,
@@ -418,7 +418,7 @@ def _drain_after_task(queues: WorkerQueues):
 
 def worker_loop(
     queues: WorkerQueues,
-    work_mem: Dict,
+    work_mem: dict,
     worker_idx: int,
     env: Environment
 ):
@@ -534,7 +534,7 @@ def worker_loop(
             raise
 
 
-DeviceT = Tuple[int, Union[Literal['CUDA'], Literal['CPU']]]
+DeviceT = tuple[int, Union[Literal['CUDA'], Literal['CPU']]]
 
 
 def _setup_device(spec: WorkerSpec, pin: bool):
@@ -600,7 +600,7 @@ def pipelined_worker(
         with attach_to_parent(span_context), \
                 tracer.start_as_current_span("pipelined_worker.startup") as span:
             _setup_device(spec, pin)
-            work_mem: Dict[str, Any] = {}
+            work_mem: dict[str, Any] = {}
 
             span.set_attributes({
                 "libertem.spec.name": spec["name"],
@@ -651,13 +651,13 @@ class PipelinedWorkerContext(WorkerContext):
     def get_worker_queue(self) -> WorkerQueue:
         return self._queue
 
-    def signal(self, ident: str, topic: str, msg_dict: Dict[str, Any]):
+    def signal(self, ident: str, topic: str, msg_dict: dict[str, Any]):
         msg_dict.update({'ident': ident})
         self._msg_queue.put((topic, msg_dict))
 
 
-ResultT = Generator[Tuple[Any, TaskProtocol], None, None]
-ResultWithID = Generator[Tuple[Any, TaskProtocol, int], None, None]
+ResultT = Generator[tuple[Any, TaskProtocol], None, None]
+ResultWithID = Generator[tuple[Any, TaskProtocol, int], None, None]
 
 
 def _order_results(results_in: ResultWithID) -> ResultT:
@@ -667,7 +667,7 @@ def _order_results(results_in: ResultWithID) -> ResultT:
     """
     last_sent_id = -1
     # for results that are received out-of-order, keep sorted:
-    result_stack: List[Tuple[Any, TaskProtocol, int]] = []
+    result_stack: list[tuple[Any, TaskProtocol, int]] = []
     span = trace.get_current_span()
     for result, task, task_id in results_in:
         if task_id == last_sent_id + 1:
@@ -709,7 +709,7 @@ def _make_spec(
     cpus: Union[int, Iterable[int]],
     cudas: Union[int, Iterable[int]],
     has_cupy: bool = False,
-) -> List[WorkerSpec]:
+) -> list[WorkerSpec]:
     """
     Takes the output of :func:`libertem.utils.devices.detect`
     and makes a plan for starting workers on them.
@@ -765,7 +765,7 @@ def _make_spec(
     return spec
 
 
-def _raise_from_msg(msg: Dict, err_prefix: str):
+def _raise_from_msg(msg: dict, err_prefix: str):
     if "exception" in msg:
         raise msg["exception"]
     else:
@@ -819,7 +819,7 @@ class PipelinedExecutor(BaseJobExecutor):
     """
     def __init__(
         self,
-        spec: Optional[List[WorkerSpec]] = None,
+        spec: Optional[list[WorkerSpec]] = None,
         pin_workers: bool = True,
         startup_timeout: float = 30.0,
         cleanup_timeout: float = 10.0,
@@ -937,7 +937,7 @@ class PipelinedExecutor(BaseJobExecutor):
         # of exceptions, it becomes a bit harder to keep attribution of messages to
         # tasks, which is why we have a separate counter for now.
         in_flight = 0
-        id_to_task: Dict[int, TaskProtocol] = {}
+        id_to_task: dict[int, TaskProtocol] = {}
         tasks_uuid = str(uuid.uuid4())
 
         all_workers = self.get_available_workers()

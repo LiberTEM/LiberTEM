@@ -2,7 +2,7 @@
 Types and objects used in the web API
 """
 
-from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional
+from typing import TYPE_CHECKING, NamedTuple, Optional
 
 from typing_extensions import TypedDict
 
@@ -24,7 +24,7 @@ class SerializedJobInfo(TypedDict):
     analysis: str
 
 
-AnalysisParameters = Dict
+AnalysisParameters = dict
 
 
 class AnalysisDetails(TypedDict):
@@ -35,7 +35,7 @@ class AnalysisDetails(TypedDict):
 class AnalysisInfo(TypedDict):
     dataset: str
     analysis: str
-    jobs: List[str]
+    jobs: list[str]
     details: AnalysisDetails
 
 
@@ -48,7 +48,7 @@ class AnalysisResultInfo(NamedTuple):
 
 class CompAnalysisDetails(TypedDict):
     mainType: str
-    analyses: List[str]
+    analyses: list[str]
 
 
 class CompoundAnalysisInfo(TypedDict):
@@ -59,5 +59,5 @@ class CompoundAnalysisInfo(TypedDict):
 
 class DatasetInfo(TypedDict):
     dataset: "DataSet"
-    params: Dict
-    converted: Dict
+    params: dict
+    converted: dict

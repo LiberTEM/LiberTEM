@@ -1,4 +1,4 @@
-from typing import NamedTuple, Tuple
+from typing import NamedTuple
 import numpy as np
 
 from libertem.common.math import prod
@@ -85,7 +85,7 @@ class File:
         return self._end_idx - self._start_idx
 
     @property
-    def sig_shape(self) -> Tuple[int, ...]:
+    def sig_shape(self) -> tuple[int, ...]:
         return self._sig_shape
 
     @property

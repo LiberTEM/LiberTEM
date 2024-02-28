@@ -1,5 +1,5 @@
 import os
-from typing import Tuple, Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 import libertem.api as lt
 from libertem.io.dataset.base import DataSetException
@@ -22,7 +22,7 @@ class ConvertTransposedDatasetUDF(RecordUDF):
         return Shape(nav_shape + sig_shape, sig_dims=len(sig_shape))
 
     @property
-    def _memmap_flat_shape(self) -> Tuple[int, ...]:
+    def _memmap_flat_shape(self) -> tuple[int, ...]:
         return (self._ds_shape.nav.size, self._ds_shape.sig.size)
 
     def process_partition(self, partition):

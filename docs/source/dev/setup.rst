@@ -139,15 +139,15 @@ environment base folder, typically
     REM execute python.exe with the same command line
     @python.exe %*
 
-To execute tests with Python 3.7, you create a new environment with Python 3.7:
+To execute tests with Python 3.12, you create a new environment with Python 3.12:
 
 .. code-block:: shell
 
-    > conda create -n libertem-3.7 python=3.7
+    > conda create -n libertem-3.12 python=3.12
 
-Now you can create :literal:`python3.7.bat` in your normal LiberTEM environment
+Now you can create :literal:`python3.12.bat` in your normal LiberTEM environment
 alongside :literal:`python3.9.bat` and make it execute the Python interpreter of
-your new libertem-3.7 environment:
+your new libertem-3.12 environment:
 
 .. code-block:: bat
 
@@ -155,7 +155,7 @@ your new libertem-3.7 environment:
     REM @echo off is vital so that the file doesn't clutter the output
     REM execute python.exe in a different environment
     REM with the same command line
-    @%LOCALAPPDATA%\conda\conda\envs\libertem-3.7\python.exe %*
+    @%LOCALAPPDATA%\conda\conda\envs\libertem-3.12\python.exe %*
 
 See also:
 https://tox.wiki/en/3.0.0/developers.html#id2

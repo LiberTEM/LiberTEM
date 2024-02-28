@@ -70,7 +70,7 @@ instruct LiberTEM to use simple single-threaded execution using the
 
 
 You can then use all usual debugging facilities, including
-`pdb <https://docs.python.org/3.7/library/pdb.html>`_ and
+`pdb <https://docs.python.org/3.12/library/pdb.html>`_ and
 `the %pdb magic of ipython/Jupyter <https://ipython.org/ipython-doc/3/interactive/magics.html#magic-pdb>`_.
 
 The :class:`libertem.executor.inline.InlineJobExecutor` uses a single CPU core

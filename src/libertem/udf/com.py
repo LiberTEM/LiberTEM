@@ -481,6 +481,12 @@ class CoMUDF(UDF):
             'field': self.buffer(
                 kind='nav', dtype=dtype, extra_shape=(2, ), use='result_only'
             ),
+            'field_y': self.buffer(
+                kind='nav', dtype=dtype, use='result_only'
+            ),
+            'field_x': self.buffer(
+                kind='nav', dtype=dtype, use='result_only'
+            ),
             'magnitude': self.buffer(
                 kind='nav', dtype=dtype, use='result_only'
             ),
@@ -678,6 +684,8 @@ class CoMUDF(UDF):
             'raw_shifts': raw_shifts,
             'raw_com': raw_com,
             'field': field,
+            'field_y': field[..., 0],
+            'field_x': field[..., 1],
             'regression': regression.astype(np.float64),
         }
 

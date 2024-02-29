@@ -48,6 +48,18 @@ def test_com(lt_ctx, delayed_ctx, backend):
             np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1),
         )
         assert_allclose(
+            com_result['field_y'],
+            np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 0],
+        )
+        assert_allclose(
+            com_result['field_x'],
+            np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 1],
+        )
+        assert_allclose(
+            com_result['field'],
+            np.stack((com_result['field_y'], com_result['field_x']), axis=-1),
+        )
+        assert_allclose(
             com_result['magnitude'],
             analysis_result.magnitude.raw_data,
         )
@@ -63,6 +75,18 @@ def test_com(lt_ctx, delayed_ctx, backend):
         assert_allclose(
             com_delayed['field'],
             np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1),
+        )
+        assert_allclose(
+            com_delayed['field_y'],
+            np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 0],
+        )
+        assert_allclose(
+            com_delayed['field_x'],
+            np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 1],
+        )
+        assert_allclose(
+            com_delayed['field'],
+            np.stack((com_delayed['field_y'], com_delayed['field_x']), axis=-1),
         )
         assert_allclose(
             com_delayed['magnitude'],
@@ -126,6 +150,18 @@ def test_com_params(lt_ctx, repeat):
     assert_allclose(
         com_result['field'],
         np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1),
+    )
+    assert_allclose(
+        com_result['field_y'],
+        np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 0],
+    )
+    assert_allclose(
+        com_result['field_x'],
+        np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 1],
+    )
+    assert_allclose(
+        com_result['field'],
+        np.stack((com_result['field_y'], com_result['field_x']), axis=-1),
     )
     assert_allclose(
         com_result['magnitude'],
@@ -193,6 +229,18 @@ def test_com_roi(lt_ctx, repeat):
         np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1),
     )
     assert_allclose(
+        com_result['field_y'],
+        np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 0],
+    )
+    assert_allclose(
+        com_result['field_x'],
+        np.flip(np.moveaxis(analysis_result.field.raw_data, 0, -1), axis=-1)[..., 1],
+    )
+    assert_allclose(
+        com_result['field'],
+        np.stack((com_result['field_y'], com_result['field_x']), axis=-1),
+    )
+    assert_allclose(
         com_result['magnitude'],
         analysis_result.magnitude.raw_data,
     )
@@ -239,6 +287,8 @@ def test_com_regression_neutral(lt_ctx, use_roi, regression):
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
     assert_allclose(res['regression'], 0, atol=1e-14)
     assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+    assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
+    assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
 
 
 @pytest.mark.parametrize(
@@ -262,6 +312,8 @@ def test_com_regression_offset(lt_ctx, use_roi, regression):
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
     assert_allclose(res['regression'].data, [[-2, 1], [0, 0], [0, 0]], atol=1e-14)
     assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+    assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
+    assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
 
 
 @pytest.mark.parametrize(
@@ -285,6 +337,8 @@ def test_com_regression_linear(lt_ctx, use_roi, regression):
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
     assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-14)
     assert_allclose(res['field'].raw_data, 0, atol=1e-12)
+    assert_allclose(res['field_y'].raw_data, 0, atol=1e-12)
+    assert_allclose(res['field_x'].raw_data, 0, atol=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -310,6 +364,8 @@ def test_com_regression_linear_2(lt_ctx, use_roi, regression):
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
     assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-14)
     assert_allclose(res['field'].raw_data, 0, atol=1e-12)
+    assert_allclose(res['field_y'].raw_data, 0, atol=1e-12)
+    assert_allclose(res['field_x'].raw_data, 0, atol=1e-12)
 
 
 def test_invalid_regression_val(lt_ctx, npy_8x8x8x8_ds):

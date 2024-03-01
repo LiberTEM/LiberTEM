@@ -2,4 +2,4 @@
 ==============================================
 
 * In :class:`~libertem.udf.com.CoMUDF`, added `field_y` and `field_x` to results, 
-  which are slices of their respective components in the `field` result.
+  which are slices of their respective components in the `field` result (:pr:`1608`).

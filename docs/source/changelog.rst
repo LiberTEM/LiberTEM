@@ -18,12 +18,6 @@ Changelog
   :glob:
 
   changelog/*/*
-  
-Misc
-----
-
-- In :class:`~libertem.udf.com.CoMUDF`, added `field_y` and `field_x` to results, 
-  which are slices of their respective components in the `field` result.
 
 .. _latest:
 

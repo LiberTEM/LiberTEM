@@ -322,6 +322,12 @@ class CoMUDF(UDF):
         The transformed shift in the centre-of-mass in pixels, subject
         to any corrections (scan rotation, detector flip)
 
+    * field_y, scalar
+        y-component of field, as given above.
+
+    * field_x, scalar
+        x-component of field, as given above.
+
     * magnitude, scalar
         The magnitude of the field buffer, equivalent to ||raw_shifts||_2
 

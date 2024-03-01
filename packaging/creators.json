@@ -40,6 +40,14 @@
         "orcid": "0000-0002-6296-4492"
     },
     {
+        "displayname": "Sivert J.V. Dagenborg",
+        "authorname": "Dagenborg, Sivert",
+        "affiliation": "Norwegian University of Science and Technology",
+        "github": "sivborg",
+        "contribution": "Code, tests, code in related projects",
+        "orcid": "0009-0000-8753-9698"
+    },
+    {
         "displayname": "Anand Baburajan",
         "authorname": "Baburajan, Anand",
         "affiliation": "Government Engineering College Sreekrishnapuram",
@@ -173,13 +181,5 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
-    },
-    {
-        "displayname": "Sivert J.V. Dagenborg",
-        "authorname": "Dagenborg, Sivert",
-        "affiliation": "Norwegian University of Science and Technology",
-        "github": "sivborg",
-        "contribution": "Code, tests, code in related projects",
-        "orcid": "0009-0000-8753-9698"
     }
 ]

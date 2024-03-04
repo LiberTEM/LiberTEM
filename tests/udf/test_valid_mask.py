@@ -1,8 +1,11 @@
 import numpy as np
+import pytest
 
 from libertem.api import Context
 from libertem.udf.base import UDF
 from libertem.io.dataset.memory import MemoryDataSet
+from libertem.common.buffers import get_inner_slice, get_bbox, get_bbox_slice
+from libertem.common.math import prod
 
 
 class ValidNavMaskUDF(UDF):
@@ -120,3 +123,73 @@ def test_adjust_valid_mask():
         # custom 2d mask:
         custom_mask = res.buffers[0]['custom_2d'].valid_mask
         assert np.allclose(custom_mask, custom_expected)
+
+
+def test_valid_mask_slice_bounding():
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    ctx = Context.make_with('inline')
+
+    custom_expected = np.zeros((64, 64), dtype=bool)
+    custom_expected[:, 32:] = True
+
+    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
+        # invariants that hold for any intermediate results:
+        # all-valid result:
+        buf = res.buffers[0]['all_valid']
+        assert buf.data[buf.valid_slice_bounding].shape == buf.data.shape
+
+        # all-invalid result:
+        buf = res.buffers[0]['all_invalid']
+        assert prod(buf.data[buf.valid_slice_bounding].shape) == 0
+
+        # same as "damage", default for kind='nav' buffers:
+        buf = res.buffers[0]['keep']
+        assert prod(buf.data[buf.valid_slice_bounding].shape) >= np.count_nonzero(res.damage.data)
+
+        # custom 2d mask:
+        buf = res.buffers[0]['custom_2d']
+        assert buf.valid_slice_bounding == np.s_[0:64, 32:64]
+
+
+def test_get_inner_slice():
+    a = np.zeros((16, 16), dtype=bool)
+    a[5:7] = 1
+    a[8, 8] = 1
+    a[-1, -1] = 1
+    assert get_inner_slice(a, axis=0) == np.s_[5:7, :]
+
+    b = np.zeros((16, 16, 16), dtype=bool)
+    b[5:7] = 1
+    b[8, 1] = 1
+    b[-1, -1] = 1
+    assert get_inner_slice(b, axis=0) == np.s_[5:7, :, :]
+
+    c = np.zeros((16, 16, 16), dtype=bool)
+    c[:, 5:7, :] = 1
+    assert get_inner_slice(c, axis=1) == np.s_[:, 5:7, :]
+
+
+@pytest.mark.with_numba
+def test_get_bbox():
+    a = np.zeros((16, 16), dtype=bool)
+    a[6, 6] = 1
+    assert get_bbox(a) == (6, 6, 6, 6)
+
+    a = np.zeros((16, 16, 16), dtype=bool)
+    a[:, 6, 6] = 1
+    assert get_bbox(a) == (0, 15, 6, 6, 6, 6)
+
+
+def test_get_bbox_slice():
+    a = np.zeros((16, 16), dtype=bool)
+    a[6, 6] = 1
+    assert get_bbox_slice(a) == np.s_[6:7, 6:7]
+
+    a = np.zeros((16, 16, 16), dtype=bool)
+    a[:, 6, 6] = 1
+    assert get_bbox_slice(a) == np.s_[0:16, 6:7, 6:7]
+
+    a = np.zeros((16, 16, 16), dtype=bool)
+    a[:, 6, 6] = 1
+    a[:, -1, -1] = 1
+    assert get_bbox_slice(a) == np.s_[0:16, 6:16, 6:16]

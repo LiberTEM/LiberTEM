@@ -6,7 +6,20 @@ import math
 import functools
 from contextlib import contextmanager
 import collections
+import itertools
 
+try:
+    from itertools import batched
+except ImportError:
+    def batched(iterable, n):
+        # batched('ABCDEFG', 3) --> ABC DEF G
+        if n < 1:
+            raise ValueError('n must be at least one')
+        it = iter(iterable)
+        while batch := tuple(itertools.islice(it, n)):
+            yield batch
+
+import numba
 import numpy as np
 
 from libertem.common.math import prod, count_nonzero, flat_nonzero
@@ -192,6 +205,86 @@ class ArrayWithMask(Generic[T]):
     @property
     def arr(self) -> T:
         return self._arr
+
+
+def get_inner_slice(arr: np.ndarray, axis: int = 0):
+    """
+    Get a slice into `arr` across `axis` where the values on all other axes are non-zero.
+    This will be the first contiguous slice, not necessarily the largest.
+    """
+    ax_min = arr.shape[axis]
+    ax_max = 0
+    state = 0
+
+    other_axes = tuple([
+        i for i in range(arr.ndim)
+        if i != axis
+    ])
+    non_zero = np.all(arr != 0, axis=other_axes)
+
+    # find the first contiguous slice:
+    for i in range(non_zero.shape[0]):
+        if non_zero[i]:
+            if state == 0:
+                state = 1
+                ax_min = i
+                ax_max = i
+            elif state == 1:
+                ax_max = i
+        else:
+            if state == 1:
+                break
+    slice_ = tuple([
+        slice(ax_min, ax_max + 1) if dim == axis else slice(None, None, None)
+        for dim in range(arr.ndim)
+    ])
+    return slice_
+
+
+@numba.njit(cache=True)
+def get_bbox_2d(arr, eps=1e-8) -> tuple[int, ...]:
+    xmin = arr.shape[1]
+    ymin = arr.shape[0]
+    xmax = 0
+    ymax = 0
+
+    for y in range(arr.shape[0]):
+        for x in range(arr.shape[1]):
+            value = arr[y, x]
+            if abs(value) < eps:
+                continue
+            # got a non-zero value, update indices
+            if x < xmin:
+                xmin = x
+            if x > xmax:
+                xmax = x
+            if y < ymin:
+                ymin = y
+            if y > ymax:
+                ymax = y
+    return int(ymin), int(ymax), int(xmin), int(xmax)
+
+
+def get_bbox(arr: np.ndarray) -> tuple[int, ...]:
+    if arr.ndim == 2:
+        # 4x faster specialization in numba for 2D:
+        return get_bbox_2d(arr)
+    else:
+        # from https://stackoverflow.com/a/31402351/540644
+        N = arr.ndim
+        out = []
+        for ax in itertools.combinations(reversed(range(N)), N - 1):
+            nonzero = np.any(arr, axis=ax)
+            out.extend(np.where(nonzero)[0][[0, -1]])
+        return tuple(out)
+
+
+def get_bbox_slice(arr: np.ndarray) -> tuple[slice]:
+    bbox = get_bbox(arr)
+    res = []
+    for pair in batched(bbox, 2):
+        res.append(slice(pair[0], pair[1] + 1, None))
+    return tuple(res)
 
 
 class BufferWrapper:
@@ -387,6 +480,14 @@ class BufferWrapper:
         else:
             # FIXME: fails if `roi is not None` for `kind='nav'`?
             return valid_mask.reshape(self.data.shape)
+
+    @property
+    def valid_slice_bounding(self) -> tuple[slice, ...]:
+        return get_bbox_slice(self.valid_mask)
+
+    @property
+    def valid_slice_inner(self) -> tuple[slice, ...]:
+        return get_inner_slice(self.valid_mask)
 
     @property
     def kind(self):

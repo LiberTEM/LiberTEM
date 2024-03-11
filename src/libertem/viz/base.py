@@ -1,3 +1,4 @@
+import typing
 import logging
 import time
 
@@ -8,6 +9,9 @@ from libertem.udf.base import UDFRunner
 
 # Import here for backwards compatibility, refs #1031
 from libertem.common.viz import encode_image  # NOQA: F401
+
+if typing.TYPE_CHECKING:
+    from libertem.common.buffers import BufferWrapper
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +179,9 @@ class Live2DPlot:
         """
         return self.udf
 
-    def extract(self, udf_results, damage):
+    def extract(
+        self, udf_results: dict[str, "BufferWrapper"], damage: "BufferWrapper"
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Extract plotting data from UDF result.
 
@@ -200,16 +206,13 @@ class Live2DPlot:
         """
         if self._extract is None:
             buffer = udf_results[self.channel]
-            squeezed = buffer.data.squeeze()
-            if buffer.kind == 'nav':
-                res_damage = damage
-            else:
-                res_damage = True
+            squeezed = buffer.masked_data.squeeze()
+            res_damage = buffer.valid_mask
             return (squeezed, res_damage)
         else:
             return self._extract(udf_results, damage)
 
-    def new_data(self, udf_results, damage, force=False):
+    def new_data(self, udf_results: dict[str, "BufferWrapper"], damage, force: bool = False):
         """
         This method is called with the raw `udf_results` any time a new
         partition has finished processing.

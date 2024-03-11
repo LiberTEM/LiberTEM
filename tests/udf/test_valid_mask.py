@@ -2,9 +2,10 @@ import numpy as np
 import pytest
 
 from libertem.api import Context
+from libertem.common.shape import Shape
 from libertem.udf.base import UDF
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.buffers import get_inner_slice, get_bbox, get_bbox_slice
+from libertem.common.buffers import BufferWrapper, get_inner_slice, get_bbox, get_bbox_slice
 from libertem.common.math import prod
 
 
@@ -20,11 +21,19 @@ class ValidNavMaskUDF(UDF):
         }
 
     def get_results(self):
-        assert self.meta.valid_nav_mask is not None
-        assert self.meta.valid_nav_mask.sum() > 0, \
+        assert self.meta.get_valid_nav_mask() is not None
+        assert self.meta.get_valid_nav_mask().sum() > 0, \
             "get_results is not called with an empty valid nav mask"
+        assert len(self.meta.get_valid_nav_mask().shape) == 1, \
+            "valid_nav_mask should be flattened"
+        if self.meta.roi is not None:
+            assert self.meta.get_valid_nav_mask().shape[0] == np.count_nonzero(self.meta.roi), \
+                "if a `roi` is given, the valid nav mask should be compressed to it by default"
+            full_mask = self.meta.get_valid_nav_mask(full_nav=True)
+            assert full_mask.shape[0] == self.meta.dataset_shape.size, \
+                "when passing `full_nav=True`, the shape must match the flattened ds shape"
         if self.params.debug:
-            print("get_results", self.meta.valid_nav_mask)
+            print("get_results", self.meta.get_valid_nav_mask())
         results = super().get_results()
         # import pdb; pdb.set_trace()
         return results
@@ -35,9 +44,9 @@ class ValidNavMaskUDF(UDF):
         self.results.buf_single[:] = frame.sum()
 
     def merge(self, dest, src):
-        assert self.meta.valid_nav_mask is not None
+        assert self.meta.get_valid_nav_mask() is not None
         if self.params.debug:
-            print("merge", self.meta.valid_nav_mask)
+            print("merge", self.meta.get_valid_nav_mask())
         dest.buf_sig += src.buf_sig
         dest.buf_single += src.buf_single
         dest.buf_nav[:] = src.buf_nav
@@ -61,12 +70,22 @@ def test_valid_nav_mask_available_roi():
         print("raw damage", res.damage.raw_data)
 
 
+def test_valid_nav_mask_available_random_roi():
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    ctx = Context.make_with('inline')
+    roi = np.random.choice([True, False], size=(16, 16))
+    for res in ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(debug=False), roi=roi):
+        print("damage", res.damage.data)
+        print("raw damage", res.damage.raw_data)
+
+
 class AdjustValidMaskUDF(UDF):
     def get_result_buffers(self):
         return {
             'all_valid': self.buffer(kind='sig', dtype=np.float32),
             'all_invalid': self.buffer(kind='sig', dtype=np.float32),
             'keep': self.buffer(kind='nav', dtype=np.float32),
+            'nav_with_extra': self.buffer(kind='nav', dtype=np.float32, extra_shape=(2,)),
             'custom_2d': self.buffer(kind='single', dtype=np.float32, extra_shape=(64, 64)),
         }
 
@@ -78,6 +97,7 @@ class AdjustValidMaskUDF(UDF):
             'all_valid': self.with_mask(self.results.all_valid, mask=1),
             'all_invalid': self.with_mask(self.results.all_invalid, mask=0),
             'keep': self.results.keep,
+            'nav_with_extra': self.results.nav_with_extra,
             'custom_2d': self.with_mask(self.results.custom_2d, mask=custom_mask),
         }
 
@@ -85,6 +105,7 @@ class AdjustValidMaskUDF(UDF):
         self.results.all_valid += frame
         self.results.all_invalid += frame
         self.results.keep[:] = frame.sum()
+        self.results.nav_with_extra[:] = frame.sum()
         self.results.custom_2d[:] = 42
 
     def merge(self, dest, src):
@@ -92,19 +113,28 @@ class AdjustValidMaskUDF(UDF):
         dest.all_invalid += src.all_invalid
         dest.custom_2d += src.custom_2d
         dest.keep[:] = src.keep
+        dest.nav_with_extra[:] = src.nav_with_extra
 
 
-def test_adjust_valid_mask():
+@pytest.mark.parametrize(
+    "with_roi", [True, False]
+)
+def test_adjust_valid_mask(with_roi: bool):
     """
     Test that we can adjust the valid mask in `get_results`
     """
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
     ctx = Context.make_with('inline')
 
+    if with_roi:
+        roi = np.random.choice([True, False], size=dataset.shape.nav)
+    else:
+        roi = None
+
     custom_expected = np.zeros((64, 64), dtype=bool)
     custom_expected[:, 32:] = True
 
-    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
+    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF(), roi=roi):
         # invariants that hold for any intermediate results:
         # all-valid result:
         valid_mask = res.buffers[0]['all_valid'].valid_mask
@@ -119,6 +149,13 @@ def test_adjust_valid_mask():
         # same as "damage", default for kind='nav' buffers:
         keep_mask = res.buffers[0]['keep'].valid_mask
         assert np.allclose(keep_mask, res.damage.data)
+
+        # nav with extra_shape:
+        extra_mask = res.buffers[0]['nav_with_extra'].valid_mask
+        assert np.allclose(
+            extra_mask,
+            res.damage.data.reshape((16, 16, 1)),  # broadcastable to nav+extra
+        )
 
         # custom 2d mask:
         custom_mask = res.buffers[0]['custom_2d'].valid_mask
@@ -149,6 +186,24 @@ def test_valid_mask_slice_bounding():
         # custom 2d mask:
         buf = res.buffers[0]['custom_2d']
         assert buf.valid_slice_bounding == np.s_[0:64, 32:64]
+
+
+def test_masked_data():
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    ctx = Context.make_with('inline')
+
+    custom_expected = np.zeros((64, 64), dtype=bool)
+    custom_expected[:, 32:] = True
+
+    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
+        for k, buf in res.buffers[0].items():
+            # "checksum" over accessing via data[valid_mask] vs. masked_data
+            masked_sum = buf.masked_data.sum()  # a value or the marker `masked`
+
+            # if everything is masked out, the masked sum is just the `masked`
+            # marker, which is not equal to zero:
+            assert np.sum(buf.data[buf.valid_mask]) == masked_sum\
+                or np.allclose(buf.masked_data.mask, True)
 
 
 def test_get_inner_slice():
@@ -193,3 +248,48 @@ def test_get_bbox_slice():
     a[:, 6, 6] = 1
     a[:, -1, -1] = 1
     assert get_bbox_slice(a) == np.s_[0:16, 6:16, 6:16]
+
+
+def test_default_mask_nav_extra_shape():
+    buf = BufferWrapper(kind='nav', extra_shape=(1, 2), dtype="float32")
+    valid_nav_mask = np.array([1, 1, 0], dtype=bool)
+    ds_shape = Shape((3, 1, 16, 16), sig_dims=2)
+    nav_mask = buf.make_default_mask(
+        valid_nav_mask=valid_nav_mask, dataset_shape=ds_shape, roi=None,
+    )
+    assert nav_mask.shape == (3, 1, 2)
+    assert np.allclose(nav_mask, valid_nav_mask.reshape((3, 1, 1)))
+
+
+def test_default_mask_nav_extra_shape_with_roi():
+    buf = BufferWrapper(kind='nav', extra_shape=(1, 2), dtype="float32")
+    valid_nav_mask = np.array([1, 0], dtype=bool)
+    roi = np.array([True, False, True])
+    ds_shape = Shape((3, 1, 16, 16), sig_dims=2)
+    nav_mask = buf.make_default_mask(
+        valid_nav_mask=valid_nav_mask, dataset_shape=ds_shape, roi=roi,
+    )
+    assert nav_mask.shape == (2, 1, 2)
+    assert np.allclose(nav_mask, valid_nav_mask.reshape((2, 1, 1)))
+
+
+def test_default_mask_sig_extra_shape():
+    buf = BufferWrapper(kind='sig', extra_shape=(1, 2), dtype="float32")
+    valid_nav_mask = np.array([1, 1, 0], dtype=bool)
+    ds_shape = Shape((3, 1, 32, 32), sig_dims=2)
+    sig_mask = buf.make_default_mask(
+        valid_nav_mask=valid_nav_mask, dataset_shape=ds_shape, roi=None,
+    )
+    assert sig_mask.shape == (32, 32, 1, 2)
+    assert np.allclose(sig_mask, 1)
+
+
+def test_default_mask_single_extra_shape():
+    buf = BufferWrapper(kind='single', extra_shape=(1, 2), dtype="float32")
+    valid_nav_mask = np.array([1, 1, 0], dtype=bool)
+    ds_shape = Shape((3, 1, 32, 32), sig_dims=2)
+    sig_mask = buf.make_default_mask(
+        valid_nav_mask=valid_nav_mask, dataset_shape=ds_shape, roi=None,
+    )
+    assert sig_mask.shape == (1, 2)
+    assert np.allclose(sig_mask, 1)

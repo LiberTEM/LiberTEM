@@ -382,6 +382,9 @@ class UDFMeta:
         self._array_backend = array_backend
         self._valid_nav_mask = valid_nav_mask
 
+        if valid_nav_mask is not None and roi is not None:
+            assert valid_nav_mask.shape[0] == np.count_nonzero(roi)
+
     @property
     def slice(self) -> Optional[Slice]:
         """
@@ -554,10 +557,10 @@ class UDFMeta:
         """
         return self._array_backend
 
-    @property
-    def valid_nav_mask(self) -> Optional[np.ndarray]:
+    def get_valid_nav_mask(self, full_nav: bool = False) -> Optional[np.ndarray]:
         """
-        Return a mask of the already computed nav positions.
+        Return a mask of the already computed nav positions, as flattened
+        1D array.
 
         Only available in :meth:`~libertem.udf.base.UDF.merge` and
         :meth:`~libertem.udf.base.UDF.get_results`.
@@ -567,11 +570,23 @@ class UDFMeta:
         but only those positions that have already been merged into result.
 
         NOTE: these positions may include dropped frames or missing data.
-        """
-        return self._valid_nav_mask
 
-    @valid_nav_mask.setter
-    def valid_nav_mask(self, new_valid_nav_mask: np.ndarray):
+        Parameters
+        ----------
+        full_nav
+            If a `roi` is applied, still include all elements of the navigation
+            space in the mask. If this is not set, the mask is compressed to the
+            positions selected in the `roi`.
+        """
+        if full_nav and self._roi is not None:
+            ds_shape = self.dataset_shape.nav.to_tuple()
+            full_mask = np.zeros(ds_shape, dtype=bool).reshape((-1,))
+            full_mask[self._roi.reshape((-1,))] = self._valid_nav_mask
+            return full_mask
+        else:
+            return self._valid_nav_mask
+
+    def set_valid_nav_mask(self, new_valid_nav_mask: np.ndarray):
         self._valid_nav_mask = new_valid_nav_mask
 
 
@@ -1227,12 +1242,13 @@ class UDFBase(UDFProtocol):
             self._check_results(decl, arr, name)
             buf_decl = decl[name]
             if mask is None:
-                if buf_decl.kind in ('single', 'sig'):
-                    mask = 1
-                elif buf_decl.kind == 'nav':
-                    mask = self.meta.valid_nav_mask
-                else:
-                    raise RuntimeError(f"invalid buffer type {buf_decl.kind}")
+                valid_mask = self.meta.get_valid_nav_mask()
+                assert valid_mask is not None
+                mask = buf_decl.make_default_mask(
+                    valid_nav_mask=valid_mask,
+                    dataset_shape=self.meta.dataset_shape,
+                    roi=self.meta.roi,
+                )
             buf = results_buffer_cls[name](
                 kind=buf_decl.kind, extra_shape=buf_decl.extra_shape,
                 dtype=buf_decl.dtype,
@@ -2254,6 +2270,8 @@ class UDFPartRunner:
             except TypeError:
                 raise TypeError("could not pickle partition")
             try:
+                # FIXME: validate state of the UDF here - need some values set
+                # for `_do_get_results`
                 cloudpickle.loads(cloudpickle.dumps(
                     [u._do_get_results() for u in self._udfs]
                 ))
@@ -2263,21 +2281,30 @@ class UDFPartRunner:
 
 class UDFRunner:
     @staticmethod
-    def _apply_part_result(udfs, damage, part_results, task):
+    def _apply_part_result(
+        udfs: Iterable[UDF],
+        damage: BufferWrapper,
+        part_results: tuple[UDFData, ...],
+        task: TaskProtocol,
+    ):
+        raw_damage = damage.raw_data
+        assert raw_damage is not None
         for results, udf in zip(part_results, udfs):
-            udf.meta.valid_nav_mask = damage.raw_data
-            udf.set_views_for_partition(task.partition)
+            udf.meta.set_valid_nav_mask(raw_damage)
+            udf.set_views_for_partition(task.get_partition())
             udf.merge(
                 dest=udf.results.get_proxy(),
                 src=results.get_proxy()
             )
-        v = damage.get_view_for_partition(task.partition)
+        v = damage.get_view_for_partition(task.get_partition())
         v[:] = True
 
     @staticmethod
     def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
+        raw_damage = damage.raw_data
+        assert raw_damage is not None
         for udf in udfs:
-            udf.meta.valid_nav_mask = damage.raw_data
+            udf.meta.set_valid_nav_mask(raw_damage)
             udf.clear_views()
         return UDFResults(
             buffers=tuple(

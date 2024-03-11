@@ -23,7 +23,7 @@ import numba
 import numpy as np
 
 from libertem.common.math import prod, count_nonzero, flat_nonzero
-from libertem.common.slice import Slice
+from libertem.common.slice import Slice, Shape
 from .backend import get_use_cuda
 
 if TYPE_CHECKING:
@@ -180,7 +180,7 @@ class ManagedBuffer:
         self.pool.checkin_bytes(self.size, self.alignment, self.buf)
 
 
-T = TypeVar('T')
+T = TypeVar('T', bound=np.generic)
 
 
 class ArrayWithMask(Generic[T]):
@@ -195,6 +195,15 @@ class ArrayWithMask(Generic[T]):
     """
 
     def __init__(self, arr: T, mask: np.ndarray):
+        if isinstance(mask, int):
+            mask = np.array([mask])
+        try:
+            mask = np.broadcast_to(mask, arr.shape)
+        except ValueError:
+            raise ValueError(
+                f"`arr` and `mask` must have compatible shapes "
+                f"(arr.shape={arr.shape} vs mask.shape={mask.shape})"
+            )
         self._arr = arr
         self._mask = mask
 
@@ -207,7 +216,7 @@ class ArrayWithMask(Generic[T]):
         return self._arr
 
 
-def get_inner_slice(arr: np.ndarray, axis: int = 0):
+def get_inner_slice(arr: np.ndarray, axis: int = 0) -> tuple[slice, ...]:
     """
     Get a slice into `arr` across `axis` where the values on all other axes are non-zero.
     This will be the first contiguous slice, not necessarily the largest.
@@ -272,14 +281,14 @@ def get_bbox(arr: np.ndarray) -> tuple[int, ...]:
     else:
         # from https://stackoverflow.com/a/31402351/540644
         N = arr.ndim
-        out = []
+        out: list[int] = []
         for ax in itertools.combinations(reversed(range(N)), N - 1):
             nonzero = np.any(arr, axis=ax)
             out.extend(np.where(nonzero)[0][[0, -1]])
         return tuple(out)
 
 
-def get_bbox_slice(arr: np.ndarray) -> tuple[slice]:
+def get_bbox_slice(arr: np.ndarray) -> tuple[slice, ...]:
     bbox = get_bbox(arr)
     res = []
     for pair in batched(bbox, 2):
@@ -343,7 +352,13 @@ class BufferWrapper:
         FIXME
     """
     def __init__(
-        self, kind, extra_shape=(), dtype="float32", where=None, use=None, valid_mask=None,
+        self,
+        kind,
+        extra_shape=(),
+        dtype="float32",
+        where=None,
+        use=None,
+        valid_mask: Optional[np.ndarray] = None,
     ) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
@@ -353,7 +368,7 @@ class BufferWrapper:
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None
-        self._ds_shape = None
+        self._ds_shape: Optional[Shape] = None
         self._ds_partitions = None
         self._roi = None
         self._roi_is_zero = None
@@ -384,7 +399,7 @@ class BufferWrapper:
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
         self._update_roi_is_zero()
 
-    def set_shape_ds(self, dataset_shape, roi=None):
+    def set_shape_ds(self, dataset_shape: Shape, roi=None):
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
@@ -469,25 +484,62 @@ class BufferWrapper:
         """
         return self._data
 
+    def make_default_mask(
+        self,
+        valid_nav_mask: np.ndarray,
+        dataset_shape: Shape,
+        roi: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        roi_count = None
+        if roi is not None:
+            roi_count = count_nonzero(roi)
+        shape = self._shape_for_kind(self._kind, dataset_shape.flatten_nav(), roi_count)
+        if self._kind == 'nav':
+            # kind=nav by default uses the `valid_nav_mask`, which we need to
+            # broadcast to take care of `extra_shape`:
+            mask = np.zeros(shape, dtype=bool)
+            extra_compat = tuple([
+                1
+                for _ in range(len(self._extra_shape))
+            ])
+            valid_nav_mask_compat = valid_nav_mask.reshape(valid_nav_mask.shape + extra_compat)
+            mask[:] = valid_nav_mask_compat
+        else:
+            mask = np.ones(shape, dtype=bool)
+        return mask
+
     @property
     def valid_mask(self) -> np.ndarray:
+        if self._ds_shape is None:
+            raise RuntimeError("`valid_mask` called without setting the dataset shape")
+
         if self._valid_mask is None:
-            valid_mask = np.array([1])
-        else:
-            valid_mask = np.array(self._valid_mask)
-        if valid_mask.shape == (1,):
-            return np.broadcast_to(valid_mask, self.data.shape)
-        else:
-            # FIXME: fails if `roi is not None` for `kind='nav'`?
-            return valid_mask.reshape(self.data.shape)
+            raise RuntimeError("`valid_mask` must be set")
+
+        if self._kind == 'nav':
+            # for `nav`, we need to do some gymnastics to un-flatten the nav
+            # part of the shape, and possibly handle `roi`:
+            full_shape = tuple(self._ds_shape.nav) + self._extra_shape
+            if self._roi is not None:
+                flat_shape = tuple(self._ds_shape.flatten_nav().nav) + self._extra_shape
+                valid_mask = np.zeros(full_shape, dtype=bool)
+                valid_mask.reshape(flat_shape)[self._roi] = self._valid_mask
+                return valid_mask
+            return self._valid_mask.reshape(full_shape)
+
+        return self._valid_mask
 
     @property
     def valid_slice_bounding(self) -> tuple[slice, ...]:
         return get_bbox_slice(self.valid_mask)
 
+    def get_valid_slice_inner(self, axis: int = 0) -> tuple[slice, ...]:
+        return get_inner_slice(self.valid_mask, axis=axis)
+
     @property
-    def valid_slice_inner(self) -> tuple[slice, ...]:
-        return get_inner_slice(self.valid_mask)
+    def masked_data(self) -> np.ma.MaskedArray:
+        mask = ~self.valid_mask
+        return np.ma.array(self.data, mask=mask)
 
     @property
     def kind(self):

@@ -1233,12 +1233,10 @@ class UDFBase(UDFProtocol):
         # wrap numpy results into `ResultBuffer`s:
         results = {}
         for name, arr in results_tmp.items():
-            import dask.array.core
             mask = None
             if isinstance(arr, ArrayWithMask):
                 mask = arr.mask
                 arr = arr.arr
-            assert isinstance(arr, (np.ndarray, dask.array.core.Array))
             self._check_results(decl, arr, name)
             buf_decl = decl[name]
             if mask is None:

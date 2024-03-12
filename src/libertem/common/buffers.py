@@ -356,8 +356,6 @@ class BufferWrapper:
 
         .. versionadded:: 0.7.0
 
-    valid_mask:
-        FIXME
     """
     def __init__(
         self,
@@ -366,7 +364,6 @@ class BufferWrapper:
         dtype="float32",
         where=None,
         use=None,
-        valid_mask: Optional[np.ndarray] = None,
     ) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
@@ -381,7 +378,6 @@ class BufferWrapper:
         self._roi = None
         self._roi_is_zero = None
         self._contiguous_cache = dict()
-        self._valid_mask = valid_mask
         self.use = use
 
     def set_roi(self, roi):
@@ -536,6 +532,10 @@ class BufferWrapper:
             return self._valid_mask.reshape(full_shape)
 
         return self._valid_mask
+
+    @valid_mask.setter
+    def valid_mask(self, valid_nask: np.ndarray):
+        self._valid_mask = valid_nask
 
     @property
     def valid_slice_bounding(self) -> tuple[slice, ...]:

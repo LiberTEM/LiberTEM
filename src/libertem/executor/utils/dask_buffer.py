@@ -183,6 +183,7 @@ class DaskResultBufferWrapper(DaskPreallocBufferWrapper):
         result._ds_partitions = buffer._ds_partitions
         result._roi = buffer._roi
         result._roi_is_zero = buffer._roi_is_zero
+        result._valid_mask = buffer._valid_mask
         return result
 
     def __array__(self):

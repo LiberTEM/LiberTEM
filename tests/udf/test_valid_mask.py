@@ -62,6 +62,23 @@ def test_valid_nav_mask_available():
         pass
 
 
+@pytest.mark.parametrize("with_roi", [True, False])
+def test_valid_nav_mask_delayed(delayed_executor, with_roi: bool):
+    ctx = Context(executor=delayed_executor)
+    if with_roi:
+        roi = np.zeros((16, 16), dtype=bool)
+        roi[4:-4, 4:-4] = True
+    else:
+        roi = None
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    for res in ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(), roi=roi):
+        res.buffers[0]['buf_nav'].data
+        assert np.allclose(
+            res.buffers[0]['buf_nav'].valid_mask,
+            res.damage,
+        )
+
+
 def test_valid_nav_mask_available_roi():
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
     ctx = Context.make_with('inline')
@@ -121,12 +138,18 @@ class AdjustValidMaskUDF(UDF):
 @pytest.mark.parametrize(
     "with_roi", [True, False]
 )
-def test_adjust_valid_mask(with_roi: bool):
+@pytest.mark.parametrize(
+    "executor", ["inline", "delayed"],
+)
+def test_adjust_valid_mask(with_roi: bool, executor: str, delayed_executor):
     """
     Test that we can adjust the valid mask in `get_results`
     """
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
+    if executor == "inline":
+        ctx = Context.make_with('inline')
+    else:
+        ctx = Context(executor=delayed_executor)
 
     if with_roi:
         roi = np.random.choice([True, False], size=dataset.shape.nav)

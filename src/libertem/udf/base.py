@@ -1251,8 +1251,8 @@ class UDFBase(UDFProtocol):
                 kind=buf_decl.kind, extra_shape=buf_decl.extra_shape,
                 dtype=buf_decl.dtype,
                 data=arr,
-                valid_mask=mask,
             )
+            buf.valid_mask = mask
             buf.set_shape_ds(self.meta.dataset_shape, self.meta.roi)
             results[name] = buf
         return results

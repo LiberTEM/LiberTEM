@@ -47,6 +47,8 @@ class ValidNavMaskUDF(UDF):
 
     def merge(self, dest, src):
         assert self.meta.get_valid_nav_mask() is not None
+        assert not np.allclose(True, self.meta.get_valid_nav_mask()), \
+            "valid nav mask should be the already merged positions! can't be all-True"
         if self.params.debug:
             print("merge", self.meta.get_valid_nav_mask())
         dest.buf_sig += src.buf_sig

@@ -5,7 +5,9 @@ from libertem.api import Context
 from libertem.common.shape import Shape
 from libertem.udf.base import UDF
 from libertem.io.dataset.memory import MemoryDataSet
-from libertem.common.buffers import BufferWrapper, get_inner_slice, get_bbox, get_bbox_slice
+from libertem.common.buffers import (
+    BufferWrapper, InvalidMaskError, get_inner_slice, get_bbox, get_bbox_slice,
+)
 from libertem.common.math import prod
 
 
@@ -30,7 +32,7 @@ class ValidNavMaskUDF(UDF):
             assert self.meta.get_valid_nav_mask().shape[0] == np.count_nonzero(self.meta.roi), \
                 "if a `roi` is given, the valid nav mask should be compressed to it by default"
             full_mask = self.meta.get_valid_nav_mask(full_nav=True)
-            assert full_mask.shape[0] == self.meta.dataset_shape.size, \
+            assert full_mask.shape[0] == self.meta.dataset_shape.nav.size, \
                 "when passing `full_nav=True`, the shape must match the flattened ds shape"
         if self.params.debug:
             print("get_results", self.meta.get_valid_nav_mask())
@@ -160,6 +162,72 @@ def test_adjust_valid_mask(with_roi: bool):
         # custom 2d mask:
         custom_mask = res.buffers[0]['custom_2d'].valid_mask
         assert np.allclose(custom_mask, custom_expected)
+
+
+class CustomMaskFromParams(UDF):
+    def __init__(self, mask):
+        super().__init__(mask=mask)
+
+    def get_result_buffers(self) -> dict[str, BufferWrapper]:
+        return {
+            'custom': self.buffer(kind='single', dtype='float32', extra_shape=(64, 64, 3)),
+        }
+
+    def get_results(self):
+        return {
+            'custom': self.with_mask(np.zeros((64, 64, 3), dtype="float32"), mask=self.params.mask),
+        }
+
+    def process_frame(self, frame):
+        pass
+
+    def merge(self, dest, src):
+        pass
+
+
+@pytest.mark.parametrize("mask_shape", [
+    (32, 32),
+    (1, 32),
+    (64, 64),  # needs to be (64, 64, 1) to be able to broadcast
+    (64, 64, 4),
+    (1, 1, 4),
+    (1, 1, 1, 1),  # that's too many...
+])
+def test_custom_mask_invalid(mask_shape):
+    """
+    Examples of mask shapes that are incompatible with the 'custom' buffer
+    defined above. Make sure these raise an appropriate exception.
+    """
+    dataset = MemoryDataSet(datashape=[16, 16, 4, 4], num_partitions=4)
+    ctx = Context.make_with('inline')
+
+    mask = np.zeros(mask_shape, dtype=bool)
+
+    with pytest.raises(InvalidMaskError):
+        for res in ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
+            pass
+
+
+@pytest.mark.parametrize("mask_shape", [
+    (),
+    (1,),
+    (1, 1),
+    (1, 1, 1),
+    (64, 64, 1),
+    (64, 64, 3),
+])
+def test_custom_mask_valid(mask_shape):
+    """
+    Examples of mask shapes that should be compatible with the shape of the 'custom'
+    buffer defined in the `CustomMaskFromParams` UDF.
+    """
+    dataset = MemoryDataSet(datashape=[16, 16, 4, 4], num_partitions=4)
+    ctx = Context.make_with('inline')
+
+    mask = np.zeros(mask_shape, dtype=bool)
+
+    for res in ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
+        pass
 
 
 def test_valid_mask_slice_bounding():

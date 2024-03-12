@@ -183,6 +183,14 @@ class ManagedBuffer:
 T = TypeVar('T', bound=np.generic)
 
 
+class InvalidMaskError(Exception):
+    """
+    The mask is not compatible, raised for example when the shape of
+    the mask doesn't match the data.
+    """
+    pass
+
+
 class ArrayWithMask(Generic[T]):
     """
     An opaque type representing an array together with a
@@ -200,7 +208,7 @@ class ArrayWithMask(Generic[T]):
         try:
             mask = np.broadcast_to(mask, arr.shape)
         except ValueError:
-            raise ValueError(
+            raise InvalidMaskError(
                 f"`arr` and `mask` must have compatible shapes "
                 f"(arr.shape={arr.shape} vs mask.shape={mask.shape})"
             )

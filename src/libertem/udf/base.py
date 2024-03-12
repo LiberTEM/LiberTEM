@@ -2270,10 +2270,8 @@ class UDFPartRunner:
             except TypeError:
                 raise TypeError("could not pickle partition")
             try:
-                # FIXME: validate state of the UDF here - need some values set
-                # for `_do_get_results`
                 cloudpickle.loads(cloudpickle.dumps(
-                    [u._do_get_results() for u in self._udfs]
+                    [u.results for u in self._udfs]
                 ))
             except TypeError:
                 raise TypeError("could not pickle results")

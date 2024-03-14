@@ -158,7 +158,6 @@ setup(
         'empyre>=0.3.0',
         'defusedxml',
         'typing-extensions',  # backwards-compatibility for newer typing constructs
-        'importlib_metadata',  # backwards-compatibility for importlib.metadata
         'opentelemetry-api',
         'tblib',
         'tomli',

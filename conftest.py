@@ -10,7 +10,7 @@ import contextlib
 import socket
 import logging
 
-from importlib_metadata import distributions
+from importlib.metadata import distributions
 import numpy as np
 import pytest
 import h5py

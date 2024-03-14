@@ -207,7 +207,7 @@ class Live2DPlot:
         if self._extract is None:
             buffer = udf_results[self.channel]
             squeezed = buffer.masked_data.squeeze()
-            res_damage = buffer.valid_mask
+            res_damage = buffer.valid_mask.squeeze()
             return (squeezed, res_damage)
         else:
             return self._extract(udf_results, damage)

@@ -66,6 +66,12 @@ def main(port, local_directory, browser, cpus, gpus, open_ds, log_level,
     if (open_ds and platform.system() == 'Windows' and open_ds[-1] == '"'
             and not os.path.exists(open_ds) and os.path.exists(open_ds[:-1])):
         open_ds = open_ds[:-1]
+    # Mitigation for https://github.com/python/cpython/issues/88141
+    if platform.system() == 'Windows':
+        # Replace the mimetype for .js, as there can be potentially broken
+        # entries in the windows registry:
+        import mimetypes
+        mimetypes.add_type('application/javascript', '.js', strict=True)
     is_custom_port = port is not None
     if port is None:
         port = 9000

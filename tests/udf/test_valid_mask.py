@@ -3,12 +3,12 @@ import pytest
 
 from libertem.api import Context
 from libertem.common.shape import Shape
-from libertem.udf.base import UDF
+from libertem.udf.base import UDF, MergeAttrMapping
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.common.buffers import (
     BufferWrapper, InvalidMaskError, get_inner_slice, get_bbox, get_bbox_slice,
 )
-from libertem.common.math import prod
+from libertem.common.math import count_nonzero, prod
 
 
 class ValidNavMaskUDF(UDF):
@@ -419,3 +419,57 @@ def test_default_mask_single_extra_shape():
     )
     assert sig_mask.shape == (1, 2)
     assert np.allclose(sig_mask, 1)
+
+
+class CustomValidMask(UDF):
+    def get_result_buffers(self):
+        nav_shape = self.meta.dataset_shape.nav
+
+        if self.meta.roi is not None:
+            nav_shape = (count_nonzero(self.meta.roi),)
+
+        return {
+            'custom_2d': self.buffer(kind='single', dtype=np.float32, extra_shape=nav_shape),
+        }
+
+    def process_frame(self, frame):
+        self.results.custom_2d[self.meta.coordinates] = np.sum(frame)
+
+    def get_results(self):
+        # in this case, we set the valid mask of the kind=single buffer to
+        # match what a nav buffer would do.
+        valid_nav_mask = self.meta.get_valid_nav_mask()
+
+        return {
+            'custom_2d': self.with_mask(
+                self.results.custom_2d,
+                mask=valid_nav_mask.reshape(self.results.custom_2d.shape)
+            ),
+        }
+
+    def merge(self, dest: MergeAttrMapping, src: MergeAttrMapping):
+        dest.custom_2d += src.custom_2d
+
+
+@pytest.mark.parametrize(
+    "with_roi", [True, False]
+)
+@pytest.mark.parametrize(
+    "executor", ["inline", "delayed"],
+)
+def test_adjust_valid_mask_extra(with_roi: bool, executor: str, delayed_executor):
+    """
+    Test that we can adjust the valid mask in `get_results`
+    """
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    if executor == "inline":
+        ctx = Context.make_with('inline')
+    else:
+        ctx = Context(executor=delayed_executor)
+
+    if with_roi:
+        roi = np.random.choice([True, False], size=dataset.shape.nav)
+    else:
+        roi = None
+
+    ctx.run_udf(dataset=dataset, udf=CustomValidMask(), roi=roi)

@@ -301,6 +301,37 @@ def test_masked_data():
                 or np.allclose(buf.masked_data.mask, True)
 
 
+def test_raw_masked_data():
+    dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
+    ctx = Context.make_with('inline')
+
+    roi = np.random.choice(a=[True, False], size=(16, 16))
+
+    custom_expected = np.zeros((64, 64), dtype=bool)
+    custom_expected[:, 32:] = True
+
+    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF(), roi=roi):
+        for k, buf in res.buffers[0].items():
+            # "checksum" over accessing via data[valid_mask] vs. masked_data
+            masked_sum = buf.raw_masked_data.sum()  # a value or the marker `masked`
+
+            # if everything is masked out, the masked sum is just the `masked`
+            # marker, which is not equal to zero:
+            assert np.sum(buf.data[buf.valid_mask]) == masked_sum \
+                or np.allclose(buf.raw_masked_data.mask, True)
+
+            # 'nav' is the interesting case where the `roi` is affecting things:
+            if buf.kind == 'nav':
+                matched_roi = roi.reshape(roi.shape + (1,) * len(buf.extra_shape))
+                matched_roi = np.broadcast_to(matched_roi, buf.valid_mask.shape)
+                matched_roi = matched_roi.reshape(roi.shape + buf.extra_shape)
+                assert np.count_nonzero(~buf.raw_masked_data.mask) == \
+                    np.count_nonzero(matched_roi[buf.valid_mask])
+
+            assert np.sum(buf.raw_data[buf._valid_mask]) == masked_sum\
+                or np.allclose(buf.raw_masked_data.mask, True)
+
+
 def test_get_inner_slice():
     a = np.zeros((16, 16), dtype=bool)
     a[5:7] = 1

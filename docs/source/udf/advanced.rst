@@ -276,6 +276,114 @@ by the ROI.
     node, too. Views for aux data are set correctly on the main node. Previously,
     it was only executed on the worker nodes.
 
+Valid data masking
+------------------
+
+In various intermediate states, result buffers may be only partially filled
+with valid data. This comes from the fact that we split the data set into
+partitions, and then merge results together as they become available.
+Also, when doing live processing, you may have a direct mapping of acquired
+detector frames to result items, where naturally only positions where we have
+received and processed data can be valid in the corresponding result buffer.
+
+Handling partially valid data becomes important when running the UDF. For example,
+live plotting needs to know what regions of the results to include. Also, when using
+:meth:`~libertem.api.Context.run_udf_iter` you might only want to handle the already valid
+parts of the results.
+
+For UDF results, you can access
+:attr:`~libertem.common.buffers.BufferWrapper.valid_mask` to access
+the valid mask for that particular buffer. You can also use
+:attr:`~libertem.common.buffers.BufferWrapper.masked_data` 
+to access the data of the buffer as a numpy masked array.
+
+For example:
+
+.. testsetup::
+
+    from libertem.udf.sumsigudf import SumSigUDF
+
+.. testcode::
+
+    # use `run_udf_iter` to get partial results while the computation is running:
+    for res in ctx.run_udf_iter(dataset=dataset, udf=SumSigUDF()):
+
+        # get the BufferWrapper for the 'intensity' buffer of the first UDF:
+        buf = res.buffers[0]['intensity']
+
+        # boolean mask that contains True for valid elements:
+        mask = buf.valid_mask
+
+        # get a numpy masked array that is limited to the valid elements:
+        masked_data = buf.masked_data
+
+
+By default, the valid masks of results depend on the buffer kind:
+
+=================== ==================
+Buffer :code:`kind` Default valid mask
+=================== ==================
+:code:`'single'`    All-valid
+------------------- ------------------
+:code:`'sig'`       All-valid
+------------------- ------------------
+:code:`'nav'`       Parts which have been merged using :meth:`~libertem.udf.UDF.merge`
+=================== ==================
+
+In your UDF, you can also customize the valid mask that should be returned.
+This is useful if there is no direct mapping between the already processed
+navigation elements and the valid results, or if you are using a :code:`kind='single'`
+buffer which is progressively built up, to override the default of all-valid.
+
+Customizing the valid data mask is done in :meth:`~libertem.udf.UDF.get_results`
+with the :meth:`~libertem.udf.UDF.with_mask` method. For example:
+
+.. testsetup::
+
+    from libertem.udf import UDF
+
+
+.. testcode::
+
+    class CustomValidMask(UDF):
+        def get_result_buffers(self):
+            nav_shape = self.meta.dataset_shape.nav
+
+            if self.meta.roi is not None:
+                nav_shape = (count_nonzero(self.meta.roi),)
+
+            return {
+                'custom_2d': self.buffer(kind='single', dtype=np.float32, extra_shape=nav_shape),
+            }
+
+        def process_frame(self, frame):
+            self.results.custom_2d[self.meta.coordinates] = np.sum(frame)
+
+        def get_results(self):
+            # in this case, we set the valid mask of the kind=single buffer to
+            # match what a nav buffer would do.
+            valid_nav_mask = self.meta.get_valid_nav_mask()
+
+            return {
+                'custom_2d': self.with_mask(
+                    self.results.custom_2d,
+                    mask=valid_nav_mask.reshape(self.results.custom_2d.shape)
+                ),
+            }
+
+        def merge(self, dest, src):
+            dest.custom_2d += src.custom_2d
+
+
+    ctx.run_udf(dataset=dataset, udf=CustomValidMask())
+
+This example also shows the :meth:`~libertem.udf.base.UDFMeta.get_valid_nav_mask`
+method, which is available in :meth:`~libertem.udf.UDF.merge` and
+:meth:`~libertem.udf.UDF.get_results`, and gives you a mask of the
+already-processed navigation elements.
+
+.. versionadded:: 0.14.0
+
 AUX data
 --------
 

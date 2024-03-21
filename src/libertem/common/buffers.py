@@ -546,8 +546,23 @@ class BufferWrapper:
 
     @property
     def masked_data(self) -> np.ma.MaskedArray:
+        """
+        Same as :property:`data`, but masked to the valid data, as a numpy
+        masked array.
+        """
         mask = ~self.valid_mask
         return np.ma.array(self.data, mask=mask)
+
+    @property
+    def raw_masked_data(self) -> np.ma.MaskedArray:
+        """
+        Same as :property:`raw_data`, but masked to the valid data, as a numpy
+        masked array.
+        """
+        # NOTE: using `self._valid_mask` instead of `self.valid_mask` to get the
+        # raw flat mask, not the one expanded to the full
+        mask = ~self._valid_mask
+        return np.ma.array(self.raw_data, mask=mask)
 
     @property
     def kind(self):

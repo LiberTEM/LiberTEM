@@ -228,6 +228,8 @@ def get_inner_slice(arr: np.ndarray, axis: int = 0) -> tuple[slice, ...]:
     """
     Get a slice into `arr` across `axis` where the values on all other axes are non-zero.
     This will be the first contiguous slice, not necessarily the largest.
+
+    :meta private:
     """
     ax_min = arr.shape[axis]
     ax_max = 0
@@ -260,6 +262,9 @@ def get_inner_slice(arr: np.ndarray, axis: int = 0) -> tuple[slice, ...]:
 
 @numba.njit(cache=True)
 def get_bbox_2d(arr, eps=1e-8) -> tuple[int, ...]:
+    """
+    :meta private:
+    """
     xmin = arr.shape[1]
     ymin = arr.shape[0]
     xmax = 0
@@ -283,6 +288,9 @@ def get_bbox_2d(arr, eps=1e-8) -> tuple[int, ...]:
 
 
 def get_bbox(arr: np.ndarray) -> tuple[int, ...]:
+    """
+    :meta private:
+    """
     if arr.ndim == 2:
         # 4x faster specialization in numba for 2D:
         return get_bbox_2d(arr)
@@ -297,6 +305,9 @@ def get_bbox(arr: np.ndarray) -> tuple[int, ...]:
 
 
 def get_bbox_slice(arr: np.ndarray) -> tuple[slice, ...]:
+    """
+    :meta private:
+    """
     bbox = get_bbox(arr)
     res = []
     for pair in batched(bbox, 2):

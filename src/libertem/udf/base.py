@@ -35,7 +35,7 @@ from libertem.common.buffers import (
 )
 from libertem.common import Shape, Slice
 from libertem.common.udf import TilingPreferences, UDFProtocol, UDFMethod
-from libertem.common.math import prod
+from libertem.common.math import count_nonzero, prod
 from libertem.io.dataset.base import (
     TilingScheme, Negotiator, Partition, DataSet, get_coordinates
 )
@@ -383,7 +383,7 @@ class UDFMeta:
         self._valid_nav_mask = valid_nav_mask
 
         if valid_nav_mask is not None and roi is not None:
-            assert valid_nav_mask.shape[0] == np.count_nonzero(roi)
+            assert valid_nav_mask.shape[0] == count_nonzero(roi)
 
     @property
     def slice(self) -> Optional[Slice]:
@@ -578,6 +578,8 @@ class UDFMeta:
             space in the mask. If this is not set, the mask is compressed to the
             positions selected in the `roi`.
         """
+        if self._valid_nav_mask is None:
+            return None
         if full_nav and self._roi is not None:
             ds_shape = self.dataset_shape.nav.to_tuple()
             full_mask = np.zeros(ds_shape, dtype=bool).reshape((-1,))
@@ -586,7 +588,7 @@ class UDFMeta:
         else:
             return self._valid_nav_mask
 
-    def set_valid_nav_mask(self, new_valid_nav_mask: np.ndarray):
+    def set_valid_nav_mask(self, new_valid_nav_mask: Optional[np.ndarray]):
         self._valid_nav_mask = new_valid_nav_mask
 
 
@@ -1594,6 +1596,10 @@ class UDF(UDFBase):
     def cleanup(self) -> None:  # FIXME: name? implement cleanup as context manager somehow?
         pass
 
+    @staticmethod
+    def with_mask(data, mask: Union[np.ndarray, bool]) -> ArrayWithMask:
+        return ArrayWithMask(data, mask=mask)
+
     def buffer(
         self,
         kind: BufferKind,
@@ -1643,9 +1649,6 @@ class UDF(UDFBase):
         if use is not None and use.lower() == "result_only":
             return PlaceholderBufferWrapper(kind, extra_shape, dtype, use=use)
         return BufferWrapper(kind, extra_shape, dtype, where, use=use)
-
-    def with_mask(self, data, mask: np.ndarray) -> ArrayWithMask:
-        return ArrayWithMask(data, mask=mask)
 
     @classmethod
     def aux_data(cls, data, kind, extra_shape=(), dtype="float32"):
@@ -2122,6 +2125,10 @@ class UDFPartRunner:
             backend: tuple(udf.get_method() for udf in udfs)
             for backend, udfs in execution_plan.items()
         }
+
+        for backend, udfs in execution_plan.items():
+            for udf in udfs:
+                udf.meta.set_valid_nav_mask(None)
 
         try:
             for tile in tiles:

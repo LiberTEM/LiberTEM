@@ -41,6 +41,8 @@ class ValidNavMaskUDF(UDF):
         return results
 
     def process_frame(self, frame):
+        assert self.meta.get_valid_nav_mask() is None
+        assert self.meta.get_valid_nav_mask(full_nav=True) is None
         self.results.buf_sig += frame
         self.results.buf_nav[:] = frame.sum()
         self.results.buf_single[:] = frame.sum()

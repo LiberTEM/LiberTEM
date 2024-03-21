@@ -202,7 +202,7 @@ class ArrayWithMask(Generic[T]):
     to instantiate it.
     """
 
-    def __init__(self, arr: T, mask: np.ndarray):
+    def __init__(self, arr: T, mask: Union[np.ndarray, bool]):
         if isinstance(mask, int):
             mask = np.array([mask])
         try:

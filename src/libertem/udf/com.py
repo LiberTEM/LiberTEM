@@ -107,7 +107,9 @@ def center_shifts(img_sum, img_y, img_x, ref_y, ref_x):
     return (y_centers, x_centers)
 
 
-def apply_correction(y_centers, x_centers, scan_rotation, flip_y, forward=True):
+def apply_correction(
+    y_centers, x_centers, scan_rotation, flip_y, forward=True,
+) -> tuple[np.ndarray, np.ndarray]:
     shape = y_centers.shape
     if flip_y:
         transform = coordinates.flip_y()
@@ -595,15 +597,11 @@ class CoMUDF(UDF):
             'curl': curl,
         }
 
-    def get_regression(self, field):
-        valid = None
+    def get_regression(self, field: np.ndarray, valid_mask: np.ndarray):
         inp = None
         result = np.zeros((3, 2))
 
         com_params = self.get_params()
-
-        def get_valid():
-            return np.all(np.isfinite(field), axis=-1)
 
         def get_inp():
             inp = np.ones(field.shape[:-1] + (3, ))
@@ -616,13 +614,12 @@ class CoMUDF(UDF):
             if com_params.regression == -1:
                 pass
             elif com_params.regression == 0:
-                valid = get_valid()
-                valid_field = field[valid]
+                valid_field = field[valid_mask]
                 result[0] = np.mean(valid_field, axis=0)
             elif com_params.regression == 1:
-                valid, inp = get_valid(), get_inp()
-                valid_field = field[valid]
-                res = np.linalg.lstsq(inp[valid], valid_field, rcond=None)
+                inp = get_inp()
+                valid_field = field[valid_mask]
+                res = np.linalg.lstsq(inp[valid_mask], valid_field, rcond=None)
                 result[:] = res[0]
             else:
                 raise ValueError(f'Unrecognized regression option {com_params.regression}')
@@ -680,11 +677,21 @@ class CoMUDF(UDF):
         field = np.moveaxis(np.array(field), 0, -1)
         nav_size = prod(self.meta.dataset_shape.nav)
 
-        regression, inp = self.get_regression(field)
+        # Only apply the regression to the valid
+        # part of the results:
+        valid_mask = self.meta.get_valid_nav_mask(full_nav=True).reshape(
+            tuple(self.meta.dataset_shape.nav)
+        )
+        regression, inp = self.get_regression(field, valid_mask=valid_mask)
+
         if inp is not None:
             self.apply_lin_regression(regression, inp, field)
         elif not np.allclose(regression[0], 0):
             self.apply_mean_regression(regression, field)
+
+        # zero the field values inside of the invalid-mask
+        # as it might be non-zero from the applied regression:
+        # field[np.broadcast_to(mask, field.shape)] = 0
 
         results = {
             'raw_shifts': raw_shifts,

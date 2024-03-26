@@ -310,7 +310,11 @@ def test_com_regression_offset(lt_ctx, use_roi, regression):
 
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
-    assert_allclose(res['regression'].data, [[-2, 1], [0, 0], [0, 0]], atol=1e-14)
+    assert_allclose(res['regression'].data, [
+        [-2, 1],  # constant offset in y and x direction
+        [0, 0],
+        [0, 0]
+    ], atol=1e-14)
     assert_allclose(res['field'].raw_data, 0, atol=1e-13)
     assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
     assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)

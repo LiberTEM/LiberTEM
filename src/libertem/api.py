@@ -219,7 +219,11 @@ class Context:
     >>> debug_ctx = libertem.api.Context(executor=InlineJobExecutor())
     """
 
-    def __init__(self, executor: Optional[JobExecutor] = None, plot_class=None):
+    def __init__(
+        self,
+        executor: Optional[JobExecutor] = None,
+        plot_class: Optional['Live2DPlot'] = None,
+    ):
         import traceback
         if executor is None:
             executor = self._create_local_executor()
@@ -385,14 +389,14 @@ class Context:
         return cls(executor=executor, plot_class=plot_class)
 
     @property
-    def plot_class(self):
+    def plot_class(self) -> type['Live2DPlot']:
         if self._plot_class is None:
             from libertem.viz.mpl import MPLLive2DPlot
             self._plot_class = MPLLive2DPlot
         return self._plot_class
 
     @plot_class.setter
-    def plot_class(self, value):
+    def plot_class(self, value: type['Live2DPlot']):
         self._plot_class = value
 
     def load(self, filetype: str, *args, io_backend=None, **kwargs) -> DataSet:
@@ -1420,7 +1424,13 @@ class Context:
             for bufferset in buffers
         ]
 
-    def _prepare_plots(self, udfs, dataset, roi, plots):
+    def _prepare_plots(
+        self,
+        udfs: list[UDF],
+        dataset: DataSet,
+        roi: RoiT,
+        plots,
+    ) -> list['Live2DPlot']:
         runner_cls = self.executor.get_udf_runner()
         dry_results = runner_cls.dry_run(udfs, dataset, roi)
 
@@ -1467,7 +1477,14 @@ class Context:
                 plots.append(p0)
         return plots
 
-    def _update_plots(self, plots, udfs, udf_results, damage, force=False):
+    def _update_plots(
+        self,
+        plots: list['Live2DPlot'],
+        udfs: list[UDF],
+        udf_results: tuple[dict[str, BufferWrapper], ...],
+        damage: np.ndarray,
+        force: bool = False,
+    ):
         for plot in plots:
             udf = plot.get_udf()
             udf_index = udfs.index(udf)

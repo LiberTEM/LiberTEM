@@ -112,7 +112,9 @@ class DelayedUDFRunner(UDFRunner):
             # call because this default Dask behaviour is to give a read-only
             # view of the arguments to the delayed function
             merged_del = delayed(merge_wrap, nout=len(flat_mapping))
-            merged_del_result = merged_del(udf, dest_dict, src_dict)
+            # need to copy the damage, as it will be overwritten in the next loop iteration,
+            # which is independent from actually evaluating the delayed object:
+            merged_del_result = merged_del(udf, dest_dict, src_dict, damage.raw_data.copy())
 
             # The following is needed when binding sequential updates on sig buffers
             # if bind_to is not None:
@@ -358,7 +360,7 @@ def make_copy(array_dict):
     return array_dict
 
 
-def merge_wrap(udf, dest_dict, src_dict):
+def merge_wrap(udf, dest_dict, src_dict, raw_damage):
     """
     The function called as delayed, acting as a wrapper
     to return a flat list of results rather than a structure
@@ -376,6 +378,7 @@ def merge_wrap(udf, dest_dict, src_dict):
     src = MergeAttrMapping(src_dict)
 
     # In place merge into the copy of dest
+    udf.meta.set_valid_nav_mask(raw_damage)
     udf.merge(dest=dest, src=src)
     # Return flat list of results so they can be unpacked later
     return delayed_unpack.flatten_nested(dest._dict)

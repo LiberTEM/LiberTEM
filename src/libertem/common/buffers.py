@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, TYPE_CHECKING
+from typing import Any, Optional, Union, TYPE_CHECKING, Generic, TypeVar
 from collections.abc import Iterable
 from typing_extensions import Literal
 import mmap
@@ -6,11 +6,24 @@ import math
 import functools
 from contextlib import contextmanager
 import collections
+import itertools
 
+try:
+    from itertools import batched
+except ImportError:
+    def batched(iterable, n):
+        # batched('ABCDEFG', 3) --> ABC DEF G
+        if n < 1:
+            raise ValueError('n must be at least one')
+        it = iter(iterable)
+        while batch := tuple(itertools.islice(it, n)):
+            yield batch
+
+import numba
 import numpy as np
 
 from libertem.common.math import prod, count_nonzero, flat_nonzero
-from libertem.common.slice import Slice
+from libertem.common.slice import Slice, Shape
 from .backend import get_use_cuda
 
 if TYPE_CHECKING:
@@ -167,6 +180,141 @@ class ManagedBuffer:
         self.pool.checkin_bytes(self.size, self.alignment, self.buf)
 
 
+T = TypeVar('T', bound=np.generic)
+
+
+class InvalidMaskError(Exception):
+    """
+    The mask is not compatible, raised for example when the shape of
+    the mask doesn't match the data.
+    """
+    pass
+
+
+class ArrayWithMask(Generic[T]):
+    """
+    An opaque type representing an array together with a
+    mask (for example, defining a region in the array
+    where there are valid entries)
+
+    This is meant for usage in :meth:`UDF.get_results`,
+    and you can use the convenience method :meth:`UDF.with_mask`
+    to instantiate it.
+    """
+
+    def __init__(self, arr: T, mask: Union[np.ndarray, bool]):
+        if isinstance(mask, int):
+            mask = np.array([mask])
+        try:
+            mask = np.broadcast_to(mask, arr.shape)
+        except ValueError:
+            raise InvalidMaskError(
+                f"`arr` and `mask` must have compatible shapes "
+                f"(arr.shape={arr.shape} vs mask.shape={mask.shape})"
+            )
+        self._arr = arr
+        self._mask = mask
+
+    @property
+    def mask(self) -> np.ndarray:
+        return np.broadcast_to(self._mask, self._arr.shape)
+
+    @property
+    def arr(self) -> T:
+        return self._arr
+
+
+def get_inner_slice(arr: np.ndarray, axis: int = 0) -> tuple[slice, ...]:
+    """
+    Get a slice into `arr` across `axis` where the values on all other axes are non-zero.
+    This will be the first contiguous slice, not necessarily the largest.
+
+    :meta private:
+    """
+    ax_min = arr.shape[axis]
+    ax_max = 0
+    state = 0
+
+    other_axes = tuple([
+        i for i in range(arr.ndim)
+        if i != axis
+    ])
+    non_zero = np.all(arr != 0, axis=other_axes)
+
+    # find the first contiguous slice:
+    for i in range(non_zero.shape[0]):
+        if non_zero[i]:
+            if state == 0:
+                state = 1
+                ax_min = i
+                ax_max = i
+            elif state == 1:
+                ax_max = i
+        else:
+            if state == 1:
+                break
+    slice_ = tuple([
+        slice(ax_min, ax_max + 1) if dim == axis else slice(None, None, None)
+        for dim in range(arr.ndim)
+    ])
+    return slice_
+
+
+@numba.njit(cache=True)
+def get_bbox_2d(arr, eps=1e-8) -> tuple[int, ...]:
+    """
+    :meta private:
+    """
+    xmin = arr.shape[1]
+    ymin = arr.shape[0]
+    xmax = 0
+    ymax = 0
+
+    for y in range(arr.shape[0]):
+        for x in range(arr.shape[1]):
+            value = arr[y, x]
+            if abs(value) < eps:
+                continue
+            # got a non-zero value, update indices
+            if x < xmin:
+                xmin = x
+            if x > xmax:
+                xmax = x
+            if y < ymin:
+                ymin = y
+            if y > ymax:
+                ymax = y
+    return int(ymin), int(ymax), int(xmin), int(xmax)
+
+
+def get_bbox(arr: np.ndarray) -> tuple[int, ...]:
+    """
+    :meta private:
+    """
+    if arr.ndim == 2:
+        # 4x faster specialization in numba for 2D:
+        return get_bbox_2d(arr)
+    else:
+        # from https://stackoverflow.com/a/31402351/540644
+        N = arr.ndim
+        out: list[int] = []
+        for ax in itertools.combinations(reversed(range(N)), N - 1):
+            nonzero = np.any(arr, axis=ax)
+            out.extend(np.where(nonzero)[0][[0, -1]])
+        return tuple(out)
+
+
+def get_bbox_slice(arr: np.ndarray) -> tuple[slice, ...]:
+    """
+    :meta private:
+    """
+    bbox = get_bbox(arr)
+    res = []
+    for pair in batched(bbox, 2):
+        res.append(slice(pair[0], pair[1] + 1, None))
+    return tuple(res)
+
+
 class BufferWrapper:
     """
     Helper class to automatically allocate buffers, either for partitions or
@@ -218,8 +366,16 @@ class BufferWrapper:
         :code:`None` means the buffer is used both as a final and intermediate result.
 
         .. versionadded:: 0.7.0
+
     """
-    def __init__(self, kind, extra_shape=(), dtype="float32", where=None, use=None) -> None:
+    def __init__(
+        self,
+        kind: Literal['nav', 'sig', 'single'],
+        extra_shape: tuple[int, ...] = (),
+        dtype="float32",
+        where: Union[None, Literal['device']] = None,
+        use: Optional[Literal['private', 'result_only']] = None,
+    ) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
@@ -228,7 +384,7 @@ class BufferWrapper:
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None
-        self._ds_shape = None
+        self._ds_shape: Optional[Shape] = None
         self._ds_partitions = None
         self._roi = None
         self._roi_is_zero = None
@@ -236,6 +392,9 @@ class BufferWrapper:
         self.use = use
 
     def set_roi(self, roi):
+        """
+        :meta private:
+        """
         if roi is not None:
             roi = roi.reshape((-1,))
         self._roi = roi
@@ -244,10 +403,15 @@ class BufferWrapper:
         """
         Add a list of dataset partitions to the buffer such that
         self.allocate() can make use of the structure
+
+        :meta private:
         """
         self._ds_partitions = partitions
 
     def set_shape_partition(self, partition, roi=None):
+        """
+        :meta private:
+        """
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
@@ -258,7 +422,10 @@ class BufferWrapper:
         self._shape = self._shape_for_kind(self._kind, partition.shape, roi_count)
         self._update_roi_is_zero()
 
-    def set_shape_ds(self, dataset_shape, roi=None):
+    def set_shape_ds(self, dataset_shape: Shape, roi=None):
+        """
+        :meta private:
+        """
         self.set_roi(roi)
         roi_count = None
         if roi is not None:
@@ -273,6 +440,9 @@ class BufferWrapper:
         return self._shape
 
     def _shape_for_kind(self, kind, orig_shape, roi_count=None):
+        """
+        :meta private:
+        """
         if self._kind == "nav":
             if roi_count is None:
                 nav_shape = tuple(orig_shape.nav)
@@ -343,8 +513,119 @@ class BufferWrapper:
         """
         return self._data
 
+    def make_default_mask(
+        self,
+        valid_nav_mask: np.ndarray,
+        dataset_shape: Shape,
+        roi: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        """
+        Create the default valid mask for this buffer kind, given the "upstream" `valid_nav_mask`.
+
+        :meta private:
+        """
+        roi_count = None
+        if roi is not None:
+            roi_count = count_nonzero(roi)
+        shape = self._shape_for_kind(self._kind, dataset_shape.flatten_nav(), roi_count)
+        if self._kind == 'nav':
+            # kind=nav by default uses the `valid_nav_mask`, which we need to
+            # broadcast to take care of `extra_shape`:
+            mask = np.zeros(shape, dtype=bool)
+            extra_compat = tuple([
+                1
+                for _ in range(len(self._extra_shape))
+            ])
+            valid_nav_mask_compat = valid_nav_mask.reshape(valid_nav_mask.shape + extra_compat)
+            mask[:] = valid_nav_mask_compat
+        else:
+            mask = np.ones(shape, dtype=bool)
+        return mask
+
     @property
-    def kind(self):
+    def valid_mask(self) -> np.ndarray:
+        """
+        Returns a boolean array with a mask that indicates which parts of the
+        buffer have valid contents.
+        """
+        if self._ds_shape is None:
+            raise RuntimeError("`valid_mask` called without setting the dataset shape")
+
+        if self._valid_mask is None:
+            raise RuntimeError("`valid_mask` must be set")
+
+        if self._kind == 'nav':
+            # for `nav`, we need to do some gymnastics to un-flatten the nav
+            # part of the shape, and possibly handle `roi`:
+            full_shape = tuple(self._ds_shape.nav) + self._extra_shape
+            if self._roi is not None:
+                flat_shape = tuple(self._ds_shape.flatten_nav().nav) + self._extra_shape
+                valid_mask = np.zeros(full_shape, dtype=bool)
+                valid_mask.reshape(flat_shape)[self._roi] = self._valid_mask
+                return valid_mask
+            return self._valid_mask.reshape(full_shape)
+
+        return self._valid_mask
+
+    @valid_mask.setter
+    def valid_mask(self, valid_nask: np.ndarray):
+        """
+        :meta private:
+        """
+        self._valid_mask = valid_nask
+
+    @property
+    def valid_slice_bounding(self) -> tuple[slice, ...]:
+        """
+        Returns a slice that bounds the valid elements in :attr:`data`.
+
+        Note that this includes all valid elements, but also may contain
+        invalid elements. If you instead want to get a slice that
+        contains no invalid elements (which may cut off some valid elements),
+        use :meth:`get_valid_slice_inner`.
+        """
+        return get_bbox_slice(self.valid_mask)
+
+    def get_valid_slice_inner(self, axis: int = 0) -> tuple[slice, ...]:
+        """
+        Return a slice into :attr:`data` across `axis` that contains only
+        elements marked as valid. This is the "inner" slice, meaning all
+        elements selected by the slice are valid according to :attr:`valid_mask`.
+
+        Parameters
+        ----------
+
+        axis
+            The axis across which we should cut. Other axes are unrestricted in
+            the returned slice. For example, if you have a :code:`(y, x)`
+            result, specifying :code:`axis=0` will give you a slice like
+            :code:`np.s_[y0:y1, :]` where for y in y0..y1, :code:`data[y, :]` is valid
+            according to :attr:`valid_mask`.
+        """
+        return get_inner_slice(self.valid_mask, axis=axis)
+
+    @property
+    def masked_data(self) -> np.ma.MaskedArray:
+        """
+        Same as :attr:`data`, but masked to the valid data, as a numpy
+        masked array.
+        """
+        mask = ~self.valid_mask
+        return np.ma.array(self.data, mask=mask)
+
+    @property
+    def raw_masked_data(self) -> np.ma.MaskedArray:
+        """
+        Same as :attr:`raw_data`, but masked to the valid data, as a numpy
+        masked array.
+        """
+        # NOTE: using `self._valid_mask` instead of `self.valid_mask` to get the
+        # raw flat mask, not the one expanded to the full
+        mask = ~self._valid_mask
+        return np.ma.array(self.raw_data, mask=mask)
+
+    @property
+    def kind(self) -> Literal['nav', 'sig', 'single']:
         """
         Get the kind of this buffer.
 
@@ -383,6 +664,8 @@ class BufferWrapper:
 
         .. versionchanged:: 0.6.0
             Support for allocating on device
+
+        :meta private:
         """
         if self._shape is None:
             raise RuntimeError("cannot allocate: no shape set")
@@ -395,13 +678,22 @@ class BufferWrapper:
         self._data = _z(self._shape, dtype=self._dtype)
 
     def has_data(self):
+        """
+        :meta private:
+        """
         return self._data is not None
 
     @property
     def roi_is_zero(self):
+        """
+        :meta private:
+        """
         return self._roi_is_zero
 
     def _update_roi_is_zero(self):
+        """
+        :meta private:
+        """
         self._roi_is_zero = prod(self._shape) == 0
 
     def _slice_for_partition(self, partition):
@@ -410,22 +702,33 @@ class BufferWrapper:
 
         Because _data is "compressed" if a ROI is set, we can't directly index and must
         calculate a new slice from the ROI.
+
+        :meta private:
         """
         if self._roi is None:
             return partition.slice
         return partition.slice.adjust_for_roi(self._roi)
 
     def get_view_for_dataset(self, dataset):
+        """
+        :meta private:
+        """
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
         return self._data
 
     def _get_slice(self, slice: Slice):
+        """
+        :meta private:
+        """
         real_slice = slice._get()
         shape = tuple(slice.shape) + self.extra_shape
         return self._get_slice_direct(real_slice, shape)
 
     def _get_slice_direct(self, real_slice: slice, shape):
+        """
+        :meta private:
+        """
         result = self._data[real_slice]
         # Defend against #1026 (internal bugs), allow deactivating in
         # optimized builds for performance
@@ -435,6 +738,8 @@ class BufferWrapper:
     def get_view_for_partition(self, partition):
         """
         get a view for a single partition in a whole-result-sized buffer
+
+        :meta private:
         """
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
@@ -450,6 +755,8 @@ class BufferWrapper:
         get a view for a single frame in a partition- or dataset-sized buffer
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
+
+        :meta private:
         """
         if partition.shape.dims != partition.shape.sig.dims + 1:
             raise RuntimeError("partition shape should be flat, is %s" % partition.shape)
@@ -479,6 +786,8 @@ class BufferWrapper:
         get a view for a single tile in a partition-sized buffer
         (partition-sized here means the reduced result for a whole partition,
         not the partition itself!)
+
+        :meta private:
         """
         if self._contiguous_cache:
             raise RuntimeError("Cache is not empty, has to be flushed")
@@ -524,6 +833,7 @@ class BufferWrapper:
         view : np.ndarray
             View into data or contiguous copy if necessary
 
+        :meta private:
         '''
         if self._kind == "sig":
             key = tile.tile_slice._discard_nav_key()
@@ -544,6 +854,9 @@ class BufferWrapper:
     @staticmethod
     @functools.lru_cache(maxsize=512)
     def _slice_from_key(key, extra_shape):
+        """
+        :meta private:
+        """
         origin, shape, sig_dims = key
         expected_shape = shape[-sig_dims:]
         return (
@@ -556,6 +869,8 @@ class BufferWrapper:
         Write back any cached contiguous copies
 
         .. versionadded:: 0.5.0
+
+        :meta private:
         '''
         if self._kind == "sig":
             for key, view in self._contiguous_cache.items():
@@ -578,6 +893,8 @@ class BufferWrapper:
     def export(self):
         '''
         Convert device array to NumPy array for pickling and merging
+
+        :meta private:
         '''
         self._data = to_numpy(self._data)
 
@@ -594,6 +911,8 @@ class BufferWrapper:
         data should be any array-like object
 
         Will perform checking for shape and dtype.
+
+        :meta private:
         """
         if self._data is None:
             shape = self._shape
@@ -613,6 +932,8 @@ class BufferWrapper:
         Define the type of Buffer used to return final UDF results
 
         More specialised buffers can override this
+
+        :meta private:
         """
         return PreallocBufferWrapper
 

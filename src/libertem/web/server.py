@@ -22,6 +22,7 @@ import tornado.ioloop
 import tornado.escape
 from tornado import httputil
 
+from ..common.async_utils import adjust_event_loop_policy
 from .shutdown import ShutdownHandler
 from .state import SharedState, ExecutorState
 from .config import ConfigHandler, ClusterDetailHandler
@@ -221,6 +222,7 @@ def run(
         format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
     )
 
+    adjust_event_loop_policy()
     loop = asyncio.get_event_loop()
 
     # shared state:

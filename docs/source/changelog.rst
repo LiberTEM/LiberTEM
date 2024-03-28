@@ -61,7 +61,7 @@ Web Interface
   (:issue:`1085`, :pr:`1518`)
 - When launching :code:`libertem-server` additional parameters are now accepted
   to preload a cluster with a given number of CPU and GPU workers, and also preload data. See
-  `the documentation <https://libertem.github.io/LiberTEM/usage.html#configuring-the-libertem-server-advanced>`_
+  `the server documentation <https://libertem.github.io/LiberTEM/usage.html#configuring-the-libertem-server-advanced>`_
   for more detail.(:issue:`1419`, :pr:`1535`)
 
 Descan compensation
@@ -81,7 +81,7 @@ UDF Interface
 - The UDF interface was extended to allow a UDF to declare
   multiple processing methods (:code:`process_tile`, :code:`process_frame` etc)
   and choose at runtime the most appropriate one to use. See
-  `the documentation <https://libertem.github.io/LiberTEM/udf/advanced.html#precedence>`_
+  `the UDF documentation <https://libertem.github.io/LiberTEM/udf/advanced.html#precedence>`_
   for more detail. (:issue:`1508`, :pr:`1509`)
 
 Misc

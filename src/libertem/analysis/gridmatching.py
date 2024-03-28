@@ -1,5 +1,14 @@
+import warnings
+
 import numpy as np
 from libertem.utils import calc_coords, within_frame
+
+
+warnings.warn(
+    'gridmatching and fullmatch are moved to '
+    'libertem_blobfinder.common.',
+    DeprecationWarning
+)
 
 
 class CorrelationResult:

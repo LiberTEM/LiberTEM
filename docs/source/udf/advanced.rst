@@ -387,6 +387,12 @@ method, which is available in :meth:`~libertem.udf.UDF.merge` and
 already-processed navigation elements.
 
 .. versionadded:: 0.14.0
+    
+   In previous versions, only :attr:`libertem.udf.base.UDFResults.damage` was
+   available for inspecting the mask of already processed data.
+   This did not account for differences between buffers, and was only available
+   when iterating over results, i.e. with :meth:`~libertem.api.Context.run_udf_iter`.
+
 
 AUX data
 --------

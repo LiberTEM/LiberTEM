@@ -280,10 +280,10 @@ Valid data masking
 ------------------
 
 In various intermediate states, result buffers may be only partially filled
-with valid data. This comes from the fact that we split the data set into
-partitions, and then merge results together as they become available.
-Also, when doing live processing, you may have a direct mapping of acquired
-detector frames to result items, where naturally only positions where we have
+with valid data. This comes from the fact that we split the dataset into
+partitions and then merge results together only as they become available.
+When doing live processing we also have the constraint that not all frames
+have been acquired yet, and so naturally only positions where we have
 received and processed data can be valid in the corresponding result buffer.
 
 Handling partially valid data becomes important when running the UDF. For example,
@@ -331,9 +331,12 @@ Buffer :code:`kind` Default valid mask
 =================== ==================
 
 In your UDF, you can also customize the valid mask that should be returned.
-This is useful if there is no direct mapping between the already processed
-navigation elements and the valid results, or if you are using a :code:`kind='single'`
-buffer which is progressively built up, to override the default of all-valid.
+This is useful if the dataset might contain invalid frames discovered at runtime,
+or if intermediate results cannot be fully valid due to missing information (e.g.
+calculating gradients across partition boundaries). Another example is when using
+a :code:`kind='single'` buffer which is progressively computed; valid-by-default
+might be incorrect if not enough information has been seen (e.g. statistical measures
+or a count of values).
 
 Customizing the valid data mask is done in :meth:`~libertem.udf.UDF.get_results`
 with the :meth:`~libertem.udf.UDF.with_mask` method. For example:
@@ -341,6 +344,7 @@ with the :meth:`~libertem.udf.UDF.with_mask` method. For example:
 .. testsetup::
 
     from libertem.udf import UDF
+    from libertem.common.math import count_nonzero    
 
 
 .. testcode::

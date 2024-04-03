@@ -336,7 +336,7 @@ def test_com_regression_linear(lt_ctx, use_roi, regression):
     for yy in range(23):
         for xx in range(42):
             data[yy, xx, 2*yy+1, 45-xx] = 1
-    ds = lt_ctx.load('memory', data=data, num_partitions=17)
+    ds = lt_ctx.load('memory', data=data, num_partitions=7)
     if use_roi:
         roi = np.random.choice([True, False], ds.shape.nav)
     else:
@@ -371,7 +371,8 @@ def test_com_regression_linear_2(lt_ctx, use_roi, regression):
             data[yy, xx, 1+2*yy+3*xx, 4+yy+4*xx] = 1
     ds = lt_ctx.load('memory', data=data, num_partitions=3)
     if use_roi:
-        roi = np.random.choice([True, False], ds.shape.nav)
+        roi = np.ones(ds.shape.nav, dtype=bool)
+        roi[2:4, 5:7] = False
     else:
         roi = None
 

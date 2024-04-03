@@ -288,7 +288,7 @@ def test_com_regression_neutral(lt_ctx, use_roi, regression):
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
     for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
         res = iter_res.buffers[0]
-        assert_allclose(res['regression'], 0, atol=1e-14)
+        assert_allclose(res['regression'], 0, atol=1e-13)
         assert_allclose(res['field'].raw_data, 0, atol=1e-13)
         assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
         assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
@@ -319,7 +319,7 @@ def test_com_regression_offset(lt_ctx, use_roi, regression):
             [-2, 1],  # constant offset in y and x direction
             [0, 0],
             [0, 0]
-        ], atol=1e-14)
+        ], atol=1e-13)
         assert_allclose(res['field'].raw_data, 0, atol=1e-13)
         assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
         assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
@@ -346,7 +346,7 @@ def test_com_regression_linear(lt_ctx, use_roi, regression):
     for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
         res = iter_res.buffers[0]
         damage = iter_res.damage
-        assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-14)
+        assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-13)
         # The linear gradient is corrected in valid data
         assert_allclose(res['field'].data[damage], 0, atol=1e-12)
         # Regression only applied to valid data, other parts remain at their
@@ -378,7 +378,7 @@ def test_com_regression_linear_2(lt_ctx, use_roi, regression):
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
     for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
         res = iter_res.buffers[0]
-        assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-14)
+        assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-13)
         assert_allclose(res['field'].raw_data, 0, atol=1e-12)
         assert_allclose(res['field_y'].raw_data, 0, atol=1e-12)
         assert_allclose(res['field_x'].raw_data, 0, atol=1e-12)

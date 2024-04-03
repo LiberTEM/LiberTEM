@@ -277,32 +277,35 @@ def test_com_regression_neutral(lt_ctx, use_roi, regression):
     for yy in range(23):
         for xx in range(42):
             data[yy, xx, 3, 3] = 1
-    ds = lt_ctx.load('memory', data=data)
+    # Make sure the first partition extends in nav y direction,
+    # so num_partitions smaller than y nav shape
+    ds = lt_ctx.load('memory', data=data, num_partitions=17)
     if use_roi:
         roi = np.random.choice([True, False], ds.shape.nav)
     else:
         roi = None
 
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
-    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
-    assert_allclose(res['regression'], 0, atol=1e-14)
-    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
-    assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
-    assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
+    for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
+        res = iter_res.buffers[0]
+        assert_allclose(res['regression'], 0, atol=1e-14)
+        assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+        assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
+        assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
 
 
 @pytest.mark.parametrize(
     'use_roi', (True, False)
 )
 @pytest.mark.parametrize(
-    'regression', (0, [[-2, 1], [0, 0], [0, 0]])
+    'regression', (0, 1, [[-2, 1], [0, 0], [0, 0]])
 )
 def test_com_regression_offset(lt_ctx, use_roi, regression):
     data = np.zeros((23, 42, 23, 42))
     for yy in range(23):
         for xx in range(42):
             data[yy, xx, 1, 4] = 1
-    ds = lt_ctx.load('memory', data=data)
+    ds = lt_ctx.load('memory', data=data, num_partitions=17)
     if use_roi:
         roi = np.random.choice([True, False], ds.shape.nav)
     else:
@@ -310,14 +313,16 @@ def test_com_regression_offset(lt_ctx, use_roi, regression):
 
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
     res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
-    assert_allclose(res['regression'].data, [
-        [-2, 1],  # constant offset in y and x direction
-        [0, 0],
-        [0, 0]
-    ], atol=1e-14)
-    assert_allclose(res['field'].raw_data, 0, atol=1e-13)
-    assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
-    assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
+    for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
+        res = iter_res.buffers[0]
+        assert_allclose(res['regression'].data, [
+            [-2, 1],  # constant offset in y and x direction
+            [0, 0],
+            [0, 0]
+        ], atol=1e-14)
+        assert_allclose(res['field'].raw_data, 0, atol=1e-13)
+        assert_allclose(res['field_y'].raw_data, 0, atol=1e-13)
+        assert_allclose(res['field_x'].raw_data, 0, atol=1e-13)
 
 
 @pytest.mark.parametrize(
@@ -331,18 +336,24 @@ def test_com_regression_linear(lt_ctx, use_roi, regression):
     for yy in range(23):
         for xx in range(42):
             data[yy, xx, 2*yy+1, 45-xx] = 1
-    ds = lt_ctx.load('memory', data=data)
+    ds = lt_ctx.load('memory', data=data, num_partitions=17)
     if use_roi:
         roi = np.random.choice([True, False], ds.shape.nav)
     else:
         roi = None
 
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
-    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
-    assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-14)
-    assert_allclose(res['field'].raw_data, 0, atol=1e-12)
-    assert_allclose(res['field_y'].raw_data, 0, atol=1e-12)
-    assert_allclose(res['field_x'].raw_data, 0, atol=1e-12)
+    for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
+        res = iter_res.buffers[0]
+        damage = iter_res.damage
+        assert_allclose(res['regression'].data, [[-2, 42], [2, 0], [0, -1]], atol=1e-14)
+        # The linear gradient is corrected in valid data
+        assert_allclose(res['field'].data[damage], 0, atol=1e-12)
+        # Regression only applied to valid data, other parts remain at their
+        # default value, 0 in this case
+        assert_allclose(res['field'].raw_data[~damage.raw_data], 0, atol=1e-12)
+        assert_allclose(res['field_y'].data[damage], 0, atol=1e-12)
+        assert_allclose(res['field_x'].data[damage], 0, atol=1e-12)
 
 
 @pytest.mark.parametrize(
@@ -358,18 +369,19 @@ def test_com_regression_linear_2(lt_ctx, use_roi, regression):
             # dy/dy: 2, dx/dy: 1
             # dy/dx: 3, dx/dx: 4
             data[yy, xx, 1+2*yy+3*xx, 4+yy+4*xx] = 1
-    ds = lt_ctx.load('memory', data=data)
+    ds = lt_ctx.load('memory', data=data, num_partitions=3)
     if use_roi:
         roi = np.random.choice([True, False], ds.shape.nav)
     else:
         roi = None
 
     udf = com.CoMUDF.with_params(cy=3, cx=3, regression=regression)
-    res = lt_ctx.run_udf(dataset=ds, udf=udf, roi=roi)
-    assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-14)
-    assert_allclose(res['field'].raw_data, 0, atol=1e-12)
-    assert_allclose(res['field_y'].raw_data, 0, atol=1e-12)
-    assert_allclose(res['field_x'].raw_data, 0, atol=1e-12)
+    for iter_res in lt_ctx.run_udf_iter(dataset=ds, udf=udf, roi=roi):
+        res = iter_res.buffers[0]
+        assert_allclose(res['regression'].data, [[-2, 1], [2, 1], [3, 4]], atol=1e-14)
+        assert_allclose(res['field'].raw_data, 0, atol=1e-12)
+        assert_allclose(res['field_y'].raw_data, 0, atol=1e-12)
+        assert_allclose(res['field_x'].raw_data, 0, atol=1e-12)
 
 
 def test_invalid_regression_val(lt_ctx, npy_8x8x8x8_ds):

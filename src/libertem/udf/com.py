@@ -638,13 +638,14 @@ class CoMUDF(UDF):
             inp = None
         return result, inp
 
-    def apply_mean_regression(self, regression, field_inout):
-        field_inout -= regression[0]
+    def apply_mean_regression(self, regression, field_inout, valid_mask):
+        field_inout[valid_mask] -= regression[0]
 
-    def apply_lin_regression(self, regression, inp, field_inout):
-        corr = inp.reshape((-1, 3)) @ regression
-        corr = corr.reshape(field_inout.shape)
-        field_inout -= corr
+    def apply_lin_regression(self, regression, inp, field_inout, valid_mask):
+        valid_inp = inp[valid_mask]
+        # fancy indexing flattens the nav shape, so it fits
+        corr = valid_inp @ regression
+        field_inout[valid_mask] -= corr
 
     def get_results(self):
         com_params = self.get_params()
@@ -684,14 +685,11 @@ class CoMUDF(UDF):
         )
         regression, inp = self.get_regression(field, valid_mask=valid_mask)
 
+        # inp not None indicates that we should apply a linear regression
         if inp is not None:
-            self.apply_lin_regression(regression, inp, field)
+            self.apply_lin_regression(regression, inp, field, valid_mask)
         elif not np.allclose(regression[0], 0):
-            self.apply_mean_regression(regression, field)
-
-        # zero the field values inside of the invalid-mask
-        # as it might be non-zero from the applied regression:
-        # field[np.broadcast_to(mask, field.shape)] = 0
+            self.apply_mean_regression(regression, field, valid_mask)
 
         results = {
             'raw_shifts': raw_shifts,

@@ -61,7 +61,7 @@ Web Interface
   (:issue:`1085`, :pr:`1518`)
 - When launching :code:`libertem-server` additional parameters are now accepted
   to preload a cluster with a given number of CPU and GPU workers, and also preload data. See
-  `the documentation <https://libertem.github.io/LiberTEM/usage.html#configuring-the-libertem-server-advanced>`_
+  `the libertem-server documentation <https://libertem.github.io/LiberTEM/usage.html#configuring-the-libertem-server-advanced>`_
   for more detail.(:issue:`1419`, :pr:`1535`)
 
 Descan compensation
@@ -130,7 +130,7 @@ Many thanks to everyone who has contributed to this release!
 
 The 0.12.0 release is also the first major release for which
 LiberTEM is available on `conda-forge <https://anaconda.org/conda-forge/libertem>`_.
-See `the documentation <https://libertem.github.io/LiberTEM/install.html>`_
+See `the installation documentation <https://libertem.github.io/LiberTEM/install.html>`_
 for installation instructions using :code:`pip` or :code:`conda`.
 
 Features

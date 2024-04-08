@@ -14,7 +14,18 @@ EMPAD_DETECTOR_SIZE = (128, 128)
 EMPAD_DETECTOR_SIZE_RAW = (130, 128)
 
 
-def get_params_from_xml(path):
+def get_params_from_xml(path, scan_parameters_mode="acquire"):
+    """
+    Parameters
+    ----------
+
+    path
+        The path to the XML file (relative or absolute)
+
+    scan_parameters_mode
+        Either "acquire" or "search" - for some files, the raw
+        data corresponds to the "search" scan parameters.
+    """
     em = ET.parse(path)
     root = em.getroot()
     raw_filename = root.find("raw_file").attrib['filename']
@@ -26,12 +37,12 @@ def get_params_from_xml(path):
 
     typ = root.find("type")
 
+    # assume "scan" if no type is given:
     if typ is None or typ.text == 'scan':
-        # assume "scan":
         scan_parameters = [
             elem
             for elem in root.findall("scan_parameters")
-            if elem.attrib["mode"] == "acquire"
+            if elem.attrib["mode"] == scan_parameters_mode
         ]
 
         node_scan_x = scan_parameters[0].find("scan_resolution_x")
@@ -148,9 +159,12 @@ class EMPADDataSet(DataSet):
         self._path_raw = None
         self._meta = None
 
-    def _init_from_xml(self, path):
+    def _init_from_xml(self, path, shape_fixup: bool = False):
         try:
-            return get_params_from_xml(path)
+            mode = "acquire"
+            if shape_fixup:
+                mode = "search"
+            return get_params_from_xml(path, scan_parameters_mode=mode)
         except Exception as e:
             raise DataSetException(
                 "could not initialize EMPAD file; error: %s" % (
@@ -175,9 +189,32 @@ class EMPADDataSet(DataSet):
             self._filesize = executor.run_function(self._get_filesize)
         except OSError as e:
             raise DataSetException(f"could not open file {self._path_raw}: {str(e)}")
+
+        itemsize = int(np.dtype("float32").itemsize)
+
+        # consistency check: see that the file size matches the detected nav
+        # shape, otherwise, re-run with fixup for #1617
+        if nav_shape_from_XML is not None:
+            expected_size = (
+                prod(EMPAD_DETECTOR_SIZE_RAW) * prod(nav_shape_from_XML) * itemsize
+            )
+            if self._filesize != expected_size:
+                _, nav_shape_from_XML = executor.run_function(
+                    self._init_from_xml, self._path, shape_fixup=True,
+                )
+            # re-run the check...
+            expected_size = (
+                prod(EMPAD_DETECTOR_SIZE_RAW) * prod(nav_shape_from_XML) * itemsize
+            )
+            if self._filesize != expected_size:
+                raise ValueError(
+                    f"RAW data file looks incomplete; filesize={self._filesize} "
+                    f"vs expected size {expected_size}"
+                )
+
         self._image_count = int(
             self._filesize / (
-                int(np.dtype("float32").itemsize) * int(
+                itemsize * int(
                     prod(EMPAD_DETECTOR_SIZE_RAW)
                 )
             )
@@ -186,8 +223,8 @@ class EMPADDataSet(DataSet):
             self._nav_shape = nav_shape_from_XML
         elif self._nav_shape is None and nav_shape_from_XML is None:
             raise ValueError(
-                    "either nav_shape needs to be passed, or path needs to point to the .xml file"
-                )
+                "either nav_shape needs to be passed, or path needs to point to the .xml file"
+            )
         self._nav_shape_product = int(prod(self._nav_shape))
         if nav_shape_from_XML:
             self._image_count = int(prod(nav_shape_from_XML))

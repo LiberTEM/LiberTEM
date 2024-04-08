@@ -359,6 +359,9 @@ with the :meth:`~libertem.udf.UDF.with_mask` method. For example:
                 nav_shape = (count_nonzero(self.meta.roi),)
 
             return {
+                # Emulate a kind='nav' result buffer using a kind='sig' buffer for demonstration.
+                # In the real world, such result buffers can be found in the implementations of ptychography
+                # and iCoM since they reconstruct the object in Fourier space
                 'custom_2d': self.buffer(kind='single', dtype=np.float32, extra_shape=nav_shape),
             }
 

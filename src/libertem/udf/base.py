@@ -1597,7 +1597,37 @@ class UDF(UDFBase):
         pass
 
     @staticmethod
-    def with_mask(data, mask: Union[np.ndarray, bool]) -> ArrayWithMask:
+    def with_mask(data: np.ndarray, mask: Union[np.ndarray, bool]) -> ArrayWithMask:
+        """
+        Add a mask to indicate the valid parts in a result. The mask
+        should be an array of bools, with a shape matching
+        the `data` array. The mask should have `True` in positions
+        that are valid, and `False` otherwise.
+
+        You can pass `mask=True` or `mask=False` as shortcuts for
+        all-valid or all-invalid, and also pass in masks that can
+        be broadcast to `data`.
+
+        This should be used in :meth:`get_results`.
+
+        See the :ref:`udf valid data masking` section in the
+        documentation for details and more examples.
+
+        Example
+        -------
+
+        >>> class SomeUDF(UDF):
+        ...     # ... other methods omitted for brevity ...
+        ...
+        ...     def get_results(self):
+        ...         return {
+        ...             'some_result': self.with_mask(
+        ...                 data=self.results.some_result,
+        ...                 mask=False,
+        ...             ),
+        ...         }
+        ...
+        """
         return ArrayWithMask(data, mask=mask)
 
     def buffer(

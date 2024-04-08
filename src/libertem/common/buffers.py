@@ -203,7 +203,10 @@ class ArrayWithMask(Generic[T]):
     """
 
     def __init__(self, arr: T, mask: Union[np.ndarray, bool]):
-        if isinstance(mask, int):
+        """
+        :meta private:
+        """
+        if isinstance(mask, bool):
             mask = np.array([mask])
         try:
             mask = np.broadcast_to(mask, arr.shape)
@@ -211,6 +214,10 @@ class ArrayWithMask(Generic[T]):
             raise InvalidMaskError(
                 f"`arr` and `mask` must have compatible shapes "
                 f"(arr.shape={arr.shape} vs mask.shape={mask.shape})"
+            )
+        if mask.dtype != np.dtype('bool'):
+            raise InvalidMaskError(
+                f"`mask` should have `dtype=bool` (have {mask.dtype})"
             )
         self._arr = arr
         self._mask = mask

@@ -276,6 +276,8 @@ by the ROI.
     node, too. Views for aux data are set correctly on the main node. Previously,
     it was only executed on the worker nodes.
 
+.. _`udf valid data masking`:
+
 Valid data masking
 ------------------
 

@@ -37,7 +37,6 @@ class ValidNavMaskUDF(UDF):
         if self.params.debug:
             print("get_results", self.meta.get_valid_nav_mask())
         results = super().get_results()
-        # import pdb; pdb.set_trace()
         return results
 
     def process_frame(self, frame):
@@ -58,10 +57,9 @@ class ValidNavMaskUDF(UDF):
         dest.buf_nav[:] = src.buf_nav
 
 
-def test_valid_nav_mask_available():
+def test_valid_nav_mask_available(lt_ctx):
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
-    for res in ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF()):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF()):
         # TODO: maybe compare damage we got in `get_results` with `res.damage` here?
         pass
 
@@ -83,21 +81,19 @@ def test_valid_nav_mask_delayed(delayed_executor, with_roi: bool):
         )
 
 
-def test_valid_nav_mask_available_roi():
+def test_valid_nav_mask_available_roi(lt_ctx):
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
     roi = np.zeros((16, 16), dtype=bool)
     roi[4:-4, 4:-4] = True
-    for res in ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(debug=False), roi=roi):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(debug=False), roi=roi):
         print("damage", res.damage.data)
         print("raw damage", res.damage.raw_data)
 
 
-def test_valid_nav_mask_available_random_roi():
+def test_valid_nav_mask_available_random_roi(lt_ctx):
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
     roi = np.random.choice([True, False], size=(16, 16))
-    for res in ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(debug=False), roi=roi):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=ValidNavMaskUDF(debug=False), roi=roi):
         print("damage", res.damage.data)
         print("raw damage", res.damage.raw_data)
 
@@ -117,8 +113,8 @@ class AdjustValidMaskUDF(UDF):
         custom_mask[:, 32:] = True
 
         return {
-            'all_valid': self.with_mask(self.results.all_valid, mask=1),
-            'all_invalid': self.with_mask(self.results.all_invalid, mask=0),
+            'all_valid': self.with_mask(self.results.all_valid, mask=True),
+            'all_invalid': self.with_mask(self.results.all_invalid, mask=False),
             'keep': self.results.keep,
             'nav_with_extra': self.results.nav_with_extra,
             'custom_2d': self.with_mask(self.results.custom_2d, mask=custom_mask),
@@ -145,13 +141,13 @@ class AdjustValidMaskUDF(UDF):
 @pytest.mark.parametrize(
     "executor", ["inline", "delayed"],
 )
-def test_adjust_valid_mask(with_roi: bool, executor: str, delayed_executor):
+def test_adjust_valid_mask(with_roi: bool, executor: str, delayed_executor, lt_ctx):
     """
     Test that we can adjust the valid mask in `get_results`
     """
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
     if executor == "inline":
-        ctx = Context.make_with('inline')
+        ctx = lt_ctx
     else:
         ctx = Context(executor=delayed_executor)
 
@@ -220,18 +216,32 @@ class CustomMaskFromParams(UDF):
     (1, 1, 4),
     (1, 1, 1, 1),  # that's too many...
 ])
-def test_custom_mask_invalid(mask_shape):
+def test_custom_mask_invalid_shape(mask_shape, lt_ctx):
     """
     Examples of mask shapes that are incompatible with the 'custom' buffer
     defined above. Make sure these raise an appropriate exception.
     """
     dataset = MemoryDataSet(datashape=[16, 16, 4, 4], num_partitions=4)
-    ctx = Context.make_with('inline')
 
     mask = np.zeros(mask_shape, dtype=bool)
 
     with pytest.raises(InvalidMaskError):
-        for res in ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
+        for res in lt_ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
+            pass
+
+
+@pytest.mark.parametrize("mask_dtype", [
+    int,
+    "float32",
+    "complex64",
+    # ...
+])
+def test_custom_mask_invalid_dtype(mask_dtype, lt_ctx):
+    dataset = MemoryDataSet(datashape=[16, 16, 4, 4], num_partitions=4)
+    mask = np.zeros((16, 16), dtype=mask_dtype)
+
+    with pytest.raises(InvalidMaskError):
+        for res in lt_ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
             pass
 
 
@@ -243,28 +253,26 @@ def test_custom_mask_invalid(mask_shape):
     (64, 64, 1),
     (64, 64, 3),
 ])
-def test_custom_mask_valid(mask_shape):
+def test_custom_mask_valid(mask_shape, lt_ctx):
     """
     Examples of mask shapes that should be compatible with the shape of the 'custom'
     buffer defined in the `CustomMaskFromParams` UDF.
     """
     dataset = MemoryDataSet(datashape=[16, 16, 4, 4], num_partitions=4)
-    ctx = Context.make_with('inline')
 
     mask = np.zeros(mask_shape, dtype=bool)
 
-    for res in ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
         pass
 
 
-def test_valid_mask_slice_bounding():
+def test_valid_mask_slice_bounding(lt_ctx):
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
 
     custom_expected = np.zeros((64, 64), dtype=bool)
     custom_expected[:, 32:] = True
 
-    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
         # invariants that hold for any intermediate results:
         # all-valid result:
         buf = res.buffers[0]['all_valid']
@@ -283,14 +291,13 @@ def test_valid_mask_slice_bounding():
         assert buf.valid_slice_bounding == np.s_[0:64, 32:64]
 
 
-def test_masked_data():
+def test_masked_data(lt_ctx):
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
 
     custom_expected = np.zeros((64, 64), dtype=bool)
     custom_expected[:, 32:] = True
 
-    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF()):
         for k, buf in res.buffers[0].items():
             # "checksum" over accessing via data[valid_mask] vs. masked_data
             masked_sum = buf.masked_data.sum()  # a value or the marker `masked`
@@ -301,16 +308,15 @@ def test_masked_data():
                 or np.allclose(buf.masked_data.mask, True)
 
 
-def test_raw_masked_data():
+def test_raw_masked_data(lt_ctx):
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
-    ctx = Context.make_with('inline')
 
     roi = np.random.choice(a=[True, False], size=(16, 16))
 
     custom_expected = np.zeros((64, 64), dtype=bool)
     custom_expected[:, 32:] = True
 
-    for res in ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF(), roi=roi):
+    for res in lt_ctx.run_udf_iter(dataset=dataset, udf=AdjustValidMaskUDF(), roi=roi):
         for k, buf in res.buffers[0].items():
             # "checksum" over accessing via data[valid_mask] vs. masked_data
             masked_sum = buf.raw_masked_data.sum()  # a value or the marker `masked`
@@ -457,13 +463,13 @@ class CustomValidMask(UDF):
 @pytest.mark.parametrize(
     "executor", ["inline", "delayed"],
 )
-def test_adjust_valid_mask_extra(with_roi: bool, executor: str, delayed_executor):
+def test_adjust_valid_mask_extra(with_roi: bool, executor: str, delayed_executor, lt_ctx):
     """
     Test that we can adjust the valid mask in `get_results`
     """
     dataset = MemoryDataSet(datashape=[16, 16, 32, 32], num_partitions=4)
     if executor == "inline":
-        ctx = Context.make_with('inline')
+        ctx = lt_ctx
     else:
         ctx = Context(executor=delayed_executor)
 

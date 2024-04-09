@@ -14,7 +14,7 @@ def event_loop_policy(request):
 
 
 @pytest.mark.asyncio
-async def test_libertem_server_cli_startup():
+async def test_libertem_server_cli_startup(http_client):
     CTRL_C = signal.SIGINT
     # make sure we can start `libertem-server` and stop it again using ctrl+c
     # this is kind of a smoke test, which should cover the main cli functions.
@@ -36,6 +36,10 @@ async def test_libertem_server_cli_startup():
         print('Line:', line, end='')
         if 'LiberTEM listening on' in line:
             break
+
+    addr = line[line.find("http"):].strip()
+    async with http_client.get(addr) as response:
+        assert response.status == 200, "Failed to GET from libertem-server"
 
     async def _debug():
         while True:

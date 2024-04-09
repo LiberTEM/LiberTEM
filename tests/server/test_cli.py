@@ -38,7 +38,7 @@ async def test_libertem_server_cli_startup(http_client):
             break
 
     addr = line[line.find("http"):].strip()
-    async with http_client.get(addr) as response:
+    async with http_client.get(addr, timeout=30.0) as response:
         assert response.status == 200, "Failed to GET from libertem-server"
 
     async def _debug():

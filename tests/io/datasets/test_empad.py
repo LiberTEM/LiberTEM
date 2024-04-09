@@ -29,6 +29,9 @@ EMPAD_XML_SERIES = os.path.join(EMPAD_TESTDATA_PATH, 'acquisition_series_pretty.
 EMPAD_XML_BROKEN_PARAMS = os.path.join(
     EMPAD_TESTDATA_PATH, 'Magical_DataSet/acquisition_1/acquisition_1.xml',
 )
+EMPAD_XML_BROKEN_PARAMS_BAD = os.path.join(
+    EMPAD_TESTDATA_PATH, 'Magical_DataSet/acquisition_1/acquisition_1_bad.xml',
+)
 HAVE_EMPAD_TESTDATA = os.path.exists(EMPAD_RAW) and os.path.exists(EMPAD_XML)
 
 pytestmark = pytest.mark.skipif(not HAVE_EMPAD_TESTDATA, reason="need EMPAD testdata")  # NOQA
@@ -83,6 +86,13 @@ def test_new_empad_xml(lt_ctx):
 def test_empad_broken_scan_parameters(lt_ctx):
     ds = lt_ctx.load("empad", path=EMPAD_XML_BROKEN_PARAMS)
     assert ds.shape.to_tuple() == (128, 16, 128, 128)
+
+
+def test_empad_broken_scan_parameters_bad(lt_ctx):
+    with pytest.raises(ValueError) as excinfo:
+        lt_ctx.load("empad", path=EMPAD_XML_BROKEN_PARAMS_BAD)
+    assert "(128, 17)" in str(excinfo.value)
+    assert "(256, 256)" in str(excinfo.value)
 
 
 def test_series_acquisition_xml():

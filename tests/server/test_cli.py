@@ -37,10 +37,6 @@ async def test_libertem_server_cli_startup(http_client):
         if 'LiberTEM listening on' in line:
             break
 
-    addr = line[line.find("http"):].strip()
-    async with http_client.get(addr, timeout=30.0) as response:
-        assert response.status == 200, "Failed to GET from libertem-server"
-
     async def _debug():
         while True:
             line = await asyncio.wait_for(p.stderr.readline(), 5)
@@ -52,6 +48,10 @@ async def test_libertem_server_cli_startup(http_client):
     debug_task = asyncio.ensure_future(_debug())
 
     try:
+        addr = line[line.find("http"):].strip()
+        async with http_client.get(addr, timeout=30.0) as response:
+            assert response.status == 200, "Failed to GET from libertem-server"
+
         # windows likes to be special, so we just kill the subprocess instead:
         if sys.platform.startswith("win"):
             if p.returncode is None:

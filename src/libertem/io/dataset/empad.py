@@ -198,19 +198,25 @@ class EMPADDataSet(DataSet):
             expected_size = (
                 prod(EMPAD_DETECTOR_SIZE_RAW) * prod(nav_shape_from_XML) * itemsize
             )
+            alternate_size = None
+            alternate_nav_shape_from_XML = None
             if self._filesize != expected_size:
-                _, nav_shape_from_XML = executor.run_function(
+                # Extract alternate nav shape with shape_fixup=True
+                _, alternate_nav_shape_from_XML = executor.run_function(
                     self._init_from_xml, self._path, shape_fixup=True,
                 )
-            # re-run the check...
-            expected_size = (
-                prod(EMPAD_DETECTOR_SIZE_RAW) * prod(nav_shape_from_XML) * itemsize
-            )
-            if self._filesize != expected_size:
-                raise ValueError(
-                    f"RAW data file looks incomplete; filesize={self._filesize} "
-                    f"vs expected size {expected_size}"
+                alternate_size = (
+                    prod(EMPAD_DETECTOR_SIZE_RAW) * prod(alternate_nav_shape_from_XML) * itemsize
                 )
+            if self._filesize != expected_size and self._filesize != alternate_size:
+                raise ValueError(
+                    f"RAW data file size mismatch; filesize={self._filesize} "
+                    f"vs expected size {expected_size} for nav {nav_shape_from_XML} "
+                    f"or alternate {alternate_size} for nav {alternate_nav_shape_from_XML}."
+                )
+            elif self._filesize == alternate_size:
+                # apply mitigation
+                nav_shape_from_XML = alternate_nav_shape_from_XML
 
         self._image_count = int(
             self._filesize / (

@@ -2,7 +2,8 @@ import logging
 import warnings
 warnings.warn(
     'gridmatching and fullmatch are moved to '
-    'libertem_blobfinder.common in libertem-blobfinder>=0.6.',
+    'libertem_blobfinder.common in libertem-blobfinder>=0.6 '
+    'and are slated for removal in LiberTEM 0.16.',
     DeprecationWarning
 )
 

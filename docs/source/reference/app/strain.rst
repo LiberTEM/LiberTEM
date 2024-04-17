@@ -21,6 +21,6 @@ Matching
 
 .. deprecated:: 0.14.0
    The modules :code:`libertem.analysis.gridmatching` and :code:`libertem.analysis.fullmatch`
-   that contain classes and helper functions tp extract and manipulate lattices from correlation results
-   are moved to :mod:`libertem_blobfinder.common.gridmatching` and :mod:`libertem_blobfinder.common.fullmatch`,
-   and will be removed in a later release.
+   that contain classes and helper functions to extract and manipulate lattices from correlation results
+   are moved to :mod:`libertem_blobfinder.common.gridmatching` and :mod:`libertem_blobfinder.common.fullmatch`
+   since :mod:`libertem-blobfinder`` version 0.6, and are slated for removal in LiberTEM 0.16.

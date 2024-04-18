@@ -1,4 +1,4 @@
-sphinx>=5
+sphinx>=5,<7.3
 sphinx-autobuild
 sphinxcontrib-bibtex>=2
 # https://github.com/sloria/sphinx-issues/issues/125

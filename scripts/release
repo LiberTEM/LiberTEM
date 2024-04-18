@@ -481,10 +481,8 @@ def upload_to_pypi(verbose, user, password):
 
     if release == "dev":
         raise Exception("won't upload dev release to pypi")
-    elif release == "rc":
-        cmd.extend(["--repository-url", "https://test.pypi.org/legacy/"])
-    elif release == "release":
-        pass
+    elif release in ["rc", "release"]:
+        pass  # both upload to production pypi
     else:
         raise Exception("unknown release kind %s" % release)
 
@@ -519,8 +517,6 @@ def is_rc(ctx):
               help="Build an AppImage")
 @click.option('--pypi-user', type=str, show_envvar=True)
 @click.option('--pypi-password', type=str, show_envvar=True)
-@click.option('--pypi-test-user', type=str, show_envvar=True)
-@click.option('--pypi-test-password', type=str, show_envvar=True)
 @click.option('--token', type=str, show_envvar=True,
               help='Github token for creating releases')
 @click.option('--zenodo-token', type=str, show_envvar=True,
@@ -529,8 +525,7 @@ def is_rc(ctx):
               help='Zenodo production parent deposition id')
 @click.pass_context
 def upload(ctx, dry_run, build_appimage, pypi_user, pypi_password,
-           pypi_test_user, pypi_test_password, token,
-           zenodo_token, zenodo_parent):
+           token, zenodo_token, zenodo_parent):
     """
     prepare, build and upload to github, zenodo and pypi
     (if release candidate, to the test instance(s))
@@ -544,14 +539,9 @@ def upload(ctx, dry_run, build_appimage, pypi_user, pypi_password,
     is_rc = current_version_tag_is_rc()
     is_release = current_version_tag_is_release()
 
-    if is_rc or is_release:
+    if is_release or is_rc:
+        # releases and release candidates need the "real" pypi credentials:
         validate_version_tag()
-
-    if is_rc:
-        # we want to upload release candidates to test.pypi.org:
-        assert (pypi_test_user is not None and pypi_test_password is not None)
-    if is_release:
-        # releases need the "real" pypi credentials:
         assert (pypi_user is not None and pypi_password is not None)
 
     prepare_upload(verbose=ctx.obj['verbose'])
@@ -562,11 +552,8 @@ def upload(ctx, dry_run, build_appimage, pypi_user, pypi_password,
 
     run_twine_check(ctx.obj['verbose'])
 
-    if not dry_run:
-        if is_release:
-            upload_to_pypi(ctx.obj['verbose'], user=pypi_user, password=pypi_password)
-        elif is_rc:
-            upload_to_pypi(ctx.obj['verbose'], user=pypi_test_user, password=pypi_test_password)
+    if not dry_run and (is_release or is_rc):
+        upload_to_pypi(ctx.obj['verbose'], user=pypi_user, password=pypi_password)
 
     release = get_release_kind()
 

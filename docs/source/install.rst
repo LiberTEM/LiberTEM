@@ -181,6 +181,8 @@ running the LiberTEM GUI. In other environments, like Jupyter notebooks, you
 need to restart the Python interpreter to make sure the new version is used,
 for example by restarting the ipython kernel.
 
+.. _`airgapped`:
+
 Air-gapped installation
 -----------------------
 

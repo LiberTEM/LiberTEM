@@ -199,8 +199,10 @@ On the host
 ^^^^^^^^^^^
 
 * Create a folder where you collect all required files, for example :code:`wheels`.
-* If necessary, download and install a recent version of Python supported by LiberTEM from
-  https://www.python.org/downloads/. This installer works without internet access.
+* If necessary, download and install a recent version of Python supported by
+  LiberTEM and compatible with your systems from
+  https://www.python.org/downloads/. This installer works without internet
+  access.
 * Start a new command shell and change into the folder for the required files.
 * Confirm that you are using the intended Python version: :code:`python --version`
 * Download and build all required packages for LiberTEM: :code:`python -m pip wheel libertem`
@@ -216,8 +218,9 @@ On the target
 * Create a virtual environment in a folder of your choice: :code:`python -m venv libertem-venv`
 * Activate the environment: On Windows cmd.exe :code:`libertem-venv\\Scripts\\activate.bat`
 * Change to the directory with the Python packages.
-* Install these packages without dependencies or using a package index:
-  On Windows cmd.exe :code:`FOR %a in (*.whl) DO python -m pip install --no-index --no-deps %a`
+* Install the LiberTEM package and other top-level packages
+  using the package folder instead of the online package index:
+  :code:`pip install --find-links . --no-index libertem`
 
 Docker and Singularity
 ----------------------

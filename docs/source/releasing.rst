@@ -45,88 +45,100 @@ When planning a release, create a new issue with the following checklist:
     * #YYY
     * #ZZZ
 
-    ## Step 0
-
-    * [ ] Create a release candidate using `scripts/release`. See `scripts/release --help` for details.
-
-    ## Before (using a release candidate package)
+    ## Step 0: before cutting the release candidate
 
     * [ ] Review open issues and pull requests
+    * [ ] Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
+          in appropriate branch.
     * [ ] License review: no import of GPL code from MIT code
           `pydeps --only "libertem" --show-deps --noshow src\libertem | python scripts\licensecheck.py`
-    * [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3)
-    * [ ] Run tests for related packages w/ new LiberTEM version
-        * [ ] LiberTEM-live
-        * [ ] LiberTEM-holo
-        * [ ] LiberTEM-blobfinder
-        * [ ] ptychography40
-        * [ ] LiberTEM-iCoM
+    * [ ] Run full CI pipeline, including slow tests, on
+          [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3)
+          and run the [Thorough workflow](https://github.com/LiberTEM/LiberTEM/actions/workflows/thorough.yml)
+          on GitHub Actions
     * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.
     * [ ] GUI dependency update with `npm install`
     * [ ] Review https://github.com/LiberTEM/LiberTEM/security/dependabot and update dependencies
     * [ ] Full documentation review and update, including link check using
           ``sphinx-build -b linkcheck "docs/source" "docs/build/html"``
-    * [ ] Run complete test suite, including slow tests that are deactivated by default
-          and tests that require sample files.
     * [ ] Update the expected version in notes on changes, i.e. from `0.3.0.dev0`
           to `0.3.0` when releasing version 0.3.0.
     * [ ] Update and review change log in `docs/source/changelog.rst`, merging
           snippets in `docs/source/changelog/*/` as appropriate.
+    * [ ] Edit `pytest.ini` to exclude flaky tests temporarily from release
+          builds, if there are currently any flaky tests
     * [ ] Update the JSON files in the ``packaging/`` folder with author and project information
-    * [ ] Edit `pytest.ini` to exclude flaky tests temporarily from release builds
+
+    ## Step 1
+
+    * [ ] Create a release candidate using `scripts/release`. See
+          `scripts/release --help` for details. Example command:
+          `./scripts/release bump v0.3.0rc1 --tag`, then push to GitHub
     * [ ] `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
           GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
-    * [ ] Confirm that a new version with the most recent release candidate is created in the
-          `Zenodo.org sandbox <https://sandbox.zenodo.org/record/367108>`_ that is ready for submission.
+    * [ ] Confirm that a new version with the most recent release candidate is created on
+          `Zenodo.org <https://zenodo.org/doi/10.5281/zenodo.1477847>`_ that is ready for submission.
+
+    ## Step 2: using the release candidate package
+
+    * [ ] Run tests for related packages w/ new LiberTEM version
+        * [ ] LiberTEM-live
+        * [ ] LiberTEM-holo
+        * [ ] LiberTEM-blobfinder
+        * [ ] ptychography40
+        * [ ] LiberTEM-iCoM
+    * [ ] Run complete test suite, including slow tests that are deactivated by default
+          and tests that require sample files or CUDA support.
     * [ ] Install release candidate packages in a clean environment
           (for example:
-          `python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple 'libertem==0.2.0rc11'`)
+          `python -m pip install --pre 'libertem==0.2.0rc11'`)
     * [ ] Test the release candidate docker image
         * [ ] Confirm rc images and tags on https://ghcr.io/libertem/libertem
-    * [ ] For the GUI-related items, open in an incognito window to start from a clean slate
-    * [ ] Correct version info displayed in info dialogue?
-    * [ ] Link check in version info dialogue
-    * [ ] Test GUI without internet access
-    * [ ] Make sure you have test files of all supported types available
-        * [ ] Include floats, ints, big endian, little endian, complex raw data
-    * [ ] Open each test file
-        * [ ] Are parameters recognized correctly, as far as implemented?
-        * [ ] Any bad default values?
-        * [ ] Does the file open correctly?
-        * [ ] Have a look at the dataset info dialogue. Reasonable values?
-    * [ ] Perform all analyses on each test file.
-        * [ ] Does the result change when the input parameters are changed?
-        * [ ] All display channels present and looking reasonable?
-        * [ ] Reasonable performance?
-        * [ ] Use pick mode.
-    * [ ] Re-open all the files
-        * [ ] Are the files listed in "recent files"?
-        * [ ] Are the parameters filled from the cache correctly?
-    * [ ] Try opening all file types with wrong parameters
-        * [ ] Proper understandable error messages?
-    * [ ] Pick one file and confirm keyboard and mouse interaction for all analyses
-        * [ ] Correct bounds check for keyboard and mouse?
-    * [ ] Check what happens when trying to open non-existent files or directories in the GUI.
-        * [ ] Proper understandable error message?
-        * [ ] Possible to continue working?
-    * [ ] Shut down libertem-server while analysis is running
-        * [ ] Shut down within a few seconds?
-        * [ ] All workers reaped?
+    * [ ] Quick GUI QA: open in an incognito window to start from a clean slate
+        * [ ] Correct version info displayed in info dialogue?
+        * [ ] Link check in version info dialogue
+        * [ ] Test GUI without internet access
+        * [ ] Make sure you have test files of all supported types available
+            * [ ] Include floats, ints, big endian, little endian, complex raw data
+        * [ ] Open each test file
+            * [ ] Are parameters recognized correctly, as far as implemented?
+            * [ ] Any bad default values?
+            * [ ] Does the file open correctly?
+            * [ ] Have a look at the dataset info dialogue. Reasonable values?
+        * [ ] Perform all analyses on each test file.
+            * [ ] Does the result change when the input parameters are changed?
+            * [ ] All display channels present and looking reasonable?
+            * [ ] Reasonable performance?
+            * [ ] Use pick mode.
+        * [ ] Re-open all the files
+            * [ ] Are the files listed in "recent files"?
+            * [ ] Are the parameters filled from the cache correctly?
+        * [ ] Try opening all file types with wrong parameters
+            * [ ] Proper understandable error messages?
+        * [ ] Pick one file and confirm keyboard and mouse interaction for all analyses
+            * [ ] Correct bounds check for keyboard and mouse?
+        * [ ] Check what happens when trying to open non-existent files or directories in the GUI.
+            * [ ] Proper understandable error message?
+            * [ ] Possible to continue working?
+        * [ ] Shut down libertem-server while analysis is running
+            * [ ] Shut down within a few seconds?
+            * [ ] All workers reaped?
+        * [ ] Run libertem-server on Windows, connect to a remote dask cluster running on Linux,
+          open all file types and perform an analysis for each file type.
+        * [ ] Use the GUI while a long-running analysis is running
+            * [ ] Still usable, decent response times?
     * [ ] Check what happens when trying to open non-existent files by scripting.
         * [ ] Proper understandable error message? TODO automate?
     * [ ] Check what happens when opening all file types with bad parameters by scripting
         * [ ] Proper understandable error message? TODO automate?
-    * [ ] Run libertem-server on Windows, connect to a remote dask cluster running on Linux,
-      open all file types and perform an analysis for each file type.
-    * [ ] Use the GUI while a long-running analysis is running
-        * [ ] Still usable, decent response times?
-    * [ ] Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
-      in appropriate branch.
+
+    ## Step 3: bump version and let release pipeline run
+
     * [ ] Final version bump: `./scripts/release bump v0.3.0 --tag`, push to github
     * [ ] After pipeline finishes, write minimal release notes for the [release](https://github.com/liberTEM/LiberTEM/releases) and publish the GitHub release
 
-    ## After releasing on GitHub
+    ## Step 4: after releasing on GitHub
 
     * [ ] Confirm that all release packages are built and release notes are up-to-date
     * [ ] Install release package

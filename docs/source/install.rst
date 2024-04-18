@@ -181,6 +181,42 @@ running the LiberTEM GUI. In other environments, like Jupyter notebooks, you
 need to restart the Python interpreter to make sure the new version is used,
 for example by restarting the ipython kernel.
 
+Air-gapped installation
+-----------------------
+
+Many microscope control computers are not connected to the internet, which means
+that the usual installation methods don't work. It is not straightforward to
+package a Python application into a self-contained executable or installer for
+Windows, see also :issue:`39`. Furthermore, relocating Python environments, for
+example with `conda-pack <https://conda.github.io/conda-pack/>`_ doesn't always
+work reliably. In order to install LiberTEM on an air-gapped machine, you need a
+computer with the same operating system, architecture and Python version as a
+host system where you can prepare all required packages for the target system.
+
+On the host
+^^^^^^^^^^^
+
+* Create a folder where you collect all required files, for example :code:`wheels`.
+* If necessary, download and install a recent version of Python supported by LiberTEM from
+  https://www.python.org/downloads/. This installer works without internet access.
+* Start a new command shell and change into the folder for the required files.
+* Confirm that you are using the intended Python version: :code:`python --version`
+* Download and build all required packages for LiberTEM: :code:`python -m pip wheel libertem`
+  You can add more packages and extras to this command as desired, for example Jupyter etc.
+* Your folder :code:`wheels` should now contain all required Python packages.
+* Transfer the folder :code:`wheels` and the Python installer to the target machine.
+
+On the target
+^^^^^^^^^^^^^
+
+* If necessary, install the same Python version as on the host.
+* Start a new command shell and confirm the Python version: :code:`python --version`
+* Create a virtual environment in a folder of your choice: :code:`python -m venv libertem-venv`
+* Activate the environment: On Windows cmd.exe :code:`libertem-venv\\Scripts\\activate.bat`
+* Change to the directory with the Python packages.
+* Install these packages without dependencies or using a package index:
+  On Windows cmd.exe :code:`FOR %a in (*.whl) DO python -m pip install --no-index --no-deps %a`
+
 Docker and Singularity
 ----------------------
 

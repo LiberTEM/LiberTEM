@@ -3,8 +3,9 @@ import { useSelector } from "react-redux";
 import ClusterConnectionForm from "../../cluster/components/ClusterConnectionForm";
 import { assertNotReached } from "../../helpers";
 import { RootReducer } from "../../store";
+import { ChannelStatusCodes } from "../reducers";
 import ChannelConnecting from "./ChannelConnecting";
-import ChannelShutdown from './ChannelShutdown'
+import ChannelShutdown from './ChannelShutdown';
 
 const messages = {
     waiting: "Waiting...",
@@ -48,18 +49,18 @@ const ChannelStatus: React.FC<{ children?: React.ReactNode }> = ({ children }) =
     const channelStatus = useSelector((state: RootReducer) => state.channelStatus);
 
     switch (channelStatus.status) {
-        case "waiting":
-        case "connecting": {
+        case ChannelStatusCodes.WAITING:
+        case ChannelStatusCodes.CONNECTING: {
             return <ChannelConnecting msg={messages[channelStatus.status]} />;
         }
-        case "connected": {
+        case ChannelStatusCodes.CONNECTED: {
             return <ConnectedNotReady />
         }
-        case "ready":
-        case "snoozed":
-        case "unsnoozing":
+        case ChannelStatusCodes.READY:
+        case ChannelStatusCodes.SNOOZED:
+        case ChannelStatusCodes.UNSNOOZING:
             return <>{children}</>;
-        case "disconnected":
+        case ChannelStatusCodes.DISCONNECTED:
             return <ChannelShutdown />
         default:
             assertNotReached("should not happen");

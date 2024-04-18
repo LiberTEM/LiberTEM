@@ -52,10 +52,7 @@ When planning a release, create a new issue with the following checklist:
           in appropriate branch.
     * [ ] License review: no import of GPL code from MIT code
           `pydeps --only "libertem" --show-deps --noshow src\libertem | python scripts\licensecheck.py`
-    * [ ] Run full CI pipeline, including slow tests, on
-          [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3)
-          and run the [Thorough workflow](https://github.com/LiberTEM/LiberTEM/actions/workflows/thorough.yml)
-          on GitHub Actions
+    * [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3) and run the [Thorough workflow](https://github.com/LiberTEM/LiberTEM/actions/workflows/thorough.yml) on GitHub Actions
     * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.
     * [ ] GUI dependency update with `npm install`
@@ -75,10 +72,10 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Create a release candidate using `scripts/release`. See
           `scripts/release --help` for details. Example command:
           `./scripts/release bump v0.3.0rc1 --tag`, then push to GitHub
-    * [ ] `Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
-          GitHub <https://github.com/LiberTEM/LiberTEM/releases>`_
+    * [ ] Confirm that wheel, tar.gz, and AppImage are built for the release candidate on
+          [GitHub](https://github.com/LiberTEM/LiberTEM/releases)
     * [ ] Confirm that a new version with the most recent release candidate is created on
-          `Zenodo.org <https://zenodo.org/doi/10.5281/zenodo.1477847>`_ that is ready for submission.
+          [Zenodo.org](https://zenodo.org/doi/10.5281/zenodo.1477847) that is ready for submission.
 
     ## Step 2: using the release candidate package
 

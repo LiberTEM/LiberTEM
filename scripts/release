@@ -297,7 +297,7 @@ def get_archive(tag):
         yield full_fn
 
 
-def upload_to_zenodo(verbose, parent, token, sandbox_token):
+def upload_to_zenodo(verbose, parent, token):
     """
     Upload wheel, sdist and repo archive to zenodo. Only works if
     there is a matching GitHub release already created.
@@ -312,10 +312,7 @@ def upload_to_zenodo(verbose, parent, token, sandbox_token):
 
     if release == "dev":
         raise click.ClickException("don't want to upload to zenodo from dev release")
-    elif release == "rc":
-        url = "https://sandbox.zenodo.org/api/"
-        os.environ['ZENODO_OAUTH_TOKEN'] = sandbox_token
-    elif release == "release":
+    elif release in ["rc", "release"]:
         url = "https://zenodo.org/api/"
         os.environ['ZENODO_OAUTH_TOKEN'] = token
 
@@ -526,18 +523,14 @@ def is_rc(ctx):
 @click.option('--pypi-test-password', type=str, show_envvar=True)
 @click.option('--token', type=str, show_envvar=True,
               help='Github token for creating releases')
-@click.option('--zenodo-sandbox-token', type=str, show_envvar=True,
-              help='Zenodo sandbox token for RC upload testing')
 @click.option('--zenodo-token', type=str, show_envvar=True,
               help='Zenodo production token for final release upload')
 @click.option('--zenodo-parent', type=str, show_envvar=True,
               help='Zenodo production parent deposition id')
-@click.option('--zenodo-sandbox-parent', type=str, show_envvar=True,
-              help='Zenodo sandbox parent deposition id')
 @click.pass_context
 def upload(ctx, dry_run, build_appimage, pypi_user, pypi_password,
-           pypi_test_user, pypi_test_password, token, zenodo_sandbox_token,
-           zenodo_token, zenodo_parent, zenodo_sandbox_parent):
+           pypi_test_user, pypi_test_password, token,
+           zenodo_token, zenodo_parent):
     """
     prepare, build and upload to github, zenodo and pypi
     (if release candidate, to the test instance(s))
@@ -605,8 +598,8 @@ def upload(ctx, dry_run, build_appimage, pypi_user, pypi_password,
 
     if not dry_run and (is_release or is_rc):
         upload_to_zenodo(verbose=ctx.obj['verbose'],
-                         parent=zenodo_sandbox_parent if is_rc else zenodo_parent,
-                         token=zenodo_token, sandbox_token=zenodo_sandbox_token)
+                         parent=zenodo_parent,
+                         token=zenodo_token)
 
 
 @cli.command()

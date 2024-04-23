@@ -109,10 +109,13 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             dataset_params = converter.to_python(params)
             executor = await self.state.executor_state.get_executor()
 
-            ds = await load(filetype=cls, executor=executor, enable_async=True, **dataset_params)
+            with self.state.executor_state.keep_alive():
+                ds = await load(
+                    filetype=cls, executor=executor, enable_async=True, **dataset_params
+                )
 
-            with tracer.start_as_current_span("prime_numba_caches"):
-                await self.prime_numba_caches(ds)
+                with tracer.start_as_current_span("prime_numba_caches"):
+                    await self.prime_numba_caches(ds)
 
             self.dataset_state.register(
                 uuid=uuid,
@@ -143,9 +146,10 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path'][0].decode("utf8")
         executor = await self.state.executor_state.get_executor()
 
-        detected_params = await sync_to_async(
-            detect, path=path, executor=executor.ensure_sync()
-        )
+        with self.state.executor_state.keep_alive():
+            detected_params = await sync_to_async(
+                detect, path=path, executor=executor.ensure_sync()
+            )
 
         if not detected_params:
             msg = Message().dataset_detect_failed(path=path)

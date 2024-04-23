@@ -19,7 +19,8 @@ class LocalFSBrowseHandler(tornado.web.RequestHandler):
         assert len(path) == 1
         path = path[0].decode("utf8")
         try:
-            listing = await executor.run_function(get_fs_listing, path)
+            with self.state.executor_state.keep_alive():
+                listing = await executor.run_function(get_fs_listing, path)
             msg = Message().directory_listing(
                 **listing
             )

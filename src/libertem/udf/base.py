@@ -2350,17 +2350,21 @@ class UDFRunner:
         v[:] = True
 
     @staticmethod
-    def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
+    def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResultsLazy":
         raw_damage = damage.raw_data
         assert raw_damage is not None
-        for udf in udfs:
-            udf.meta.set_valid_nav_mask(raw_damage)
-            udf.clear_views()
-        return UDFResults(
-            buffers=tuple(
-                udf._do_get_results()
-                for udf in udfs
-            ),
+
+        def _inner():
+            buffers = []
+            for udf in udfs:
+                udf.meta.set_valid_nav_mask(raw_damage)
+                udf.clear_views()
+                buffers.append(udf._do_get_results())
+            return tuple(buffers)
+
+        return UDFResultsLazy(
+            udfs=udfs,
+            cb=_inner,
             damage=damage
         )
 
@@ -2801,3 +2805,35 @@ class UDFResults:
     def __init__(self, buffers: Iterable[UDFResultDict], damage: BufferWrapper):
         self.buffers = tuple(buffers)
         self.damage = damage
+
+
+class UDFResultsLazy:
+    '''
+    Lazy version of :class:`UDFResults`
+
+    .. versionadded:: 0.7.0
+
+    Parameters
+    ----------
+
+    udfs
+        UDF instances for which these results apply
+
+    cb
+        A function that generates the results
+
+    damage : BufferWrapper
+        :class:`libertem.common.buffers.BufferWrapper` of :code:`kind='nav'`, :code:`dtype=bool`.
+        It is set to :code:`True` for all positions in nav space that have been processed already.
+    '''
+    def __init__(self, udfs, cb, damage: BufferWrapper):
+        self._udfs = udfs
+        self._cb = cb
+        self.damage = damage
+        self._result = None
+
+    @property
+    def buffers(self):
+        if self._result is None:
+            self._result = self._cb()
+        return self._result

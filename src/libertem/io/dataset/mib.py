@@ -96,6 +96,8 @@ def is_valid_hdr(path):
 
 
 def nav_shape_from_hdr(hdr):
+    if 'ScanX' in hdr and 'ScanY' in hdr:
+        return (hdr['ScanY'], hdr['ScanX'])
     num_frames, scan_x = (
         int(hdr['Frames in Acquisition (Number)']),
         int(hdr['Frames per Trigger (Number)'])

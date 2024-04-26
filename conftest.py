@@ -9,6 +9,7 @@ import warnings
 import contextlib
 import socket
 import logging
+import textwrap
 
 from importlib.metadata import distributions
 import numpy as np
@@ -26,6 +27,7 @@ import tornado.httpserver
 import libertem.api as lt
 from libertem.executor.inline import InlineJobExecutor
 from libertem.executor.delayed import DelayedJobExecutor
+from libertem.io.dataset import get_dataset_cls
 from libertem.io.dataset.hdf5 import H5DataSet
 from libertem.io.dataset.raw import RawFileDataSet
 from libertem.io.dataset.memory import MemoryDataSet
@@ -1089,6 +1091,46 @@ def points():
         (-1, 0),
         (-1, -1)
     ])
+
+
+@pytest.fixture(scope="function")
+def standard_bad_ds_params():
+    return [
+        dict(nav_shape=(-1, 2)),
+        dict(nav_shape=4),
+        dict(sig_shape=(3, 17)),
+        dict(sig_shape=(103, -83)),
+        dict(sync_offset=180000000),
+        dict(io_backend="doesn't exist"),
+    ]
+
+
+@pytest.fixture()
+def ds_params_tester(lt_ctx, bad_params_logger):
+    def _test_bad_params(ds_key, *args, **params):
+        ds_class = get_dataset_cls(ds_key)
+        kwarg_repr = (
+            textwrap.shorten(f'{k}={repr(v)}', 30, placeholder="...")
+            for k, v in params.items()
+        )
+        stub = (
+            f"{ds_class.__name__}(..., {', '.join(kwarg_repr)})"
+        )
+        try:
+            lt_ctx.load(ds_key, *args, **params)
+        except Exception as e:
+            bad_params_logger.append(f'{stub}\n  RAISED {type(e).__name__}("{e}")')
+            return False
+        bad_params_logger.append(f'{stub}\n  DID NOT raise')
+        return True
+    return _test_bad_params
+
+
+@pytest.fixture(scope="session")
+def bad_params_logger():
+    lines = []
+    yield lines
+    print("\n".join(lines))
 
 
 @pytest.hookimpl(hookwrapper=True)

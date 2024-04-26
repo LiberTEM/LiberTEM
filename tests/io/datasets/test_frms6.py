@@ -631,3 +631,9 @@ def test_compare_backends_sparse(lt_ctx, default_frms6, buffered_frms6, as_spars
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_frms6, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("frms6", FRMS6_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

@@ -507,3 +507,8 @@ def test_load_stack_dd(local_cluster_ctx, dm_stack_glob):
     files = dm_stack_glob
     ds = local_cluster_ctx.load("dm", files=files, same_offset=True)
     ds.check_valid()
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params, dm_3d_glob):
+    for params in standard_bad_ds_params:
+        ds_params_tester("dm", files=dm_3d_glob, **params)

@@ -834,3 +834,11 @@ def test_scheme_too_large(default_seq):
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_seq.shape.sig)
     for _ in tiles:
         pass
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("seq", SEQ_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        if "nav_shape" not in params:
+            params['nav_shape'] = (8, 8)
+        ds_params_tester(*args, **params)

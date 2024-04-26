@@ -596,3 +596,11 @@ def test_run_many_files(lt_ctx):
     hdr_path = out_dir / 'w_140 h_139-2map.hdr'
     nav_shape = (139, 141)
     lt_ctx.load('mib', path=hdr_path, nav_shape=nav_shape)
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("mib", MIB_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        if 'nav_shape' not in params:
+            params['nav_shape'] = (1, 1)
+        ds_params_tester(*args, **params)

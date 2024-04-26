@@ -365,3 +365,9 @@ def test_compare_backends_sparse(lt_ctx, default_blo, buffered_blo, as_sparse):
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_blo, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("blo", BLO_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

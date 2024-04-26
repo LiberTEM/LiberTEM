@@ -708,3 +708,9 @@ def test_incorrect_sig_shape(lt_ctx):
     assert e.match(
         r"sig_shape must be of size: 3809280"
     )
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("k2is", K2IS_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

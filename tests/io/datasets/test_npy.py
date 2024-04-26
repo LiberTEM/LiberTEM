@@ -465,3 +465,9 @@ def test_correction_default(default_npy, lt_ctx, with_roi):
 
 def test_diagnostics(default_npy):
     assert {"name": "dtype", "value": "float32"} in default_npy.get_diagnostics()
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params, default_npy):
+    args = ("npy", default_npy._path)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

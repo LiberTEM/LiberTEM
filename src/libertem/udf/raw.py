@@ -126,18 +126,26 @@ class PickShiftedUDF(UDF):
         return {'intensity': intensity_sum, "coordinates": coordinates}
 
     def get_results(self):
-        coordinates = self.results.get_buffer('coordinates').raw_data
 
-        coordinates = np.concatenate((np.ones((*coordinates.shape[:-1], 1)), coordinates), axis=-1)
-        shifts = np.dot(coordinates, self.params.regression_coefficients)
         intensity = self.results.get_buffer('intensity').data
 
-        shifted = []
-        for intens, shift in zip(intensity, shifts):
-            shifted.append(scipy.ndimage.shift(intens, -shift, mode="constant"))
+        # Only do shifts if nonzero regression coefficients
+        if self.params.regression_coefficients.any():
+
+            coordinates = self.results.get_buffer('coordinates').raw_data
+
+            prefix_ones = np.ones((*coordinates.shape[:-1], 1))
+            coordinates = np.concatenate((prefix_ones, coordinates), axis=-1)
+            shifts = np.dot(coordinates, self.params.regression_coefficients)
+
+            shifted = []
+            for intens, shift in zip(intensity, shifts):
+                shifted.append(scipy.ndimage.shift(intens, -shift, mode="constant"))
+
+            intensity = np.stack(shifted)
 
         return {
-            "intensity": np.stack(shifted),
+            "intensity": intensity,
             "coordinates": self.results.get_buffer('coordinates').raw_data
         }
 

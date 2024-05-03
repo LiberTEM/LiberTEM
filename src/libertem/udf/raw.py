@@ -122,7 +122,7 @@ class PickShiftedUDF(UDF):
         ''
         intensity_chunks = [b.intensity for b in ordered_results.values()]
         intensity_sum = np.stack(intensity_chunks, axis=0).sum(axis=0)
-        coordinates = np.stack([b.coordinates for b in ordered_results.values()], axis=0)
+        coordinates = np.concatenate([b.coordinates for b in ordered_results.values()], axis=0)
         return {'intensity': intensity_sum, "coordinates": coordinates}
 
     def get_results(self):
@@ -130,7 +130,7 @@ class PickShiftedUDF(UDF):
         intensity = self.results.get_buffer('intensity').data
 
         # Only do shifts if nonzero regression coefficients
-        if self.params.regression_coefficients.any():
+        if np.array(self.params.regression_coefficients).any():
 
             coordinates = self.results.get_buffer('coordinates').raw_data
 
@@ -142,7 +142,8 @@ class PickShiftedUDF(UDF):
             for intens, shift in zip(intensity, shifts):
                 shifted.append(scipy.ndimage.shift(intens, -shift, mode="constant"))
 
-            intensity = np.stack(shifted)
+            if shifted:
+                intensity = np.stack(shifted)
 
         return {
             "intensity": intensity,

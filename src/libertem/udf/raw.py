@@ -129,8 +129,9 @@ class PickShiftedUDF(UDF):
 
         intensity = self.results.get_buffer('intensity').data
 
+        regression_coefficients = np.array(self.params.regression_coefficients)
         # Only do shifts if nonzero regression coefficients
-        if np.array(self.params.regression_coefficients).any():
+        if regression_coefficients.any():
 
             coordinates = self.results.get_buffer('coordinates').raw_data
 

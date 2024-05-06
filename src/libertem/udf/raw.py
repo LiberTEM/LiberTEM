@@ -10,6 +10,15 @@ import scipy.ndimage
 log = logging.getLogger(__name__)
 
 
+def check_size_warning(dtype, sigshape, navsize):
+    warn_limit = 2**28
+    loaded_size = prod(sigshape) * navsize * np.dtype(dtype).itemsize
+    if loaded_size > warn_limit:
+        log.warning("PickUDF is loading %s bytes, exceeding warning limit %s. "
+            "Consider using or implementing an UDF to process data on the worker "
+            "nodes instead." % (loaded_size, warn_limit))
+
+
 class PickUDF(UDF):
     '''
     Load raw data from ROI
@@ -27,8 +36,8 @@ class PickUDF(UDF):
     >>> result["intensity"].raw_data[0].shape
     (32, 32)
     '''
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
 
     def get_preferred_input_dtype(self):
         ''
@@ -42,12 +51,8 @@ class PickUDF(UDF):
             navsize = count_nonzero(self.meta.roi)
         else:
             navsize = prod(self.meta.dataset_shape.nav)
-        warn_limit = 2**28
-        loaded_size = prod(sigshape) * navsize * np.dtype(dtype).itemsize
-        if loaded_size > warn_limit:
-            log.warning("PickUDF is loading %s bytes, exceeding warning limit %s. "
-                "Consider using or implementing an UDF to process data on the worker "
-                "nodes instead." % (loaded_size, warn_limit))
+
+        check_size_warning(dtype, sigshape, navsize)
         # We are using a "single" buffer since we mostly load single frames. A
         # "sig" buffer would work as well, but would require a transpose to
         # accomodate multiple frames in the last and not first dimension.
@@ -159,16 +164,9 @@ class PickShiftedUDF(UDF):
             navsize = count_nonzero(self.meta.roi)
         else:
             navsize = prod(self.meta.dataset_shape.nav)
-        warn_limit = 2**28
-        loaded_size = prod(sigshape) * navsize * np.dtype(dtype).itemsize
-        if loaded_size > warn_limit:
-            log.warning("PickShiftedUDF is loading %s bytes, exceeding warning limit %s. "
-                "Consider using or implementing an UDF to process data on the worker "
-                "nodes instead." % (loaded_size, warn_limit))
-        # We are using a "single" buffer since we mostly load single frames. A
-        # "sig" buffer would work as well, but would require a transpose to
-        # accomodate multiple frames in the last and not first dimension.
-        # A "nav" buffer would allocate a NaN-filled buffer for the whole dataset.
+
+        check_size_warning(dtype, sigshape, navsize)
+
         nav_dims = len(self.meta.dataset_shape.nav)
         return {
             'intensity': self.buffer(

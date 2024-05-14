@@ -126,9 +126,9 @@ When planning a release, create a new issue with the following checklist:
         * [ ] Use the GUI while a long-running analysis is running
             * [ ] Still usable, decent response times?
     * [ ] Check what happens when trying to open non-existent files by scripting.
-        * [ ] Proper understandable error message? TODO automate?
+        * [ ] Run `pytest -rA tests/io/datasets/test_missing.py` and check output
     * [ ] Check what happens when opening all file types with bad parameters by scripting
-        * [ ] Proper understandable error message? TODO automate?
+        * [ ] Run `pytest -rA tests/io/datasets/ -k "test_bad_params"` and check output
 
     ## Step 3: bump version and let release pipeline run
 

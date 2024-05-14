@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.14.0.dev0
+0.15.0.dev0
 ###########
 
 .. toctree::
@@ -20,6 +20,77 @@ Changelog
   changelog/*/*
 
 .. _latest:
+
+.. _`v0-14-0`:
+
+0.14.0 / 2024-05-17
+###################
+
+..
+   Links and date above are temporary, update before release!
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.10091431.svg
+  :target: https://doi.org/10.5281/zenodo.10091431
+
+The 0.14.0 release adds a system for UDFs to be aware of which parts of a
+dataset have already been processed during merging and post-processing,
+and to mark parts of results as invalid when the processing would otherwise
+be incorrect. This feature supports the plotting interface by allowing
+a UDF to mark outliers in results to be ignored, and computations such as
+discrete derivatives where the result at the boundaries of the processed
+data is undefined.
+
+This release also increases the minimum supported Python version to
+3.9 in line with a range of other projects. Older versions of LiberTEM
+remain available in sitations where Python cannot be upgraded.
+
+Many thanks to everyone who has contributed to this release!
+
+Features
+--------
+
+- Add a system for UDFs to be aware of which parts of a
+  dataset have already been processed during merging and
+  post-processing, and mark parts of results as invalid.
+  Documentation for this feature is found `here <https://libertem.github.io/LiberTEM/udf/advanced.html#valid-data-masking>`_.
+  (:issue:`1449` :pr:`1593`).
+- Add a new snooze function to :code:`libertem-server`; the argument
+  :code:`--snooze-timeout` will free resources after a duration of inactivity
+  which is especially useful when deploying LiberTEM as a service on a
+  multi-user system. (:issue:`1570`, :pr:`1572`).
+- In :class:`~libertem.udf.com.CoMUDF`, added `field_y` and `field_x` to results, 
+  which are slices of their respective components in the `field` result (:pr:`1608`).
+
+Bugfixes
+--------
+
+- Fix loading of malformed EMPAD data. In some data sets, the actual raw
+  data acquired corresponds to the :code:`mode="search"` scan parameters,
+  and not :code:`mode="acquire"`. This is probably a bug in the acquisition
+  software, but we want to be able to load these files anyways (:issue:`1617`, :pr:`1620`).
+- Fix the :class:`~libertem.udf.com.CoMUDF` automatic offset and gradient
+  compensation to yield reasonable results during live processing (:pr:`1593`).
+- Manually add MIME type for Javascript on Windows, this is needed to fix
+  setups with an invalid registry entry (:issue:`1612` :pr:`1613`).
+
+Documentation
+-------------
+
+- Describe how to install LiberTEM safely on
+  `air-gapped systems <https://libertem.github.io/LiberTEM/install.html#air-gapped-installation>`_.
+  (:pr:`1627`).
+
+Obsolescence
+------------
+
+- Remove support for Python 3.7 and Python 3.8 following numpy and other
+  projects (:issue:`1606`, :pr:`1607`).
+- The modules :code:`libertem.analysis.gridmatching` and
+  :code:`libertem.analysis.fullmatch` are now available from
+  :mod:`libertem_blobfinder.common.gridmatching` and
+  :mod:`libertem_blobfinder.common.fullmatch` since :mod:`libertem-blobfinder`
+  version 0.6. The original import locations trigger a deprecation warning and
+  are slated for removal in LiberTEM 0.16. (:issue:`1469`, :pr:`1600`).
 
 .. _`v0-13-1`:
 

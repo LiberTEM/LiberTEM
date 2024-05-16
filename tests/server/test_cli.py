@@ -71,7 +71,9 @@ async def test_libertem_server_cli_startup(http_client):
 
             # wait for the process to stop, but max. 1 second:
             ret = await asyncio.wait_for(p.wait(), 1)
-            assert ret == 0
+
+            # in unix, minus signal number is returned if the process was killed:
+            assert ret in (0, -CTRL_C)
     except Exception:
         if p.returncode is None:
             p.terminate()

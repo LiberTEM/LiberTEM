@@ -23,14 +23,11 @@ Changelog
 
 .. _`v0-14-0`:
 
-0.14.0 / 2024-05-17
+0.14.0 / 2024-05-16
 ###################
 
-..
-   Links and date above are temporary, update before release!
-
-.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.10091431.svg
-  :target: https://doi.org/10.5281/zenodo.10091431
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.11204954.svg
+  :target: https://doi.org/10.5281/zenodo.11204954
 
 The 0.14.0 release adds a system for UDFs to be aware of which parts of a
 dataset have already been processed during merging and post-processing,

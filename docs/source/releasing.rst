@@ -89,7 +89,7 @@ When planning a release, create a new issue with the following checklist:
           and tests that require sample files or CUDA support.
     * [ ] Install release candidate packages in a clean environment
           (for example:
-          `python -m pip install --pre 'libertem==0.2.0rc11'`)
+          `python -m pip install 'libertem==0.2.0rc11'`)
     * [ ] Test the release candidate docker image
         * [ ] Confirm rc images and tags on https://ghcr.io/libertem/libertem
     * [ ] Quick GUI QA: open in an incognito window to start from a clean slate

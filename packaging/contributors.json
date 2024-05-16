@@ -407,5 +407,11 @@
         "github": "theassassin",
         "authorname": "@theassassin",
         "contribution": "Help with setting up AppImage building and Continuous Integration"
+    },
+    {
+        "displayname": "Cigdem Ozsoy-Keskinbora",
+        "authorname": "Cigdem Ozsoy-Keskinbora",
+        "affiliation": "Thermo Fisher Scientific",
+        "contribution": "Test files for EMPAD"
     }
 ]

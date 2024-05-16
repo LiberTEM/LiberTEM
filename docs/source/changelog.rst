@@ -64,10 +64,9 @@ Features
 Bugfixes
 --------
 
-- Fix loading of malformed EMPAD data. In some data sets, the actual raw
+- Fix loading of EMPAD data acquired in "search" mode. In some data sets, the actual raw
   data acquired corresponds to the :code:`mode="search"` scan parameters,
-  and not :code:`mode="acquire"`. This is probably a bug in the acquisition
-  software, but we want to be able to load these files anyways (:issue:`1617`, :pr:`1620`).
+  and not :code:`mode="acquire"`. The correct mode can be determined by comparing the file size and file name (:issue:`1617`, :pr:`1620`).
 - Fix the :class:`~libertem.udf.com.CoMUDF` automatic offset and gradient
   compensation to yield reasonable results during live processing (:pr:`1593`).
 - Manually add MIME type for Javascript on Windows, this is needed to fix

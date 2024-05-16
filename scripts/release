@@ -328,6 +328,7 @@ def upload_to_zenodo(verbose, parent, token):
     with get_archive(tag) as repo_archive:
         out = subprocess.check_output([
             "python", join(HERE, "zenodo_upload"),
+            "-v",
             "--url=%s" % url,
             "--parent=%s" % parent,
             "--mask-zenodo-exception",

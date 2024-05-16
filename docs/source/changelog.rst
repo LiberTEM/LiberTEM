@@ -446,7 +446,7 @@ New features
 * New :code:`--preload` option to :code:`libertem-server` and :code:`libertem-worker`.
   That makes it work as documented in :ref:`hdf5`, following
   `Dask worker preloading
-  <https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts>`_
+  <https://docs.dask.org/en/stable/customize-initialization.html#preload-scripts>`_
   (:pr:`1151`).
 * Allow selection of I/O backend in GUI and Python API (:issue:`753`, :pr:`896,1129`).
 * Re-add support for direct I/O. It was previously only supported as a special

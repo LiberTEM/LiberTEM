@@ -89,7 +89,7 @@ frame, ``n`` the number of frames and ``m`` the number of masks. Let (``A``) be
 a ``n x c`` matrix with the scanned data, and ``B`` a ``c x m`` matrix with the
 masks. Applying the masks in ``B`` to the detector data in ``A`` can be
 expressed as a `rectangular matrix product
-<https://en.wikipedia.org/wiki/Matrix_multiplication#Definition>`_ of ``A`` and
+<https://en.wikipedia.org/wiki/Matrix_multiplication#Definitions>`_ of ``A`` and
 ``B``.
 
 That means we can use the BLAS function `GEMM

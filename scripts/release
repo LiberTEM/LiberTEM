@@ -11,8 +11,10 @@ import contextlib
 from os.path import join
 
 from github import Github, UnknownObjectException
-from pkg_resources import parse_version
-from pkg_resources.extern.packaging.version import LegacyVersion
+from packaging.version import (
+    parse as parse_version,
+    InvalidVersion,
+)
 import click
 import requests
 
@@ -143,16 +145,21 @@ def validate_version_tag():
         raise click.ClickException(
             "version tags need to have a 'v' prefix"
         )
-    v = parse_version(version_tag['full'])
-    if isinstance(v, LegacyVersion):
+    try:
+        v = parse_version(version_tag['full'])
+    except InvalidVersion as e:
         raise click.ClickException(
-            "The version tag %s could not be parsed as valid version" % v
+            f"The version tag {version_tag['full']} could not be parsed "
+            f"as valid version: {e}"
         )
 
-    version_from_file = parse_version(read_version(get_version_fn()))
-    if isinstance(version_from_file, LegacyVersion):
+    raw_version = read_version(get_version_fn())
+    try:
+        version_from_file = parse_version(raw_version)
+    except InvalidVersion as e:
         raise click.ClickException(
-            "__version__ %s could not be parsed as valid version" % version_from_file
+                f"__version__ {raw_version} could not be parsed "
+                f"as valid version: {e}"
         )
     if version_from_file != v:
         raise click.ClickException(

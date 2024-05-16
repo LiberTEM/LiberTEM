@@ -51,6 +51,7 @@ class ExecutorState:
         self.cluster_details: typing.Optional[list] = None
         self.context: typing.Optional[Context] = None
         self._event_bus = event_bus
+        self._snooze_lock = asyncio.Lock()
         self._snooze_timeout = snooze_timeout
         self._pool = AsyncAdapter.make_pool()
         self._is_snoozing = False
@@ -95,33 +96,35 @@ class ExecutorState:
             self._update_last_activity()
 
     async def snooze(self):
-        if self.executor is None:
-            log.debug("not snoozing: no executor")
-            return
-        if self._keep_alive > 0:
-            log.debug("not snoozing: _keep_alive=%d", self._keep_alive)
-            return
-        log.info("Snoozing...")
-        from .messages import Message
-        msg = Message().snooze("snoozing")
-        self._event_bus.send(msg)
-        self.executor.ensure_sync().close()
-        self.context = None
-        self.executor = None
-        self._is_snoozing = True
+        async with self._snooze_lock:
+            if self.executor is None:
+                log.debug("not snoozing: no executor")
+                return
+            if self._keep_alive > 0:
+                log.debug("not snoozing: _keep_alive=%d", self._keep_alive)
+                return
+            log.info("Snoozing...")
+            from .messages import Message
+            msg = Message().snooze("snoozing")
+            self._event_bus.send(msg)
+            self.executor.ensure_sync().close()
+            self.context = None
+            self.executor = None
+            self._is_snoozing = True
 
     async def unsnooze(self):
-        if not self._is_snoozing:
-            return
-        log.info("Unsnoozing...")
-        from .messages import Message
-        msg = Message().unsnooze("unsnoozing")
-        self._event_bus.send(msg)
-        executor = await self.make_executor(self.cluster_params, self._pool)
-        self._set_executor(executor, self.cluster_params)
-        self._is_snoozing = False
-        msg = Message().unsnooze_done("unsnooze done")
-        self._event_bus.send(msg)
+        async with self._snooze_lock:
+            if not self._is_snoozing:
+                return
+            log.info("Unsnoozing...")
+            from .messages import Message
+            msg = Message().unsnooze("unsnoozing")
+            self._event_bus.send(msg)
+            executor = await self.make_executor(self.cluster_params, self._pool)
+            self._set_executor(executor, self.cluster_params)
+            self._is_snoozing = False
+            msg = Message().unsnooze_done("unsnooze done")
+            self._event_bus.send(msg)
 
     def is_snoozing(self):
         return self._is_snoozing

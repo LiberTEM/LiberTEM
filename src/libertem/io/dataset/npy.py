@@ -6,7 +6,7 @@ from typing import Optional
 import logging
 
 import numpy as np
-from numpy.lib.utils import safe_eval
+from ast import literal_eval
 from numpy.lib.format import read_magic
 from numpy.compat import long, asstr
 from libertem.common.messageconverter import MessageConverter
@@ -128,7 +128,7 @@ def _read_array_header(fp, version):
     #   "descr" : dtype.descr
     header = _filter_header(header)
     try:
-        d = safe_eval(header)
+        d = literal_eval(header)
     except SyntaxError as e:
         msg = "Cannot parse header: %r\nException: %r"
         raise ValueError(msg % (header, e))

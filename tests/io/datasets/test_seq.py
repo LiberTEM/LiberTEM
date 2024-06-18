@@ -21,7 +21,11 @@ from utils import get_testdata_path, ValidationUDF, roi_as_sparse
 import defusedxml.ElementTree as ET
 
 try:
-    import pims
+    # FIXME: pims/skimage can't deal with numpy2 on python 3.9
+    if int(np.version.version.split('.')[0]) < 2 or sys.version_info >= (3, 10):
+        import pims
+    else:
+        pims = None
 except ModuleNotFoundError:
     pims = None
 

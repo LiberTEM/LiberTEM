@@ -1067,7 +1067,7 @@ class MIBDataSet(DataSet):
             if nav_shape is not None:
                 raise ValueError("cannot specify both scan_size and nav_shape")
             self._nav_shape = tuple(scan_size)
-        if self._nav_shape is None and not path.lower().endswith(".hdr"):
+        if self._nav_shape is None and not self._path.lower().endswith(".hdr"):
             raise ValueError(
                     "either nav_shape needs to be passed, or path needs to point to a .hdr file"
                 )

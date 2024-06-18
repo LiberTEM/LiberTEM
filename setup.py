@@ -128,7 +128,8 @@ setup(
     zip_safe=False,
     python_requires='>=3.9.3',
     install_requires=[
-        "numpy",
+        'numpy<2;python_version<"3.10"',
+        'numpy;python_version>="3.10"',
         "scipy>=1.4.1",
         "sparse",
         "distributed>=2.19.0",

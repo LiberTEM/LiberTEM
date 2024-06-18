@@ -235,13 +235,14 @@ class ApplyMasksUDF(UDF):
     or a per-frame shift supplied using an :class:`~libertem.common.buffers.AuxBufferWrapper`
     created using :meth:`~libertem.udf.base.UDF.aux_data`:
 
+    >>> shifts = np.random.randint(-8, 8, size=(16, 16, 2)).ravel()
     >>> udf = ApplyMasksUDF(
     ...         mask_factories=my_masks,
     ...         shifts=ApplyMasksUDF.aux_data(
-    ...             np.random.randint(-8, 8, size=(16, 16, 2)).ravel(),
+    ...             shifts,
     ...             kind='nav',
     ...             extra_shape=(2,),
-    ...             dtype=int,
+    ...             dtype=shifts.dtype,
     ...         )
     ...     )
     >>> res_shift_aux = ctx.run_udf(dataset=dataset, udf=udf)['intensity']

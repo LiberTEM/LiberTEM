@@ -19,8 +19,12 @@ from libertem.udf.raw import PickUDF
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    import rsciio
-    import rsciio.blockfile
+    # FIXME: rsciio/pint is not numpy2 compatible yet
+    if int(np.version.version.split('.')[0]) < 2:
+        import rsciio
+        import rsciio.blockfile
+    else:
+        rsciio = None
 except ModuleNotFoundError:
     rsciio = None
 

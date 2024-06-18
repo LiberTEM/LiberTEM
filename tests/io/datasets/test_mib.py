@@ -608,3 +608,14 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
         if 'nav_shape' not in params:
             params['nav_shape'] = (1, 1)
         ds_params_tester(*args, **params)
+
+
+@needsdata
+def test_read_scan_shape_header(lt_ctx):
+    out_dir = pathlib.Path(MIB_TESTDATA_PATH).parent / 'merlin_scan_header/'
+    hdr_path = (
+        out_dir / 't2_200kV_alpha3_28_20_px_5_4nm_300k_C2_30um_CL_10m_1ms_1L_with_flatfield.hdr'
+    )
+    ds = lt_ctx.load('mib', path=hdr_path)
+    assert ds.shape.nav.to_tuple() == (20, 28)
+    assert ds.shape.sig.to_tuple() == (514, 514)

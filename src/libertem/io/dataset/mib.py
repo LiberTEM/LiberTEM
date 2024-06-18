@@ -578,14 +578,16 @@ def decode_r12_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape
             col = i % 4
             pos = i // 4
             out_pos = (pos + 1) * 4 - col - 1
-            out_cut[out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+            out_cut[out_pos] = (np.uint16(inp[i * 2]) << 8) + (inp[i * 2 + 1] << 0)
     else:
         # flip in x direction:
         for i in range(out_cut.shape[0]):
             col = i % 4
             pos = i // 4
             out_pos = (pos + 1) * 4 - col - 1
-            out_cut[out_cut.shape[0] - out_pos - 1] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+            out_cut[out_cut.shape[0] - out_pos - 1] = (
+                (np.uint16(inp[i * 2]) << 8) + (inp[i * 2 + 1] << 0)
+            )
 
     # reference non-quad impl:
     # for i in range(out.shape[1]):

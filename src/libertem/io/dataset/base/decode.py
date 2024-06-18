@@ -54,14 +54,14 @@ def byteswap_8_straight(inp, out):
 @numba.njit(inline='always', cache=True)
 def byteswap_8_decode(inp, out):
     for i in range(inp.shape[0] // 8):
-        o0 = inp[i * 8 + 0] << 56
-        o1 = inp[i * 8 + 1] << 48
-        o2 = inp[i * 8 + 2] << 40
-        o3 = inp[i * 8 + 3] << 32
-        o4 = inp[i * 8 + 4] << 24
-        o5 = inp[i * 8 + 5] << 16
-        o6 = inp[i * 8 + 6] << 8
-        o7 = inp[i * 8 + 7] << 0
+        o0 = np.uint64(inp[i * 8 + 0]) << 56
+        o1 = np.uint64(inp[i * 8 + 1]) << 48
+        o2 = np.uint64(inp[i * 8 + 2]) << 40
+        o3 = np.uint64(inp[i * 8 + 3]) << 32
+        o4 = np.uint64(inp[i * 8 + 4]) << 24
+        o5 = np.uint64(inp[i * 8 + 5]) << 16
+        o6 = np.uint64(inp[i * 8 + 6]) << 8
+        o7 = np.uint64(inp[i * 8 + 7]) << 0
         out[i] = o0 + o1 + o2 + o3 + o4 + o5 + o6 + o7
 
 

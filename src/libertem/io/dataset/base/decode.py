@@ -14,8 +14,8 @@ def byteswap_2_straight(inp, out):
 @numba.njit(inline='always', cache=True)
 def byteswap_2_decode(inp, out):
     for i in range(inp.shape[0] // 2):
-        o0 = inp[i * 2 + 0] << 8
-        o1 = inp[i * 2 + 1] << 0
+        o0 = np.uint16(inp[i * 2 + 0]) << 8
+        o1 = np.uint16(inp[i * 2 + 1]) << 0
         out[i] = o0 | o1
 
 
@@ -31,10 +31,10 @@ def byteswap_4_straight(inp, out):
 @numba.njit(inline='always', cache=True)
 def byteswap_4_decode(inp, out):
     for i in range(inp.shape[0] // 4):
-        o0 = inp[i * 4 + 0] << 24
-        o1 = inp[i * 4 + 1] << 16
-        o2 = inp[i * 4 + 2] << 8
-        o3 = inp[i * 4 + 3] << 0
+        o0 = np.uint32(inp[i * 4 + 0]) << 24
+        o1 = np.uint32(inp[i * 4 + 1]) << 16
+        o2 = np.uint32(inp[i * 4 + 2]) << 8
+        o3 = np.uint32(inp[i * 4 + 3]) << 0
         out[i] = o0 + o1 + o2 + o3
 
 

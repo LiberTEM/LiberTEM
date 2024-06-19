@@ -22,6 +22,16 @@ If you are bumping to a .dev0 suffix, omit :code:`--tag` and only pass :code:`--
 
     $ ./scripts/release bump v0.4.0.dev0 --commit
 
+By default, the release script will refuse to downgrade the version. This can be
+overridden with the :code:`--force` option, for example to prepare a point
+release. In that case the repository should be prepared to contain only the
+desired changes for the point release without any changes that are targeting the
+next regular release, for example by cherry-picking.
+
+.. code-block:: shell
+
+    $ ./scripts/release bump v0.14.1rc0 --tag --force
+
 .. note::
    In normal development, the version in the master branch will be x.y.z.dev0,
    if the next expected version is x.y.z. When starting the release process, it

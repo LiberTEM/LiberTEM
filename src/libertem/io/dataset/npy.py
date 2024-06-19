@@ -8,7 +8,6 @@ import logging
 import numpy as np
 from ast import literal_eval
 from numpy.lib.format import read_magic
-from numpy.compat import long, asstr
 from libertem.common.messageconverter import MessageConverter
 
 from libertem.io.dataset.base import (
@@ -142,7 +141,7 @@ def _read_array_header(fp, version):
 
     # Sanity-check the values.
     if (not isinstance(d['shape'], tuple)
-            or not np.all([isinstance(x, (int, long)) for x in d['shape']])):
+            or not np.all([isinstance(x, int) for x in d['shape']])):
         msg = "shape is not valid: %r"
         raise ValueError(msg % (d['shape'],))
     if not isinstance(d['fortran_order'], bool):
@@ -182,7 +181,7 @@ def _filter_header(s):
 
     tokens = []
     last_token_was_number = False
-    for token in tokenize.generate_tokens(StringIO(asstr(s)).read):
+    for token in tokenize.generate_tokens(StringIO(s).read):
         token_type = token[0]
         token_string = token[1]
         if (last_token_was_number

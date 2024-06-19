@@ -26,7 +26,7 @@ By default, the release script will refuse to downgrade the version. This can be
 overridden with the :code:`--force` option, for example to prepare a point
 release. In that case the repository should be prepared to contain only the
 desired changes for the point release without any changes that are targeting the
-next regular release, for example by cherry-picking.
+next regular release, for example by cherry-picking into a stable branch.
 
 .. code-block:: shell
 

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.testing import assert_allclose
 
 from libertem.analysis.rawfft import PickFFTFrameAnalysis
 from libertem.io.dataset.memory import MemoryDataSet
@@ -36,4 +37,4 @@ def test_pick_fft_masked(lt_ctx):
     fft_data = np.fft.fftshift(abs(np.fft.fft2(data[1]*real_mask)))
     res = lt_ctx.run(analysis)
 
-    assert np.allclose(res.intensity.raw_data, fft_data)
+    assert_allclose(res.intensity.raw_data, fft_data, rtol=1e-6, atol=1e-6, equal_nan=True)

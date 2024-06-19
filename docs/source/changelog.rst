@@ -23,8 +23,11 @@ Changelog
 
 .. _`v0-14-1`:
 
-0.14.1 / in preparation
-#######################
+0.14.1 / 2024-06-19
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.12168380.svg
+  :target: https://doi.org/10.5281/zenodo.12168380
 
 Support for numpy 2.x. Note that some examples may not yet run, as the
 dependencies might not be numpy 2 compatible. For these cases, please downgrade

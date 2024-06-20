@@ -74,8 +74,10 @@ def read_npy_info(path: str) -> NPYInfo:
     offset = mmp.offset
     dtype = mmp.dtype
     if not c_contiguous:
-        raise DataSetException('Unable to process NPY arrays that are not C_CONTIGUOUS, '
-                                'consider converting with np.ascontiguousarray().')
+        raise DataSetException(
+            'Unable to process NPY arrays that are not C_CONTIGUOUS, '
+            'consider converting with np.ascontiguousarray().'
+        )
     # Make absolutely sure the file is closed before anything else happens
     mmp._mmap.close()
     del mmp

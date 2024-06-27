@@ -1,2 +1,114 @@
-# This file is a workaround for a pip bug.
-# https://stackoverflow.com/a/53698424
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "libertem"
+dynamic = ["version"]
+description = "Open pixelated STEM framework"
+readme = "README.rst"
+license = "GPL v3"
+requires-python = ">=3.9.3"
+authors = [
+    { name = "the LiberTEM team", email = "libertem-dev@googlegroups.com" },
+]
+keywords = [
+    "electron",
+    "microscopy",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: JavaScript",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "autopep8",
+    "click",
+    "cloudpickle",
+    "dask!=2023.6.1",
+    "defusedxml",
+    "distributed>=2.19.0",
+    "empyre>=0.3.0",
+    "h5py",
+    "ipympl",
+    "jsonschema",
+    "jupyter_ui_poll",
+    "matplotlib",
+    "nbconvert",
+    "nbformat",
+    "ncempy>=1.10",
+    "numba>=0.51",
+    "numexpr!=2.8.6",
+    "numpy",
+    "opentelemetry-api",
+    "pillow",
+    "psutil",
+    "pywin32!=226;platform_system==\"Windows\"",
+    "scikit-image",
+    "scikit-learn",
+    "scipy>=1.4.1",
+    "sparse",
+    "sparseconverter>=0.3.3",
+    "tblib",
+    "threadpoolctl>=3.0",
+    "tomli",
+    "tornado>=5",
+    "tqdm",
+    "typing-extensions",
+]
+
+[project.optional-dependencies]
+bqplot = [
+    "bqplot",
+    "bqplot-image-gl",
+    "ipython",
+]
+cupy = [
+    "cupy",
+]
+hdbscan = [
+    "hdbscan;( python_version!='3.11' or platform_system!='Windows')",
+    "hdbscan<=0.8.30;( python_version=='3.11' and platform_system=='Windows')",
+]
+hdf5plugin = [
+    "hdf5plugin",
+]
+torch = [
+    "torch<1.12",
+]
+tracing = [
+    "opentelemetry-distro",
+    "opentelemetry-exporter-otlp",
+]
+
+[project.scripts]
+libertem-server = "libertem.web.cli:main"
+libertem-worker = "libertem.executor.cli:main"
+
+[project.urls]
+Homepage = "https://libertem.github.io/LiberTEM/"
+
+[tool.hatch.version]
+path = "libertem/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+]

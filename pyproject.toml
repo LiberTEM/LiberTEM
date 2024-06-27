@@ -126,7 +126,9 @@ include = [
 
 [tool.coverage.run]
 branch = true
-include = "src/"
+include = [
+    "src/"
+]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration

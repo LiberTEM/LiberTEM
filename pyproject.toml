@@ -7,7 +7,7 @@ name = "libertem"
 dynamic = ["version"]
 description = "Open pixelated STEM framework"
 readme = "README.rst"
-license = "GPL v3"
+license = "GPL-3.0-only"
 requires-python = ">=3.9.3"
 authors = [
     { name = "the LiberTEM team", email = "libertem-dev@googlegroups.com" },
@@ -106,7 +106,7 @@ libertem-worker = "libertem.executor.cli:main"
 Homepage = "https://libertem.github.io/LiberTEM/"
 
 [tool.hatch.version]
-path = "libertem/__init__.py"
+path = "src/libertem/__version__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [

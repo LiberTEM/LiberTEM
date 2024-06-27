@@ -37,7 +37,8 @@ current focus is `pixelated
 <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy#Universal_detectors>`_
 scanning transmission electron microscopy (`STEM
 <https://en.wikipedia.org/wiki/Scanning_transmission_electron_microscopy>`_)
-:cite:`doi:10.1002/9783527808465.EMC2016.6284,Ophus_2019` and scanning electron
+\[`MacLaren et al. (2016) <https://doi.org/10.1002/9783527808465.EMC2016.6284>`_,
+`Ophus (2019) <https://doi.org/10.1017/s1431927619000497>`_\] and scanning electron
 beam diffraction data.
 
 MapReduce-like processing allows to specify an algorithm through two functions:
@@ -118,7 +119,8 @@ Since LiberTEM is programmable through `user-defined functions (UDFs)
 range of processing tasks on array-like data and data streams. The following
 applications have been implemented already:
 
-- Virtual detectors (virtual bright field, virtual HAADF, center of mass :cite:`Krajnak2016`,
+- Virtual detectors (virtual bright field, virtual HAADF, center of mass
+  \[`Krajnak et al. (2016) <https://doi.org/10.1016/j.ultramic.2016.03.006>`_\],
   custom shapes via masks)
 - `Analysis of amorphous materials <https://libertem.github.io/LiberTEM/app/amorphous.html>`_
 - `Strain mapping <https://libertem.github.io/LiberTEM-blobfinder/>`_
@@ -164,14 +166,15 @@ information!
 
 - Raw binary files
 - NumPy .npy binary files
-- Thermo Fisher EMPAD detector :cite:`Tate2016` files
+- Thermo Fisher EMPAD detector \[`Tate et al. (2016) <https://doi.org/10.1017/S1431927615015664>`_\] files
 - `Quantum Detectors MIB format <https://quantumdetectors.com/products/merlinem/>`_
 - Nanomegas .blo block files
 - Direct Electron DE5 files (HDF5-based) and Norpix SEQ files for `DE-Series <https://directelectron.com/de-series-cameras/>`_ detectors
 - `Gatan K2 IS <https://web.archive.org/web/20180809021832/http://www.gatan.com/products/tem-imaging-spectroscopy/k2-camera>`_ raw format
 - Stacks of Gatan DM3 and DM4 files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - Single-file Gatan DM4 scans when saved using C-ordering
-- FRMS6 from PNDetector pnCCD cameras :cite:`Simson2015` (currently alpha, gain correction still needs UI changes)
+- FRMS6 from PNDetector pnCCD cameras \[`Simson et al. (2015) <https://doi.org/10.1017/s1431927615011836>`_\]
+  (currently alpha, gain correction still needs UI changes)
 - FEI SER files (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - MRC (via `openNCEM <https://github.com/ercius/openNCEM>`_)
 - HDF5-based formats such as HyperSpy files, NeXus and EMD

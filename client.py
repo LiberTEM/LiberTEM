@@ -17,7 +17,7 @@ def cli():
 
 @cli.command(name="build")
 def build_client():
-    # description = 'build the js client'
+    # build the js client
     cwd = os.path.dirname(__file__)
     cwd_client = os.path.join(cwd, 'client')
     logger.info(
@@ -32,7 +32,7 @@ def build_client():
 
 
 def _copy_client():
-    # description = 'copy the js client'
+    # copy the js client
     cwd = pathlib.Path(__file__).absolute().parent
     cwd_client = cwd / 'client'
     client = cwd / 'src' / 'libertem' / 'web' / 'client'

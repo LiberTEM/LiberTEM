@@ -32,3 +32,4 @@ junit.xml
 *.sif
 examples/generated/
 packaging/docker/requirements.txt
+src/libertem/__version__.py

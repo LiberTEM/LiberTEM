@@ -309,7 +309,7 @@ Code style
 
 We try to keep our code `PEP8 <https://peps.python.org/pep-0008/>`_
 -compliant, with line-length relaxed to 100 chars, and some rules ignored. See
-the flake8 section in :code:`setup.cfg` for the current PEP8 settings. As a
+the file :code:`.flake8` in the root for the current PEP8 settings. As a
 general rule, try to keep your changes in a similar style as the surrounding
 code.
 

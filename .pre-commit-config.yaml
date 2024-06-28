@@ -18,10 +18,11 @@ repos:
   hooks:
   - id: flake8
     exclude: ^prototypes/
-- repo: https://github.com/regebro/pyroma
-  rev: "4.2"
-  hooks:
-  - id: pyroma
+# pyroma failing in CI due to missing deps
+# - repo: https://github.com/regebro/pyroma
+#   rev: "4.2"
+#   hooks:
+#   - id: pyroma
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.16.0
   hooks:

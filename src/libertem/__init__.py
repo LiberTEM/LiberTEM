@@ -1,11 +1,13 @@
+# keep version and revision in separate files such that we can
+# generate them without any regex magic
+
+from .__version__ import __version__
+
 try:
-    from .__version__ import __version__, __version_tuple__
-    revision = __version_tuple__[-1]
-except ModuleNotFoundError:
-    __version__ = "0.0.0.dev0"
+    from ._baked_revision import revision
+except ImportError:
     from .versioning import get_git_rev
     revision = get_git_rev()
-
 
 __all__ = [
     "revision", "__version__"

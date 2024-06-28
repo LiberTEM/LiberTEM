@@ -1,16 +1,15 @@
 [build-system]
 requires = [
     "hatchling",
-    "hatch-vcs",
+    "hatch-fancy-pypi-readme",
 ]
 build-backend = "hatchling.build"
 
 [project]
 name = "libertem"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Open pixelated STEM framework"
-readme = "README.rst"
-license = "GPL-3.0-only"
+license-files = { paths = ["LICENSE", "src/libertem/common/LICENSE"] }
 requires-python = ">=3.9.3"
 authors = [
     { name = "the LiberTEM team", email = "libertem-dev@googlegroups.com" },
@@ -106,23 +105,29 @@ libertem-server = "libertem.web.cli:main"
 libertem-worker = "libertem.executor.cli:main"
 
 [project.urls]
+Repository = "https://github.com/LiberTEM/LiberTEM"
 Homepage = "https://libertem.github.io/LiberTEM/"
 
 [tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.build]
-artifacts = [
-  "src/libertem/__version__.py",
-]
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/libertem/__version__.py"
+path = "src/libertem/__version__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/src",
 ]
+
+[tool.hatch.build.hooks.custom]
+# this enables hatch_build.py
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+"content-type" = "text/x-rst"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.rst"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = ":(cite|doc):`[^`]+` ?"
+replacement = ""
 
 [tool.coverage.run]
 branch = true

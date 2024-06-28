@@ -17,7 +17,7 @@ def write_baked_revision(dest_dir):
     baked_dest = os.path.join(dest_dir, '_baked_revision.py')
     os.makedirs(dest_dir, exist_ok=True)
     with open(baked_dest, "w") as f:
-        f.write(r'revision = "%s"' % get_git_rev())
+        f.write(r'revision = "%s"\n' % get_git_rev())
 
 
 class CustomBuildHook(BuildHookInterface):

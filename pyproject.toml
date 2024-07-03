@@ -114,6 +114,27 @@ path = "src/libertem/__version__.py"
 [tool.hatch.build.targets.sdist]
 include = [
     "/src",
+    "/tests",
+    "/client/src",
+    "/client/public",
+    "/client/types",
+    "/client/README.md",
+    "/client/*.*js*",
+    "/LICENSE",
+    "/README.rst",
+    "/pytest.ini",
+    "/conftest.py",
+    "/test_requirements.txt",
+    "/override_requirements.txt",
+    "/tox.ini",
+    "/.flake8",
+]
+exclude = [
+    "*.pyc",
+    "*.nbi",
+    "*.nbc",
+    "__pycache__",
+    ".mypy_cache",
 ]
 
 [tool.hatch.build.hooks.custom]

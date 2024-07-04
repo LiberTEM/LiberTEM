@@ -112,6 +112,9 @@ Homepage = "https://libertem.github.io/LiberTEM/"
 path = "src/libertem/__version__.py"
 
 [tool.hatch.build.targets.sdist]
+artifacts = [
+    "/src/libertem/_baked_revision.py",
+]
 include = [
     "/src",
     "/tests",

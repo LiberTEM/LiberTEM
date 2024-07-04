@@ -5,7 +5,7 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
 def get_git_rev():
-    # Also exists in src/libertem/versioning.py
+    # NOTE: Also exists in src/libertem/versioning.py
     try:
         new_cwd = os.path.abspath(os.path.dirname(__file__))
         rev_raw = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=new_cwd)

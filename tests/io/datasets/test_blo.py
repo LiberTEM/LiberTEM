@@ -31,6 +31,8 @@ except ModuleNotFoundError:
 
 BLO_TESTDATA_PATH = os.path.join(get_testdata_path(), 'default.blo')
 HAVE_BLO_TESTDATA = os.path.exists(BLO_TESTDATA_PATH)
+BLO_16BIT_TESTDATA_PATH = os.path.join(get_testdata_path(), 'Stingray16bit_7_11.blo')
+HAVE_BLO_16BIT_TESTDATA = os.path.exists(BLO_16BIT_TESTDATA_PATH)
 
 pytestmark = pytest.mark.skipif(not HAVE_BLO_TESTDATA, reason="need .blo testdata")  # NOQA
 
@@ -40,6 +42,16 @@ def default_blo(lt_ctx):
     ds = lt_ctx.load(
         "blo",
         path=str(BLO_TESTDATA_PATH),
+        io_backend=MMapBackend(),
+    )
+    return ds
+
+
+@pytest.fixture()
+def blo_16bit(lt_ctx):
+    ds = lt_ctx.load(
+        "blo",
+        path=str(BLO_16BIT_TESTDATA_PATH),
         io_backend=MMapBackend(),
     )
     return ds
@@ -73,8 +85,9 @@ def default_blo_raw():
     return res[0]['data']
 
 
-def test_simple_open(default_blo):
+def test_simple_open(default_blo: BloDataSet):
     assert tuple(default_blo.shape) == (90, 121, 144, 144)
+    assert default_blo.meta.raw_dtype == np.uint8
 
 
 def test_check_valid(default_blo):
@@ -375,3 +388,16 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
     args = ("blo", BLO_TESTDATA_PATH)
     for params in standard_bad_ds_params:
         ds_params_tester(*args, **params)
+
+
+@pytest.mark.skipif(not HAVE_BLO_16BIT_TESTDATA, reason="missing testdata")
+def test_simple_open_16bit(blo_16bit: BloDataSet):
+    assert tuple(blo_16bit.meta.shape) == (11, 7, 576, 576)
+    assert blo_16bit.meta.raw_dtype == np.uint16
+
+
+def test_pick_16bit(lt_ctx, blo_16bit):
+    roi = np.zeros(blo_16bit.meta.shape.nav, dtype=bool).reshape((-1,))
+    roi[0] = True
+    frame = lt_ctx.run_udf(dataset=blo_16bit, udf=PickUDF(), roi=roi)['intensity'].data
+    assert frame.sum() == 2055304

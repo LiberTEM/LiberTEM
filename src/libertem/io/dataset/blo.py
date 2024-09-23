@@ -237,7 +237,7 @@ class BloDataSet(DataSet):
         return tuple()
 
     @staticmethod
-    def _try_read_bitdepth(metadata: tuple[str]) -> str:
+    def _try_read_bitdepth(metadata: tuple[str, ...]) -> str:
         """
         Try to extract a bitdepth from the metadata items
         using the key in the post-header section of the file

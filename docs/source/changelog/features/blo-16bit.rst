@@ -2,4 +2,4 @@
 ===========================================
 * Adds support for parsing the data bit depth from
   the secondary header in v1.3 BLO files, and reading
-  image data accordingly (:pr:`1631`).
+  image data accordingly (:pr:`1676`).

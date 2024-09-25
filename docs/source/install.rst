@@ -80,16 +80,16 @@ Using conda
 If you are already using conda, or if you don't have a system-wide compatible
 Python installation, you can create a conda environment for LiberTEM.
 
-This section assumes that you have `installed anaconda or miniconda
-<https://conda.io/projects/conda/en/latest/user-guide/install/index.html#regular-installation>`_
+This section assumes that you have installed a conda-like environment manager, e.g.
+`Miniforge<https://github.com/conda-forge/miniforge?tab=readme-ov-file#install>`_
 and that your installation is working.
 
-You can create a new conda environment to install LiberTEM with the following
+You can create a new environment to install LiberTEM with the following
 command:
 
 .. code-block:: shell
 
-    $ conda create -n libertem python=3.11
+    $ conda create -n libertem python=3.12
 
 Activate the environment with the following command:
 

@@ -8,8 +8,14 @@ from sparseconverter import (
 from libertem.io.dataset.memory import MemoryDataSet
 from libertem.udf.base import _execution_plan
 from libertem.udf.base import UDF, _get_canonical_backends
+from libertem.utils.devices import detect
 
 from utils import set_device_class
+
+
+d = detect()
+has_cupy = d['cudas'] and d['has_cupy']
+has_gpus = len(d['cudas']) > 0
 
 
 class BackendUDF(UDF):
@@ -354,13 +360,16 @@ def test_udf_preference_number(lt_ctx, device_class, ds_backends, udf4_backends)
         SCIPY_COO: frozenset([udf1, udf2, udf3]),
         udf4_backends[0]: frozenset([udf4]),
     }
+    needs_cupy = device_class in ('cupy', 'cuda') or CUPY in ds_backends
+    do_run = not needs_cupy or has_cupy
     validate(
         ctx=lt_ctx,
         ds=ds,
         udfs=[udf1, udf2, udf3, udf4],
         available_backends=BACKENDS,
         source_backend=source_backend,
-        execution_plan=execution_plan
+        execution_plan=execution_plan,
+        do_run=do_run,
     )
 
 

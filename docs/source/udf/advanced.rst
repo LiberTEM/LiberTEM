@@ -731,6 +731,9 @@ constants: :attr:`libertem.udf.base.UDF.BACKEND_NUMPY`,
 :attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_COO`,
 :attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSR`,
 :attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSC`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_COO_ARRAY`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSR_ARRAY`,
+:attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSC_ARRAY`,
 :attr:`~libertem.udf.base.UDF.BACKEND_CUPY_SCIPY_COO`,
 :attr:`~libertem.udf.base.UDF.BACKEND_CUPY_SCIPY_CSR`,
 :attr:`~libertem.udf.base.UDF.BACKEND_CUPY_SCIPY_CSC`.
@@ -748,6 +751,11 @@ recommended for use in UDFs.
     The backends in :attr:`~libertem.udf.base.UDF.D2_BACKENDS` only support 2D
     matrices, while the ones in :attr:`~libertem.udf.base.UDF.ND_BACKENDS` support
     n-dimensional arrays.
+
+.. versionadded:: 0.15.0
+    :attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_COO_ARRAY`,
+    :attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSR_ARRAY`, and
+    :attr:`~libertem.udf.base.UDF.BACKEND_SCIPY_CSC_ARRAY` are added.
 
 The frame, tile or partition is supplied with flattened
 signal dimensions for 2D-only backends. Furthermore, frames include a nav

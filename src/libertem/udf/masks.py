@@ -256,9 +256,15 @@ class ApplyMasksUDF(UDF):
                 mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
 
         _backends = backends
+        not_supported = (
+            self.BACKEND_SCIPY_COO_ARRAY,
+            self.BACKEND_SCIPY_CSR_ARRAY,
+            self.BACKEND_SCIPY_CSC_ARRAY,
+        )
+        supported_backends = tuple(b for b in self.BACKEND_ALL if b not in not_supported)
         if backends is None:
-            backends = self.BACKEND_ALL
-        backends = tuple(b for b in backends if b in self.BACKEND_ALL)
+            backends = supported_backends
+        backends = tuple(b for b in backends if b in supported_backends)
 
         if shifts is not None:
             if isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):

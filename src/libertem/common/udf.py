@@ -3,7 +3,8 @@ from typing_extensions import Protocol, TypedDict
 from typing import Union
 from sparseconverter import (
     CUDA, CUPY, CUPY_SCIPY_COO, CUPY_SCIPY_CSC, CUPY_SCIPY_CSR, NUMPY,
-    SCIPY_COO, SCIPY_CSC, SCIPY_CSR, SPARSE_COO, SPARSE_DOK, SPARSE_GCXS,
+    SCIPY_COO, SCIPY_CSC, SCIPY_CSR, SCIPY_COO_ARRAY, SCIPY_CSC_ARRAY, SCIPY_CSR_ARRAY,
+    SPARSE_COO, SPARSE_DOK, SPARSE_GCXS,
     CPU_BACKENDS, CUDA_BACKENDS, CUPY_BACKENDS, SPARSE_BACKENDS, DENSE_BACKENDS,
     ND_BACKENDS, D2_BACKENDS,
 )
@@ -49,6 +50,9 @@ class UDFProtocol(Protocol):
     BACKEND_SCIPY_COO = SCIPY_COO  #: scipy.sparse.coo_matrix
     BACKEND_SCIPY_CSR = SCIPY_CSR  #: scipy.sparse.csr_matrix
     BACKEND_SCIPY_CSC = SCIPY_CSC  #: scipy.sparse.csc_matrix
+    BACKEND_SCIPY_COO_ARRAY = SCIPY_COO_ARRAY  #: scipy.sparse.coo_array
+    BACKEND_SCIPY_CSR_ARRAY = SCIPY_CSR_ARRAY  #: scipy.sparse.csr_array
+    BACKEND_SCIPY_CSC_ARRAY = SCIPY_CSC_ARRAY  #: scipy.sparse.csc_array
     BACKEND_CUPY_SCIPY_COO = CUPY_SCIPY_COO  #: cupyx.scipy.sparse.coo_matrix
     BACKEND_CUPY_SCIPY_CSR = CUPY_SCIPY_CSR  #: cupyx.scipy.sparse.csr_matrix
     BACKEND_CUPY_SCIPY_CSC = CUPY_SCIPY_CSC  #: cupyx.scipy.sparse.csc_matrix
@@ -57,6 +61,7 @@ class UDFProtocol(Protocol):
     #: Tuple with all backends in suggested priority
     BACKEND_ALL = (
         CUPY_SCIPY_CSR, CUPY_SCIPY_CSC, CUPY_SCIPY_COO,
+        SCIPY_COO_ARRAY, SCIPY_CSC_ARRAY, SCIPY_CSR_ARRAY,
         SCIPY_CSR, SCIPY_CSC, SCIPY_COO,
         CUPY, NUMPY,
         SPARSE_COO, SPARSE_GCXS,

@@ -76,7 +76,7 @@ dependencies = [
     "scikit-learn",
     "scipy>=1.4.1",
     "sparse",
-    "sparseconverter>=0.3.3",
+    "sparseconverter>=0.4.0",
     "tblib",
     "threadpoolctl>=3.0",
     "tomli",

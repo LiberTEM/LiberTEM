@@ -199,7 +199,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
         return self.get_generic_results(img_sum, img_y, img_x, damage=damage)
 
     def get_generic_results(self, img_sum, img_y, img_x, damage):
-        from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple
+        from libertem.viz import rgb_from_2dvector, visualize_simple
         ref_x = self.parameters["cx"]
         ref_y = self.parameters["cy"]
         y_centers_raw, x_centers_raw = center_shifts(img_sum, img_y, img_x, ref_y, ref_x)
@@ -236,7 +236,7 @@ class COMAnalysis(BaseMasksAnalysis, id_="CENTER_OF_MASS"):
                 vmax = np.sqrt(np.max(x_centers[damage]**2 + y_centers[damage]**2))
             else:
                 vmax = 1
-            f = CMAP_CIRCULAR_DEFAULT.rgb_from_vector((x_centers, y_centers, 0), vmax=vmax)
+            f = rgb_from_2dvector(x=x_centers, y=y_centers, vmax=vmax)
             m = magnitude(y_centers, x_centers)
             # Create results which are valid for any nav_shape
             results_list = [

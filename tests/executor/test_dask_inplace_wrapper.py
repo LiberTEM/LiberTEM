@@ -55,7 +55,13 @@ def test_inplace_get_with_slice(shape):
 
 @pytest.mark.parametrize(
     "shape", ((8, 8),))
-def test_inplace_set_with_ints(shape):
+@pytest.mark.parametrize(
+    "set_wrapper", (
+        np.asarray,
+        da.asarray,
+        lambda x: x,
+    ))
+def test_inplace_set_with_ints(shape, set_wrapper):
     dtype = np.float32
     data, dask_wrapped = get_wrapped_data(shape, dtype)
 
@@ -63,7 +69,7 @@ def test_inplace_set_with_ints(shape):
     subslice = np.s_[5]
 
     dask_wrapped.set_slice(sl)
-    dask_wrapped[subslice] = 55.
+    dask_wrapped[subslice] = set_wrapper(55.)
     data[sl][subslice] = 55.
 
     assert np.allclose(dask_wrapped.data.compute(), data)
@@ -268,8 +274,13 @@ def random_slice(shape, final_ellipsis=False):
     "shape", ((16, 8, 32, 64),
               (16, 16, 8),
               (16, 16),
-              (16,),))
-def test_random_set_with_array(repeat_number, shape):
+              (16,),
+              (1,),))
+@pytest.mark.parametrize(
+    "creator",
+    (np.random.uniform, da.random.uniform),
+)
+def test_random_set_with_array(repeat_number, shape, creator):
     dtype = np.float32
     data, dask_wrapped = get_wrapped_data(shape, dtype)
 
@@ -296,20 +307,21 @@ def test_random_set_with_array(repeat_number, shape):
               f'on shape {shape} with sl {sl}')
         return
 
-    set_values = np.random.random(size=target_shape)
-    dask_wrapped.set_slice(sl)
-
-    # Assignment to an empty slice sometimes raises a ValueError in Dask
-    # but is a no-op in Numpy. The 'sometimes' refers to specific combinations
-    # of zero-length, [:] or Ellipsis subslices not raising an error
     try:
-        dask_wrapped[subslice] = set_values
-    except ValueError:
-        assert 0 in target_shape or 1 in target_shape
-        # Can't find consistent behaviour in Dask so better to return to avoid
-        # tests failing for things outside of our control
+        set_values = creator(size=target_shape)
+    except ZeroDivisionError:
+        # Dask auto-chunking cannot handle a shape with zero dimensions
+        assert 0 in target_shape
+        print(f'Failed while creating values of shape {target_shape}')
         return
 
+    dask_wrapped.set_slice(sl)
+    dask_wrapped[subslice] = set_values
+
+    try:
+        set_values = set_values.compute()
+    except AttributeError:
+        pass
     if set_values.size == 1:
         set_values = set_values.item()
 

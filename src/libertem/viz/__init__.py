@@ -1,13 +1,13 @@
 from empyre.vis.colors import ColormapCubehelix, ColormapPerception, ColormapHLS, ColormapClassic
 
-from .base import visualize_simple, get_plottable_2D_channels
+from .base import visualize_simple, rgb_from_2dvector, get_plottable_2D_channels
 
 from libertem.common.viz import encode_image
 
 
 __all__ = ['ColormapCubehelix', 'ColormapPerception', 'ColormapHLS',
            'ColormapClassic', 'cmaps', 'CMAP_CIRCULAR_DEFAULT',
-           'visualize_simple', 'encode_image', 'get_plottable_2D_channels']
+           'visualize_simple', 'encode_image', 'get_plottable_2D_channels', 'rgb_from_2dvector']
 
 
 cmaps = {'cubehelix_standard': ColormapCubehelix(),

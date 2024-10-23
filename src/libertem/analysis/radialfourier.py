@@ -171,7 +171,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
         udf_results = udf_results.reshape((n_bins, orders, *shape))
 
         def resultlist():
-            from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
+            from libertem.viz import rgb_from_2dvector, visualize_simple, cmaps
             import matplotlib.cm as cm
             sets = []
             absolute = np.absolute(udf_results)
@@ -240,8 +240,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
             for b in range(n_bins):
                 data = udf_results[b, 0]
                 f = partial(
-                    CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                    (data.real, data.imag, 0),
+                    rgb_from_2dvector,
+                    x=data.real, y=data.imag,
                     vmax=np.max(np.abs(data[..., dam]))
                 )
                 sets.append(
@@ -256,8 +256,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                 for o in range(1, orders):
                     data = udf_results[b, o] / normal[b]
                     f = partial(
-                        CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                        (data.real, data.imag, 0), vmax=max_absolute
+                        rgb_from_2dvector,
+                        x=data.real, y=data.imag, vmax=max_absolute
                     )
                     sets.append(
                         AnalysisResult(

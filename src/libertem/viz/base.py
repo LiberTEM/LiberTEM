@@ -3,7 +3,10 @@ import logging
 import time
 
 import numpy as np
-from matplotlib import colors, cm
+# Makes colormaps available in matplotlib
+import colorcet  # noqa:F401
+from matplotlib import colors, cm, colormaps
+from skimage.color import rgb2luv, luv2rgb
 
 from libertem.udf.base import UDFRunner
 
@@ -73,6 +76,38 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
     normalized = norm(result.reshape((-1,))).reshape(shape)
     colored = colormap(normalized, bytes=True)
     return colored
+
+
+cet_cyclic_isoluminant = colormaps.get_cmap('cet_cyclic_isoluminant')
+
+
+def rgb_from_2dvector(y, x, vmax=None):
+    y = np.asarray(y)
+    x = np.asarray(x)
+    absval = np.sqrt(np.abs(y)**2 + np.abs(x)**2)
+    if vmax is None:
+        vmax = np.max(absval[np.isfinite(absval)])
+    if vmax == 0:
+        vmax = 1
+    scaled_absval = absval / vmax
+    scaled_absval = np.minimum(scaled_absval, 1)
+    # Transform coordinates to match previous circular color map
+    angle = np.arctan2(-y, -x)
+    # Get color from isoluminant cyclic map of the angle
+    color = np.asarray(visualize_simple(
+        angle, colormap=cet_cyclic_isoluminant, vmin=-np.pi, vmax=np.pi
+    ))
+    # Transform to LUV space for linear axes
+    luv = rgb2luv(color[..., :3])
+    # Tweak luminance to match previous map
+    luv[..., 0] *= 0.8
+    # Adjust color intensity to roughly match previous implementation
+    color_scale = scaled_absval * 2.2
+    # Scale color
+    luv[..., 1] *= color_scale
+    luv[..., 2] *= color_scale
+    rgb = (luv2rgb(luv) * 255).astype(np.uint8)
+    return rgb
 
 
 def get_plottable_2D_channels(buffers):

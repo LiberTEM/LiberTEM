@@ -52,7 +52,7 @@ def visualize_simple(result, colormap=None, logarithmic=False, vmin=None, vmax=N
         2d array of intensity values
 
     colormap : matplotlib colormap or None
-        colormap used for visualizing intensity values, defaults to ColormapCubehelix()
+        colormap used for visualizing intensity values, defaults to matplotlib.cm.gist_earth
 
     Returns
     -------

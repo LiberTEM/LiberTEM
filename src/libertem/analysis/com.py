@@ -43,7 +43,7 @@ class ComTemplate(GeneratorHelper):
 
     def get_dependency(self):
         return [
-            "from empyre.vis.colors import ColormapCubehelix"
+            "from libertem.viz import rgb_from_2dvector"
         ]
 
     def get_docs(self):
@@ -71,8 +71,7 @@ class ComTemplate(GeneratorHelper):
             "fig, axes = plt.subplots()",
             'axes.set_title("field")',
             "x_centers, y_centers = com_result.field.raw_data",
-            "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
-            "axes.imshow(ch.rgb_from_vector((x_centers, y_centers, 0)))"
+            "axes.imshow(rgb_from_2dvector(x=x_centers, y=y_centers))"
         ]
         for channel in self.channels[1:3]:
             plot.append("fig, axes = plt.subplots()")

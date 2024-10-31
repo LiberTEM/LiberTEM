@@ -12,20 +12,48 @@ from libertem.udf.sumsigudf import SumSigUDF
 def test_rgb_from_vector():
     rgb = viz.rgb_from_2dvector(x=0, y=0)  # center (grey)
     np.testing.assert_equal(rgb, np.asarray([127, 127, 127], dtype=np.uint8))
-    rgb = viz.rgb_from_2dvector(x=0, y=1)  # up (green)
+
+    x = 0
+    y = 1
+    rgb = viz.rgb_from_2dvector(x=x, y=y)  # up (green)
     # plus green
     np.testing.assert_equal(np.argmax(rgb), 1)
-    rgb = viz.rgb_from_2dvector(x=1, y=0)  # right (red)
+    angle = np.arctan2(y, x)
+    mapped = (angle + np.pi) / (2*np.pi)
+    cyclic = (np.asarray(viz.libertem_cyclic(mapped)) * 255).astype(np.uint8)
+    np.testing.assert_allclose(cyclic[:-1], rgb, atol=2)
+
+    x = 1
+    y = 0
+    rgb = viz.rgb_from_2dvector(x=x, y=y)  # right (red)
     # plus red
     np.testing.assert_equal(np.argmax(rgb), 0)
-    rgb = viz.rgb_from_2dvector(x=0, y=-1)  # down (purple)
+    angle = np.arctan2(y, x)
+    mapped = (angle + np.pi) / (2*np.pi)
+    cyclic = (np.asarray(viz.libertem_cyclic(mapped)) * 255).astype(np.uint8)
+    np.testing.assert_allclose(cyclic[:-1], rgb, atol=2)
+
+    x = 0
+    y = -1
+    rgb = viz.rgb_from_2dvector(x=x, y=y)  # down (purple)
     # minus green, plus blue
     np.testing.assert_equal(np.argmin(rgb), 1)
     np.testing.assert_equal(np.argmax(rgb), 2)
-    rgb = viz.rgb_from_2dvector(x=-1, y=0)  # left (cyan)
+    angle = np.arctan2(y, x)
+    mapped = (angle + np.pi) / (2*np.pi)
+    cyclic = (np.asarray(viz.libertem_cyclic(mapped)) * 255).astype(np.uint8)
+    np.testing.assert_allclose(cyclic[:-1], rgb, atol=2)
+
+    x = -1
+    y = 0
+    rgb = viz.rgb_from_2dvector(x=x, y=y)  # left (cyan)
     # minus red, plus blue
     np.testing.assert_equal(np.argmin(rgb), 0)
     np.testing.assert_equal(np.argmax(rgb), 2)
+    angle = np.arctan2(y, x)
+    mapped = (angle + np.pi) / (2*np.pi)
+    cyclic = (np.asarray(viz.libertem_cyclic(mapped)) * 255).astype(np.uint8)
+    np.testing.assert_allclose(cyclic[:-1], rgb, atol=2)
 
 
 @pytest.mark.parametrize("log", [True, False])

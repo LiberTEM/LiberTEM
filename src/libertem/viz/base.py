@@ -111,9 +111,7 @@ def rgb_from_2dvector(y, x, vmax=None):
 
 
 def make_colormap():
-    # including 360 to close the circle: it interpolates
-    # in the interval [0, 1] and color(0) == color(1)
-    angles = np.arange(361)
+    angles = np.arange(360)
     angles_rad = angles/180*np.pi
     yy, xx = -np.sin(angles_rad), -np.cos(angles_rad)
     cols = rgb_from_2dvector(y=yy, x=xx) / 255

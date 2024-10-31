@@ -9,7 +9,7 @@
 ## Reviewer Checklist:
 
 * [ ] `/azp run libertem.libertem-data` passed
-* [ ] No import of GPL code from MIT code
+* [ ] Only import code that is compatible with MIT license
 
 <!--
 

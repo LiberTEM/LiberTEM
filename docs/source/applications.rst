@@ -24,7 +24,6 @@ and also integrated into this documentation via the links below:
    app/amorphous
    app/strain
    app/phasechange
-   app/holography
    app/processing
 
 * `Ptychography (external) <https://ptychography-4-0.github.io/ptychography/>`_

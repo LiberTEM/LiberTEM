@@ -124,7 +124,7 @@ applications have been implemented already:
   custom shapes via masks)
 - `Analysis of amorphous materials <https://libertem.github.io/LiberTEM/app/amorphous.html>`_
 - `Strain mapping <https://libertem.github.io/LiberTEM-blobfinder/>`_
-- `Off-axis electron holography reconstruction <https://libertem.github.io/LiberTEM/app/holography.html>`_
+- `Off-axis electron holography reconstruction <https://libertem.github.io/LiberTEM-holo/>`_
 - `Single Side Band ptychography <https://ptychography-4-0.github.io/ptychography/>`_
 
 Some of these applications are available through an `interactive web GUI

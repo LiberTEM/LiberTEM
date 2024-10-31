@@ -14,4 +14,3 @@ Application-specific APIs
     app/amorphous
     app/strain
     app/phasechange
-    app/holography

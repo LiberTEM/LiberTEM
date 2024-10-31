@@ -110,6 +110,20 @@ def rgb_from_2dvector(y, x, vmax=None):
     return rgb
 
 
+def make_colormap():
+    # including 360 to close the circle: it interpolates
+    # in the interval [0, 1] and color(0) == color(1)
+    angles = np.arange(361)
+    angles_rad = angles/180*np.pi
+    yy, xx = -np.sin(angles_rad), -np.cos(angles_rad)
+    cols = rgb_from_2dvector(y=yy, x=xx) / 255
+    cmap = colors.LinearSegmentedColormap.from_list('libertem_cyclic', cols)
+    return cmap
+
+
+libertem_cyclic = make_colormap()
+
+
 def get_plottable_2D_channels(buffers):
     return [
         k

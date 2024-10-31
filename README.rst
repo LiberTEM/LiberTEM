@@ -12,7 +12,7 @@
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1477847.svg
 .. _zenodo: https://doi.org/10.5281/zenodo.1477847
 
-.. |github| image:: https://img.shields.io/badge/GitHub-GPL--3.0-informational
+.. |github| image:: https://img.shields.io/badge/GitHub-MIT-informational
 .. _github: https://github.com/LiberTEM/LiberTEM/
 
 .. |codeclimate| image:: https://api.codeclimate.com/v1/badges/dee042f64380f64737e5/maintainability
@@ -191,8 +191,7 @@ See `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_!
 License
 -------
 
-LiberTEM is licensed under GPLv3. The I/O parts are also available under the MIT
-license, please see LICENSE files in the subdirectories for details.
+LiberTEM is licensed under the MIT license.
 
 Acknowledgements
 ----------------

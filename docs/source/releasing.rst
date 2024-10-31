@@ -60,8 +60,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Review open issues and pull requests
     * [ ] Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
           in appropriate branch.
-    * [ ] License review: no import of GPL code from MIT code
-          `pydeps --only "libertem" --show-deps --noshow src\libertem | python scripts\licensecheck.py`
+    * [ ] License review: compatible with MIT license
     * [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3) and run the [Thorough workflow](https://github.com/LiberTEM/LiberTEM/actions/workflows/thorough.yml) on GitHub Actions
     * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.

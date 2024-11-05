@@ -3,6 +3,9 @@ import contextlib
 from copy import deepcopy
 import functools
 import logging
+import copy
+import time
+import threading
 import signal
 from typing import Any, Optional, Union, Callable
 from collections.abc import Iterable
@@ -446,6 +449,49 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._futures = {}
         self._scatter_map = {}
 
+        if is_local:
+            self._worker_spec = copy.copy(self.client.cluster.worker_spec)
+            self._snooze_timeout = 10.
+            self._is_snoozing = False
+            self._last_activity = time.monotonic()
+            self._snooze_check_interval = min(
+                30.0,
+                self._snooze_timeout and (self._snooze_timeout * 0.1) or 30.0,
+            )
+            self._snooze_task = threading.Thread(
+                target=self._snooze_check_task,
+                daemon=True,
+            )
+            self._snooze_task.start()
+
+    def update_activity(self):
+        if self.is_local:
+            self._last_activity = time.monotonic()
+
+    def snooze(self):
+        self.client.cluster.scale(0)
+        self._is_snoozing = True
+
+    def unsnooze(self):
+        self.update_activity()
+        self.client.cluster.worker_spec = copy.copy(self._worker_spec)
+        self.client.cluster.scale(len(self._worker_spec))
+        self._is_snoozing = False
+
+    def is_snoozing(self):
+        return self._is_snoozing
+
+    def _snooze_check_task(self):
+        """
+        Periodically check if we need to snooze the executor
+        """
+        while True:
+            time.sleep(self._snooze_check_interval)
+            if not self._is_snoozing and self._snooze_timeout is not None:
+                since_last_activity = time.monotonic() - self._last_activity
+                if since_last_activity > self._snooze_timeout:
+                    self.snooze()
+
     @contextlib.contextmanager
     def scatter(self, obj):
         # an additional layer of indirection, because we want to be able to
@@ -491,6 +537,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         def _id_to_task(task_id):
             return tasks[task_id]
 
+        self.unsnooze()
         workers = self.get_available_workers()
         threaded_executor = workers.has_threaded_workers()
 
@@ -522,6 +569,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         try:
             as_completed = dd.as_completed(initial, with_results=True, loop=self.client.loop)
             for future, result_wrap in as_completed:
+                self.update_activity()
                 if future.cancelled():
                     log.debug(
                         "future %r is cancelled, stopping",
@@ -599,6 +647,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         """
         run a callable :code:`fn` on any worker
         """
+        self.unsnooze()
         fn_with_args = functools.partial(fn, *args, **kwargs)
         future = self.client.submit(fn_with_args, priority=1, pure=False)
         return future.result()

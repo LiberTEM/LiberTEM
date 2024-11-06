@@ -453,6 +453,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
             )
 
     def scale(self, n_workers: Optional[int] = None):
+        if not self.is_local:
+            return
         if n_workers is None:
             n_workers = len(self._worker_spec)
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)

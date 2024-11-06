@@ -42,7 +42,7 @@ class AsyncAdapter(AsyncJobExecutor):
     Wrap a synchronous JobExecutor and allow to use it as AsyncJobExecutor. All methods are
     converted to async and executed in a separate thread.
     """
-    def __init__(self, wrapped, pool=None):
+    def __init__(self, wrapped: JobExecutor, pool=None):
         self._wrapped = wrapped
         if pool is None:
             pool = AsyncAdapter.make_pool()

@@ -142,16 +142,15 @@ class JobEngine:
         analysis_id: str,
         details: AnalysisDetails,
     ) -> AnalysisResultSet:
-        with self.state.executor_state.keep_alive():
-            with tracer.start_as_current_span("JobEngine.run_udf"):
-                return await self._run_udf(
-                    job_id,
-                    dataset,
-                    dataset_id,
-                    analysis,
-                    analysis_id,
-                    details,
-                )
+        with tracer.start_as_current_span("JobEngine.run_udf"):
+            return await self._run_udf(
+                job_id,
+                dataset,
+                dataset_id,
+                analysis,
+                analysis_id,
+                details,
+            )
 
     async def _run_udf(
         self,

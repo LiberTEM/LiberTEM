@@ -4,15 +4,14 @@ import typing
 import itertools
 import logging
 import asyncio
-import time
-import contextlib
+from typing import Union
 
 import psutil
 
 import libertem
 from libertem.api import Context
 from libertem.analysis.base import AnalysisResultSet
-from libertem.common.executor import JobExecutor
+from libertem.common.executor import JobExecutor, SnoozeMessage
 from libertem.common.async_utils import sync_to_async
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor
@@ -51,20 +50,11 @@ class ExecutorState:
         self.cluster_details: typing.Optional[list] = None
         self.context: typing.Optional[Context] = None
         self._event_bus = event_bus
-        self._snooze_lock = asyncio.Lock()
         self._snooze_timeout = snooze_timeout
         self._pool = AsyncAdapter.make_pool()
-        self._is_snoozing = False
-        self._last_activity = time.monotonic()
-        self._snooze_check_interval = min(
-            30.0,
-            snooze_timeout and (snooze_timeout * 0.1) or 30.0,
-        )
-        self._snooze_task = asyncio.ensure_future(self._snooze_check_task())
         if loop is None:
             loop = asyncio.get_event_loop()
         self._loop = loop
-        self._keep_alive = 0
         self.local_directory = "dask-worker-space"
         self.preload: tuple[str, ...] = ()
 
@@ -81,68 +71,23 @@ class ExecutorState:
     def get_local_directory(self):
         return self.local_directory
 
-    def _update_last_activity(self):
-        self._last_activity = time.monotonic()
-        log.debug("_update_last_activity")
-
-    @contextlib.contextmanager
-    def keep_alive(self):
-        self._update_last_activity()
-        self._keep_alive += 1
-        try:
-            yield
-        finally:
-            self._keep_alive -= 1
-            self._update_last_activity()
-
-    async def snooze(self):
-        async with self._snooze_lock:
-            if self.executor is None:
-                log.debug("not snoozing: no executor")
-                return
-            if self._keep_alive > 0:
-                log.debug("not snoozing: _keep_alive=%d", self._keep_alive)
-                return
+    def _snooze_message_callback(self, message_type: SnoozeMessage):
+        from .messages import Message
+        if message_type == SnoozeMessage.SNOOZE:
             log.info("Snoozing...")
-            from .messages import Message
             msg = Message().snooze("snoozing")
             self._event_bus.send(msg)
-            self.executor.ensure_sync().close()
-            self.context = None
-            self.executor = None
-            self._is_snoozing = True
-
-    async def unsnooze(self):
-        async with self._snooze_lock:
-            if not self._is_snoozing:
-                return
+        elif message_type == SnoozeMessage.UNSNOOZE_START:
             log.info("Unsnoozing...")
-            from .messages import Message
             msg = Message().unsnooze("unsnoozing")
             self._event_bus.send(msg)
-            executor = await self.make_executor(self.cluster_params, self._pool)
-            self._set_executor(executor, self.cluster_params)
-            self._is_snoozing = False
+        elif message_type == SnoozeMessage.UNSNOOZE_DONE:
             msg = Message().unsnooze_done("unsnooze done")
             self._event_bus.send(msg)
-
-    def is_snoozing(self):
-        return self._is_snoozing
-
-    async def _snooze_check_task(self):
-        """
-        Periodically check if we need to snooze the executor
-        """
-        try:
-            while True:
-                await asyncio.sleep(self._snooze_check_interval)
-                if not self._is_snoozing and self._snooze_timeout is not None:
-                    since_last_activity = time.monotonic() - self._last_activity
-                    if since_last_activity > self._snooze_timeout:
-                        await self.snooze()
-        except asyncio.CancelledError:
-            log.debug("shutting down snooze check task")
-            return
+        elif message_type == SnoozeMessage.UPDATE_ACTIVITY:
+            log.debug("_update_last_activity")
+        else:
+            log.error("Unrecognized snooze message")
 
     async def make_executor(self, params, pool) -> AsyncAdapter:
         connection = params['connection']
@@ -160,21 +105,25 @@ class ExecutorState:
                 local_directory=self.get_local_directory(),
                 preload=self.get_preload(),
             )
+            self._setup_snooze(sync_executor)
         else:
             raise ValueError("unknown connection type")
         executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
         return executor
 
+    def _setup_snooze(self, executor: Union[JobExecutor, AsyncAdapter]):
+        if self._snooze_timeout:
+            executor.ensure_sync().setup_snooze(
+                self._snooze_timeout,
+                cb=self._snooze_message_callback
+            )
+
     async def get_executor(self):
-        self._update_last_activity()
-        await self.unsnooze()
-        if self.executor is None:
-            # TODO: exception type, conversion into 400 response
-            raise RuntimeError("wrong state: executor is None")
+        self.executor.ensure_sync().unsnooze()
         return self.executor
 
     def have_executor(self):
-        return self.executor is not None or self._is_snoozing
+        return self.executor is not None  # or self._is_snoozing
 
     async def get_resource_details(self):
         # memoize the cluster details, if ever we support
@@ -185,14 +134,10 @@ class ExecutorState:
         return self.cluster_details
 
     async def get_context(self) -> Context:
-        await self.unsnooze()
-        self._update_last_activity()
-        if self.context is None:
-            raise RuntimeError("cannot get context, please call `set_executor` before")
+        _ = await self.get_executor()
         return self.context
 
     def shutdown(self):
-        self._loop.call_soon_threadsafe(self._snooze_task.cancel)
         if self.context is not None:
             self.context.close()
 
@@ -204,7 +149,6 @@ class ExecutorState:
         After the executor is set, we take "ownership" of it, and ensure
         that it is properly cleaned up in the `shutdown` method.
         """
-        self._update_last_activity()
         if self.executor is not None:
             await self.executor.close()
             self.executor = None
@@ -216,7 +160,6 @@ class ExecutorState:
         self.executor = executor
         self.cluster_params = params
         self.context = Context(executor=executor.ensure_sync())
-        self._is_snoozing = False  # if we were snoozing before, we no longer are
         try:
             # Exposing the scheduler address allows use of
             # libertem-server to spin up a LT-compatible
@@ -226,7 +169,6 @@ class ExecutorState:
             pass
 
     def get_cluster_params(self):
-        self._update_last_activity()
         return self.cluster_params
 
 
@@ -575,4 +517,5 @@ class SharedState:
             self.executor_state.get_local_directory(),
             self.executor_state.get_preload(),
         )
+        self.executor_state._setup_snooze(executor)
         self.executor_state._set_executor(executor, params)

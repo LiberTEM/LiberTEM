@@ -109,7 +109,7 @@ class DataSetDetailHandler(CORSMixin, tornado.web.RequestHandler):
             dataset_params = converter.to_python(params)
             executor = await self.state.executor_state.get_executor()
 
-            with self.state.executor_state.keep_alive():
+            with self.state.executor_state.executor.ensure_sync().in_use():
                 ds = await load(
                     filetype=cls, executor=executor, enable_async=True, **dataset_params
                 )
@@ -146,7 +146,7 @@ class DataSetDetectHandler(tornado.web.RequestHandler):
         path = self.request.arguments['path'][0].decode("utf8")
         executor = await self.state.executor_state.get_executor()
 
-        with self.state.executor_state.keep_alive():
+        with self.state.executor_state.executor.ensure_sync().in_use():
             detected_params = await sync_to_async(
                 detect, path=path, executor=executor.ensure_sync()
             )

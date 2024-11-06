@@ -1,5 +1,6 @@
 import queue
 import time
+from enum import Enum, auto
 import functools
 from typing import (
     Callable, Optional, Any, TYPE_CHECKING,
@@ -719,11 +720,27 @@ class NoopCommHandler(TaskCommHandler):
         pass
 
 
+class SnoozeMessage(Enum):
+    SNOOZE = auto()
+    UNSNOOZE_START = auto()
+    UNSNOOZE_DONE = auto()
+    UPDATE_ACTIVITY = auto()
+
+
 class SnoozeMixin:
-    def setup_snooze(self, snooze_timeout: Union[float, int]):
+    def setup_snooze(
+        self,
+        snooze_timeout: Union[float, int],
+        cb: Optional[Callable[[SnoozeMessage], None]] = None,
+    ):
+        if self.snooze_task is not None:
+            raise ExecutorError("Cannot enable snooze more than once")
+        if snooze_timeout <= 0:
+            raise ValueError("Must supply a positive snooze timeout")
+        self.snooze_cb = cb or self._default_snooze_cb
         self._keep_alive = 0
         self._last_activity = time.monotonic()
-        self.is_snoozing = False
+        self._is_snoozing = False
         self._snooze_lock = threading.Lock()
         self._snooze_timeout = snooze_timeout
         self._snooze_check_interval = min(
@@ -736,8 +753,20 @@ class SnoozeMixin:
         )
         self._snooze_task.start()
 
+    @property
+    def snooze_task(self):
+        try:
+            return self._snooze_task
+        except AttributeError:
+            return None
+
+    @staticmethod
+    def _default_snooze_cb(message: SnoozeMessage):
+        pass
+
     def _update_last_activity(self):
         self._last_activity = time.monotonic()
+        self.snooze_cb(SnoozeMessage.UPDATE_ACTIVITY)
 
     @contextlib.contextmanager
     def in_use(self):
@@ -750,16 +779,21 @@ class SnoozeMixin:
             self._update_last_activity()
 
     def snooze(self):
-        if self._keep_alive > 0:
+        if self._keep_alive > 0 or self.snooze_task is None:
             return
         with self._snooze_lock:
+            self.snooze_cb(SnoozeMessage.SNOOZE)
             self.scale(1)
-            self.is_snoozing = True
+            self._is_snoozing = True
 
     def unsnooze(self):
+        if not self._is_snoozing:
+            return
         with self._snooze_lock:
+            self.snooze_cb(SnoozeMessage.UNSNOOZE_START)
             self.scale()
-            self.is_snoozing = False
+            self._is_snoozing = False
+            self.snooze_cb(SnoozeMessage.UNSNOOZE_DONE)
 
     def _snooze_check_task(self):
         """
@@ -767,7 +801,7 @@ class SnoozeMixin:
         """
         while True:
             time.sleep(self._snooze_check_interval)
-            if self.is_snoozing or self._keep_alive > 0:
+            if self._is_snoozing or self._keep_alive > 0:
                 continue
             since_last_activity = time.monotonic() - self._last_activity
             if since_last_activity > self._snooze_timeout:

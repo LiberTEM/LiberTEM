@@ -4,6 +4,7 @@ from copy import deepcopy
 import functools
 import logging
 import copy
+import time
 import signal
 from typing import Any, Optional, Union, Callable
 from collections.abc import Iterable
@@ -17,7 +18,7 @@ from libertem.common.threading import set_num_threads_env
 from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment,
-    WorkerContext, SnoozeMixin
+    WorkerContext, SnoozeMixin, ExecutorError
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
@@ -452,13 +453,18 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
                 self.client.cluster.worker_spec
             )
 
-    def scale(self, n_workers: Optional[int] = None):
+    def scale(self, n_workers: Optional[int] = None, timeout: float = 10.):
         if not self.is_local:
             return
         if n_workers is None:
             n_workers = len(self._worker_spec)
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)
         self.client.cluster.scale(n=n_workers)
+        tstart = time.monotonic()
+        while len(self.client.cluster.workers) != n_workers:
+            time.sleep(0.25)
+            if (time.monotonic() - tstart) > timeout:
+                raise ExecutorError("Timed out waiting for Dask cluster re-scaling")
 
     @contextlib.contextmanager
     def scatter(self, obj):

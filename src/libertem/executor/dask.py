@@ -424,6 +424,16 @@ def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tup
         handler(true_topic, message)
 
 
+def keep_alive(fn):
+
+    @functools.wraps(fn)
+    def wrapped(self, *args, **kwargs):
+        with self.in_use():
+            return fn(self, *args, **kwargs)
+
+    return wrapped
+
+
 class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     '''
     Default LiberTEM executor that uses `Dask futures
@@ -449,11 +459,14 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._futures = {}
         self._scatter_map = {}
 
+        self._snooze_task = None
+        self._keep_alive = 0
+        self._last_activity = time.monotonic()
+        self.is_snoozing = False
         if is_local:
+            self._snooze_lock = threading.Lock()
             self._worker_spec = copy.copy(self.client.cluster.worker_spec)
             self._snooze_timeout = 10.
-            self._is_snoozing = False
-            self._last_activity = time.monotonic()
             self._snooze_check_interval = min(
                 30.0,
                 self._snooze_timeout and (self._snooze_timeout * 0.1) or 30.0,
@@ -464,22 +477,31 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             )
             self._snooze_task.start()
 
-    def update_activity(self):
-        if self.is_local:
-            self._last_activity = time.monotonic()
+    def _update_last_activity(self):
+        self._last_activity = time.monotonic()
+
+    @contextlib.contextmanager
+    def in_use(self):
+        self._update_last_activity()
+        self._keep_alive += 1
+        try:
+            yield
+        finally:
+            self._keep_alive -= 1
+            self._update_last_activity()
 
     def snooze(self):
-        self.client.cluster.scale(0)
-        self._is_snoozing = True
+        if self._keep_alive > 0:
+            return
+        with self._snooze_lock:
+            self.client.cluster.scale(1)
+            self.is_snoozing = True
 
     def unsnooze(self):
-        self.update_activity()
-        self.client.cluster.worker_spec = copy.copy(self._worker_spec)
-        self.client.cluster.scale(len(self._worker_spec))
-        self._is_snoozing = False
-
-    def is_snoozing(self):
-        return self._is_snoozing
+        with self._snooze_lock:
+            self.client.cluster.worker_spec = copy.copy(self._worker_spec)
+            self.client.cluster.scale(len(self._worker_spec))
+            self.is_snoozing = False
 
     def _snooze_check_task(self):
         """
@@ -487,10 +509,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         """
         while True:
             time.sleep(self._snooze_check_interval)
-            if not self._is_snoozing and self._snooze_timeout is not None:
-                since_last_activity = time.monotonic() - self._last_activity
-                if since_last_activity > self._snooze_timeout:
-                    self.snooze()
+            if self.is_snoozing or self._keep_alive > 0:
+                continue
+            since_last_activity = time.monotonic() - self._last_activity
+            if since_last_activity > self._snooze_timeout:
+                self.snooze()
 
     @contextlib.contextmanager
     def scatter(self, obj):
@@ -524,6 +547,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         for res in dd.as_completed(futures, loop=self.client.loop):
             pass
 
+    @keep_alive
     def run_tasks(
         self,
         tasks: Iterable[TaskProtocol],
@@ -537,7 +561,6 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         def _id_to_task(task_id):
             return tasks[task_id]
 
-        self.unsnooze()
         workers = self.get_available_workers()
         threaded_executor = workers.has_threaded_workers()
 
@@ -569,7 +592,6 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         try:
             as_completed = dd.as_completed(initial, with_results=True, loop=self.client.loop)
             for future, result_wrap in as_completed:
-                self.update_activity()
                 if future.cancelled():
                     log.debug(
                         "future %r is cancelled, stopping",
@@ -599,6 +621,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             futures = self._futures[cancel_id]
             self.client.cancel(futures)
 
+    @keep_alive
     def run_each_partition(self, partitions, fn, all_nodes=False):
         """
         Run `fn` for all partitions. Yields results in order of completion.
@@ -643,15 +666,16 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
                 raise JobCancelledError()
             yield result
 
+    @keep_alive
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable :code:`fn` on any worker
         """
-        self.unsnooze()
         fn_with_args = functools.partial(fn, *args, **kwargs)
         future = self.client.submit(fn_with_args, priority=1, pure=False)
         return future.result()
 
+    @keep_alive
     def map(self, fn, iterable):
         """
         Run a callable :code:`fn` for each element in :code:`iterable`, on arbitrary worker nodes.
@@ -668,6 +692,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         return [future.result()
                 for future in self.client.map(fn, iterable, pure=False)]
 
+    @keep_alive
     def run_each_host(self, fn, *args, **kwargs):
         """
         Run a callable :code:`fn` once on each host, gathering all results into
@@ -692,6 +717,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         }
         return result_map
 
+    @keep_alive
     def run_each_worker(self, fn, *args, **kwargs):
         # Client.run() creates issues on Windows and OS X with Python 3.6
         # FIXME workaround may not be needed anymore for Python 3.7+

@@ -137,7 +137,7 @@ class JobExecutor:
     '''
     Interface to execute functions on workers.
     '''
-    def scale(self, n_workers: Optional[int] = None):
+    def scale(self, n_workers: Optional[int] = None, timeout: float = 10.):
         """
         Adjust the executor state to the given number of workers
         If n_workers is None, return executor to its initial state

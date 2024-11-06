@@ -132,6 +132,12 @@ class JobExecutor:
     '''
     Interface to execute functions on workers.
     '''
+    def scale_up(self, n_workers: Optional[int]):
+        pass
+
+    def scale_down(self, n_workers: Optional[int]):
+        pass
+
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable :code:`fn` on any worker

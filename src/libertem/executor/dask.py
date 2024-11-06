@@ -448,8 +448,9 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
         self._futures = {}
         self._scatter_map = {}
         if self.is_local:
-            self._worker_spec = copy.copy(self.client.cluster.worker_spec)
-            self.setup_snooze(10.)
+            self._worker_spec = copy.copy(
+                self.client.cluster.worker_spec
+            )
 
     def scale(self, n_workers: Optional[int] = None):
         if n_workers is None:

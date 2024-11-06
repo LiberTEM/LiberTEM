@@ -426,7 +426,6 @@ def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tup
 
 class SnoozeMixin:
     def setup_snooze(self, snooze_timeout: Union[float, int]):
-        self._snooze_task = None
         self._keep_alive = 0
         self._last_activity = time.monotonic()
         self.is_snoozing = False
@@ -518,14 +517,16 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
             self._worker_spec = copy.copy(self.client.cluster.worker_spec)
             self.setup_snooze(10.)
 
-    def scale_up(self, n: Optional[int]):
-        if n is None:
-            n = len(self._worker_spec)
+    def scale_up(self, n_workers: Optional[int]):
+        if n_workers is None:
+            n_workers = len(self._worker_spec)
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)
-        self.client.cluster.scale(n)
+        self.client.cluster.scale(n_workers)
 
-    def scale_down(self, n: int):
-        self.client.cluster.scale(n)
+    def scale_down(self, n_workers: Optional[int]):
+        if n_workers is None:
+            n_workers = 0
+        self.client.cluster.scale(n_workers)
 
     @contextlib.contextmanager
     def scatter(self, obj):

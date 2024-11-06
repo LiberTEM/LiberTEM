@@ -4,8 +4,6 @@ from copy import deepcopy
 import functools
 import logging
 import copy
-import time
-import threading
 import signal
 from typing import Any, Optional, Union, Callable
 from collections.abc import Iterable
@@ -18,7 +16,8 @@ from libertem.common.threading import set_num_threads_env
 
 from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
-    JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
+    JobCancelledError, TaskCommHandler, TaskProtocol, Environment,
+    WorkerContext, SnoozeMixin
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
@@ -424,71 +423,6 @@ def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tup
         handler(true_topic, message)
 
 
-class SnoozeMixin:
-    def setup_snooze(self, snooze_timeout: Union[float, int]):
-        self._keep_alive = 0
-        self._last_activity = time.monotonic()
-        self.is_snoozing = False
-        self._snooze_lock = threading.Lock()
-        self._snooze_timeout = snooze_timeout
-        self._snooze_check_interval = min(
-            30.0,
-            self._snooze_timeout and (self._snooze_timeout * 0.1) or 30.0,
-        )
-        self._snooze_task = threading.Thread(
-            target=self._snooze_check_task,
-            daemon=True,
-        )
-        self._snooze_task.start()
-
-    def _update_last_activity(self):
-        self._last_activity = time.monotonic()
-
-    @contextlib.contextmanager
-    def in_use(self):
-        self._update_last_activity()
-        self._keep_alive += 1
-        try:
-            yield
-        finally:
-            self._keep_alive -= 1
-            self._update_last_activity()
-
-    def snooze(self):
-        if self._keep_alive > 0:
-            return
-        with self._snooze_lock:
-            self.scale_down(1)
-            self.is_snoozing = True
-
-    def unsnooze(self):
-        with self._snooze_lock:
-            self.scale_up()
-            self.is_snoozing = False
-
-    def _snooze_check_task(self):
-        """
-        Periodically check if we need to snooze the executor
-        """
-        while True:
-            time.sleep(self._snooze_check_interval)
-            if self.is_snoozing or self._keep_alive > 0:
-                continue
-            since_last_activity = time.monotonic() - self._last_activity
-            if since_last_activity > self._snooze_timeout:
-                self.snooze()
-
-    @staticmethod
-    def keep_alive(fn):
-
-        @functools.wraps(fn)
-        def wrapped(self, *args, **kwargs):
-            with self.in_use():
-                return fn(self, *args, **kwargs)
-
-        return wrapped
-
-
 class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
     '''
     Default LiberTEM executor that uses `Dask futures
@@ -517,16 +451,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
             self._worker_spec = copy.copy(self.client.cluster.worker_spec)
             self.setup_snooze(10.)
 
-    def scale_up(self, n_workers: Optional[int]):
+    def scale(self, n_workers: Optional[int] = None):
         if n_workers is None:
             n_workers = len(self._worker_spec)
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)
-        self.client.cluster.scale(n_workers)
-
-    def scale_down(self, n_workers: Optional[int]):
-        if n_workers is None:
-            n_workers = 0
-        self.client.cluster.scale(n_workers)
+        self.client.cluster.scale(n=n_workers)
 
     @contextlib.contextmanager
     def scatter(self, obj):

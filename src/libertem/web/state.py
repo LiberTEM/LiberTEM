@@ -119,7 +119,7 @@ class ExecutorState:
             )
 
     async def get_executor(self):
-        self.executor.ensure_sync().unsnooze()
+        await self.executor.ensure_async().unsnooze()
         return self.executor
 
     def have_executor(self):

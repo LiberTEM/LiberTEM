@@ -141,7 +141,8 @@ class JobExecutor:
         """
         Adjust the executor state to the given number of workers
         If n_workers is None, return executor to its initial state
-        if not currently the case
+        if not currently the case. Block during scaling, raise
+        ExecutorError if scaling incomplete before timeout seconds.
         """
         pass
 

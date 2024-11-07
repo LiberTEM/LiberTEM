@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from libertem.common.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager
 )
-from libertem.common.executor import JobExecutor, AsyncJobExecutor
+from libertem.common.executor import JobExecutor, AsyncJobExecutor, SnoozeMixin, SnoozeMessage
 from libertem.common.tracing import TracedThreadPoolExecutor
 
 
@@ -25,7 +25,7 @@ class ResourceError(RuntimeError):
     pass
 
 
-class BaseJobExecutor(JobExecutor):
+class BaseJobExecutor(JobExecutor, SnoozeMixin):
     def get_udf_runner(self) -> type['UDFRunner']:
         from libertem.udf.base import UDFRunner
         return UDFRunner
@@ -145,3 +145,12 @@ class AsyncAdapter(AsyncJobExecutor):
     def get_udf_runner(self) -> type['UDFRunner']:
         from libertem.udf.base import UDFRunner
         return UDFRunner
+
+    async def unsnooze(self):
+        if not self._wrapped._is_snoozing:
+            return
+        with self._wrapped._snooze_lock:
+            self._wrapped.snooze_cb(SnoozeMessage.UNSNOOZE_START)
+            await sync_to_async(self._wrapped.scale)
+            self._wrapped._is_snoozing = False
+            self._wrapped.snooze_cb(SnoozeMessage.UNSNOOZE_DONE)

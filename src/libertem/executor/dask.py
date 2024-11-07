@@ -424,7 +424,7 @@ def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tup
         handler(true_topic, message)
 
 
-class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor, SnoozeMixin):
+class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     '''
     Default LiberTEM executor that uses `Dask futures
     <https://docs.dask.org/en/stable/futures.html>`_.

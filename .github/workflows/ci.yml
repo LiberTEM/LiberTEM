@@ -38,7 +38,7 @@ jobs:
       - name: run tox
         run: tox -e 'py${{ matrix.python_version }}'
       - name: submit code coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -57,7 +57,7 @@ jobs:
       - run: (cd client && CI=1 npm run coverage)
       - run: (cd client && npm run lint)
       - name: submit code coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -79,7 +79,7 @@ jobs:
       - name: 'run tox for environment ${{ matrix.envs }}'
         run: tox -e '${{ matrix.envs }}'
       - name: submit code coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

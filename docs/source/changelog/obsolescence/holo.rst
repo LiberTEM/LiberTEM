@@ -8,5 +8,5 @@
   be delayed, it is removed without deprecation period and will throw an error
   on import explaining the situation. The new holography code will hopefully be
   released in due time. We recommend that users who depend on the previous code
-  use an older LiberTEM version (&lt;= 0.14.1) for the time being and migrate to
+  use an older LiberTEM version (<= 0.14.1) for the time being and migrate to
   the new version when appropriate. (:pr:`1689`)

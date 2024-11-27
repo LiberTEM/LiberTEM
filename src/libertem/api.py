@@ -240,6 +240,7 @@ class Context:
         cpus: Optional[Union[int, Iterable[int]]] = None,
         gpus: Optional[Union[int, Iterable[int]]] = None,
         plot_class: Optional['Live2DPlot'] = None,
+        snooze_timeout: Optional[float] = None,
     ) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
@@ -353,6 +354,9 @@ class Context:
         if has_spec and executor_spec in ('dask', 'dask-make-default'):
             spec = cluster_spec(**spec_args)
 
+        if snooze_timeout is not None:
+            snooze_timeout *= 60
+
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
             executor = InlineJobExecutor()
@@ -364,7 +368,7 @@ class Context:
                 pass
             executor = ConcurrentJobExecutor.make_local(n_threads=n_threads)
         elif executor_spec == 'dask':
-            executor = DaskJobExecutor.make_local(spec=spec)
+            executor = DaskJobExecutor.make_local(spec=spec, snooze_timeout=snooze_timeout)
         elif executor_spec == 'dask-integration':
             executor = get_dask_integration_executor()
         elif executor_spec == 'dask-make-default':

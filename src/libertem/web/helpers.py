@@ -20,7 +20,7 @@ def _convert_device_map(raw_cudas: dict[int, Any]) -> list[int]:
     ]
 
 
-def create_executor(*, connection, local_directory, preload) -> DaskJobExecutor:
+def create_executor(*, connection, local_directory, preload, snooze_timeout) -> DaskJobExecutor:
     devices = detect()
     options = {
         "local_directory": local_directory,
@@ -38,7 +38,8 @@ def create_executor(*, connection, local_directory, preload) -> DaskJobExecutor:
             **devices,
             options=options,
             preload=preload,
-        )
+        ),
+        snooze_timeout=snooze_timeout,
     )
 
 
@@ -46,6 +47,7 @@ def create_executor_external(
     executor_spec: dict[str, int],
     local_directory,
     preload,
+    snooze_timeout,
 ) -> tuple[AsyncAdapter, dict[str, dict[str, Any]]]:
     cudas = {}
     if executor_spec['cudas']:
@@ -60,7 +62,8 @@ def create_executor_external(
     sync_executor = create_executor(
         connection=params['connection'],
         local_directory=local_directory,
-        preload=preload
+        preload=preload,
+        snooze_timeout=snooze_timeout,
     )
     pool = AsyncAdapter.make_pool()
     executor = AsyncAdapter(wrapped=sync_executor, pool=pool)

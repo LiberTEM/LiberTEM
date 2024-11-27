@@ -4,7 +4,6 @@ import typing
 import itertools
 import logging
 import asyncio
-from typing import Union
 
 import psutil
 
@@ -104,26 +103,21 @@ class ExecutorState:
                 connection=connection,
                 local_directory=self.get_local_directory(),
                 preload=self.get_preload(),
+                snooze_timeout=self._snooze_timeout,
             )
-            self._setup_snooze(sync_executor)
         else:
             raise ValueError("unknown connection type")
         executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
         return executor
 
-    def _setup_snooze(self, executor: Union[JobExecutor, AsyncAdapter]):
-        if self._snooze_timeout:
-            executor.ensure_sync().setup_snooze(
-                self._snooze_timeout,
-                cb=self._snooze_message_callback
-            )
-
     async def get_executor(self):
-        await self.executor.ensure_async().unsnooze()
+        snooze_manager = self.executor.ensure_sync().snooze_manager
+        if snooze_manager is not None:
+            await sync_to_async(snooze_manager.unsnooze)
         return self.executor
 
     def have_executor(self):
-        return self.executor is not None  # or self._is_snoozing
+        return self.executor is not None
 
     async def get_resource_details(self):
         # memoize the cluster details, if ever we support
@@ -516,6 +510,6 @@ class SharedState:
             spec,
             self.executor_state.get_local_directory(),
             self.executor_state.get_preload(),
+            snooze_timeout=self.executor_state._snooze_timeout,
         )
-        self.executor_state._setup_snooze(executor)
         self.executor_state._set_executor(executor, params)

@@ -1,10 +1,11 @@
 import queue
 import time
+import weakref
 from enum import Enum, auto
 import functools
 from typing import (
     Callable, Optional, Any, TYPE_CHECKING,
-    TypeVar, Union
+    TypeVar
 )
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
@@ -137,15 +138,6 @@ class JobExecutor:
     '''
     Interface to execute functions on workers.
     '''
-    def scale(self, n_workers: Optional[int] = None, timeout: float = 10.):
-        """
-        Adjust the executor state to the given number of workers
-        If n_workers is None, return executor to its initial state
-        if not currently the case. Block during scaling, raise
-        ExecutorError if scaling incomplete before timeout seconds.
-        """
-        pass
-
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable :code:`fn` on any worker
@@ -363,6 +355,13 @@ class JobExecutor:
 
     def get_udf_runner(self) -> type['UDFRunner']:
         raise NotImplementedError
+
+    @property
+    def snooze_manager(self) -> Optional['SnoozeManager']:
+        """
+        Return the SnoozeManager for this executor, if it exists
+        """
+        return None
 
 
 class AsyncJobExecutor:
@@ -728,22 +727,23 @@ class SnoozeMessage(Enum):
     UPDATE_ACTIVITY = auto()
 
 
-class SnoozeMixin:
-    def setup_snooze(
+class SnoozeManager:
+    def __init__(
         self,
-        snooze_timeout: Union[float, int],
-        cb: Optional[Callable[[SnoozeMessage], None]] = None,
+        *,
+        up: Callable[[], None],
+        down: Callable[[], None],
+        timeout: float,  # seconds
     ):
-        if self.snooze_task is not None:
-            raise ExecutorError("Cannot enable snooze more than once")
-        if snooze_timeout <= 0:
+        if timeout <= 0:
             raise ValueError("Must supply a positive snooze timeout")
-        self.snooze_cb = cb or self._default_snooze_cb
+        self.scale_up = weakref.WeakMethod(up)
+        self.scale_down = weakref.WeakMethod(down)
         self._keep_alive = 0
         self._last_activity = time.monotonic()
         self._is_snoozing = False
         self._snooze_lock = threading.Lock()
-        self._snooze_timeout = snooze_timeout
+        self._snooze_timeout = timeout
         self._snooze_check_interval = min(
             30.0,
             self._snooze_timeout and (self._snooze_timeout * 0.1) or 30.0,
@@ -754,20 +754,8 @@ class SnoozeMixin:
         )
         self._snooze_task.start()
 
-    @property
-    def snooze_task(self):
-        try:
-            return self._snooze_task
-        except AttributeError:
-            return None
-
-    @staticmethod
-    def _default_snooze_cb(message: SnoozeMessage):
-        pass
-
     def _update_last_activity(self):
         self._last_activity = time.monotonic()
-        self.snooze_cb(SnoozeMessage.UPDATE_ACTIVITY)
 
     @contextlib.contextmanager
     def in_use(self):
@@ -777,24 +765,26 @@ class SnoozeMixin:
             yield
         finally:
             self._keep_alive -= 1
+            self._keep_alive = max(0, self._keep_alive)
             self._update_last_activity()
 
     def snooze(self):
-        if self._keep_alive > 0 or self.snooze_task is None:
+        if self._keep_alive > 0 or self._snooze_task is None:
             return
         with self._snooze_lock:
-            self.snooze_cb(SnoozeMessage.SNOOZE)
-            self.scale(1)
+            scale_down = self.scale_down()
+            if scale_down is not None:
+                scale_down()
             self._is_snoozing = True
 
     def unsnooze(self):
         if not self._is_snoozing:
             return
         with self._snooze_lock:
-            self.snooze_cb(SnoozeMessage.UNSNOOZE_START)
-            self.scale()
+            scale_up = self.scale_up()
+            if scale_up is not None:
+                scale_up()
             self._is_snoozing = False
-            self.snooze_cb(SnoozeMessage.UNSNOOZE_DONE)
 
     def _snooze_check_task(self):
         """
@@ -802,18 +792,25 @@ class SnoozeMixin:
         """
         while True:
             time.sleep(self._snooze_check_interval)
+            if self.scale_down() is None:
+                break
             if self._is_snoozing or self._keep_alive > 0:
                 continue
             since_last_activity = time.monotonic() - self._last_activity
             if since_last_activity > self._snooze_timeout:
                 self.snooze()
 
-    @staticmethod
-    def keep_alive(fn):
 
-        @functools.wraps(fn)
-        def wrapped(self, *args, **kwargs):
-            with self.in_use():
+def keep_alive(fn):
+
+    @functools.wraps(fn)
+    def wrapped(self: 'JobExecutor', *args, **kwargs):
+        manager = self.snooze_manager
+        if manager is not None:
+            manager.unsnooze()
+            with manager.in_use():
                 return fn(self, *args, **kwargs)
+        else:
+            return fn(self, *args, **kwargs)
 
-        return wrapped
+    return wrapped

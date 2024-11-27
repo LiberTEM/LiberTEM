@@ -17,8 +17,9 @@ from libertem.common.threading import set_num_threads_env
 from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment,
-    WorkerContext, SnoozeManager, keep_alive
+    WorkerContext
 )
+from libertem.common.snooze import SnoozeManager, keep_alive
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda

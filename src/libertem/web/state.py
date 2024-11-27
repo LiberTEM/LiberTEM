@@ -10,7 +10,8 @@ import psutil
 import libertem
 from libertem.api import Context
 from libertem.analysis.base import AnalysisResultSet
-from libertem.common.executor import JobExecutor, SnoozeMessage
+from libertem.common.executor import JobExecutor
+from libertem.common.snooze import SnoozeMessage
 from libertem.common.async_utils import sync_to_async
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor

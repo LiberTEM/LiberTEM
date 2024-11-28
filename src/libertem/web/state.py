@@ -71,20 +71,20 @@ class ExecutorState:
     def get_local_directory(self):
         return self.local_directory
 
-    def _snooze_message_callback(self, message_type: SnoozeMessage):
+    def _snooze_message_callback(self, topic: SnoozeMessage, msg_dict: dict):
         from .messages import Message
-        if message_type == SnoozeMessage.SNOOZE:
+        if topic == SnoozeMessage.SNOOZE:
             log.info("Snoozing...")
             msg = Message().snooze("snoozing")
             self._event_bus.send(msg)
-        elif message_type == SnoozeMessage.UNSNOOZE_START:
+        elif topic == SnoozeMessage.UNSNOOZE_START:
             log.info("Unsnoozing...")
             msg = Message().unsnooze("unsnoozing")
             self._event_bus.send(msg)
-        elif message_type == SnoozeMessage.UNSNOOZE_DONE:
+        elif topic == SnoozeMessage.UNSNOOZE_DONE:
             msg = Message().unsnooze_done("unsnooze done")
             self._event_bus.send(msg)
-        elif message_type == SnoozeMessage.UPDATE_ACTIVITY:
+        elif topic == SnoozeMessage.UPDATE_ACTIVITY:
             log.debug("_update_last_activity")
         else:
             log.error("Unrecognized snooze message")
@@ -106,6 +106,15 @@ class ExecutorState:
                 preload=self.get_preload(),
                 snooze_timeout=self._snooze_timeout,
             )
+            if self._snooze_timeout is not None:
+                sync_executor.subscribe((
+                        SnoozeMessage.SNOOZE,
+                        SnoozeMessage.UNSNOOZE_START,
+                        SnoozeMessage.UNSNOOZE_DONE,
+                        SnoozeMessage.UPDATE_ACTIVITY,
+                    ),
+                    self._snooze_message_callback
+                )
         else:
             raise ValueError("unknown connection type")
         executor = AsyncAdapter(wrapped=sync_executor, pool=pool)
@@ -153,6 +162,17 @@ class ExecutorState:
         if self.executor is not None:
             self.executor.ensure_sync().close()
         self.executor = executor
+        if self._snooze_timeout is not None:
+            # assumes we always have a DaskExecutor as this
+            # implements executor.subscribe
+            self.executor.ensure_sync().subscribe((
+                    SnoozeMessage.SNOOZE,
+                    SnoozeMessage.UNSNOOZE_START,
+                    SnoozeMessage.UNSNOOZE_DONE,
+                    SnoozeMessage.UPDATE_ACTIVITY,
+                ),
+                self._snooze_message_callback
+            )
         self.cluster_params = params
         self.context = Context(executor=executor.ensure_sync())
         try:

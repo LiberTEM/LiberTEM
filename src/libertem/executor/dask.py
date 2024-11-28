@@ -20,6 +20,7 @@ from libertem.common.executor import (
     WorkerContext
 )
 from libertem.common.snooze import SnoozeManager, keep_alive
+from libertem.common.subscriptions import SubscriptionManager
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -450,31 +451,37 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._scatter_map = {}
         self._snooze_manager = None
         self._worker_spec = None
+        self._subscriptions = SubscriptionManager()
 
     def _scale_down(self):
         if not self.is_local or self._worker_spec is None:
             return
         self.client.cluster.scale(n=1)
-        print("DOWN-DASK")
 
     def _scale_up(self):
         if not self.is_local or self._worker_spec is None:
             return
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)
         self.client.cluster.scale(n=len(self._worker_spec))
-        print("UP-DASK")
 
     def _enable_snooze(self, timeout: float, spec: dict):
         self._snooze_manager = SnoozeManager(
             up=self._scale_up,
             down=self._scale_down,
             timeout=timeout,
+            subscriptions=self._subscriptions,
         )
         self._worker_spec = copy.copy(spec)
 
     @property
     def snooze_manager(self):
         return self._snooze_manager
+
+    def subscribe(self, topic: str, callback: Callable[[str, dict], None]) -> str:
+        return self._subscriptions.subscribe(topic, callback)
+
+    def unsubscribe(self, key: str) -> bool:
+        return self._subscriptions.unsubscribe(key)
 
     @contextlib.contextmanager
     def scatter(self, obj):

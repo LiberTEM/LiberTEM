@@ -359,6 +359,28 @@ class JobExecutor:
         """
         return None
 
+    def subscribe(self, topic: str, callback: Callable[[str, dict], None]) -> str:
+        """
+        Register a callback to run in response to executor events
+
+        The callback should accept the arguments
+            (topic, message_dict)
+        and not block execution as it will be run synchronously
+        within code such as :code:`executor.run_tasks`
+
+        Returns a key for the subscription which can
+        later be used to unsubscribe
+        """
+        raise NotImplementedError()
+
+    def unsubscribe(self, key: str) -> bool:
+        """
+        Unregister a callback based on the key returned by :code:`subscribe`
+
+        Return True if sucessfully unsubscribed, else False (e.g. unrecognized key)
+        """
+        raise NotImplementedError()
+
 
 class AsyncJobExecutor:
     '''

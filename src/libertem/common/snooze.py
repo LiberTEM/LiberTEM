@@ -33,7 +33,8 @@ class SnoozeManager:
         self.scale_down = weakref.WeakMethod(down)
         self.subscriptions = weakref.ref(subscriptions)
         self.keep_alive = 0
-        self.last_activity = time.monotonic()
+        self.last_activity: float
+        self._update_last_activity()
         self.is_snoozing = False
         self._snooze_lock = threading.Lock()
         self._snooze_timeout = timeout
@@ -49,6 +50,9 @@ class SnoozeManager:
 
     def _update_last_activity(self):
         self.last_activity = time.monotonic()
+        subs = self.subscriptions()
+        if subs is not None:
+            subs.send(SnoozeMessage.UPDATE_ACTIVITY, {})
 
     @contextlib.contextmanager
     def in_use(self):
@@ -62,9 +66,15 @@ class SnoozeManager:
             self._update_last_activity()
 
     def snooze(self):
-        if self.keep_alive > 0 or self._snooze_task is None:
+        if self.keep_alive > 0:
+            # always no-op if something is using the executor
             return
         with self._snooze_lock:
+            if self.is_snoozing:
+                # Wait for lock to check this as there could be a
+                # slow unsnooze action in progress which would leave things
+                # in a bad state if we no-op too early
+                return
             scale_down = self.scale_down()
             if scale_down is not None:
                 subs = self.subscriptions()
@@ -74,18 +84,22 @@ class SnoozeManager:
             self.is_snoozing = True
 
     def unsnooze(self):
-        if not self.is_snoozing:
-            return
-        with self._snooze_lock:
-            scale_up = self.scale_up()
-            if scale_up is not None:
-                subs = self.subscriptions()
-                if subs is not None:
-                    subs.send(SnoozeMessage.UNSNOOZE_START, {})
-                scale_up()
-                if subs is not None:
-                    subs.send(SnoozeMessage.UNSNOOZE_DONE, {})
-            self.is_snoozing = False
+        with self.in_use():
+            with self._snooze_lock:
+                if not self.is_snoozing:
+                    # Wait for lock to check this as there could be a
+                    # slow snooze action in progress which would leave things
+                    # in a bad state if we no-op too early
+                    return
+                scale_up = self.scale_up()
+                if scale_up is not None:
+                    subs = self.subscriptions()
+                    if subs is not None:
+                        subs.send(SnoozeMessage.UNSNOOZE_START, {})
+                    scale_up()
+                    if subs is not None:
+                        subs.send(SnoozeMessage.UNSNOOZE_DONE, {})
+                self.is_snoozing = False
 
     def _snooze_check_task(self):
         """
@@ -94,6 +108,7 @@ class SnoozeManager:
         while True:
             time.sleep(self._snooze_check_interval)
             if self.scale_down() is None:
+                # Executor is likely being torn down
                 break
             if self.is_snoozing or self.keep_alive > 0:
                 continue

@@ -93,15 +93,19 @@ def test_job_prevents_snooze():
 def test_lock_prevents_transitions():
     executor = MockSnoozeExecutor(10_000., updown_timeout=0.1)
     assert not executor.snooze_manager.is_snoozing
-    th = threading.Thread(target=executor.snooze_manager.snooze)
-    th.start()
-    time.sleep(0.05)
-    # Thread will take the snooze lock, so the next call to unsnooze will have to wait,
-    # would raise error in Mock if two transitions are in progress simultaneously
-    assert executor.num_down == 0
-    assert executor.num_up == 0
-    executor.snooze_manager.unsnooze()
+    with executor.snooze_manager._snooze_lock:
+        # already holding the lock so new thread will wait
+        th = threading.Thread(target=executor.snooze_manager.snooze)
+        th.start()
+        time.sleep(0.05)
+        assert executor.num_down == 0
+        assert executor.num_up == 0
+
     th.join()
+    assert executor.num_down == 1
+    assert executor.num_up == 0
+
+    executor.snooze_manager.unsnooze()
     assert not executor.snooze_manager.is_snoozing
     assert executor.num_down == 1
     assert executor.num_up == 1

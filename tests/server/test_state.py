@@ -1,6 +1,7 @@
 import asyncio
 import uuid
 import pytest
+import queue
 from unittest import mock
 
 from libertem.executor.base import AsyncAdapter
@@ -90,119 +91,108 @@ async def test_preload_executor(tmpdir_factory):
 
 
 @pytest.mark.asyncio
-async def test_snooze_last_activity(async_executor):
+async def test_snooze_last_activity():
+    params = {
+        "connection": {
+            "type": "local",
+            "numWorkers": 2,
+        }
+    }
     event_bus = EventBus()
-    executor_state = ExecutorState(event_bus=event_bus)
-    await executor_state.set_executor(async_executor, {})
+    pool = AsyncAdapter.make_pool()
+    executor_state = ExecutorState(event_bus=event_bus, snooze_timeout=10_000)
+    executor = await executor_state.make_executor(params, pool)
+    await executor_state.set_executor(executor, params)
 
     try:
         # each of these activities should reset the last activity timer:
-        executor_state._update_last_activity = mock.Mock()
+        executor_state.executor.ensure_sync().snooze_manager._update_last_activity = mock.Mock()
         _ = await executor_state.get_executor()
-        executor_state._update_last_activity.assert_called()
+        executor_state.executor.ensure_sync().snooze_manager._update_last_activity.assert_called()
 
-        executor_state._update_last_activity = mock.Mock()
+        executor_state.executor.ensure_sync().snooze_manager._update_last_activity = mock.Mock()
         _ = await executor_state.get_context()
-        executor_state._update_last_activity.assert_called()
+        executor_state.executor.ensure_sync().snooze_manager._update_last_activity.assert_called()
 
-        executor_state._update_last_activity = mock.Mock()
+        executor_state.executor.ensure_sync().snooze_manager._update_last_activity = mock.Mock()
         _ = executor_state.get_cluster_params()
-        executor_state._update_last_activity.assert_called()
+        executor_state.executor.ensure_sync().snooze_manager._update_last_activity.assert_called()
 
-        # the previous executor is closed in `set_executor`, which we don't want to
-        # happen here:
-        executor_state.executor = None
-        executor_state._update_last_activity = mock.Mock()
-        await executor_state.set_executor(async_executor, {})
-        executor_state._update_last_activity.assert_called()
     finally:
         executor_state.shutdown()
 
 
 @pytest.mark.asyncio
-async def test_snooze_explicit(local_cluster_url):
+async def test_get_executor_unsnooze():
     """
-    We can snooze and unsnooze the executor that is part of the ExecutorState:
+    Getting the executor brings it out of a snooze state
     """
     event_bus = EventBus()
-    executor_state = ExecutorState(event_bus=event_bus)
+    executor_state = ExecutorState(event_bus=event_bus, snooze_timeout=10_000)
     pool = AsyncAdapter.make_pool()
     try:
         params = {
             "connection": {
-                "type": "tcp",
-                "address": local_cluster_url,
+                "type": "local",
+                "numWorkers": 2,
             }
         }
         executor = await executor_state.make_executor(params, pool)
         await executor_state.set_executor(executor, params)
 
-        await executor_state.snooze()
-        assert executor_state._is_snoozing
-        assert executor_state.executor is None
-        assert executor_state.context is None
+        assert executor_state.executor.ensure_sync().snooze_manager is not None
+        executor_state.executor.ensure_sync().snooze_manager.snooze()
+        assert executor_state.executor.ensure_sync().snooze_manager.is_snoozing
 
-        await executor_state.unsnooze()
-        assert not executor_state._is_snoozing
-        assert executor_state.executor is not None
-        assert executor_state.context is not None
-        # these two work without raising an exception:
+        # Getting the executor brings it out of snooze
         await executor_state.get_executor()
-        await executor_state.get_context()
+        assert not executor_state.executor.ensure_sync().snooze_manager.is_snoozing
     finally:
         pool.shutdown()
         executor_state.shutdown()
 
 
 @pytest.mark.asyncio
-async def test_snooze_explicit_keep_alive(local_cluster_url):
+async def test_snooze_explicit_keep_alive():
     """
     We can't snooze if keep-alive is nonzero
     """
     event_bus = EventBus()
-    executor_state = ExecutorState(event_bus=event_bus)
+    executor_state = ExecutorState(event_bus=event_bus, snooze_timeout=10_000)
     pool = AsyncAdapter.make_pool()
     try:
         params = {
             "connection": {
-                "type": "tcp",
-                "address": local_cluster_url,
+                "type": "local",
+                "numWorkers": 2,
             }
         }
         executor = await executor_state.make_executor(params, pool)
         await executor_state.set_executor(executor, params)
 
+        snoozer = executor_state.executor.ensure_sync().snooze_manager
         # if we are in at least one keep-alive section, we can't snooze:
-        with executor_state.keep_alive():
-            assert executor_state._keep_alive > 0
-            await executor_state.snooze()
-            assert not executor_state._is_snoozing
-            assert executor_state.executor is not None
-            assert executor_state.context is not None
+        with snoozer.in_use():
+            assert snoozer.keep_alive > 0
+            snoozer.snooze()
+            assert not snoozer.is_snoozing
 
         # keep-alive can nest:
-        with executor_state.keep_alive():
-            with executor_state.keep_alive():
-                assert executor_state._keep_alive > 0
-                await executor_state.snooze()
-                assert not executor_state._is_snoozing
-                assert executor_state.executor is not None
-                assert executor_state.context is not None
+        with snoozer.in_use():
+            with snoozer.in_use():
+                assert snoozer.keep_alive > 0
+                snoozer.snooze()
+                assert not snoozer.is_snoozing
 
         # afterwards, we can snooze again:
-        assert executor_state._keep_alive == 0
-        await executor_state.snooze()
-        assert executor_state._is_snoozing
-        assert executor_state.executor is None
-        assert executor_state.context is None
+        assert snoozer.keep_alive == 0
+        snoozer.snooze()
+        assert snoozer.is_snoozing
 
-        await executor_state.unsnooze()
-        assert not executor_state._is_snoozing
-        assert executor_state.executor is not None
-        assert executor_state.context is not None
+        snoozer.unsnooze()
+        assert not snoozer.is_snoozing
         # these two work without raising an exception:
         await executor_state.get_executor()
-        await executor_state.get_context()
     finally:
         pool.shutdown()
         executor_state.shutdown()
@@ -219,34 +209,67 @@ async def test_snooze_by_activity(local_cluster_url):
     try:
         params = {
             "connection": {
-                "type": "tcp",
-                "address": local_cluster_url,
+                "type": "local",
+                "numWorkers": 2,
             }
         }
         executor = await executor_state.make_executor(params, pool)
         # we must check very frequently; by default we only check twice a minute
         # to keep activity low:
-        executor_state._snooze_check_interval = 0.01
         await executor_state.set_executor(executor, params)
+        snoozer = executor_state.executor.ensure_sync().snooze_manager
+        snoozer._snooze_check_interval = 0.01
 
         await asyncio.sleep(0.1)
         # after this sleep, the executor should be snoozed, as we had about ten
         # opportunities to snooze in between:
-        assert executor_state._is_snoozing
-        assert executor_state.executor is None
-        assert executor_state.context is None
+        assert snoozer.is_snoozing
 
         # and this should directly unsnooze the executor
         # (we need to change the timeout etc. here, before we trigger the unsnooze,
         # to make sure we don't directly snooze again):
-        executor_state._snooze_timeout = 3600.0
+        snoozer._snooze_timeout = 3600.0
         _ = await executor_state.get_executor()
-        assert not executor_state._is_snoozing
-        assert executor_state.executor is not None
-        assert executor_state.context is not None
+        assert not snoozer.is_snoozing
 
         # should not raise an exception, there should be a snooze message
         # in here (raises Empty otherwise):
         event_bus.get()
+    finally:
+        executor_state.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_messages():
+    """
+    Test that we get snooze messages on the event bus
+    """
+    pool = AsyncAdapter.make_pool()
+    event_bus = EventBus()
+    executor_state = ExecutorState(snooze_timeout=0.02, event_bus=event_bus)
+    try:
+        params = {
+            "connection": {
+                "type": "local",
+                "numWorkers": 2,
+            }
+        }
+        executor = await executor_state.make_executor(params, pool)
+        # we must check very frequently; by default we only check twice a minute
+        # to keep activity low:
+        await executor_state.set_executor(executor, params)
+
+        await asyncio.sleep(0.1)
+        # these two work without raising an exception:
+        await executor_state.get_executor()
+        messages = []
+        while True:
+            try:
+                messages.append(event_bus.get()['messageType'])
+            except queue.Empty:
+                break
+        assert "SNOOZE" in messages
+        assert "UNSNOOZE" in messages
+        assert "UNSNOOZE_DONE" in messages
     finally:
         executor_state.shutdown()

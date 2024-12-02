@@ -8,6 +8,9 @@ class SubscriptionManager:
         # Mapping of topic to {key: callback}
         self._subs: dict[str, dict[str, Callable[[str, dict], None]]] = {}
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(subs={tuple(self._subs.keys())})"
+
     @overload
     def subscribe(
         self, topic: tuple[str, ...], callback: Callable[[str, dict], None]
@@ -30,7 +33,8 @@ class SubscriptionManager:
                 _ = registered.pop(key)
                 return True
             except KeyError:
-                return False
+                continue
+        return False
 
     def send(self, topic: str, msg_dict: dict[str, Any]):
         if "timestamp" not in msg_dict:

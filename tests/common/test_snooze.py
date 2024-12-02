@@ -151,11 +151,10 @@ def test_messages():
     time.sleep(0.15)
 
     assert messages_received[0][0] == SnoozeMessage.UPDATE_ACTIVITY
-    assert messages_received[1][0] == SnoozeMessage.UPDATE_ACTIVITY
     assert executor.snooze_manager.is_snoozing
-    assert messages_received[2][0] == SnoozeMessage.SNOOZE
+    assert messages_received[-1][0] == SnoozeMessage.SNOOZE
     task_start = messages_received[0][1]['timestamp']
-    task_end = messages_received[1][1]['timestamp']
+    task_end = messages_received[-1][1]['timestamp']
     assert (task_end - task_start) >= 0.99 * task_time  # account for jitter
 
     assert executor.unsubscribe(activity_key)

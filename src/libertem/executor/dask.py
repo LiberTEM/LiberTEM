@@ -716,6 +716,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             # use getattr just in case cluster is already gone
             if getattr(self.client, 'cluster', None) is not None:
                 self.client.cluster.close(timeout=30)
+            if self.snooze_manager is not None:
+                self.snooze_manager.close()
         # NOTE: distributed already registers atexit handlers for
         # both clients and clusters, this is here to allow manual closure
         # followed by creation of a new Executor without accumulating clusters

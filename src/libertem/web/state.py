@@ -138,10 +138,15 @@ class ExecutorState:
         return self.cluster_details
 
     async def get_context(self) -> Context:
+        # Getting the executor ensures it is unsnoozed before providing the context
         _ = await self.get_executor()
         return self.context
 
     def shutdown(self):
+        if self.executor.ensure_sync().snooze_manager is not None:
+            self._loop.call_soon_threadsafe(
+                self.executor.ensure_sync().snooze_manager.close
+            )
         if self.context is not None:
             self.context.close()
 

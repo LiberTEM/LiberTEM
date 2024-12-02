@@ -106,17 +106,17 @@ async def test_snooze_last_activity():
 
     try:
         # each of these activities should reset the last activity timer:
-        executor_state.executor.ensure_sync().snooze_manager._update_last_activity = mock.Mock()
+        executor_state.executor.snooze_manager._update_last_activity = mock.Mock()
         _ = await executor_state.get_executor()
-        executor_state.executor.ensure_sync().snooze_manager._update_last_activity.assert_called()
+        executor_state.executor.snooze_manager._update_last_activity.assert_called()
 
-        executor_state.executor.ensure_sync().snooze_manager._update_last_activity = mock.Mock()
+        executor_state.executor.snooze_manager._update_last_activity = mock.Mock()
         _ = await executor_state.get_context()
-        executor_state.executor.ensure_sync().snooze_manager._update_last_activity.assert_called()
+        executor_state.executor.snooze_manager._update_last_activity.assert_called()
 
-        executor_state.executor.ensure_sync().snooze_manager._update_last_activity = mock.Mock()
+        executor_state.executor.snooze_manager._update_last_activity = mock.Mock()
         _ = executor_state.get_cluster_params()
-        executor_state.executor.ensure_sync().snooze_manager._update_last_activity.assert_called()
+        executor_state.executor.snooze_manager._update_last_activity.assert_called()
 
     finally:
         executor_state.shutdown()
@@ -140,13 +140,13 @@ async def test_get_executor_unsnooze():
         executor = await executor_state.make_executor(params, pool)
         await executor_state.set_executor(executor, params)
 
-        assert executor_state.executor.ensure_sync().snooze_manager is not None
-        executor_state.executor.ensure_sync().snooze_manager.snooze()
-        assert executor_state.executor.ensure_sync().snooze_manager.is_snoozing
+        assert executor_state.executor.snooze_manager is not None
+        executor_state.executor.snooze_manager.snooze()
+        assert executor_state.executor.snooze_manager.is_snoozing
 
         # Getting the executor brings it out of snooze
         await executor_state.get_executor()
-        assert not executor_state.executor.ensure_sync().snooze_manager.is_snoozing
+        assert not executor_state.executor.snooze_manager.is_snoozing
     finally:
         pool.shutdown()
         executor_state.shutdown()
@@ -170,7 +170,7 @@ async def test_snooze_explicit_keep_alive():
         executor = await executor_state.make_executor(params, pool)
         await executor_state.set_executor(executor, params)
 
-        snoozer = executor_state.executor.ensure_sync().snooze_manager
+        snoozer = executor_state.executor.snooze_manager
         # if we are in at least one keep-alive section, we can't snooze:
         with snoozer.in_use():
             assert snoozer.keep_alive > 0
@@ -217,7 +217,7 @@ async def test_snooze_by_activity(local_cluster_url):
         # we must check very frequently; by default we only check twice a minute
         # to keep activity low:
         await executor_state.set_executor(executor, params)
-        snoozer = executor_state.executor.ensure_sync().snooze_manager
+        snoozer = executor_state.executor.snooze_manager
         snoozer._snooze_check_interval = 0.01
 
         await asyncio.sleep(0.1)

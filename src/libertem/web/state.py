@@ -121,7 +121,7 @@ class ExecutorState:
         return executor
 
     async def get_executor(self):
-        snooze_manager = self.executor.ensure_sync().snooze_manager
+        snooze_manager = self.executor.snooze_manager
         if snooze_manager is not None:
             await sync_to_async(snooze_manager.unsnooze)
         return self.executor
@@ -143,9 +143,9 @@ class ExecutorState:
         return self.context
 
     def shutdown(self):
-        if self.executor.ensure_sync().snooze_manager is not None:
+        if self.executor is not None and self.executor.snooze_manager is not None:
             self._loop.call_soon_threadsafe(
-                self.executor.ensure_sync().snooze_manager.close
+                self.executor.snooze_manager.close
             )
         if self.context is not None:
             self.context.close()
@@ -189,10 +189,10 @@ class ExecutorState:
             pass
 
     def get_cluster_params(self):
-        if self.executor.ensure_sync().snooze_manager is not None:
+        if self.executor.snooze_manager is not None:
             # Given cluster_params are stored on this class the _update_last_activity
             # is somewhat unecessary, but it was part of the old system so maintained here
-            self.executor.ensure_sync().snooze_manager._update_last_activity()
+            self.executor.snooze_manager._update_last_activity()
         return self.cluster_params
 
 

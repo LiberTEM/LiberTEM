@@ -21,7 +21,11 @@ from utils import get_testdata_path, ValidationUDF, roi_as_sparse
 import defusedxml.ElementTree as ET
 
 try:
-    import pims
+    # FIXME: pims/skimage can't deal with numpy2 on python 3.9
+    if int(np.version.version.split('.')[0]) < 2 or sys.version_info >= (3, 10):
+        import pims
+    else:
+        pims = None
 except ModuleNotFoundError:
     pims = None
 
@@ -834,3 +838,11 @@ def test_scheme_too_large(default_seq):
     assert tuple(t.tile_slice.shape) == tuple((depth,) + default_seq.shape.sig)
     for _ in tiles:
         pass
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("seq", SEQ_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        if "nav_shape" not in params:
+            params['nav_shape'] = (8, 8)
+        ds_params_tester(*args, **params)

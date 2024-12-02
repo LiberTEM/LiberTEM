@@ -314,7 +314,7 @@ class StackedDMDataSet(DMDataSet):
                 fn: metadata[fn]['zsize']
                 for fn in self._get_files()
             }
-        self._image_count = sum(self._z_sizes.values())
+        self._image_count = int(sum(self._z_sizes.values()))
         if self._nav_shape is None:
             self._nav_shape = (sum(self._z_sizes.values()),)
         native_sig_shape, native_dtype = executor.run_function(self._get_sig_shape_and_native_dtype)

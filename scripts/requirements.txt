@@ -8,3 +8,4 @@ html5lib
 docutils
 bibtexparser
 ghp-import
+packaging

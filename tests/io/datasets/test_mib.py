@@ -23,7 +23,11 @@ from libertem.io.dataset.base import (
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    import rsciio
+    # FIXME: rsciio/pint is not numpy2 compatible yet
+    if int(np.version.version.split('.')[0]) < 2:
+        import rsciio
+    else:
+        rsciio = None
 except ModuleNotFoundError:
     rsciio = None
 
@@ -596,3 +600,22 @@ def test_run_many_files(lt_ctx):
     hdr_path = out_dir / 'w_140 h_139-2map.hdr'
     nav_shape = (139, 141)
     lt_ctx.load('mib', path=hdr_path, nav_shape=nav_shape)
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("mib", MIB_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        if 'nav_shape' not in params:
+            params['nav_shape'] = (1, 1)
+        ds_params_tester(*args, **params)
+
+
+@needsdata
+def test_read_scan_shape_header(lt_ctx):
+    out_dir = pathlib.Path(MIB_TESTDATA_PATH).parent / 'merlin_scan_header/'
+    hdr_path = (
+        out_dir / 't2_200kV_alpha3_28_20_px_5_4nm_300k_C2_30um_CL_10m_1ms_1L_with_flatfield.hdr'
+    )
+    ds = lt_ctx.load('mib', path=hdr_path)
+    assert ds.shape.nav.to_tuple() == (20, 28)
+    assert ds.shape.sig.to_tuple() == (514, 514)

@@ -499,3 +499,9 @@ def test_compare_backends_sparse(lt_ctx, default_empad, buffered_empad, as_spars
     buffered_f0 = lt_ctx.run_udf(dataset=buffered_empad, udf=PickUDF(), roi=roi)['intensity']
 
     assert np.allclose(mm_f0, buffered_f0)
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("empad", EMPAD_XML)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

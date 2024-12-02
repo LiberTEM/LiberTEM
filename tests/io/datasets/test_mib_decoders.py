@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -15,9 +17,13 @@ from libertem.io.dataset.mib import (
 )
 
 
-def encode_roundtrip(encode, decode, bits_per_pixel, shape=(512, 512)):
+def encode_roundtrip(encode, decode, bits_per_pixel, dtype, shape=(512, 512)):
     max_value = (1 << bits_per_pixel) - 1
-    data = np.random.randint(0, max_value + 1, shape)
+    seed = os.environ.get('RANDOM_SEED', None)
+    if seed is not None:
+        seed = int(seed)
+    gen = np.random.default_rng(seed=seed)
+    data = gen.integers(low=0, high=max_value + 1, size=shape, dtype=dtype)
     encoded = np.zeros(data.size // 8 * bits_per_pixel, dtype=np.uint8)
     encoded = encoded.reshape((shape[0], -1))
     encode(inp=data, out=encoded)
@@ -34,19 +40,24 @@ def encode_roundtrip(encode, decode, bits_per_pixel, shape=(512, 512)):
         ds_shape=np.zeros(1, dtype=np.uint64),
     )
     decoded = decoded.reshape(data.shape)
-    return data, decoded
+    return data, encoded, decoded
 
 
 @pytest.mark.with_numba
 @pytest.mark.parametrize(
-    'encode,decode,bits_per_pixel', [
-        (encode_r1, decode_r1_swap, 1),
-        (encode_r6, decode_r6_swap, 8),
-        (encode_r12, decode_r12_swap, 16),
-        (encode_u1,  default_decode, 8),
-        (encode_u2,  decode_swap_2, 16),
+    'encode,decode,bits_per_pixel,dtype', [
+        (encode_r1, decode_r1_swap, 1, "uint8"),
+        (encode_r6, decode_r6_swap, 8, "uint8"),
+        (encode_r12, decode_r12_swap, 16, "uint16"),
+        (encode_u1,  default_decode, 8, "uint8"),
+        (encode_u2,  decode_swap_2, 16, "uint16"),
     ],
 )
-def test_encode_roundtrip(encode, decode, bits_per_pixel):
-    data, decoded = encode_roundtrip(encode, decode, bits_per_pixel, shape=(256, 256))
+def test_encode_roundtrip(encode, decode, bits_per_pixel, dtype):
+    data, encoded, decoded = encode_roundtrip(
+        encode, decode, bits_per_pixel, dtype, shape=(256, 256),
+    )
+    print(list(hex(i) for i in data[0, :8]))
+    print(list(hex(i) for i in encoded[0, :16]))
+    print(list(hex(i) for i in decoded[0, :16]))
     assert_allclose(data, decoded)

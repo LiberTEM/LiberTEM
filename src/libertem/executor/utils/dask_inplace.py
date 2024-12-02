@@ -83,7 +83,7 @@ class DaskInplaceWrapper:
             return self._array[combined_slice]
 
     def __setitem__(self, key, value: Union[nt.ArrayLike, Number]):
-        if not np.isscalar(value) and value.size == 1:
+        if not np.isscalar(value) and value.size == 1 and not isinstance(value, dask.array.Array):
             # Avoids deprecated Numpy behaviour of implicitly
             # extracting a scalar from an array during assignment
             value = value.item()
@@ -93,6 +93,12 @@ class DaskInplaceWrapper:
             else:
                 combined_slice = combine_slices_multid(self._slice, key, self._array.shape)
                 self._array[combined_slice] = value
+        except ValueError as e:
+            if not np.isscalar(value) and value.size == 0:
+                # Setting a zero-size slice is a no-op, but
+                # can raise a ValueError in Dask
+                return
+            raise e
         except NotImplementedError:
             raise NotImplementedError(
                 "Assignment into Dask array failed. This feature requires "

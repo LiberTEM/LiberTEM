@@ -2,7 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v5.0.0
   hooks:
   - id: trailing-whitespace
     files: ^src/
@@ -14,21 +14,22 @@ repos:
   - id: check-added-large-files
     exclude: ^src/libertem/web/client/assets
 - repo: https://github.com/pycqa/flake8
-  rev: 7.0.0
+  rev: 7.1.1
   hooks:
   - id: flake8
     exclude: ^prototypes/
-- repo: https://github.com/regebro/pyroma
-  rev: "4.2"
-  hooks:
-  - id: pyroma
+# pyroma failing in CI due to missing deps
+# - repo: https://github.com/regebro/pyroma
+#   rev: "4.2"
+#   hooks:
+#   - id: pyroma
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.15.2
+  rev: v3.19.0
   hooks:
     - id: pyupgrade
       args: ["--py39-plus"]
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.10.0
+  rev: v1.13.0
   hooks:
   - id: mypy
     verbose: true

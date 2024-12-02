@@ -38,7 +38,7 @@ jobs:
       - name: run tox
         run: tox -e 'py${{ matrix.python_version }}'
       - name: submit code coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -57,7 +57,7 @@ jobs:
       - run: (cd client && CI=1 npm run coverage)
       - run: (cd client && npm run lint)
       - name: submit code coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -79,7 +79,7 @@ jobs:
       - name: 'run tox for environment ${{ matrix.envs }}'
         run: tox -e '${{ matrix.envs }}'
       - name: submit code coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
@@ -108,7 +108,7 @@ jobs:
           docker pull python:3.11-slim  # the base image, to make sure we get the latest one
           docker pull ghcr.io/libertem/libertem-dev:latest
       - name: Build and push (libertem/libertem-triage)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: packaging/docker/Dockerfile
           context: .
@@ -117,7 +117,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/libertem/libertem-dev:latest
           cache-to: type=inline
       - name: Build and push (libertem/libertem-dev)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: packaging/docker/Dockerfile
           context: .

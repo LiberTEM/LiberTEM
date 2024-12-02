@@ -22,6 +22,16 @@ If you are bumping to a .dev0 suffix, omit :code:`--tag` and only pass :code:`--
 
     $ ./scripts/release bump v0.4.0.dev0 --commit
 
+By default, the release script will refuse to downgrade the version. This can be
+overridden with the :code:`--force` option, for example to prepare a point
+release. In that case the repository should be prepared to contain only the
+desired changes for the point release without any changes that are targeting the
+next regular release, for example by cherry-picking into a stable branch.
+
+.. code-block:: shell
+
+    $ ./scripts/release bump v0.14.1rc0 --tag --force
+
 .. note::
    In normal development, the version in the master branch will be x.y.z.dev0,
    if the next expected version is x.y.z. When starting the release process, it
@@ -50,8 +60,7 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Review open issues and pull requests
     * [ ] Confirm that pull requests and issues are handled as intended, i.e. milestoned and merged
           in appropriate branch.
-    * [ ] License review: no import of GPL code from MIT code
-          `pydeps --only "libertem" --show-deps --noshow src\libertem | python scripts\licensecheck.py`
+    * [ ] License review: compatible with MIT license
     * [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3) and run the [Thorough workflow](https://github.com/LiberTEM/LiberTEM/actions/workflows/thorough.yml) on GitHub Actions
     * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.
@@ -89,7 +98,7 @@ When planning a release, create a new issue with the following checklist:
           and tests that require sample files or CUDA support.
     * [ ] Install release candidate packages in a clean environment
           (for example:
-          `python -m pip install --pre 'libertem==0.2.0rc11'`)
+          `python -m pip install 'libertem==0.2.0rc11'`)
     * [ ] Test the release candidate docker image
         * [ ] Confirm rc images and tags on https://ghcr.io/libertem/libertem
     * [ ] Quick GUI QA: open in an incognito window to start from a clean slate
@@ -126,9 +135,9 @@ When planning a release, create a new issue with the following checklist:
         * [ ] Use the GUI while a long-running analysis is running
             * [ ] Still usable, decent response times?
     * [ ] Check what happens when trying to open non-existent files by scripting.
-        * [ ] Proper understandable error message? TODO automate?
+        * [ ] Run `pytest -rA tests/io/datasets/test_missing.py` and check output
     * [ ] Check what happens when opening all file types with bad parameters by scripting
-        * [ ] Proper understandable error message? TODO automate?
+        * [ ] Run `pytest -rA tests/io/datasets/ -k "test_bad_params"` and check output
 
     ## Step 3: bump version and let release pipeline run
 

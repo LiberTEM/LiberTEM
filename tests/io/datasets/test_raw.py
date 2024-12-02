@@ -869,3 +869,14 @@ def test_compare_backends_sparse(lt_ctx, default_raw, buffered_raw, as_sparse):
 
 def test_diagnostics(default_raw):
     assert {"name": "dtype", "value": "float32"} in default_raw.get_diagnostics()
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params, raw_dataset_8x8x8x8):
+    args = ("raw", raw_dataset_8x8x8x8._path)
+    for params in standard_bad_ds_params:
+        params['dtype'] = raw_dataset_8x8x8x8.meta.raw_dtype
+        if 'nav_shape' not in params:
+            params['nav_shape'] = raw_dataset_8x8x8x8.meta.shape.nav
+        if 'sig_shape' not in params:
+            params['sig_shape'] = raw_dataset_8x8x8x8.meta.shape.sig
+        ds_params_tester(*args, **params)

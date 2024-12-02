@@ -28,7 +28,7 @@ const About: React.FC<MergedProps> = ({ version, revision }) => (
             <List.Item>
                 <List.Icon name="legal" />
                 <List.Content>
-                    LiberTEM is licensed under the <a href="https://github.com/LiberTEM/LiberTEM/blob/master/LICENSE">GNU General Public License v3.0</a>
+                    LiberTEM is licensed under the <a href="https://github.com/LiberTEM/LiberTEM/blob/master/LICENSE">MIT License</a>
                 </List.Content>
             </List.Item>
             <List.Item>

@@ -25,6 +25,9 @@ class LogsumUDF(UDF):
             b for b in self.BACKEND_ALL
             if b not in (
                 self.BACKEND_SCIPY_COO, self.BACKEND_SCIPY_CSR, self.BACKEND_SCIPY_CSC,
+                self.BACKEND_SCIPY_COO_ARRAY,
+                self.BACKEND_SCIPY_CSR_ARRAY,
+                self.BACKEND_SCIPY_CSC_ARRAY,
                 self.BACKEND_CUPY_SCIPY_COO, self.BACKEND_CUPY_SCIPY_CSC,
                 self.BACKEND_CUPY_SCIPY_CSR,
             )

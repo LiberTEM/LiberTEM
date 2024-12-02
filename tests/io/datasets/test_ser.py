@@ -13,7 +13,11 @@ from libertem.common.buffers import reshaped_view
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    import hyperspy.api as hs
+    # FIXME: rsciio/pint is not numpy2 compatible yet
+    if int(np.version.version.split('.')[0]) < 2:
+        import hyperspy.api as hs
+    else:
+        hs = None
 except ModuleNotFoundError:
     hs = None
 
@@ -401,3 +405,9 @@ def test_scheme_too_large(default_ser):
     tiles = p.get_tiles(tiling_scheme=tiling_scheme)
     t = next(tiles)
     assert tuple(t.tile_slice.shape)[0] <= depth
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("ser", SER_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

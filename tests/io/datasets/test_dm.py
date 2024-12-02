@@ -18,7 +18,11 @@ from libertem.io.dataset.base import (
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    import hyperspy.api as hs
+    # FIXME: rsciio/pint is not numpy2 compatible yet
+    if int(np.version.version.split('.')[0]) < 2:
+        import hyperspy.api as hs
+    else:
+        hs = None
 except ModuleNotFoundError:
     hs = None
 
@@ -507,3 +511,8 @@ def test_load_stack_dd(local_cluster_ctx, dm_stack_glob):
     files = dm_stack_glob
     ds = local_cluster_ctx.load("dm", files=files, same_offset=True)
     ds.check_valid()
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params, dm_3d_glob):
+    for params in standard_bad_ds_params:
+        ds_params_tester("dm", files=dm_3d_glob, **params)

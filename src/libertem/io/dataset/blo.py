@@ -11,7 +11,7 @@ from .base import (
 )
 from libertem.common.messageconverter import MessageConverter
 
-MAGIC_EXPECT = 258
+MAGIC_EXPECT = (258, 259)
 
 
 class BLODatasetParams(MessageConverter):
@@ -141,6 +141,8 @@ class BloDataSet(DataSet):
 
     def initialize(self, executor):
         self._header = h = executor.run_function(self._read_header)
+        metadata = executor.run_function(self._read_metadata)
+        dtype = self._try_read_bitdepth(metadata)
         NY = int(h['NY'][0])
         NX = int(h['NX'][0])
         DP_SZ = int(h['DP_SZ'][0])
@@ -158,7 +160,7 @@ class BloDataSet(DataSet):
         self._shape = Shape(self._nav_shape + self._sig_shape, sig_dims=len(self._sig_shape))
         self._meta = DataSetMeta(
             shape=self._shape,
-            raw_dtype=np.dtype("u1"),
+            raw_dtype=np.dtype(dtype),
             sync_offset=self._sync_offset,
             image_count=self._image_count,
         )
@@ -211,6 +213,59 @@ class BloDataSet(DataSet):
         with open(self._path, 'rb') as f:
             return np.fromfile(f, dtype=get_header_dtype_list(self._endianess), count=1)
 
+    def _read_metadata(self) -> tuple[str]:
+        """
+        Read metadata from the block after the inital 64 byte header
+        but before the first Data section (as interpreted from the header).
+
+        In the files alrady seen, this is a Windows-delimited sequence
+        of lines of text starting at byte 240.
+
+        As we aren't confident in the format this function doesn't try
+        to decode the metadata, it just loads it and cleans up any null
+        bytes or extra whitespace.
+        """
+        if self._header['MAGIC'] == 259:
+            metadata_start_pos = 240
+            data_start_byte = int(self._header['Data_offset_1'].item())
+            with open(self._path, 'rb') as f:
+                f.seek(metadata_start_pos)
+                metadata_bytes = f.read(data_start_byte - metadata_start_pos)
+            metadata = metadata_bytes.decode(errors='ignore').strip('\x00')
+            metadata = (m.strip() for m in metadata.splitlines())
+            return tuple(m for m in metadata if len(m) > 0)
+        return tuple()
+
+    @staticmethod
+    def _try_read_bitdepth(metadata: tuple[str, ...]) -> str:
+        """
+        Try to extract a bitdepth from the metadata items
+        using the key in the post-header section of the file
+        like:
+
+            Blo Bit Depth: 16 bits
+
+        Falls back to u1 dtype if metadata is missing
+        or does not exactly conform to the format already seen.
+        If metadata is missing (older format) this is a no-op.
+
+        The alternative to this function is to infer the bit depth
+        using the filesize, data_offset and nav/sig shapes.
+        """
+        for m in metadata:
+            if not m.lower().startswith('blo bit depth:'):
+                continue
+            for p in m.split(':'):
+                p = p.strip().lower()
+                if not p.endswith(' bits'):
+                    continue
+                try:
+                    bitdepth = int(p.replace(' bits', ''))
+                    return f"u{bitdepth // 8}"
+                except ValueError:
+                    break
+        return "u1"
+
     def _get_filesize(self):
         return os.stat(self._path).st_size
 
@@ -224,8 +279,11 @@ class BloDataSet(DataSet):
         try:
             header = self._read_header()
             magic = header['MAGIC'][0]
-            if magic != MAGIC_EXPECT:
-                raise DataSetException(f"invalid magic number: {magic:x} != {MAGIC_EXPECT:x}")
+            if magic not in MAGIC_EXPECT:
+                raise DataSetException(
+                    f"invalid magic number: {magic:x} "
+                    f"not in {tuple(hex(x) for x in MAGIC_EXPECT)}"
+                )
             return True
         except OSError as e:
             raise DataSetException("invalid dataset: %s" % e) from e
@@ -244,7 +302,11 @@ class BloDataSet(DataSet):
                 path=self._path,
                 start_idx=0,
                 end_idx=self._image_count,
-                native_dtype=self._endianess + "u1",
+                native_dtype=(
+                    self._endianess
+                    + self.meta.raw_dtype.kind
+                    + str(self.meta.raw_dtype.itemsize)
+                ),
                 sig_shape=self.shape.sig,
                 frame_header=6,
                 file_header=int(self.header['Data_offset_2'][0]),

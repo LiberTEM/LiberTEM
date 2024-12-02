@@ -1,2 +1,197 @@
-# This file is a workaround for a pip bug.
-# https://stackoverflow.com/a/53698424
+[build-system]
+requires = [
+    "hatchling",
+    "hatch-fancy-pypi-readme",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "libertem"
+dynamic = ["version", "readme"]
+description = "Open pixelated STEM framework"
+license = { file = "LICENSE" }
+requires-python = ">=3.9.3"
+authors = [
+    { name = "the LiberTEM team", email = "libertem-dev@googlegroups.com" },
+]
+keywords = [
+    "electron",
+    "microscopy",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: JavaScript",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "autopep8",
+    "click",
+    "cloudpickle",
+    "colorcet",
+    "dask!=2023.6.1",
+    "defusedxml",
+    "distributed>=2.19.0",
+    "h5py",
+    "ipympl",
+    "jsonschema",
+    "jupyter_ui_poll",
+    "matplotlib",
+    "nbconvert",
+    "nbformat",
+    "ncempy>=1.10",
+    # Minimum constraints of numba for all Python versions we support
+    # See https://numba.readthedocs.io/en/stable/release-notes-overview.html
+    "numba>=0.53;python_version < '3.10'",
+    "numba>=0.55;python_version < '3.11'",
+    "numba>=0.57;python_version < '3.12'",
+    "numba>=0.59;python_version < '3.13'",
+    # for any future Python release, constrain numba to a recent version,
+    # otherwise, version resolution might try to install an ancient version
+    # that isn't constrained properly:
+    "numba>=0.61;python_version >= '3.13'",  
+    "numexpr!=2.8.6",
+    "numpy",
+    "opentelemetry-api",
+    "pillow",
+    "psutil",
+    "pywin32!=226;platform_system==\"Windows\"",
+    "scikit-image",
+    "scikit-learn",
+    "scipy>=1.4.1",
+    "sparse",
+    "sparseconverter>=0.4.0",
+    "tblib",
+    "threadpoolctl>=3.0",
+    "tomli",
+    "tornado>=5",
+    "tqdm",
+    "typing-extensions",
+]
+
+[project.optional-dependencies]
+bqplot = [
+    "bqplot",
+    "bqplot-image-gl",
+    "ipython",
+]
+cupy = [
+    "cupy",
+]
+hdbscan = [
+    "hdbscan;( python_version!='3.11' or platform_system!='Windows')",
+    "hdbscan<=0.8.30;( python_version=='3.11' and platform_system=='Windows')",
+]
+hdf5plugin = [
+    "hdf5plugin",
+]
+torch = [
+    "torch<1.12",
+]
+tracing = [
+    "opentelemetry-distro",
+    "opentelemetry-exporter-otlp",
+]
+
+[project.scripts]
+libertem-server = "libertem.web.cli:main"
+libertem-worker = "libertem.executor.cli:main"
+
+[project.urls]
+Repository = "https://github.com/LiberTEM/LiberTEM"
+Homepage = "https://libertem.github.io/LiberTEM/"
+
+[tool.hatch.version]
+path = "src/libertem/__version__.py"
+
+[tool.hatch.build.targets.wheel]
+artifacts = [
+    "/src/libertem/_baked_revision.py",
+]
+
+[tool.hatch.build.targets.sdist]
+artifacts = [
+    "/src/libertem/_baked_revision.py",
+]
+include = [
+    "/src",
+    "/tests",
+    "/client/src",
+    "/client/public",
+    "/client/types",
+    "/client/README.md",
+    "/client/*.*js*",
+    "/LICENSE",
+    "/README.rst",
+    "/pytest.ini",
+    "/conftest.py",
+    "/test_requirements.txt",
+    "/override_requirements.txt",
+    "/tox.ini",
+    "/.flake8",
+]
+exclude = [
+    "*.pyc",
+    "*.nbi",
+    "*.nbc",
+    "__pycache__",
+    ".mypy_cache",
+]
+
+[tool.hatch.build.hooks.custom]
+# this enables hatch_build.py
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+"content-type" = "text/x-rst"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.rst"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.substitutions]]
+pattern = ":(cite|doc):`[^`]+` ?"
+replacement = ""
+
+[tool.coverage.run]
+branch = true
+include = [
+    "src/"
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self.debug",
+
+    # Don't complain about typing branches:
+    "if TYPE_CHECKING",
+    "if typing.TYPE_CHECKING",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if False:",
+    "if __name__ == .__main__.:",
+]

@@ -25,6 +25,21 @@ def make_dask_array(dataset: DataSet, dtype='float32', roi=None,
         array_backend: Optional[ArrayBackend] = None):
     '''
     Create a Dask array using the DataSet's partitions as blocks.
+
+    Parameters
+    ----------
+
+    dataset
+        The LiberTEM dataset to load from
+
+    dtype
+        The numpy dtype into which the data should be converted
+
+    roi
+        Restrict the dataset to this region of interest (nav-shaped mask)
+
+    array_backend
+        The array type the data should be converted to
     '''
     chunks = []
     workers = {}

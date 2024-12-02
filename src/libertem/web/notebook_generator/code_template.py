@@ -89,7 +89,7 @@ class CodeTemplate(TemplateBase):
         return self.code_formatter('\n'.join(dep))
 
     def initial_setup(self):
-        return "%matplotlib nbagg"
+        return "%matplotlib widget"
 
     def connection(self):
         docs = ["# Connection"]

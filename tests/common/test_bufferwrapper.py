@@ -32,7 +32,7 @@ def test_new_for_partition():
         ps = partition.slice.get(nav_only=True)
         roi_part = roi.reshape(-1)[ps]
 
-        assert np.product(new_buf._data.shape) == roi_part.sum()
+        assert np.prod(new_buf._data.shape) == roi_part.sum()
 
         # old buffer stays the same:
         assert np.allclose(buf._data, auxdata.reshape(-1))

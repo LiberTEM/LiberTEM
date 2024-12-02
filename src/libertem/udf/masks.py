@@ -235,13 +235,14 @@ class ApplyMasksUDF(UDF):
     or a per-frame shift supplied using an :class:`~libertem.common.buffers.AuxBufferWrapper`
     created using :meth:`~libertem.udf.base.UDF.aux_data`:
 
+    >>> shifts = np.random.randint(-8, 8, size=(16, 16, 2)).ravel()
     >>> udf = ApplyMasksUDF(
     ...         mask_factories=my_masks,
     ...         shifts=ApplyMasksUDF.aux_data(
-    ...             np.random.randint(-8, 8, size=(16, 16, 2)).ravel(),
+    ...             shifts,
     ...             kind='nav',
     ...             extra_shape=(2,),
-    ...             dtype=int,
+    ...             dtype=shifts.dtype,
     ...         )
     ...     )
     >>> res_shift_aux = ctx.run_udf(dataset=dataset, udf=udf)['intensity']
@@ -255,9 +256,15 @@ class ApplyMasksUDF(UDF):
                 mask_dtype=None, preferred_dtype=None, backends=None, shifts=None, **kwargs):
 
         _backends = backends
+        not_supported = (
+            self.BACKEND_SCIPY_COO_ARRAY,
+            self.BACKEND_SCIPY_CSR_ARRAY,
+            self.BACKEND_SCIPY_CSC_ARRAY,
+        )
+        supported_backends = tuple(b for b in self.BACKEND_ALL if b not in not_supported)
         if backends is None:
-            backends = self.BACKEND_ALL
-        backends = tuple(b for b in backends if b in self.BACKEND_ALL)
+            backends = supported_backends
+        backends = tuple(b for b in backends if b in supported_backends)
 
         if shifts is not None:
             if isinstance(use_sparse, str) and use_sparse.startswith('scipy.sparse'):

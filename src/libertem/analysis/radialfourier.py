@@ -27,7 +27,7 @@ class RadialTemplate(GeneratorHelper):
     def get_dependency(self):
         return [
             "import matplotlib.cm as cm",
-            "from empyre.vis.colors import ColormapCubehelix, ColormapPerception"
+            "from libertem.viz import rgb_from_2dvector, libertem_cyclic"
         ]
 
     def get_docs(self):
@@ -56,13 +56,12 @@ class RadialTemplate(GeneratorHelper):
         cells.append([
             "imag = radial_result.complex_0_1.raw_data.imag",
             "real = radial_result.complex_0_1.raw_data.real",
-            "ch = ColormapCubehelix(start=1, rot=1, minLight=0.5, maxLight=0.5, sat=2)",
             "fig, axes = plt.subplots()",
             'axes.set_title("complex_0_1")',
-            "plt.imshow(ch.rgb_from_vector((real, imag, 0)))",
+            "plt.imshow(rgb_from_2dvector(x=real, y=imag))",
             "fig, axes = plt.subplots()",
             'axes.set_title("phase_0_1")',
-            'plt.imshow(radial_result.phase_0_1.raw_data, cmap=ColormapPerception())'
+            'plt.imshow(radial_result.phase_0_1.raw_data, cmap=libertem_cyclic)'
         ])
         return ['\n'.join(cell) for cell in cells]
 
@@ -171,7 +170,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
         udf_results = udf_results.reshape((n_bins, orders, *shape))
 
         def resultlist():
-            from libertem.viz import CMAP_CIRCULAR_DEFAULT, visualize_simple, cmaps
+            from libertem.viz import rgb_from_2dvector, visualize_simple, libertem_cyclic
             import matplotlib.cm as cm
             sets = []
             absolute = np.absolute(udf_results)
@@ -229,7 +228,7 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                         AnalysisResult(
                             raw_data=angle[b, o],
                             visualized=partial(visualize_simple,
-                                angle[b, o], colormap=cmaps['perception_circular'],
+                                angle[b, o], colormap=libertem_cyclic,
                                 damage=dam
                             ),
                             key=f"phase_{b}_{o}",
@@ -240,8 +239,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
             for b in range(n_bins):
                 data = udf_results[b, 0]
                 f = partial(
-                    CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                    (data.real, data.imag, 0),
+                    rgb_from_2dvector,
+                    x=data.real, y=data.imag,
                     vmax=np.max(np.abs(data[..., dam]))
                 )
                 sets.append(
@@ -256,8 +255,8 @@ class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):
                 for o in range(1, orders):
                     data = udf_results[b, o] / normal[b]
                     f = partial(
-                        CMAP_CIRCULAR_DEFAULT.rgb_from_vector,
-                        (data.real, data.imag, 0), vmax=max_absolute
+                        rgb_from_2dvector,
+                        x=data.real, y=data.imag, vmax=max_absolute
                     )
                     sets.append(
                         AnalysisResult(

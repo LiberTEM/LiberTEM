@@ -96,6 +96,8 @@ def is_valid_hdr(path):
 
 
 def nav_shape_from_hdr(hdr):
+    if 'ScanX' in hdr and 'ScanY' in hdr:
+        return (int(hdr['ScanY']), int(hdr['ScanX']))
     num_frames, scan_x = (
         int(hdr['Frames in Acquisition (Number)']),
         int(hdr['Frames per Trigger (Number)'])
@@ -167,8 +169,8 @@ def encode_u2(inp, out):
         row_in = inp[y]
         for i in range(row_in.shape[0]):
             in_value = row_in[i]
-            row_out[i * 2] = (0xFF00 & in_value) >> 8
-            row_out[i * 2 + 1] = 0xFF & in_value
+            row_out[i * 2] = (0xFF00 & np.uint16(in_value)) >> 8
+            row_out[i * 2 + 1] = 0xFF & np.uint16(in_value)
 
 
 @numba.njit(cache=True)
@@ -181,7 +183,7 @@ def encode_r1(inp, out):
                 out_byte = 0
                 for bitpos in range(8):
                     value = row_in[64 * stripe + 8 * byte + bitpos] & 1
-                    out_byte |= (value << bitpos)
+                    out_byte |= (np.uint64(value) << bitpos)
                 row_out[(stripe + 1) * 8 - (byte + 1)] = out_byte
 
 
@@ -578,14 +580,16 @@ def decode_r12_swap_2x2(inp, out, idx, native_dtype, rr, origin, shape, ds_shape
             col = i % 4
             pos = i // 4
             out_pos = (pos + 1) * 4 - col - 1
-            out_cut[out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+            out_cut[out_pos] = (np.uint16(inp[i * 2]) << 8) + (inp[i * 2 + 1] << 0)
     else:
         # flip in x direction:
         for i in range(out_cut.shape[0]):
             col = i % 4
             pos = i // 4
             out_pos = (pos + 1) * 4 - col - 1
-            out_cut[out_cut.shape[0] - out_pos - 1] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+            out_cut[out_cut.shape[0] - out_pos - 1] = (
+                (np.uint16(inp[i * 2]) << 8) + (inp[i * 2 + 1] << 0)
+            )
 
     # reference non-quad impl:
     # for i in range(out.shape[1]):
@@ -636,7 +640,7 @@ def decode_r12_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
         col = i % 4
         pos = i // 4
         out_pos = (pos + 1) * 4 - col - 1
-        out[idx, out_pos] = (inp[i * 2] << 8) + (inp[i * 2 + 1] << 0)
+        out[idx, out_pos] = (np.uint16(inp[i * 2]) << 8) + (np.uint16(inp[i * 2 + 1]) << 0)
 
 
 @numba.njit(inline='always', cache=True)
@@ -655,7 +659,7 @@ def decode_r24_swap(inp, out, idx, native_dtype, rr, origin, shape, ds_shape):
         col = i % 4
         pos = i // 4
         out_pos = (pos + 1) * 4 - col - 1
-        out_val = np.uint32((inp[i * 2] << 8) + (inp[i * 2 + 1] << 0))
+        out_val = np.uint32((np.uint32(inp[i * 2]) << 8) + (np.uint32(inp[i * 2 + 1]) << 0))
         if idx % 2 == 0:  # from first frame: most significant bits
             out_val = out_val << 12
         out[idx // 2, out_pos] += out_val
@@ -1063,7 +1067,7 @@ class MIBDataSet(DataSet):
             if nav_shape is not None:
                 raise ValueError("cannot specify both scan_size and nav_shape")
             self._nav_shape = tuple(scan_size)
-        if self._nav_shape is None and not path.lower().endswith(".hdr"):
+        if self._nav_shape is None and not self._path.lower().endswith(".hdr"):
             raise ValueError(
                     "either nav_shape needs to be passed, or path needs to point to a .hdr file"
                 )

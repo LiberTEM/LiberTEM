@@ -260,3 +260,9 @@ def test_scheme_too_large(default_mrc):
 
 def test_diagnostics(default_mrc):
     assert {"name": "dtype", "value": "float32"} in default_mrc.get_diagnostics()
+
+
+def test_bad_params(ds_params_tester, standard_bad_ds_params):
+    args = ("mrc", MRC_TESTDATA_PATH)
+    for params in standard_bad_ds_params:
+        ds_params_tester(*args, **params)

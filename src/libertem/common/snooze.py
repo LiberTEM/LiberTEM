@@ -42,6 +42,8 @@ class SnoozeManager:
             30.0,
             self._snooze_timeout and (self._snooze_timeout * 0.1) or 30.0,
         )
+        self._snooze_task_continue = threading.Event()
+        self._snooze_task_continue.set()
         self._snooze_task = threading.Thread(
             target=self._snooze_check_task,
             daemon=True,
@@ -101,11 +103,15 @@ class SnoozeManager:
                         subs.send(SnoozeMessage.UNSNOOZE_DONE, {})
                 self.is_snoozing = False
 
+    def close(self):
+        if self._snooze_task is not None:
+            self._snooze_task_continue.clear()
+
     def _snooze_check_task(self):
         """
         Periodically check if we need to snooze the executor
         """
-        while True:
+        while self._snooze_task_continue.is_set():
             time.sleep(self._snooze_check_interval)
             if self.scale_down() is None:
                 # Executor is likely being torn down

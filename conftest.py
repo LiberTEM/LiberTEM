@@ -915,7 +915,7 @@ class ServerThread(threading.Thread):
         self.server.stop()
         await self.server.close_all_connections()
         exstate = self.shared_state.executor_state
-        if exstate.have_executor() and not exstate.is_snoozing():
+        if exstate.have_executor():
             executor = await exstate.get_executor()
             await executor.close()
         self.loop.stop()

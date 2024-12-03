@@ -16,8 +16,7 @@ from libertem.common.threading import set_num_threads_env
 
 from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
-    JobCancelledError, TaskCommHandler, TaskProtocol, Environment,
-    WorkerContext
+    JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
 from libertem.common.snooze import SnoozeManager, keep_alive
 from libertem.common.subscriptions import SubscriptionManager

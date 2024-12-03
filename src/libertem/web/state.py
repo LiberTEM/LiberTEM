@@ -121,9 +121,11 @@ class ExecutorState:
         return executor
 
     async def get_executor(self):
-        if self.have_executor():
-            if self.executor.snooze_manager is not None:
-                await sync_to_async(self.executor.snooze_manager.unsnooze)
+        if self.executor is None:
+            # TODO: exception type, conversion into 400 response
+            raise RuntimeError("wrong state: executor is None")
+        elif self.executor.snooze_manager is not None:
+            await sync_to_async(self.executor.snooze_manager.unsnooze)
         return self.executor
 
     def have_executor(self):

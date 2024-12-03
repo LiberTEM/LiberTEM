@@ -189,7 +189,7 @@ class ExecutorState:
             pass
 
     def get_cluster_params(self):
-        if self.executor.snooze_manager is not None:
+        if self.executor is not None and self.executor.snooze_manager is not None:
             # Given cluster_params are stored on this class the _update_last_activity
             # is somewhat unecessary, but it was part of the old system so maintained here
             self.executor.snooze_manager._update_last_activity()

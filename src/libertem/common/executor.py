@@ -1,12 +1,11 @@
 import queue
 from typing import (
     Callable, Optional, Any, TYPE_CHECKING,
-    TypeVar
+    TypeVar,
 )
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 import multiprocessing as mp
-
 
 import cloudpickle
 from opentelemetry import trace

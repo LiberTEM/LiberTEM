@@ -121,9 +121,9 @@ class ExecutorState:
         return executor
 
     async def get_executor(self):
-        snooze_manager = self.executor.snooze_manager
-        if snooze_manager is not None:
-            await sync_to_async(snooze_manager.unsnooze)
+        if self.have_executor():
+            if self.executor.snooze_manager is not None:
+                await sync_to_async(self.executor.snooze_manager.unsnooze)
         return self.executor
 
     def have_executor(self):

@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import time
 import subprocess
 
 import numpy as np
@@ -270,3 +271,20 @@ def test_preload(hdf5_ds_1):
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = Context(executor=executor)
         ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)
+
+
+def test_connected_cluster_cannot_snooze(local_cluster_url):
+    """
+    Normally if we go via .connect there is no way to
+    setup a snooze_manager, and directly calling _scale_up
+    and _scale_down is unsupported, but check anyway
+    """
+    ex = DaskJobExecutor.connect(local_cluster_url)
+    assert ex.is_local
+    assert ex.client.cluster is None
+    num_workers = len(ex.get_available_workers())
+    ex._scale_down()  # should be a no-op
+    time.sleep(0.1)
+    assert num_workers == len(ex.get_available_workers())
+    ex._scale_up()  # should be a no-op
+    assert num_workers == len(ex.get_available_workers())

@@ -453,15 +453,21 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._subscriptions = SubscriptionManager()
 
     def _scale_down(self):
-        if not self.is_local or self._worker_spec is None:
+        if not self.is_local or self._worker_spec is None or self.client.cluster is None:
             return
         self.client.cluster.scale(n=1)
+        # Can return immediately with scale-down because
+        # Dask will do its thing in the background
 
     def _scale_up(self):
-        if not self.is_local or self._worker_spec is None:
+        if not self.is_local or self._worker_spec is None or self.client.cluster is None:
             return
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)
         self.client.cluster.scale(n=len(self._worker_spec))
+        # Block until our scale request is complete
+        # There is also an async client._wait_for_workers(n, timeout)
+        # which could be used in the web client, but it is nominally internal
+        self.client.wait_for_workers(len(self._worker_spec))
 
     def _enable_snooze(self, timeout: float, spec: dict):
         self._snooze_manager = SnoozeManager(

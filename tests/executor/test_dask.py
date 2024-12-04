@@ -288,3 +288,18 @@ def test_connected_cluster_cannot_snooze(local_cluster_url):
     assert num_workers == len(ex.get_available_workers())
     ex._scale_up()  # should be a no-op
     assert num_workers == len(ex.get_available_workers())
+
+
+@pytest.mark.slow
+def test_local_cluster_snooze():
+    try:
+        ctx = Context.make_with('dask', cpus=2, gpus=0, snooze_timeout=10_000)
+        num_workers = len(ctx.executor.get_available_workers())
+        assert num_workers == 2 + 1  # +service worker
+        ctx.executor.snooze_manager.snooze()
+        time.sleep(1.)
+        assert len(ctx.executor.get_available_workers()) == 1
+        ctx.executor.snooze_manager.unsnooze()
+        assert len(ctx.executor.get_available_workers()) == 2 + 1
+    finally:
+        ctx.close()

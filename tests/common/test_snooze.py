@@ -166,4 +166,6 @@ def test_messages():
     messages_received.clear()
     time.sleep(0.15)
     executor.run_task()
-    assert messages_received[-1][0] == SnoozeMessage.UNSNOOZE_DONE
+    topics = tuple(m[0] for m in messages_received)
+    assert SnoozeMessage.UPDATE_ACTIVITY not in topics
+    assert topics[-1] == SnoozeMessage.UNSNOOZE_DONE

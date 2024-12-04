@@ -276,7 +276,8 @@ class Context:
             "dask":
                 Create a standard :class:`~libertem.executor.dask.DaskJobExecutor` without
                 considering any pre-existing Dask schedulers available on the system, similar to
-                the default behaviour of :code:`Context()` called with no arguments.
+                the default behaviour of :code:`Context()` called with no arguments. Will create
+                by default 1 worker per-CPU core and per-GPU detected on the system.
             "dask-integration":
                 Use a JobExecutor that is compatible with the currently active Dask scheduler.
                 See :func:`~libertem.executor.integration.get_dask_integration_executor` for

@@ -317,6 +317,12 @@ class Context:
             When unspecified the default executor behaviour is retained.
         plot_class : libertem.viz.base.Live2DPlot, optional
             Plot class for live plotting, passed to :class:`Context`.
+        snooze_timeout : float, optional
+            Activate automatic executor downscaling after :code:`snooze_timeout`
+            minutes of inactivity. This can be used to free resources in a shared
+            environment, for example. The executor is automatically brought back
+            up when used again after snoozing. Currently only supported for the
+            :class:`~libertem.executor.dask.DaskJobExecutor`.
 
         Raises
         ------

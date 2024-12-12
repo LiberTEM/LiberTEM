@@ -240,6 +240,7 @@ class Context:
         cpus: Optional[Union[int, Iterable[int]]] = None,
         gpus: Optional[Union[int, Iterable[int]]] = None,
         plot_class: Optional['Live2DPlot'] = None,
+        snooze_timeout: Optional[float] = None,
     ) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
@@ -275,7 +276,8 @@ class Context:
             "dask":
                 Create a standard :class:`~libertem.executor.dask.DaskJobExecutor` without
                 considering any pre-existing Dask schedulers available on the system, similar to
-                the default behaviour of :code:`Context()` called with no arguments.
+                the default behaviour of :code:`Context()` called with no arguments. Will create
+                by default 1 worker per-CPU core and per-GPU detected on the system.
             "dask-integration":
                 Use a JobExecutor that is compatible with the currently active Dask scheduler.
                 See :func:`~libertem.executor.integration.get_dask_integration_executor` for
@@ -315,6 +317,12 @@ class Context:
             When unspecified the default executor behaviour is retained.
         plot_class : libertem.viz.base.Live2DPlot, optional
             Plot class for live plotting, passed to :class:`Context`.
+        snooze_timeout : float, optional
+            Activate automatic executor downscaling after :code:`snooze_timeout`
+            minutes of inactivity. This can be used to free resources in a shared
+            environment, for example. The executor is automatically brought back
+            up when used again after snoozing. Currently only supported for the
+            :class:`~libertem.executor.dask.DaskJobExecutor`.
 
         Raises
         ------
@@ -353,6 +361,9 @@ class Context:
         if has_spec and executor_spec in ('dask', 'dask-make-default'):
             spec = cluster_spec(**spec_args)
 
+        if snooze_timeout is not None:
+            snooze_timeout *= 60
+
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
             executor = InlineJobExecutor()
@@ -364,7 +375,7 @@ class Context:
                 pass
             executor = ConcurrentJobExecutor.make_local(n_threads=n_threads)
         elif executor_spec == 'dask':
-            executor = DaskJobExecutor.make_local(spec=spec)
+            executor = DaskJobExecutor.make_local(spec=spec, snooze_timeout=snooze_timeout)
         elif executor_spec == 'dask-integration':
             executor = get_dask_integration_executor()
         elif executor_spec == 'dask-make-default':

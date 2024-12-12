@@ -4,6 +4,10 @@ from typing import Callable, Any, overload
 
 
 class SubscriptionManager:
+    """
+    A simple topic -> callback dispatcher, used by an executor
+    to send messages to subscribers about events.
+    """
     def __init__(self):
         # Mapping of topic to {key: callback}
         self._subs: dict[str, dict[str, Callable[[str, dict], None]]] = {}
@@ -18,6 +22,15 @@ class SubscriptionManager:
         ...
 
     def subscribe(self, topic: str, callback: Callable[[str, dict], None]) -> str:
+        """
+        Subscribe to one-or-more topics with the provided callback.
+        Returns a string UUID used to unsubscribe from the topic.
+
+        The callback will receive :code:`(topic_str, {'timestamp': float, ...})`
+        for each event sent.
+
+        The callback is run synchronously so must run efficiently.
+        """
         if isinstance(topic, tuple):
             return tuple(self.subscribe(t, callback) for t in topic)
         key = str(uuid.uuid4())
@@ -28,6 +41,10 @@ class SubscriptionManager:
         return key
 
     def unsubscribe(self, key: str) -> bool:
+        """
+        Unsubscribe from a topic registered under the key, return
+        a bool indicating if the key was found and unregistered
+        """
         for registered in self._subs.values():
             try:
                 _ = registered.pop(key)

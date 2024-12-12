@@ -453,6 +453,16 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._subscriptions = SubscriptionManager()
 
     def _scale_down(self):
+        """
+        If possible, scale the cluster down to one worker
+        using Dask's :code:`cluster.scale`. Normally called by
+        :code:`SnoozeManager`. Returns immediately, though
+        Dask may take some time to shut down the extra workers
+        in the background. There is no way to ensure that the
+        remaining worker is the service (or even a CPU) worker.
+
+        :meta private:
+        """
         if not self.is_local or self._worker_spec is None or self.client.cluster is None:
             return
         self.client.cluster.scale(n=1)
@@ -460,6 +470,19 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         # Dask will do its thing in the background
 
     def _scale_up(self):
+        """
+        If possible, scale the cluster back up to its initial
+        state using Dask's :code:`cluster.scale`. Normally called by
+        :code:`SnoozeManager`. The initial worker spec is stored in
+        :code:`self._worker_spec`, set by :code:`self._enable_snooze`,
+        as Dask deletes its copy of worker spec when scaling down.
+
+        This method blocks until the workers are up, though there is
+        an internal Dask async function (:code:`_wait_for_workers`) which
+        could be used for the web client.
+
+        :meta private:
+        """
         if not self.is_local or self._worker_spec is None or self.client.cluster is None:
             return
         self.client.cluster.worker_spec = copy.copy(self._worker_spec)
@@ -470,6 +493,18 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self.client.wait_for_workers(len(self._worker_spec))
 
     def _enable_snooze(self, timeout: float, spec: dict):
+        """
+        Enable the automatic snoozing on this executor,
+        with a snooze timeout in seconds.
+
+        :code:`spec` is the worker spec used to create the cluster
+        behind thi executor, so that it can be re-supplied to Dask
+        during cluster scale_up.
+
+        :meta private:
+        """
+        if self._snooze_manager is not None:
+            return
         self._snooze_manager = SnoozeManager(
             up=self._scale_up,
             down=self._scale_down,

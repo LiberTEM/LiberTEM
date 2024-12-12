@@ -4,7 +4,7 @@ from enum import Enum
 import functools
 import threading
 import contextlib
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from libertem.common.executor import JobExecutor
@@ -19,19 +19,44 @@ class SnoozeMessage(Enum):
 
 
 class SnoozeManager:
+    '''
+    Monitor an executor for activity, and call its scale down
+    method to free resources if inactive for longer than a
+    specified timeout
+
+    Executors can decorate methods with the :function:`~libertem.common.snooze.keep_alive`
+    decorator in order to prevent snoozing during execution,
+    and to trigger automatic unsnoozing when these methods are called.
+
+    Parameters
+    ----------
+
+    up : Callable[[], None]
+        Method to call to scale up the executor
+    down : Callable[[], None]
+        Method to call to scale down the executor
+    timeout : float
+        The inactivity period before triggering snoozing (seconds)
+    subscriptions : Optional[SubscriptionManager]
+        An instance of SubscriptionManager used to notify
+        when snooze / unsnooze events are happening.
+    '''
     def __init__(
         self,
         *,
         up: Callable[[], None],
         down: Callable[[], None],
         timeout: float,  # seconds
-        subscriptions: 'SubscriptionManager',
+        subscriptions: Optional['SubscriptionManager'] = None,
     ):
         if timeout <= 0:
             raise ValueError("Must supply a positive snooze timeout")
         self.scale_up = weakref.WeakMethod(up)
         self.scale_down = weakref.WeakMethod(down)
-        self.subscriptions = weakref.ref(subscriptions)
+        if subscriptions is not None:
+            self.subscriptions = weakref.ref(subscriptions)
+        else:
+            self.subscriptions = lambda: None
         self.keep_alive = 0
         self.last_activity: float
         self._update_last_activity()
@@ -42,6 +67,7 @@ class SnoozeManager:
             30.0,
             self._snooze_timeout and (self._snooze_timeout * 0.1) or 30.0,
         )
+        # sentinel value, used during shutdown to stop the snooze task
         self._snooze_task_continue = threading.Event()
         self._snooze_task_continue.set()
         self._snooze_task = threading.Thread(

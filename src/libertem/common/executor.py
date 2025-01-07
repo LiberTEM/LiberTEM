@@ -19,6 +19,7 @@ from libertem.io.dataset.base import Partition
 
 if TYPE_CHECKING:
     from libertem.udf.base import UDFParams, UDFRunner
+    from libertem.common.snooze import SnoozeManager
     from opentelemetry.trace import SpanContext
 
 ResourceDef = dict[
@@ -349,6 +350,35 @@ class JobExecutor:
 
     def get_udf_runner(self) -> type['UDFRunner']:
         raise NotImplementedError
+
+    @property
+    def snooze_manager(self) -> Optional['SnoozeManager']:
+        """
+        Return the SnoozeManager for this executor, if it exists
+        """
+        return None
+
+    def subscribe(self, topic: str, callback: Callable[[str, dict], None]) -> str:
+        """
+        Register a callback to run in response to executor events
+
+        The callback should accept the arguments
+            (topic, message_dict)
+        and not block execution as it will be run synchronously
+        within code such as :code:`executor.run_tasks`
+
+        Returns a key for the subscription which can
+        later be used to unsubscribe
+        """
+        raise NotImplementedError()
+
+    def unsubscribe(self, key: str) -> bool:
+        """
+        Unregister a callback based on the key returned by :code:`subscribe`
+
+        Return True if sucessfully unsubscribed, else False (e.g. unrecognized key)
+        """
+        raise NotImplementedError()
 
 
 class AsyncJobExecutor:

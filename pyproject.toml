@@ -35,6 +35,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
@@ -61,10 +62,11 @@ dependencies = [
     "numba>=0.55;python_version < '3.11'",
     "numba>=0.57;python_version < '3.12'",
     "numba>=0.59;python_version < '3.13'",
+    "numba>=0.61;python_version < '3.14'",
     # for any future Python release, constrain numba to a recent version,
     # otherwise, version resolution might try to install an ancient version
     # that isn't constrained properly:
-    "numba>=0.61;python_version >= '3.13'",  
+    "numba>=0.61;python_version >= '3.14'",  
     "numexpr!=2.8.6",
     "numpy",
     "opentelemetry-api",

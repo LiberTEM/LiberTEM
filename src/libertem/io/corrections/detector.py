@@ -1,6 +1,7 @@
 import numpy as np
 import numba
 import sparse
+import sparseconverter
 
 from libertem.common.math import prod
 from libertem.common.sparse import is_sparse
@@ -310,7 +311,7 @@ def correct_dot_masks(masks, gain_map, excluded_pixels=None, allow_empty=False):
                 for rr in r[:c]:
                     result[m, rr] = result[m, rr] + rep[m]
         if is_sparse(result):
-            result = sparse.COO(result)
+            result = sparseconverter.for_backend(result, sparseconverter.SPARSE_COO)
     else:
         result = masks
     result = result * gain_map.flatten()

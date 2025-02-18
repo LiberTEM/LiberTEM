@@ -4,6 +4,7 @@ from typing import Optional
 import numpy as np
 import numba
 import sparse
+import sparseconverter
 
 from libertem.common import Slice
 from libertem.io.corrections.detector import correct, RepairDescriptor
@@ -107,7 +108,9 @@ class CorrectionSet:
         self._dark = dark
         self._gain = gain
         if excluded_pixels is not None:
-            excluded_pixels = sparse.COO(excluded_pixels, prune=True)
+            excluded_pixels = sparseconverter.for_backend(
+                excluded_pixels, sparseconverter.SPARSE_COO
+            )
         self._excluded_pixels = excluded_pixels
         self._allow_empty = allow_empty
         if not allow_empty and excluded_pixels is not None:

@@ -59,7 +59,7 @@ class PointMaskAnalysis(SingleMaskAnalysis, id_="APPLY_POINT_SELECTOR"):
         def _point_inner():
             a = sparse.COO(
                 data=np.array([1]),
-                coords=([int(cy)], [int(cx)]),
+                coords=np.array(([int(cy)], [int(cx)])),
                 shape=sig_shape
             )
             return a

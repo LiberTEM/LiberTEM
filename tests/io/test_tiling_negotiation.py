@@ -452,7 +452,7 @@ def test_base_shape_adjustment_asis(lt_ctx_fast):
 
     corr = CorrectionSet(
         excluded_pixels=sparse.COO(
-            coords=(bad_y, bad_x),
+            coords=np.stack((bad_y, bad_x), axis=0),
             data=1,
             shape=ds.shape.sig
         )
@@ -487,7 +487,7 @@ def test_base_shape_adjustment_valid(lt_ctx_fast):
 
     corr = CorrectionSet(
         excluded_pixels=sparse.COO(
-            coords=(bad_y, bad_x),
+            coords=np.stack((bad_y, bad_x), axis=0),
             data=1,
             shape=ds.shape.sig
         )
@@ -517,7 +517,7 @@ def test_base_shape_adjustment_invalid(lt_ctx_fast):
 
     corr = CorrectionSet(
         excluded_pixels=sparse.COO(
-            coords=(bad_y, bad_x),
+            coords=np.stack((bad_y, bad_x), axis=0),
             data=1,
             shape=ds.shape.sig
         )

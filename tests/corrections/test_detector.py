@@ -387,7 +387,7 @@ def test_mask_correction_sparse():
         count = min(shape)//2
         assert count > 0
         indices = np.stack([np.random.randint(low=0, high=s, size=count) for s in shape], axis=0)
-        masks = sparse.COO(coords=indices, shape=shape, data=1)
+        masks = sparse.COO(coords=indices, shape=shape, data=1).astype(np.float64)
 
         data_flat = data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
         damaged_flat = damaged_data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
@@ -485,7 +485,7 @@ def test_mask_patch_sparse():
         count = min(shape)//2
         assert count > 0
         indices = np.stack([np.random.randint(low=0, high=s, size=count) for s in shape], axis=0)
-        masks = sparse.COO(coords=indices, shape=shape, data=1)
+        masks = sparse.COO(coords=indices, shape=shape, data=1).astype(np.float64)
 
         data_flat = data.reshape((np.prod(nav_dims), np.prod(sig_dims)))
         damaged_flat = damaged_data.reshape((np.prod(nav_dims), np.prod(sig_dims)))

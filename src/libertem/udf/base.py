@@ -2764,7 +2764,7 @@ class UDFResultsLazy:
     '''
     Lazy version of :class:`UDFResults`
 
-    .. versionadded:: 0.7.0
+    .. versionadded:: 0.15.0
 
     Parameters
     ----------

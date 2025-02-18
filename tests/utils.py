@@ -274,7 +274,7 @@ def dataset_correction_verification(ds, roi, lt_ctx, exclude=None):
                 for s in tuple(ds.shape.sig)
             ]
 
-        exclude_coo = sparse.COO(coords=exclude, data=True, shape=ds.shape.sig)
+        exclude_coo = sparse.COO(coords=np.array(exclude), data=True, shape=ds.shape.sig)
         corrset = CorrectionSet(dark=dark, gain=gain, excluded_pixels=exclude_coo)
 
         # This one uses native input data

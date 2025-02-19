@@ -240,6 +240,10 @@ access to a version of the result that is suitable for visualization using
 a :code:`roi` was used, but still allow access to the raw result using
 :attr:`~libertem.common.buffers.BufferWrapper.raw_data` attribute.
 
+Implementations of :meth:`~libertem.udf.base.UDF.get_results` should not
+have side-effects you rely on, as in some situations, it will be called lazily,
+i.e. only when accessing the :code:`buffers` attribute of the results object.
+
 The detailed rules for buffer declarations, :code:`get_result_buffers` and :code:`get_results` are:
 
 1) All buffers are declared in :code:`get_result_buffers`

@@ -505,9 +505,9 @@ def worker_loop(
                 elif header_type == "SHUTDOWN":
                     with attach_to_parent(header["span_context"]):
                         with tracer.start_as_current_span("SHUTDOWN"):
-                            queues.request.close()
-                            queues.response.close(drain=False)
-                            queues.message.close(drain=False)
+                            queues.request.close(force=True)
+                            queues.response.close(drain=False, force=True)
+                            queues.message.close(drain=False, force=True)
                         break
                 elif header_type == "WARMUP":
                     with attach_to_parent(header["span_context"]):

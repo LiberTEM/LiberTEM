@@ -3,7 +3,7 @@ import time
 import random
 from typing import Optional, TypeVar
 from collections.abc import Generator
-from multiprocessing import Process
+import multiprocessing as mp
 import sys
 import subprocess
 
@@ -512,7 +512,8 @@ def test_auto_teardown_2():
 
 
 def test_manual_teardown():
-    p = Process(target=_teardown_manual, name="_teardown_manual")
+    mp_ctx = mp.get_context("spawn")
+    p = mp_ctx.Process(target=_teardown_manual, name="_teardown_manual")
     p.start()
     p.join(30)
     exitcode = p.exitcode

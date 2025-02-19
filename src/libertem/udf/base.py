@@ -12,6 +12,8 @@ from typing import runtime_checkable
 import warnings
 import logging
 import uuid
+import threading
+import copy
 
 import cloudpickle
 import numpy as np
@@ -1455,6 +1457,10 @@ class UDF(UDFBase):
         Get results, allowing a postprocessing step on the main node after
         a result has been merged. See also: :class:`UDFPostprocessMixin`.
 
+        This method should not have side-effects, as it may be called
+        lazily, meaning only when accessing the :code:`buffers` attribute
+        of the results object.
+
         .. versionadded:: 0.7.0
 
         Note
@@ -2336,30 +2342,41 @@ class UDFRunner:
         damage: BufferWrapper,
         part_results: tuple[UDFData, ...],
         task: TaskProtocol,
+        results_lock: threading.Lock,
     ):
         raw_damage = damage.raw_data
         assert raw_damage is not None
-        for results, udf in zip(part_results, udfs):
-            udf.meta.set_valid_nav_mask(raw_damage)
-            udf.set_views_for_partition(task.get_partition())
-            udf.merge(
-                dest=udf.results.get_proxy(),
-                src=results.get_proxy()
-            )
+        with results_lock:
+            for results, udf in zip(part_results, udfs):
+                udf.meta.set_valid_nav_mask(raw_damage)
+                udf.set_views_for_partition(task.get_partition())
+                udf.merge(
+                    dest=udf.results.get_proxy(),
+                    src=results.get_proxy()
+                )
         v = damage.get_view_for_partition(task.get_partition())
         v[:] = True
 
     @staticmethod
-    def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResultsLazy":
+    def _make_udf_result(
+        udfs: Iterable[UDF],
+        damage: BufferWrapper,
+        results_lock: threading.Lock,
+        make_copy: bool = False,
+    ) -> "UDFResultsLazy":
         raw_damage = damage.raw_data
         assert raw_damage is not None
 
         def _inner():
             buffers = []
-            for udf in udfs:
-                udf.meta.set_valid_nav_mask(raw_damage)
-                udf.clear_views()
-                buffers.append(udf._do_get_results())
+            with results_lock:
+                for udf in udfs:
+                    udf.meta.set_valid_nav_mask(raw_damage)
+                    udf.clear_views()
+                    udf_res = udf._do_get_results()
+                    if make_copy:
+                        udf_res = copy.deepcopy(udf_res)
+                    buffers.append(udf_res)
             return tuple(buffers)
 
         return UDFResultsLazy(
@@ -2374,6 +2391,7 @@ class UDFRunner:
         self._debug = debug
         self._pool = TracedThreadPoolExecutor(tracer, max_workers=4)
         self._progress_reporter = progress_reporter
+        self._results_lock = threading.Lock()
 
     @classmethod
     def inspect_udf(
@@ -2646,6 +2664,7 @@ class UDFRunner:
         backends: BackendSpec | None = None,
         dry: bool = False,
         iterate: bool = True,
+        copy_needed: bool = False,
     ) -> ResultsForDataSet:
         span = trace.get_current_span()
         span_context = span.get_span_context()
@@ -2673,6 +2692,7 @@ class UDFRunner:
         def _inner(environment: Environment):
             num_results = 0
             try:
+<<<<<<< HEAD
                 with environment.enter():
                     for part_results, task in result_iter:
                         num_results += 1
@@ -2681,7 +2701,8 @@ class UDFRunner:
                                 udfs=self._udfs,
                                 damage=damage,
                                 part_results=part_results,
-                                task=task
+                                task=task,
+                                results_lock=self._results_lock,
                             )
                         if iterate:
                             yield self._make_udf_result(
@@ -2691,7 +2712,9 @@ class UDFRunner:
                     if num_results == 0 or not iterate:
                         yield self._make_udf_result(
                             udfs=self._udfs,
-                            damage=damage
+                            damage=damage,
+                            make_copy=copy_needed,
+                            results_lock=self._results_lock,
                         )
             except JobCancelledError:
                 raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")

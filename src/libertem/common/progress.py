@@ -66,7 +66,8 @@ class CommsDispatcher:
         messages from the queue as fast as they are recieved
         """
         while True:
-            with self._message_q.get(block=True) as ((topic, msg), _):
+            with self._message_q.get(block=True) as item:
+                ((topic, msg), _) = item
                 if topic == 'STOP':
                     break
                 try:

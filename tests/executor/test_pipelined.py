@@ -550,3 +550,16 @@ def test_cancellation(pipelined_ex, default_raw):
 
     # after cancellation, the executor is still usable:
     _ = ctx.run_udf(dataset=default_raw, udf=SumUDF())
+
+
+def test_with_progress(pipelined_ex, default_raw):
+    executor = pipelined_ex
+    ctx = Context(executor=executor)
+
+    udf = SumUDF()
+    res_iter = ctx.run_udf_iter(dataset=default_raw, udf=udf, progress=True)
+    try:
+        for res in res_iter:
+            pass
+    finally:
+        res_iter.close()

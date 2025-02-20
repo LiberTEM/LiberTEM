@@ -58,7 +58,10 @@ class CommsDispatcher:
 
     def monitor_queue(self):
         """
-        Monitor the queue for messages
+        Monitor the queue for messages. This runs as a background thread of the
+        main process, and forwards messages from the message queue to all
+        subscribers via the registered callback functions.
+
         If there are no subscribers this should drain
         messages from the queue as fast as they are recieved
         """

@@ -434,11 +434,12 @@ def test_exception_in_main_thread():
         udf = SucceedEventuallyUDF()
         data = np.random.randn(1, 32, 16, 16)
         ds = ctx.load("memory", data=data, num_partitions=32)
+        res_iter = ctx.run_udf_iter(dataset=ds, udf=udf)
         with pytest.raises(RuntimeError):
-            res_iter = ctx.run_udf_iter(dataset=ds, udf=udf)
             next(res_iter)
             res_iter.throw(RuntimeError("stuff"))
             next(res_iter)
+        res_iter.close()
 
         # here, we get a KeyError if the worker queues aren't drained:
         print("second UDF run starting")

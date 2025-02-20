@@ -2581,15 +2581,19 @@ class UDFRunner:
                     yield params_handle
 
                     if tasks:
-                        for res in executor.run_tasks(
+                        task_gen = executor.run_tasks(
                             tasks,
                             params_handle,
                             cancel_id,
                             task_comm_handler,
-                        ):
-                            if progress:
-                                pman.finalize_task(res[1])
-                            yield res
+                        )
+                        try:
+                            for res in task_gen:
+                                if progress:
+                                    pman.finalize_task(res[1])
+                                yield res
+                        finally:
+                            task_gen.close()
             finally:
                 if progress and tasks and pman is not None:
                     pman.close()
@@ -2647,6 +2651,8 @@ class UDFRunner:
                     )
             except JobCancelledError:
                 raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
+            finally:
+                result_iter.close()
 
         gen = _inner()
         return ResultsForDataSet(

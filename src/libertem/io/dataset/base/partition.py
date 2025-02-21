@@ -77,7 +77,7 @@ class Partition:
                 "setting num_part to 1 to allow processing (use fewer workers?)",
                 RuntimeWarning
             )
-            num_partitions = 1
+            num_partitions = num_frames
         boundaries = np.linspace(
             0,
             num_frames,

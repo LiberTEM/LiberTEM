@@ -227,7 +227,7 @@ def test_custom_mask_invalid_shape(mask_shape, lt_ctx):
 
     with pytest.raises(InvalidMaskError):
         for res in lt_ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
-            pass
+            res.buffers
 
 
 @pytest.mark.parametrize("mask_dtype", [
@@ -242,7 +242,7 @@ def test_custom_mask_invalid_dtype(mask_dtype, lt_ctx):
 
     with pytest.raises(InvalidMaskError):
         for res in lt_ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
-            pass
+            res.buffers
 
 
 @pytest.mark.parametrize("mask_shape", [
@@ -263,7 +263,7 @@ def test_custom_mask_valid(mask_shape, lt_ctx):
     mask = np.zeros(mask_shape, dtype=bool)
 
     for res in lt_ctx.run_udf_iter(dataset=dataset, udf=CustomMaskFromParams(mask=mask)):
-        pass
+        res.buffers
 
 
 def test_valid_mask_slice_bounding(lt_ctx):

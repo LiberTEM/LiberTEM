@@ -316,6 +316,10 @@ class TVIPSDataSet(DataSet):
         If negative, number of blank frames to insert at start
         If not given, we try to automatically determine the sync_offset from
         the scan metadata in the image headers.
+
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
     """
     def __init__(
         self,
@@ -324,8 +328,12 @@ class TVIPSDataSet(DataSet):
         sig_shape: Optional[tuple[int, ...]] = None,
         sync_offset: Optional[int] = None,
         io_backend: Optional[IOBackend] = None,
+        num_partitions: Optional[int] = None,
     ):
-        super().__init__(io_backend=io_backend)
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
         self._sync_offset = sync_offset

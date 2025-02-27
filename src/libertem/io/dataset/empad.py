@@ -135,14 +135,29 @@ class EMPADDataSet(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
 
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
+
     Examples
     --------
 
     >>> ds = ctx.load("empad", path='./path_to_file.xml', ...)  # doctest: +SKIP
     """
-    def __init__(self, path, scan_size=None, nav_shape=None,
-                 sig_shape=None, sync_offset=0, io_backend=None):
-        super().__init__(io_backend=io_backend)
+    def __init__(
+        self,
+        path,
+        scan_size=None,
+        nav_shape=None,
+        sig_shape=None,
+        sync_offset=0,
+        io_backend=None,
+        num_partitions=None,
+    ):
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._path = path
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape

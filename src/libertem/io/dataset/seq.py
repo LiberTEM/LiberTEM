@@ -436,6 +436,9 @@ class SEQDataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start.
         If negative, number of blank frames to insert at start.
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
 
     Note
     ----
@@ -464,8 +467,12 @@ class SEQDataSet(DataSet):
         sig_shape: Optional[tuple[int, ...]] = None,
         sync_offset: int = 0,
         io_backend=None,
+        num_partitions=None,
     ):
-        super().__init__(io_backend=io_backend)
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._path = path
         # There might be '.seq.seq' and '.seq' in the wild
         # See https://github.com/LiberTEM/LiberTEM/issues/1120

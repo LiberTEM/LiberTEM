@@ -1044,10 +1044,27 @@ class MIBDataSet(DataSet):
         (for example, a.mib, a1.mib and a2.mib), loading a.mib would include a1.mib and a2.mib
         in the data set. Setting :code:`disable_glob` to :code:`True` will only load the single
         .mib file specified as :code:`path`.
+
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
     """
-    def __init__(self, path, tileshape=None, scan_size=None, disable_glob=False,
-                 nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
-        super().__init__(io_backend=io_backend)
+    def __init__(
+        self,
+        path,
+        tileshape=None,
+        scan_size=None,
+        disable_glob=False,
+        nav_shape=None,
+        sig_shape=None,
+        sync_offset=0,
+        io_backend=None,
+        num_partitions=None,
+    ):
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._sig_dims = 2
         self._path = str(path)
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape

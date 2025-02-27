@@ -117,6 +117,9 @@ class NPYDataSet(DataSet):
         If negative, number of blank frames to insert at start
     io_backend : IOBackend, optional
         The I/O backend to use, see :ref:`io backends`, by default None.
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
 
     Raises
     ------
@@ -141,8 +144,12 @@ class NPYDataSet(DataSet):
         sig_shape: Optional[tuple[int, int]] = None,
         sync_offset: int = 0,
         io_backend: Optional[IOBackend] = None,
+        num_partitions: Optional[int] = None,
     ):
-        super().__init__(io_backend=io_backend)
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._meta = None
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
         self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape

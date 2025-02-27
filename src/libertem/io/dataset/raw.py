@@ -95,10 +95,27 @@ class RawFileDataSet(DataSet):
     dtype: numpy dtype
         The dtype of the data as it is on disk. Can contain endian indicator, for
         example >u2 for big-endian 16bit data.
+
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
     """
-    def __init__(self, path, dtype, scan_size=None, detector_size=None, enable_direct=False,
-                 detector_size_raw=None, crop_detector_to=None, tileshape=None,
-                 nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
+    def __init__(
+        self,
+        path,
+        dtype,
+        scan_size=None,
+        detector_size=None,
+        enable_direct=False,
+        detector_size_raw=None,
+        crop_detector_to=None,
+        tileshape=None,
+        nav_shape=None,
+        sig_shape=None,
+        sync_offset=0,
+        io_backend=None,
+        num_partitions=None,
+    ):
         if enable_direct and io_backend is not None:
             raise ValueError("can't specify io_backend and enable_direct at the same time")
         if enable_direct:
@@ -108,7 +125,10 @@ class RawFileDataSet(DataSet):
                 FutureWarning
             )
             io_backend = DirectBackend()
-        super().__init__(io_backend=io_backend)
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         # handle backwards-compatability:
         if tileshape is not None:
             warnings.warn(

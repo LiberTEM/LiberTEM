@@ -242,15 +242,20 @@ def default_raw_data():
 
 
 @pytest.fixture(scope='session')
-def default_raw(tmpdir_factory, default_raw_data):
-    lt_ctx = lt.Context(executor=InlineJobExecutor())
+def default_raw_file(tmpdir_factory, default_raw_data):
     datadir = tmpdir_factory.mktemp('data')
     filename = datadir + '/raw-test-default'
     default_raw_data.tofile(str(filename))
     del default_raw_data
+    return filename
+
+
+@pytest.fixture(scope='session')
+def default_raw(default_raw_file):
+    lt_ctx = lt.Context(executor=InlineJobExecutor())
     ds = lt_ctx.load(
         "raw",
-        path=str(filename),
+        path=str(default_raw_file),
         dtype="float32",
         nav_shape=(16, 16),
         sig_shape=(128, 128),

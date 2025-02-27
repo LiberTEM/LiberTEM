@@ -112,3 +112,24 @@ def test_filetype_auto_fail_file_does_not_exist(lt_ctx):
     with pytest.raises(DataSetException) as e:
         lt_ctx.load("auto", path="/does/not/exist/believe_me")
     assert e.match("could not determine DataSet type for file")
+
+
+@pytest.mark.parametrize("num", [32*32, 25, 16*16, 16, 8, 4, 2, 1, 0, -1])
+def test_num_partitions(lt_ctx, default_raw_file, num):
+    ds = lt_ctx.load(
+        "raw",
+        path=str(default_raw_file),
+        dtype="float32",
+        nav_shape=(16, 16),
+        sig_shape=(128, 128),
+        num_partitions=num,
+    )
+
+    # clamped by number of frames:
+    if num <= 0:
+        assert len(list(ds.get_partitions())) == 1
+    elif num <= 16*16:
+        assert len(list(ds.get_partitions())) == num
+    elif num > 16*16:
+        with pytest.warns(RuntimeWarning):
+            assert len(list(ds.get_partitions())) == 16*16

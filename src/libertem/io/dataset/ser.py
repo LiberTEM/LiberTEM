@@ -115,10 +115,25 @@ class SERDataSet(DataSet):
     sync_offset: int, optional
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
+
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
     """
-    def __init__(self, path, emipath=None, nav_shape=None,
-                 sig_shape=None, sync_offset=0, io_backend=None):
-        super().__init__(io_backend=io_backend)
+    def __init__(
+        self,
+        path,
+        emipath=None,
+        nav_shape=None,
+        sig_shape=None,
+        sync_offset=0,
+        io_backend=None,
+        num_partitions=None,
+    ):
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         if io_backend is not None:
             raise ValueError("SERDataSet currently doesn't support alternative I/O backends")
         self._path = path

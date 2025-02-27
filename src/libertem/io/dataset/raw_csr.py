@@ -136,6 +136,9 @@ class RawCSRDataSet(DataSet):
         If negative, number of blank frames to insert at start
     io_backend : IOBackend, optional
         The I/O backend to use, see :ref:`io backends`, by default None.
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
 
     Examples
     --------
@@ -149,11 +152,15 @@ class RawCSRDataSet(DataSet):
         nav_shape: typing.Optional[tuple[int, ...]] = None,
         sig_shape: typing.Optional[tuple[int, ...]] = None,
         sync_offset: int = 0,
-        io_backend: typing.Optional["IOBackend"] = None
+        io_backend: typing.Optional["IOBackend"] = None,
+        num_partitions: typing.Optional[int] = None,
     ):
         if io_backend is not None:
             raise NotImplementedError()
-        super().__init__(io_backend=io_backend)
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._path = path
         if nav_shape is not None:
             nav_shape = tuple(nav_shape)

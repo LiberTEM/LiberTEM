@@ -35,10 +35,12 @@ def test_sweep_stackheight():
 
 def test_num_part_larger_than_num_frames():
     shape = Shape((1, 1, 256, 256), sig_dims=2)
-    slice_iter = Partition.make_slices(shape=shape, num_partitions=2)
-    next(slice_iter)
-    with pytest.raises(StopIteration):
+
+    with pytest.warns(RuntimeWarning):
+        slice_iter = Partition.make_slices(shape=shape, num_partitions=2)
         next(slice_iter)
+        with pytest.raises(StopIteration):
+            next(slice_iter)
 
 
 @pytest.mark.parametrize(

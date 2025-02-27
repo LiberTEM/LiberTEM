@@ -748,14 +748,29 @@ class K2ISDataSet(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
 
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
+
     Examples
     --------
 
     >>> ds = ctx.load("k2is", path='./path_to_file.bin', ...)  # doctest: +SKIP
     """
 
-    def __init__(self, path, nav_shape=None, sig_shape=None, sync_offset=None, io_backend=None):
-        super().__init__(io_backend=io_backend)
+    def __init__(
+        self,
+        path,
+        nav_shape=None,
+        sig_shape=None,
+        sync_offset=None,
+        io_backend=None,
+        num_partitions=None,
+    ):
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._path = path
         self._start_offsets = None
         self._last_offsets = None

@@ -434,15 +434,32 @@ class FRMS6DataSet(DataSet):
         If positive, number of frames to skip from start
         If negative, number of blank frames to insert at start
 
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
+
     Examples
     --------
 
     >>> ds = ctx.load("frms6", path='./path_to_file.hdr', ...)  # doctest: +SKIP
     """
 
-    def __init__(self, path, enable_offset_correction=True, gain_map_path=None, dest_dtype=None,
-                 nav_shape=None, sig_shape=None, sync_offset=0, io_backend=None):
-        super().__init__(io_backend=io_backend)
+    def __init__(
+        self,
+        path,
+        enable_offset_correction=True,
+        gain_map_path=None,
+        dest_dtype=None,
+        nav_shape=None,
+        sig_shape=None,
+        sync_offset=0,
+        io_backend=None,
+        num_partitions=None,
+    ):
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._path = path
         self._gain_map_path = gain_map_path
         self._dark_frame = None

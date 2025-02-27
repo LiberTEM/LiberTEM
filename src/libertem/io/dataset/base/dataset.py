@@ -23,13 +23,18 @@ class DataSet:
     # The default partition size in bytes
     MAX_PARTITION_SIZE = 512*1024*1024
 
-    def __init__(self, io_backend: Optional["IOBackend"] = None):
+    def __init__(
+        self,
+        io_backend: Optional["IOBackend"] = None,
+        num_partitions: Optional[int] = None,
+    ):
         self._cores = 1
         self._sync_offset: Optional[int] = 0
         self._sync_offset_info = None
         self._image_count = 0
         self._nav_shape_product = 0
         self._io_backend = io_backend
+        self._user_num_partitions = num_partitions
         self._meta: Optional[DataSetMeta] = None
 
     def initialize(self, executor) -> "DataSet":
@@ -81,6 +86,8 @@ class DataSet:
         native dtype. At least :code:`self._cores` partitions
         are created.
         """
+        if self._user_num_partitions is not None:
+            return self._user_num_partitions
         partition_size_float_px = self.MAX_PARTITION_SIZE // 4
         dataset_size_px = prod(self.shape)
         num: int = max(self._cores, dataset_size_px // partition_size_float_px)

@@ -89,6 +89,10 @@ class SingleDMDataSet(DMDataSet):
         the datasets in a DM-file often begin with a thumbnail
         which occupies the 0 dataset index. If not provided the
         first compatible dataset found in the file is used.
+
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default heuristic doesn't work well.
     """
     def __init__(
         self,
@@ -98,9 +102,13 @@ class SingleDMDataSet(DMDataSet):
         sync_offset: int = 0,
         io_backend: Optional[IOBackend] = None,
         force_c_order: bool = False,
-        dataset_index: Optional[int] = None
+        dataset_index: Optional[int] = None,
+        num_partitions: Optional[int] = None,
     ):
-        super().__init__(io_backend=io_backend)
+        super().__init__(
+            io_backend=io_backend,
+            num_partitions=num_partitions,
+        )
         self._filesize = None
 
         self._path = path

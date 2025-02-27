@@ -59,8 +59,8 @@ class File:
     def __init__(self, path, start_idx, end_idx,
                 native_dtype, sig_shape,
                 frame_footer=0, frame_header=0, file_header=0):
-        self._start_idx = start_idx
-        self._end_idx = end_idx
+        self._start_idx = int(start_idx)
+        self._end_idx = int(end_idx)
         self._native_dtype = native_dtype
         self._path = path
         self._file_header = file_header

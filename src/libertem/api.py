@@ -1,7 +1,7 @@
 from typing import (
     TYPE_CHECKING, Any, Optional, Union, overload
 )
-from collections.abc import Iterable, Generator, Coroutine
+from collections.abc import Iterable, Coroutine
 from typing_extensions import Literal
 import os
 import pathlib
@@ -9,6 +9,7 @@ import warnings
 import weakref
 import atexit
 import logging
+import contextlib
 
 from opentelemetry import trace
 import numpy as np
@@ -35,11 +36,16 @@ from libertem.analysis.sum import SumAnalysis
 from libertem.analysis.point import PointMaskAnalysis
 from libertem.analysis.masks import MasksAnalysis
 from libertem.analysis.base import AnalysisResultSet, Analysis
-from libertem.udf.base import UDFResultDict, UDF, UDFResults, UDFRunner
+from libertem.udf.base import UDFResultDict, UDF, UDFResults
 from libertem.udf.auto import AutoUDF
 from libertem.common.async_utils import async_generator, run_agen_get_last, run_gen_get_last
 from libertem.common.sparse import sparse_to_coo, to_dense
 from libertem.common.exceptions import ExecutorSpecException
+from libertem._api_helpers import (
+    ResultGenerator,
+    ResultAsyncGenerator,
+    UDFAsyncRun,
+)
 
 if TYPE_CHECKING:
     import numpy.typing as nt
@@ -66,104 +72,6 @@ ExecutorSpecType = Literal[
 ]
 IterableRoiT = Iterable[tuple[tuple[int, ...], bool]]
 RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', tuple[int, ...], IterableRoiT]]
-
-
-class ResultGenerator:
-    """
-    Yields partial results from one or more UDFs currently running,
-    with methods to control some aspects of the UDF run.
-    """
-
-    def __init__(
-        self,
-        task_results: Generator[UDFResults, None, None],
-        runner: UDFRunner,
-        result_iter,
-    ):
-        self._task_results = task_results
-        self._runner = runner
-        self._result_iter = result_iter
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        return next(self._task_results)
-
-    def close(self):
-        self._task_results.close()
-        self._result_iter.close()
-
-    def update_parameters_experimental(self, parameters: list[dict[str, Any]]):
-        """
-        Update parameters while the UDFs are running.
-
-        :code:`parameters` should be a list of dicts, with one dict for each
-        UDF you are running.
-
-        The dicts should only contain items for those parameters you want to
-        update.
-        """
-        logger.debug("ResultGenerator.update_parameters_experimental: %s", parameters)
-        self._result_iter.update_parameters_experimental(parameters)
-
-    def throw(self, exc: Exception):
-        return self._result_iter.throw(exc)
-
-
-class ResultAsyncGenerator:
-    """
-    async wrapper of `ResultGenerator`.
-    """
-
-    def __init__(self, result_generator: ResultGenerator):
-        from concurrent.futures import ThreadPoolExecutor
-        self._result_generator = result_generator
-        self._pool = ThreadPoolExecutor(max_workers=1)
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        from .common.async_utils import MyStopIteration
-        try:
-            return await self._run_in_executor(self._inner_next)
-        except MyStopIteration:
-            raise StopAsyncIteration()
-
-    def _inner_next(self):
-        from .common.async_utils import MyStopIteration
-        try:
-            return next(self._result_generator)
-        except StopIteration:
-            raise MyStopIteration()
-
-    async def aclose(self):
-        return await self._run_in_executor(self._result_generator.close)
-
-    async def _run_in_executor(self, f, *args):
-        import asyncio
-        loop = asyncio.get_event_loop()
-        next_result = await loop.run_in_executor(self._pool, f, *args)
-        return next_result
-
-    async def update_parameters_experimental(self, parameters: list[dict[str, Any]]):
-        """
-        Update parameters while the UDFs are running.
-
-        :code:`parameters` should be a list of dicts, with one dict for each
-        UDF you are running.
-
-        The dicts should only contain items for those parameters you want to
-        update.
-        """
-        logger.debug("ResultGenerator.update_parameters_experimental: %s", parameters)
-        return await self._run_in_executor(
-            self._result_generator.update_parameters_experimental, parameters
-        )
-
-    async def athrow(self, exc: Exception):
-        return await self._run_in_executor(self._result_generator.throw, exc)
 
 
 RunUDFGenType = ResultGenerator
@@ -1719,3 +1627,22 @@ class Context:
         from libertem.udf.record import RecordUDF
         udf = RecordUDF(path)
         self.run_udf(dataset, udf, progress=progress)
+
+    @contextlib.asynccontextmanager
+    async def run_udf_async(self, dataset, udf, roi, corrections, progress, backends, plots):
+        sync_generator = self._run_sync(
+            dataset=dataset,
+            udf=udf,
+            roi=roi,
+            corrections=corrections,
+            progress=progress,
+            backends=backends,
+            plots=plots,
+            iterate=True,
+            copy_needed=True,
+        )
+        agen = ResultAsyncGenerator(result_generator=sync_generator)
+        try:
+            yield UDFAsyncRun(gen=agen)
+        finally:
+            agen.close()

@@ -43,9 +43,9 @@ def default_seq(lt_ctx):
         path=SEQ_TESTDATA_PATH,
         nav_shape=nav_shape,
         io_backend=MMapBackend(),
+        num_partitions=4,
     )
 
-    ds.set_num_cores(4)
     assert tuple(ds.shape) == (8, 8, 128, 128)
     return ds
 
@@ -59,9 +59,9 @@ def buffered_seq(lt_ctx):
         path=SEQ_TESTDATA_PATH,
         nav_shape=nav_shape,
         io_backend=BufferedBackend(),
+        num_partitions=4,
     )
 
-    ds.set_num_cores(4)
     return ds
 
 
@@ -74,9 +74,9 @@ def direct_seq(lt_ctx):
         path=SEQ_TESTDATA_PATH,
         nav_shape=nav_shape,
         io_backend=DirectBackend(),
+        num_partitions=4,
     )
 
-    ds.set_num_cores(4)
     return ds
 
 
@@ -114,9 +114,9 @@ def test_positive_sync_offset(default_seq, lt_ctx):
     sync_offset = 2
 
     ds_with_offset = SEQDataSet(
-        path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sync_offset=sync_offset
+        path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -448,9 +448,9 @@ def test_negative_sync_offset(default_seq, lt_ctx):
     sync_offset = -2
 
     ds_with_offset = SEQDataSet(
-        path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sync_offset=sync_offset
+        path=SEQ_TESTDATA_PATH, nav_shape=(8, 8), sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -493,8 +493,11 @@ def test_negative_sync_offset(default_seq, lt_ctx):
 def test_missing_frames(lt_ctx):
     nav_shape = (16, 8)
 
-    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=nav_shape)
-    ds.set_num_cores(4)
+    ds = SEQDataSet(
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        num_partitions=4,
+    )
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 
@@ -525,9 +528,11 @@ def test_missing_data_with_positive_sync_offset(lt_ctx):
     sync_offset = 8
 
     ds = SEQDataSet(
-        path=SEQ_TESTDATA_PATH, nav_shape=nav_shape, sync_offset=sync_offset
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(
@@ -555,9 +560,11 @@ def test_missing_data_with_negative_sync_offset(lt_ctx):
     sync_offset = -8
 
     ds = SEQDataSet(
-        path=SEQ_TESTDATA_PATH, nav_shape=nav_shape, sync_offset=sync_offset
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(
@@ -583,8 +590,11 @@ def test_missing_data_with_negative_sync_offset(lt_ctx):
 def test_too_many_frames(lt_ctx):
     nav_shape = (4, 8)
 
-    ds = SEQDataSet(path=SEQ_TESTDATA_PATH, nav_shape=nav_shape)
-    ds.set_num_cores(4)
+    ds = SEQDataSet(
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        num_partitions=4,
+    )
     ds = ds.initialize(lt_ctx.executor)
     ds.check_valid()
 

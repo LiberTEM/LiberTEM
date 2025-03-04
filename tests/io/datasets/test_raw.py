@@ -29,8 +29,8 @@ def raw_dataset_8x8x8x8(lt_ctx, raw_data_8x8x8x8_path):
         nav_shape=(8, 8),
         sig_shape=(8, 8),
         dtype="float32",
+        num_partitions=4,
     )
-    ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
 
     return ds
@@ -508,8 +508,8 @@ def test_positive_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         dtype="float32",
         sync_offset=sync_offset,
         io_backend=io_backend,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -567,8 +567,8 @@ def test_negative_sync_offset(lt_ctx, raw_dataset_8x8x8x8, raw_data_8x8x8x8_path
         dtype="float32",
         sync_offset=sync_offset,
         io_backend=io_backend,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -620,8 +620,8 @@ def test_missing_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
         sig_shape=(8, 8),
         dtype="float32",
         io_backend=io_backend,
+        num_partitions=4,
     )
-    ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(
@@ -658,8 +658,8 @@ def test_too_many_frames(lt_ctx, raw_data_8x8x8x8_path, io_backend):
         sig_shape=(8, 8),
         dtype="float32",
         io_backend=io_backend,
+        num_partitions=4,
     )
-    ds.set_num_cores(4)
     ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(

@@ -317,9 +317,8 @@ def test_missing_frames(lt_ctx, io_backend, dm_stack_glob):
         files=list(sorted(dm_stack_glob)),
         nav_shape=nav_shape,
         io_backend=io_backend,
+        num_partitions=4,
     )
-
-    ds.set_num_cores(4)
 
     tileshape = Shape(
         (1,) + tuple(ds.shape.sig),

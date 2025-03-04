@@ -276,8 +276,7 @@ def test_many_tiles(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
     (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm', filename)
-    ds.set_num_cores(8)
+    ds = lt_ctx_fast.load('dm', filename, num_partitions=8)
     _, _, sy, sx = array.shape
     flat_data = array.reshape(-1, sy, sx)
     # depth 5, height 3, divides neither flat_nav or sy evenly
@@ -347,8 +346,7 @@ def test_macrotile_normal(monkeypatch, dm4_mockfile_c, lt_ctx_fast):
     (array, filename), mock_fileDM = dm4_mockfile_c
     _patch_filedm(monkeypatch, mock_fileDM)
 
-    ds = lt_ctx_fast.load('dm', filename)
-    ds.set_num_cores(4)
+    ds = lt_ctx_fast.load('dm', filename, num_partitions=4)
 
     ps = ds.get_partitions()
     _ = next(ps)
@@ -383,8 +381,8 @@ def test_positive_sync_offset(monkeypatch, dm4_mockfile_c, lt_ctx):
     ds_with_offset = SingleDMDataSet(
         path=filename,
         sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -434,8 +432,8 @@ def test_negative_sync_offset(monkeypatch, dm4_mockfile_c, lt_ctx):
     ds_with_offset = SingleDMDataSet(
         path=filename,
         sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 

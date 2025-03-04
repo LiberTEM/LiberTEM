@@ -30,8 +30,7 @@ pytestmark = pytest.mark.skipif(not HAVE_SER_TESTDATA, reason="need SER testdata
 
 @pytest.fixture
 def default_ser(lt_ctx):
-    ds = SERDataSet(path=SER_TESTDATA_PATH)
-    ds.set_num_cores(4)
+    ds = SERDataSet(path=SER_TESTDATA_PATH, num_partitions=4)
     ds = ds.initialize(lt_ctx.executor)
     assert tuple(ds.shape) == (8, 35, 512, 512)
     return ds
@@ -84,11 +83,10 @@ def test_comparison_roi(default_ser, default_ser_raw, lt_ctx_fast):
     ),
 )
 def test_roi(lt_ctx, as_sparse):
-    ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH)
+    ds = lt_ctx.load("ser", path=SER_TESTDATA_PATH, num_partitions=2)
     roi = np.zeros(ds.shape.nav, dtype=bool)
     roi[0, 1] = True
 
-    ds.set_num_cores(2)
     parts = ds.get_partitions()
 
     p = next(parts)
@@ -155,9 +153,9 @@ def test_positive_sync_offset(default_ser, lt_ctx):
     sync_offset = 2
 
     ds_with_offset = SERDataSet(
-        path=SER_TESTDATA_PATH, sync_offset=sync_offset
+        path=SER_TESTDATA_PATH, sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -200,9 +198,9 @@ def test_negative_sync_offset(default_ser, lt_ctx):
     sync_offset = -2
 
     ds_with_offset = SERDataSet(
-        path=SER_TESTDATA_PATH, sync_offset=sync_offset
+        path=SER_TESTDATA_PATH, sync_offset=sync_offset,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -279,8 +277,11 @@ def test_negative_sync_offset_with_roi(default_ser, lt_ctx):
 def test_missing_frames(lt_ctx):
     nav_shape = (10, 35)
 
-    ds = SERDataSet(path=SER_TESTDATA_PATH, nav_shape=nav_shape)
-    ds.set_num_cores(4)
+    ds = SERDataSet(
+        path=SER_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        num_partitions=4,
+    )
     ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(
@@ -307,8 +308,11 @@ def test_missing_frames(lt_ctx):
 def test_too_many_frames(lt_ctx):
     nav_shape = (7, 35)
 
-    ds = SERDataSet(path=SER_TESTDATA_PATH, nav_shape=nav_shape)
-    ds.set_num_cores(4)
+    ds = SERDataSet(
+        path=SER_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        num_partitions=4,
+    )
     ds = ds.initialize(lt_ctx.executor)
 
     tileshape = Shape(

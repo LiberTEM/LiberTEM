@@ -73,8 +73,9 @@ class Partition:
         num_frames = shape.nav.size
         if num_partitions > num_frames:
             warnings.warn(
-                f"dataset contains fewer frames than partitions, "
-                f"setting num_partitions to {num_frames} to allow processing",
+                "dataset contains fewer frames than specified partitions, "
+                f"setting num_partitions == num_frames == {num_frames} "
+                "to avoid creating empty partitions",
                 RuntimeWarning
             )
             num_partitions = num_frames

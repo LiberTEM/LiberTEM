@@ -1,7 +1,7 @@
 [Feature] Allow overriding the number of partitions
 ===================================================
 * Adds a parameter :code:`num_partitions` to most :code:`DataSet`
-  implementations. This means (export) users can override the number of
+  implementations. This means (expert) users can override the number of
   partitions when loading data, in cases where the default heuristic doesn't
   work well. Also changes the number of partitions in case there are fewer
   frames than workers, where it is an advantage to more have small (1-frame)

@@ -76,8 +76,8 @@ def default_tvips(lt_ctx):
         path=TVIPS_TESTDATA_PATH,
         nav_shape=nav_shape,
         io_backend=MMapBackend(),
+        num_partitions=4,
     )
-    ds.set_num_cores(4)
     return ds
 
 
@@ -142,9 +142,9 @@ def test_positive_sync_offset(default_tvips, lt_ctx):
     sync_offset = 2
 
     ds_with_offset = TVIPSDataSet(
-        path=TVIPS_TESTDATA_PATH, sync_offset=sync_offset
+        path=TVIPS_TESTDATA_PATH, sync_offset=sync_offset,
+        num_partitions=2,
     )
-    ds_with_offset.set_num_cores(2)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -191,9 +191,9 @@ def test_negative_sync_offset(default_tvips, lt_ctx):
     sync_offset = -2
 
     ds_with_offset = TVIPSDataSet(
-        path=TVIPS_TESTDATA_PATH, sync_offset=sync_offset
+        path=TVIPS_TESTDATA_PATH, sync_offset=sync_offset,
+        num_partitions=2,
     )
-    ds_with_offset.set_num_cores(2)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 

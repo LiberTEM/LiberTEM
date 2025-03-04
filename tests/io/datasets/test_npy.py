@@ -258,8 +258,8 @@ def test_positive_sync_offset(lt_ctx, npy_8x8x8x8_ds, npy_8x8x8x8_path, io_backe
         path=npy_8x8x8x8_path,
         sync_offset=sync_offset,
         io_backend=io_backend,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 
@@ -314,8 +314,8 @@ def test_negative_sync_offset(lt_ctx, npy_8x8x8x8_ds, npy_8x8x8x8_path, io_backe
         path=npy_8x8x8x8_path,
         sync_offset=sync_offset,
         io_backend=io_backend,
+        num_partitions=4,
     )
-    ds_with_offset.set_num_cores(4)
     ds_with_offset = ds_with_offset.initialize(lt_ctx.executor)
     ds_with_offset.check_valid()
 

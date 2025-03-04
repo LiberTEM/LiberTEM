@@ -438,7 +438,9 @@ class SEQDataSet(DataSet):
         If negative, number of blank frames to insert at start.
     num_partitions: int, optional
         Override the number of partitions. This is useful if the
-        default heuristic doesn't work well.
+        default number of partitions, chosen based on common workloads,
+        creates partitions which are too large (or small) for the UDFs
+        being run on this dataset.
 
     Note
     ----

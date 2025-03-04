@@ -204,6 +204,12 @@ class StackedDMDataSet(DMDataSet):
         absolutely know that the offsets and sizes are the same for all files,
         you can set this parameter and we will skip reading all metadata but
         the one from the first file.
+
+    num_partitions: int, optional
+        Override the number of partitions. This is useful if the
+        default number of partitions, chosen based on common workloads,
+        creates partitions which are too large (or small) for the UDFs
+        being run on this dataset.
     """
     def __init__(self, files=None, scan_size=None, same_offset=False, nav_shape=None,
                  sig_shape=None, sync_offset=0, io_backend=None, num_partitions=None):

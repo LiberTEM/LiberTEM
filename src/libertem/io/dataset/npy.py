@@ -119,7 +119,9 @@ class NPYDataSet(DataSet):
         The I/O backend to use, see :ref:`io backends`, by default None.
     num_partitions: int, optional
         Override the number of partitions. This is useful if the
-        default heuristic doesn't work well.
+        default number of partitions, chosen based on common workloads,
+        creates partitions which are too large (or small) for the UDFs
+        being run on this dataset.
 
     Raises
     ------

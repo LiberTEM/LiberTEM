@@ -206,8 +206,8 @@ class StackedDMDataSet(DMDataSet):
         the one from the first file.
     """
     def __init__(self, files=None, scan_size=None, same_offset=False, nav_shape=None,
-                 sig_shape=None, sync_offset=0, io_backend=None):
-        super().__init__(io_backend=io_backend)
+                 sig_shape=None, sync_offset=0, io_backend=None, num_partitions=None):
+        super().__init__(io_backend=io_backend, num_partitions=num_partitions)
         self._meta = None
         self._same_offset = same_offset
         self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape

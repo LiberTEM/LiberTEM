@@ -858,6 +858,7 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
         ds_params_tester(*args, **params)
 
 
+@needsdata
 def test_no_num_partitions(lt_ctx):
     nav_shape = (8, 8)
     ds = lt_ctx.load(

@@ -716,6 +716,7 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
         ds_params_tester(*args, **params)
 
 
+@needsdata
 def test_num_partitions(lt_ctx):
     ds = lt_ctx.load(
         "k2is",

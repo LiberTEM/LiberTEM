@@ -619,3 +619,13 @@ def test_read_scan_shape_header(lt_ctx):
     ds = lt_ctx.load('mib', path=hdr_path)
     assert ds.shape.nav.to_tuple() == (20, 28)
     assert ds.shape.sig.to_tuple() == (514, 514)
+
+
+@needsdata
+def test_no_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "mib",
+        path=MIB_TESTDATA_PATH,
+        nav_shape=(32, 32),
+    )
+    lt_ctx.run_udf(dataset=ds, udf=SumSigUDF())

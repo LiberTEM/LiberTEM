@@ -551,3 +551,12 @@ def test_convert_f_ordered(monkeypatch, dm4_mockfile_f, lt_ctx, tmpdir_factory):
     pick_frame = lt_ctx.run(pick_a).intensity.raw_data
     # flipped coords because pick_a takes x, y arguments
     assert np.allclose(pick_frame, array[3, 4, :, :])
+
+
+def test_num_partitions(lt_ctx, dm3_3dstack_path):
+    ds = lt_ctx.load(
+        "dm",
+        path=dm3_3dstack_path,
+        num_partitions=2,
+    )
+    assert len(list(ds.get_partitions())) == 2

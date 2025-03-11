@@ -462,3 +462,11 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
     args = ("tvips", TVIPS_TESTDATA_PATH)
     for params in standard_bad_ds_params:
         ds_params_tester(*args, **params)
+
+
+def test_no_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "tvips",
+        path=TVIPS_TESTDATA_PATH,
+    )
+    lt_ctx.run_udf(dataset=ds, udf=SumSigUDF())

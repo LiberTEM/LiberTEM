@@ -329,6 +329,15 @@ def test_incorrect_sig_shape(lt_ctx):
     )
 
 
+def test_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "blo",
+        path=BLO_TESTDATA_PATH,
+        num_partitions=129,
+    )
+    assert len(list(ds.get_partitions())) == 129
+
+
 def test_compare_backends(lt_ctx, default_blo, buffered_blo):
     y = random.choice(range(default_blo.shape.nav[0]))
     x = random.choice(range(default_blo.shape.nav[1]))

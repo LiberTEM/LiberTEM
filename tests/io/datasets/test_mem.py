@@ -384,3 +384,13 @@ def test_sig_nav_dims_sync(nav_shape, sig_shape, sync_offset, sig_dims, prime_ra
 def test_exception_no_datashape(lt_ctx_fast):
     with pytest.raises(DataSetException):
         lt_ctx_fast.load('memory', tileshape=(5, 6, 7))
+
+
+def test_num_partitions(lt_ctx):
+    data = _mk_random(size=(8, 8, 8, 8))
+    ds = lt_ctx.load(
+        "memory",
+        num_partitions=7,
+        data=data,
+    )
+    assert len(list(ds.get_partitions())) == 7

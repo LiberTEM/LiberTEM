@@ -266,3 +266,12 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
     args = ("mrc", MRC_TESTDATA_PATH)
     for params in standard_bad_ds_params:
         ds_params_tester(*args, **params)
+
+
+def test_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "mrc",
+        path=MRC_TESTDATA_PATH,
+        num_partitions=3,
+    )
+    assert len(list(ds.get_partitions())) == 3

@@ -505,3 +505,12 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
     args = ("empad", EMPAD_XML)
     for params in standard_bad_ds_params:
         ds_params_tester(*args, **params)
+
+
+def test_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "empad",
+        path=EMPAD_XML,
+        num_partitions=5,
+    )
+    assert len(list(ds.get_partitions())) == 5

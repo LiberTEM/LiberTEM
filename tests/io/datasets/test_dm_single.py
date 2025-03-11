@@ -553,6 +553,7 @@ def test_convert_f_ordered(monkeypatch, dm4_mockfile_f, lt_ctx, tmpdir_factory):
     assert np.allclose(pick_frame, array[3, 4, :, :])
 
 
+@pytest.mark.skipif(not HAVE_DM_TESTDATA, reason="No DM4 test data")
 def test_num_partitions(lt_ctx, dm3_3dstack_path):
     ds = lt_ctx.load(
         "dm",

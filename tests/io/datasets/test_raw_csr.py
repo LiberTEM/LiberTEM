@@ -466,6 +466,7 @@ def test_large_file_detect(monkeypatch, default_raw, inline_executor_fast):
     assert not load_called
 
 
+@pytest.mark.skipif(not HAVE_CSR_TESTDATA, reason="need raw CSR testdata")
 def test_num_partitions(lt_ctx):
     ds = lt_ctx.load(
         "raw_csr",

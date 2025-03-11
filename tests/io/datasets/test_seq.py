@@ -856,3 +856,13 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
         if "nav_shape" not in params:
             params['nav_shape'] = (8, 8)
         ds_params_tester(*args, **params)
+
+
+def test_no_num_partitions(lt_ctx):
+    nav_shape = (8, 8)
+    ds = lt_ctx.load(
+        "seq",
+        path=SEQ_TESTDATA_PATH,
+        nav_shape=nav_shape,
+    )
+    lt_ctx.run_udf(dataset=ds, udf=SumSigUDF())

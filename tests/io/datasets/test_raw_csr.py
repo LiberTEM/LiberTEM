@@ -464,3 +464,12 @@ def test_large_file_detect(monkeypatch, default_raw, inline_executor_fast):
     detects = RawCSRDataSet.detect_params(filepath, inline_executor_fast)
     assert not detects
     assert not load_called
+
+
+def test_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "raw_csr",
+        path=RAW_CSR_TESTDATA_PATH,
+        num_partitions=129,
+    )
+    assert len(list(ds.get_partitions())) == 129

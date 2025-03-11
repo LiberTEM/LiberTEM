@@ -368,6 +368,14 @@ def test_load_direct(lt_ctx, npy_8x8x8x8_path):
     lt_ctx.run(analysis)
 
 
+def test_no_num_partitions(lt_ctx, npy_8x8x8x8_path):
+    ds = lt_ctx.load(
+        "npy",
+        path=npy_8x8x8x8_path,
+    )
+    lt_ctx.run_udf(dataset=ds, udf=SumSigUDF())
+
+
 @pytest.mark.parametrize(
     "io_backend", (
         BufferedBackend(),

@@ -637,3 +637,12 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params):
     args = ("frms6", FRMS6_TESTDATA_PATH)
     for params in standard_bad_ds_params:
         ds_params_tester(*args, **params)
+
+
+def test_num_partitions(lt_ctx):
+    ds = lt_ctx.load(
+        "frms6",
+        path=FRMS6_TESTDATA_PATH,
+        num_partitions=129,
+    )
+    assert len(list(ds.get_partitions())) == 129

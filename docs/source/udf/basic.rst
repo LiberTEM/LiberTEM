@@ -542,9 +542,9 @@ run your UDF on a selected subset of data. :code:`roi` can be specified in sever
   This allows quick specification of a small number of pixels to include or exclude
   from the analysis.
 - a NumPy array containing a bool mask, having the shape of the navigation
-  axes of the dataset.
+  axes of the dataset. This can also be created from a slice using :attr:`~libertem.io.dataset.DataSet.roi`.
 - any :code:`scipy.sparse` matrix or array or :code:`pydata.sparse.SparseArray` format,
-  again having the same shape as the naivgation axes of the dataset
+  again having the same shape as the navigation axes of the dataset
 
 For example, to process a random subset of a 4D-STEM dataset:
    
@@ -556,6 +556,13 @@ For example, to process a random subset of a 4D-STEM dataset:
    # and two navigation dimensions, `dataset.shape.nav`
    # translates to `(14, 14)`.
    roi = np.random.choice(a=[False, True], size=dataset.shape.nav)
+   ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
+
+Or, to select a specific slice:
+
+.. testcode:: run
+
+   roi = dataset.roi[3:7, 9:12]
    ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
 
 Note that the result array only contains values for the selected indices, all

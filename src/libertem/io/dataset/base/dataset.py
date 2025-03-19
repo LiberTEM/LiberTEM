@@ -19,6 +19,16 @@ if typing.TYPE_CHECKING:
     from numpy import typing as nt
 
 
+class RoiHelper:
+    def __init__(self, ds):
+        self._ds = ds
+
+    def __getitem__(self, k):
+        roi = np.zeros(self._ds.shape.nav, dtype=bool)
+        roi[k] = True
+        return roi
+
+
 class DataSet:
     # The default partition size in bytes
     MAX_PARTITION_SIZE = 512*1024*1024
@@ -36,6 +46,7 @@ class DataSet:
         self._io_backend = io_backend
         self._user_num_partitions = num_partitions
         self._meta: Optional[DataSetMeta] = None
+        self._roi_helper = RoiHelper(ds=self)
 
     def initialize(self, executor) -> "DataSet":
         """
@@ -190,6 +201,10 @@ class DataSet:
         a list of dicts itself. Subclasses should override this method.
         """
         return []
+
+    @property
+    def roi(self):
+        return self._roi_helper
 
     def partition_shape(
         self,

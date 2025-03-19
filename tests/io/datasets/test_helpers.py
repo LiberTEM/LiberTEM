@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 
+
 @pytest.mark.parametrize(
     "slice_", [
         np.s_[0],

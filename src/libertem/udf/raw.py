@@ -20,8 +20,7 @@ class PickUDF(UDF):
     Examples
     --------
     >>> udf = PickUDF()
-    >>> roi = np.zeros(dataset.shape.nav, dtype=bool)
-    >>> roi[0] = True
+    >>> roi = dataset.roi[0]
     >>> result = ctx.run_udf(dataset=dataset, udf=udf, roi=roi)
     >>> result["intensity"].raw_data[0].shape
     (32, 32)

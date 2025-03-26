@@ -40,7 +40,6 @@ class EventBus:
         self._queue.put(msg)
 
     def get(self, timeout=1.0):
-        # Use a non-blocking `get` here, so we don't completely block the
-        # thread we are running in. raises `queue.Empty` if there's nothing to
-        # get.
-        return self._queue.get(block=False, timeout=timeout)
+        # We need to block here to not busy-wait. Only run in a sync context
+        # where you can affort to block, or in a dedicated thread.
+        return self._queue.get(block=True, timeout=timeout)

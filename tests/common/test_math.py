@@ -61,6 +61,11 @@ def test_make_2D_square(shape, result):
         (sparse.COO(
             np.array(((1, ), (2, ), (3, ))), data=[True], fill_value=True, shape=(4, 4, 4)
         ), 4*4*4),
+        # int32 overflow
+        (sparse.COO(
+            np.array(((1, ), (2, ), (3, ))), data=[True], fill_value=True,
+            shape=(2**16, 2**16, 2**16)
+        ), 2**16 * 2**16 * 2**16),
         (sp.csr_matrix(np.array(((2, 0), (0, -7)))), 2),
         # Non-canonical COO with duplicates
         (sp.coo_array(
@@ -73,6 +78,8 @@ def test_make_2D_square(shape, result):
     )
 )
 def test_count_nonzero(arr, res):
-    ref = sparseconverter.for_backend(arr, sparseconverter.NUMPY)
     assert count_nonzero(arr) == res
-    assert count_nonzero(arr) == np.count_nonzero(ref)
+    # Skip for large arrays
+    if arr.size < 2**20:
+        ref = sparseconverter.for_backend(arr, sparseconverter.NUMPY)
+        assert count_nonzero(arr) == np.count_nonzero(ref)

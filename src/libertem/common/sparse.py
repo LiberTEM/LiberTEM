@@ -10,12 +10,11 @@ if TYPE_CHECKING:
 
 
 def to_dense(a):
-    if isinstance(a, sparse.SparseArray):
-        return a.todense()
-    elif sp.issparse(a):
-        return a.toarray()
-    else:
+    # If unsupported by sparseconverter
+    if sparseconverter.get_backend(a) is None:
         return np.array(a)
+    else:
+        return sparseconverter.for_backend(a, sparseconverter.NUMPY)
 
 
 def to_sparse(a, shape: Optional[Union['Shape', tuple[int, ...]]] = None):

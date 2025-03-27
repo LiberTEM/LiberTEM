@@ -1,7 +1,10 @@
 import numpy as np
 import pytest
+import sparseconverter
+import sparse
+import scipy.sparse as sp
 
-from libertem.common.math import prod, make_2D_square
+from libertem.common.math import prod, make_2D_square, count_nonzero
 from libertem.common.shape import Shape
 
 
@@ -47,3 +50,29 @@ def test_make_2D_square(shape, result):
         with pytest.raises(result):
             make_2D_square(shape)
             return
+
+
+@pytest.mark.parametrize(
+    ('arr', 'res'), (
+        (np.array(((2, 0), (0, -7))), 2),
+        (sparse.COO(
+            np.array(((1, ), (2, ), (3, ))), data=[False], fill_value=False, shape=(4, 4, 4)
+        ), 0),
+        (sparse.COO(
+            np.array(((1, ), (2, ), (3, ))), data=[True], fill_value=True, shape=(4, 4, 4)
+        ), 4*4*4),
+        (sp.csr_matrix(np.array(((2, 0), (0, -7)))), 2),
+        # Non-canonical COO with duplicates
+        (sp.coo_array(
+            (
+                np.array((1, 2, 3, 4)),
+                (np.array((0, 0, 0, 0)), np.array((0, 0, 0, 0))),
+            ),
+            shape=(7, 9),
+        ), 1),
+    )
+)
+def test_count_nonzero(arr, res):
+    ref = sparseconverter.for_backend(arr, sparseconverter.NUMPY)
+    assert count_nonzero(arr) == res
+    assert count_nonzero(arr) == np.count_nonzero(ref)

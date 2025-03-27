@@ -35,9 +35,9 @@ def prod(iterable: Iterable[ProdAccepted]):
 
 def count_nonzero(array) -> int:
     try:
-        return np.count_nonzero(array)
+        return int(np.count_nonzero(array))
     except (TypeError, ValueError):
-        return array.astype(bool).sum()
+        return int(array.astype(bool).sum())
 
 
 def flat_nonzero(array):

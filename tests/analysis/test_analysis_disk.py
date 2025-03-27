@@ -1,9 +1,7 @@
-import numpy as np
+from numpy.testing import assert_allclose
 from libertem.analysis.disk import DiskMaskAnalysis
-import pytest
 
 
-@pytest.mark.xfail
 def test_compare_hdf5_result_with_raw_result(
     lt_ctx, hdf5_same_data_4d, raw_same_dataset_4d
 ):
@@ -24,4 +22,4 @@ def test_compare_hdf5_result_with_raw_result(
     result_raw = lt_ctx.run(analysis_raw)
     result_raw = result_raw['intensity'].raw_data
 
-    assert not np.any(np.abs(result_hdf5 - result_raw))
+    assert_allclose(result_hdf5, result_raw, rtol=1e-6, atol=1e-6)

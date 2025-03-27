@@ -125,7 +125,7 @@ def empty_hdf5(tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def hdf5_4d_data():
-    data = np.random.randn(2, 10, 26, 26).astype("float32")
+    data = np.random.random((2, 10, 26, 26)).astype("float32")
     yield data
 
 

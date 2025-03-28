@@ -103,7 +103,7 @@ hdf5plugin = [
     "hdf5plugin",
 ]
 torch = [
-    "torch<1.12",
+    "torch",
 ]
 tracing = [
     "opentelemetry-distro",

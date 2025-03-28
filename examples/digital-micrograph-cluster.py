@@ -1,38 +1,44 @@
-import threading
-
-import numpy as np
+import distributed  # noqa:F401
 import DigitalMicrograph as DM
 
-from libertem import api
+from libertem.api import Context
 from libertem.executor.dask import DaskJobExecutor
+from libertem.viz.gms import GMSLive2DPlot
+from libertem.udf.sum import SumUDF
 
-# This example connects to an external Dask.Distributed cluster. See
-# https://libertem.github.io/LiberTEM/usage.html#cluster on how to start such a
-# cluster. This method gives the fastest script execution in GMS for most use
-# cases. Alternatively, you can use an InlineJobExecutor (see
-# digital-micrograph-inline.py) or start a local cluster each time the script is
-# run (see digital-micrograph-local.py).
+# The dataset used in this example is available at
+# https://doi.org/10.5281/zenodo.5113448
+path = r"C:\Users\Dieter Weber\Downloads\20200518 165148\20200518 165148\default.hdr"
+
+# This example connects to an external Dask cluster.
+# This achieves the best performance on powerful workstations with many cores
+# and avoids restarting the cluster each time the script is run.
+# See https://libertem.github.io/LiberTEM/deployment/clustercontainer.html#starting-a-custom-cluster
+# on how to start such a cluster.
+
+# Alternatively, you can use the threaded executor,
+# see example digital-micrograph-threads.py
+# This is easier to set up and perfectly adequate on most desktop systems.
+
+# Starting a process-based executor such as the default Dask executor
+# each time the script is run is possible, but not recommended
+# because of their significant startup time.
 
 
-# The workload is wrapped into a `main()` function
-# to run it in a separate background thread since using Numba
-# can hang when used directly in a GMS Python background thread
 def main():
-    with DaskJobExecutor.connect('tcp://localhost:8786') as executor:
-        ctx = api.Context(executor=executor)
+    with DaskJobExecutor.connect('tcp://127.0.0.1:8786') as executor:
+        ctx = Context(executor=executor, plot_class=GMSLive2DPlot)
+    # If you also want to use the Dask cluster for other Dask-based computations,
+    # uncomment the next two lines and replace the previous two lines with this code:
+    # client = distributed.Client('tcp://127.0.0.1:8786')
+    # with Context.make_with('dask-integration', plot_class=GMSLive2DPlot) as ctx:
         ds = ctx.load(
-            "RAW",
-            path=r"C:\Users\Dieter\testfile-32-32-32-32-float32.raw",
-            nav_shape=(32, 32),
-            sig_shape=(32, 32),
-            dtype=np.float32
+            "auto",
+            path=path,
         )
 
-        sum_analysis = ctx.create_sum_analysis(dataset=ds)
-        sum_result = ctx.run(sum_analysis)
-
-        sum_image = DM.CreateImage(sum_result.intensity.raw_data.copy())
-        sum_image.ShowImage()
+        udf = SumUDF()
+        sum_res = ctx.run_udf(dataset=ds, udf=udf, plots=True)  # noqa:F841
 
         haadf_analysis = ctx.create_ring_analysis(dataset=ds)
         haadf_result = ctx.run(haadf_analysis)
@@ -41,8 +47,6 @@ def main():
         haadf_image.ShowImage()
 
 
+# This pattern avoids issues in case the script spawns processes.
 if __name__ == "__main__":
-    # Start the workload and wait for it to finish
-    th = threading.Thread(target=main)
-    th.start()
-    th.join()
+    main()

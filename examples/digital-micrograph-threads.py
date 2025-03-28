@@ -1,6 +1,3 @@
-import threading
-
-import numpy as np
 import DigitalMicrograph as DM
 
 from libertem.api import Context
@@ -22,6 +19,7 @@ path = r"C:\Users\Dieter Weber\Downloads\20200518 165148\20200518 165148\default
 # each time the script is run is possible, but not recommended
 # because of their significant startup time.
 
+
 def main():
     with Context.make_with('threads', plot_class=GMSLive2DPlot) as ctx:
         ds = ctx.load(
@@ -30,7 +28,7 @@ def main():
         )
 
         udf = SumUDF()
-        sum_res = ctx.run_udf(dataset=ds, udf=udf, plots=True)
+        sum_res = ctx.run_udf(dataset=ds, udf=udf, plots=True)  # noqa:F841
 
         haadf_analysis = ctx.create_ring_analysis(dataset=ds)
         haadf_result = ctx.run(haadf_analysis)

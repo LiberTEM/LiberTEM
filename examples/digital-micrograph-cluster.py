@@ -1,7 +1,4 @@
-import threading
-
-import numpy as np
-import distributed
+import distributed  # noqa:F401
 import DigitalMicrograph as DM
 
 from libertem.api import Context
@@ -27,20 +24,21 @@ path = r"C:\Users\Dieter Weber\Downloads\20200518 165148\20200518 165148\default
 # each time the script is run is possible, but not recommended
 # because of their significant startup time.
 
+
 def main():
     with DaskJobExecutor.connect('tcp://127.0.0.1:8786') as executor:
         ctx = Context(executor=executor, plot_class=GMSLive2DPlot)
     # If you also want to use the Dask cluster for other Dask-based computations,
     # uncomment the next two lines and replace the previous two lines with this code:
-    #client = distributed.Client('tcp://127.0.0.1:8786')
-    #with Context.make_with('dask-integration', plot_class=GMSLive2DPlot) as ctx:
+    # client = distributed.Client('tcp://127.0.0.1:8786')
+    # with Context.make_with('dask-integration', plot_class=GMSLive2DPlot) as ctx:
         ds = ctx.load(
             "auto",
             path=path,
         )
 
         udf = SumUDF()
-        sum_res = ctx.run_udf(dataset=ds, udf=udf, plots=True)
+        sum_res = ctx.run_udf(dataset=ds, udf=udf, plots=True)  # noqa:F841
 
         haadf_analysis = ctx.create_ring_analysis(dataset=ds)
         haadf_result = ctx.run(haadf_analysis)

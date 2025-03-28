@@ -1,11 +1,9 @@
 import threading
 
 import numpy as np
-import distributed
 import DigitalMicrograph as DM
 
 from libertem.api import Context
-from libertem.executor.dask import DaskJobExecutor
 from libertem.viz.gms import GMSLive2DPlot
 from libertem.udf.sum import SumUDF
 
@@ -13,27 +11,19 @@ from libertem.udf.sum import SumUDF
 # https://doi.org/10.5281/zenodo.5113448
 path = r"C:\Users\Dieter Weber\Downloads\20200518 165148\20200518 165148\default.hdr"
 
-# This example connects to an external Dask cluster.
-# This achieves the best performance on powerful workstations with many cores
-# and avoids restarting the cluster each time the script is run.
-# See https://libertem.github.io/LiberTEM/deployment/clustercontainer.html#starting-a-custom-cluster
-# on how to start such a cluster.
+# This example uses a threaded executor which starts up very quickly
+# and is perfectly adequate on desktop systems.
+# It doesn't scale well to many cores due to Python's
+# Global Interpreter Lock, however.
 
-# Alternatively, you can use the threaded executor,
-# see example digital-micrograph-threads.py
-# This is easier to set up and perfectly adequate on most desktop systems.
-
+# For best performance on powerful workstations with many cores you
+# can connect to an external cluster (see digital-micrograph-cluster.py).
 # Starting a process-based executor such as the default Dask executor
 # each time the script is run is possible, but not recommended
 # because of their significant startup time.
 
 def main():
-    with DaskJobExecutor.connect('tcp://127.0.0.1:8786') as executor:
-        ctx = Context(executor=executor, plot_class=GMSLive2DPlot)
-    # If you also want to use the Dask cluster for other Dask-based computations,
-    # uncomment the next two lines and replace the previous two lines with this code:
-    #client = distributed.Client('tcp://127.0.0.1:8786')
-    #with Context.make_with('dask-integration', plot_class=GMSLive2DPlot) as ctx:
+    with Context.make_with('threads', plot_class=GMSLive2DPlot) as ctx:
         ds = ctx.load(
             "auto",
             path=path,

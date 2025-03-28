@@ -63,7 +63,7 @@ class GMSLive2DPlot(Live2DPlot):
         # Optional dependency, don't import top-level
         import DigitalMicrograph as DM
 
-        self.image = DM.CreateImage(self.data.copy())
+        self.image = DM.CreateImage(np.array(self.data))
         self.window = None
         self.disp = None
         self.image.SetName(self.title)

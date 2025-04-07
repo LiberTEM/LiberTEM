@@ -61,8 +61,6 @@ def detect_pyfftw():
 
 @contextmanager
 def set_fftw_threads(n):
-    global __has_pyfftw
-    global __has_pyfftw_threads
     global __pyfftw_counter
     global __pyfftw_threads
 
@@ -100,7 +98,6 @@ def detect_pytorch():
 
 @contextmanager
 def set_torch_threads(n):
-    global __has_pytorch
     global __pytorch_counter
     global __pytorch_threads
 
@@ -281,8 +278,6 @@ def mitigations():
     * Disable pyFFTW interface cache:
       https://github.com/LiberTEM/LiberTEM-blobfinder/issues/35
     '''
-    global __has_pyfftw
-    global __has_pyfftw_threads
     global __mitigation_counter
     global __pyfftw_cached
 

@@ -146,7 +146,7 @@ def radial_mask_factory(
     return stack
 
 
-@numba.njit(cache=True, fastmath=True, nogil=True)
+@numba.njit(cache=True, nogil=True)
 def _radial_mask_product(ring_stack_coords, ring_stack_data_inout, modulator):
     '''
     Perform the product between rings and modulator for radial_mask_factory()

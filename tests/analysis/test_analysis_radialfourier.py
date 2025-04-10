@@ -59,6 +59,7 @@ def test_smoke_defaults(ds_random, lt_ctx):
     lt_ctx.run(analysis)
 
 
+@pytest.mark.with_numba
 def test_sparse(ds_random, lt_ctx):
     analysis = lt_ctx.create_radial_fourier_analysis(
         dataset=ds_random, use_sparse=True,

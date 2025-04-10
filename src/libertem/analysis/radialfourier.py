@@ -4,6 +4,7 @@ from functools import partial
 
 import numpy as np
 import sparse
+import numba
 
 from libertem import masks
 from libertem.common.math import prod
@@ -102,7 +103,11 @@ class RadialFourierResultSet(AnalysisResultSet):
     pass
 
 
-def radial_mask_factory(detector_y, detector_x, cx, cy, ri, ro, n_bins, max_order, use_sparse):
+def radial_mask_factory(
+        detector_y, detector_x, cx, cy, ri, ro, n_bins, max_order,
+        use_sparse, dtype=np.complex64):
+    dtype = np.result_type(dtype, np.complex64)
+
     def stack():
         rings = masks.radial_bins(
             centerX=cx,
@@ -113,10 +118,10 @@ def radial_mask_factory(detector_y, detector_x, cx, cy, ri, ro, n_bins, max_orde
             radius_inner=ri,
             n_bins=n_bins,
             use_sparse=use_sparse,
-            dtype=np.complex64
+            dtype=dtype
         )
 
-        orders = np.arange(max_order + 1)
+        orders = np.arange(max_order + 1, dtype=dtype)
 
         r, phi = masks.polar_map(
             centerX=cx,
@@ -124,17 +129,36 @@ def radial_mask_factory(detector_y, detector_x, cx, cy, ri, ro, n_bins, max_orde
             imageSizeX=detector_x,
             imageSizeY=detector_y
         )
-        modulator = np.exp(phi * orders[:, np.newaxis, np.newaxis] * 1j)
+        modulator = np.exp(phi.astype(dtype) * orders[:, np.newaxis, np.newaxis] * 1j)
 
         if use_sparse:
             rings = rings.reshape((rings.shape[0], 1, *rings.shape[1:]))
             ring_stack = [rings] * len(orders)
             ring_stack = sparse.concatenate(ring_stack, axis=1)
-            ring_stack *= modulator
+            _radial_mask_product(
+                ring_stack_coords=ring_stack.coords,
+                ring_stack_data_inout=ring_stack.data,
+                modulator=modulator
+            )
         else:
             ring_stack = rings[:, np.newaxis, ...] * modulator
         return ring_stack.reshape((-1, detector_y, detector_x))
     return stack
+
+
+@numba.njit(cache=True, fastmath=True, nogil=True)
+def _radial_mask_product(ring_stack_coords, ring_stack_data_inout, modulator):
+    '''
+    Perform the product between rings and modulator for radial_mask_factory()
+
+    Work on the COO data structure since `sparse` doesn't support
+    efficient sparse-dense product with broadcasting since 0.16, apparently.
+    '''
+    for i in range(ring_stack_data_inout.shape[0]):
+        order = ring_stack_coords[1, i]
+        y = ring_stack_coords[2, i]
+        x = ring_stack_coords[3, i]
+        ring_stack_data_inout[i] *= modulator[order, y, x]
 
 
 class RadialFourierAnalysis(BaseMasksAnalysis, id_="RADIAL_FOURIER"):

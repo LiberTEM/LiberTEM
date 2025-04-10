@@ -26,6 +26,9 @@ Changelog
 0.14.2 / 2025-04-10
 ###################
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.15191240.svg
+  :target: https://doi.org/10.5281/zenodo.15191240
+
 Support for sparse v0.16.0, and an important bugfix for high idle CPU usage
 (:issue:`1707`, :pr:`1708`).
 

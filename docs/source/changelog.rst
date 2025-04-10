@@ -21,6 +21,14 @@ Changelog
 
 .. _latest:
 
+.. _`v0-14-2`:
+
+0.14.2 / 2025-04-10
+###################
+
+Support for sparse v0.16.0, and an important bugfix for high idle CPU usage
+(:issue:`1707`, :pr:`1708`).
+
 .. _`v0-14-1`:
 
 0.14.1 / 2024-06-19

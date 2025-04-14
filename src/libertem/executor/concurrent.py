@@ -119,6 +119,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             self._futures[cancel_id].append(future)
 
         with task_comm_handler.monitor(msg_queue):
+            as_completed = None
             try:
                 as_completed = concurrent.futures.as_completed(self._futures[cancel_id])
                 for future in as_completed:
@@ -132,6 +133,8 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             finally:
                 if cancel_id in self._futures:
                     del self._futures[cancel_id]
+                if as_completed is not None:
+                    as_completed.close()
 
     def cancel(self, cancel_id):
         if cancel_id in self._futures:

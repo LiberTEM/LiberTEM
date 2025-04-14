@@ -188,19 +188,19 @@ def test_threads_per_worker_vanilla(default_raw, monkeypatch):
     old_threads = os.environ.get('NUMBA_NUM_THREADS')
     # Triggers #1053
     monkeypatch.delenv('NUMBA_NUM_THREADS', raising=False)
-    ctx = Context()
-    assert 'NUMBA_NUM_THREADS' not in os.environ
-    # We have to reset it properly since it is set in pytest.ini
-    # and Numba will complain if it is changed
-    if old_threads:
-        os.environ['NUMBA_NUM_THREADS'] = old_threads
-    inline_ctx = Context(executor=InlineJobExecutor())
-    res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
-    res_inline = inline_ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
-    print(res['num_threads'].data)
-    assert np.all(res['num_threads'].data == 1)
-    print(res_inline['num_threads'].data)
-    assert np.all(res_inline['num_threads'].data == psutil.cpu_count(logical=False))
+    with Context() as ctx:
+        assert 'NUMBA_NUM_THREADS' not in os.environ
+        # We have to reset it properly since it is set in pytest.ini
+        # and Numba will complain if it is changed
+        if old_threads:
+            os.environ['NUMBA_NUM_THREADS'] = old_threads
+        inline_ctx = Context(executor=InlineJobExecutor())
+        res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
+        res_inline = inline_ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
+        print(res['num_threads'].data)
+        assert np.all(res['num_threads'].data == 1)
+        print(res_inline['num_threads'].data)
+        assert np.all(res_inline['num_threads'].data == psutil.cpu_count(logical=False))
 
 
 @pytest.mark.slow
@@ -291,7 +291,6 @@ def test_connected_cluster_cannot_snooze(local_cluster_url):
 
 
 @pytest.mark.slow
-@pytest.mark.skip(reason="Closing context breaks other tests?")
 def test_local_cluster_snooze():
     try:
         ctx = Context.make_with('dask', cpus=2, gpus=0, snooze_timeout=10_000)

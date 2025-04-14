@@ -466,9 +466,11 @@ class MockPartition:
 
 
 class MockTask:
+    def __init__(self, delay):
+        self._delay = delay
+
     def __call__(self, params, env: Environment) -> Any:
-        time.sleep(0.025 / 2)
-        # print(f"MockTask.__call__: params={params}, env={env}")
+        time.sleep(self._delay)
         return params
 
     def get_tracing_span_context(self):
@@ -489,7 +491,7 @@ class DelayingCommHandler(TaskCommHandler):
         # our tests only work if the tasks don't all get submitted at the
         # beginning of the `run_tasks` call - this simulates the live
         # processing scenario
-        time.sleep(0.025)
+        time.sleep(0.25)
 
 
 @pytest.mark.parametrize('executor', ['dask', 'pipelined', 'inline', 'concurrent'])
@@ -523,11 +525,18 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx, concurrent_e
     results = []
 
     with exc.scatter('hello scatter') as handle:
+        tasks = []
+        # first two tasks: return immediately
+        # (this ensures we get to the point of changing the params faster)
+        tasks.append(MockTask(delay=0))
+        tasks.append(MockTask(delay=0))
+        # all that follow have some delay:
+        tasks.extend([MockTask(delay=0.025) for _ in range(300 * num_workers)])
         result_iter = exc.run_tasks(
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(30 * num_workers)]
+            tasks=tasks,
         )
         first_result, _task = next(result_iter)
         print("started")
@@ -536,6 +545,10 @@ def test_scatter_update(executor, local_cluster_ctx, pipelined_ctx, concurrent_e
         exc.scatter_update(handle, 'new value')
         for result, _task in result_iter:
             results.append(result)
+            # early exit to keep test as fast as possible:
+            if result == "new value":
+                result_iter.close()
+                break
 
     # eventually, the new value is available to the workers:
     assert "new value" in results
@@ -584,11 +597,15 @@ def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx, concurrent_ex
             return f"<Patchable: {self.value}>"
 
     with exc.scatter(Patchable('hello scatter')) as handle:
+        tasks = []
+        tasks.append(MockTask(delay=0))
+        tasks.append(MockTask(delay=0))
+        tasks.extend([MockTask(delay=0.025) for _ in range(300 * num_workers)])
         result_iter = exc.run_tasks(
             cancel_id=cancel_id,
             params_handle=handle,
             task_comm_handler=comm_handler,
-            tasks=[MockTask() for _ in range(30 * num_workers)]
+            tasks=tasks,
         )
         first_result, _task = next(result_iter)
         print("started")
@@ -597,6 +614,9 @@ def test_scatter_patch(executor, local_cluster_ctx, pipelined_ctx, concurrent_ex
         exc.scatter_update_patch(handle, 'new value')
         for result, _task in result_iter:
             results.append(result.value)
+            if result.value == "new value":
+                result_iter.close()
+                break
 
     # eventually, the new value is available to the workers:
     assert "new value" in results

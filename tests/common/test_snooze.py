@@ -142,7 +142,6 @@ def test_messages():
     messages_received = []
 
     def got_message(topic, msg_dict):
-        nonlocal messages_received
         messages_received.append((topic, msg_dict))
 
     executor = MockSnoozeExecutor(0.1)

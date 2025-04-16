@@ -498,7 +498,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         with a snooze timeout in seconds.
 
         :code:`spec` is the worker spec used to create the cluster
-        behind thi executor, so that it can be re-supplied to Dask
+        behind the executor, so that it can be re-supplied to Dask
         during cluster scale_up.
 
         :meta private:

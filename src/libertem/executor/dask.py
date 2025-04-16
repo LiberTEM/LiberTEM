@@ -3,6 +3,7 @@ import contextlib
 from copy import deepcopy
 import functools
 import logging
+import copy
 import signal
 from typing import Any, Optional, Union, Callable
 from collections.abc import Iterable
@@ -17,6 +18,8 @@ from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
+from libertem.common.snooze import SnoozeManager, keep_alive, keep_alive_context
+from libertem.common.subscriptions import SubscriptionManager
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import set_use_cpu, set_use_cuda
@@ -445,7 +448,82 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self.lt_resources = lt_resources
         self._futures = {}
         self._scatter_map = {}
+        self._snooze_manager = None
+        self._worker_spec = None
+        self._subscriptions = SubscriptionManager()
 
+    def _scale_down(self):
+        """
+        If possible, scale the cluster down to one worker
+        using Dask's :code:`cluster.scale`. Normally called by
+        :code:`SnoozeManager`. Returns immediately, though
+        Dask may take some time to shut down the extra workers
+        in the background. There is no way to ensure that the
+        remaining worker is the service (or even a CPU) worker.
+
+        :meta private:
+        """
+        if not self.is_local or self._worker_spec is None or self.client.cluster is None:
+            return
+        self.client.cluster.scale(n=1)
+        # Can return immediately with scale-down because
+        # Dask will do its thing in the background
+
+    def _scale_up(self):
+        """
+        If possible, scale the cluster back up to its initial
+        state using Dask's :code:`cluster.scale`. Normally called by
+        :code:`SnoozeManager`. The initial worker spec is stored in
+        :code:`self._worker_spec`, set by :code:`self._enable_snooze`,
+        as Dask deletes its copy of worker spec when scaling down.
+
+        This method blocks until the workers are up, though there is
+        an internal Dask async function (:code:`_wait_for_workers`) which
+        could be used for the web client.
+
+        :meta private:
+        """
+        if not self.is_local or self._worker_spec is None or self.client.cluster is None:
+            return
+        self.client.cluster.worker_spec = copy.copy(self._worker_spec)
+        self.client.cluster.scale(n=len(self._worker_spec))
+        # Block until our scale request is complete
+        # There is also an async client._wait_for_workers(n, timeout)
+        # which could be used in the web client, but it is nominally internal
+        self.client.wait_for_workers(len(self._worker_spec))
+
+    def _enable_snooze(self, timeout: float, spec: dict):
+        """
+        Enable the automatic snoozing on this executor,
+        with a snooze timeout in seconds.
+
+        :code:`spec` is the worker spec used to create the cluster
+        behind the executor, so that it can be re-supplied to Dask
+        during cluster scale_up.
+
+        :meta private:
+        """
+        if self._snooze_manager is not None:
+            return
+        self._snooze_manager = SnoozeManager(
+            up=self._scale_up,
+            down=self._scale_down,
+            timeout=timeout,
+            subscriptions=self._subscriptions,
+        )
+        self._worker_spec = copy.copy(spec)
+
+    @property
+    def snooze_manager(self):
+        return self._snooze_manager
+
+    def subscribe(self, topic: str, callback: Callable[[str, dict], None]) -> str:
+        return self._subscriptions.subscribe(topic, callback)
+
+    def unsubscribe(self, key: str) -> bool:
+        return self._subscriptions.unsubscribe(key)
+
+    @keep_alive_context
     @contextlib.contextmanager
     def scatter(self, obj):
         # an additional layer of indirection, because we want to be able to
@@ -459,10 +537,12 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             if handle in self._scatter_map:
                 del self._scatter_map[handle]
 
+    @keep_alive
     def scatter_update(self, handle, obj):
         fut = self.client.scatter(obj, broadcast=True, hash=False)
         self._scatter_map[handle] = fut
 
+    @keep_alive
     def scatter_update_patch(self, handle, patch):
         fut = self._scatter_map[handle]
 
@@ -478,6 +558,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         for res in dd.as_completed(futures, loop=self.client.loop):
             pass
 
+    @keep_alive
     def run_tasks(
         self,
         tasks: Iterable[TaskProtocol],
@@ -551,6 +632,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             futures = self._futures[cancel_id]
             self.client.cancel(futures)
 
+    @keep_alive
     def run_each_partition(self, partitions, fn, all_nodes=False):
         """
         Run `fn` for all partitions. Yields results in order of completion.
@@ -595,6 +677,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
                 raise JobCancelledError()
             yield result
 
+    @keep_alive
     def run_function(self, fn, *args, **kwargs):
         """
         run a callable :code:`fn` on any worker
@@ -603,6 +686,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         future = self.client.submit(fn_with_args, priority=1, pure=False)
         return future.result()
 
+    @keep_alive
     def map(self, fn, iterable):
         """
         Run a callable :code:`fn` for each element in :code:`iterable`, on arbitrary worker nodes.
@@ -619,6 +703,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         return [future.result()
                 for future in self.client.map(fn, iterable, pure=False)]
 
+    @keep_alive
     def run_each_host(self, fn, *args, **kwargs):
         """
         Run a callable :code:`fn` once on each host, gathering all results into
@@ -643,6 +728,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         }
         return result_map
 
+    @keep_alive
     def run_each_worker(self, fn, *args, **kwargs):
         # Client.run() creates issues on Windows and OS X with Python 3.6
         # FIXME workaround may not be needed anymore for Python 3.7+
@@ -673,6 +759,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             # use getattr just in case cluster is already gone
             if getattr(self.client, 'cluster', None) is not None:
                 self.client.cluster.close(timeout=30)
+            if self.snooze_manager is not None:
+                self.snooze_manager.close()
         # NOTE: distributed already registers atexit handlers for
         # both clients and clusters, this is here to allow manual closure
         # followed by creation of a new Executor without accumulating clusters
@@ -709,7 +797,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
     @classmethod
     def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
-            client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None):
+            client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None,
+            snooze_timeout: Optional[float] = None):
         """
         Spin up a local dask cluster
 
@@ -774,7 +863,10 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
         is_local = not client_kwargs['set_as_default']
 
-        return cls(client=client, is_local=is_local, lt_resources=True)
+        executor = cls(client=client, is_local=is_local, lt_resources=True)
+        if snooze_timeout is not None:
+            executor._enable_snooze(snooze_timeout, spec)
+        return executor
 
     def __enter__(self):
         return self

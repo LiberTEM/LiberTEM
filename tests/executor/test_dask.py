@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import time
 import subprocess
 
 import numpy as np
@@ -187,19 +188,19 @@ def test_threads_per_worker_vanilla(default_raw, monkeypatch):
     old_threads = os.environ.get('NUMBA_NUM_THREADS')
     # Triggers #1053
     monkeypatch.delenv('NUMBA_NUM_THREADS', raising=False)
-    ctx = Context()
-    assert 'NUMBA_NUM_THREADS' not in os.environ
-    # We have to reset it properly since it is set in pytest.ini
-    # and Numba will complain if it is changed
-    if old_threads:
-        os.environ['NUMBA_NUM_THREADS'] = old_threads
-    inline_ctx = Context(executor=InlineJobExecutor())
-    res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
-    res_inline = inline_ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
-    print(res['num_threads'].data)
-    assert np.all(res['num_threads'].data == 1)
-    print(res_inline['num_threads'].data)
-    assert np.all(res_inline['num_threads'].data == psutil.cpu_count(logical=False))
+    with Context() as ctx:
+        assert 'NUMBA_NUM_THREADS' not in os.environ
+        # We have to reset it properly since it is set in pytest.ini
+        # and Numba will complain if it is changed
+        if old_threads:
+            os.environ['NUMBA_NUM_THREADS'] = old_threads
+        inline_ctx = Context(executor=InlineJobExecutor())
+        res = ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
+        res_inline = inline_ctx.run_udf(dataset=default_raw, udf=ThreadsPerWorkerUDF())
+        print(res['num_threads'].data)
+        assert np.all(res['num_threads'].data == 1)
+        print(res_inline['num_threads'].data)
+        assert np.all(res_inline['num_threads'].data == psutil.cpu_count(logical=False))
 
 
 @pytest.mark.slow
@@ -270,3 +271,47 @@ def test_preload(hdf5_ds_1):
     with DaskJobExecutor.make_local(spec=spec) as executor:
         ctx = Context(executor=executor)
         ctx.run_udf(udf=CheckEnvUDF(), dataset=hdf5_ds_1)
+
+
+def test_connected_cluster_cannot_snooze(local_cluster_url):
+    """
+    Normally if we go via .connect there is no way to
+    setup a snooze_manager, and directly calling _scale_up
+    and _scale_down is unsupported, but check anyway
+    """
+    ex = DaskJobExecutor.connect(local_cluster_url)
+    assert ex.is_local
+    assert ex.client.cluster is None
+    num_workers = len(ex.get_available_workers())
+    ex._scale_down()  # should be a no-op
+    time.sleep(0.1)
+    assert num_workers == len(ex.get_available_workers())
+    ex._scale_up()  # should be a no-op
+    assert num_workers == len(ex.get_available_workers())
+
+
+@pytest.mark.slow
+def test_local_cluster_snooze():
+    try:
+        ctx = Context.make_with('dask', cpus=2, gpus=0, snooze_timeout=10_000)
+        num_workers = len(ctx.executor.get_available_workers())
+        assert num_workers == 2 + 1  # +service worker
+        ctx.executor.snooze_manager.snooze()
+        time.sleep(1.)
+        assert len(ctx.executor.get_available_workers()) == 1
+        ctx.executor.snooze_manager.unsnooze()
+        assert len(ctx.executor.get_available_workers()) == 2 + 1
+    finally:
+        ctx.close()
+
+
+@pytest.mark.slow
+def test_scatter_keeps_alive():
+    try:
+        ctx = Context.make_with('dask', cpus=1, gpus=0, snooze_timeout=10_000)
+        assert ctx.executor.snooze_manager.keep_alive == 0
+        with ctx.executor.scatter("Hello!") as _:
+            assert ctx.executor.snooze_manager.keep_alive == 1
+        assert ctx.executor.snooze_manager.keep_alive == 0
+    finally:
+        ctx.close()

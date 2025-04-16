@@ -89,8 +89,7 @@ class SnoozeManager:
         try:
             yield
         finally:
-            self.keep_alive -= 1
-            self.keep_alive = max(0, self.keep_alive)
+            self.keep_alive = max(0, self.keep_alive - 1)
             self._update_last_activity()
 
     def snooze(self):
@@ -160,5 +159,22 @@ def keep_alive(fn):
                 return fn(self, *args, **kwargs)
         else:
             return fn(self, *args, **kwargs)
+
+    return wrapped
+
+
+def keep_alive_context(fn):
+
+    @contextlib.contextmanager
+    def wrapped(self: 'JobExecutor', *args, **kwargs):
+        manager = self.snooze_manager
+        if manager is not None:
+            manager.unsnooze()
+            with manager.in_use():
+                with fn(self, *args, **kwargs) as mgr:
+                    yield mgr
+        else:
+            with fn(self, *args, **kwargs) as mgr:
+                yield mgr
 
     return wrapped

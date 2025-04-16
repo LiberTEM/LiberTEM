@@ -18,7 +18,7 @@ from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
-from libertem.common.snooze import SnoozeManager, keep_alive
+from libertem.common.snooze import SnoozeManager, keep_alive, keep_alive_context
 from libertem.common.subscriptions import SubscriptionManager
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
@@ -523,6 +523,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     def unsubscribe(self, key: str) -> bool:
         return self._subscriptions.unsubscribe(key)
 
+    @keep_alive_context
     @contextlib.contextmanager
     def scatter(self, obj):
         # an additional layer of indirection, because we want to be able to
@@ -536,10 +537,12 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             if handle in self._scatter_map:
                 del self._scatter_map[handle]
 
+    @keep_alive
     def scatter_update(self, handle, obj):
         fut = self.client.scatter(obj, broadcast=True, hash=False)
         self._scatter_map[handle] = fut
 
+    @keep_alive
     def scatter_update_patch(self, handle, patch):
         fut = self._scatter_map[handle]
 

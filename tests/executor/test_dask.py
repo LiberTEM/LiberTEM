@@ -303,3 +303,15 @@ def test_local_cluster_snooze():
         assert len(ctx.executor.get_available_workers()) == 2 + 1
     finally:
         ctx.close()
+
+
+@pytest.mark.slow
+def test_scatter_keeps_alive():
+    try:
+        ctx = Context.make_with('dask', cpus=1, gpus=0, snooze_timeout=10_000)
+        assert ctx.executor.snooze_manager.keep_alive == 0
+        with ctx.executor.scatter("Hello!") as _:
+            assert ctx.executor.snooze_manager.keep_alive == 1
+        assert ctx.executor.snooze_manager.keep_alive == 0
+    finally:
+        ctx.close()

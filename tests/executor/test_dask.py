@@ -297,7 +297,16 @@ def test_local_cluster_snooze():
         num_workers = len(ctx.executor.get_available_workers())
         assert num_workers == 2 + 1  # +service worker
         ctx.executor.snooze_manager.snooze()
-        time.sleep(1.)
+
+        # workaround: cannot call `ctx.close` before the `snooze` operation has
+        # completely finished, so we need to wait here
+        # NOTE: once this is fixed upstream in distributed, this should be
+        # removed, as it also means we are not testing the real sequence here,
+        # which doesn't wait!
+        t0 = time.monotonic()
+        while len(ctx.executor.client.cluster.workers) > 1 and time.monotonic() < t0 + 3:
+            time.sleep(0.1)
+
         assert len(ctx.executor.get_available_workers()) == 1
         ctx.executor.snooze_manager.unsnooze()
         assert len(ctx.executor.get_available_workers()) == 2 + 1

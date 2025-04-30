@@ -3,6 +3,7 @@ import uuid
 import pytest
 import queue
 from unittest import mock
+import time
 
 from libertem.executor.base import AsyncAdapter
 from libertem.executor.dask import DaskJobExecutor
@@ -144,6 +145,18 @@ async def test_get_executor_unsnooze():
         executor_state.executor.snooze_manager.snooze()
         assert executor_state.executor.snooze_manager.is_snoozing
 
+        # workaround: cannot call `executor.close` before the `snooze`
+        # operation has completely finished, so we need to wait here.
+        # NOTE: once this is fixed upstream in distributed, this should be
+        # removed, as it also means we are not testing the real sequence here,
+        # which doesn't wait!
+        t0 = time.monotonic()
+        while (
+            len(executor_state.executor._wrapped.client.cluster.workers) > 1
+            and time.monotonic() < t0 + 3
+        ):
+            time.sleep(0.1)
+
         # Getting the executor brings it out of snooze
         await executor_state.get_executor()
         assert not executor_state.executor.snooze_manager.is_snoozing
@@ -189,6 +202,18 @@ async def test_snooze_explicit_keep_alive():
         snoozer.snooze()
         assert snoozer.is_snoozing
 
+        # workaround: cannot call `executor.close` before the `snooze`
+        # operation has completely finished, so we need to wait here.
+        # NOTE: once this is fixed upstream in distributed, this should be
+        # removed, as it also means we are not testing the real sequence here,
+        # which doesn't wait!
+        t0 = time.monotonic()
+        while (
+            len(executor_state.executor._wrapped.client.cluster.workers) > 1
+            and time.monotonic() < t0 + 3
+        ):
+            time.sleep(0.1)
+
         snoozer.unsnooze()
         assert not snoozer.is_snoozing
         # these two work without raising an exception:
@@ -225,6 +250,18 @@ async def test_snooze_by_activity(local_cluster_url):
         # opportunities to snooze in between:
         assert snoozer.is_snoozing
 
+        # workaround: cannot call `executor.close` before the `snooze`
+        # operation has completely finished, so we need to wait here.
+        # NOTE: once this is fixed upstream in distributed, this should be
+        # removed, as it also means we are not testing the real sequence here,
+        # which doesn't wait!
+        t0 = time.monotonic()
+        while (
+            len(executor_state.executor._wrapped.client.cluster.workers) > 1
+            and time.monotonic() < t0 + 3
+        ):
+            time.sleep(0.1)
+
         # and this should directly unsnooze the executor
         # (we need to change the timeout etc. here, before we trigger the unsnooze,
         # to make sure we don't directly snooze again):
@@ -260,6 +297,19 @@ async def test_messages():
         await executor_state.set_executor(executor, params)
 
         await asyncio.sleep(0.1)
+
+        # workaround: cannot call `executor.close` before the `snooze` operation has
+        # completely finished, so we need to wait here
+        # NOTE: once this is fixed upstream in distributed, this should be
+        # removed, as it also means we are not testing the real sequence here,
+        # which doesn't wait!
+        t0 = time.monotonic()
+        while (
+            len(executor_state.executor._wrapped.client.cluster.workers) > 1
+            and time.monotonic() < t0 + 3
+        ):
+            await asyncio.sleep(0.1)
+
         # these two work without raising an exception:
         await executor_state.get_executor()
         messages = []

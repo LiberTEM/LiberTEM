@@ -1,7 +1,6 @@
 import os
 import sys
 import re
-import time
 import subprocess
 
 import numpy as np
@@ -284,7 +283,6 @@ def test_connected_cluster_cannot_snooze(local_cluster_url):
     assert ex.client.cluster is None
     num_workers = len(ex.get_available_workers())
     ex._scale_down()  # should be a no-op
-    time.sleep(0.1)
     assert num_workers == len(ex.get_available_workers())
     ex._scale_up()  # should be a no-op
     assert num_workers == len(ex.get_available_workers())
@@ -297,16 +295,6 @@ def test_local_cluster_snooze():
         num_workers = len(ctx.executor.get_available_workers())
         assert num_workers == 2 + 1  # +service worker
         ctx.executor.snooze_manager.snooze()
-
-        # workaround: cannot call `ctx.close` before the `snooze` operation has
-        # completely finished, so we need to wait here
-        # NOTE: once this is fixed upstream in distributed, this should be
-        # removed, as it also means we are not testing the real sequence here,
-        # which doesn't wait!
-        t0 = time.monotonic()
-        while len(ctx.executor.client.cluster.workers) > 1 and time.monotonic() < t0 + 3:
-            time.sleep(0.1)
-
         assert len(ctx.executor.get_available_workers()) == 1
         ctx.executor.snooze_manager.unsnooze()
         assert len(ctx.executor.get_available_workers()) == 2 + 1

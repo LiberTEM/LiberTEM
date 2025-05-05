@@ -4,6 +4,7 @@ from copy import deepcopy
 import functools
 import logging
 import copy
+import time
 import signal
 from typing import Any, Optional, Union, Callable
 from collections.abc import Iterable
@@ -466,8 +467,16 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         if not self.is_local or self._worker_spec is None or self.client.cluster is None:
             return
         self.client.cluster.scale(n=1)
-        # Can return immediately with scale-down because
-        # Dask will do its thing in the background
+        # cluster.scale returns immediately while workers are shut down
+        # in the background by Dask. To avoid a bad state where we
+        # `_scale_up` too quickly after calling this function then shutdown
+        # the cluster, wait at most a few seconds until the cluster has time
+        # to enact the call to `scale` before we hassle it with more requests
+        # See https://github.com/dask/distributed/pull/9064 for more info
+        t0 = time.monotonic()
+        t1 = t0 + 3  # seconds of settling time
+        while len(self.client.cluster.workers) > 1 and time.monotonic() < t1:
+            time.sleep(0.1)
 
     def _scale_up(self):
         """

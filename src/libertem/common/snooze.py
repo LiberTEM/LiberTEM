@@ -107,8 +107,10 @@ class SnoozeManager:
                 subs = self.subscriptions()
                 if subs is not None:
                     subs.send(SnoozeMessage.SNOOZE, {})
+                # Set the is_snoozing flag early, in case of a
+                # long call to scale_down()
+                self.is_snoozing = True
                 scale_down()
-            self.is_snoozing = True
 
     def unsnooze(self):
         with self.in_use():
@@ -126,7 +128,8 @@ class SnoozeManager:
                     scale_up()
                     if subs is not None:
                         subs.send(SnoozeMessage.UNSNOOZE_DONE, {})
-                self.is_snoozing = False
+                    # Unset the is_snoozing flag only *after* we complete scale_up()
+                    self.is_snoozing = False
 
     def close(self):
         if self._snooze_task is not None:

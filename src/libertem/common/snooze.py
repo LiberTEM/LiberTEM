@@ -103,14 +103,15 @@ class SnoozeManager:
                 # in a bad state if we no-op too early
                 return
             scale_down = self.scale_down()
-            if scale_down is not None:
-                subs = self.subscriptions()
-                if subs is not None:
-                    subs.send(SnoozeMessage.SNOOZE, {})
-                # Set the is_snoozing flag early, in case of a
-                # long call to scale_down()
-                self.is_snoozing = True
-                scale_down()
+            if scale_down is None:
+                # must be destroying the executor, do nothing
+                return
+            subs = self.subscriptions()
+            if subs is not None:
+                subs.send(SnoozeMessage.SNOOZE, {})
+            # Set the is_snoozing flag early, in case of a long call to scale_down()
+            self.is_snoozing = True
+            scale_down()
 
     def unsnooze(self):
         with self.in_use():
@@ -121,15 +122,17 @@ class SnoozeManager:
                     # in a bad state if we no-op too early
                     return
                 scale_up = self.scale_up()
-                if scale_up is not None:
-                    subs = self.subscriptions()
-                    if subs is not None:
-                        subs.send(SnoozeMessage.UNSNOOZE_START, {})
-                    scale_up()
-                    if subs is not None:
-                        subs.send(SnoozeMessage.UNSNOOZE_DONE, {})
-                    # Unset the is_snoozing flag only *after* we complete scale_up()
-                    self.is_snoozing = False
+                if scale_up is None:
+                    # must be destroying the executor, do nothing
+                    return
+                subs = self.subscriptions()
+                if subs is not None:
+                    subs.send(SnoozeMessage.UNSNOOZE_START, {})
+                scale_up()
+                # Unset the is_snoozing flag only *after* we complete scale_up()
+                self.is_snoozing = False
+                if subs is not None:
+                    subs.send(SnoozeMessage.UNSNOOZE_DONE, {})
 
     def close(self):
         if self._snooze_task is not None:

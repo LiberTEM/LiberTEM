@@ -222,8 +222,8 @@ On the target
   using the package folder instead of the online package index:
   :code:`pip install --find-links . --no-index libertem`
 
-Docker and Singularity
-----------------------
+Docker and Apptainer
+--------------------
 
 .. versionadded:: 0.9.0
 

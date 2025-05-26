@@ -47,7 +47,7 @@ branch for each pull request.
 All pull requests should come from a user's personal fork since we don't push to
 the main repository for development. See the `GitHub documentation on how to
 create and manage forks
-<https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_
+<https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_
 for details.
 
 Before creating a pull request, please make sure all tests still pass. See
@@ -110,7 +110,7 @@ using the following comment on the PR:
 If everything is good to go, your changes will be merged and you can
 delete the branch you created for the pull request.
 
-.. seealso:: `Guide on understanding the GitHub flow <https://docs.github.com/en/get-started/quickstart/github-flow>`_
+.. seealso:: `Guide on understanding the GitHub flow <https://docs.github.com/en/get-started/using-github/github-flow>`_
 
 .. seealso:: `How to make a simple GitHub PR (video) <https://www.youtube.com/watch?v=cysuuUtbC6E>`_
 

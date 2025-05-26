@@ -218,7 +218,7 @@ On Windows
 The easiest way to get the tracing services up and running is using
 `Windows Subsystem for Linux <https://learn.microsoft.com/en-us/windows/wsl/install>`_
 to install Linux and Docker. This allows to run the tracing services as described above.
-Alternatively, `Docker Desktop for Windows <https://docs.docker.com/desktop/install/windows-install/>`_
+Alternatively, `Docker Desktop for Windows <https://docs.docker.com/desktop/setup/install/windows-install/>`_
 could be an option.
 
 Clients running natively on Windows can then connect to these services:

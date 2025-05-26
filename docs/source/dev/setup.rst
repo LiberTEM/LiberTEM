@@ -45,7 +45,7 @@ If you want to follow the latest development, you should install LiberTEM from
 a git clone. As a prerequisite, you need to have git installed on your system. On Linux,
 we suggest using the git package that comes with your package manager. On Windows, you can use one
 of the many available clients, like  `git for windows <https://gitforwindows.org/>`_, 
-`GitHub Desktop <https://desktop.github.com/>`_, `TortoiseGit <https://tortoisegit.org/>`_,
+`GitHub Desktop <https://github.com/apps/desktop>`_, `TortoiseGit <https://tortoisegit.org/>`_,
 or the git integration of your development environment.
 
 .. code-block:: shell
@@ -70,7 +70,7 @@ by following these steps:
     $ git clone https://github.com/your-user-name/LiberTEM
 
 More information about `forking a repository
-<https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_.
+<https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_.
 For a beginner-friendly introduction to git and GitHub, consider going through
 the following resources:
 
@@ -78,8 +78,7 @@ the following resources:
   covers the essentials of using Git.
 * Practice `pull request <https://github.com/firstcontributions/first-contributions>`_
   in a safe sandbox environment.
-* Sample `workflow <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_
-  for contributing code.
+* Detailed `documentation for contributing to astropy <https://docs.astropy.org/en/latest/index_dev.html>`_.
 
 Activate the Python environment (conda or virtualenv) and change to the newly
 created directory with the clone of the LiberTEM repository. Now you can start

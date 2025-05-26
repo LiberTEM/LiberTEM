@@ -370,12 +370,12 @@ def make_data():
 
 
 @click.command()
-@click.option('--parent', default="264899")
+@click.option('--concept', default="260887")
 @click.option('--url', default='https://sandbox.zenodo.org/api/')
 @click.option('--verbose', '-v', is_flag=True)
 @click.option('--mask-zenodo-exception', is_flag=True)
 @click.argument('files', nargs=-1, required=True, type=click.File())
-def main(files, parent, url, verbose, mask_zenodo_exception):
+def main(files, concept, url, verbose, mask_zenodo_exception):
     try:
         # raise ZenodoException("Test")
         global BASE_URL
@@ -384,17 +384,34 @@ def main(files, parent, url, verbose, mask_zenodo_exception):
         global VERBOSE
         VERBOSE = verbose
 
-        try:
-            log("Creating new version of deposition %s..." % parent)
-            r = new_version(parent_id=parent)
-            prettylog(r)
-        # Above will fail for very first draft
-        except ZenodoException:
-            log("Loading initial draft of deposition %s..." % parent)
-            r = get_deposition(deposition_id=parent)
-            prettylog(r)
+        depositions = list_depositions().json()
+        log(
+            "Found the following depositions: "
+            f"{[(d['id'], d['title'], d['conceptrecid']) for d in depositions]}"
+        )
+        deposition_id = None
+        submitted = None
+        n_found = 0
 
-        deposition_id = get_latest_draft(r)
+        for deposition in depositions:
+            if deposition['conceptrecid'] == concept:
+                deposition_id = deposition['id']
+                submitted = deposition['submitted']
+                log(f"found {deposition_id} in state {deposition['state']}")
+                n_found += 1
+
+        if deposition_id is None or submitted is None:
+            raise ZenodoException("Didn't find a record matching the concept ID", concept)
+
+        if n_found != 1:
+            raise ZenodoException(f"Found {n_found} matching records, expected exactly one")
+
+        if submitted:
+            log("Creating new version of deposition %s..." % deposition_id)
+            r = new_version(parent_id=deposition_id)
+            prettylog(r)
+            deposition_id = r.json()['id']
+
         log("Updating draft deposition %s..." % deposition_id)
         r = update_deposition(deposition_id=deposition_id, data=make_data())
         prettylog(r)

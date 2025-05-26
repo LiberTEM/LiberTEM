@@ -172,7 +172,7 @@ jobs:
       LT_RELEASE_UPLOAD_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       LT_RELEASE_UPLOAD_PYPI_PASSWORD: ${{ secrets.LT_RELEASE_UPLOAD_PYPI_PASSWORD }}
       LT_RELEASE_UPLOAD_ZENODO_TOKEN: ${{ secrets.LT_RELEASE_UPLOAD_ZENODO_TOKEN }}
-      LT_RELEASE_UPLOAD_ZENODO_PARENT: ${{ secrets.LT_RELEASE_UPLOAD_ZENODO_PARENT }}
+      LT_RELEASE_UPLOAD_ZENODO_CONCEPT: ${{ secrets.LT_RELEASE_UPLOAD_ZENODO_CONCEPT }}
     steps:
       - run: sudo apt-get install -y fuse
       - uses: actions/checkout@v4

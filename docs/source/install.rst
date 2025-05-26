@@ -109,7 +109,7 @@ the :code:`conda` command at the top of this page.
 
 For more information about conda, see their `documentation about creating and
 managing environments
-<https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
+<https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_.
 
 Optional dependencies
 ---------------------

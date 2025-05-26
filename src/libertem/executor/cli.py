@@ -9,7 +9,7 @@ log_values = "Allowed values are 'critical', 'error', 'warning', 'info', 'debug'
 preload_help = (
     'Module, file or code to preload on workers, for example HDF5 plugins. '
     'Can be specified multiple times. See also '
-    'https://docs.dask.org/en/stable/how-to/customize-initialization.html#preload-scripts '
+    'https://docs.dask.org/en/stable/customize-initialization.html#preload-scripts '
     'for the behavior with Dask workers (current default)'
     'and https://libertem.github.io/LiberTEM/reference/dataset.html#hdf5 '
     'for information on loading HDF5 files that depend on custom filters.'

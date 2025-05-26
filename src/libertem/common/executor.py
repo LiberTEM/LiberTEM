@@ -363,7 +363,9 @@ class JobExecutor:
         Register a callback to run in response to executor events
 
         The callback should accept the arguments
-            (topic, message_dict)
+
+        :code:`(topic, message_dict)`
+
         and not block execution as it will be run synchronously
         within code such as :code:`executor.run_tasks`
 

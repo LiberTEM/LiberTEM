@@ -97,7 +97,7 @@ Alternatively, to run the `LiberTEM Docker image
 
 .. code-block:: shell
 
-    $ docker run -p localhost:9000:9000 --mount type=bind,source=/path/to/your/data/,dst=/data/,ro ghcr.io/libertem/libertem
+    $ docker run -p 127.0.0.1:9000:9000 --mount type=bind,source=/path/to/your/data/,dst=/data/,ro ghcr.io/libertem/libertem
 
 or
 

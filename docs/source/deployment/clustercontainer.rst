@@ -26,10 +26,10 @@ Containers and clusters
     Furthermore, the default command of the LiberTEM Docker container starts a
     server that binds to all interfaces to facilitate integration. Docker runs
     containers in an isolated environment and requires the user to expose the
-    port explicitly. Singularity, however, will run the container like a regular
+    port explicitly. Apptainer, however, will run the container like a regular
     user program. That means it exposes an insecure LiberTEM server to all
     interfaces when running the default container command. For that reason the
-    command to run should always be specified explicitly when using Singularity.
+    command to run should always be specified explicitly when using Apptainer.
 
 .. _`containers`:
 
@@ -52,11 +52,11 @@ When using Docker, you can run and expose the LiberTEM server to
     $ docker run -p 127.0.0.1:9000:9000 \
       --mount type=bind,source=/path/to/your/data/,dst=/data/,ro ghcr.io/libertem/libertem
 
-To use the Docker image and Singularity to start :code:`libertem-server`:
+To use the Docker image and Apptainer to start :code:`libertem-server`:
 
 .. code-block:: shell
 
-    $ singularity exec docker://ghcr.io/libertem/libertem /venv/bin/libertem-server
+    $ apptainer exec docker://ghcr.io/libertem/libertem /venv/bin/libertem-server
 
 Available versions
 ..................
@@ -84,7 +84,7 @@ or
 
 .. code-block:: shell
 
-    $ singularity pull docker://ghcr.io/libertem/libertem
+    $ apptainer pull docker://ghcr.io/libertem/libertem
 
 .. _`cluster`:
 
@@ -133,9 +133,9 @@ Example: Start a scheduler and workers in an isolated environment with Docker.
       ghcr.io/libertem/libertem /venv/bin/libertem-worker tcp://<scheduler-addr>:8786
 
 Example: Start a scheduler and workers in the context
-of the local user with Singularity.
+of the local user with Apptainer.
 
 .. code-block:: shell
 
-    $ singularity exec docker://ghcr.io/libertem/libertem /venv/bin/dask-scheduler --host localhost
-    $ singularity exec docker://ghcr.io/libertem/libertem /venv/bin/libertem-worker tcp://localhost:8786
+    $ apptainer exec docker://ghcr.io/libertem/libertem /venv/bin/dask-scheduler --host localhost
+    $ apptainer exec docker://ghcr.io/libertem/libertem /venv/bin/libertem-worker tcp://localhost:8786

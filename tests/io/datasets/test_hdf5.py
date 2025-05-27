@@ -850,3 +850,24 @@ def test_sync_offset_beyond_ds(lt_ctx, tmpdir_factory):
         )
 
     os.unlink(filename)
+
+
+@pytest.mark.parametrize(
+    'flip', (True, False)
+)
+def test_tuple_list(flip, lt_ctx, hdf5_3d):
+    sig_shape = tuple(hdf5_3d['data'].shape[1:])
+    nav_shape = list(hdf5_3d['data'].shape[:1])
+
+    if flip:
+        sig_shape = list(sig_shape)
+        nav_shape = tuple(nav_shape)
+
+    print(sig_shape, nav_shape)
+    ds = lt_ctx.load(
+        'HDF5', path=hdf5_3d.filename, ds_path='/data',
+        sig_shape=sig_shape, nav_shape=nav_shape,
+    )
+
+    udf = PixelsumUDF()
+    lt_ctx.run_udf(udf=udf, dataset=ds)

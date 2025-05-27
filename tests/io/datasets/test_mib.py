@@ -629,3 +629,24 @@ def test_no_num_partitions(lt_ctx):
         nav_shape=(32, 32),
     )
     lt_ctx.run_udf(dataset=ds, udf=SumSigUDF())
+
+
+@needsdata
+@pytest.mark.parametrize(
+    'flip', (True, False)
+)
+def test_tuple_list(flip, lt_ctx):
+    nav_shape = (2, 2)
+    sig_shape = [256, 256]
+
+    if flip:
+        nav_shape = list(nav_shape)
+        sig_shape = tuple(sig_shape)
+
+    ds = lt_ctx.load(
+        "mib",
+        path=MIB_TESTDATA_PATH,
+        nav_shape=nav_shape,
+        sig_shape=sig_shape
+    )
+    lt_ctx.run_udf(dataset=ds, udf=SumSigUDF())

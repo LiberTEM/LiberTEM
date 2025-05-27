@@ -23,6 +23,7 @@ from libertem.common.executor import (
 from libertem.api import Context
 from libertem.udf.stddev import StdDevUDF
 from libertem.udf.masks import ApplyMasksUDF
+from libertem.udf.sum import SumUDF
 from libertem.common.exceptions import ExecutorSpecException
 from sparseconverter import (
     BACKENDS, CUPY, CUPY_BACKENDS, CUPY_SCIPY_CSR, NUMPY, SCIPY_COO, SPARSE_COO
@@ -279,6 +280,24 @@ def test_executors(ctx, load_kwargs, reference):
             print("dtypes", left.dtype, right.dtype)
             assert np.allclose(left, right), \
                 f"mismatching result for buffer {buf_key} in UDF {udfs[i]}"
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    'flip', (True, False)
+)
+def test_tuple_list(flip, lt_ctx, load_kwargs):
+    default = lt_ctx.load(**load_kwargs)
+    sig_shape = default.shape.sig.to_tuple()
+    nav_shape = default.shape.nav.to_tuple()
+    if flip:
+        sig_shape = list(sig_shape)
+    else:
+        nav_shape = list(nav_shape)
+    load_kwargs['nav_shape'] = nav_shape
+    load_kwargs['sig_shape'] = sig_shape
+    ds = lt_ctx.load(**load_kwargs)
+    lt_ctx.run_udf(dataset=ds, udf=SumUDF())
 
 
 @pytest.mark.slow

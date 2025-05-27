@@ -345,10 +345,13 @@ class H5DataSet(DataSet):
                 # so we currently don't support opening 2D HDF5 files
                 raise DataSetException("2D HDF5 files are currently not supported")
             ds_shape = Shape(shape, sig_dims=self.sig_dims)
-            if self._sig_shape is not None and self._sig_shape != ds_shape.sig.to_tuple():
+            if self._sig_shape is not None and tuple(self._sig_shape) != ds_shape.sig.to_tuple():
                 raise DataSetException("sig reshaping currently not supported with HDF5 files")
             self._image_count = ds_shape.nav.size
-            nav_shape = ds_shape.nav.to_tuple() if self._nav_shape is None else self._nav_shape
+            if self._nav_shape is None:
+                nav_shape = ds_shape.nav.to_tuple()
+            else:
+                nav_shape = tuple(self._nav_shape)
             self._shape = nav_shape + ds_shape.sig
             self._meta = DataSetMeta(
                 shape=self.shape,

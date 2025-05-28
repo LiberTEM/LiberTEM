@@ -1029,8 +1029,7 @@ if sys.platform.startswith("win"):
                 return WindowsSelectorEventLoopPolicy()
 
 
-@pytest.fixture(scope='session')
-def local_cluster_url():
+def _local_cluster_url():
     """
     Shared dask cluster, can be used repeatedly by different executors.
 
@@ -1066,6 +1065,10 @@ def local_cluster_url():
             client.close()
 
         yield 'tcp://localhost:%d' % cluster_port
+
+
+local_cluster_url = pytest.fixture(scope='session')(_local_cluster_url)
+local_cluster_url_per_module = pytest.fixture(scope='module')(_local_cluster_url)
 
 
 @pytest.fixture(scope='function')

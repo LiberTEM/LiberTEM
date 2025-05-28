@@ -126,10 +126,27 @@ async def test_cluster_connect_error(base_url, http_client, default_token):
         assert_msg(conn_resp, 'CLUSTER_CONN_ERROR', status='error')
 
 
+# FIXME: This runs with a fresh local cluster URL because of elusive test
+# failures under particular conditions:
+# * Coverage being collected
+# * Python 3.13
+# * "Some" tests ran before, for example:
+# pytest --cov=libertem --cov-config=pyproject.toml -v
+# tests/server/test_browse.py tests/server/test_browse.py
+# tests/server/test_startup.py::test_start_server
+# tests/server/test_startup.py::test_get_config
+# tests/server/test_startup.py::test_conn_is_disconnected
+# tests/server/test_startup.py::test_conn_connect_local
+# tests/server/test_startup.py::test_cluster_create_error
+# tests/server/test_startup.py::test_cluster_connect_error
+# tests/server/test_startup.py::test_initial_state_empty -m 'not dist'
+
+# To be re-checked in the future if the issue persists
 @pytest.mark.asyncio
 async def test_initial_state_empty(
-    default_raw, base_url, http_client, server_port, local_cluster_url, default_token,
+    default_raw, base_url, http_client, server_port, local_cluster_url_per_module, default_token,
 ):
+    local_cluster_url = local_cluster_url_per_module
     conn_url = f"{base_url}/api/config/connection/?token={default_token}"
     conn_details = {
         'connection': {

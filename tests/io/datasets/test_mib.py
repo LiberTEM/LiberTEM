@@ -23,11 +23,7 @@ from libertem.io.dataset.base import (
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    # FIXME: rsciio/pint is not numpy2 compatible yet
-    if int(np.version.version.split('.')[0]) < 2:
-        import rsciio
-    else:
-        rsciio = None
+    import rsciio
 except ModuleNotFoundError:
     rsciio = None
 

@@ -5,9 +5,11 @@ Changelog
 
     from libertem import api
     from libertem.executor.inline import InlineJobExecutor
+    from libertem.udf.sum import SumUDF
 
     ctx = api.Context(executor=InlineJobExecutor())
     dataset = ctx.load("memory", datashape=(16, 16, 16, 16), sig_dims=2)
+    udf = SumUDF()
 
 .. _continuous:
 
@@ -29,7 +31,7 @@ Changelog
 
 With the release 0.15.0 LiberTEM is **re-licensed** under the **MIT license**
 (:pr:`1689`)! Subprojects, in particular `LiberTEM-live
-<https://github.com/LiberTEM/LiberTEM-live/pull/172>`_, will follow as far as
+<https://github.com/LiberTEM/LiberTEM-live/pull/172>`__, will follow as far as
 their upstream licenses allow. Many thanks to all creators for agreeing to this
 change! We hope that this makes integrating LiberTEM into other software or
 systems easier. The discussion can be found at :issue:`1649`.

@@ -13,11 +13,7 @@ from libertem.common.buffers import reshaped_view
 from utils import dataset_correction_verification, get_testdata_path, ValidationUDF, roi_as_sparse
 
 try:
-    # FIXME: rsciio/pint is not numpy2 compatible yet
-    if int(np.version.version.split('.')[0]) < 2:
-        import hyperspy.api as hs
-    else:
-        hs = None
+    import hyperspy.api as hs
 except ModuleNotFoundError:
     hs = None
 

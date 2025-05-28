@@ -1,3 +1,0 @@
-[Feature] Support for Python 3.13
-=================================
-* Adds support for Python 3.13, including updated version constraints for numba (:pr:`1696`).

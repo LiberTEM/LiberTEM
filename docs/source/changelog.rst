@@ -11,7 +11,7 @@ Changelog
 
 .. _continuous:
 
-0.15.0.dev0
+0.16.0.dev0
 ###########
 
 .. toctree::
@@ -19,7 +19,97 @@ Changelog
 
   changelog/*/*
 
+
 .. _latest:
+
+.. _`v0-15-0`:
+
+0.15.0 / in progress
+####################
+
+With the release 0.15.0 LiberTEM is **re-licensed** under the **MIT license**
+(:pr:`1689`)! Subprojects, in particular `LiberTEM-live
+<https://github.com/LiberTEM/LiberTEM-live/pull/172>`_, will follow as far as
+their upstream licenses allow. Many thanks to all creators for agreeing to this
+change! We hope that this makes integrating LiberTEM into other software or
+systems easier. The discussion can be found at :issue:`1649`.
+
+Thanks to a joint bug hunt with Gatan, LiberTEM (and many other Python packages)
+work again within the Python scripting environment of Gatan Digital Micrograph /
+GMS since at least version 3.61 and newer. That allowed us to update the GMS
+integration examples. Most notably, they now default to the threaded executor
+which combines fast startup with decent performance on most systems. Many thanks
+for the fruitful collaboration!
+
+A warm welcome and many thanks to `Sivert Dagenborg
+<https://github.com/sivborg>`_ who started contributing to LiberTEM with this
+release. Thanks go out to all other contributors as well!
+
+Features
+--------
+
+* Add support for 16-bit BLO v1.3 files (:pr:`1676`).
+* Support to snooze the executor after inactivity to free resources occupied by
+  worker processes, in particular GPU memory held by CuPy. This was previously
+  available in the web client, but has now been exposed in the Python API.
+  It is supported only in the default :code:`DaskJobExecutor` at this time
+  (:issue:`1576`, :pr:`1690`). Currently, it must be activated by the user. We
+  plan to activate it with aggressive defaults during the 0.16 development cycle for
+  testing, and then activate it by default with conservative defaults in the
+  next release.
+* MIB: Starting with version 1.5 of the merlin software, the `ScanX` and `ScanY`
+  fields are included with the acquisition header (:code:`.hdr` file), if the
+  software knows about them. We now try to read these and fall back to the old
+  logic if they are not present (:issue:`1630`, :pr:`1631`).
+* Allow overriding the number of partitions through a parameter
+  :code:`num_partitions` that was added to most :code:`DataSet` implementations.
+  With that expert users can override the number of partitions when loading
+  data, in cases where the default heuristic doesn't work well (:issue:`1701`, :pr:`1702`).
+* Change the number of partitions in case there are fewer frames than
+  workers, where it is an overall advantage to have small (1-frame) partitions
+  instead of aggregating all frames into a single partition, especially if there
+  is a lot of processing done per frame (:issue:`1701`, :pr:`1702`).
+* Add support for Python 3.13 (:pr:`1696`).
+* Add a :ref:`shortcut to generate ROIs <udf roi>` from any numpy-supported slicing (:pr:`1704`):
+
+.. testcode:: run
+
+    roi = dataset.roi[3:7, 9:12]
+    ctx.run_udf(udf=udf, dataset=dataset, roi=roi)
+
+* Adds support for :code:`scipy.sparse.{coo,csr,csc}_array` in addition to
+  :code:`scipy.sparse.{coo,csr,csc}_matrix` through
+  :code:`sparseconverter>=0.4.0` (:pr:`1684`).
+
+Bugfixes
+--------
+
+* Update GMS examples and fix live plotting for GMS 3.61 (:issue:`1418`, :pr:`1712`).
+
+Obsolescence
+------------
+
+* Remove :code:`ClusterDataSet` and :code:`CachedDataSet` since they are
+  under-documented and don't work well; they are fully replacable by filesystem
+  system level caching like fscache. (:pr:`1706`)
+* Remove the holography implementation. It was partly adapted from HyperSpy
+  under GPL v3 and would prevent relicensing of LiberTEM to MIT (:issue:`1649`).
+  Development of holography support in LiberTEM has moved to
+  https://github.com/LiberTEM/LiberTEM-holo. Since the previous code had only
+  few users, and relicensing to MIT should not be delayed, it is removed without
+  deprecation period and will throw an error on import explaining the situation.
+  We recommend that users who depend on the previous code use an older LiberTEM
+  version (<= 0.14.2) for the time being and migrate to the new package when
+  possible. (:pr:`1689`)
+
+Miscellaneous
+-------------
+
+* Replace vector field colormap from :code:`empyre` with custom implementation
+  based on :code:`colorcet` to remove dependency on GPL code (:pr:`1687`, see
+  also :issue:`1649`).
+* LiberTEM has been migrated to use `hatchling` as its build backend and all
+  metadata moved into :code:`pyproject.toml`. (:pr:`1667`)
 
 .. _`v0-14-2`:
 

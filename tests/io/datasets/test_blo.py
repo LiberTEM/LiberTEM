@@ -12,7 +12,6 @@ from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset.blo import BloDataSet
 from libertem.io.dataset.base import TilingScheme, BufferedBackend, MMapBackend, DirectBackend
 from libertem.common import Shape
-from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.raw import PickUDF
 
@@ -143,20 +142,22 @@ def test_scheme_too_large(default_blo):
 
 @pytest.mark.skipif(rsciio is None, reason="No rosettasciio found")
 def test_comparison(default_blo, default_blo_raw, lt_ctx_fast):
+    reference = default_blo_raw.reshape(-1, *tuple(default_blo.shape.sig))
     udf = ValidationUDF(
-        reference=reshaped_view(default_blo_raw, (-1, *tuple(default_blo.shape.sig)))
+        reference=reference,
     )
     lt_ctx_fast.run_udf(udf=udf, dataset=default_blo)
 
 
 @pytest.mark.skipif(rsciio is None, reason="No rosettasciio found")
 def test_comparison_roi(default_blo, default_blo_raw, lt_ctx_fast):
+    reference = default_blo_raw.reshape(-1, *tuple(default_blo.shape.sig))
     roi = np.random.choice(
         [True, False],
-        size=tuple(default_blo.shape.nav),
+        size=reference.shape[0],
         p=[0.5, 0.5]
     )
-    udf = ValidationUDF(reference=default_blo_raw[roi])
+    udf = ValidationUDF(reference=reference[roi])
     lt_ctx_fast.run_udf(udf=udf, dataset=default_blo, roi=roi)
 
 

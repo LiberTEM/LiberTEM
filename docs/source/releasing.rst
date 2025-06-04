@@ -159,4 +159,3 @@ When planning a release, create a new issue with the following checklist:
     * [ ] Edit `pytest.ini` to include flaky tests again
     * [ ] Bump version in master branch to next .dev0 (`./scripts/release bump v0.X.0.dev0 --commit`)
     * [ ] Add to institutional publication databases
-    * [ ] Add the current LiberTEM version to [CVL](https://github.com/Chasdfracterisation-Virtual-Laboratory/CharacterisationVL-Software>) - add both the singularity and the .desktop file!

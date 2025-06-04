@@ -144,6 +144,14 @@ def test_messages():
     def got_message(topic, msg_dict):
         messages_received.append((topic, msg_dict))
 
+    def wait_for_snooze():
+        deadline = time.monotonic() + 10  # extreme, but knowing CI...
+        while time.monotonic() < deadline:
+            if SnoozeMessage.SNOOZE in [m[0] for m in messages_received]:
+                break
+            else:
+                time.sleep(0.01)
+
     executor = MockSnoozeExecutor(0.1)
     executor.subscribe(SnoozeMessage.SNOOZE, got_message)
     executor.subscribe(SnoozeMessage.UNSNOOZE_START, got_message)
@@ -151,7 +159,7 @@ def test_messages():
     activity_key = executor.subscribe(SnoozeMessage.UPDATE_ACTIVITY, got_message)
     task_time = 0.1
     executor.run_task(task_time)
-    time.sleep(0.15)
+    wait_for_snooze()
 
     assert messages_received[0][0] == SnoozeMessage.UPDATE_ACTIVITY
     assert executor.snooze_manager.is_snoozing
@@ -163,7 +171,7 @@ def test_messages():
     assert executor.unsubscribe(activity_key)
     executor.snooze_manager.unsnooze()
     messages_received.clear()
-    time.sleep(0.15)
+    wait_for_snooze()
     executor.run_task()
     topics = tuple(m[0] for m in messages_received)
     assert SnoozeMessage.UPDATE_ACTIVITY not in topics

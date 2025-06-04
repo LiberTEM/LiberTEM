@@ -26,8 +26,11 @@ Changelog
 
 .. _`v0-15-0`:
 
-0.15.0 / in progress
-####################
+0.15.0 / 2025-06-04
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.15584540.svg
+  :target: https://doi.org/10.5281/zenodo.15584540
 
 With the release 0.15.0 LiberTEM is **re-licensed** under the **MIT license**
 (:pr:`1689`)! Subprojects, in particular `LiberTEM-live

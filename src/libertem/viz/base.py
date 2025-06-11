@@ -20,7 +20,9 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _get_stat_limits(data: np.ndarray, quantile: float = 0.005) -> tuple[float, float]:
+def _get_stat_limits(
+            data: np.ndarray, quantile: float = 0.001, snip_factor: float = 10.
+        ) -> tuple[float, float]:
     """
     Calculates robust min/max limits for auto-ranging by using the lower/upper quantiles.
     Extreme values (e.g. outliers, "bad" pixels) are ignored this way.
@@ -30,9 +32,12 @@ def _get_stat_limits(data: np.ndarray, quantile: float = 0.005) -> tuple[float, 
     data : np.ndarray
         Input data array.
     quantile : float, optional
-        The fraction of data to ignore at each end (default: 0.005 for 0.5%).
+        The fraction of data to ignore at each end (default: 0.001 for 0.1%).
         For example, 0.005 means 0.5% at each end (0.005 and 0.995 quantiles).
         Use 0 for no outlier rejection, higher values for more aggressive filtering.
+    snip_factor : float, optional
+        Use actual data limits and not quantile-filtered if data limits are close
+        to quantile limits by no more than snip_factor
 
     Returns
     -------
@@ -42,15 +47,43 @@ def _get_stat_limits(data: np.ndarray, quantile: float = 0.005) -> tuple[float, 
     data = data[np.isfinite(data)]
     if data.size == 0:
         return 1.0, math.nextafter(1.0, math.inf)
+    vmin = data.min()
+    vmax = data.max()
     q = float(quantile)
-    lower, upper = np.quantile(data, (q, 1 - q))
-    filtered = data[(data >= lower) & (data <= upper)]
-    if filtered.size > 0:
-        vmin = filtered.min()
-        vmax = filtered.max()
-    else:
-        vmin = data.min()
-        vmax = data.max()
+    # Disregard zeros for the quantile calculation to
+    # better handle very sparse datasets
+    zeros = data == 0
+    has_zeros = np.any(zeros)
+    # Don't run quantile on empty array
+    if not np.all(zeros):
+        lower, upper = np.quantile(data[np.invert(zeros)], (q, 1 - q))
+
+        # Expand limits to include 0 if any zeros are present.
+        if has_zeros:
+            lower = min(lower, 0)
+            upper = max(upper, 0)
+        # Select values within the quantile limits
+        filtered = data[(data >= lower) & (data <= upper)]
+        if filtered.size > 0:
+            filt_vmin = filtered.min()
+            filt_vmax = filtered.max()
+            # Only snip outliers if they are actually outliers,
+            # i.e. significantly larger or smaller than values within the quantile.
+            filt_vmin_diff = np.abs(filt_vmin - vmin)
+            filt_vmax_diff = np.abs(filt_vmax - vmax)
+            # Use the quantile limits as basis to determine ratio to differences
+            filt_vmin_base = np.abs(filt_vmin)
+            filt_vmax_base = np.abs(filt_vmax)
+            # filt_..._diff will be much larger than the filt_..._base if we
+            # have actual outliers.
+            if filt_vmin_base > 0:
+                vmin_quot = filt_vmin_diff / filt_vmin_base
+                if vmin_quot > snip_factor:
+                    vmin = filt_vmin
+            if filt_vmax_base > 0:
+                vmax_quot = filt_vmax_diff / filt_vmax_base
+                if vmax_quot > snip_factor:
+                    vmax = filt_vmax
     if vmin == vmax:
         vmax = math.nextafter(vmin, math.inf)
     return float(vmin), float(vmax)

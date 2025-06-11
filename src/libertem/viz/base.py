@@ -1,6 +1,7 @@
 import typing
 import logging
 import time
+import math
 
 import numpy as np
 # Makes colormaps available in matplotlib
@@ -35,24 +36,23 @@ def _get_stat_limits(data: np.ndarray, quantile: float = 0.005) -> tuple[float, 
 
     Returns
     -------
-    tuple of float
-        (vmin, vmax):
-            vmin is the robust minimum value for auto-ranging (lower quantile or min of filtered data).
-            vmax is the robust maximum value for auto-ranging (upper quantile or max of filtered data).
+    (vmin, vmax):
+        Robust min/max value for auto-ranging.
     """
     data = data[np.isfinite(data)]
     if data.size == 0:
-        return 1.0, 1.0 + 1e-12
+        return 1.0, math.nextafter(1.0, math.inf)
     q = float(quantile)
-    lower = np.quantile(data, q)
-    upper = np.quantile(data, 1 - q)
+    lower, upper = np.quantile(data, (q, 1 - q))
     filtered = data[(data >= lower) & (data <= upper)]
     if filtered.size > 0:
         vmin = filtered.min()
         vmax = filtered.max()
     else:
-        vmin = lower
-        vmax = upper
+        vmin = data.min()
+        vmax = data.max()
+    if vmin == vmax:
+        vmax = math.nextafter(vmin, math.inf)
     return float(vmin), float(vmax)
 
 

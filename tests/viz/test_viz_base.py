@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from unittest.mock import Mock
+import math
 
 from libertem import viz
 from libertem.viz.base import Dummy2DPlot
@@ -17,6 +18,27 @@ def test_get_stat_limits_outlier():
     # vmin/vmax should be close to 1, not affected by the outlier
     assert abs(vmin - 1) < 1e-6
     assert abs(vmax - 1) < 1e-2  # allow for quantile rounding
+
+
+def test_get_stat_limits_all_inf():
+    arr = np.array([np.inf, -np.inf])
+    vmin, vmax = viz.base._get_stat_limits(arr)
+    assert vmin == 1.0
+    assert math.isclose(vmax, math.nextafter(1.0, math.inf))
+
+
+def test_get_stat_limits_constant():
+    arr = np.full(100, 42.0)
+    vmin, vmax = viz.base._get_stat_limits(arr)
+    assert vmin == 42.0
+    assert math.isclose(vmax, math.nextafter(42.0, math.inf))
+
+
+def test_get_stat_limits_no_quantile():
+    arr = np.array([1, 2, 3, 100])
+    vmin, vmax = viz.base._get_stat_limits(arr, quantile=0)
+    assert vmin == 1
+    assert vmax == 100
 
 
 def test_rgb_from_vector():

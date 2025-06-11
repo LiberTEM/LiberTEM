@@ -19,6 +19,43 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _get_stat_limits(data: np.ndarray, quantile: float = 0.005) -> tuple[float, float]:
+    """
+    Calculates robust min/max limits for auto-ranging by using the lower/upper quantiles.
+    Extreme values (e.g. outliers, "bad" pixels) are ignored this way.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        Input data array.
+    quantile : float, optional
+        The fraction of data to ignore at each end (default: 0.005 for 0.5%).
+        For example, 0.005 means 0.5% at each end (0.005 and 0.995 quantiles).
+        Use 0 for no outlier rejection, higher values for more aggressive filtering.
+
+    Returns
+    -------
+    tuple of float
+        (vmin, vmax):
+            vmin is the robust minimum value for auto-ranging (lower quantile or min of filtered data).
+            vmax is the robust maximum value for auto-ranging (upper quantile or max of filtered data).
+    """
+    data = data[np.isfinite(data)]
+    if data.size == 0:
+        return 1.0, 1.0 + 1e-12
+    q = float(quantile)
+    lower = np.quantile(data, q)
+    upper = np.quantile(data, 1 - q)
+    filtered = data[(data >= lower) & (data <= upper)]
+    if filtered.size > 0:
+        vmin = filtered.min()
+        vmax = filtered.max()
+    else:
+        vmin = lower
+        vmax = upper
+    return float(vmin), float(vmax)
+
+
 def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=None):
     if (vmin is not None) and (vmax is not None):
         return norm_cls(vmin=vmin, vmax=vmax)
@@ -29,14 +66,16 @@ def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=No
         damage = (result != 0)
 
     damage = damage & np.isfinite(result)
+    valid_data = result[damage]
+    qmin, qmax = _get_stat_limits(valid_data)
 
     if damage.sum() == 0:
         return norm_cls(vmin=1, vmax=1)  # all-NaN or all-zero
 
     if vmin is None:
-        vmin = np.min(result[damage])
+        vmin = qmin
     if vmax is None:
-        vmax = np.max(result[damage])
+        vmax = qmax
 
     return norm_cls(vmin=vmin, vmax=vmax)
 

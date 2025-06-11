@@ -9,6 +9,16 @@ from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
 
 
+def test_get_stat_limits_outlier():
+    # Array with one outlier
+    arr = np.ones(1000)
+    arr[500] = 1e6  # extreme outlier
+    vmin, vmax = viz.base._get_stat_limits(arr)
+    # vmin/vmax should be close to 1, not affected by the outlier
+    assert abs(vmin - 1) < 1e-6
+    assert abs(vmax - 1) < 1e-2  # allow for quantile rounding
+
+
 def test_rgb_from_vector():
     rgb = viz.rgb_from_2dvector(x=0, y=0)  # center (grey)
     np.testing.assert_equal(rgb, np.asarray([127, 127, 127], dtype=np.uint8))

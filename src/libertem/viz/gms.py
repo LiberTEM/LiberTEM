@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 
-from .base import Live2DPlot
+from .base import Live2DPlot, _get_stat_limits
 
 
 class GMSLive2DPlot(Live2DPlot):
@@ -85,10 +85,8 @@ class GMSLive2DPlot(Live2DPlot):
             )
             return
         valid_data = self.data[damage]
-        if len(valid_data) > 0:
-            vmin = np.min(valid_data)
-            vmax = np.max(valid_data)
-            self.disp.SetContrastLimits(float(vmin), float(vmax))
+        vmin, vmax = _get_stat_limits(valid_data)
+        self.disp.SetContrastLimits(float(vmin), float(vmax))
         buffer = self.image.GetNumArray()
         buffer[:] = self.data
         self.image.UpdateImage()

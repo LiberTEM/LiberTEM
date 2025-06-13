@@ -1,4 +1,4 @@
-name: Thorough (manual)
+name: Install with GMS deps
 
 on:
   workflow_dispatch:

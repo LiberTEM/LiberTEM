@@ -54,8 +54,9 @@ def _get_stat_limits(
     # better handle very sparse datasets
     zeros = data == 0
     has_zeros = np.any(zeros)
-    # Don't run quantile on empty array
-    if not np.all(zeros):
+    # Don't run quantile on empty array and confirm
+    # dtype is compatible with quantile
+    if not np.all(zeros) and np.issubdtype(data.dtype, np.number):
         lower, upper = np.quantile(data[np.invert(zeros)], (q, 1 - q))
 
         # Expand limits to include 0 if any zeros are present.

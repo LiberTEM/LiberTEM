@@ -79,6 +79,8 @@ from libertem.udf.sumsigudf import SumSigUDF
         (np.concatenate(
             [np.zeros(1000), np.array([-1000, -5000, 1000, 2000])]
         ), 0.1, 3.0, (-1000.0, 2000.0)),
+        (np.array([True, False]), 0.001, 5, (False, True)),
+        (np.array([0, 1, 2, 4, 8, 16, 32, 64, 128, 255]).astype(np.uint8), 0.001, 5, (0, 255)),
     ]
 )
 def test_get_stat_limits_parametric(data, quantile, snip_factor, expected):

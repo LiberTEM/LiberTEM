@@ -1,0 +1,26 @@
+name: Thorough (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - python: "3.10"
+            numpy: "1.23.5"
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Choose Python version ${{ matrix.version.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '${{ matrix.version.python }}'
+          cache: 'pip'
+      - name: install
+        run: pip install . numpy==${{ matrix.version.numpy }} -r test_requirements.txt
+      - name: test
+        run: pytest tests/executor/test_concurrent.py

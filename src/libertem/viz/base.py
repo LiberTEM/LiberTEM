@@ -47,8 +47,8 @@ def _get_stat_limits(
     data = data[np.isfinite(data)]
     if data.size == 0:
         return 1.0, math.nextafter(1.0, math.inf)
-    vmin = data.min()
-    vmax = data.max()
+    vmin = float(np.real(data.min()))
+    vmax = float(np.real(data.max()))
     q = float(quantile)
     # Disregard zeros for the quantile calculation to
     # better handle very sparse datasets
@@ -56,7 +56,11 @@ def _get_stat_limits(
     has_zeros = np.any(zeros)
     # Don't run quantile on empty array and confirm
     # dtype is compatible with quantile
-    if not np.all(zeros) and np.issubdtype(data.dtype, np.number):
+    if (
+            not np.all(zeros)
+            and np.issubdtype(data.dtype, np.number)
+            and not np.issubdtype(data.dtype, np.complexfloating)
+    ):
         lower, upper = np.quantile(data[np.invert(zeros)], (q, 1 - q))
 
         # Expand limits to include 0 if any zeros are present.
@@ -66,8 +70,8 @@ def _get_stat_limits(
         # Select values within the quantile limits
         filtered = data[(data >= lower) & (data <= upper)]
         if filtered.size > 0:
-            filt_vmin = filtered.min()
-            filt_vmax = filtered.max()
+            filt_vmin = float(filtered.min())
+            filt_vmax = float(filtered.max())
             # Only snip outliers if they are actually outliers,
             # i.e. significantly larger or smaller than values within the quantile.
             filt_vmin_diff = np.abs(filt_vmin - vmin)
@@ -87,7 +91,7 @@ def _get_stat_limits(
                     vmax = filt_vmax
     if vmin == vmax:
         vmax = math.nextafter(vmin, math.inf)
-    return float(vmin), float(vmax)
+    return vmin, vmax
 
 
 def _get_norm(result, norm_cls=colors.Normalize, vmin=None, vmax=None, damage=None):

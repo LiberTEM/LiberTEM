@@ -26,7 +26,9 @@ from libertem.udf.sumsigudf import SumSigUDF
         # No zeros, quantile=0 (no outlier rejection)
         (np.array([1, 2, 3, 100000]), 0.0, 5.0, (1.0, 100000.0)),
         # Outliers, quantile > 0, snip_factor high (no snipping)
-        (np.concatenate([np.ones(100), [1000]]), 0.01, 100.0, (1.0, pytest.approx(1.0, abs=1e-2))),
+        (np.concatenate(
+            [np.ones(100), [1000]]
+        ), 0.01, 1000.0, (1.0, pytest.approx(1000., abs=1e-2))),
         # Outliers, quantile > 0, snip_factor low (snipping occurs)
         (np.concatenate([np.ones(100), [1000]]), 0.01, 0.1, (1.0, pytest.approx(1.0, abs=1e-2))),
         # Negative and positive values, zeros present
@@ -81,6 +83,19 @@ from libertem.udf.sumsigudf import SumSigUDF
         ), 0.1, 3.0, (-1000.0, 2000.0)),
         (np.array([True, False]), 0.001, 5, (False, True)),
         (np.array([0, 1, 2, 4, 8, 16, 32, 64, 128, 255]).astype(np.uint8), 0.001, 5, (0, 255)),
+        # No snip uint8
+        (
+            np.concatenate([np.ones(100), [255]]).astype(np.uint8),
+            0.01, 0.1, (1.0, pytest.approx(1.0, abs=1e-2))
+        ),
+        # Snip uint8
+        (
+            np.concatenate([np.ones(100), [255]]).astype(np.uint8),
+            0.01, 1000, (1.0, pytest.approx(255, abs=1e-2))
+        ),
+        # Complex numbers are sorted by real part, no snipping since quantile not supported.
+        # Return only real part for vmin and vmax.
+        (np.array([0-23j, 255+1j]), 0.001, 5, (0, 255)),
     ]
 )
 def test_get_stat_limits_parametric(data, quantile, snip_factor, expected):

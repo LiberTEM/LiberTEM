@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from jupyter_ui_poll import ui_events
 
-from .base import Live2DPlot
+from .base import Live2DPlot, _get_stat_limits
 
 
 logger = logging.getLogger(__name__)
@@ -122,8 +122,9 @@ class MPLLive2DPlot(Live2DPlot):
         valid_data = self.data[damage]
         valid_data = valid_data[np.isfinite(valid_data)]
         if len(valid_data) > 0:
-            i_o.norm.vmin = np.min(valid_data)
-            i_o.norm.vmax = np.max(valid_data)
+            i_o.norm.vmin, i_o.norm.vmax = _get_stat_limits(
+                valid_data
+            )
         with ui_events() as poll:
             i_o.changed()
             self.fig.canvas.draw_idle()

@@ -27,8 +27,11 @@ Changelog
 
 .. _`v0-15-1`:
 
-0.15.1 (in preparation)
-#######################
+0.15.1 / 2025-06-16
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.15676206.svg
+  :target: https://doi.org/10.5281/zenodo.15676206
 
 Fix dependency specifications to allow installation in Gatan Digital Micrograph
 Python environment with Python 3.10 and NumPy 1.23.5 (:pr:`1743`).

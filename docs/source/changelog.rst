@@ -24,6 +24,16 @@ Changelog
 
 .. _latest:
 
+
+.. _`v0-15-1`:
+
+0.15.1 (in preparation)
+#######################
+
+Fix dependency specifications to allow installation in Gatan Digital Micrograph
+Python environment with Python 3.10 and NumPy 1.23.5 (:pr:`1743`).
+
+
 .. _`v0-15-0`:
 
 0.15.0 / 2025-06-04

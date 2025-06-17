@@ -21,9 +21,6 @@ def make_get_read_ranges():
         start_at_frame, stop_before_frame, depth,
         slices_arr, sig_shape, sync_offset=0,
     ):
-        # Use NumPy prod for Numba compilation
-
-        num_indices = int(stop_before_frame - max(0, start_at_frame))
         # in case of a negative sync_offset, start_at_frame can be negative
         if start_at_frame < 0:
             slice_offset = abs(sync_offset)
@@ -32,14 +29,13 @@ def make_get_read_ranges():
 
         # indices into `frame_indices`:
         inner_indices_start = 0
-        inner_indices_stop = min(depth, num_indices)
 
         sig_origins = np.array([
             numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
             for slice_idx in range(slices_arr.shape[0])
         ])
 
-        return inner_indices_start, slice_offset, inner_indices_stop, sig_origins
+        return inner_indices_start, slice_offset, sig_origins
 
     return _get_read_ranges_inner
 

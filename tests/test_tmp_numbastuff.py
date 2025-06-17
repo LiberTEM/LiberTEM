@@ -2,15 +2,24 @@ import numpy as np
 import numba
 
 
-from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index
+@numba.njit(boundscheck=True, nogil=True)
+def numba_ravel_multi_index_single(multi_index, dims):
+    # only supports the "single index" case
+    idxs = range(len(dims) - 1, -1, -1)
+    res = 0
+    for idx in idxs:
+        stride = 1
+        for dimidx in range(idx + 1, len(dims)):
+            stride *= dims[dimidx]
+        res += multi_index[idx] * stride
+    return res
 
 
 def make_get_read_ranges():
     @numba.njit(boundscheck=True, cache=True, nogil=True)
     def _get_read_ranges_inner(
         start_at_frame, stop_before_frame, depth,
-        slices_arr, fileset_arr, sig_shape,
-        bpp, sync_offset=0, extra=None, frame_header_bytes=0, frame_footer_bytes=0,
+        slices_arr, sig_shape, sync_offset=0,
     ):
         # Use NumPy prod for Numba compilation
 
@@ -34,7 +43,7 @@ def make_get_read_ranges():
         ])
 
         sig_origins = np.array([
-            _ravel_multi_index(slices_arr[slice_idx][0], sig_shape)
+            numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
             for slice_idx in range(slices_arr.shape[0])
         ])
 
@@ -50,12 +59,8 @@ def test_numbastuff():
         stop_before_frame=128,
         depth=1,
         slices_arr=np.array([[[0,  0], [16, 16]]]),
-        fileset_arr=np.array([[0, 256, 0, 0]]),
         sig_shape=(16, 16),
-        bpp=16,
         sync_offset=0,
-        frame_header_bytes=0,
-        frame_footer_bytes=0,
     )
 
 

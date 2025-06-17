@@ -34,20 +34,12 @@ def make_get_read_ranges():
         inner_indices_start = 0
         inner_indices_stop = min(depth, num_indices)
 
-        # this should be `prod(..., axis=-1)``, which is not supported by numba yet:
-        # slices that divide the signal dimensions:
-        slice_sig_sizes = np.array([
-            # Use NumPy prod for Numba compilation
-            np.prod(slices_arr[slice_idx, 1, :].astype(np.int64))
-            for slice_idx in range(slices_arr.shape[0])
-        ])
-
         sig_origins = np.array([
             numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
             for slice_idx in range(slices_arr.shape[0])
         ])
 
-        return inner_indices_start, slice_offset, slice_sig_sizes, inner_indices_stop, sig_origins
+        return inner_indices_start, slice_offset, inner_indices_stop, sig_origins
 
     return _get_read_ranges_inner
 

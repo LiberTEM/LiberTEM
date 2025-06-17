@@ -39,7 +39,7 @@ def make_get_read_ranges(
             else:
                 slice_offset = np.sum(roi_nonzero < start_at_frame - sync_offset)
 
-        num_indices = frame_indices.shape[0]
+        num_indices = len(frame_indices)
 
         # indices into `frame_indices`:
         inner_indices_start = 0

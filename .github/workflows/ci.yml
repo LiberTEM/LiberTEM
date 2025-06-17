@@ -17,21 +17,16 @@ jobs:
   tests:
     strategy:
       matrix:
-        os: [macos-15]
-        python:
-          - version: "3.13"
-            toxenv: py313-quick
+        os: [macos-15, ubuntu-latest]
+        python_version: ["3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Choose Python version ${{ matrix.python.version }}
+      - name: Choose Python version ${{ matrix.python_version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '${{ matrix.python.version }}'
+          python-version: '${{ matrix.python_version }}'
           cache: 'pip'
-      - run: |
-           [[ "${{ matrix.os }}" = "ubuntu-latest" ]] && sudo apt-get install -y libcap-dev || true
-        shell: bash
       - name: install dependencies
         run: python3 -m pip install numpy numba
       - name: run script

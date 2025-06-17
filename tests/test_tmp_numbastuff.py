@@ -17,15 +17,8 @@ def numba_ravel_multi_index_single(multi_index, dims):
 
 @numba.njit(boundscheck=True, cache=True, nogil=True)
 def read_ranges(
-    start_at_frame, stop_before_frame, depth,
-    slices_arr, sig_shape, sync_offset=0,
+    slices_arr, sig_shape
 ):
-    # in case of a negative sync_offset, start_at_frame can be negative
-    if start_at_frame < 0:
-        slice_offset = abs(sync_offset)
-    else:
-        slice_offset = start_at_frame - sync_offset
-
     # indices into `frame_indices`:
     inner_indices_start = 0
 
@@ -34,17 +27,13 @@ def read_ranges(
         for slice_idx in range(slices_arr.shape[0])
     ])
 
-    return inner_indices_start, slice_offset, sig_origins
+    return inner_indices_start, sig_origins
 
 
 def test_numbastuff():
     read_ranges(
-        start_at_frame=0,
-        stop_before_frame=128,
-        depth=1,
         slices_arr=np.array([[[0,  0], [16, 16]]]),
         sig_shape=(16, 16),
-        sync_offset=0,
     )
 
 

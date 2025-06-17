@@ -15,33 +15,29 @@ def numba_ravel_multi_index_single(multi_index, dims):
     return res
 
 
-def make_get_read_ranges():
-    @numba.njit(boundscheck=True, cache=True, nogil=True)
-    def _get_read_ranges_inner(
-        start_at_frame, stop_before_frame, depth,
-        slices_arr, sig_shape, sync_offset=0,
-    ):
-        # in case of a negative sync_offset, start_at_frame can be negative
-        if start_at_frame < 0:
-            slice_offset = abs(sync_offset)
-        else:
-            slice_offset = start_at_frame - sync_offset
+@numba.njit(boundscheck=True, cache=True, nogil=True)
+def read_ranges(
+    start_at_frame, stop_before_frame, depth,
+    slices_arr, sig_shape, sync_offset=0,
+):
+    # in case of a negative sync_offset, start_at_frame can be negative
+    if start_at_frame < 0:
+        slice_offset = abs(sync_offset)
+    else:
+        slice_offset = start_at_frame - sync_offset
 
-        # indices into `frame_indices`:
-        inner_indices_start = 0
+    # indices into `frame_indices`:
+    inner_indices_start = 0
 
-        sig_origins = np.array([
-            numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
-            for slice_idx in range(slices_arr.shape[0])
-        ])
+    sig_origins = np.array([
+        numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
+        for slice_idx in range(slices_arr.shape[0])
+    ])
 
-        return inner_indices_start, slice_offset, sig_origins
-
-    return _get_read_ranges_inner
+    return inner_indices_start, slice_offset, sig_origins
 
 
 def test_numbastuff():
-    read_ranges = make_get_read_ranges()
     read_ranges(
         start_at_frame=0,
         stop_before_frame=128,

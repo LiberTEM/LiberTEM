@@ -1,7 +1,8 @@
 import numpy as np
+import numba
 
 
-from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
+from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index
 from libertem.io.dataset.base.tiling import (
     _default_px_to_bytes, _default_read_ranges_tile_block
 )
@@ -11,7 +12,7 @@ def make_get_read_ranges(
     px_to_bytes=_default_px_to_bytes,
     read_ranges_tile_block=_default_read_ranges_tile_block,
 ):
-    @cached_njit(boundscheck=True, cache=True, nogil=True)
+    @numba.njit(boundscheck=True, cache=True, nogil=True)
     def _get_read_ranges_inner(
         start_at_frame, stop_before_frame, depth,
         slices_arr, fileset_arr, sig_shape,

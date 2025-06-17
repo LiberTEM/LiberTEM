@@ -32,7 +32,7 @@ jobs:
       - run: |
            [[ "${{ matrix.os }}" = "ubuntu-latest" ]] && sudo apt-get install -y libcap-dev || true
         shell: bash
-      - name: install dependencies
-        run: python3 -m pip install numba 
-      - name: run script
+      - name: install tox (with uv)
+        run: python3 -m pip install tox tox-uv
+      - name: run tox
         run: tox -e '${{ matrix.python.toxenv }}'

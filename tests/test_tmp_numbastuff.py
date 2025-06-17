@@ -1,6 +1,6 @@
 import numpy as np
 
-from libertem.common.numba import numba_ravel_multi_index_single as cached_njit
+from libertem.common.numba import cached_njit
 from libertem.io.dataset.base.tiling import (
     _default_px_to_bytes, _default_read_ranges_tile_block,
 )

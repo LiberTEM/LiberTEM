@@ -15,15 +15,23 @@ def numba_ravel_multi_index_single(multi_index, dims):
     return res
 
 
-def test_numbastuff():
-    slices_arr = np.array([[[0,  0], [16, 16]]])
-    sig_shape = (16, 16)
-
+@numba.njit(boundscheck=True, cache=True, nogil=True)
+def read_ranges(
+    slices_arr, sig_shape
+):
     sig_origins = np.array([
         numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
         for slice_idx in range(slices_arr.shape[0])
     ])
-    print(sig_origins)
+
+    return sig_origins
+
+
+def test_numbastuff():
+    read_ranges(
+        slices_arr=np.array([[[0,  0], [16, 16]]]),
+        sig_shape=(16, 16),
+    )
 
 
 if __name__ == "__main__":

@@ -35,4 +35,4 @@ jobs:
       - name: install dependencies
         run: python3 -m pip install numba 
       - name: run script
-        run: python tests/test_tmp_numbastuff.py
+        run: tox -e '${{ matrix.python.toxenv }}'

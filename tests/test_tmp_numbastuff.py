@@ -62,3 +62,9 @@ def test_numbastuff():
         frame_header_bytes=0,
         frame_footer_bytes=0,
     )
+
+
+if __name__ == "__main__":
+    print("running tests")
+    test_numbastuff()
+    print("Test passed successfully.")

@@ -1,9 +1,9 @@
 import numpy as np
 
 
-from libertem.common.numba import cached_njit
+from libertem.common.numba import numba_ravel_multi_index_single as _ravel_multi_index, cached_njit
 from libertem.io.dataset.base.tiling import (
-    _default_px_to_bytes, _default_read_ranges_tile_block,
+    _default_px_to_bytes, _default_read_ranges_tile_block
 )
 
 
@@ -28,8 +28,22 @@ def make_get_read_ranges(
 
         # indices into `frame_indices`:
         inner_indices_start = 0
+        inner_indices_stop = min(depth, num_indices)
 
-        return num_indices, inner_indices_start, slice_offset
+        # this should be `prod(..., axis=-1)``, which is not supported by numba yet:
+        # slices that divide the signal dimensions:
+        slice_sig_sizes = np.array([
+            # Use NumPy prod for Numba compilation
+            np.prod(slices_arr[slice_idx, 1, :].astype(np.int64))
+            for slice_idx in range(slices_arr.shape[0])
+        ])
+
+        sig_origins = np.array([
+            _ravel_multi_index(slices_arr[slice_idx][0], sig_shape)
+            for slice_idx in range(slices_arr.shape[0])
+        ])
+
+        return inner_indices_start, slice_offset, slice_sig_sizes, inner_indices_stop, sig_origins
 
     return _get_read_ranges_inner
 

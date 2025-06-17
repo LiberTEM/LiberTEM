@@ -30,16 +30,7 @@ def make_get_read_ranges(
             else:
                 slice_offset = start_at_frame - sync_offset
         else:
-            shifted_roi = roi_nonzero + sync_offset
-            roi_mask = np.logical_and(shifted_roi >= max(0, start_at_frame),
-                                      shifted_roi < stop_before_frame)
-            frame_indices = shifted_roi[roi_mask]
-            num_indices = int(len(frame_indices))
-
-            if start_at_frame < 0:
-                slice_offset = np.sum(roi_nonzero < abs(sync_offset))
-            else:
-                slice_offset = np.sum(roi_nonzero < start_at_frame - sync_offset)
+            raise Exception("Don't")
 
         # indices into `frame_indices`:
         inner_indices_start = 0

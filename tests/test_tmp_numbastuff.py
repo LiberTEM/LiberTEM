@@ -19,15 +19,12 @@ def numba_ravel_multi_index_single(multi_index, dims):
 def read_ranges(
     slices_arr, sig_shape
 ):
-    # indices into `frame_indices`:
-    inner_indices_start = 0
-
     sig_origins = np.array([
         numba_ravel_multi_index_single(slices_arr[slice_idx][0], sig_shape)
         for slice_idx in range(slices_arr.shape[0])
     ])
 
-    return inner_indices_start, sig_origins
+    return sig_origins
 
 
 def test_numbastuff():

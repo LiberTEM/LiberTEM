@@ -88,6 +88,20 @@ class FileSet:
         roi_nonzero = None
         if roi is not None:
             roi_nonzero = flat_nonzero(roi).astype(np.int64)
+        kwargs = dict(
+            start_at_frame=start_at_frame,
+            stop_before_frame=stop_before_frame,
+            roi_nonzero=roi_nonzero,
+            depth=tiling_scheme.depth,
+            slices_arr=tiling_scheme.slices_array,
+            fileset_arr=fileset_arr,
+            sig_shape=tuple(tiling_scheme.dataset_shape.sig),
+            sync_offset=sync_offset,
+            bpp=np.dtype(dtype).itemsize * 8,
+            frame_header_bytes=self._frame_header_bytes,
+            frame_footer_bytes=self._frame_footer_bytes,
+        )
+        print(kwargs)
         return default_get_read_ranges(
             start_at_frame=start_at_frame,
             stop_before_frame=stop_before_frame,

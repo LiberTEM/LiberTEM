@@ -62,7 +62,9 @@ dependencies = [
     "numba>=0.55;python_version < '3.11' and python_version >= '3.10'",
     "numba>=0.57;python_version < '3.12' and python_version >= '3.11'",
     "numba>=0.59;python_version < '3.13' and python_version >= '3.12'",
-    "numba>=0.61;python_version < '3.14' and python_version >= '3.13'",
+    # See https://github.com/numba/numba/pull/10120#issuecomment-2980883054
+    "numba>=0.61;python_version < '3.14' and python_version >= '3.13' and python_full_version != '3.13.4'",
+    "numba>0.61.2;python_full_version == '3.13.4'",
     # for any future Python release, constrain numba to a recent version,
     # otherwise, version resolution might try to install an ancient version
     # that isn't constrained properly:

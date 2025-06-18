@@ -27,6 +27,7 @@ jobs:
             toxenv: py311
           - version: "3.12"
             toxenv: py312
+          # FIXME reset to 3.13 once it is the default for GitHub Actions on OS X
           - version: "3.13.5"
             toxenv: py313
         exclude:

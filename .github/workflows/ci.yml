@@ -17,7 +17,7 @@ jobs:
   tests:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-15]
         python:
           - version: "3.9"
             toxenv: py39
@@ -27,10 +27,10 @@ jobs:
             toxenv: py311
           - version: "3.12"
             toxenv: py312
-          - version: "3.13"
+          - version: "3.13.5"
             toxenv: py313
         exclude:
-          - os: macos-14
+          - os: macos-15
             python:
               version: "3.9"
               toxenv: py39

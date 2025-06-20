@@ -52,12 +52,26 @@ class MockSnoozeExecutor:
         self.transitions_in_progress -= 1
 
 
+def wait_for_condition(condition, wait, deadline=10.):
+    # repeatedly check a condition until it is True or we timeout
+    # return True if met, else False
+    deadline = time.monotonic() + deadline
+    while time.monotonic() < deadline:
+        if condition():
+            return True
+        else:
+            time.sleep(wait * 0.1)
+    return False
+
+
 def test_timer():
     snooze_time = 0.2
     executor = MockSnoozeExecutor(snooze_time)
     assert not executor.snooze_manager.is_snoozing
-    time.sleep(snooze_time * 2)
-    assert executor.snooze_manager.is_snoozing
+    assert wait_for_condition(
+        lambda: executor.snooze_manager.is_snoozing,
+        snooze_time,
+    )
     assert executor.num_down == 1
     assert executor.num_up == 0
     executor.snooze_manager.unsnooze()
@@ -71,6 +85,8 @@ def test_keep_alive():
     executor = MockSnoozeExecutor(snooze_time)
     assert not executor.snooze_manager.is_snoozing
     assert executor.snooze_manager.keep_alive == 0
+    # synchronously waits in the task for at least two snooze timeouts
+    # in order to prevent the timer thread from snoozing the exec
     executor.run_task(timeout=snooze_time * 2)
     assert not executor.snooze_manager.is_snoozing
     assert executor.snooze_manager.keep_alive == 0
@@ -91,42 +107,50 @@ def test_job_prevents_snooze():
 
 
 def test_lock_prevents_transitions():
+    # snooze timeout very long so the timer thread does nothing
+    # all snooze actions are manual
     executor = MockSnoozeExecutor(10_000., updown_timeout=0.1)
     assert not executor.snooze_manager.is_snoozing
     with executor.snooze_manager._snooze_lock:
         # already holding the lock so new thread will wait
         th = threading.Thread(target=executor.snooze_manager.snooze)
         th.start()
-        time.sleep(0.05)
+        time.sleep(0.05)  # just to give time for the thread to start
         assert executor.num_down == 0
         assert executor.num_up == 0
 
     th.join()
+    # we've released the lock, the completed thread should have snoozed the executor
     assert executor.num_down == 1
     assert executor.num_up == 0
 
+    # no lock, executor snoozed, so a simple unsnooze to reset
     executor.snooze_manager.unsnooze()
     assert not executor.snooze_manager.is_snoozing
     assert executor.num_down == 1
     assert executor.num_up == 1
 
+    # Try three concurrent calls to snooze
+    # Only the first will have an effect, the others will return early
     threads = []
     for _ in range(3):
         threads.append(threading.Thread(target=executor.snooze_manager.snooze))
         threads[-1].start()
     _ = tuple(th.join() for th in threads)
     assert executor.snooze_manager.is_snoozing
-    # extra calls should short-circuit if already snoozing
+    # extra calls short-circuit if already snoozing
     assert executor.num_down == 2
     assert executor.num_up == 1
 
+    # Try three concurrent calls to unsnooze
+    # Only the first will have an effect, the others will return early
     threads = []
     for _ in range(3):
         threads.append(threading.Thread(target=executor.snooze_manager.unsnooze))
         threads[-1].start()
     _ = tuple(th.join() for th in threads)
     assert not executor.snooze_manager.is_snoozing
-    # extra calls should short-circuit if already snoozing
+    # extra calls short-circuit if already snoozing
     assert executor.num_down == 2
     assert executor.num_up == 2
 

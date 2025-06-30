@@ -17,16 +17,27 @@ class AutoUDF(UDF):
     ----------
 
     f:
-        Function that accepts a frame as a single parameter. It will
-        be called with np.ones(tuple(dataset.shape.sig)) to determine the output
-        type and shape.
+        Function that accepts a frame as a single parameter. It will be called
+        with np.ones(tuple(dataset.shape.sig)) to determine the output type and
+        shape.
+    monitor: bool, optional
+        .. versionadded:: 0.16.0
+        If True, the UDF will include a
+        :ref:`result-only<udf final post processing>` monitoring buffer with the last
+        valid result for live plotting. Defaults to False.
     '''
-    def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
+    def __init__(self, f, monitor=False):
+        super().__init__(f=f, monitor=monitor)
 
     def auto_buffer(self, var):
         return self.buffer(kind='nav', extra_shape=var.shape, dtype=var.dtype)
+
+    def auto_monitor_buffer(self, var):
+        return self.buffer(
+            kind='single',
+            extra_shape=var.shape, dtype=var.dtype,
+            use='result_only'
+        )
 
     def get_result_buffers(self):
         '''
@@ -34,23 +45,12 @@ class AutoUDF(UDF):
         '''
         mock_frame = np.ones(tuple(self.meta.dataset_shape.sig), dtype=self.meta.input_dtype)
         result = np.array(self.params.f(mock_frame))
-
-        try:
-            # FIXME Thresholds chosen somewhat arbitrarily
-            if result.nbytes > max(1024, mock_frame.nbytes / (2**7)):
-                log.warn(
-                    "Return value of function has size %s, "
-                    "not strongly reduced compared to input size %s"
-                    % (result.nbytes, mock_frame.nbytes)
-                )
-        # Numpy arrays of dtype "object" can throw an AttributeError
-        # upon size calculations
-        except AttributeError:
-            pass
-
-        return {
+        buffers = {
             'result': self.auto_buffer(result)
         }
+        if self.params.monitor:
+            buffers['monitor'] = self.auto_monitor_buffer(result)
+        return buffers
 
     def process_frame(self, frame):
         '''
@@ -58,3 +58,20 @@ class AutoUDF(UDF):
         '''
         res = self.params.f(frame)
         self.results.result[:] = np.array(res)
+
+    def get_results(self):
+        if self.params.monitor:
+            # valid nav mask is flat
+            valid_nav_mask = self.meta.get_valid_nav_mask()
+            valid_indices = np.argwhere(valid_nav_mask)
+            if len(valid_indices):
+                # shape (n, n_dim), with n_dim == 1, see above
+                last_index = valid_indices[-1][0]
+            else:
+                # return initial value
+                last_index = 0
+            return {
+                'monitor': self.results.result[last_index]
+            }
+        else:
+            return {}

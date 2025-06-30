@@ -505,7 +505,7 @@ def merge_until_target(array, target, min_chunks=0):
     chunksizes = get_chunksizes(array)
     while chunksizes.size > min_chunks and chunksizes.min() < target:
         if (chunksizes < 0).any():
-            log.warn('Overflow in chunksize calculation, will be clipped!')
+            log.warning('Overflow in chunksize calculation, will be clipped!')
         chunksizes = np.clip(chunksizes, 0., np.inf)
         last_chunked_dim = get_last_chunked_dim(chunking)
         if last_chunked_dim < 0:

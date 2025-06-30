@@ -387,7 +387,7 @@ class FullMatcher(grm.Matcher):
         # Adjust as needed because the full match is slow for too many points
         if len(polar_vectors) < self.min_candidates:
             if len(points) > self.min_points:
-                log.warn(
+                log.warning(
                     "Matching many points directly, might be computationally intensive: %s" %
                     len(points)
                 )

@@ -71,6 +71,12 @@ def test_auto_monitor(lt_ctx, with_roi):
     for res in lt_ctx.run_udf_iter(dataset=dataset, udf=udf, roi=roi):
         # Confirm it is the last valid data point in nav space
         valid = np.argwhere(res.damage.raw_data.reshape((-1, )))
+        # Not sure if argwhere() is guaranteed to be sorted. Docs say nothing,
+        # but I'd expect it should be since it will
+        # go through the values and append indices that are True to the output.
+        # Adding to the test to hopefully catch discrepancies.
+        # In any case, monitoring is ephemeral, so it should not matter too much
+        valid.sort(axis=0)
         if len(valid):
             index = valid[-1][0]
         else:

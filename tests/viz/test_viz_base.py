@@ -1,12 +1,116 @@
 import numpy as np
 import pytest
 from unittest.mock import Mock
+import math
 
 from libertem import viz
 from libertem.viz.base import Dummy2DPlot
 from libertem.udf.base import NoOpUDF
 from libertem.udf.sum import SumUDF
 from libertem.udf.sumsigudf import SumSigUDF
+
+
+@pytest.mark.parametrize(
+    "data,quantile,snip_factor,expected",
+    [
+        # Empty array
+        (np.array([]), 0.001, 5.0, (1.0, math.nextafter(1.0, math.inf))),
+        # Single value
+        (np.array([3.0]), 0.001, 5.0, (3.0, math.nextafter(3.0, math.inf))),
+        # all-inf
+        (np.array([np.inf, -np.inf]), 0.001, 5.0, (1.0, math.nextafter(1.0, math.inf))),
+        # All zeros
+        (np.zeros(10), 0.001, 5.0, (0.0, math.nextafter(0.0, math.inf))),
+        # All constant
+        (np.full(10, 42.), 0.001, 5.0, (42.0, math.nextafter(42.0, math.inf))),
+        # No zeros, quantile=0 (no outlier rejection)
+        (np.array([1, 2, 3, 100000]), 0.0, 5.0, (1.0, 100000.0)),
+        # Outliers, quantile > 0, snip_factor high (no snipping)
+        (np.concatenate(
+            [np.ones(100), [1000]]
+        ), 0.01, 1000.0, (1.0, pytest.approx(1000., abs=1e-2))),
+        # Outliers, quantile > 0, snip_factor low (snipping occurs)
+        (np.concatenate([np.ones(100), [1000]]), 0.01, 0.1, (1.0, pytest.approx(1.0, abs=1e-2))),
+        # Negative and positive values, zeros present
+        (np.array([-5, 0, 5, 10]), 0.25, 5.0, (-5.0, 10.0)),
+        # Very sparse data (mostly zeros), aggressive snipping quantile and low
+        # snip factor, but snip rejected because zeros are ignored in the
+        # statistics and therefore effectively quantile of single value
+        (np.concatenate([np.zeros(1000), np.array([5000, ])]), 0.1, 1.0, (0.0, 5000.0)),
+        # Snipped because of large difference to next-smaller values compared to snip factor
+        (np.concatenate([np.zeros(1000), np.array([1000, 5000, ])]), 0.1, 1.0, (0.0, 1000.0)),
+        # Not snipped because of large-enough snip factor
+        (np.concatenate([np.zeros(1000), np.array([1000, 5000, ])]), 0.1, 5.0, (0.0, 5000.0)),
+        # Snipped because of small snip factor
+        (np.concatenate([np.zeros(1000), np.full(30, 1000), [5000]]), 0.001, 1.0, (0.0, 1000.0)),
+        # Only last snipped because of inclusive quantile
+        (np.concatenate(
+            [np.zeros(1000), np.full(30, 1000), [4500, 10000]]
+        ), 0.001, 1.0, (0.0, 4500.0)),
+        # last two snipped because of exclusive quantile
+        (np.concatenate(
+            [np.zeros(1000), np.full(30, 1000), [4500, 10000]]
+        ), 0.1, 1.0, (0.0, 1000.0)),
+        # Negative values, symmetry
+
+        # Very sparse data (mostly zeros), aggressive snipping quantile and low
+        # snip factor, but snip rejected because zeros are ignored in the statistics
+        (np.concatenate([np.zeros(1000), np.array([-5000, ])]), 0.1, 1.0, (-5000.0, 0.0)),
+        # Snipped because of large difference to next-smaller values
+        (np.concatenate([np.zeros(1000), np.array([-1000, -5000, ])]), 0.1, 1.0, (-1000.0, 0.0)),
+        # Not snipped because of large snip factor
+        (np.concatenate([np.zeros(1000), np.array([-1000, -5000, ])]), 0.1, 5.0, (-5000.0, 0.0)),
+        # Snipped because of small snip factor
+        (np.concatenate([np.zeros(1000), np.full(30, -1000), [-5000]]), 0.001, 1.0, (-1000.0, 0.0)),
+        # Mixed positive and negative values, symmetric
+        # Snipped because of large difference to next-smaller values
+        (np.concatenate(
+            [np.zeros(1000), np.array([-1000, -5000, 1000, 5000])]
+        ), 0.1, 1.0, (-1000.0, 1000.0)),
+        # Not snipped because of large snip factor
+        (np.concatenate(
+            [np.zeros(1000), np.array([-1000, -5000, 1000, 5000])]
+        ), 0.1, 5.0, (-5000.0, 5000.0)),
+        # Snipped because of small snip factor
+        (np.concatenate([
+            np.zeros(1000),
+            np.full(30, -2000), [-6000],
+            np.full(30, 1000), [5000]
+        ]), 0.001, 1.0, (-2000.0, 1000.0)),
+        # Partially snipped because of snip factor, asymmetric
+        (np.concatenate(
+            [np.zeros(1000), np.array([-1000, -5000, 1000, 2000])]
+        ), 0.1, 3.0, (-1000.0, 2000.0)),
+        (np.array([True, False]), 0.001, 5, (0, 1)),
+        (np.array([0, 1, 2, 4, 8, 16, 32, 64, 128, 255]).astype(np.uint8), 0.001, 5, (0, 255)),
+        # No snip uint8
+        (
+            np.concatenate([np.ones(100), [255]]).astype(np.uint8),
+            0.01, 0.1, (1.0, pytest.approx(1.0, abs=1e-2))
+        ),
+        # Snip uint8
+        (
+            np.concatenate([np.ones(100), [255]]).astype(np.uint8),
+            0.01, 1000, (1.0, pytest.approx(255, abs=1e-2))
+        ),
+        # Complex numbers are sorted by real part, no snipping since quantile not supported.
+        # Return only real part for vmin and vmax.
+        (np.array([0-23j, 255+1j]), 0.001, 5, (0, 255)),
+    ]
+)
+def test_get_stat_limits_parametric(data, quantile, snip_factor, expected):
+    # Shuffle to ensure order does not affect results
+    rng = np.random.default_rng()
+    rng.shuffle(data)
+    vmin, vmax = viz.base._get_stat_limits(data, quantile=quantile, snip_factor=snip_factor)
+    if isinstance(expected[0], float) or isinstance(expected[0], int):
+        assert vmin == pytest.approx(expected[0], abs=1e-6)
+    else:
+        assert vmin == expected[0]
+    if isinstance(expected[1], float) or isinstance(expected[1], int):
+        assert vmax == pytest.approx(expected[1], abs=1e-6)
+    else:
+        assert vmax == expected[1]
 
 
 def test_rgb_from_vector():

@@ -65,7 +65,7 @@ class AutoUDF(UDF):
             valid_nav_mask = self.meta.get_valid_nav_mask()
             valid_indices = np.nonzero(valid_nav_mask)
             if len(valid_indices):
-                # shape (n, n_dim), with n_dim == 1, see above
+                # shape (n_dim, n), with n_dim == 1, see above
                 last_index = valid_indices[0][-1]
             else:
                 # return initial value

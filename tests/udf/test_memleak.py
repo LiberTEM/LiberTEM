@@ -48,7 +48,7 @@ def total_size(o):
 
 
 def worker_memory(client):
-    info = client.scheduler_info()
+    info = client.scheduler_info(n_workers=-1)
     memory = 0
     for name, w_info in info['workers'].items():
         memory += w_info['metrics']['memory']

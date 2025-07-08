@@ -366,7 +366,10 @@ class CommonDaskMixin:
         )
 
     def get_available_workers(self) -> WorkerSet:
-        info = self.client.scheduler_info()
+        try:
+            info = self.client.scheduler_info(n_workers=-1)
+        except TypeError:
+            info = self.client.scheduler_info()
         return WorkerSet([
             Worker(
                 name=worker['name'],

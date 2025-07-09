@@ -24,6 +24,16 @@ Changelog
 
 .. _latest:
 
+.. _`v0-15-2`:
+
+0.15.2 (in preparation)
+#######################
+
+Fix for a backwards-incompatible change of :code:`scheduler_info()` in
+Dask Distributed 2025.4.0 (:pr:`1751`, see also
+`dask/distributed#9045 <https://github.com/dask/distributed/pull/9045>`_).
+
+Special thanks to Mat who tracked this down!
 
 .. _`v0-15-1`:
 

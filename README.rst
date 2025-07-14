@@ -15,9 +15,6 @@
 .. |github| image:: https://img.shields.io/badge/GitHub-MIT-informational
 .. _github: https://github.com/LiberTEM/LiberTEM/
 
-.. |codeclimate| image:: https://api.codeclimate.com/v1/badges/dee042f64380f64737e5/maintainability
-.. _codeclimate: https://codeclimate.com/github/LiberTEM/LiberTEM
-
 .. |joss| image:: https://joss.theoj.org/papers/10.21105/joss.02006/status.svg
 .. _joss: https://doi.org/10.21105/joss.02006
 

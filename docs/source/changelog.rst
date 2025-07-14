@@ -26,8 +26,11 @@ Changelog
 
 .. _`v0-15-2`:
 
-0.15.2 (in preparation)
-#######################
+0.15.2 / 2025-07-14
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.15877919.svg
+  :target: https://doi.org/10.5281/zenodo.15877919
 
 Fix for a backwards-incompatible change of :code:`scheduler_info()` in
 Dask Distributed 2025.4.0 (:pr:`1751`, see also

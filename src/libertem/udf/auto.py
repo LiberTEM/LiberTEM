@@ -10,18 +10,18 @@ log = logging.getLogger(__name__)
 
 class AutoUDF(UDF):
     '''
-    Generate a UDF for reduction along the signal axis from a regular function
+    Generate a UDF for reduction along the signal axes from a regular function
     that processes one frame, generating result buffers automatically.
 
     Parameters
     ----------
-
-    f:
+    f: Callable
         Function that accepts a frame as a single parameter. It will be called
-        with np.ones(tuple(dataset.shape.sig)) to determine the output type and
+        with :code:`np.ones(tuple(dataset.shape.sig))` to determine the output type and
         shape.
     monitor: bool, optional
         .. versionadded:: 0.16.0
+
         If True, the UDF will include a
         :ref:`result-only<udf final post processing>` monitoring buffer with the last
         valid result for live plotting. Defaults to False.

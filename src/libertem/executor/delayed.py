@@ -175,14 +175,17 @@ class DelayedUDFRunner(UDFRunner):
 
     def results_for_dataset_sync(self, dataset: DataSet, executor: 'DelayedJobExecutor',
             roi: Optional[np.ndarray] = None, progress: bool = False,
-            corrections: Optional[CorrectionSet] = None, backends: Optional[BackendSpec] = None,
+            corrections: Optional[CorrectionSet] = None,
+            backends: Optional[BackendSpec] = None,
+            main_process_gpu: Optional[int] = None,
             dry: bool = False) -> Iterable[tuple]:
 
         executor.register_master_udfs(self._udfs)
 
         return super().results_for_dataset_sync(
             dataset, executor, roi=roi, progress=progress,
-            corrections=corrections, backends=backends, dry=dry
+            corrections=corrections, backends=backends, main_process_gpu=main_process_gpu,
+            dry=dry
         )
 
 

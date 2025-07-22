@@ -63,6 +63,13 @@ spec.loader.exec_module(utils)
 dask.config.set({"distributed.worker.profile.enabled": False})
 
 
+d = detect()
+if d['has_cupy'] and d['cudas']:
+    main_process_gpu = d['cudas'][0]
+else:
+    main_process_gpu = None
+
+
 def get_or_create_hdf5(tmpdir_factory, filename, *args, **kwargs):
     datadir = tmpdir_factory.mktemp('data')
     filename = os.path.join(datadir, filename)
@@ -833,7 +840,13 @@ def delayed_executor():
 
 @pytest.fixture
 def lt_ctx(inline_executor):
-    return lt.Context(executor=inline_executor, plot_class=Dummy2DPlot)
+    # Enable GPU on main process if GPU is available
+    # to catch any issues with that feature
+    return lt.Context(
+        executor=inline_executor,
+        plot_class=Dummy2DPlot,
+        main_process_gpu=main_process_gpu,
+    )
 
 
 @pytest.fixture

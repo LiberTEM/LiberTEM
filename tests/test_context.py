@@ -3,10 +3,12 @@ import copy
 from unittest import mock
 import contextlib
 
+
 import pytest
 import numpy as np
 import sparse
 import scipy.sparse
+
 from libertem.common.buffers import BufferWrapper
 from libertem.common.executor import (
     TaskProtocol, WorkerQueue, TaskCommHandler,
@@ -18,6 +20,7 @@ from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.base import NoOpUDF, MergeAttrMapping
 from libertem.api import Context
 from libertem.common.exceptions import ExecutorSpecException
+from libertem.utils.devices import detect
 
 
 def test_ctx_load(lt_ctx, default_raw):
@@ -553,3 +556,73 @@ def test_res_iter_throw(lt_ctx: Context, default_raw):
     with pytest.raises(RuntimeError):
         for res in result_iter:
             result_iter.throw(RuntimeError("stuff"))
+
+
+class CheckXPUDF(UDF):
+    def get_result_buffers(self):
+        return {
+            'process_cupy': self.buffer(kind='nav', dtype='bool'),
+            'merge_cupy': self.buffer(kind='nav', dtype='bool'),
+            'result_cupy': self.buffer(
+                kind='single', dtype='bool', extra_shape=(1, ), use='result_only'
+            ),
+        }
+
+    def xp_is_cupy(self):
+        obj = str(self.xp)
+        is_cupy = 'cupy' in obj
+        is_numpy = 'numpy' in obj
+        assert is_cupy != is_numpy
+        return is_cupy
+
+    def process_frame(self, frame):
+        self.results.process_cupy[:] = self.xp_is_cupy()
+
+    def merge(self, dest, src):
+        dest.process_cupy[:] = src.process_cupy[:]
+        dest.merge_cupy[:] = self.xp_is_cupy()
+
+    def get_results(self):
+        res = np.zeros((1, ), dtype='bool')
+        res[0] = self.xp_is_cupy()
+        return {
+            'result_cupy': res,
+        }
+
+
+@pytest.mark.parametrize(
+    'main_process_gpu', (True, False, 0, None)
+)
+@pytest.mark.parametrize(
+        'executor', ('inline', 'threads', 'delayed', 'pipelined', 'dask', 'dask-integration')
+)
+def test_with_main_gpu(executor, main_process_gpu):
+    d = detect()
+    has_cupy = d['has_cupy']
+    if not has_cupy and main_process_gpu in (True, 0):
+        with pytest.raises(ExecutorSpecException):
+            ctx = Context.make_with(executor, main_process_gpu=main_process_gpu)
+    else:
+        if executor in ['dask', 'pipelined']:
+            cpus = [0, 1]
+        else:
+            cpus = None
+        try:
+            ctx = Context.make_with(executor, cpus=cpus, main_process_gpu=main_process_gpu)
+            udf = CheckXPUDF()
+            ds = ctx.load('memory', data=np.zeros((1, 1, 1, 1)))
+            res = ctx.run_udf(dataset=ds, udf=udf)
+            use_cupy = has_cupy and (
+                main_process_gpu is True
+                or main_process_gpu is None
+                or type(main_process_gpu) is int
+            )
+            if use_cupy:
+                assert np.all(res['merge_cupy'])
+                assert np.all(res['result_cupy'])
+            else:
+                assert not np.any(res['merge_cupy'])
+                assert not np.any(res['result_cupy'])
+            assert not np.any(res['process_cupy'])
+        finally:
+            ctx.close()

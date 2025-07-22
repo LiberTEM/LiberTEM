@@ -591,7 +591,7 @@ class ReshapedViewUDF(UDF):
 def test_noncontiguous_tiles(lt_ctx, backend):
     if backend == 'cupy':
         d = detect()
-        cudas = detect()['cudas']
+        cudas = d['cudas']
         if not d['cudas'] or not d['has_cupy']:
             pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
 
@@ -710,7 +710,7 @@ class CheckSigSliceFrame(UDF):
 def test_sig_slice(lt_ctx, backend, udf_class, tileshape, success):
     if backend == 'cupy':
         d = detect()
-        cudas = detect()['cudas']
+        cudas = d['cudas']
         if not d['cudas'] or not d['has_cupy']:
             pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
 

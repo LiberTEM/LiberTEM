@@ -1112,6 +1112,12 @@ class UDFBase(UDFProtocol):
         assert backend in _get_canonical_backends(self.get_backends())
         self._backend = backend
 
+    def set_main_process_gpu(self, main_process_gpu):
+        if main_process_gpu is None:
+            self._backend = 'numpy'
+        else:
+            self._backend = 'cupy'
+
     def get_backends(self) -> BackendSpec:
         raise NotImplementedError()  # see impl in UDF.get_backends
 
@@ -2058,6 +2064,24 @@ class UDFTask(Task):
         return self._task_frames
 
 
+@contextmanager
+def use_gpu(device: Optional[int]):
+    if device is None:
+        # noop
+        yield
+    else:
+        previous_id = None
+        try:
+            # Avoid importing if not used
+            import cupy
+            previous_id = cupy.cuda.Device().id
+            cupy.cuda.Device(device).use()
+            yield
+        finally:
+            if previous_id is not None:
+                cupy.cuda.Device(previous_id).use()
+
+
 class UDFPartRunner:
     def __init__(self, udfs: list[UDF], debug: bool = False, progress: bool = False):
         self._udfs = udfs
@@ -2077,33 +2101,29 @@ class UDFPartRunner:
             backend_choice = BACKENDS
         backend_choice = frozenset(_get_canonical_backends(backend_choice))
         with env.enter():
-            try:
-                previous_id = None
-                device_class = get_device_class()
-                if device_class == 'cpu':
-                    available_backends = backend_choice.intersection(CPU_BACKENDS)
-                elif device_class == 'cuda':
-                    if has_cupy():
-                        available_backends = backend_choice.intersection(BACKENDS)
-                    else:
-                        available_backends = backend_choice.intersection(
-                            CPU_BACKENDS.union((CUDA, ))
-                        )
+            device_class = get_device_class()
+            if device_class == 'cpu':
+                available_backends = backend_choice.intersection(CPU_BACKENDS)
+            elif device_class == 'cuda':
+                if has_cupy():
+                    available_backends = backend_choice.intersection(BACKENDS)
                 else:
-                    raise RuntimeError(f"Unknown device class {device_class}.")
-                # This will raise an exception if unavailable backends would be used
-                ds_backend, execution_plan = _execution_plan(
-                    udfs=self._udfs,
-                    ds=partition.meta,
-                    device_class=device_class,
-                    available_backends=available_backends,
-                )
-                if CUPY_BACKENDS.intersection(execution_plan.keys()):
-                    # Avoid importing if not used
-                    import cupy
-                    device = get_use_cuda()
-                    previous_id = cupy.cuda.Device().id
-                    cupy.cuda.Device(device).use()
+                    available_backends = backend_choice.intersection(
+                        CPU_BACKENDS.union((CUDA, ))
+                    )
+            else:
+                raise RuntimeError(f"Unknown device class {device_class}.")
+            # This will raise an exception if unavailable backends would be used
+            ds_backend, execution_plan = _execution_plan(
+                udfs=self._udfs,
+                ds=partition.meta,
+                device_class=device_class,
+                available_backends=available_backends,
+            )
+            device = None
+            if CUPY_BACKENDS.intersection(execution_plan.keys()):
+                device = get_use_cuda()
+            with use_gpu(device):
                 dtype = self._init_udfs(
                     execution_plan, partition, roi, corrections, device_class, env,
                     params.tiling_scheme,
@@ -2115,9 +2135,6 @@ class UDFPartRunner:
                     ds_backend, execution_plan, partition, params.tiling_scheme, roi, dtype
                 )
                 self._wrapup_udfs(partition)
-            finally:
-                if previous_id is not None:
-                    cupy.cuda.Device(previous_id).use()
             # Make sure results are in the same order as the UDFs
             return tuple(udf.results for udf in self._udfs)
 
@@ -2437,6 +2454,7 @@ class UDFRunner:
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
         backends: Optional[BackendSpec],
+        main_process_gpu: Optional[int],
         dry: bool,
     ) -> tuple[list[UDFTask], UDFParams]:
         self._check_preconditions(dataset, roi)
@@ -2467,6 +2485,7 @@ class UDFRunner:
             # that will be determined dynamically on the workers.
         )
         for udf in self._udfs:
+            udf.set_main_process_gpu(main_process_gpu)
             udf.set_meta(meta)
             # ideally the UDF would know the set of workers it might run on
             # here, e.g. backend information, to choose the best method,
@@ -2523,6 +2542,7 @@ class UDFRunner:
         progress: bool = False,
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
+        main_process_gpu: Optional[int] = None,
         dry: bool = False
     ) -> "UDFResults":
         with tracer.start_as_current_span("UDFRunner.run_for_dataset"):
@@ -2533,6 +2553,7 @@ class UDFRunner:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
+                main_process_gpu=main_process_gpu,
                 dry=dry,
                 iterate=False
             ):
@@ -2547,6 +2568,7 @@ class UDFRunner:
         progress: bool = False,
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
+        main_process_gpu: Optional[int] = None,
         dry: bool = False,
     ) -> tuple[
         Iterable[tuple[tuple[UDFData, ...], TaskProtocol]],
@@ -2555,7 +2577,13 @@ class UDFRunner:
     ]:
         with tracer.start_as_current_span("_prepare_run_for_dataset"):
             tasks, params = self._prepare_run_for_dataset(
-                dataset, executor, roi, corrections, backends, dry
+                dataset=dataset,
+                executor=executor,
+                roi=roi,
+                corrections=corrections,
+                backends=backends,
+                main_process_gpu=main_process_gpu,
+                dry=dry,
             )
 
         with tracer.start_as_current_span("before inner work"):
@@ -2611,57 +2639,60 @@ class UDFRunner:
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
-        iterate: bool = True
+        iterate: bool = True,
+        main_process_gpu: Optional[int] = None,
     ) -> ResultsForDataSet:
-        executor = executor.ensure_sync()
-        result_iter, params_handle, params = self.results_for_dataset_sync(
-            dataset=dataset,
-            executor=executor,
-            roi=roi,
-            progress=progress,
-            corrections=corrections,
-            backends=backends,
-            dry=dry,
-        )
-        damage = BufferWrapper(kind='nav', dtype=bool)
-        damage.set_shape_ds(dataset.shape, roi)
-        damage.allocate()
+        with use_gpu(main_process_gpu):
+            executor = executor.ensure_sync()
+            result_iter, params_handle, params = self.results_for_dataset_sync(
+                dataset=dataset,
+                executor=executor,
+                roi=roi,
+                progress=progress,
+                corrections=corrections,
+                backends=backends,
+                main_process_gpu=main_process_gpu,
+                dry=dry,
+            )
+            damage = BufferWrapper(kind='nav', dtype=bool)
+            damage.set_shape_ds(dataset.shape, roi)
+            damage.allocate()
 
-        def _inner():
-            num_results = 0
-            try:
-                for part_results, task in result_iter:
-                    num_results += 1
-                    with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
-                        self._apply_part_result(
-                            udfs=self._udfs,
-                            damage=damage,
-                            part_results=part_results,
-                            task=task
-                        )
-                    if iterate:
+            def _inner():
+                num_results = 0
+                try:
+                    for part_results, task in result_iter:
+                        num_results += 1
+                        with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
+                            self._apply_part_result(
+                                udfs=self._udfs,
+                                damage=damage,
+                                part_results=part_results,
+                                task=task
+                            )
+                        if iterate:
+                            yield self._make_udf_result(
+                                udfs=self._udfs,
+                                damage=damage
+                            )
+                    if num_results == 0 or not iterate:
                         yield self._make_udf_result(
                             udfs=self._udfs,
                             damage=damage
                         )
-                if num_results == 0 or not iterate:
-                    yield self._make_udf_result(
-                        udfs=self._udfs,
-                        damage=damage
-                    )
-            except JobCancelledError:
-                raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
-            finally:
-                result_iter.close()
+                except JobCancelledError:
+                    raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
+                finally:
+                    result_iter.close()
 
-        gen = _inner()
-        return ResultsForDataSet(
-            gen=gen,
-            params_handle=params_handle,
-            params=params,
-            executor=executor,
-            udfs=self._udfs,
-        )
+            gen = _inner()
+            return ResultsForDataSet(
+                gen=gen,
+                params_handle=params_handle,
+                params=params,
+                executor=executor,
+                udfs=self._udfs,
+            )
 
     async def run_for_dataset_async(
         self,

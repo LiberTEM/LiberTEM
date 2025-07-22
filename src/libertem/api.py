@@ -199,6 +199,14 @@ class Context:
 
         .. versionadded:: 0.7.0
 
+    main_process_gpu : int or None
+
+        .. versionadded:: 0.16.0
+
+        GPU to make available for UDFs on the main process,
+        i.e. for merging and computing results. Currently, this switches
+        :attr:`libertem.udf.base.UDF.xp` to CuPy if available.
+
     Attributes
     ----------
 
@@ -223,12 +231,14 @@ class Context:
         self,
         executor: Optional[JobExecutor] = None,
         plot_class: Optional['Live2DPlot'] = None,
+        main_process_gpu: Optional[int] = None,
     ):
         import traceback
         if executor is None:
             executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
+        self._main_process_gpu = main_process_gpu
         self._created_at = traceback.format_stack()
         self._register_at_exit()
 
@@ -241,6 +251,7 @@ class Context:
         gpus: Optional[Union[int, Iterable[int]]] = None,
         plot_class: Optional['Live2DPlot'] = None,
         snooze_timeout: Optional[float] = None,
+        main_process_gpu: Optional[Union[int, bool]] = None,
     ) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
@@ -323,6 +334,22 @@ class Context:
             environment, for example. The executor is automatically brought back
             up when used again after snoozing. Currently only supported for the
             :class:`~libertem.executor.dask.DaskJobExecutor`.
+        main_process_gpu : int or bool, optional
+
+            .. versionadded:: 0.16.0
+
+            Activate GPU processing on the main process. Currently, this switches
+            :attr:`libertem.udf.base.UDF.xp` to CuPy if available.
+
+            True:
+                Use any available GPU, throw an error if none are available.
+            int:
+                Specify GPU ID to use, throw an error if it is not present.
+            False:
+                Don't use GPU on the main process.
+            None:
+                Default behavior. Currently activates GPU processing if a GPU is
+                available to catch any potential issues with this feature.
 
         Raises
         ------
@@ -397,7 +424,38 @@ class Context:
                 f'"synchronous", "inline", "threads", "dask", "dask-integration",'
                 f'"dask-make-default" "delayed" or "pipelined".'
             )
-        return cls(executor=executor, plot_class=plot_class)
+        if main_process_gpu is False:
+            main_process_gpu = None
+        elif main_process_gpu is True:
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if spec_args['cudas'] and spec_args['has_cupy']:
+                main_process_gpu = spec_args['cudas'][0]
+            else:
+                raise ExecutorSpecException(
+                    'Cannot specify GPU for main process as no GPUs detected or no CuPy found.'
+                )
+        elif main_process_gpu is None:
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if spec_args['cudas'] and spec_args['has_cupy']:
+                main_process_gpu = spec_args['cudas'][0]
+            else:
+                # for clarity
+                main_process_gpu = None
+        # check last because instanceof(<bool>, int) is True
+        elif isinstance(main_process_gpu, int):
+            # Verify it is a valid GPU ID
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if main_process_gpu not in spec_args['cudas'] or not spec_args['has_cupy']:
+                raise ExecutorSpecException(
+                    f'GPU {main_process_gpu} for main process not detected, '
+                    f'only found {spec_args['cudas']}.'
+                )
+        else:
+            raise ValueError(f'Invalid type for main_process_gpu: {type(main_process_gpu)}')
+        return cls(executor=executor, plot_class=plot_class, main_process_gpu=main_process_gpu)
 
     @property
     def plot_class(self) -> type['Live2DPlot']:
@@ -1269,7 +1327,8 @@ class Context:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
-                iterate=(iterate or enable_plotting)
+                iterate=(iterate or enable_plotting),
+                main_process_gpu=self._main_process_gpu,
             )
 
             def _inner():

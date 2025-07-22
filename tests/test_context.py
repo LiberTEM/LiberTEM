@@ -594,12 +594,27 @@ class CheckXPUDF(UDF):
     'main_process_gpu', (True, False, 0, None)
 )
 @pytest.mark.parametrize(
-        'executor', ('inline', 'threads', 'delayed', 'pipelined', 'dask', 'dask-integration')
+        'executor', ('inline', 'threads', 'delayed', 'dask-integration')
 )
 def test_with_main_gpu(executor, main_process_gpu):
+    with_main_gpu(executor, main_process_gpu)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    'main_process_gpu', (True, False, 0, None)
+)
+@pytest.mark.parametrize(
+        'executor', ('pipelined', 'dask')
+)
+def test_with_main_gpu_slow(executor, main_process_gpu):
+    with_main_gpu(executor, main_process_gpu)
+
+
+def with_main_gpu(executor, main_process_gpu):
     d = detect()
     has_cupy = d['has_cupy']
-    if not has_cupy and main_process_gpu in (True, 0):
+    if not has_cupy and (main_process_gpu is True or type(main_process_gpu) is int):
         with pytest.raises(ExecutorSpecException):
             ctx = Context.make_with(executor, main_process_gpu=main_process_gpu)
     else:

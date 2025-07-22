@@ -450,8 +450,8 @@ class Context:
             spec_args = detect()
             if main_process_gpu not in spec_args['cudas'] or not spec_args['has_cupy']:
                 raise ExecutorSpecException(
-                    f'GPU {main_process_gpu} for main process not detected, '
-                    f'only found {spec_args['cudas']}.'
+                    f"GPU {main_process_gpu} for main process not detected, "
+                    f"only found {spec_args['cudas']}."
                 )
         else:
             raise ValueError(f'Invalid type for main_process_gpu: {type(main_process_gpu)}')

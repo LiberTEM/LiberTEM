@@ -63,7 +63,8 @@ echo "AppDir created, creating AppImage..."
 
 cd .. || exit 1
 
-wget -c -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+wget -c -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
+
 chmod a+x appimagetool-x86_64.AppImage
 export VERSION=$(git rev-parse --short HEAD) # linuxdeployqt uses this for naming the file
 ./appimagetool-x86_64.AppImage "$APPDIR" -g --no-appstream

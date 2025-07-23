@@ -30,7 +30,12 @@ def get_use_cuda() -> Optional[int]:
         CUDA device ID to use.
     '''
     ret = os.environ.get("LIBERTEM_USE_CUDA")
+    opp = os.environ.get("LIBERTEM_USE_CPU")
     if ret is not None:
+        if opp is not None:
+            raise RuntimeError(
+                "Both LIBERTEM_USE_CPU and LIBERTEM_USE_CUDA set, expecting at most one"
+            )
         return int(ret)
     else:
         return None
@@ -63,7 +68,12 @@ def get_use_cpu():
         Default is 0 if no settings were applied before.
     '''
     ret = os.environ.get("LIBERTEM_USE_CPU")
+    opp = os.environ.get("LIBERTEM_USE_CUDA")
     if ret is not None:
+        if opp is not None:
+            raise RuntimeError(
+                "Both LIBERTEM_USE_CPU and LIBERTEM_USE_CUDA set, expecting at most one"
+            )
         ret = int(ret)
     elif get_use_cuda() is None:
         # If no variable is set, return CPU 0

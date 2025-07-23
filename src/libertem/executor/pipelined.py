@@ -17,7 +17,7 @@ import time
 from tblib import pickling_support
 import cloudpickle
 from opentelemetry import trace
-from libertem.common.backend import set_use_cpu, set_use_cuda, set_file_limit
+from libertem.common.backend import set_use_cpu, set_use_cuda, set_file_limit, get_use_cuda
 
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
@@ -612,10 +612,12 @@ def pipelined_worker(
             set_thread_name(f"worker-{worker_idx}")
 
             worker_context = PipelinedWorkerContext(queues.request, queues.message)
+            gpu_id = get_use_cuda()
             env = Environment(
                 threaded_executor=False,
                 threads_per_worker=1,
-                worker_context=worker_context
+                worker_context=worker_context,
+                gpu_id=gpu_id
             )
 
             queues.response.put({

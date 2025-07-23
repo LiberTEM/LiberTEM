@@ -79,10 +79,12 @@ class InlineJobExecutor(BaseJobExecutor):
             threads = psutil.cpu_count(logical=False)
         worker_context = InlineWorkerContext(queue=worker_queue,
                                              msg_queue=msg_queue)
+        gpu_id = get_use_cuda()
         env = Environment(
             threads_per_worker=threads,
             threaded_executor=False,
             worker_context=worker_context,
+            gpu_id=gpu_id,
         )
         with task_comm_handler.monitor(msg_queue):
             for task in tasks:

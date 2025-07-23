@@ -26,7 +26,6 @@ from libertem.common.tracing import attach_to_parent, TracedThreadPoolExecutor
 from libertem.common.progress import ProgressManager, PartitionProgressTracker, PartitionTrackerNoOp
 from libertem.io.dataset.base.tiling import DataTile
 from libertem.io.dataset.base import DataSetMeta
-from libertem.utils.devices import has_cupy
 from libertem.warnings import UseDiscouragedWarning
 from libertem.common.exceptions import UDFException
 from libertem.common.buffers import (
@@ -41,7 +40,6 @@ from libertem.io.dataset.base import (
 )
 from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base.roi import roi_for_partition
-from libertem.common.backend import get_use_cuda, get_device_class
 from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.common.executor import (
@@ -49,6 +47,7 @@ from libertem.common.executor import (
     JobCancelledError, ResourceDef,
 )
 from libertem.common.exceptions import UDFRunCancelled
+from libertem.common.cupy import use_gpu
 
 if TYPE_CHECKING:
     from numpy import typing as nt
@@ -2064,24 +2063,6 @@ class UDFTask(Task):
         return self._task_frames
 
 
-@contextmanager
-def use_gpu(device: Optional[int]):
-    if device is None:
-        # noop
-        yield
-    else:
-        previous_id = None
-        try:
-            # Avoid importing if not used
-            import cupy
-            previous_id = cupy.cuda.Device().id
-            cupy.cuda.Device(device).use()
-            yield
-        finally:
-            if previous_id is not None:
-                cupy.cuda.Device(previous_id).use()
-
-
 class UDFPartRunner:
     def __init__(self, udfs: list[UDF], debug: bool = False, progress: bool = False):
         self._udfs = udfs
@@ -2101,11 +2082,11 @@ class UDFPartRunner:
             backend_choice = BACKENDS
         backend_choice = frozenset(_get_canonical_backends(backend_choice))
         with env.enter():
-            device_class = get_device_class()
+            device_class = env.device_class
             if device_class == 'cpu':
                 available_backends = backend_choice.intersection(CPU_BACKENDS)
             elif device_class == 'cuda':
-                if has_cupy():
+                if env.has_cupy:
                     available_backends = backend_choice.intersection(BACKENDS)
                 else:
                     available_backends = backend_choice.intersection(
@@ -2120,10 +2101,8 @@ class UDFPartRunner:
                 device_class=device_class,
                 available_backends=available_backends,
             )
-            device = None
-            if CUPY_BACKENDS.intersection(execution_plan.keys()):
-                device = get_use_cuda()
-            with use_gpu(device):
+            enable_gpu = CUPY_BACKENDS.intersection(execution_plan.keys())
+            with env.use_gpu(enable_gpu):
                 dtype = self._init_udfs(
                     execution_plan, partition, roi, corrections, device_class, env,
                     params.tiling_scheme,

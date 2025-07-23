@@ -23,7 +23,7 @@ from libertem.common.snooze import SnoozeManager, keep_alive, keep_alive_context
 from libertem.common.subscriptions import SubscriptionManager
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
-from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.common.backend import set_use_cpu, set_use_cuda, get_use_cuda
 from libertem.common.async_utils import adjust_event_loop_policy
 from .utils import assign_cudas
 
@@ -245,9 +245,11 @@ def _run_task(task, params, task_id, threaded_executor, comms_topic: Optional[st
     cache, which blows up memory usage over time.
     """
     worker_context = DaskWorkerContext(comms_topic)
+    gpu_id = get_use_cuda()
     env = Environment(threads_per_worker=1,
                       threaded_executor=threaded_executor,
-                      worker_context=worker_context)
+                      worker_context=worker_context,
+                      gpu_id=gpu_id)
     task_result = task(env=env, params=params)
     return {
         "task_result": task_result,

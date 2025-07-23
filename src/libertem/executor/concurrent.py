@@ -44,9 +44,11 @@ def _run_task(task, params, task_id, threaded_executor, msg_queue, scatter_map):
     """
     params = scatter_map[params]
     worker_context = ConcurrentWorkerContext(msg_queue)
+    gpu_id = get_use_cuda()
     env = Environment(threads_per_worker=1,
                       threaded_executor=threaded_executor,
-                      worker_context=worker_context)
+                      worker_context=worker_context,
+                      gpu_id=gpu_id)
     task_result = task(env=env, params=params)
     return {
         "task_result": task_result,

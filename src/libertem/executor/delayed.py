@@ -16,6 +16,7 @@ from libertem.utils.devices import detect
 from .base import BaseJobExecutor
 from libertem.common.executor import Environment, TaskCommHandler, TaskProtocol
 from libertem.common.scheduler import Worker, WorkerSet
+from libertem.common.backend import get_use_cuda
 
 from ..common.buffers import BufferWrapper
 from ..common.math import prod
@@ -234,7 +235,8 @@ class DelayedJobExecutor(BaseJobExecutor):
 
         called from :meth:`DelayedUDFRunner.results_for_dataset_sync`
         """
-        env = Environment(threads_per_worker=1, threaded_executor=True)
+        gpu_id = get_use_cuda()
+        env = Environment(threads_per_worker=1, threaded_executor=True, gpu_id=gpu_id)
         for task in tasks:
             structure = structure_from_task(self._udfs, task)
             flat_structure = delayed_unpack.flatten_nested(structure)

@@ -14,7 +14,9 @@ from typing_extensions import Protocol, Literal
 
 from libertem.common.scheduler import WorkerSet
 from libertem.common.threading import set_num_threads, mitigations
+from libertem.common.cupy import use_gpu
 from libertem.io.dataset.base import Partition
+from libertem.utils.devices import has_cupy
 
 
 if TYPE_CHECKING:
@@ -52,10 +54,12 @@ class Environment:
         threads_per_worker: Optional[int],
         threaded_executor: bool,
         worker_context: Optional["WorkerContext"] = None,
+        gpu_id: Optional[int] = None,
     ):
         self._threads_per_worker = threads_per_worker
         self._threaded_executor = threaded_executor
         self._worker_context = worker_context
+        self._gpu_id = gpu_id
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -92,6 +96,10 @@ class Environment:
         """
         return self._worker_context
 
+    @property
+    def gpu_id(self) -> Optional[int]:
+        return self._gpu_id
+
     @contextmanager
     def enter(self):
         """
@@ -106,6 +114,25 @@ class Environment:
                     yield self
             else:
                 yield self
+
+    @contextmanager
+    def use_gpu(self, enable: True):
+        if enable:
+            with use_gpu(self._gpu_id):
+                yield
+        else:
+            yield
+
+    @property
+    def device_class(self) -> Literal['cpu', 'cuda']:
+        if self.gpu_id is None:
+            return 'cpu'
+        else:
+            return 'cuda'
+
+    @property
+    def has_cupy(self) -> bool:
+        return has_cupy()
 
 
 class TaskProtocol(Protocol):

@@ -178,7 +178,7 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
-    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs={}):
+    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: Optional[dict] = None):
         """
         run a callable :code:`fn` in the context of the current process.
         """

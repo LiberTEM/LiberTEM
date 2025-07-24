@@ -13,7 +13,7 @@ from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import DataSet
 from libertem.utils.devices import detect
 
-from .base import BaseJobExecutor
+from .base import BaseJobExecutor, GenericTaskMixin
 from libertem.common.executor import Environment, TaskCommHandler, TaskProtocol
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
@@ -175,33 +175,40 @@ class DelayedUDFRunner(UDFRunner):
         return False
 
     def results_for_dataset_sync(self, dataset: DataSet, executor: 'DelayedJobExecutor',
+            environment: Environment,
             roi: Optional[np.ndarray] = None, progress: bool = False,
             corrections: Optional[CorrectionSet] = None,
             backends: Optional[BackendSpec] = None,
-            main_process_gpu: Optional[int] = None,
             dry: bool = False) -> Iterable[tuple]:
 
         executor.register_master_udfs(self._udfs)
 
         return super().results_for_dataset_sync(
-            dataset, executor, roi=roi, progress=progress,
-            corrections=corrections, backends=backends, main_process_gpu=main_process_gpu,
+            dataset, executor, environment=environment, roi=roi, progress=progress,
+            corrections=corrections, backends=backends,
             dry=dry
         )
 
 
-class DelayedJobExecutor(BaseJobExecutor):
+class DelayedJobExecutor(GenericTaskMixin, BaseJobExecutor):
     """
     :class:`~libertem.common.executor.JobExecutor` that uses dask.delayed to execute tasks.
 
     .. versionadded:: 0.9.0
 
+    Parameters
+    ----------
+
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
+
     Highly experimental at this time!
     """
-    def __init__(self):
+    def __init__(self, main_process_gpu: Optional[int] = None):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self._udfs = None
+        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
 
     @contextlib.contextmanager
     def scatter(self, obj):

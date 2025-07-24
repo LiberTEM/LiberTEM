@@ -15,7 +15,7 @@ import dask
 
 from libertem.common.threading import set_num_threads_env
 
-from .base import BaseJobExecutor, AsyncAdapter, ResourceError
+from .base import BaseJobExecutor, AsyncAdapter, ResourceError, GenericTaskMixin
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
@@ -430,7 +430,7 @@ def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tup
         handler(true_topic, message)
 
 
-class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
+class DaskJobExecutor(GenericTaskMixin, CommonDaskMixin, BaseJobExecutor):
     '''
     Default LiberTEM executor that uses `Dask futures
     <https://docs.dask.org/en/stable/futures.html>`_.
@@ -444,9 +444,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     lt_resources : bool
         Specify if the cluster has LiberTEM resource tags and environment
         variables for GPU processing. Autodetected by default.
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
     '''
     def __init__(self, client: dd.Client, is_local: bool = False,
-                lt_resources: bool = None):
+                lt_resources: bool = None, main_process_gpu: Optional[int] = None):
         self.is_local = is_local
         self.client = client
         if lt_resources is None:
@@ -457,6 +459,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._snooze_manager = None
         self._worker_spec = None
         self._subscriptions = SubscriptionManager()
+        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
 
     def _scale_down(self):
         """
@@ -812,7 +815,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     @classmethod
     def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
             client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None,
-            snooze_timeout: Optional[float] = None):
+            snooze_timeout: Optional[float] = None, main_process_gpu: Optional[int] = None):
         """
         Spin up a local dask cluster
 
@@ -833,6 +836,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             default Dask scheduler.
         preload: Optional[Tuple[str]]
             Passed to :func:`cluster_spec` if :code:`spec` is :code:`None`.
+        main_process_gpu : int or None, optional
+            GPU to use for the environment of process-local tasks
 
         Returns
         -------
@@ -877,7 +882,12 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
         is_local = not client_kwargs['set_as_default']
 
-        executor = cls(client=client, is_local=is_local, lt_resources=True)
+        executor = cls(
+            client=client,
+            is_local=is_local,
+            lt_resources=True,
+            main_process_gpu=main_process_gpu,
+        )
         if snooze_timeout is not None:
             executor._enable_snooze(snooze_timeout, spec)
         return executor
@@ -906,12 +916,15 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
     @classmethod
-    async def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None):
+    async def make_local(
+            cls, spec=None, cluster_kwargs=None, client_kwargs=None,
+            main_process_gpu=None):
         executor = await sync_to_async(functools.partial(
             DaskJobExecutor.make_local,
             spec=spec,
             cluster_kwargs=cluster_kwargs,
             client_kwargs=client_kwargs,
+            main_process_gpu=main_process_gpu,
         ))
         return cls(wrapped=executor)
 

@@ -116,7 +116,20 @@ class Environment:
                 yield self
 
     @contextmanager
-    def use_gpu(self, enable: True):
+    def use_gpu(self, enable: bool = True):
+        """
+        Use the GPU specified in the constructor in CuPy
+
+        .. versionadded :: 0.16.0
+
+        Parameters
+        ----------
+
+        enable : bool, default True
+            Flag that allows using the GPU conditionally without changing the
+            code structure. If set to :code:`False`, this function doesn't
+            perform any action.
+        """
         if enable:
             with use_gpu(self._gpu_id):
                 yield
@@ -152,6 +165,17 @@ class TaskProtocol(Protocol):
         ...
 
 
+class GenericTaskProtocol(Protocol):
+    '''
+    Interface for generic tasks
+    '''
+    def __call__(self, args, kwargs, environment: Environment):
+        pass
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        ...
+
+
 T = TypeVar('T')
 V = TypeVar('V')
 
@@ -163,6 +187,12 @@ class JobExecutor:
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable :code:`fn` on any worker
+        """
+        raise NotImplementedError()
+
+    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs={}):
+        """
+        run a callable :code:`fn` in the context of the current process.
         """
         raise NotImplementedError()
 

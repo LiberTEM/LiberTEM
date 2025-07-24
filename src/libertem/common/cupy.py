@@ -9,5 +9,9 @@ def use_gpu(device: Optional[int]):
         yield
     else:
         import cupy
-        with cupy.cuda.Device(device):
+        prev_id = cupy.cuda.Device().id
+        try:
+            cupy.cuda.Device(device).use()
             yield
+        finally:
+            cupy.cuda.Device(prev_id).use()

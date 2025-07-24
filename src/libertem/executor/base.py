@@ -55,10 +55,12 @@ class BaseJobExecutor(JobExecutor):
         """
         return AsyncAdapter(wrapped=self, pool=pool)
 
-    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs={}):
+    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: Optional[dict] = None):
         """
         run a callable :code:`fn` in the context of the current process.
         """
+        if kwargs is None:
+            kwargs = {}
         env = self._get_local_env()
         return task(args, kwargs, environment=env)
 

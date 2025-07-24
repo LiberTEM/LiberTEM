@@ -15,7 +15,7 @@ import dask
 
 from libertem.common.threading import set_num_threads_env
 
-from .base import BaseJobExecutor, AsyncAdapter, ResourceError, GenericTaskMixin
+from .base import BaseJobExecutor, AsyncAdapter, ResourceError
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
 )
@@ -430,7 +430,7 @@ def _dispatch_messages(subscribers: dict[str, list[Callable]], dask_message: tup
         handler(true_topic, message)
 
 
-class DaskJobExecutor(GenericTaskMixin, CommonDaskMixin, BaseJobExecutor):
+class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     '''
     Default LiberTEM executor that uses `Dask futures
     <https://docs.dask.org/en/stable/futures.html>`_.
@@ -459,7 +459,7 @@ class DaskJobExecutor(GenericTaskMixin, CommonDaskMixin, BaseJobExecutor):
         self._snooze_manager = None
         self._worker_spec = None
         self._subscriptions = SubscriptionManager()
-        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
+        super().__init__(main_process_gpu=main_process_gpu)
 
     def _scale_down(self):
         """

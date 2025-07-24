@@ -28,21 +28,12 @@ class ResourceError(RuntimeError):
 
 
 class BaseJobExecutor(JobExecutor):
-    def get_udf_runner(self) -> type['UDFRunner']:
-        from libertem.udf.base import UDFRunner
-        return UDFRunner
-
-    def ensure_async(self, pool=None):
-        """
-        Returns an asynchronous executor; by default just wrap into `AsyncAdapter`.
-        """
-        return AsyncAdapter(wrapped=self, pool=pool)
-
-
-class GenericTaskMixin:
     '''
-    Generic implementation for :meth:`libertem.common.executor.JobExecutor.run_process_local`
-    for re-use in executors that don't implement a specialized version.
+    Base class for LiberTEM executors
+
+    Contains a generic implementation for
+    :meth:`libertem.common.executor.JobExecutor.run_process_local` for re-use in
+    executors that don't implement a specialized version.
 
     Parameters
     ----------
@@ -53,6 +44,16 @@ class GenericTaskMixin:
     '''
     def __init__(self, main_process_gpu: Optional[int] = None):
         self._main_process_gpu = main_process_gpu
+
+    def get_udf_runner(self) -> type['UDFRunner']:
+        from libertem.udf.base import UDFRunner
+        return UDFRunner
+
+    def ensure_async(self, pool=None):
+        """
+        Returns an asynchronous executor; by default just wrap into `AsyncAdapter`.
+        """
+        return AsyncAdapter(wrapped=self, pool=pool)
 
     def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs={}):
         """

@@ -2102,39 +2102,38 @@ class UDFPartRunner:
         if backend_choice is None:
             backend_choice = BACKENDS
         backend_choice = frozenset(_get_canonical_backends(backend_choice))
-        with env.enter():
-            device_class = env.device_class
-            if device_class == 'cpu':
-                available_backends = backend_choice.intersection(CPU_BACKENDS)
-            elif device_class == 'cuda':
-                if env.has_cupy:
-                    available_backends = backend_choice.intersection(BACKENDS)
-                else:
-                    available_backends = backend_choice.intersection(
-                        CPU_BACKENDS.union((CUDA, ))
-                    )
+        device_class = env.device_class
+        if device_class == 'cpu':
+            available_backends = backend_choice.intersection(CPU_BACKENDS)
+        elif device_class == 'cuda':
+            if env.has_cupy:
+                available_backends = backend_choice.intersection(BACKENDS)
             else:
-                raise RuntimeError(f"Unknown device class {device_class}.")
-            # This will raise an exception if unavailable backends would be used
-            ds_backend, execution_plan = _execution_plan(
-                udfs=self._udfs,
-                ds=partition.meta,
-                device_class=device_class,
-                available_backends=available_backends,
+                available_backends = backend_choice.intersection(
+                    CPU_BACKENDS.union((CUDA, ))
+                )
+        else:
+            raise RuntimeError(f"Unknown device class {device_class}.")
+        # This will raise an exception if unavailable backends would be used
+        ds_backend, execution_plan = _execution_plan(
+            udfs=self._udfs,
+            ds=partition.meta,
+            device_class=device_class,
+            available_backends=available_backends,
+        )
+        enable_gpu = CUPY_BACKENDS.intersection(execution_plan.keys())
+        with env.enter(enable_gpu=enable_gpu):
+            dtype = self._init_udfs(
+                execution_plan, partition, roi, corrections, device_class, env,
+                params.tiling_scheme,
             )
-            enable_gpu = CUPY_BACKENDS.intersection(execution_plan.keys())
-            with env.use_gpu(enable_gpu):
-                dtype = self._init_udfs(
-                    execution_plan, partition, roi, corrections, device_class, env,
-                    params.tiling_scheme,
-                )
-                partition.set_corrections(corrections)
-                if env.worker_context is not None:
-                    partition.set_worker_context(env.worker_context)
-                self._run_udfs(
-                    ds_backend, execution_plan, partition, params.tiling_scheme, roi, dtype
-                )
-                self._wrapup_udfs(partition)
+            partition.set_corrections(corrections)
+            if env.worker_context is not None:
+                partition.set_worker_context(env.worker_context)
+            self._run_udfs(
+                ds_backend, execution_plan, partition, params.tiling_scheme, roi, dtype
+            )
+            self._wrapup_udfs(partition)
             # Make sure results are in the same order as the UDFs
             return tuple(udf.results for udf in self._udfs)
 
@@ -2575,63 +2574,62 @@ class UDFRunner:
         UDFParams
     ]:
         with environment.enter():
-            with environment.use_gpu():
-                with tracer.start_as_current_span("_prepare_run_for_dataset"):
-                    tasks, params = self._prepare_run_for_dataset(
-                        dataset=dataset,
-                        executor=executor,
-                        environment=environment,
-                        roi=roi,
-                        corrections=corrections,
-                        backends=backends,
-                        dry=dry,
-                    )
+            with tracer.start_as_current_span("_prepare_run_for_dataset"):
+                tasks, params = self._prepare_run_for_dataset(
+                    dataset=dataset,
+                    executor=executor,
+                    environment=environment,
+                    roi=roi,
+                    corrections=corrections,
+                    backends=backends,
+                    dry=dry,
+                )
 
-                with tracer.start_as_current_span("before inner work"):
-                    cancel_id = str(uuid.uuid4())
-                    self._debug_task_pickling(tasks)
+            with tracer.start_as_current_span("before inner work"):
+                cancel_id = str(uuid.uuid4())
+                self._debug_task_pickling(tasks)
 
-                    executor = executor.ensure_sync()
-                    if dry:
-                        task_comm_handler: TaskCommHandler = NoopCommHandler()
-                    else:
-                        task_comm_handler = dataset.get_task_comm_handler()
+                executor = executor.ensure_sync()
+                if dry:
+                    task_comm_handler: TaskCommHandler = NoopCommHandler()
+                else:
+                    task_comm_handler = dataset.get_task_comm_handler()
 
-                def _inner():
-                    pman = None
-                    try:
-                        if progress and tasks:
-                            pman = ProgressManager(
-                                tasks, cancel_id, reporter=self._progress_reporter
+            def _inner():
+                pman = None
+                try:
+                    if progress and tasks:
+                        pman = ProgressManager(
+                            tasks, cancel_id, reporter=self._progress_reporter
+                        )
+                        pman.connect(task_comm_handler)
+                        for task in tasks:
+                            task.report_progress()
+                    with executor.scatter(params) as params_handle:
+                        # XXX yuck, refactor this?
+                        yield params_handle
+
+                        if tasks:
+                            task_gen = executor.run_tasks(
+                                tasks,
+                                params_handle,
+                                cancel_id,
+                                task_comm_handler,
                             )
-                            pman.connect(task_comm_handler)
-                            for task in tasks:
-                                task.report_progress()
-                        with executor.scatter(params) as params_handle:
-                            # XXX yuck, refactor this?
-                            yield params_handle
+                            try:
+                                for res in task_gen:
+                                    if progress:
+                                        pman.finalize_task(res[1])
+                                    yield res
+                            finally:
+                                task_gen.close()
+                finally:
+                    if progress and tasks and pman is not None:
+                        pman.close()
 
-                            if tasks:
-                                task_gen = executor.run_tasks(
-                                    tasks,
-                                    params_handle,
-                                    cancel_id,
-                                    task_comm_handler,
-                                )
-                                try:
-                                    for res in task_gen:
-                                        if progress:
-                                            pman.finalize_task(res[1])
-                                        yield res
-                                finally:
-                                    task_gen.close()
-                    finally:
-                        if progress and tasks and pman is not None:
-                            pman.close()
-
-                it = _inner()
-                params_handle = next(it)
-                return it, params_handle, params
+            it = _inner()
+            params_handle = next(it)
+            return it, params_handle, params
 
     def run_for_dataset_sync(
         self,
@@ -2671,26 +2669,25 @@ class UDFRunner:
             num_results = 0
             try:
                 with environment.enter():
-                    with environment.use_gpu():
-                        for part_results, task in result_iter:
-                            num_results += 1
-                            with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
-                                self._apply_part_result(
-                                    udfs=self._udfs,
-                                    damage=damage,
-                                    part_results=part_results,
-                                    task=task
-                                )
-                            if iterate:
-                                yield self._make_udf_result(
-                                    udfs=self._udfs,
-                                    damage=damage
-                                )
-                        if num_results == 0 or not iterate:
+                    for part_results, task in result_iter:
+                        num_results += 1
+                        with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
+                            self._apply_part_result(
+                                udfs=self._udfs,
+                                damage=damage,
+                                part_results=part_results,
+                                task=task
+                            )
+                        if iterate:
                             yield self._make_udf_result(
                                 udfs=self._udfs,
                                 damage=damage
                             )
+                    if num_results == 0 or not iterate:
+                        yield self._make_udf_result(
+                            udfs=self._udfs,
+                            damage=damage
+                        )
             except JobCancelledError:
                 raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
             finally:

@@ -13,7 +13,7 @@ from libertem.io.corrections import CorrectionSet
 from libertem.io.dataset.base import DataSet
 from libertem.utils.devices import detect
 
-from .base import BaseJobExecutor, GenericTaskMixin
+from .base import BaseJobExecutor
 from libertem.common.executor import Environment, TaskCommHandler, TaskProtocol
 from libertem.common.scheduler import Worker, WorkerSet
 from libertem.common.backend import get_use_cuda
@@ -190,7 +190,7 @@ class DelayedUDFRunner(UDFRunner):
         )
 
 
-class DelayedJobExecutor(GenericTaskMixin, BaseJobExecutor):
+class DelayedJobExecutor(BaseJobExecutor):
     """
     :class:`~libertem.common.executor.JobExecutor` that uses dask.delayed to execute tasks.
 
@@ -208,7 +208,7 @@ class DelayedJobExecutor(GenericTaskMixin, BaseJobExecutor):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self._udfs = None
-        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
+        super().__init__(main_process_gpu=main_process_gpu)
 
     @contextlib.contextmanager
     def scatter(self, obj):

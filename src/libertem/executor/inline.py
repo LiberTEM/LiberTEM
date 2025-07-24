@@ -6,7 +6,7 @@ import cloudpickle
 import psutil
 import uuid
 
-from .base import BaseJobExecutor, GenericTaskMixin
+from .base import BaseJobExecutor
 from libertem.common.executor import (
     Environment, SimpleWorkerQueue, TaskCommHandler, TaskProtocol, WorkerContext, WorkerQueue
 )
@@ -29,7 +29,7 @@ class InlineWorkerContext(WorkerContext):
         self._msg_queue.put((topic, msg_dict))
 
 
-class InlineJobExecutor(GenericTaskMixin, BaseJobExecutor):
+class InlineJobExecutor(BaseJobExecutor):
     """
     Naive JobExecutor that just iterates over partitions and processes them one after another
 
@@ -52,7 +52,7 @@ class InlineJobExecutor(GenericTaskMixin, BaseJobExecutor):
         self._debug = debug
         self._inline_threads = inline_threads
         self._scattered = {}
-        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
+        super().__init__(main_process_gpu=main_process_gpu)
 
     def _get_local_env(self):
         return Environment(

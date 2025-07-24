@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from opentelemetry import trace
 
 from .base import (
-    BaseJobExecutor, AsyncAdapter, GenericTaskMixin
+    BaseJobExecutor, AsyncAdapter
 )
 from libertem.common.executor import (
     JobCancelledError, TaskProtocol, TaskCommHandler, WorkerContext,
@@ -56,7 +56,7 @@ def _run_task(task, params, task_id, threaded_executor, msg_queue, scatter_map):
     }
 
 
-class ConcurrentJobExecutor(GenericTaskMixin, BaseJobExecutor):
+class ConcurrentJobExecutor(BaseJobExecutor):
     '''
     :class:`JobExecutor` that uses :mod:`python.concurrent.futures`.
 
@@ -82,7 +82,7 @@ class ConcurrentJobExecutor(GenericTaskMixin, BaseJobExecutor):
         self.client = client
         self._futures = {}
         self._scatter_map = {}
-        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
+        super().__init__(main_process_gpu=main_process_gpu)
 
     @contextlib.contextmanager
     def scatter(self, obj):

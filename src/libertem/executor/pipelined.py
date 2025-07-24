@@ -28,7 +28,7 @@ from libertem.common.scheduler import Worker, WorkerSet, Scheduler
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
 
 from .utils import assign_cudas
-from .base import BaseJobExecutor, ResourceError, GenericTaskMixin
+from .base import BaseJobExecutor, ResourceError
 
 try:
     import prctl
@@ -784,7 +784,7 @@ def _inspect_startup(msg, span):
     span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
 
 
-class PipelinedExecutor(GenericTaskMixin, BaseJobExecutor):
+class PipelinedExecutor(BaseJobExecutor):
     """
     Multi-process pipelined executor. Useful for live processing using
     `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_
@@ -849,7 +849,7 @@ class PipelinedExecutor(GenericTaskMixin, BaseJobExecutor):
 
         # keep this at the bottom:
         self._pool = self._start_pool()
-        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
+        super().__init__(main_process_gpu=main_process_gpu)
 
     def _start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:

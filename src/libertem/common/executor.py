@@ -4,7 +4,7 @@ from typing import (
     TypeVar,
 )
 from collections.abc import Generator, Iterable
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import multiprocessing as mp
 
 import cloudpickle
@@ -98,43 +98,31 @@ class Environment:
 
     @property
     def gpu_id(self) -> Optional[int]:
+        """
+        ID of the GPU to activate in CuPy when entering the environment,
+        as specified in the constructor.
+        """
         return self._gpu_id
 
     @contextmanager
-    def enter(self):
+    def enter(self, enable_gpu: bool = True):
         """
         Note: we are using the @contextmanager decorator here,
         because with separate `__enter__`, `__exit__` methods,
         we can't easily delegate to `set_num_threads`, or other
         contextmanagers that may come later.
-        """
-        with set_num_threads(self._threads_per_worker):
-            if self.threaded_executor:
-                with mitigations():
-                    yield self
-            else:
-                yield self
-
-    @contextmanager
-    def use_gpu(self, enable: bool = True):
-        """
-        Use the GPU specified in the constructor in CuPy
-
-        .. versionadded :: 0.16.0
 
         Parameters
         ----------
 
-        enable : bool, default True
-            Flag that allows using the GPU conditionally without changing the
-            code structure. If set to :code:`False`, this function doesn't
-            perform any action.
+        enable_gpu : bool, default True
+            .. versionadded :: 0.16.0
+            Enable the GPU set in the constructor.
         """
-        if enable:
-            with use_gpu(self._gpu_id):
-                yield
-        else:
-            yield
+        with use_gpu(self._gpu_id) if enable_gpu else nullcontext():
+            with set_num_threads(self._threads_per_worker):
+                with mitigations() if self.threaded_executor else nullcontext():
+                    yield self
 
     @property
     def device_class(self) -> Literal['cpu', 'cuda']:

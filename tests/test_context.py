@@ -622,8 +622,8 @@ def with_main_gpu(executor, main_process_gpu):
             cpus = [0, 1]
         else:
             cpus = None
+        ctx = Context.make_with(executor, cpus=cpus, main_process_gpu=main_process_gpu)
         try:
-            ctx = Context.make_with(executor, cpus=cpus, main_process_gpu=main_process_gpu)
             udf = CheckXPUDF()
             ds = ctx.load('memory', data=np.zeros((1, 1, 1, 1)))
             res = ctx.run_udf(dataset=ds, udf=udf)

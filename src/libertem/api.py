@@ -199,14 +199,6 @@ class Context:
 
         .. versionadded:: 0.7.0
 
-    main_process_gpu : int or None
-
-        .. versionadded:: 0.16.0
-
-        GPU to make available for UDFs on the main process,
-        i.e. for merging and computing results. Currently, this switches
-        :attr:`libertem.udf.base.UDF.xp` to CuPy if available.
-
     Attributes
     ----------
 
@@ -231,16 +223,47 @@ class Context:
         self,
         executor: Optional[JobExecutor] = None,
         plot_class: Optional['Live2DPlot'] = None,
-        main_process_gpu: Optional[int] = None,
     ):
         import traceback
         if executor is None:
             executor = self._create_local_executor()
         self.executor = executor
         self._plot_class = plot_class
-        self._main_process_gpu = main_process_gpu
         self._created_at = traceback.format_stack()
         self._register_at_exit()
+
+    @staticmethod
+    def _make_canonical(main_process_gpu):
+        if main_process_gpu is False:
+            main_process_gpu = None
+        elif main_process_gpu is True:
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if spec_args['cudas'] and spec_args['has_cupy']:
+                main_process_gpu = spec_args['cudas'][0]
+            else:
+                raise ExecutorSpecException(
+                    'Cannot specify GPU for main process as no GPUs detected or no CuPy found.'
+                )
+        elif main_process_gpu is None:
+            # Activate if available
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if spec_args['cudas'] and spec_args['has_cupy']:
+                main_process_gpu = spec_args['cudas'][0]
+        # check last because instanceof(<bool>, int) is True
+        elif isinstance(main_process_gpu, int):
+            # Verify it is a valid GPU ID
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if main_process_gpu not in spec_args['cudas'] or not spec_args['has_cupy']:
+                raise ExecutorSpecException(
+                    f"GPU {main_process_gpu} for main process not detected, "
+                    f"only found {spec_args['cudas']}."
+                )
+        else:
+            raise ValueError(f'Invalid type for main_process_gpu: {type(main_process_gpu)}')
+        return main_process_gpu
 
     @classmethod
     def make_with(
@@ -367,6 +390,7 @@ class Context:
         has_spec = cpu_spec or gpu_spec
         limited_execs = ('inline', 'synchronous', 'dask-integration', 'delayed')
         cannot_cpus = executor_spec in limited_execs
+        main_process_gpu = cls._make_canonical(main_process_gpu)
         if cpu_spec and cannot_cpus:
             raise ExecutorSpecException(f'Executor type {executor_spec} does not support '
                                         'specifying CPU workers at this time')
@@ -393,69 +417,46 @@ class Context:
 
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
-            executor = InlineJobExecutor()
+            executor = InlineJobExecutor(main_process_gpu=main_process_gpu)
         elif executor_spec == 'threads':
             n_threads = cpus
             try:
                 n_threads = len(n_threads)
             except TypeError:
                 pass
-            executor = ConcurrentJobExecutor.make_local(n_threads=n_threads)
+            executor = ConcurrentJobExecutor.make_local(
+                n_threads=n_threads,
+                main_process_gpu=main_process_gpu
+            )
         elif executor_spec == 'dask':
-            executor = DaskJobExecutor.make_local(spec=spec, snooze_timeout=snooze_timeout)
+            executor = DaskJobExecutor.make_local(
+                spec=spec,
+                snooze_timeout=snooze_timeout,
+                main_process_gpu=main_process_gpu
+            )
         elif executor_spec == 'dask-integration':
-            executor = get_dask_integration_executor()
+            executor = get_dask_integration_executor(main_process_gpu=main_process_gpu)
         elif executor_spec == 'dask-make-default':
             executor = DaskJobExecutor.make_local(
                 spec=spec,
-                client_kwargs={"set_as_default": True}
+                client_kwargs={"set_as_default": True},
+                main_process_gpu=main_process_gpu,
             )
         elif executor_spec == 'delayed':
-            executor = DelayedJobExecutor()
+            executor = DelayedJobExecutor(main_process_gpu=main_process_gpu)
         elif executor_spec == 'pipelined':
             if has_spec:
                 spec = PipelinedExecutor.make_spec(**spec_args)
-                executor = PipelinedExecutor(spec=spec)
+                executor = PipelinedExecutor(spec=spec, main_process_gpu=main_process_gpu)
             else:
-                executor = PipelinedExecutor.make_local()
+                executor = PipelinedExecutor.make_local(main_process_gpu=main_process_gpu)
         else:
             raise ExecutorSpecException(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '
                 f'"synchronous", "inline", "threads", "dask", "dask-integration",'
                 f'"dask-make-default" "delayed" or "pipelined".'
             )
-        if main_process_gpu is False:
-            main_process_gpu = None
-        elif main_process_gpu is True:
-            from libertem.utils.devices import detect
-            spec_args = detect()
-            if spec_args['cudas'] and spec_args['has_cupy']:
-                main_process_gpu = spec_args['cudas'][0]
-            else:
-                raise ExecutorSpecException(
-                    'Cannot specify GPU for main process as no GPUs detected or no CuPy found.'
-                )
-        elif main_process_gpu is None:
-            from libertem.utils.devices import detect
-            spec_args = detect()
-            if spec_args['cudas'] and spec_args['has_cupy']:
-                main_process_gpu = spec_args['cudas'][0]
-            else:
-                # for clarity
-                main_process_gpu = None
-        # check last because instanceof(<bool>, int) is True
-        elif isinstance(main_process_gpu, int):
-            # Verify it is a valid GPU ID
-            from libertem.utils.devices import detect
-            spec_args = detect()
-            if main_process_gpu not in spec_args['cudas'] or not spec_args['has_cupy']:
-                raise ExecutorSpecException(
-                    f"GPU {main_process_gpu} for main process not detected, "
-                    f"only found {spec_args['cudas']}."
-                )
-        else:
-            raise ValueError(f'Invalid type for main_process_gpu: {type(main_process_gpu)}')
-        return cls(executor=executor, plot_class=plot_class, main_process_gpu=main_process_gpu)
+        return cls(executor=executor, plot_class=plot_class)
 
     @property
     def plot_class(self) -> type['Live2DPlot']:
@@ -1328,7 +1329,6 @@ class Context:
                 corrections=corrections,
                 backends=backends,
                 iterate=(iterate or enable_plotting),
-                main_process_gpu=self._main_process_gpu,
             )
 
             def _inner():

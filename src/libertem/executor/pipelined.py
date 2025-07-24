@@ -28,7 +28,7 @@ from libertem.common.scheduler import Worker, WorkerSet, Scheduler
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
 
 from .utils import assign_cudas
-from .base import BaseJobExecutor, ResourceError
+from .base import BaseJobExecutor, ResourceError, GenericTaskMixin
 
 try:
     import prctl
@@ -784,7 +784,7 @@ def _inspect_startup(msg, span):
     span.add_event("worker startup done", {"worker_id": msg["worker_id"]})
 
 
-class PipelinedExecutor(BaseJobExecutor):
+class PipelinedExecutor(GenericTaskMixin, BaseJobExecutor):
     """
     Multi-process pipelined executor. Useful for live processing using
     `LiberTEM-live <https://libertem.github.io/LiberTEM-live/>`_
@@ -814,6 +814,9 @@ class PipelinedExecutor(BaseJobExecutor):
         Callable that will be run as early as possible on each worker process.
         Useful for custom warmup code or testing.
 
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
+
     Note
     ----
     This executor is not thread-safe - concurrent calls into :meth:`run_tasks` or
@@ -826,6 +829,7 @@ class PipelinedExecutor(BaseJobExecutor):
         startup_timeout: float = 30.0,
         cleanup_timeout: float = 10.0,
         early_setup: Optional[Callable] = None,
+        main_process_gpu: Optional[int] = None,
     ) -> None:
         self._pin_workers = pin_workers
         if spec is None:
@@ -845,6 +849,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
         # keep this at the bottom:
         self._pool = self._start_pool()
+        GenericTaskMixin.__init__(self, main_process_gpu=main_process_gpu)
 
     def _start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:

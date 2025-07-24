@@ -2,7 +2,7 @@ from collections import defaultdict, OrderedDict
 from contextlib import contextmanager
 import typing
 from typing import (
-    Any, Optional,
+    Any, Optional, Callable,
     TypeVar, Union, TYPE_CHECKING
 )
 from collections.abc import AsyncGenerator, Generator, Iterator, Mapping, Sequence, Iterable
@@ -44,10 +44,9 @@ from libertem.common.async_utils import async_generator_eager
 from libertem.executor.inline import InlineJobExecutor
 from libertem.common.executor import (
     Environment, JobExecutor, TaskCommHandler, NoopCommHandler, TaskProtocol,
-    JobCancelledError, ResourceDef,
+    JobCancelledError, ResourceDef, GenericTaskProtocol
 )
 from libertem.common.exceptions import UDFRunCancelled
-from libertem.common.cupy import use_gpu
 
 if TYPE_CHECKING:
     from numpy import typing as nt
@@ -1823,95 +1822,6 @@ class UDFParams:
         return self._tiling_scheme
 
 
-class Task:
-    """
-    A computation on a partition. Inherit from this class and implement ``__call__``
-    for your specific computation.
-
-    .. versionchanged:: 0.4.0
-        Moved from libertem.job.base to libertem.udf.base as part of Job API deprecation
-    """
-
-    def __init__(self, partition: Partition, idx: int, span_context: "SpanContext"):
-        self.partition = partition
-        self.idx = idx
-        self._span_context = span_context
-        self._progress = False
-
-    def get_partition(self):
-        return self.partition
-
-    def get_locations(self):
-        return self.partition.get_locations()
-
-    def get_resources(self) -> ResourceDef:
-        '''
-        Specify the resources that a Task will use.
-
-        The resources are designed to work with resource tags in Dask clusters:
-        See https://distributed.dask.org/en/latest/resources.html
-
-        The resources allow scheduling of CPU-only compute, CUDA-only compute,
-        (CPU or CUDA) hybrid compute, and service tasks in such a way that all
-        resources are used without oversubscription. Furthermore, they
-        distinguish if the given resource can be accessed with a transparent
-        NumPy ndarray interface -- namely if CuPy is installed to access CUDA
-        resources.
-
-        Each CPU worker gets one CPU, one compute and one ndarray resource
-        assigned. Each CUDA worker gets one CUDA and one compute resource
-        assigned. If CuPy is installed, it additionally gets an ndarray resource
-        assigned. A service worker doesn't get any resources assigned.
-
-        A CPU-only task consumes one CPU, one ndarray and one compute resource,
-        i.e. it will be scheduled only on CPU workers. A CUDA-only task consumes
-        one CUDA, one compute and possibly an ndarray resource, i.e. it will
-        only be scheduled on CUDA workers. A hybrid task that can run on both
-        CPU or CUDA using a transparent ndarray interface only consumes a
-        compute and an ndarray resource, i.e. it can be scheduled on CPU workers
-        or CUDA workers with CuPy. A service task doesn't request any resources
-        and can therefore run on CPU, CUDA and service workers.
-
-        Which device a hybrid task uses is only decided at runtime by the
-        environment variables that are set on each worker process.
-
-        That way, CPU-only and CUDA-only tasks can run in parallel without
-        oversubscription, and hybrid tasks use whatever compute workers are free
-        at the time. Furthermore, it allows using CUDA without installing CuPy.
-        See https://github.com/LiberTEM/LiberTEM/pull/760 for detailed
-        discussion.
-
-        Compute tasks will not run on service workers, so that these can serve
-        shorter service tasks with lower latency.
-
-        At the moment, workers only get a single "item" of each resource
-        assigned since we run one process per CPU. Requesting more of a resource
-        than any of the workers has causes a :class:`RuntimeError`, including
-        requesting a resource that is not available at all.
-
-        For that reason one has to make sure that the workers are set up with
-        the correct resources and matching environment.
-        :meth:`libertem.utils.devices.detect`,
-        :meth:`libertem.executor.dask.cluster_spec` and
-        :meth:`libertem.executor.dask.DaskJobExecutor.make_local` can be used to
-        set up a local cluster correctly.
-
-        .. versionadded:: 0.6.0
-        '''
-        # default: run only on CPU and do computation
-        # No CUDA support for the deprecated Job interface
-        return {'CPU': 1, 'compute': 1, 'ndarray': 1}
-
-    def get_tracing_span_context(self) -> "SpanContext":
-        return self._span_context
-
-    def __call__(self, params: UDFParams, env: Environment):
-        raise NotImplementedError()
-
-    def report_progress(self):
-        self._progress = True
-
-
 def _get_canonical_backends(backends: Optional[BackendSpec]) -> Sequence[ArrayBackend]:
     """
     Convert from either an iterable of backends or a simple string form into a
@@ -1977,7 +1887,46 @@ def get_resources_for_backends(
     return result
 
 
-class UDFTask(Task):
+class GenericTask(GenericTaskProtocol):
+    '''
+    Generic task to be run by an executor.
+
+    Parameters
+    ----------
+
+    fn : callable
+        A Callable that accepts a :code:`environment` kwarg of
+        type :class:`Environment`. The environment is
+        provided by the executor when running the task.
+    span_context
+        OpenTelemetry span context
+    '''
+    def __init__(self, fn: Callable, span_context: "SpanContext"):
+        self._span_context = span_context
+        self._fn = fn
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        return self._span_context
+
+    @contextmanager
+    def _propagate_tracing(self):
+        """
+        Initialize the current tracing context from the :code:`SpanContext`
+        given in `self._span_context`, if we don't already have a running
+        tracing context.
+        """
+        if opentelemetry_context.get_current():
+            yield
+        else:
+            with attach_to_parent(self._span_context):
+                yield
+
+    def __call__(self, args, kwargs, environment: Environment):
+        with self._propagate_tracing(), tracer.start_as_current_span("GenericTask.__call__"):
+            return self._fn(*args, **kwargs, environment=environment)
+
+
+class UDFTask(TaskProtocol):
     def __init__(
         self,
         partition: Partition,
@@ -2000,19 +1949,28 @@ class UDFTask(Task):
             The partition to work on
         idx : int
             the index of the task, used to identify results (?)
-        udf_classes : List[Type[UDF]]
+        udf_classes
             The UDFs to run
-        backends : List[str]
+        udf_backends
             The specified backends we want to run on
+        user_backends
+            The backends specified by the user
+        runner_cls
+            The :class:`UDFPartRunner` class to run the task with
+        span_context
+            OpenTelemetry span context
         task_frames : int
             The number of frames this task must process (ROI included)
         """
-        super().__init__(partition=partition, idx=idx, span_context=span_context)
         self._udf_classes = udf_classes
         self._udf_backends = udf_backends
         self._user_backends = user_backends
         self._runner_cls = runner_cls
         self._task_frames = task_frames
+        self.partition = partition
+        self.idx = idx
+        self._span_context = span_context
+        self._progress = False
 
     def __call__(self, params: UDFParams, env: Environment) -> tuple[UDFData, ...]:
         with self._propagate_tracing(), tracer.start_as_current_span("UDFTask.__call__"):
@@ -2023,6 +1981,18 @@ class UDFTask(Task):
             return self._runner_cls(udfs, progress=self._progress).run_for_partition(
                 self.partition, params, env, self._user_backends,
             )
+
+    def get_partition(self):
+        return self.partition
+
+    def get_locations(self):
+        return self.partition.get_locations()
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        return self._span_context
+
+    def report_progress(self):
+        self._progress = True
 
     @contextmanager
     def _propagate_tracing(self):
@@ -2045,9 +2015,60 @@ class UDFTask(Task):
 
     def get_resources(self) -> ResourceDef:
         """
+        Specify the resources that a Task will use.
+
         Intersection of resources of all UDFs, throws if empty.
 
-        See docstring of super class for details.
+        The resources are designed to work with resource tags in Dask clusters:
+        See https://distributed.dask.org/en/latest/resources.html
+
+        The resources allow scheduling of CPU-only compute, CUDA-only compute,
+        (CPU or CUDA) hybrid compute, and service tasks in such a way that all
+        resources are used without oversubscription. Furthermore, they
+        distinguish if the given resource can be accessed with a transparent
+        NumPy ndarray interface -- namely if CuPy is installed to access CUDA
+        resources.
+
+        Each CPU worker gets one CPU, one compute and one ndarray resource
+        assigned. Each CUDA worker gets one CUDA and one compute resource
+        assigned. If CuPy is installed, it additionally gets an ndarray resource
+        assigned. A service worker doesn't get any resources assigned.
+
+        A CPU-only task consumes one CPU, one ndarray and one compute resource,
+        i.e. it will be scheduled only on CPU workers. A CUDA-only task consumes
+        one CUDA, one compute and possibly an ndarray resource, i.e. it will
+        only be scheduled on CUDA workers. A hybrid task that can run on both
+        CPU or CUDA using a transparent ndarray interface only consumes a
+        compute and an ndarray resource, i.e. it can be scheduled on CPU workers
+        or CUDA workers with CuPy. A service task doesn't request any resources
+        and can therefore run on CPU, CUDA and service workers.
+
+        Which device a hybrid task uses is only decided at runtime by the
+        environment variables that are set on each worker process.
+
+        That way, CPU-only and CUDA-only tasks can run in parallel without
+        oversubscription, and hybrid tasks use whatever compute workers are free
+        at the time. Furthermore, it allows using CUDA without installing CuPy.
+        See https://github.com/LiberTEM/LiberTEM/pull/760 for detailed
+        discussion.
+
+        Compute tasks will not run on service workers, so that these can serve
+        shorter service tasks with lower latency.
+
+        At the moment, workers only get a single "item" of each resource
+        assigned since we run one process per CPU. Requesting more of a resource
+        than any of the workers has causes a :class:`RuntimeError`, including
+        requesting a resource that is not available at all.
+
+        For that reason one has to make sure that the workers are set up with
+        the correct resources and matching environment.
+        :meth:`libertem.utils.devices.detect`,
+        :meth:`libertem.executor.dask.cluster_spec` and
+        :meth:`libertem.executor.dask.DaskJobExecutor.make_local` can be used to
+        set up a local cluster correctly.
+
+        .. versionadded:: 0.6.0
+        '''
         """
         return get_resources_for_backends(self._udf_backends, user_backends=self._user_backends)
 
@@ -2430,10 +2451,10 @@ class UDFRunner:
         self,
         dataset: DataSet,
         executor: JobExecutor,
+        environment: Environment,
         roi: Optional[np.ndarray],
         corrections: Optional[CorrectionSet],
         backends: Optional[BackendSpec],
-        main_process_gpu: Optional[int],
         dry: bool,
     ) -> tuple[list[UDFTask], UDFParams]:
         self._check_preconditions(dataset, roi)
@@ -2464,7 +2485,7 @@ class UDFRunner:
             # that will be determined dynamically on the workers.
         )
         for udf in self._udfs:
-            udf.set_main_process_gpu(main_process_gpu)
+            udf.set_main_process_gpu(environment.gpu_id)
             udf.set_meta(meta)
             # ideally the UDF would know the set of workers it might run on
             # here, e.g. backend information, to choose the best method,
@@ -2532,7 +2553,6 @@ class UDFRunner:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
-                main_process_gpu=main_process_gpu,
                 dry=dry,
                 iterate=False
             ):
@@ -2543,71 +2563,75 @@ class UDFRunner:
         self,
         dataset: DataSet,
         executor: JobExecutor,
+        environment: Environment,
         roi: Optional[np.ndarray] = None,
         progress: bool = False,
         corrections: Optional[CorrectionSet] = None,
         backends: Optional[BackendSpec] = None,
-        main_process_gpu: Optional[int] = None,
         dry: bool = False,
     ) -> tuple[
         Iterable[tuple[tuple[UDFData, ...], TaskProtocol]],
         Any,
         UDFParams
     ]:
-        with tracer.start_as_current_span("_prepare_run_for_dataset"):
-            tasks, params = self._prepare_run_for_dataset(
-                dataset=dataset,
-                executor=executor,
-                roi=roi,
-                corrections=corrections,
-                backends=backends,
-                main_process_gpu=main_process_gpu,
-                dry=dry,
-            )
+        with environment.enter():
+            with environment.use_gpu():
+                with tracer.start_as_current_span("_prepare_run_for_dataset"):
+                    tasks, params = self._prepare_run_for_dataset(
+                        dataset=dataset,
+                        executor=executor,
+                        environment=environment,
+                        roi=roi,
+                        corrections=corrections,
+                        backends=backends,
+                        dry=dry,
+                    )
 
-        with tracer.start_as_current_span("before inner work"):
-            cancel_id = str(uuid.uuid4())
-            self._debug_task_pickling(tasks)
+                with tracer.start_as_current_span("before inner work"):
+                    cancel_id = str(uuid.uuid4())
+                    self._debug_task_pickling(tasks)
 
-            executor = executor.ensure_sync()
-            if dry:
-                task_comm_handler: TaskCommHandler = NoopCommHandler()
-            else:
-                task_comm_handler = dataset.get_task_comm_handler()
+                    executor = executor.ensure_sync()
+                    if dry:
+                        task_comm_handler: TaskCommHandler = NoopCommHandler()
+                    else:
+                        task_comm_handler = dataset.get_task_comm_handler()
 
-        def _inner():
-            pman = None
-            try:
-                if progress and tasks:
-                    pman = ProgressManager(tasks, cancel_id, reporter=self._progress_reporter)
-                    pman.connect(task_comm_handler)
-                    for task in tasks:
-                        task.report_progress()
-                with executor.scatter(params) as params_handle:
-                    # XXX yuck, refactor this?
-                    yield params_handle
+                def _inner():
+                    pman = None
+                    try:
+                        if progress and tasks:
+                            pman = ProgressManager(
+                                tasks, cancel_id, reporter=self._progress_reporter
+                            )
+                            pman.connect(task_comm_handler)
+                            for task in tasks:
+                                task.report_progress()
+                        with executor.scatter(params) as params_handle:
+                            # XXX yuck, refactor this?
+                            yield params_handle
 
-                    if tasks:
-                        task_gen = executor.run_tasks(
-                            tasks,
-                            params_handle,
-                            cancel_id,
-                            task_comm_handler,
-                        )
-                        try:
-                            for res in task_gen:
-                                if progress:
-                                    pman.finalize_task(res[1])
-                                yield res
-                        finally:
-                            task_gen.close()
-            finally:
-                if progress and tasks and pman is not None:
-                    pman.close()
+                            if tasks:
+                                task_gen = executor.run_tasks(
+                                    tasks,
+                                    params_handle,
+                                    cancel_id,
+                                    task_comm_handler,
+                                )
+                                try:
+                                    for res in task_gen:
+                                        if progress:
+                                            pman.finalize_task(res[1])
+                                        yield res
+                                finally:
+                                    task_gen.close()
+                    finally:
+                        if progress and tasks and pman is not None:
+                            pman.close()
 
-        it = _inner()
-        params_handle = next(it)
-        return it, params_handle, params
+                it = _inner()
+                params_handle = next(it)
+                return it, params_handle, params
 
     def run_for_dataset_sync(
         self,
@@ -2619,59 +2643,68 @@ class UDFRunner:
         backends: Optional[BackendSpec] = None,
         dry: bool = False,
         iterate: bool = True,
-        main_process_gpu: Optional[int] = None,
     ) -> ResultsForDataSet:
-        with use_gpu(main_process_gpu):
-            executor = executor.ensure_sync()
-            result_iter, params_handle, params = self.results_for_dataset_sync(
+        span = trace.get_current_span()
+        span_context = span.get_span_context()
+        executor = executor.ensure_sync()
+        results_task = GenericTask(
+            fn=self.results_for_dataset_sync,
+            span_context=span_context,
+        )
+        result_iter, params_handle, params = executor.run_process_local(
+            results_task,
+            kwargs=dict(
                 dataset=dataset,
                 executor=executor,
                 roi=roi,
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
-                main_process_gpu=main_process_gpu,
                 dry=dry,
             )
-            damage = BufferWrapper(kind='nav', dtype=bool)
-            damage.set_shape_ds(dataset.shape, roi)
-            damage.allocate()
+        )
+        damage = BufferWrapper(kind='nav', dtype=bool)
+        damage.set_shape_ds(dataset.shape, roi)
+        damage.allocate()
 
-            def _inner():
-                num_results = 0
-                try:
-                    for part_results, task in result_iter:
-                        num_results += 1
-                        with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
-                            self._apply_part_result(
-                                udfs=self._udfs,
-                                damage=damage,
-                                part_results=part_results,
-                                task=task
-                            )
-                        if iterate:
+        def _inner(environment: Environment):
+            num_results = 0
+            try:
+                with environment.enter():
+                    with environment.use_gpu():
+                        for part_results, task in result_iter:
+                            num_results += 1
+                            with tracer.start_as_current_span("_apply_part_result -> UDF.merge"):
+                                self._apply_part_result(
+                                    udfs=self._udfs,
+                                    damage=damage,
+                                    part_results=part_results,
+                                    task=task
+                                )
+                            if iterate:
+                                yield self._make_udf_result(
+                                    udfs=self._udfs,
+                                    damage=damage
+                                )
+                        if num_results == 0 or not iterate:
                             yield self._make_udf_result(
                                 udfs=self._udfs,
                                 damage=damage
                             )
-                    if num_results == 0 or not iterate:
-                        yield self._make_udf_result(
-                            udfs=self._udfs,
-                            damage=damage
-                        )
-                except JobCancelledError:
-                    raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
-                finally:
-                    result_iter.close()
+            except JobCancelledError:
+                raise UDFRunCancelled(f"UDF run cancelled after {num_results} partitions")
+            finally:
+                result_iter.close()
 
-            gen = _inner()
-            return ResultsForDataSet(
-                gen=gen,
-                params_handle=params_handle,
-                params=params,
-                executor=executor,
-                udfs=self._udfs,
-            )
+        inner_task = GenericTask(fn=_inner, span_context=span_context)
+        gen = executor.run_process_local(task=inner_task)
+        return ResultsForDataSet(
+            gen=gen,
+            params_handle=params_handle,
+            params=params,
+            executor=executor,
+            udfs=self._udfs,
+        )
 
     async def run_for_dataset_async(
         self,

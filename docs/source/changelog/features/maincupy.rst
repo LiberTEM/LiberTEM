@@ -9,6 +9,5 @@
   :meth:`libertem.udf.base.UDF.get_results` with Fourier transforms over the
   displacement vector field that run much faster on GPUs compared to CPUs. It
   can be controlled with the new :code:`main_process_gpu` parameter for
-  :meth:`libertem.api.Context` and :meth:`libertem.api.Context.make_with`. In
-  :meth:`libertem.api.Context.make_with` it is enabled by default to catch
+  :meth:`libertem.api.Context.make_with`. It is enabled by default to catch
   potential issues, to be reviewed before the next release (:pr:`1758`).

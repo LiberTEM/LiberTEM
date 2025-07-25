@@ -32,7 +32,7 @@ class NoopSigUDF(UDF):
 def test_udf_noncontiguous_tiles(lt_ctx, backend, benchmark):
     if backend == 'cupy':
         d = detect()
-        cudas = detect()['cudas']
+        cudas = d['cudas']
         if not d['cudas'] or not d['has_cupy']:
             pytest.skip("No CUDA device or no CuPy, skipping CuPy test")
 

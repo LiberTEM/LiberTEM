@@ -16,6 +16,7 @@ from libertem.utils.devices import detect
 from .base import BaseJobExecutor
 from libertem.common.executor import Environment, TaskCommHandler, TaskProtocol
 from libertem.common.scheduler import Worker, WorkerSet
+from libertem.common.backend import get_use_cuda
 
 from ..common.buffers import BufferWrapper
 from ..common.math import prod
@@ -174,15 +175,18 @@ class DelayedUDFRunner(UDFRunner):
         return False
 
     def results_for_dataset_sync(self, dataset: DataSet, executor: 'DelayedJobExecutor',
+            environment: Environment,
             roi: Optional[np.ndarray] = None, progress: bool = False,
-            corrections: Optional[CorrectionSet] = None, backends: Optional[BackendSpec] = None,
+            corrections: Optional[CorrectionSet] = None,
+            backends: Optional[BackendSpec] = None,
             dry: bool = False) -> Iterable[tuple]:
 
         executor.register_master_udfs(self._udfs)
 
         return super().results_for_dataset_sync(
-            dataset, executor, roi=roi, progress=progress,
-            corrections=corrections, backends=backends, dry=dry
+            dataset, executor, environment=environment, roi=roi, progress=progress,
+            corrections=corrections, backends=backends,
+            dry=dry
         )
 
 
@@ -192,12 +196,19 @@ class DelayedJobExecutor(BaseJobExecutor):
 
     .. versionadded:: 0.9.0
 
+    Parameters
+    ----------
+
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
+
     Highly experimental at this time!
     """
-    def __init__(self):
+    def __init__(self, main_process_gpu: Optional[int] = None):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self._udfs = None
+        super().__init__(main_process_gpu=main_process_gpu)
 
     @contextlib.contextmanager
     def scatter(self, obj):
@@ -231,7 +242,8 @@ class DelayedJobExecutor(BaseJobExecutor):
 
         called from :meth:`DelayedUDFRunner.results_for_dataset_sync`
         """
-        env = Environment(threads_per_worker=1, threaded_executor=True)
+        gpu_id = get_use_cuda()
+        env = Environment(threads_per_worker=1, threaded_executor=True, gpu_id=gpu_id)
         for task in tasks:
             structure = structure_from_task(self._udfs, task)
             flat_structure = delayed_unpack.flatten_nested(structure)

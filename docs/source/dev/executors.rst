@@ -22,6 +22,9 @@ Base classes
 .. automodule:: libertem.common.executor
     :members: JobExecutor, AsyncJobExecutor
 
+.. automodule:: libertem.executor.base
+    :members: BaseJobExecutor
+
 .. _`dask executor`:
 
 Dask.Distributed
@@ -32,6 +35,7 @@ when creating a :class:`~libertem.api.Context` with no parameters.
 
 .. automodule:: libertem.executor.dask
     :members:
+    :inherited-members:
 
 .. automodule:: libertem.executor.integration
     :members:
@@ -41,12 +45,14 @@ Inline
 
 .. automodule:: libertem.executor.inline
     :members:
+    :inherited-members:
 
 Concurrent
 ..........
 
 .. automodule:: libertem.executor.concurrent
     :members:
+    :inherited-members:
 
 Dask.delayed
 ............
@@ -56,6 +62,7 @@ See :ref:`delayed_udfs` for more information about
 
 .. automodule:: libertem.executor.delayed
     :members:
+    :inherited-members:
 
 .. _`pipelined executor`:
 
@@ -64,3 +71,4 @@ Pipelined executor
 
 .. automodule:: libertem.executor.pipelined
     :members:
+    :inherited-members:

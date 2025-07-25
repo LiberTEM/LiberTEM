@@ -63,6 +63,13 @@ spec.loader.exec_module(utils)
 dask.config.set({"distributed.worker.profile.enabled": False})
 
 
+d = detect()
+if d['has_cupy'] and d['cudas']:
+    main_process_gpu = d['cudas'][0]
+else:
+    main_process_gpu = None
+
+
 def get_or_create_hdf5(tmpdir_factory, filename, *args, **kwargs):
     datadir = tmpdir_factory.mktemp('data')
     filename = os.path.join(datadir, filename)
@@ -728,7 +735,7 @@ def dist_ctx(scheduler_addr):
      - one scheduler node
      - data availability TBD
     """
-    executor = DaskJobExecutor.connect(scheduler_addr)
+    executor = DaskJobExecutor.connect(scheduler_addr, main_process_gpu=main_process_gpu)
     with lt.Context(executor=executor) as ctx:
         yield ctx
 
@@ -740,7 +747,9 @@ def ipy_ctx():
     # wait for two engines: see also docker-compose.yml where the engines are started
     client.wait_for_engines(2)
     dask_client = client.become_dask()
-    executor = DaskJobExecutor(client=dask_client, is_local=False)
+    executor = DaskJobExecutor(
+        client=dask_client, is_local=False, main_process_gpu=main_process_gpu
+    )
     with lt.Context(executor=executor) as ctx:
         yield ctx
 
@@ -765,7 +774,7 @@ def ipy_ctx():
 @pytest.fixture(scope="class")
 def shared_dist_ctx():
     print("start shared Context()")
-    ctx = lt.Context()
+    ctx = lt.Context.make_with(main_process_gpu=main_process_gpu)
     yield ctx
     print("stop shared Context()")
     ctx.close()
@@ -776,7 +785,7 @@ def shared_dist_ctx_globaldask():
     # Sets default dask.distributed client
     # for integration testing
     print("start shared Context()")
-    ctx = lt.Context.make_with('dask-make-default')
+    ctx = lt.Context.make_with('dask-make-default', main_process_gpu=main_process_gpu)
     yield ctx
     print("stop shared Context()")
     # Make sure everything is shut down
@@ -786,7 +795,7 @@ def shared_dist_ctx_globaldask():
 
 @pytest.fixture(autouse=True)
 def auto_ctx(doctest_namespace):
-    ctx = lt.Context(executor=InlineJobExecutor())
+    ctx = lt.Context(executor=InlineJobExecutor(main_process_gpu=main_process_gpu))
     doctest_namespace["ctx"] = ctx
 
 
@@ -823,22 +832,27 @@ def auto_files(doctest_namespace, hdf5, default_raw):
 
 @pytest.fixture
 def inline_executor():
-    return InlineJobExecutor(debug=True, inline_threads=2)
+    return InlineJobExecutor(debug=True, inline_threads=2, main_process_gpu=main_process_gpu)
 
 
 @pytest.fixture
 def delayed_executor():
-    return DelayedJobExecutor()
+    return DelayedJobExecutor(main_process_gpu=main_process_gpu)
 
 
 @pytest.fixture
 def lt_ctx(inline_executor):
-    return lt.Context(executor=inline_executor, plot_class=Dummy2DPlot)
+    # Enable GPU on main process if GPU is available
+    # to catch any issues with that feature
+    return lt.Context(
+        executor=inline_executor,
+        plot_class=Dummy2DPlot,
+    )
 
 
 @pytest.fixture
 def inline_executor_fast():
-    return InlineJobExecutor(debug=False, inline_threads=2)
+    return InlineJobExecutor(debug=False, inline_threads=2, main_process_gpu=main_process_gpu)
 
 
 @pytest.fixture
@@ -852,7 +866,8 @@ async def async_executor(local_cluster_url):
     sync_executor = await sync_to_async(
         partial(
             DaskJobExecutor.connect,
-            scheduler_uri=local_cluster_url
+            scheduler_uri=local_cluster_url,
+            main_process_gpu=main_process_gpu,
         ),
         pool=pool,
     )
@@ -863,14 +878,14 @@ async def async_executor(local_cluster_url):
 
 @pytest.fixture
 def dask_executor(local_cluster_url):
-    executor = DaskJobExecutor.connect(local_cluster_url)
+    executor = DaskJobExecutor.connect(local_cluster_url, main_process_gpu=main_process_gpu)
     yield executor
     executor.close()
 
 
 @pytest.fixture
 def concurrent_executor():
-    executor = ConcurrentJobExecutor.make_local()
+    executor = ConcurrentJobExecutor.make_local(main_process_gpu=main_process_gpu)
     yield executor
     executor.close()
 

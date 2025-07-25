@@ -4,7 +4,7 @@ from typing import (
     TypeVar,
 )
 from collections.abc import Generator, Iterable
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import multiprocessing as mp
 
 import cloudpickle
@@ -14,7 +14,9 @@ from typing_extensions import Protocol, Literal
 
 from libertem.common.scheduler import WorkerSet
 from libertem.common.threading import set_num_threads, mitigations
+from libertem.common.cupy import use_gpu
 from libertem.io.dataset.base import Partition
+from libertem.utils.devices import has_cupy
 
 
 if TYPE_CHECKING:
@@ -52,10 +54,12 @@ class Environment:
         threads_per_worker: Optional[int],
         threaded_executor: bool,
         worker_context: Optional["WorkerContext"] = None,
+        gpu_id: Optional[int] = None,
     ):
         self._threads_per_worker = threads_per_worker
         self._threaded_executor = threaded_executor
         self._worker_context = worker_context
+        self._gpu_id = gpu_id
 
     @property
     def threads_per_worker(self) -> Optional[int]:
@@ -92,20 +96,44 @@ class Environment:
         """
         return self._worker_context
 
+    @property
+    def gpu_id(self) -> Optional[int]:
+        """
+        ID of the GPU to activate in CuPy when entering the environment,
+        as specified in the constructor.
+        """
+        return self._gpu_id
+
     @contextmanager
-    def enter(self):
+    def enter(self, enable_gpu: bool = True):
         """
         Note: we are using the @contextmanager decorator here,
         because with separate `__enter__`, `__exit__` methods,
         we can't easily delegate to `set_num_threads`, or other
         contextmanagers that may come later.
+
+        Parameters
+        ----------
+
+        enable_gpu : bool, default True
+            .. versionadded :: 0.16.0
+            Enable the GPU set in the constructor.
         """
-        with set_num_threads(self._threads_per_worker):
-            if self.threaded_executor:
-                with mitigations():
+        with use_gpu(self._gpu_id) if enable_gpu else nullcontext():
+            with set_num_threads(self._threads_per_worker):
+                with mitigations() if self.threaded_executor else nullcontext():
                     yield self
-            else:
-                yield self
+
+    @property
+    def device_class(self) -> Literal['cpu', 'cuda']:
+        if self.gpu_id is None:
+            return 'cpu'
+        else:
+            return 'cuda'
+
+    @property
+    def has_cupy(self) -> bool:
+        return has_cupy()
 
 
 class TaskProtocol(Protocol):
@@ -125,6 +153,17 @@ class TaskProtocol(Protocol):
         ...
 
 
+class GenericTaskProtocol(Protocol):
+    '''
+    Interface for generic tasks
+    '''
+    def __call__(self, args, kwargs, environment: Environment):
+        pass
+
+    def get_tracing_span_context(self) -> "SpanContext":
+        ...
+
+
 T = TypeVar('T')
 V = TypeVar('V')
 
@@ -136,6 +175,12 @@ class JobExecutor:
     def run_function(self, fn: Callable[..., T], *args, **kwargs) -> T:
         """
         run a callable :code:`fn` on any worker
+        """
+        raise NotImplementedError()
+
+    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: Optional[dict] = None):
+        """
+        run a callable :code:`fn` in the context of the current process.
         """
         raise NotImplementedError()
 

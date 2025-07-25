@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from opentelemetry import trace
 
 from .base import (
-    BaseJobExecutor, AsyncAdapter,
+    BaseJobExecutor, AsyncAdapter
 )
 from libertem.common.executor import (
     JobCancelledError, TaskProtocol, TaskCommHandler, WorkerContext,
@@ -44,9 +44,11 @@ def _run_task(task, params, task_id, threaded_executor, msg_queue, scatter_map):
     """
     params = scatter_map[params]
     worker_context = ConcurrentWorkerContext(msg_queue)
+    gpu_id = get_use_cuda()
     env = Environment(threads_per_worker=1,
                       threaded_executor=threaded_executor,
-                      worker_context=worker_context)
+                      worker_context=worker_context,
+                      gpu_id=gpu_id)
     task_result = task(env=env, params=params)
     return {
         "task_result": task_result,
@@ -66,14 +68,21 @@ class ConcurrentJobExecutor(BaseJobExecutor):
     client : concurrent.futures.Executor
     is_local : bool
         Shut the client down when the executor closes.
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
     '''
-    def __init__(self, client: concurrent.futures.Executor, is_local=False):
+    def __init__(
+            self,
+            client: concurrent.futures.Executor,
+            is_local=False,
+            main_process_gpu: Optional[int] = None):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self.is_local = is_local
         self.client = client
         self._futures = {}
         self._scatter_map = {}
+        super().__init__(main_process_gpu=main_process_gpu)
 
     @contextlib.contextmanager
     def scatter(self, obj):
@@ -199,7 +208,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             self.client.shutdown(wait=False)
 
     @classmethod
-    def make_local(cls, n_threads: Optional[int] = None):
+    def make_local(cls, n_threads: Optional[int] = None, main_process_gpu: Optional[int] = None):
         """
         Create a local ConcurrentJobExecutor backed by
         a :class:`python:concurrent.futures.ThreadPoolExecutor`
@@ -221,7 +230,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             devices = detect()
             n_threads = len(devices['cpus'])
         client = TracedThreadPoolExecutor(tracer, max_workers=n_threads)
-        return cls(client=client, is_local=True)
+        return cls(client=client, is_local=True, main_process_gpu=main_process_gpu)
 
     def __enter__(self):
         return self

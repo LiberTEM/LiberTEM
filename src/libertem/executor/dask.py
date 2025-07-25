@@ -23,7 +23,7 @@ from libertem.common.snooze import SnoozeManager, keep_alive, keep_alive_context
 from libertem.common.subscriptions import SubscriptionManager
 from libertem.common.async_utils import sync_to_async
 from libertem.common.scheduler import Worker, WorkerSet
-from libertem.common.backend import set_use_cpu, set_use_cuda
+from libertem.common.backend import set_use_cpu, set_use_cuda, get_use_cuda
 from libertem.common.async_utils import adjust_event_loop_policy
 from .utils import assign_cudas
 
@@ -245,9 +245,11 @@ def _run_task(task, params, task_id, threaded_executor, comms_topic: Optional[st
     cache, which blows up memory usage over time.
     """
     worker_context = DaskWorkerContext(comms_topic)
+    gpu_id = get_use_cuda()
     env = Environment(threads_per_worker=1,
                       threaded_executor=threaded_executor,
-                      worker_context=worker_context)
+                      worker_context=worker_context,
+                      gpu_id=gpu_id)
     task_result = task(env=env, params=params)
     return {
         "task_result": task_result,
@@ -442,9 +444,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     lt_resources : bool
         Specify if the cluster has LiberTEM resource tags and environment
         variables for GPU processing. Autodetected by default.
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
     '''
     def __init__(self, client: dd.Client, is_local: bool = False,
-                lt_resources: bool = None):
+                lt_resources: bool = None, main_process_gpu: Optional[int] = None):
         self.is_local = is_local
         self.client = client
         if lt_resources is None:
@@ -455,6 +459,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         self._snooze_manager = None
         self._worker_spec = None
         self._subscriptions = SubscriptionManager()
+        super().__init__(main_process_gpu=main_process_gpu)
 
     def _scale_down(self):
         """
@@ -810,7 +815,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     @classmethod
     def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
             client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None,
-            snooze_timeout: Optional[float] = None):
+            snooze_timeout: Optional[float] = None, main_process_gpu: Optional[int] = None):
         """
         Spin up a local dask cluster
 
@@ -831,6 +836,8 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             default Dask scheduler.
         preload: Optional[Tuple[str]]
             Passed to :func:`cluster_spec` if :code:`spec` is :code:`None`.
+        main_process_gpu : int or None, optional
+            GPU to use for the environment of process-local tasks
 
         Returns
         -------
@@ -845,7 +852,10 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
         if spec is None:
             from libertem.utils.devices import detect
-            spec = cluster_spec(**detect(), preload=preload)
+            d = detect()
+            spec = cluster_spec(**d, preload=preload)
+            if main_process_gpu is None and d['has_cupy'] and d['cudas']:
+                main_process_gpu = d['cudas'][0]
         else:
             if preload is not None:
                 raise ValueError(
@@ -875,7 +885,12 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
         is_local = not client_kwargs['set_as_default']
 
-        executor = cls(client=client, is_local=is_local, lt_resources=True)
+        executor = cls(
+            client=client,
+            is_local=is_local,
+            lt_resources=True,
+            main_process_gpu=main_process_gpu,
+        )
         if snooze_timeout is not None:
             executor._enable_snooze(snooze_timeout, spec)
         return executor
@@ -904,12 +919,15 @@ class AsyncDaskJobExecutor(AsyncAdapter):
         return cls(wrapped=executor)
 
     @classmethod
-    async def make_local(cls, spec=None, cluster_kwargs=None, client_kwargs=None):
+    async def make_local(
+            cls, spec=None, cluster_kwargs=None, client_kwargs=None,
+            main_process_gpu=None):
         executor = await sync_to_async(functools.partial(
             DaskJobExecutor.make_local,
             spec=spec,
             cluster_kwargs=cluster_kwargs,
             client_kwargs=client_kwargs,
+            main_process_gpu=main_process_gpu,
         ))
         return cls(wrapped=executor)
 

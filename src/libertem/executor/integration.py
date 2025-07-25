@@ -1,5 +1,6 @@
 import types
 import warnings
+from typing import Optional
 
 import dask
 import dask.delayed
@@ -10,7 +11,7 @@ from .concurrent import ConcurrentJobExecutor
 from .inline import InlineJobExecutor
 
 
-def get_dask_integration_executor():
+def get_dask_integration_executor(main_process_gpu: Optional[int] = None):
     '''
     Query the current Dask scheduler and return a :class:`~libertem.common.executor.JobExecutor`
     that is compatible with it. See https://docs.dask.org/en/stable/scheduling.html
@@ -33,6 +34,12 @@ def get_dask_integration_executor():
     If the Dask scheduler is :code:`'synchronous'`, return an
     :class:`~libertem.executor.inline.InlineJobExecutor`
     which mimics the single-process, single-thread behaviour of Dask.
+
+    Parameters
+    ----------
+
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
     '''
     item = dask.delayed(1)
     dask_scheduler = dask.base.get_scheduler(collections=[item])
@@ -47,10 +54,16 @@ def get_dask_integration_executor():
                     "the DM reader. "
                     "See https://github.com/dask/distributed/issues/6776"
                 )
-            return DaskJobExecutor(client=dask_scheduler.__self__)
+            return DaskJobExecutor(
+                client=dask_scheduler.__self__,
+                main_process_gpu=main_process_gpu,
+            )
     elif dask_scheduler is dask.threaded.get:
         if dask.threaded.default_pool:
-            return ConcurrentJobExecutor(client=dask.threaded.default_pool)
+            return ConcurrentJobExecutor(
+                client=dask.threaded.default_pool,
+                main_process_gpu=main_process_gpu,
+            )
     # ConcurrentJobExecutor is currently incompatible with ProcessPoolExecutor
     # since it can't pickle local functions.
     # Therefore, fall through to default case for now.
@@ -62,8 +75,8 @@ def get_dask_integration_executor():
     #         is_local=True
     #     )
     elif dask_scheduler is dask.local.get_sync:
-        return InlineJobExecutor()
+        return InlineJobExecutor(main_process_gpu=main_process_gpu)
 
     # If we didn't return yet,
     # we fall through to the default case.
-    return ConcurrentJobExecutor.make_local()
+    return ConcurrentJobExecutor.make_local(main_process_gpu=main_process_gpu)

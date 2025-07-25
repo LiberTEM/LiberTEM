@@ -17,7 +17,7 @@ import time
 from tblib import pickling_support
 import cloudpickle
 from opentelemetry import trace
-from libertem.common.backend import set_use_cpu, set_use_cuda, set_file_limit
+from libertem.common.backend import set_use_cpu, set_use_cuda, set_file_limit, get_use_cuda
 
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
@@ -612,10 +612,12 @@ def pipelined_worker(
             set_thread_name(f"worker-{worker_idx}")
 
             worker_context = PipelinedWorkerContext(queues.request, queues.message)
+            gpu_id = get_use_cuda()
             env = Environment(
                 threaded_executor=False,
                 threads_per_worker=1,
-                worker_context=worker_context
+                worker_context=worker_context,
+                gpu_id=gpu_id
             )
 
             queues.response.put({
@@ -812,6 +814,9 @@ class PipelinedExecutor(BaseJobExecutor):
         Callable that will be run as early as possible on each worker process.
         Useful for custom warmup code or testing.
 
+    main_process_gpu : int or None, optional
+        GPU to use for the environment of process-local tasks
+
     Note
     ----
     This executor is not thread-safe - concurrent calls into :meth:`run_tasks` or
@@ -824,6 +829,7 @@ class PipelinedExecutor(BaseJobExecutor):
         startup_timeout: float = 30.0,
         cleanup_timeout: float = 10.0,
         early_setup: Optional[Callable] = None,
+        main_process_gpu: Optional[int] = None,
     ) -> None:
         self._pin_workers = pin_workers
         if spec is None:
@@ -843,6 +849,7 @@ class PipelinedExecutor(BaseJobExecutor):
 
         # keep this at the bottom:
         self._pool = self._start_pool()
+        super().__init__(main_process_gpu=main_process_gpu)
 
     def _start_pool(self) -> WorkerPool:
         with tracer.start_as_current_span("PipelinedExecutor.start_pool") as span:

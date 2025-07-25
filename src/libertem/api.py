@@ -232,6 +232,39 @@ class Context:
         self._created_at = traceback.format_stack()
         self._register_at_exit()
 
+    @staticmethod
+    def _make_canonical(main_process_gpu):
+        if main_process_gpu is False:
+            main_process_gpu = None
+        elif main_process_gpu is True:
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if spec_args['cudas'] and spec_args['has_cupy']:
+                main_process_gpu = spec_args['cudas'][0]
+            else:
+                raise ExecutorSpecException(
+                    'Cannot specify GPU for main process as no GPUs detected or no CuPy found.'
+                )
+        elif main_process_gpu is None:
+            # Activate if available
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if spec_args['cudas'] and spec_args['has_cupy']:
+                main_process_gpu = spec_args['cudas'][0]
+        # check last because instanceof(<bool>, int) is True
+        elif isinstance(main_process_gpu, int):
+            # Verify it is a valid GPU ID
+            from libertem.utils.devices import detect
+            spec_args = detect()
+            if main_process_gpu not in spec_args['cudas'] or not spec_args['has_cupy']:
+                raise ExecutorSpecException(
+                    f"GPU {main_process_gpu} for main process not detected, "
+                    f"only found {spec_args['cudas']}."
+                )
+        else:
+            raise ValueError(f'Invalid type for main_process_gpu: {type(main_process_gpu)}')
+        return main_process_gpu
+
     @classmethod
     def make_with(
         cls,
@@ -241,6 +274,7 @@ class Context:
         gpus: Optional[Union[int, Iterable[int]]] = None,
         plot_class: Optional['Live2DPlot'] = None,
         snooze_timeout: Optional[float] = None,
+        main_process_gpu: Optional[Union[int, bool]] = None,
     ) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
@@ -323,6 +357,22 @@ class Context:
             environment, for example. The executor is automatically brought back
             up when used again after snoozing. Currently only supported for the
             :class:`~libertem.executor.dask.DaskJobExecutor`.
+        main_process_gpu : int or bool, optional
+
+            .. versionadded:: 0.16.0
+
+            Activate GPU processing on the main process. Currently, this switches
+            :attr:`libertem.udf.base.UDF.xp` to CuPy if available.
+
+            True:
+                Use any available GPU, throw an error if none are available.
+            int:
+                Specify GPU ID to use, throw an error if it is not present.
+            False:
+                Don't use GPU on the main process.
+            None:
+                Default behavior. Currently activates GPU processing if a GPU is
+                available to catch any potential issues with this feature.
 
         Raises
         ------
@@ -340,6 +390,7 @@ class Context:
         has_spec = cpu_spec or gpu_spec
         limited_execs = ('inline', 'synchronous', 'dask-integration', 'delayed')
         cannot_cpus = executor_spec in limited_execs
+        main_process_gpu = cls._make_canonical(main_process_gpu)
         if cpu_spec and cannot_cpus:
             raise ExecutorSpecException(f'Executor type {executor_spec} does not support '
                                         'specifying CPU workers at this time')
@@ -366,31 +417,39 @@ class Context:
 
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
-            executor = InlineJobExecutor()
+            executor = InlineJobExecutor(main_process_gpu=main_process_gpu)
         elif executor_spec == 'threads':
             n_threads = cpus
             try:
                 n_threads = len(n_threads)
             except TypeError:
                 pass
-            executor = ConcurrentJobExecutor.make_local(n_threads=n_threads)
+            executor = ConcurrentJobExecutor.make_local(
+                n_threads=n_threads,
+                main_process_gpu=main_process_gpu
+            )
         elif executor_spec == 'dask':
-            executor = DaskJobExecutor.make_local(spec=spec, snooze_timeout=snooze_timeout)
+            executor = DaskJobExecutor.make_local(
+                spec=spec,
+                snooze_timeout=snooze_timeout,
+                main_process_gpu=main_process_gpu
+            )
         elif executor_spec == 'dask-integration':
-            executor = get_dask_integration_executor()
+            executor = get_dask_integration_executor(main_process_gpu=main_process_gpu)
         elif executor_spec == 'dask-make-default':
             executor = DaskJobExecutor.make_local(
                 spec=spec,
-                client_kwargs={"set_as_default": True}
+                client_kwargs={"set_as_default": True},
+                main_process_gpu=main_process_gpu,
             )
         elif executor_spec == 'delayed':
-            executor = DelayedJobExecutor()
+            executor = DelayedJobExecutor(main_process_gpu=main_process_gpu)
         elif executor_spec == 'pipelined':
             if has_spec:
                 spec = PipelinedExecutor.make_spec(**spec_args)
-                executor = PipelinedExecutor(spec=spec)
+                executor = PipelinedExecutor(spec=spec, main_process_gpu=main_process_gpu)
             else:
-                executor = PipelinedExecutor.make_local()
+                executor = PipelinedExecutor.make_local(main_process_gpu=main_process_gpu)
         else:
             raise ExecutorSpecException(
                 f'Argument `executor_spec` is {executor_spec}. Allowed are '
@@ -1269,7 +1328,7 @@ class Context:
                 progress=progress,
                 corrections=corrections,
                 backends=backends,
-                iterate=(iterate or enable_plotting)
+                iterate=(iterate or enable_plotting),
             )
 
             def _inner():

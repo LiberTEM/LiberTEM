@@ -852,7 +852,10 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
 
         if spec is None:
             from libertem.utils.devices import detect
-            spec = cluster_spec(**detect(), preload=preload)
+            d = detect()
+            spec = cluster_spec(**d, preload=preload)
+            if main_process_gpu is None and d['has_cupy'] and d['cudas']:
+                main_process_gpu = d['cudas'][0]
         else:
             if preload is not None:
                 raise ValueError(

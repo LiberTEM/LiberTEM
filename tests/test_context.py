@@ -641,3 +641,23 @@ def with_main_gpu(executor, main_process_gpu):
             assert not np.any(res['process_cupy'])
         finally:
             ctx.close()
+
+
+@pytest.mark.slow
+def test_default_context_with_main_gpu():
+    d = detect()
+    use_cupy = d['has_cupy'] and d['cudas']
+    ctx = Context()
+    try:
+        udf = CheckXPUDF()
+        ds = ctx.load('memory', data=np.zeros((1, 1, 1, 1)))
+        res = ctx.run_udf(dataset=ds, udf=udf)
+        if use_cupy:
+            assert np.all(res['merge_cupy'])
+            assert np.all(res['result_cupy'])
+        else:
+            assert not np.any(res['merge_cupy'])
+            assert not np.any(res['result_cupy'])
+        assert not np.any(res['process_cupy'])
+    finally:
+        ctx.close()

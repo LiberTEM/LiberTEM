@@ -6,7 +6,7 @@ import functools
 import contextlib
 import multiprocessing as mp
 from typing import (
-    TYPE_CHECKING, Any, Callable, NamedTuple, Optional, TypeVar, Union,
+    TYPE_CHECKING, Any, Callable, NamedTuple, Optional, TypeVar, Union
 )
 from collections.abc import Iterable, Generator
 from typing_extensions import TypedDict, Literal
@@ -22,13 +22,13 @@ from libertem.common.backend import set_use_cpu, set_use_cuda, set_file_limit, g
 from libertem.common.executor import (
     Environment, TaskProtocol, WorkerContext, WorkerQueue,
     WorkerQueueEmpty, TaskCommHandler, SimpleMPWorkerQueue,
-    JobCancelledError, ResourceDef,
+    JobCancelledError, ResourceDef, GPUSpec
 )
 from libertem.common.scheduler import Worker, WorkerSet, Scheduler
 from libertem.common.tracing import add_partition_to_span, attach_to_parent, maybe_setup_tracing
 
 from .utils import assign_cudas
-from .base import BaseJobExecutor, ResourceError
+from .base import BaseJobExecutor, ResourceError, make_canonical
 
 try:
     import prctl
@@ -912,12 +912,13 @@ class PipelinedExecutor(BaseJobExecutor):
         return _make_spec(**detected)
 
     @classmethod
-    def make_local(cls, **kwargs):
+    def make_local(cls, main_process_gpu: GPUSpec = None, **kwargs):
         """
         Create a :code:`PipelinedExecutor` with the default spec.
         """
         spec = cls._default_spec()
-        return cls(spec=spec, **kwargs)
+        main_process_gpu = make_canonical(main_process_gpu)
+        return cls(spec=spec, main_process_gpu=main_process_gpu, **kwargs)
 
     @classmethod
     def make_spec(
@@ -926,7 +927,9 @@ class PipelinedExecutor(BaseJobExecutor):
         cudas: Union[int, Iterable[int]],
         has_cupy: bool = False,
     ):
-        return _make_spec(cpus=cpus, cudas=cudas, has_cupy=has_cupy)
+        return _make_spec(
+            cpus=cpus, cudas=cudas, has_cupy=has_cupy
+        )
     make_spec.__doc__ = _make_spec.__doc__
 
     def _validate_worker_state(self):

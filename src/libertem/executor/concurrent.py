@@ -10,11 +10,11 @@ from collections.abc import Iterable
 from opentelemetry import trace
 
 from .base import (
-    BaseJobExecutor, AsyncAdapter
+    BaseJobExecutor, AsyncAdapter, make_canonical
 )
 from libertem.common.executor import (
     JobCancelledError, TaskProtocol, TaskCommHandler, WorkerContext,
-    SimpleWorkerQueue, WorkerQueue, Environment
+    SimpleWorkerQueue, WorkerQueue, Environment, GPUSpec
 )
 from libertem.common.async_utils import sync_to_async
 from libertem.utils.devices import detect
@@ -208,7 +208,11 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             self.client.shutdown(wait=False)
 
     @classmethod
-    def make_local(cls, n_threads: Optional[int] = None, main_process_gpu: Optional[int] = None):
+    def make_local(
+            cls,
+            n_threads: Optional[int] = None,
+            main_process_gpu: GPUSpec = None
+            ):
         """
         Create a local ConcurrentJobExecutor backed by
         a :class:`python:concurrent.futures.ThreadPoolExecutor`
@@ -220,12 +224,15 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             The number of threads to spawn in the executor,
             by default None in which case as many threads as there
             are CPU cores will be spawned.
+        main_process_gpu
+            GPU to use for the environment of process-local tasks
 
         Returns
         -------
         ConcurrentJobExecutor
             the connected JobExecutor
         """
+        main_process_gpu = make_canonical(main_process_gpu)
         if n_threads is None:
             devices = detect()
             n_threads = len(devices['cpus'])

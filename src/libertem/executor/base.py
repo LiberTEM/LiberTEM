@@ -9,7 +9,7 @@ from libertem.common.async_utils import (
 )
 from libertem.common.executor import JobExecutor, AsyncJobExecutor
 from libertem.common.tracing import TracedThreadPoolExecutor
-from libertem.common.executor import Environment, GenericTaskProtocol
+from libertem.common.executor import Environment, GenericTaskProtocol, GPUSpec
 
 
 if TYPE_CHECKING:
@@ -25,6 +25,67 @@ class ResourceError(RuntimeError):
     resources that are not available in the worker pool.
     """
     pass
+
+
+def make_canonical(main_gpu: GPUSpec) -> Optional[int]:
+    '''
+    Handle default cases when specifying a main GPU
+
+    .. versionadded:: 0.16.0
+
+    Parameters
+    ----------
+
+    main_gpu : int or bool, optional
+
+        GPU spec to use for GPU processing on the main process.
+
+        True:
+            Use any available GPU, throw an error if none are available.
+        int:
+            Specify GPU ID to use, throw an error if it is not present.
+        False:
+            Don't use GPU on the main process.
+        None:
+            Default behavior. Currently activates GPU processing if a GPU is
+            available to catch any potential issues with this feature.
+
+    Returns
+    -------
+
+    int or None
+        GPU ID or :code:`None` for no GPU processing
+    '''
+    if main_gpu is False:
+        main_gpu = None
+    elif main_gpu is True:
+        from libertem.utils.devices import detect
+        detect_out = detect()
+        if detect_out['cudas'] and detect_out['has_cupy']:
+            main_gpu = detect_out['cudas'][0]
+        else:
+            raise ResourceError(
+                'Cannot specify main GPU as no GPUs detected or no CuPy found.'
+            )
+    elif main_gpu is None:
+        # Activate if available
+        from libertem.utils.devices import detect
+        detect_out = detect()
+        if detect_out['cudas'] and detect_out['has_cupy']:
+            main_gpu = detect_out['cudas'][0]
+    # check last because instanceof(<bool>, int) is True
+    elif isinstance(main_gpu, int):
+        # Verify it is a valid GPU ID
+        from libertem.utils.devices import detect
+        detect_out = detect()
+        if main_gpu not in detect_out['cudas'] or not detect_out['has_cupy']:
+            raise ResourceError(
+                f"Main GPU {main_gpu} not detected, "
+                f"only found {detect_out['cudas']}."
+            )
+    else:
+        raise ValueError(f'Invalid type for main_process_gpu: {type(main_gpu)}')
+    return main_gpu
 
 
 class BaseJobExecutor(JobExecutor):

@@ -1,7 +1,7 @@
 import queue
 from typing import (
     Callable, Optional, Any, TYPE_CHECKING,
-    TypeVar,
+    TypeVar, Union
 )
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager, nullcontext
@@ -30,6 +30,8 @@ ResourceDef = dict[
     ],
     int
 ]
+
+GPUSpec = Optional[Union[int, bool]]
 
 tracer = trace.get_tracer(__name__)
 

@@ -7,9 +7,12 @@ from contextlib import asynccontextmanager
 from libertem.common.async_utils import (
     adjust_event_loop_policy, sync_to_async, async_generator_eager
 )
-from libertem.common.executor import JobExecutor, AsyncJobExecutor
+from libertem.common.executor import (
+    JobExecutor, AsyncJobExecutor,
+    Environment, GenericTaskProtocol, GPUSpec,
+)
 from libertem.common.tracing import TracedThreadPoolExecutor
-from libertem.common.executor import Environment, GenericTaskProtocol, GPUSpec
+from libertem.common.exceptions import ExecutorSpecException
 
 
 if TYPE_CHECKING:
@@ -64,7 +67,7 @@ def make_canonical(main_gpu: GPUSpec) -> Optional[int]:
         if detect_out['cudas'] and detect_out['has_cupy']:
             main_gpu = detect_out['cudas'][0]
         else:
-            raise ResourceError(
+            raise ExecutorSpecException(
                 'Cannot specify main GPU as no GPUs detected or no CuPy found.'
             )
     elif main_gpu is None:
@@ -79,7 +82,7 @@ def make_canonical(main_gpu: GPUSpec) -> Optional[int]:
         from libertem.utils.devices import detect
         detect_out = detect()
         if main_gpu not in detect_out['cudas'] or not detect_out['has_cupy']:
-            raise ResourceError(
+            raise ExecutorSpecException(
                 f"Main GPU {main_gpu} not detected, "
                 f"only found {detect_out['cudas']}."
             )

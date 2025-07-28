@@ -1,17 +1,18 @@
 import types
 import warnings
-from typing import Optional
 
 import dask
 import dask.delayed
 import dask.distributed as dd
 
+from libertem.common.executor import GPUSpec
 from .dask import DaskJobExecutor
 from .concurrent import ConcurrentJobExecutor
 from .inline import InlineJobExecutor
+from .base import make_canonical
 
 
-def get_dask_integration_executor(main_process_gpu: Optional[int] = None):
+def get_dask_integration_executor(main_process_gpu: GPUSpec = None):
     '''
     Query the current Dask scheduler and return a :class:`~libertem.common.executor.JobExecutor`
     that is compatible with it. See https://docs.dask.org/en/stable/scheduling.html
@@ -38,7 +39,7 @@ def get_dask_integration_executor(main_process_gpu: Optional[int] = None):
     Parameters
     ----------
 
-    main_process_gpu : int or None, optional
+    main_process_gpu : int, bool or None, optional
         GPU to use for the environment of process-local tasks
     '''
     item = dask.delayed(1)
@@ -56,13 +57,13 @@ def get_dask_integration_executor(main_process_gpu: Optional[int] = None):
                 )
             return DaskJobExecutor(
                 client=dask_scheduler.__self__,
-                main_process_gpu=main_process_gpu,
+                main_process_gpu=make_canonical(main_process_gpu),
             )
     elif dask_scheduler is dask.threaded.get:
         if dask.threaded.default_pool:
             return ConcurrentJobExecutor(
                 client=dask.threaded.default_pool,
-                main_process_gpu=main_process_gpu,
+                main_process_gpu=make_canonical(main_process_gpu),
             )
     # ConcurrentJobExecutor is currently incompatible with ProcessPoolExecutor
     # since it can't pickle local functions.
@@ -75,7 +76,7 @@ def get_dask_integration_executor(main_process_gpu: Optional[int] = None):
     #         is_local=True
     #     )
     elif dask_scheduler is dask.local.get_sync:
-        return InlineJobExecutor(main_process_gpu=main_process_gpu)
+        return InlineJobExecutor(main_process_gpu=make_canonical(main_process_gpu))
 
     # If we didn't return yet,
     # we fall through to the default case.

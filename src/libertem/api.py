@@ -15,6 +15,7 @@ import numpy as np
 from libertem.executor.pipelined import PipelinedExecutor
 
 from libertem.io.corrections import CorrectionSet
+from libertem.executor.base import make_canonical
 from libertem.executor.concurrent import ConcurrentJobExecutor
 from libertem.executor.inline import InlineJobExecutor
 from libertem.io.dataset import load, filetypes
@@ -23,7 +24,7 @@ from libertem.common.buffers import BufferWrapper
 from libertem.executor.dask import DaskJobExecutor, cluster_spec
 from libertem.executor.delayed import DelayedJobExecutor
 from libertem.executor.integration import get_dask_integration_executor
-from libertem.common.executor import JobExecutor
+from libertem.common.executor import JobExecutor, GPUSpec
 from libertem.common.progress import ProgressReporter
 from libertem.masks import MaskFactoriesType
 from libertem.analysis.raw import PickFrameAnalysis
@@ -232,39 +233,6 @@ class Context:
         self._created_at = traceback.format_stack()
         self._register_at_exit()
 
-    @staticmethod
-    def _make_canonical(main_process_gpu):
-        if main_process_gpu is False:
-            main_process_gpu = None
-        elif main_process_gpu is True:
-            from libertem.utils.devices import detect
-            spec_args = detect()
-            if spec_args['cudas'] and spec_args['has_cupy']:
-                main_process_gpu = spec_args['cudas'][0]
-            else:
-                raise ExecutorSpecException(
-                    'Cannot specify GPU for main process as no GPUs detected or no CuPy found.'
-                )
-        elif main_process_gpu is None:
-            # Activate if available
-            from libertem.utils.devices import detect
-            spec_args = detect()
-            if spec_args['cudas'] and spec_args['has_cupy']:
-                main_process_gpu = spec_args['cudas'][0]
-        # check last because instanceof(<bool>, int) is True
-        elif isinstance(main_process_gpu, int):
-            # Verify it is a valid GPU ID
-            from libertem.utils.devices import detect
-            spec_args = detect()
-            if main_process_gpu not in spec_args['cudas'] or not spec_args['has_cupy']:
-                raise ExecutorSpecException(
-                    f"GPU {main_process_gpu} for main process not detected, "
-                    f"only found {spec_args['cudas']}."
-                )
-        else:
-            raise ValueError(f'Invalid type for main_process_gpu: {type(main_process_gpu)}')
-        return main_process_gpu
-
     @classmethod
     def make_with(
         cls,
@@ -274,7 +242,7 @@ class Context:
         gpus: Optional[Union[int, Iterable[int]]] = None,
         plot_class: Optional['Live2DPlot'] = None,
         snooze_timeout: Optional[float] = None,
-        main_process_gpu: Optional[Union[int, bool]] = None,
+        main_process_gpu: GPUSpec = None,
     ) -> 'Context':
         '''
         Create a Context with a specific kind of executor.
@@ -390,7 +358,6 @@ class Context:
         has_spec = cpu_spec or gpu_spec
         limited_execs = ('inline', 'synchronous', 'dask-integration', 'delayed')
         cannot_cpus = executor_spec in limited_execs
-        main_process_gpu = cls._make_canonical(main_process_gpu)
         if cpu_spec and cannot_cpus:
             raise ExecutorSpecException(f'Executor type {executor_spec} does not support '
                                         'specifying CPU workers at this time')
@@ -417,7 +384,9 @@ class Context:
 
         executor: JobExecutor
         if executor_spec in ('synchronous', 'inline'):
-            executor = InlineJobExecutor(main_process_gpu=main_process_gpu)
+            executor = InlineJobExecutor(
+                main_process_gpu=make_canonical(main_process_gpu)
+            )
         elif executor_spec == 'threads':
             n_threads = cpus
             try:
@@ -443,11 +412,15 @@ class Context:
                 main_process_gpu=main_process_gpu,
             )
         elif executor_spec == 'delayed':
-            executor = DelayedJobExecutor(main_process_gpu=main_process_gpu)
+            executor = DelayedJobExecutor(
+                main_process_gpu=make_canonical(main_process_gpu)
+            )
         elif executor_spec == 'pipelined':
             if has_spec:
                 spec = PipelinedExecutor.make_spec(**spec_args)
-                executor = PipelinedExecutor(spec=spec, main_process_gpu=main_process_gpu)
+                executor = PipelinedExecutor(
+                    spec=spec, main_process_gpu=make_canonical(main_process_gpu)
+                )
             else:
                 executor = PipelinedExecutor.make_local(main_process_gpu=main_process_gpu)
         else:

@@ -15,9 +15,10 @@ import dask
 
 from libertem.common.threading import set_num_threads_env
 
-from .base import BaseJobExecutor, AsyncAdapter, ResourceError
+from .base import BaseJobExecutor, AsyncAdapter, ResourceError, make_canonical
 from libertem.common.executor import (
     JobCancelledError, TaskCommHandler, TaskProtocol, Environment, WorkerContext,
+    GPUSpec
 )
 from libertem.common.snooze import SnoozeManager, keep_alive, keep_alive_context
 from libertem.common.subscriptions import SubscriptionManager
@@ -815,7 +816,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
     @classmethod
     def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
             client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None,
-            snooze_timeout: Optional[float] = None, main_process_gpu: Optional[int] = None):
+            snooze_timeout: Optional[float] = None, main_process_gpu: GPUSpec = None):
         """
         Spin up a local dask cluster
 
@@ -836,7 +837,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             default Dask scheduler.
         preload: Optional[Tuple[str]]
             Passed to :func:`cluster_spec` if :code:`spec` is :code:`None`.
-        main_process_gpu : int or None, optional
+        main_process_gpu
             GPU to use for the environment of process-local tasks
 
         Returns
@@ -849,13 +850,11 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         # from within pytest as of version 2.21.0. For that reason we
         # adjust the policy ourselves here.
         adjust_event_loop_policy()
-
+        main_process_gpu = make_canonical(main_process_gpu)
         if spec is None:
             from libertem.utils.devices import detect
             d = detect()
             spec = cluster_spec(**d, preload=preload)
-            if main_process_gpu is None and d['has_cupy'] and d['cudas']:
-                main_process_gpu = d['cudas'][0]
         else:
             if preload is not None:
                 raise ValueError(
@@ -921,7 +920,7 @@ class AsyncDaskJobExecutor(AsyncAdapter):
     @classmethod
     async def make_local(
             cls, spec=None, cluster_kwargs=None, client_kwargs=None,
-            main_process_gpu=None):
+            main_process_gpu: GPUSpec = None):
         executor = await sync_to_async(functools.partial(
             DaskJobExecutor.make_local,
             spec=spec,

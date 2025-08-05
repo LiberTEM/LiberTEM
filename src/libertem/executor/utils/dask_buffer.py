@@ -186,8 +186,8 @@ class DaskResultBufferWrapper(DaskPreallocBufferWrapper):
         result._valid_mask = buffer._valid_mask
         return result
 
-    def __array__(self):
-        return super().__array__()
+    def __array__(self, copy=None, dtype=None):
+        return super().__array__(copy=copy, dtype=dtype)
 
     @property
     def raw_data(self):

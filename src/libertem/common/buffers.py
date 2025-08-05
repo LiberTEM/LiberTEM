@@ -658,11 +658,11 @@ class BufferWrapper:
         """
         return self._where
 
-    def __array__(self):
+    def __array__(self, dtype=None, copy=None):
         """
         returns the "wrapped"/reshaped array, see above
         """
-        return self.data
+        return np.array(self.data, copy=copy, dtype=dtype)
 
     def allocate(self, lib=None):
         """

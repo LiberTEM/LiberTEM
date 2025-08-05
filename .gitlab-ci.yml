@@ -1,0 +1,70 @@
+variables:
+  CUSTOM_CI_BUILDS_DIR: /p/scratch/slen/clausen1
+
+stages:
+  - benchmark
+
+# NOTES
+# - using the `*devel` partitions, so we have internet access directly from the
+#   slurm-spawned jobs, too
+
+juwels_cpu:
+  id_tokens:
+    SITE_ID_TOKEN:
+      aud: "https://gitlab.jsc.fz-juelich.de"
+  variables:
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel'
+  stage: benchmark
+  tags:
+    - juwels
+    - jacamar
+    - compute
+    - slurm
+  script:
+    - module load Python/3.12.3
+    - module load git
+    - python3 -m venv venv
+    - pwd
+    - ls -la
+    - ./venv/bin/pip install tox-uv uv
+    - ./venv/bin/tox -e benchmark-cb
+  artifacts:
+    paths:
+      - bench-results.json
+
+juwels_cpu_reference_run:
+  id_tokens:
+    SITE_ID_TOKEN:
+      aud: "https://gitlab.jsc.fz-juelich.de"
+  variables:
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel'
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^PullRequest_/
+  stage: benchmark
+  tags:
+    - juwels
+    - jacamar
+    - compute
+    - slurm
+  before_script:
+    - module load git
+    - git remote -v
+    - git remote set-url origin https://github.com/LiberTEM/LiberTEM.git
+    - git remote -v
+    - git fetch origin master
+    - git checkout origin/master
+    - git log -n 10 --oneline
+    - git rev-parse HEAD
+  script:
+    - module load git
+    - module load Python/3.12.3
+    - python3 -m venv venv
+    - pwd
+    - ls -la
+    - ./venv/bin/pip install tox-uv uv
+    - ./venv/bin/tox -e benchmark-cb
+  artifacts:
+    paths:
+      - bench-results.json
+
+# vim:ts=2:sw=2

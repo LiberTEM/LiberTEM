@@ -64,7 +64,7 @@ class TestUseSharedExecutor:
     @pytest.mark.parametrize(
         "context", ("dist", "inline")
     )
-    def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, lt_ctx, io_backend, context):
+    def test_mask(self, benchmark, prefix, drop, shared_dist_ctx, lt_ctx_fast, io_backend, context):
         io_backend = backends_by_name[io_backend]
         mib_hdr = os.path.join(prefix, MIB_FILE)
         flist = filelist(mib_hdr)
@@ -72,7 +72,7 @@ class TestUseSharedExecutor:
         if context == 'dist':
             ctx = shared_dist_ctx
         elif context == 'inline':
-            ctx = lt_ctx
+            ctx = lt_ctx_fast
         else:
             raise ValueError
 
@@ -87,17 +87,34 @@ class TestUseSharedExecutor:
         ctx.run_udf(udf=udf, dataset=ds)
 
         if drop == "cold_cache":
-            drop_cache(flist)
+            def setup():
+                drop_cache(flist)
+
+            def dostuff(**kwargs):
+                ctx.run_udf(**kwargs)
+
         elif drop == "warm_cache":
             warmup_cache(flist)
+
+            def setup():
+                pass
+
+            def dostuff(**kwargs):
+                ctx.run_udf(**kwargs)
+
         else:
             raise ValueError("bad param")
 
         benchmark.pedantic(
-            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds),
-            warmup_rounds=0,
-            rounds=1,
-            iterations=1
+            dostuff,
+            setup=setup,
+            warmup_rounds=1,
+            rounds=5,
+            iterations=1,
+            kwargs=dict(
+                udf=udf,
+                dataset=ds,
+            ),
         )
 
     @pytest.mark.benchmark(
@@ -135,18 +152,41 @@ class TestUseSharedExecutor:
         ctx.run_udf(udf=udf, dataset=ds)
 
         if drop == "cold_cache":
-            drop_cache(flist)
+
+            def setup():
+                drop_cache(flist)
+
+            def dostuff(**kwargs):
+                ctx.run_udf(**kwargs)
+
         elif drop == "warm_cache":
             warmup_cache(flist)
+
+            def setup():
+                pass
+
+            def dostuff(**kwargs):
+                ctx.run_udf(**kwargs)
+
         else:
             raise ValueError("bad param")
 
         benchmark.pedantic(
-            ctx.run_udf, kwargs=dict(udf=udf, dataset=ds, roi=sparse_roi),
-            warmup_rounds=0,
-            rounds=1,
-            iterations=1,
+            dostuff,
+            setup=setup,
+            kwargs=dict(
+                udf=udf,
+                dataset=ds,
+                roi=sparse_roi,
+            )
         )
+
+        # benchmark(
+        #     dostuff,
+        #     udf=udf,
+        #     dataset=ds,
+        #     roi=sparse_roi,
+        # )
 
 
 @pytest.mark.benchmark(
@@ -170,7 +210,7 @@ def test_mask_firstrun(benchmark, prefix, first, io_backend):
         ds = ctx.load(filetype="mib", path=mib_hdr, io_backend=io_backend)
 
         def mask():
-            return np.ones(ds.shape.sig, dtype=bool)
+            return np.ones(tuple(ds.shape.sig), dtype=bool)
 
         udf = ApplyMasksUDF(mask_factories=[mask], backends=('numpy', ))
 

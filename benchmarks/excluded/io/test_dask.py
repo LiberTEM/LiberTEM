@@ -12,7 +12,7 @@ from libertem.contrib.daskadapter import make_dask_array
 # Load the dask dataset utils from the tests folder
 # This is really ugly but we're outside of the package structure!
 basedir = pathlib.Path(__file__).parent
-location = (basedir / "../../tests/io/datasets/utils_dask.py").resolve()
+location = (basedir / "../../../tests/io/datasets/utils_dask.py").resolve()
 spec = importlib.util.spec_from_file_location("utils_dask", location)
 utils_dask = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(utils_dask)
@@ -20,14 +20,18 @@ _mk_dask_from_delayed = utils_dask._mk_dask_from_delayed
 
 
 # (100, 100, 1216, 1216) by default
-nblock_params = ((100, 1, 1, 1),
-                 (50, 1, 1, 1),
-                 (25, 1, 1, 1),
-                 (10, 1, 1, 1),
-                 (4, 1, 1, 1),
-                 (100, 25, 1, 1),
-                 (100, 4, 1, 1),
-                 (20, 1, 2, 2))
+nblock_params = (
+    (100, 1, 1, 1),
+    (50, 1, 1, 1),
+    (25, 1, 1, 1),
+    (100, 25, 1, 1),
+    (100, 4, 1, 1),
+
+    # These nblock values are unstable and cause workers to be killed:
+    # (10, 1, 1, 1),
+    # (4, 1, 1, 1),
+    # (20, 1, 2, 2),
+)
 
 
 # Make it a class to re-use the shared dist executor

@@ -78,6 +78,9 @@ class EchoUDF(UDF):
     def merge(self, dest, src):
         return super().merge(dest, src)
 
+    def get_preferred_input_dtype(self):
+        return self.USE_NATIVE_DTYPE
+
 
 class EchoMergeUDF(EchoUDF):
     def merge_all(self, ordered_results):
@@ -85,6 +88,9 @@ class EchoMergeUDF(EchoUDF):
         return {
             'intensity': intensity
         }
+
+    def get_preferred_input_dtype(self):
+        return self.USE_NATIVE_DTYPE
 
 
 class Test:

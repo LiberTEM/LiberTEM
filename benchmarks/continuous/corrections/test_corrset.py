@@ -7,6 +7,10 @@ from libertem.utils.generate import gradient_data, exclude_pixels
 from libertem.udf.base import NoOpUDF
 
 
+# Adust to scale benchmark:
+COMMON_ROI = np.s_[:10, :10]
+
+
 @pytest.mark.benchmark(
     group="adjust tileshape",
 )
@@ -71,17 +75,12 @@ def test_detector_patch_large(num_excluded, benchmark):
     print("Sig dims:", sig_dims)
     print("Exclude: ", exclude)
 
-    benchmark.pedantic(
+    benchmark(
         detector.correct,
-        kwargs=dict(
-            buffer=damaged_data,
-            excluded_pixels=exclude,
-            sig_shape=sig_dims,
-            inplace=False
-        ),
-        warmup_rounds=0,
-        rounds=5,
-        iterations=1,
+        buffer=damaged_data,
+        excluded_pixels=exclude,
+        sig_shape=sig_dims,
+        inplace=False
     )
 
 
@@ -103,18 +102,13 @@ def test_detector_correction_large(benchmark):
     print("Nav dims: ", nav_dims)
     print("Sig dims:", sig_dims)
 
-    benchmark.pedantic(
+    benchmark(
         detector.correct,
-        kwargs=dict(
-            buffer=damaged_data,
-            dark_image=dark_image,
-            gain_map=gain_map,
-            sig_shape=sig_dims,
-            inplace=False
-        ),
-        warmup_rounds=0,
-        rounds=5,
-        iterations=1,
+        buffer=damaged_data,
+        dark_image=dark_image,
+        gain_map=gain_map,
+        sig_shape=sig_dims,
+        inplace=False,
     )
 
 
@@ -154,20 +148,16 @@ class TestRealCorrection:
         ds = shared_dist_ctx.load(
             'RAW',
             path=str(filename),
-            scan_size=shape[:2],
+            nav_shape=shape[:2],
             dtype=dtype,
-            detector_size=shape[2:],
+            sig_shape=shape[2:],
         )
 
-        benchmark.pedantic(
+        benchmark(
             shared_dist_ctx.run_udf,
-            kwargs=dict(
-                dataset=ds,
-                udf=udf,
-            ),
-            warmup_rounds=0,
-            rounds=5,
-            iterations=1,
+            dataset=ds,
+            udf=udf,
+            roi=ds.roi[COMMON_ROI],
         )
 
     @pytest.mark.benchmark(
@@ -204,6 +194,7 @@ class TestRealCorrection:
 
         if num_excluded > 0:
             excluded_coords = exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
+            assert excluded_coords is not None
             assert excluded_coords.shape[1] == num_excluded
             exclude = sparse.COO(coords=excluded_coords, shape=sig_dims, data=True)
         else:
@@ -222,19 +213,15 @@ class TestRealCorrection:
         ds = shared_dist_ctx.load(
             'RAW',
             path=str(filename),
-            scan_size=shape[:2],
+            nav_shape=shape[:2],
             dtype=dtype,
-            detector_size=shape[2:],
+            sig_shape=shape[2:],
         )
 
-        benchmark.pedantic(
+        benchmark(
             shared_dist_ctx.run_udf,
-            kwargs=dict(
-                dataset=ds,
-                udf=udf,
-                corrections=corrset,
-            ),
-            warmup_rounds=0,
-            rounds=5,
-            iterations=1,
+            dataset=ds,
+            udf=udf,
+            corrections=corrset,
+            roi=ds.roi[COMMON_ROI],
         )

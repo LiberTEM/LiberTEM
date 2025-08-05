@@ -33,3 +33,4 @@ junit.xml
 examples/generated/
 packaging/docker/requirements.txt
 src/libertem/_baked_revision.py
+bench-results.json

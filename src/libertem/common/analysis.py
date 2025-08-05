@@ -50,8 +50,8 @@ class AnalysisResult:
     def __repr__(self):
         return "<AnalysisResult: %s>" % self.key
 
-    def __array__(self):
-        return np.array(self.raw_data)
+    def __array__(self, copy=None, dtype=None):
+        return np.array(self.raw_data, copy=copy, dtype=dtype)
 
     def get_image(self, save_kwargs: Optional[dict] = None) -> BytesIO:
         from libertem.common.viz import encode_image

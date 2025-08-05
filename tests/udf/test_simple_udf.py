@@ -600,33 +600,37 @@ def test_noncontiguous_tiles(lt_ctx, backend):
         data=data, tileshape=(3, 2, 2),
         num_partitions=2, sig_dims=2
     )
-    if backend == 'cupy':
-        gpu_id = cudas[0]
-    else:
-        gpu_id = None
-    udf = ReshapedViewUDF()
-    res = lt_ctx.run_udf(udf=udf, dataset=dataset)
-    partition = next(dataset.get_partitions())
-    p_udf = udf.copy_for_partition(partition=partition, roi=None)
-    tiling_scheme = TilingScheme.make_for_shape(
-        tileshape=dataset.tileshape,
-        dataset_shape=dataset.shape,
-    )
-    # Enabling debug=True checks for disjoint cache keys
-    params = UDFParams.from_udfs(
-        udfs=[udf],
-        roi=None,
-        corrections=None,
-        tiling_scheme=tiling_scheme,
-    )
-    UDFPartRunner([p_udf], debug=True).run_for_partition(
-        partition=partition,
-        params=params,
-        env=Environment(threads_per_worker=1, threaded_executor=False, gpu_id=gpu_id),
-        backend_choice=BACKENDS,
-    )
+    try:
+        if backend == 'cupy':
+            gpu_id = cudas[0]
+            set_use_cuda(gpu_id)
+        else:
+            gpu_id = None
+        udf = ReshapedViewUDF()
+        res = lt_ctx.run_udf(udf=udf, dataset=dataset)
+        partition = next(dataset.get_partitions())
+        p_udf = udf.copy_for_partition(partition=partition, roi=None)
+        tiling_scheme = TilingScheme.make_for_shape(
+            tileshape=dataset.tileshape,
+            dataset_shape=dataset.shape,
+        )
+        # Enabling debug=True checks for disjoint cache keys
+        params = UDFParams.from_udfs(
+            udfs=[udf],
+            roi=None,
+            corrections=None,
+            tiling_scheme=tiling_scheme,
+        )
+        UDFPartRunner([p_udf], debug=True).run_for_partition(
+            partition=partition,
+            params=params,
+            env=Environment(threads_per_worker=1, threaded_executor=False, gpu_id=gpu_id),
+            backend_choice=BACKENDS,
+        )
 
-    assert np.all(res["sigbuf"].data == 1)
+        assert np.all(res["sigbuf"].data == 1)
+    finally:
+        set_use_cpu(0)
 
 
 class CheckSigSlice(UDF):

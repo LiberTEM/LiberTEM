@@ -24,6 +24,7 @@ import numpy as np
 
 from libertem.common.math import prod, count_nonzero, flat_nonzero
 from libertem.common.slice import Slice, Shape
+from libertem.common.compat import copy_if_needed
 from .backend import get_use_cuda
 
 if TYPE_CHECKING:
@@ -658,7 +659,7 @@ class BufferWrapper:
         """
         return self._where
 
-    def __array__(self, dtype=None, copy=None):
+    def __array__(self, dtype=None, copy=copy_if_needed):
         """
         returns the "wrapped"/reshaped array, see above
         """

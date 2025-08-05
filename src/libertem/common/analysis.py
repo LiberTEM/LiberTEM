@@ -5,6 +5,8 @@ from typing import (
 
 import numpy as np
 
+from .compat import copy_if_needed
+
 
 class AnalysisResult:
     """
@@ -50,7 +52,7 @@ class AnalysisResult:
     def __repr__(self):
         return "<AnalysisResult: %s>" % self.key
 
-    def __array__(self, copy=None, dtype=None):
+    def __array__(self, copy=copy_if_needed, dtype=None):
         return np.array(self.raw_data, copy=copy, dtype=dtype)
 
     def get_image(self, save_kwargs: Optional[dict] = None) -> BytesIO:

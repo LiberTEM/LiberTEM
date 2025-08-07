@@ -90,6 +90,7 @@ juwels_cpu_reference_run:
     - pwd
     - ls -la
     - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb --skip-pkg-install
+    - cp bench-results.json $CI_PROJECT_DIR/
   artifacts:
     paths:
       - bench-results.json

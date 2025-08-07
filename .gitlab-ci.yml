@@ -2,31 +2,60 @@ variables:
   CUSTOM_CI_BUILDS_DIR: /p/scratch/slen/clausen1
 
 stages:
+  - prepare
   - benchmark
 
-# NOTES
-# - using the `*devel` partitions, so we have internet access directly from the
-#   slurm-spawned jobs, too
+jusuf_login:
+  id_tokens:
+    SITE_ID_TOKEN:
+      aud: "https://gitlab.jsc.fz-juelich.de"
+  stage: prepare
+  tags:
+    - jusuf
+    - jacamar
+    - login
+    - shell
+  script:
+    - module load Python/3.12.3
+    - module load git
+
+    # main run:
+    - python3 -m venv venv
+    - ./venv/bin/pip install tox-uv uv
+    - ./venv/bin/tox -e benchmark-cb -- --help  # only create
+    - pwd
+    - ls -la
+
+    # reference run:
+    - git clone https://github.com/LiberTEM/LiberTEM.git ref --depth=10
+    - cd ref
+    - git log -n 10 --oneline
+    - git rev-parse HEAD
+    - python3 -m venv venv
+    - ./venv/bin/pip install tox-uv uv
+    - ./venv/bin/tox -e benchmark-cb -- --help  # only create
+    - pwd
+    - ls -la
+
+# TODO: update job names (to something generic) - for now kept like this for the comparison script
 
 juwels_cpu:
   id_tokens:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
   variables:
-    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel --disable-turbomode --cpu-freq=2400-2400:performance'
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2200'
   stage: benchmark
   tags:
-    - juwels
+    - jusuf
     - jacamar
     - compute
     - slurm
   script:
     - module load Python/3.12.3
     - module load git
-    - python3 -m venv venv
     - pwd
     - ls -la
-    - ./venv/bin/pip install tox-uv uv
     - ./venv/bin/tox -e benchmark-cb
   artifacts:
     paths:
@@ -37,31 +66,21 @@ juwels_cpu_reference_run:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
   variables:
-    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel --disable-turbomode --cpu-freq=2400-2400:performance'
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2200'
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^PullRequest_/
   stage: benchmark
   tags:
-    - juwels
+    - jusuf
     - jacamar
     - compute
     - slurm
-  before_script:
-    - module load git
-    - git remote -v
-    - git remote set-url origin https://github.com/LiberTEM/LiberTEM.git
-    - git remote -v
-    - git fetch origin master
-    - git checkout origin/master
-    - git log -n 10 --oneline
-    - git rev-parse HEAD
   script:
     - module load git
     - module load Python/3.12.3
-    - python3 -m venv venv
+    - cd ref
     - pwd
     - ls -la
-    - ./venv/bin/pip install tox-uv uv
     - ./venv/bin/tox -e benchmark-cb
   artifacts:
     paths:

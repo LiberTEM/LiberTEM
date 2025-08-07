@@ -13,7 +13,7 @@ juwels_cpu:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
   variables:
-    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel --disable-turbomode'
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel --disable-turbomode --cpu-freq=2400-2400:performance'
   stage: benchmark
   tags:
     - juwels
@@ -37,7 +37,7 @@ juwels_cpu_reference_run:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
   variables:
-    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel --disable-turbomode'
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 48 --partition=devel --disable-turbomode --cpu-freq=2400-2400:performance'
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^PullRequest_/
   stage: benchmark

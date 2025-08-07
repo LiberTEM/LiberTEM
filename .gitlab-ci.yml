@@ -37,7 +37,7 @@ jusuf_login:
     - git rev-parse HEAD
     - python3 -m venv $MY_JOB_PREFIX/venv-ref
     - $MY_JOB_PREFIX/venv-ref/bin/pip install tox-uv uv
-    - $MY_JOB_PREFIX/venv-ref/bin/tox -e benchmark-cb -- --help  # only create
+    - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb -- --help  # only create
     - pwd
     - ls -la
 
@@ -62,7 +62,7 @@ juwels_cpu:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-main/bin/tox -e benchmark-cb
+    - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb --skip-pkg-install
   artifacts:
     paths:
       - bench-results.json
@@ -89,7 +89,7 @@ juwels_cpu_reference_run:
     - cd $MY_JOB_PREFIX/git-ref
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-ref/bin/tox -e benchmark-cb
+    - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb --skip-pkg-install
   artifacts:
     paths:
       - bench-results.json

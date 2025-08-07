@@ -18,22 +18,26 @@ jusuf_login:
   script:
     - module load Python/3.12.3
     - module load git
+    - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - mkdir -p $MY_JOB_PREFIX/
 
     # main run:
-    - python3 -m venv venv
-    - ./venv/bin/pip install tox-uv uv
-    - ./venv/bin/tox -e benchmark-cb -- --help  # only create
+    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
+    - python3 -m venv $MY_JOB_PREFIX/venv-main
+    - $MY_JOB_PREFIX/venv-main/bin/pip install tox-uv uv
+    - $MY_JOB_PREFIX/venv-main/bin/tox -e benchmark-cb -- --help  # only create
     - pwd
     - ls -la
 
     # reference run:
-    - git clone https://github.com/LiberTEM/LiberTEM.git ref --depth=10
-    - cd ref
+    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
+    - git clone https://github.com/LiberTEM/LiberTEM.git $MY_JOB_PREFIX/git-ref --depth=10
+    - cd $MY_JOB_PREFIX/git-ref
     - git log -n 10 --oneline
     - git rev-parse HEAD
-    - python3 -m venv venv
-    - ./venv/bin/pip install tox-uv uv
-    - ./venv/bin/tox -e benchmark-cb -- --help  # only create
+    - python3 -m venv $MY_JOB_PREFIX/venv-ref
+    - $MY_JOB_PREFIX/venv-ref/bin/pip install tox-uv uv
+    - $MY_JOB_PREFIX/venv-ref/bin/tox -e benchmark-cb -- --help  # only create
     - pwd
     - ls -la
 
@@ -44,7 +48,7 @@ juwels_cpu:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
   variables:
-    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2200'
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2250'
   stage: benchmark
   tags:
     - jusuf
@@ -54,9 +58,11 @@ juwels_cpu:
   script:
     - module load Python/3.12.3
     - module load git
+    - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
     - pwd
     - ls -la
-    - ./venv/bin/tox -e benchmark-cb
+    - $MY_JOB_PREFIX/venv-main/bin/tox -e benchmark-cb
   artifacts:
     paths:
       - bench-results.json
@@ -66,7 +72,7 @@ juwels_cpu_reference_run:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
   variables:
-    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2200'
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2250'
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^PullRequest_/
   stage: benchmark
@@ -78,10 +84,12 @@ juwels_cpu_reference_run:
   script:
     - module load git
     - module load Python/3.12.3
-    - cd ref
+    - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
+    - cd $MY_JOB_PREFIX/git-ref
     - pwd
     - ls -la
-    - ./venv/bin/tox -e benchmark-cb
+    - $MY_JOB_PREFIX/venv-ref/bin/tox -e benchmark-cb
   artifacts:
     paths:
       - bench-results.json

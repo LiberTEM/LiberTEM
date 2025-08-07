@@ -5,10 +5,28 @@ import pytest
 from libertem.io.corrections import CorrectionSet, detector
 from libertem.utils.generate import gradient_data, exclude_pixels
 from libertem.udf.base import NoOpUDF
+from libertem.api import Context
 
 
 # Adust to scale benchmark:
 COMMON_ROI = np.s_[:10, :10]
+
+
+@pytest.fixture(scope='module')
+def mod_ctx():
+    """
+    To make it easy to experiment with different executors
+    and their parameters, we have a local fixture here.
+    """
+    from libertem.executor.pipelined import PipelinedExecutor
+    from libertem.utils.devices import detect
+    specargs = detect()
+    specargs.update({'cudas': []})
+    spec = PipelinedExecutor.make_spec(**specargs)
+    executor = PipelinedExecutor(spec=spec, pin_workers=True)
+    yield Context(executor=executor)
+    # yield Context.make_with(gpus=0)
+    # yield Context.make_with('pipelined', gpus=0)
 
 
 @pytest.mark.benchmark(
@@ -136,7 +154,7 @@ class TestRealCorrection:
     @pytest.mark.benchmark(
         group="correct large",
     )
-    def test_real_correction_baseline(self, shared_dist_ctx, large_raw_file, benchmark):
+    def test_real_correction_baseline(self, mod_ctx, large_raw_file, benchmark):
         filename, shape, dtype = large_raw_file
         nav_dims = shape[:2]
         sig_dims = shape[2:]
@@ -145,7 +163,7 @@ class TestRealCorrection:
         print("Sig dims:", sig_dims)
 
         udf = NoOpUDF()
-        ds = shared_dist_ctx.load(
+        ds = mod_ctx.load(
             'RAW',
             path=str(filename),
             nav_shape=shape[:2],
@@ -154,7 +172,7 @@ class TestRealCorrection:
         )
 
         benchmark(
-            shared_dist_ctx.run_udf,
+            mod_ctx.run_udf,
             dataset=ds,
             udf=udf,
             roi=ds.roi[COMMON_ROI],
@@ -172,7 +190,7 @@ class TestRealCorrection:
     @pytest.mark.parametrize(
         'num_excluded', (0, 1, 1000, 10000)
     )
-    def test_real_correction(self, shared_dist_ctx, large_raw_file, benchmark,
+    def test_real_correction(self, mod_ctx, large_raw_file, benchmark,
             gain, dark, num_excluded):
         filename, shape, dtype = large_raw_file
         nav_dims = shape[:2]
@@ -210,7 +228,7 @@ class TestRealCorrection:
         )
 
         udf = NoOpUDF()
-        ds = shared_dist_ctx.load(
+        ds = mod_ctx.load(
             'RAW',
             path=str(filename),
             nav_shape=shape[:2],
@@ -219,7 +237,7 @@ class TestRealCorrection:
         )
 
         benchmark(
-            shared_dist_ctx.run_udf,
+            mod_ctx.run_udf,
             dataset=ds,
             udf=udf,
             corrections=corrset,

@@ -62,7 +62,7 @@ juwels_cpu:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb --skip-pkg-install -- -v
+    - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb --skip-pkg-install -- benchmarks/continuous/ -v
   artifacts:
     paths:
       - bench-results.json
@@ -89,7 +89,7 @@ juwels_cpu_reference_run:
     - cd $MY_JOB_PREFIX/git-ref
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb --skip-pkg-install -- -v
+    - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb --skip-pkg-install -- benchmarks/continuous/ -v
   artifacts:
     paths:
       - bench-results.json

@@ -12,6 +12,11 @@ from libertem.api import Context
 COMMON_ROI = np.s_[:10, :10]
 
 
+def _my_setup():
+    import gc
+    gc.disable()
+
+
 @pytest.fixture(scope='module')
 def mod_ctx():
     """
@@ -23,7 +28,12 @@ def mod_ctx():
     specargs = detect()
     specargs.update({'cudas': []})
     spec = PipelinedExecutor.make_spec(**specargs)
-    executor = PipelinedExecutor(spec=spec, pin_workers=True)
+
+    executor = PipelinedExecutor(
+        spec=spec,
+        pin_workers=True,
+        early_setup=_my_setup,
+    )
     yield Context(executor=executor)
     # yield Context.make_with(gpus=0)
     # yield Context.make_with('pipelined', gpus=0)

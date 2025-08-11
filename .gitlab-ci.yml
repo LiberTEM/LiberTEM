@@ -25,7 +25,7 @@ jusuf_login:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
     - python3 -m venv $MY_JOB_PREFIX/venv-main
     - $MY_JOB_PREFIX/venv-main/bin/pip install tox-uv uv
-    - $MY_JOB_PREFIX/venv-main/bin/tox -e benchmark-cb -- --help  # only create
+    - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb -- --help  # only create
     - pwd
     - ls -la
 

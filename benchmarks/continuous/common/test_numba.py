@@ -1,3 +1,4 @@
+import os
 import scipy.sparse
 import sparse
 import pytest
@@ -12,10 +13,20 @@ L = M // 8
 K = L // 8
 
 
+@pytest.fixture(scope="function")
+def set_affinity():
+    current_aff = os.sched_getaffinity(0)
+    os.sched_setaffinity(0, [list(sorted(current_aff))[0]])
+    try:
+        yield
+    finally:
+        os.sched_setaffinity(0, current_aff)
+
+
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_rmatmul_csr(benchmark):
+def test_rmatmul_csr(benchmark, set_affinity):
     data = np.zeros((2*N, N), dtype=np.float32)
     masks = scipy.sparse.csr_matrix(
         ([1.]*L, (range(0, M, 8), [0, 1, 2, 3, 4, 5, 6, 7]*K)),
@@ -29,7 +40,7 @@ def test_rmatmul_csr(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_scipysparse_csr_right(benchmark):
+def test_scipysparse_csr_right(benchmark, set_affinity):
     data = np.zeros((2*N, N), dtype=np.float32)
     masks = scipy.sparse.csr_matrix(
         ([1.]*L, (range(0, M, 8), [0, 1, 2, 3, 4, 5, 6, 7]*K)),
@@ -46,7 +57,7 @@ def test_scipysparse_csr_right(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_scipysparse_csr_left(benchmark):
+def test_scipysparse_csr_left(benchmark, set_affinity):
     data = np.zeros((N, 2*N), dtype=np.float32)
     masks = scipy.sparse.csr_matrix(
         ([1.]*L, ([0, 1, 2, 3, 4, 5, 6, 7]*K, range(0, M, 8))),
@@ -63,7 +74,7 @@ def test_scipysparse_csr_left(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_rmatmul_csc(benchmark):
+def test_rmatmul_csc(benchmark, set_affinity):
     data = np.zeros((2*N, N), dtype=np.float32)
     masks = scipy.sparse.csc_matrix(
         ([1.]*L, (range(0, M, 8), [0, 1, 2, 3, 4, 5, 6, 7]*K)),
@@ -77,7 +88,7 @@ def test_rmatmul_csc(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_scipysparse_csc_right(benchmark):
+def test_scipysparse_csc_right(benchmark, set_affinity):
     data = np.zeros((2*N, N), dtype=np.float32)
     masks = scipy.sparse.csc_matrix(
         ([1.]*L, (range(0, M, 8), [0, 1, 2, 3, 4, 5, 6, 7]*K)),
@@ -94,7 +105,7 @@ def test_scipysparse_csc_right(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_scipysparse_csc_left(benchmark):
+def test_scipysparse_csc_left(benchmark, set_affinity):
     data = np.zeros((N, 2*N), dtype=np.float32)
     masks = scipy.sparse.csc_matrix(
         ([1.]*L, ([0, 1, 2, 3, 4, 5, 6, 7]*K, range(0, M, 8))),
@@ -111,7 +122,7 @@ def test_scipysparse_csc_left(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_sparse_coo_right(benchmark):
+def test_sparse_coo_right(benchmark, set_affinity):
     data = np.zeros((2*N, N), dtype=np.float32)
     masks = sparse.COO(scipy.sparse.csr_matrix(
         ([1.]*L, (range(0, M, 8), [0, 1, 2, 3, 4, 5, 6, 7]*K)),
@@ -128,7 +139,7 @@ def test_sparse_coo_right(benchmark):
 @pytest.mark.benchmark(
     group="rmatmul",
 )
-def test_sparse_coo_left(benchmark):
+def test_sparse_coo_left(benchmark, set_affinity):
     data = np.zeros((N, 2*N), dtype=np.float32)
     masks = sparse.COO(scipy.sparse.csr_matrix(
         ([1.]*L, ([0, 1, 2, 3, 4, 5, 6, 7]*K, range(0, M, 8))),

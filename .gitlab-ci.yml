@@ -4,6 +4,7 @@ variables:
 stages:
   - prepare
   - benchmark
+  - cleanup
 
 jusuf_login:
   id_tokens:
@@ -94,5 +95,20 @@ juwels_cpu_reference_run:
   artifacts:
     paths:
       - bench-results.json
+
+cleanup-cb-directory:
+  id_tokens:
+    SITE_ID_TOKEN:
+      aud: "https://gitlab.jsc.fz-juelich.de"
+  stage: cleanup
+  tags:
+    - jusuf
+    - jacamar
+    - login
+    - shell
+  script:
+    - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - rm -rf $MY_JOB_PREFIX/
+  when: always
 
 # vim:ts=2:sw=2

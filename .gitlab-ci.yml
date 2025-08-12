@@ -30,6 +30,14 @@ jusuf_login:
     - pwd
     - ls -la
 
+    # main run v2:
+    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main-2
+    - python3 -m venv $MY_JOB_PREFIX/venv-main-2
+    - $MY_JOB_PREFIX/venv-main-2/bin/pip install tox-uv uv
+    - $MY_JOB_PREFIX/venv-main-2/bin/tox run -e benchmark-cb -- --help  # only create
+    - pwd
+    - ls -la
+
     # reference run:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
     - git clone https://github.com/LiberTEM/LiberTEM.git $MY_JOB_PREFIX/git-ref --depth=10
@@ -68,6 +76,32 @@ juwels_cpu:
   artifacts:
     paths:
       - bench-results.json
+
+juwels_cpu_2:
+  id_tokens:
+    SITE_ID_TOKEN:
+      aud: "https://gitlab.jsc.fz-juelich.de"
+  variables:
+    SCHEDULER_PARAMETERS: '--account=slen -N1 --cpus-per-task 128 --partition=batch --disable-turbomode --cpufreq=2000'
+  stage: benchmark
+  tags:
+    - jusuf
+    - jacamar
+    - compute
+    - slurm
+  script:
+    - module load Python/3.12.3
+    - module load git
+    - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main-2
+    - export PYTEST_DEBUG_TEMPROOT=$LOCALSCRATCH
+    - pwd
+    - ls -la
+    - $MY_JOB_PREFIX/venv-main-2/bin/tox run -e benchmark-cb --skip-pkg-install
+  artifacts:
+    paths:
+      - bench-results.json
+
 
 juwels_cpu_reference_run:
   id_tokens:

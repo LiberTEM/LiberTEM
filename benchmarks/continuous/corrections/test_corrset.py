@@ -96,7 +96,12 @@ def test_detector_patch_large(num_excluded, benchmark, set_affinity):
 
     data = gradient_data(nav_dims, sig_dims)
 
-    exclude = exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
+    gen = np.random.Generator(np.random.PCG64(seed=12345))
+    exclude = exclude_pixels(
+        sig_dims=sig_dims,
+        num_excluded=num_excluded,
+        rng=gen,
+    )
 
     damaged_data = data.copy()
 
@@ -125,7 +130,7 @@ def test_detector_correction_large(benchmark, set_affinity):
     sig_dims = (1336, 2004)
 
     data = gradient_data(nav_dims, sig_dims)
-    gen = np.random.generator(np.random.PCG64(seed=12345))
+    gen = np.random.Generator(np.random.PCG64(seed=12345))
     gain_map = (gen.random(sig_dims) + 1).astype(np.float64)
     dark_image = gen.random(sig_dims).astype(np.float64)
 
@@ -154,7 +159,7 @@ def test_detector_correction_large(benchmark, set_affinity):
 )
 def test_descriptor_creation(num_excluded, benchmark, set_affinity):
     shape = (2000, 2000)
-    gen = np.random.generator(np.random.PCG64(seed=12345))
+    gen = np.random.Generator(np.random.PCG64(seed=12345))
     excluded_coords = (
         gen.integers(0, 2000, num_excluded),
         gen.integers(0, 2000, num_excluded),
@@ -213,7 +218,7 @@ class TestRealCorrection:
         nav_dims = shape[:2]
         sig_dims = shape[2:]
 
-        gen = np.random.generator(np.random.PCG64(seed=12345))
+        gen = np.random.Generator(np.random.PCG64(seed=12345))
 
         if gain == 'use gain':
             gain_map = (gen.random(sig_dims) + 1).astype(np.float64)
@@ -230,7 +235,11 @@ class TestRealCorrection:
             raise ValueError
 
         if num_excluded > 0:
-            excluded_coords = exclude_pixels(sig_dims=sig_dims, num_excluded=num_excluded)
+            excluded_coords = exclude_pixels(
+                sig_dims=sig_dims,
+                num_excluded=num_excluded,
+                rng=gen,
+            )
             assert excluded_coords is not None
             assert excluded_coords.shape[1] == num_excluded
             exclude = sparse.COO(coords=excluded_coords, shape=sig_dims, data=True)

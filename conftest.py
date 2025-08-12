@@ -1165,6 +1165,20 @@ def pytest_benchmark_generate_json(config, benchmarks, include_data, machine_inf
     yield
 
 
+@pytest.fixture(scope="function")
+def set_affinity():
+    current_aff = os.sched_getaffinity(0)
+    current_aff_list = list(sorted(current_aff))
+    # pick a CPU core from the middle (CPU 0 may be special cased by the OS and
+    # thus more noisy):
+    mid_cpu = current_aff_list[len(current_aff_list)//2]
+    os.sched_setaffinity(0, [mid_cpu])
+    try:
+        yield
+    finally:
+        os.sched_setaffinity(0, current_aff)
+
+
 def pytest_collectstart(collector):
     # nbval: ignore some output types
     if collector.fspath and collector.fspath.ext == '.ipynb':

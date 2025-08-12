@@ -1,4 +1,3 @@
-import os
 import scipy.sparse
 import sparse
 import pytest
@@ -11,16 +10,6 @@ N = 3*1024
 M = N
 L = M // 8
 K = L // 8
-
-
-@pytest.fixture(scope="function")
-def set_affinity():
-    current_aff = os.sched_getaffinity(0)
-    os.sched_setaffinity(0, [list(sorted(current_aff))[0]])
-    try:
-        yield
-    finally:
-        os.sched_setaffinity(0, current_aff)
 
 
 @pytest.mark.benchmark(

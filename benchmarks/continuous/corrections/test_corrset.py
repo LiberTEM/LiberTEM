@@ -65,7 +65,7 @@ def mod_ctx():
         ])
     )
 )
-def test_tileshape_adjustment_bench(benchmark, base_shape, excluded_coords):
+def test_tileshape_adjustment_bench(benchmark, base_shape, excluded_coords, set_affinity):
     sig_shape = (1024, 1024)
     tile_shape = base_shape
     excluded_pixels = sparse.COO(coords=excluded_coords, shape=sig_shape, data=True)
@@ -85,7 +85,7 @@ def test_tileshape_adjustment_bench(benchmark, base_shape, excluded_coords):
 @pytest.mark.parametrize(
     "num_excluded", (0, 1, 10, 100, 1000, 10000)
 )
-def test_detector_patch_large(num_excluded, benchmark):
+def test_detector_patch_large(num_excluded, benchmark, set_affinity):
     nav_dims = (8, 8)
     sig_dims = (1336, 2004)
 
@@ -115,7 +115,7 @@ def test_detector_patch_large(num_excluded, benchmark):
 @pytest.mark.benchmark(
     group="correct large",
 )
-def test_detector_correction_large(benchmark):
+def test_detector_correction_large(benchmark, set_affinity):
     nav_dims = (8, 8)
     sig_dims = (1336, 2004)
 
@@ -146,7 +146,7 @@ def test_detector_correction_large(benchmark):
 @pytest.mark.parametrize(
     'num_excluded', (0, 1, 10, 100, 1000, 10000, 100000)
 )
-def test_descriptor_creation(num_excluded, benchmark):
+def test_descriptor_creation(num_excluded, benchmark, set_affinity):
     shape = (2000, 2000)
     excluded_coords = (
         np.random.randint(0, 2000, num_excluded),

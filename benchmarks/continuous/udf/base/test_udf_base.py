@@ -35,7 +35,7 @@ class NoOpBufUDF(NoOpUDF):
 @pytest.mark.benchmark(
     group="udf overheads"
 )
-def test_noop_udf(mod_ctx, benchmark, medium_raw):
+def test_noop_udf(mod_ctx, benchmark, medium_raw, set_affinity):
     """
     This measures running a no-op UDF. The overheads measured include:
 
@@ -53,7 +53,7 @@ def test_noop_udf(mod_ctx, benchmark, medium_raw):
 @pytest.mark.benchmark(
     group="udf overheads"
 )
-def test_noop_udf_sig(mod_ctx, benchmark, medium_raw):
+def test_noop_udf_sig(mod_ctx, benchmark, medium_raw, set_affinity):
     """
     This measures running a no-op UDF with a result buffer.
 

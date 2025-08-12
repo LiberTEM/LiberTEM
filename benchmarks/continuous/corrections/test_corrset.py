@@ -29,7 +29,10 @@ def mod_ctx():
     specargs.update({'cudas': []})
     # FIXME: hardcoded CPU set, needsto be configured by env var or similar:
     # This range exactly corresponds to the numa1 node (of numa[0-7]) on JUSUF
-    spec = PipelinedExecutor.make_spec(list(range(16, 32)))
+    spec = PipelinedExecutor.make_spec(
+        cpus=list(range(16, 32)),
+        cudas=[],
+    )
 
     executor = PipelinedExecutor(
         spec=spec,

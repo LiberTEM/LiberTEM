@@ -27,7 +27,9 @@ def mod_ctx():
     from libertem.utils.devices import detect
     specargs = detect()
     specargs.update({'cudas': []})
-    spec = PipelinedExecutor.make_spec(**specargs)
+    # FIXME: hardcoded CPU set, needsto be configured by env var or similar:
+    # This range exactly corresponds to the numa1 node (of numa[0-7]) on JUSUF
+    spec = PipelinedExecutor.make_spec(list(range(16, 32)))
 
     executor = PipelinedExecutor(
         spec=spec,

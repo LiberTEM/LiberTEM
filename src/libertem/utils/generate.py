@@ -125,7 +125,7 @@ def gradient_data(nav_dims, sig_dims):
     return data.reshape(nav_dims + sig_dims)
 
 
-def exclude_pixels(sig_dims, num_excluded):
+def exclude_pixels(sig_dims, num_excluded, rng=None):
     '''
     Generate a list of excluded pixels that
     can be reconstructed faithfully from their neighbors
@@ -133,6 +133,8 @@ def exclude_pixels(sig_dims, num_excluded):
     '''
     if num_excluded == 0:
         return None
+    if rng is None:
+        rng = np.random.default_rng()
     # Map of pixels that can be reconstructed faithfully from neighbors in a linear gradient
     free_map = np.ones(sig_dims, dtype=bool)
 
@@ -144,7 +146,7 @@ def exclude_pixels(sig_dims, num_excluded):
     exclude = []
 
     while len(exclude) < num_excluded:
-        exclude_item = tuple(np.random.randint(low=1, high=s-1) for s in sig_dims)
+        exclude_item = tuple(rng.integers(low=1, high=s-1) for s in sig_dims)
         if free_map[exclude_item]:
             exclude.append(exclude_item)
             knock_out = tuple(slice(e - 1, e + 2) for e in exclude_item)

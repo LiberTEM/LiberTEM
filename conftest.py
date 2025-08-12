@@ -1170,8 +1170,10 @@ def set_affinity():
     current_aff = os.sched_getaffinity(0)
     current_aff_list = list(sorted(current_aff))
     # pick a CPU core from the middle (CPU 0 may be special cased by the OS and
-    # thus more noisy):
-    mid_cpu = current_aff_list[len(current_aff_list)//2]
+    # thus more noisy).
+    # 4 because HT may result in, for example, CPU 0 == CPU 128, on a system
+    # with 256 threads:
+    mid_cpu = current_aff_list[len(current_aff_list)//4]
     os.sched_setaffinity(0, [mid_cpu])
     try:
         yield

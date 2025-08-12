@@ -61,6 +61,7 @@ juwels_cpu:
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
+    - export PYTEST_DEBUG_TEMPROOT=$LOCALSCRATCH
     - pwd
     - ls -la
     - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb --skip-pkg-install
@@ -87,6 +88,7 @@ juwels_cpu_reference_run:
     - module load Python/3.12.3
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
+    - export PYTEST_DEBUG_TEMPROOT=$LOCALSCRATCH
     - cd $MY_JOB_PREFIX/git-ref
     - pwd
     - ls -la

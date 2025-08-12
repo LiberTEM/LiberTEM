@@ -125,8 +125,9 @@ def test_detector_correction_large(benchmark, set_affinity):
     sig_dims = (1336, 2004)
 
     data = gradient_data(nav_dims, sig_dims)
-    gain_map = (np.random.random(sig_dims) + 1).astype(np.float64)
-    dark_image = np.random.random(sig_dims).astype(np.float64)
+    gen = np.random.generator(np.random.PCG64(seed=12345))
+    gain_map = (gen.random(sig_dims) + 1).astype(np.float64)
+    dark_image = gen.random(sig_dims).astype(np.float64)
 
     damaged_data = data.copy()
     damaged_data /= gain_map
@@ -153,9 +154,10 @@ def test_detector_correction_large(benchmark, set_affinity):
 )
 def test_descriptor_creation(num_excluded, benchmark, set_affinity):
     shape = (2000, 2000)
+    gen = np.random.generator(np.random.PCG64(seed=12345))
     excluded_coords = (
-        np.random.randint(0, 2000, num_excluded),
-        np.random.randint(0, 2000, num_excluded),
+        gen.integers(0, 2000, num_excluded),
+        gen.integers(0, 2000, num_excluded),
     )
     benchmark(
         detector.RepairDescriptor,
@@ -211,15 +213,17 @@ class TestRealCorrection:
         nav_dims = shape[:2]
         sig_dims = shape[2:]
 
+        gen = np.random.generator(np.random.PCG64(seed=12345))
+
         if gain == 'use gain':
-            gain_map = (np.random.random(sig_dims) + 1).astype(np.float64)
+            gain_map = (gen.random(sig_dims) + 1).astype(np.float64)
         elif gain == 'no gain':
             gain_map = None
         else:
             raise ValueError
 
         if dark == 'use dark':
-            dark_image = np.random.random(sig_dims).astype(np.float64)
+            dark_image = gen.random(sig_dims).astype(np.float64)
         elif dark == 'no dark':
             dark_image = None
         else:

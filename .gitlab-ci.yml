@@ -21,22 +21,20 @@ jusuf_login:
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - mkdir -p $MY_JOB_PREFIX/
+    - cd $MY_JOB_PREFIX/
+    - wget https://raw.githubusercontent.com/LiberTEM/benchmarks/refs/heads/main/utils/subsample.py
 
     # main run:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
     - python3 -m venv $MY_JOB_PREFIX/venv-main
-    - $MY_JOB_PREFIX/venv-main/bin/pip install tox-uv uv
+    - $MY_JOB_PREFIX/venv-main/bin/pip install tox-uv uv click numpy
     - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb -- --help  # only create
-    - pwd
-    - ls -la
 
     # main run v2:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main-2
     - python3 -m venv $MY_JOB_PREFIX/venv-main-2
-    - $MY_JOB_PREFIX/venv-main-2/bin/pip install tox-uv uv
+    - $MY_JOB_PREFIX/venv-main-2/bin/pip install tox-uv uv click numpy
     - $MY_JOB_PREFIX/venv-main-2/bin/tox run -e benchmark-cb -- --help  # only create
-    - pwd
-    - ls -la
 
     # reference run:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
@@ -45,12 +43,11 @@ jusuf_login:
     - git log -n 10 --oneline
     - git rev-parse HEAD
     - python3 -m venv $MY_JOB_PREFIX/venv-ref
-    - $MY_JOB_PREFIX/venv-ref/bin/pip install tox-uv uv
+    - $MY_JOB_PREFIX/venv-ref/bin/pip install tox-uv uv click numpy
     - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb -- --help  # only create
-    - pwd
-    - ls -la
 
 # TODO: update job names (to something generic) - for now kept like this for the comparison script
+# TODO: reduce repetition in job scripts
 
 juwels_cpu:
   id_tokens:
@@ -68,14 +65,18 @@ juwels_cpu:
     - module load Python/3.12.3
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - export MY_VENV=MY_JOB_PREFIX/venv-main
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main
     - export PYTEST_DEBUG_TEMPROOT=$LOCALSCRATCH
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb --skip-pkg-install
+    - $MY_VENV/bin/tox run -e benchmark-cb --skip-pkg-install
+    - cp bench-results.json bench-results-orig.json
+    - $MY_VENV/bin/python $MY_JOB_PREFIX/subsample.py 1000 < bench-results-orig.json > bench-results.json
   artifacts:
     paths:
       - bench-results.json
+      - bench-results-orig.json
 
 juwels_cpu_2:
   id_tokens:
@@ -93,14 +94,18 @@ juwels_cpu_2:
     - module load Python/3.12.3
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - export MY_VENV=MY_JOB_PREFIX/venv-main-2
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main-2
     - export PYTEST_DEBUG_TEMPROOT=$LOCALSCRATCH
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-main-2/bin/tox run -e benchmark-cb --skip-pkg-install
+    - $MY_VENV/bin/tox run -e benchmark-cb --skip-pkg-install
+    - cp bench-results.json bench-results-orig.json
+    - $MY_VENV/bin/python $MY_JOB_PREFIX/subsample.py 1000 < bench-results-orig.json > bench-results.json
   artifacts:
     paths:
       - bench-results.json
+      - bench-results-orig.json
 
 
 juwels_cpu_reference_run:
@@ -121,16 +126,21 @@ juwels_cpu_reference_run:
     - module load git
     - module load Python/3.12.3
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
+    - export MY_VENV=MY_JOB_PREFIX/venv-ref
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
     - export PYTEST_DEBUG_TEMPROOT=$LOCALSCRATCH
     - cd $MY_JOB_PREFIX/git-ref
     - pwd
     - ls -la
-    - $MY_JOB_PREFIX/venv-ref/bin/tox run -e benchmark-cb --skip-pkg-install
+    - $MY_VENV/bin/tox run -e benchmark-cb --skip-pkg-install
+    - cp bench-results.json bench-results-orig.json
+    - $MY_VENV/bin/python $MY_JOB_PREFIX/subsample.py 1000 < bench-results-orig.json > bench-results.json
     - cp bench-results.json $CI_PROJECT_DIR/
+    - cp bench-results-orig.json $CI_PROJECT_DIR/
   artifacts:
     paths:
       - bench-results.json
+      - bench-results-orig.json
 
 cleanup-cb-directory:
   id_tokens:

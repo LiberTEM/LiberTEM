@@ -45,6 +45,10 @@ jobs:
               uses: actions/setup-python@v5
               with:
                 python-version: '3.12'
+            - name: Prepare environment for comparison
+              if: github.event.pull_request
+              run: 
+                python3 -m venv venv && ./venv/bin/pip install click scipy numpy
             - name: Compare benchmark results
               if: github.event.pull_request
               env:
@@ -52,8 +56,6 @@ jobs:
                 PR: ${{ github.event.pull_request.html_url }}            
               run: >-
                 wget https://raw.githubusercontent.com/LiberTEM/benchmarks/refs/heads/main/utils/compare.py &&
-                python3 -m venv venv &&
-                ./venv/bin/pip install click scipy &&
                 ./venv/bin/python3 compare.py ./artifacts/juwels_cpu_reference_run.zip ./artifacts/juwels_cpu.zip | gh pr comment $PR -F -
             - name: Trigger artifact collection
               if: ${{ github.event_name == 'push' }}

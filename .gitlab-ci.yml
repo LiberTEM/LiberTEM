@@ -21,8 +21,7 @@ jusuf_login:
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - mkdir -p $MY_JOB_PREFIX/
-    - cd $MY_JOB_PREFIX/
-    - wget https://raw.githubusercontent.com/LiberTEM/benchmarks/refs/heads/main/utils/subsample.py
+    - (cd $MY_JOB_PREFIX/ && wget https://raw.githubusercontent.com/LiberTEM/benchmarks/refs/heads/main/utils/subsample.py)
 
     # main run:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main

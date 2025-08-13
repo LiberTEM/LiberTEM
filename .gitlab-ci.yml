@@ -76,6 +76,8 @@ juwels_cpu:
   artifacts:
     paths:
       - bench-results.json
+      - bench-results-1.json
+      - bench-results-2.json
 
 juwels_cpu_2:
   id_tokens:
@@ -101,6 +103,8 @@ juwels_cpu_2:
   artifacts:
     paths:
       - bench-results.json
+      - bench-results-1.json
+      - bench-results-2.json
 
 
 juwels_cpu_reference_run:

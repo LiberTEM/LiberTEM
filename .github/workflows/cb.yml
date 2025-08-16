@@ -31,7 +31,7 @@ jobs:
                   -H 'Authorization: token ${{ github.token }}' \
                   'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/labels/benchmark'
             - name: Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
             - name: Mirror and get status
               uses: jakob-fritz/github2lab_action@main
               env:

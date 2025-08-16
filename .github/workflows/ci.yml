@@ -37,7 +37,7 @@ jobs:
               toxenv: py39
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Choose Python version ${{ matrix.python.version }}
         uses: actions/setup-python@v5
         with:
@@ -58,7 +58,7 @@ jobs:
   node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
@@ -80,7 +80,7 @@ jobs:
         envs: ["numba_coverage", "docs-check", "web_api"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: 'Choose Python version 3.11'
         uses: actions/setup-python@v5
         with:
@@ -99,7 +99,7 @@ jobs:
   build-docker-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: 'Choose Python version 3.11'
         uses: actions/setup-python@v5
         with:
@@ -144,7 +144,7 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: 'Choose Python version 3.11'
         uses: actions/setup-python@v5
         with:
@@ -188,7 +188,7 @@ jobs:
       LT_RELEASE_UPLOAD_ZENODO_CONCEPT: ${{ secrets.LT_RELEASE_UPLOAD_ZENODO_CONCEPT }}
     steps:
       - run: sudo apt-get install -y fuse
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Choose Python version 3.10
         uses: actions/setup-python@v5
         with:

@@ -155,7 +155,7 @@ jobs:
         run: python3 -m pip install tox tox-uv
       - name: 'run tox for docs-build-ci'
         run: tox -e 'docs-build-ci'
-      - uses: actions/upload-pages-artifact@v3.0.1
+      - uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: 'docs/build/html/'
 

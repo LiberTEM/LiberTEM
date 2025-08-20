@@ -58,7 +58,7 @@ jobs:
                 PR: ${{ github.event.pull_request.html_url }}            
               run: >-
                 wget https://raw.githubusercontent.com/LiberTEM/benchmarks/refs/heads/main/utils/compare.py &&
-                ./venv/bin/python3 compare.py ./artifacts/juwels_cpu_reference_run.zip ./artifacts/juwels_cpu.zip | gh pr comment $PR -F -
+                ./venv/bin/python3 compare.py ./artifacts/cpu_reference_run.zip ./artifacts/cpu.zip | gh pr comment $PR -F -
             - name: Trigger artifact collection
               if: ${{ github.event_name == 'push' }}
               env:

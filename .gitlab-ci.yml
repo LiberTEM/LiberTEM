@@ -29,12 +29,6 @@ jusuf_login:
     - $MY_JOB_PREFIX/venv-main/bin/pip install tox-uv uv click numpy
     - $MY_JOB_PREFIX/venv-main/bin/tox run -e benchmark-cb -- --help  # only create
 
-    # main run v2:
-    - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-main-2
-    - python3 -m venv $MY_JOB_PREFIX/venv-main-2
-    - $MY_JOB_PREFIX/venv-main-2/bin/pip install tox-uv uv click numpy
-    - $MY_JOB_PREFIX/venv-main-2/bin/tox run -e benchmark-cb -- --help  # only create
-
     # reference run:
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref
     - git clone https://github.com/LiberTEM/LiberTEM.git $MY_JOB_PREFIX/git-ref --depth=10

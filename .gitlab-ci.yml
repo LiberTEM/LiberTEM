@@ -42,7 +42,7 @@ jusuf_login:
 # TODO: update job names (to something generic) - for now kept like this for the comparison script
 # TODO: reduce repetition in job scripts
 
-juwels_cpu:
+cpu:
   id_tokens:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"
@@ -72,7 +72,7 @@ juwels_cpu:
       - bench-results-orig.json
 
 
-juwels_cpu_reference_run:
+cpu_reference_run:
   id_tokens:
     SITE_ID_TOKEN:
       aud: "https://gitlab.jsc.fz-juelich.de"

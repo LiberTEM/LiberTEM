@@ -578,31 +578,31 @@ def test_apply_correction():
         [1, 1]
     ))
 
-    forward_1 = apply_correction(y_centers, x_centers, 90, False)
-    forward_2 = apply_correction(y_centers, x_centers, 90, True)
+    forward_1_y, forward_1_x = apply_correction(y_centers, x_centers, 90, False)
+    forward_2_y, forward_2_x = apply_correction(y_centers, x_centers, 90, True)
     assert np.allclose(
-        forward_1[0],
+        forward_1_y,
         np.array((
             [0, 1],
             [1, 1]
         ))
     )
     assert np.allclose(
-        forward_1[1],
+        forward_1_x,
         np.array((
             [-1, -1],
             [1, 0]
         ))
     )
     assert np.allclose(
-        forward_2[0],
+        forward_2_y,
         np.array((
             [0, 1],
             [1, 1]
         ))
     )
     assert np.allclose(
-        forward_2[1],
+        forward_2_x,
         np.array((
             [1, 1],
             [-1, 0]

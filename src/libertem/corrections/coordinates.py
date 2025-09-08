@@ -84,7 +84,9 @@ def scale_rotate_flip_y(mat: np.ndarray):
     angle2 = np.arctan2(rot[0, 1], rot[1, 1])
 
     # So far not reached in tests since inconsistencies are caught as shear before
-    if not np.allclose((np.sin(angle1), np.cos(angle1)), (np.sin(angle2), np.cos(angle2))):  # pragma: no cover
+    if not np.allclose(                         # pragma: no cover
+            (np.sin(angle1), np.cos(angle1)),   # pragma: no cover
+            (np.sin(angle2), np.cos(angle2))):  # pragma: no cover
         raise ValueError(
             f'Rotation angle 1 {angle1} and rotation angle 2 {angle2} are inconsistent.'
         )

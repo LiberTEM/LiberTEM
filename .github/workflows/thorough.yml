@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Choose Python version ${{ matrix.version.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '${{ matrix.version.python }}'
           cache: 'pip'
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Choose Python version ${{ matrix.python.version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '${{ matrix.python.version }}'
           cache: 'pip'

@@ -553,3 +553,8 @@ def test_mask_patch_overlapping():
             data=correct_dot, corrected=reconstructed_dot,
             atol=1e-8, rtol=1e-5
         )
+
+
+def test_f_order_correct():
+    img = np.zeros((128, 128), dtype=np.float32, order='F')
+    detector.correct(buffer=img, sig_shape=img.shape)

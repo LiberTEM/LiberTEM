@@ -256,7 +256,7 @@ def correct(
             raise ValueError("Invalid arguments: Bot repair_descriptor and excluded_pixels set")
 
     _correct_numba_inplace(
-        buffer=out.reshape((prod(nav_shape), prod(sig_shape))),
+        buffer=out.reshape((prod(nav_shape), prod(sig_shape)), copy=False),
         dark_image=dark_image,
         gain_map=gain_map,
         exclude_pixels=repair_descriptor.exclude_flat,

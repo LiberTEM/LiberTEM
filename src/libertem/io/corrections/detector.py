@@ -255,7 +255,7 @@ def correct(
             "For in-place operation, the buffer given must be C-contiguous"
         )
 
-    # With current numpy, we can enfore that no copy is happening. This is an
+    # With current numpy, we can enforce that no copy is happening. This is an
     # extra safeguard in case the checks above don't catch the issue, but can
     # not be done with old (<2.1) versions:
     try:

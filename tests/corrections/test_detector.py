@@ -557,4 +557,13 @@ def test_mask_patch_overlapping():
 
 def test_f_order_correct():
     img = np.zeros((128, 128), dtype=np.float32, order='F')
-    detector.correct(buffer=img, sig_shape=img.shape)
+    with pytest.raises(detector.CorrectError):
+        detector.correct(buffer=img, sig_shape=img.shape)
+
+
+def test_non_contiguous_correct():
+    img = np.zeros((2, 128, 128), dtype=np.float32)
+    img = img[:, :64, :64]
+    assert not img.flags.c_contiguous
+    with pytest.raises(detector.CorrectError):
+        detector.correct(buffer=img, sig_shape=img.shape, inplace=True)

@@ -25,9 +25,18 @@ if typing.TYPE_CHECKING:
     import numpy.typing as nt
 
 
+class TOMLError(Exception):
+    # In some versions of tomli, TOMLDecodeError is not picklable, so we use
+    # this custom exception type as a workaround
+    pass
+
+
 def load_toml(path: str):
-    with open(path, "rb") as f:
-        return tomli.load(f)
+    try:
+        with open(path, "rb") as f:
+            return tomli.load(f)
+    except tomli.TOMLDecodeError as e:
+        raise TOMLError(str(e))
 
 
 class RawCSRDatasetParams(MessageConverter):
@@ -275,7 +284,7 @@ class RawCSRDataSet(DataSet):
                     "image_count": image_count,
                 }
             }
-        except (TypeError, UnicodeDecodeError, tomli.TOMLDecodeError, OSError):
+        except (TypeError, UnicodeDecodeError, TOMLError, OSError):
             return False
 
     @classmethod

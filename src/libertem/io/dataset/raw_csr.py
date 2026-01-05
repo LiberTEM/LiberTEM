@@ -4,7 +4,6 @@ import os
 import scipy.sparse
 import numpy as np
 import numba
-import tomli
 from sparseconverter import SCIPY_CSR, ArrayBackend, for_backend, NUMPY
 
 from libertem.common import Slice, Shape
@@ -32,11 +31,20 @@ class TOMLError(Exception):
 
 
 def load_toml(path: str):
+    import tomli
     try:
         with open(path, "rb") as f:
             return tomli.load(f)
     except tomli.TOMLDecodeError as e:
-        raise TOMLError(str(e)) from None
+        msg = str(e)
+    # XXX apparently dask or the libraries used by dask look at the
+    # exceptions that "cause" the final exception, even if we disable
+    # exception chaining. This is a problem if some of these
+    # exceptions aren't pickleable...
+    # If we reached this line, we know the exception case was hit, and
+    # `msg` is set. This is not beautiful, but works around the issue
+    # described above:
+    raise TOMLError(msg)
 
 
 class RawCSRDatasetParams(MessageConverter):

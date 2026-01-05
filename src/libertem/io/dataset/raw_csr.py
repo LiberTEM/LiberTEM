@@ -36,7 +36,7 @@ def load_toml(path: str):
         with open(path, "rb") as f:
             return tomli.load(f)
     except tomli.TOMLDecodeError as e:
-        raise TOMLError(str(e))
+        raise TOMLError(str(e)) from None
 
 
 class RawCSRDatasetParams(MessageConverter):

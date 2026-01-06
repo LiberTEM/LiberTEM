@@ -230,8 +230,7 @@ stages:
       - bash: $(Agent.TempDirectory)/venv/bin/pip install uv
         displayName: install uv
 
-      # FIXME: install with uv, which bugs out with the path right now...
-      - bash: $(Agent.TempDirectory)/venv/bin/pip install $(Build.SourcesDirectory)/LiberTEM/
+      - bash: $(Agent.TempDirectory)/venv/bin/uv pip install $(Build.SourcesDirectory)/LiberTEM/
         displayName: install LiberTEM
 
       - bash: $(Agent.TempDirectory)/venv/bin/pip install "$(Build.SourcesDirectory)/LiberTEM-live/[dectris]"

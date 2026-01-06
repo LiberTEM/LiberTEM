@@ -13,14 +13,12 @@ from functools import partial
 from typing import Optional
 import hmac
 import hashlib
-import time
 
 import tornado.web
 import tornado.gen
 import tornado.websocket
 import tornado.ioloop
 import tornado.escape
-from tornado import httputil
 
 from ..common.async_utils import adjust_event_loop_policy
 from .shutdown import ShutdownHandler
@@ -61,33 +59,22 @@ def _get_token(request):
     return token
 
 
-def _write_token_mismatch_error(request):
-    start_line = httputil.ResponseStartLine("", 400, "bad request: token mismatch")
-    headers = httputil.HTTPHeaders({
-        "Content-Type": "text/html; charset=UTF-8",
-        "Date": httputil.format_timestamp(time.time()),
-    })
-    return request.connection.write_headers(
-        start_line, headers, b""
-    )
+class CheckTokenAuthApp(tornado.web.Application):
+    def __init__(self, *args, auth_token=None, **kwargs):
+        if auth_token is None:
+            self._auth_token_hash = None
+        else:
+            self._auth_token_hash = hashlib.sha256(auth_token.encode("utf8")).hexdigest()
+        super().__init__(*args, **kwargs)
 
-
-def check_token_auth_middleware(app, expected_token):
-    # bypass token check if no token is set:
-    if expected_token is None:
-        return lambda r: app(r)
-
-    expected_hash = hashlib.sha256(expected_token.encode("utf8")).hexdigest()
-
-    def _middleware(request):
-        # NOTE: token length may be leaked here
-        given_token = _get_token(request)
-        given_hash = hashlib.sha256(given_token.encode("utf8")).hexdigest()
-        if not hmac.compare_digest(given_hash, expected_hash):
-            return _write_token_mismatch_error(request)
-        return app(request)
-
-    return _middleware
+    def find_handler(self, request, **kwargs):
+        from tornado.web import ErrorHandler
+        if self._auth_token_hash is not None:
+            given_token = _get_token(request)
+            given_hash = hashlib.sha256(given_token.encode("utf8")).hexdigest()
+            if not hmac.compare_digest(given_hash, self._auth_token_hash):
+                return self.get_handler_delegate(request, ErrorHandler, {"status_code": 403})
+        return super().find_handler(request, **kwargs)
 
 
 def make_app(event_registry, shared_state, token=None):
@@ -98,13 +85,14 @@ def make_app(event_registry, shared_state, token=None):
     """
     settings = {
         "static_path": os.path.join(os.path.dirname(__file__), "client"),
+        "auth_token": token,
     }
     assets_path = os.path.join(os.path.dirname(__file__), "client", "assets")
     common_kwargs = {
         "state": shared_state,
         "event_registry": event_registry,
     }
-    app = tornado.web.Application([
+    app = CheckTokenAuthApp([
         (r"/", IndexHandler, common_kwargs),
         (r"/api/datasets/detect/", DataSetDetectHandler, common_kwargs),
         (r"/api/datasets/([^/]+)/", DataSetDetailHandler, common_kwargs),
@@ -128,7 +116,6 @@ def make_app(event_registry, shared_state, token=None):
         (r"/api/config/connection/", ConnectHandler, common_kwargs),
         (r"/assets/(.*)", tornado.web.StaticFileHandler, {"path": assets_path}),
     ], **settings)
-    app = check_token_auth_middleware(app, token)
     return app
 
 

@@ -107,6 +107,9 @@ stages:
           Python313:
             python.version: '3.13'
             TOXENV: 'py313-data'
+          Python314:
+            python.version: '3.14'
+            TOXENV: 'py314-data'
       variables:
         TESTDATA_BASE_PATH: '/data/'
       steps:

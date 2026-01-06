@@ -5,7 +5,7 @@ nest-asyncio
 pytest-xdist
 pytest-env
 aiohttp
-websockets<14
+websockets
 pytest-benchmark
 ipykernel
 joblib

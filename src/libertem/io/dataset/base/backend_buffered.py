@@ -183,7 +183,7 @@ class DirectBufferedFile(BufferedFile):
             # Make sure to keep a reference, otherwise
             # it will be closed
             self._fh = win32file.CreateFile(
-                self.path,  # fileName
+                str(self.path),  # fileName
                 win32file.GENERIC_READ,  # desiredAccess
                 win32file.FILE_SHARE_READ
                 | win32file.FILE_SHARE_WRITE

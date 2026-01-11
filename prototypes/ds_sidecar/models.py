@@ -1,0 +1,470 @@
+import pathlib
+import math
+import numpy as np
+import natsort
+import functools
+import operator
+
+from typing import Dict, Any, Optional, Union, List
+from typing_extensions import Literal
+
+from pydantic import BaseModel, Extra, validator, root_validator
+from pydantic import conlist, PositiveInt, Field
+
+from utils import resolve_path_glob, join_if_relative
+from utils import format_defs, sort_methods, format_T
+
+
+class DType:
+    """Acts as type annotation/validator for np.dtype-like"""
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        try:
+            value = np.dtype(value)
+        except TypeError:
+            raise ValueError(f'Cannot cast {value} to dtype')
+        return value
+
+
+class NPArray:
+    """Acts as type annotation/validator for np.ndarray-like"""
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        try:
+            value = np.asarray(value)
+        except TypeError:
+            raise ValueError(f'Cannot convert {value} to array')
+        return value
+
+
+class WithExtraModel(BaseModel):
+    """
+    Any extra keys are inserted onto Model (unvalidated)
+    rather than being dropped
+    """
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+
+class WithRootModel(WithExtraModel):
+    """
+    Adds the root attribute for resolving relative file paths
+    This will not be shown in the repr and has a default value
+    of the current working directory
+    """
+    root: Optional[pathlib.Path] = Field(default=pathlib.Path(), repr=False)
+
+
+class FileConfig(WithRootModel):
+    """
+    Config for a single file on disk
+
+    Has a .resolve() method to return the pathlib.Path object
+    pointing to the file on disk, potentially resolved relative
+    to a root path if the file path is not itself absolute
+
+    The specifier path can be a glob which must resolve to
+    only one file in the target directory
+
+    If format is specified and recognized, enables a .load()
+    method which will load the file directly using the associated
+    loader
+    """
+    config_type: Literal['file'] = Field(default='file', repr=False)
+    path: pathlib.Path
+    format: Optional[format_T] = None
+    load_options: Dict = Field(default_factory=lambda: {})
+
+    @validator('format', pre=True)
+    def format_clean(cls, v):
+        if isinstance(v, str):
+            return v.strip().lower()
+        return v
+
+    @validator('format')
+    def format_is_defined(cls, v):
+        if v not in format_defs:
+            raise ValueError(f'Format {v} unknown')
+        return v
+
+    @classmethod
+    def from_value(
+        cls,
+        path_or_config: Union[str, Dict[str, Any]],
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Instantiate this config from a single value
+        which is assumed to be coercible to a pathlib.Path
+
+        Sets the directory 'root' on the config to the root
+        of the parent config (if called as such), else to
+        the current working directory
+        """
+        if not isinstance(path_or_config, dict):
+            path_or_config = {
+                'path': path_or_config,
+                'root': kwargs.get('values', {}).get('root', pathlib.Path())
+            }
+        return path_or_config
+
+    def resolve(self) -> pathlib.Path:
+        search_path = join_if_relative(self.path, self.root)
+        paths = resolve_path_glob(search_path)
+        if len(paths) > 1:
+            raise RuntimeError(f'Path {search_path} matched {len(paths)} '
+                               'files, must match a single file')
+        return paths[0]
+
+    def load(self, path: Optional[pathlib.Path] = None) -> np.ndarray:
+        if path is None:
+            path = self.resolve()
+        format = self.format
+        if format is None:
+            format = path.suffix.lstrip('.').lower()
+        if format not in format_defs.keys():
+            raise ValueError(f'Unrecognized file format {format}')
+        return format_defs[format](path, **self.load_options)
+
+
+class FileSetConfig(WithRootModel):
+    """
+    Config for a set of files on disk
+
+    Has a .resolve() method to return the list of pathlib.Path objects
+    pointing to the files on disk, potentially resolved relative
+    to a root path if the file paths are not absolute
+
+    The specifier can be one-or-more glob strings
+
+    By default the returned paths will be sorted using 'natsorted',
+    however the sort behaviour can be modified or disabled using options
+    on the config
+    """
+
+    config_type: Literal['fileset'] = Field(default='fileset', repr=False)
+    files: Union[List[pathlib.Path], pathlib.Path]
+    sort: Optional[Literal['natsorted', 'os_sorted', 'humansorted', 'none']] = 'natsorted'
+    sort_options: Optional[List[natsort.ns]] = None
+
+    @validator('sort_options', pre=True, each_item=True)
+    def convert_sort_keys(cls, v):
+        try:
+            v = natsort.ns[v]
+        except KeyError:
+            raise ValueError(f'Unrecognized sort option {v}')
+        return v
+
+    @validator('sort_options')
+    def sort_options_no_sort(cls, value, values):
+        if value is not None and values.get('sort') is None:
+            raise ValueError('Cannot define sort options without sort method')
+        return value
+
+    @classmethod
+    def from_value(
+        cls,
+        files_or_config: Union[str, Dict[str, Any]],
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Instantiate this config from a single value
+        which is assumed to be coercible to pathlib.Path
+        or List[pathlib.Path]
+
+        Sets the directory 'root' on the config to the root
+        of the parent config (if called as such), else to
+        the current working directory
+        """
+        if not isinstance(files_or_config, dict):
+            files_or_config = {
+                'files': files_or_config,
+                'root': kwargs.get('values', {}).get('root', pathlib.Path())
+            }
+        return files_or_config
+
+    def resolve(self) -> List[pathlib.Path]:
+        """
+        Resolve the self.files attribute to a list of paths
+        taking into account glob expansion and the root directory
+        if necessary
+
+        If sorting is enabled (the default) return the list of paths
+        in their sorted form
+        """
+        if isinstance(self.files, (str, pathlib.Path)):
+            path = join_if_relative(self.files, self.root)
+            filelist = resolve_path_glob(path)
+        elif isinstance(self.files, (list, tuple)):
+            # List of (potentially mixed) absolute, relative, or glob specifiers
+            paths = [join_if_relative(path, self.root) for path in self.files]
+            filelist = [f for path in paths for f in resolve_path_glob(path)]
+        else:
+            raise ValueError(f'Unrecognized files specifier {self.files}')
+
+        # It's possible that multiple globs together may match a file more than once
+        # Could add some form of uniqueness check for resolved paths ?
+        if self.sort:
+            filelist = self._sort(filelist)
+
+        return filelist
+
+    def _sort(self, filelist: List[pathlib.Path]) -> List[pathlib.Path]:
+        """
+        Sort filelist using the specified sort method and sort options (if any)
+        """
+        sort_fn = sort_methods.get(self.sort)
+        if sort_fn is None:
+            return filelist
+        alg_option = natsort.ns.DEFAULT
+        if self.sort_options:
+            alg_option = functools.reduce(operator.or_, self.sort_options)
+        # FIXME Ambiguity in sorting if we are reading from multiple directories ?
+        return sort_fn(filelist, alg=alg_option)
+
+
+class FileArrayConfig(FileConfig):
+    """
+    Config for a numpy array loaded from file
+
+    Has the same behaviour / options as FileConfig, but
+    the file must be loadable, and .resolve() returns
+    np.ndarray rather than pathlib.Path
+    """
+    config_type: Literal['array'] = Field(default='array', repr=False)
+    dtype: Optional[DType] = None
+    shape: Optional[conlist(PositiveInt, min_items=1)] = None
+
+    @validator('format')
+    def is_loadable(cls, value, values):
+        if value is None:
+            format = values['path'].suffix.strip().lower()
+            if format not in format_defs.keys():
+                raise ValueError('Need a loadable format to load array from file')
+
+    def resolve(self) -> np.ndarray:
+        path = super().resolve()
+        # Explicit path needed to avoid recursion problem in FileConfig.load()
+        array = self.load(path=path)
+        if self.dtype is not None:
+            array = array.astype(self.dtype)
+        if self.shape is not None:
+            if math.prod(self.shape) != array.size:
+                raise RuntimeError(
+                    'Loaded array does not match config-supplied shape, '
+                    f'got array of shape {array.shape} for reshape of {tuple(self.shape)}'
+                )
+            array = array.reshape(self.shape)
+        return array
+
+
+class InlineArrayConfig(WithRootModel):
+    """
+    Specify an array of values inline, resolves to np.ndarray
+
+    The data key must be coercible to np.ndarray and
+    the shape key (if supplied) will be used to reshape
+    this data if it is compatible
+    """
+    config_type: Literal['array'] = Field(default='array', repr=False)
+    data: NPArray
+    dtype: Optional[DType] = None
+    shape: Optional[conlist(PositiveInt, min_items=1)] = None
+
+    @validator('shape')
+    def validate_shape_matches(cls, value, values):
+        value = tuple(value)
+        shape_size = math.prod(value)
+        if 'data' not in values:
+            raise ValueError('Cannot get data size')
+        if shape_size != values['data'].size:
+            raise ValueError('Array shape must have same size as data '
+                             f'got {value} for data shape {values["data"].shape}')
+        return value
+
+    def resolve(self) -> np.ndarray:
+        array = np.asarray(self.data)
+        if self.dtype is not None:
+            array = array.astype(self.dtype)
+        if self.shape is not None:
+            array = array.reshape(self.shape)
+        return array
+
+
+class ArrayConfig(WithExtraModel):
+    """
+    Wrapper around InlineArrayConfig and FileArrayConfig
+    to allow specifying an array from either a file or inline
+    """
+    config_type: Literal['array'] = Field(default='array', repr=False)
+    array_config: Union[InlineArrayConfig, FileArrayConfig]
+
+    @root_validator(pre=True)
+    def wrap_config(cls, values):
+        if 'array_config' in values:
+            pass
+        else:
+            values = {
+                'config_type': values.get('config_type', 'array'),
+                'array_config': values,
+            }
+        return values
+
+    def resolve(self) -> np.ndarray:
+        return self.array_config.resolve()
+
+
+class StandardDatasetConfig(WithRootModel):
+    """
+    Config for 'standard' LiberTEM dataset arguments
+    """
+    config_type: Literal['dataset'] = Field(default='dataset', repr=False)
+    # This could be an enum of defined dataset keys
+    ds_format: Optional[str] = 'auto'
+    path: Union[FileConfig, pathlib.Path, str]
+    nav_shape: Optional[conlist(PositiveInt, min_items=1)] = None
+    sig_shape: Optional[conlist(PositiveInt, min_items=1)] = None
+    sync_offset: Optional[int] = 0
+
+    # This validator is used to cast a path-like 'string'
+    # to a FileConfig object which can be resolved
+    _cast_file = validator(
+        'path',
+        pre=True,
+        allow_reuse=True
+    )(FileConfig.from_value)
+
+
+class ROIFileConfig(FileArrayConfig):
+    """
+    A FileArrayConfig for loading ROIs from file
+    Data is cast to bool after loading by default
+    """
+    config_type: Literal['roi'] = Field(default='roi', repr=False)
+    dtype: Optional[DType] = bool
+
+    @validator('dtype')
+    def check_dtype(cls, value):
+        if not np.issubdtype(value, bool):
+            raise ValueError('ROI dtype spec must be bool')
+        return value
+
+
+class ROIInlineConfig(WithRootModel):
+    """
+    Specify an ROI inline using a shape
+
+    The roi is initially constructed with base_value for all pixels,
+    and the coordinates in toggle_px are toggled
+    """
+    config_type: Literal['roi'] = Field(default='roi', repr=False)
+    shape: conlist(PositiveInt, min_items=1)
+    base_value: bool
+    toggle_px: Optional[conlist(conlist(int, min_items=1))] = None
+    dtype: Optional[DType] = bool
+
+    @validator('toggle_px')
+    def check_valid_toggle(cls, value, values):
+        if not value:
+            # nothing to do
+            return
+        coords = value
+        containing_shape = tuple(values['shape'])
+        if not all(len(coord) == len(containing_shape) for coord in coords):
+            raise ValueError('Pixel coordinates must match dimension of containing shape')
+        for coord in coords:
+            if not all(-s <= c < s for c, s in zip(coord, containing_shape)):
+                raise ValueError(f'Invalid coordinate {coord} for shape {containing_shape}')
+        return value
+
+    def resolve(self) -> np.ndarray:
+        roi = np.full(tuple(self.shape), self.base_value, dtype=self.dtype)
+        if self.toggle_px is None:
+            return roi
+        toggle_coords = np.asarray(self.toggle_px).reshape(-1, roi.ndim)
+        set_value = not self.base_value
+        flat_coords = np.ravel_multi_index(
+            np.split(toggle_coords, roi.ndim, axis=1),
+            roi.shape,
+            mode='wrap',
+        )
+        np.put(roi, flat_coords, set_value)
+        return roi
+
+
+class ROISpec(WithExtraModel):
+    """
+    Wrapper around ROIInlineConfig and ROIFileConfig allowing
+    roi specification either from file or inline
+    """
+    config_type: Literal['roi'] = Field(default='roi', repr=False)
+    array_config: Union[ROIInlineConfig, ROIFileConfig]
+
+    @root_validator(pre=True)
+    def wrap_config(cls, values):
+        if 'array_config' in values:
+            pass
+        else:
+            values = {
+                'config_type': values.get('config_type', 'roi'),
+                'array_config': values,
+            }
+        return values
+
+    def resolve(self) -> np.ndarray:
+        return self.array_config.resolve()
+
+
+if __name__ == '__main__':
+    from tree import TreeFactory
+
+    cwd = f"root='{pathlib.Path().absolute()}'"
+
+    config_str = cwd + R"""
+
+[dataset_config]
+config_type='dataset'
+ds_format='mib'
+path='#/my_mib_file'
+
+[my_mib_file]
+config_type='file'
+path='testpath.mib'
+
+[my_fileset]
+config_type='fileset'
+files='yoyo'
+sort='natsorted'
+sort_options=['FLOAT']
+
+[my_array]
+config_type='array'
+data = [5, 6, 7, 8]
+dtype='uint8'
+shape=[2, 2]
+
+[my_roi]
+config_type='roi'
+shape=[5, 6]
+base_value=false
+toggle_px=[[0, 0], [2, 3], [4, 4]]
+
+[my_fileset_2]
+config_type='fileset'
+files='./testfiles/file*.raw'
+"""
+    nest = TreeFactory.from_string(config_str)
+    ds_model = StandardDatasetConfig(**nest['dataset_config'].freeze())
+    fileset_model = FileSetConfig(**nest['my_fileset'].freeze())
+    array_model = ArrayConfig(**nest['my_array'].freeze())
+    roi_model = ROISpec(**nest['my_roi'].freeze())
+    fileset2_model = FileSetConfig(**nest['my_fileset_2'].freeze())

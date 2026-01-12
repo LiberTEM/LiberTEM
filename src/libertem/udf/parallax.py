@@ -76,6 +76,17 @@ def aberration_cartesian_gradients_np(alpha, phi, aberration_coefs):
     return dchi_dx, dchi_dy
 
 
+def suppress_nyquist_realspace(array):
+    """
+    Zero Nyquist frequencies of a real-space array.
+    """
+    F = np.fft.fft2(array)
+    Nx, Ny = F.shape
+    F[Nx // 2, :] = 0.0
+    F[:, Ny // 2] = 0.0
+    return np.fft.ifft2(F).real
+
+
 @numba.njit(fastmath=True, nogil=True, cache=False)
 def parallax_accumulate_cpu(
     frames,  # (T, sy, sx) float32/64
@@ -127,11 +138,14 @@ class ParallaxUDF(UDF):
     with internal NumPy preprocessing equivalent to StreamingParallax.
     """
 
-    def __init__(self, bf_flat_inds, shifts, upsampling_factor, **kwargs):
+    def __init__(
+        self, bf_flat_inds, shifts, upsampling_factor, suppress_Nyquist_noise, **kwargs
+    ):
         super().__init__(
             bf_flat_inds=bf_flat_inds,
             shifts=shifts,
             upsampling_factor=upsampling_factor,
+            suppress_Nyquist_noise=suppress_Nyquist_noise,
             **kwargs,
         )
 
@@ -148,6 +162,7 @@ class ParallaxUDF(UDF):
         aberration_coefs: dict | None = None,
         rotation_angle: float | None = None,
         upsampling_factor: int = 1,
+        suppress_Nyquist_noise: bool = True,
         **kwargs,
     ):
         """ """
@@ -206,6 +221,7 @@ class ParallaxUDF(UDF):
             bf_flat_inds=bf_flat_inds,
             shifts=shifts,
             upsampling_factor=upsampling_factor,
+            suppress_Nyquist_noise=suppress_Nyquist_noise,
             **kwargs,
         )
 
@@ -247,7 +263,13 @@ class ParallaxUDF(UDF):
         )
 
     def merge(self, dest, src):
-        dest.reconstruction[:] += src.reconstruction
+        reconstruction = src.reconstruction
+        upsampling_factor: int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
+
+        if self.params.suppress_Nyquist_noise and upsampling_factor > 1:
+            reconstruction = suppress_nyquist_realspace(reconstruction)
+
+        dest.reconstruction[:] += reconstruction
 
     def postprocess(self):
         pass

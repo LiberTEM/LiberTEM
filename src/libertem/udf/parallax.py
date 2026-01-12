@@ -76,7 +76,7 @@ def aberration_cartesian_gradients_np(alpha, phi, aberration_coefs):
     return dchi_dx, dchi_dy
 
 
-@numba.njit(fastmath=True, nogil=True, cache=True)
+@numba.njit(fastmath=True, nogil=True, cache=False)
 def parallax_accumulate_cpu(
     frames,  # (T, sy, sx) float32/64
     bf_flat_inds,  # (M,) int32
@@ -310,7 +310,7 @@ def prepare_grouped_phase_flipping_kernel_np(H, s_m_up, upsampled_gpts):
     return unique_offsets.astype(np.int64), K
 
 
-@numba.njit(fastmath=True, nogil=True, cache=True)
+@numba.njit(fastmath=True, nogil=True, cache=False)
 def phase_flip_accumulate_cpu(frames, bf_rows, bf_cols, coords, unique_offsets, K, out):
     """
     Scatter-add phase-flip contributions into out (real-space accumulator).

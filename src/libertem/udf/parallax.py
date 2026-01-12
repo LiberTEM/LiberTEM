@@ -127,10 +127,11 @@ class ParallaxUDF(UDF):
     with internal NumPy preprocessing equivalent to StreamingParallax.
     """
 
-    def __init__(self, bf_flat_inds, shifts, **kwargs):
+    def __init__(self, bf_flat_inds, shifts, upsampling_factor, **kwargs):
         super().__init__(
             bf_flat_inds=bf_flat_inds,
             shifts=shifts,
+            upsampling_factor=upsampling_factor,
             **kwargs,
         )
 
@@ -164,8 +165,8 @@ class ParallaxUDF(UDF):
 
         # ---- Parallax shifts ----
         sampling = (
-            1.0 / reciprocal_sampling[0] / ny,
-            1.0 / reciprocal_sampling[1] / nx,
+            1.0 / reciprocal_sampling[0] / ny,  # ty:ignore[not-subscriptable]
+            1.0 / reciprocal_sampling[1] / nx,  # ty:ignore[not-subscriptable]
         )
 
         kxa, kya = spatial_frequencies_np(
@@ -208,6 +209,7 @@ class ParallaxUDF(UDF):
         return cls(
             bf_flat_inds=bf_flat_inds,
             shifts=shifts,
+            upsampling_factor=upsampling_factor,
             **kwargs,
         )
 
@@ -222,11 +224,16 @@ class ParallaxUDF(UDF):
 
     @property
     def reconstruct_shape(self):
-        return tuple(self.meta.dataset_shape.nav)
+        upsampling_factor:int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
+        scan_gpts:tuple[int,int] = self.meta.dataset_shape.nav  # ty:ignore[invalid-assignment]
+        return tuple(gpt * upsampling_factor for gpt in scan_gpts)
 
     def process_tile(self, tile):
         frames = tile.data
         coords = self.meta.coordinates
+
+        upsampling_factor:int = self.params.upsampling_factor # ty:ignore[invalid-assignment]
+        coords *= upsampling_factor
 
         parallax_accumulate_cpu(
             frames,
@@ -404,8 +411,8 @@ class ParallaxPhaseFlipUDF(UDF):
 
         # ---- Parallax shifts ----
         sampling = (
-            1.0 / reciprocal_sampling[0] / ny,
-            1.0 / reciprocal_sampling[1] / nx,
+            1.0 / reciprocal_sampling[0] / ny,  # ty:ignore[not-subscriptable]
+            1.0 / reciprocal_sampling[1] / nx,  # ty:ignore[not-subscriptable]
         )
 
         kxa, kya = spatial_frequencies_np(

@@ -195,10 +195,6 @@ class ParallaxUDF(UDF):
             axis=-1,
         )
 
-        # upsampled_gpts = (
-        #     scan_gpts[0] * upsampling_factor,
-        #     scan_gpts[1] * upsampling_factor,
-        # )
         upsampled_sampling = (
             scan_sampling[0] / upsampling_factor,
             scan_sampling[1] / upsampling_factor,
@@ -218,21 +214,28 @@ class ParallaxUDF(UDF):
             "reconstruction": self.buffer(
                 kind="single",
                 dtype=np.float64,
-                extra_shape=self.reconstruct_shape,
+                extra_shape=self.upsampled_scan_gpts,
             )
         }
 
     @property
-    def reconstruct_shape(self):
-        upsampling_factor:int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
-        scan_gpts:tuple[int,int] = self.meta.dataset_shape.nav  # ty:ignore[invalid-assignment]
-        return tuple(gpt * upsampling_factor for gpt in scan_gpts)
+    def gpts(self):
+        return self.meta.dataset_shape.sig
+
+    @property
+    def scan_gpts(self):
+        return self.meta.dataset_shape.nav
+
+    @property
+    def upsampled_scan_gpts(self) -> tuple[int, int]:
+        upsampling_factor: int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
+        return tuple(gpt * upsampling_factor for gpt in self.scan_gpts)
 
     def process_tile(self, tile):
         frames = tile.data
         coords = self.meta.coordinates
 
-        upsampling_factor:int = self.params.upsampling_factor # ty:ignore[invalid-assignment]
+        upsampling_factor: int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
         coords *= upsampling_factor
 
         parallax_accumulate_cpu(
@@ -374,11 +377,12 @@ class ParallaxPhaseFlipUDF(UDF):
         Phase-flip weights (shape U x M).
     """
 
-    def __init__(self, bf_flat_inds, unique_offsets, K, **kwargs):
+    def __init__(self, bf_flat_inds, unique_offsets, K, upsampling_factor, **kwargs):
         super().__init__(
             bf_flat_inds=bf_flat_inds,
             unique_offsets=unique_offsets,
             K=K,
+            upsampling_factor=upsampling_factor,
             **kwargs,
         )
 
@@ -478,27 +482,43 @@ class ParallaxPhaseFlipUDF(UDF):
             bf_flat_inds=bf_flat_inds,
             unique_offsets=unique_offsets,
             K=K,
+            upsampling_factor=upsampling_factor,
             **kwargs,
         )
 
     def get_result_buffers(self):
-        Ny, Nx = tuple(self.meta.dataset_shape.nav)
         return {
             "reconstruction": self.buffer(
-                kind="single", dtype=np.float64, extra_shape=(Ny, Nx)
+                kind="single",
+                dtype=np.float64,
+                extra_shape=self.upsampled_scan_gpts,
             )
         }
+
+    @property
+    def gpts(self):
+        return self.meta.dataset_shape.sig
+
+    @property
+    def scan_gpts(self):
+        return self.meta.dataset_shape.nav
+
+    @property
+    def upsampled_scan_gpts(self) -> tuple[int, int]:
+        upsampling_factor: int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
+        return tuple(gpt * upsampling_factor for gpt in self.scan_gpts)
 
     def process_tile(self, tile):
         frames = tile.data  # shape (T, sy, sx)
         coords = self.meta.coordinates  # shape (T, 2)
 
-        bf_flat_inds = np.asarray(self.params.bf_flat_inds)
-        bf_rows = bf_flat_inds // frames.shape[1]
-        bf_cols = bf_flat_inds % frames.shape[1]
+        # Note we don't need to scale coords by upsampling-factor here, would be double-counting
+        # upsampling_factor: int = self.params.upsampling_factor  # ty:ignore[invalid-assignment]
+        # coords *= upsampling_factor
 
-        out_buf = self.results.reconstruction
-        out = out_buf  # single real-valued buffer
+        bf_flat_inds = np.asarray(self.params.bf_flat_inds)
+        bf_rows = bf_flat_inds // self.gpts[0]
+        bf_cols = bf_flat_inds % self.gpts[0]
 
         phase_flip_accumulate_cpu(
             frames,
@@ -507,7 +527,7 @@ class ParallaxPhaseFlipUDF(UDF):
             coords,
             self.params.unique_offsets,
             self.params.K,
-            out,
+            self.results.reconstruction,
         )
 
     def merge(self, dest, src):

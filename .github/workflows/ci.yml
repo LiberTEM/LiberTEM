@@ -30,6 +30,8 @@ jobs:
           # FIXME reset to 3.13 once it is the default for GitHub Actions on OS X
           - version: "3.13.5"
             toxenv: py313
+          - version: "3.14"
+            toxenv: py314
         exclude:
           - os: macos-15
             python:
@@ -37,7 +39,7 @@ jobs:
               toxenv: py39
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Choose Python version ${{ matrix.python.version }}
         uses: actions/setup-python@v6
         with:
@@ -58,9 +60,9 @@ jobs:
   node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup Node.js environment
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -80,7 +82,7 @@ jobs:
         envs: ["numba_coverage", "docs-check", "web_api"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: 'Choose Python version 3.11'
         uses: actions/setup-python@v6
         with:
@@ -99,7 +101,7 @@ jobs:
   build-docker-image:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: 'Choose Python version 3.11'
         uses: actions/setup-python@v6
         with:
@@ -144,7 +146,7 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: 'Choose Python version 3.11'
         uses: actions/setup-python@v6
         with:
@@ -188,7 +190,7 @@ jobs:
       LT_RELEASE_UPLOAD_ZENODO_CONCEPT: ${{ secrets.LT_RELEASE_UPLOAD_ZENODO_CONCEPT }}
     steps:
       - run: sudo apt-get install -y fuse
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Choose Python version 3.10
         uses: actions/setup-python@v6
         with:

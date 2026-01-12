@@ -107,6 +107,9 @@ stages:
           Python313:
             python.version: '3.13'
             TOXENV: 'py313-data'
+          Python314:
+            python.version: '3.14'
+            TOXENV: 'py314-data'
       variables:
         TESTDATA_BASE_PATH: '/data/'
       steps:
@@ -227,8 +230,7 @@ stages:
       - bash: $(Agent.TempDirectory)/venv/bin/pip install uv
         displayName: install uv
 
-      # FIXME: install with uv, which bugs out with the path right now...
-      - bash: $(Agent.TempDirectory)/venv/bin/pip install $(Build.SourcesDirectory)/LiberTEM/
+      - bash: $(Agent.TempDirectory)/venv/bin/uv pip install $(Build.SourcesDirectory)/LiberTEM/
         displayName: install LiberTEM
 
       - bash: $(Agent.TempDirectory)/venv/bin/pip install "$(Build.SourcesDirectory)/LiberTEM-live/[dectris]"

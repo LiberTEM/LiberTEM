@@ -36,6 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Visualization",
@@ -65,6 +66,7 @@ dependencies = [
     # See https://github.com/numba/numba/pull/10120#issuecomment-2980883054
     "numba>=0.61;python_version < '3.14' and python_version >= '3.13' and python_full_version != '3.13.4'",
     "numba>0.61.2;python_full_version == '3.13.4'",
+    "numba>=0.63;python_version < '3.15' and python_version >= '3.14'",
     # for any future Python release, constrain numba to a recent version,
     # otherwise, version resolution might try to install an ancient version
     # that isn't constrained properly:

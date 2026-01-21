@@ -1,5 +1,5 @@
 import os
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import libertem.api as lt
 from libertem.io.dataset.base import DataSetException
@@ -59,8 +59,8 @@ def convert_dm4_transposed(
     dm4_path: os.PathLike,
     out_path: os.PathLike,
     ctx: Optional['Context'] = None,
-    num_cpus: Optional[int] = None,
-    dataset_index: Optional[int] = None,
+    num_cpus: int | None = None,
+    dataset_index: int | None = None,
     progress: bool = False,
 ):
     """

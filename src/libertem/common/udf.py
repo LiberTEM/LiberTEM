@@ -1,6 +1,5 @@
 from enum import Enum
 from typing_extensions import Protocol, TypedDict
-from typing import Union
 from sparseconverter import (
     CUDA, CUPY, CUPY_SCIPY_COO, CUPY_SCIPY_CSC, CUPY_SCIPY_CSR, NUMPY,
     SCIPY_COO, SCIPY_CSC, SCIPY_CSR, SCIPY_COO_ARRAY, SCIPY_CSC_ARRAY, SCIPY_CSR_ARRAY,
@@ -22,8 +21,8 @@ class TileSizeEnum(Enum):
 
 
 class TilingPreferences(TypedDict):
-    depth: Union[int, TileDepthEnum]
-    total_size: Union[float, int]
+    depth: int | TileDepthEnum
+    total_size: float | int
 
 
 class UDFMethod(Enum):

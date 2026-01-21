@@ -42,13 +42,13 @@ class ExecutorState:
     def __init__(
         self,
         event_bus: EventBus,
-        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-        snooze_timeout: typing.Optional[float] = None,
+        loop: asyncio.AbstractEventLoop | None = None,
+        snooze_timeout: float | None = None,
     ):
         self.executor = None
         self.cluster_params = {}
-        self.cluster_details: typing.Optional[list] = None
-        self.context: typing.Optional[Context] = None
+        self.cluster_details: list | None = None
+        self.context: Context | None = None
         self._event_bus = event_bus
         self._snooze_timeout = snooze_timeout
         self._pool = AsyncAdapter.make_pool()
@@ -230,8 +230,8 @@ class AnalysisState:
         self.analyses[uuid]["details"]["analysisType"] = analysis_type
 
     def get(
-        self, uuid: str, default: typing.Optional[AnalysisInfo] = None
-    ) -> typing.Optional[AnalysisInfo]:
+        self, uuid: str, default: AnalysisInfo | None = None
+    ) -> AnalysisInfo | None:
         return self.analyses.get(uuid, default)
 
     def filter(self, predicate: typing.Callable[[AnalysisInfo], bool]) -> list[AnalysisInfo]:
@@ -264,7 +264,7 @@ class AnalysisState:
         details: AnalysisDetails,
         results: AnalysisResultSet,
         job_id: str,
-        udf_results: typing.Optional[UDFResults],
+        udf_results: UDFResults | None,
     ) -> None:
         """
         set results: create or update
@@ -491,7 +491,7 @@ class SharedState:
         )
 
     def get_local_cores(self, default: int = 2) -> int:
-        cores: typing.Optional[int] = psutil.cpu_count(logical=False)
+        cores: int | None = psutil.cpu_count(logical=False)
         if cores is None:
             cores = default
         return cores

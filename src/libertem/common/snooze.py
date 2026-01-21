@@ -4,7 +4,8 @@ from enum import Enum
 import functools
 import threading
 import contextlib
-from typing import Callable, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional
+from collections.abc import Callable
 
 if TYPE_CHECKING:
     from libertem.common.executor import JobExecutor
@@ -37,7 +38,7 @@ class SnoozeManager:
         Method to call to scale down the executor
     timeout : float
         The inactivity period before triggering snoozing (seconds)
-    subscriptions : Optional[SubscriptionManager]
+    subscriptions : SubscriptionManager | None
         An instance of SubscriptionManager used to notify
         when snooze / unsnooze events are happening.
     '''

@@ -1,6 +1,6 @@
 from enum import IntEnum
-from typing import NamedTuple, Optional, Union
-from typing_extensions import Literal
+from typing import NamedTuple, Union
+from typing import Literal
 
 import numpy as np
 from sparseconverter import CUPY_BACKENDS
@@ -35,10 +35,10 @@ class CoMParams(NamedTuple):
     for descriptions of each parameter. In most cases use this
     method rather than instantiating this class directly.
     """
-    cy: Optional[float] = None
-    cx: Optional[float] = None
+    cy: float | None = None
+    cx: float | None = None
     r: float = float('inf')
-    ri: Union[float, None] = 0.
+    ri: float | None = 0.
     scan_rotation: float = 0.
     flip_y: bool = False
     regression: RegressionOptionsT = RegressionOptions.NO_REGRESSION
@@ -157,7 +157,7 @@ def coordinate_check(y_centers, x_centers, roi=None):
         2D arrays with y and x component of the center of mass shift for each
         scan position, as returned by :meth:`center_shifts` or
         :meth:`apply_correction`
-    roi : Optional[numpy.ndarray]
+    roi : numpy.ndarray | None
         Selector for values to consider in the statistics, compatible
         with indexing an array with the shape of y_centers and x_centers.
         By default, everything except the last row and last column are used
@@ -207,7 +207,7 @@ class GuessResult(NamedTuple):
 def guess_corrections(
     y_centers: np.ndarray,
     x_centers: np.ndarray,
-    roi: Optional[Union[np.ndarray, tuple[slice, ...]]] = None,
+    roi: np.ndarray | tuple[slice, ...] | None = None,
 ) -> GuessResult:
     '''
     Guess values for center offset (:code:`(cy, cx)`), :code:`scan_rotation` and
@@ -234,7 +234,7 @@ def guess_corrections(
     ----------
     y_centers, x_centers : numpy.ndarray
         2D arrays with y and x component of the center of mass for each scan position
-    roi : Optional[numpy.ndarray]
+    roi : numpy.ndarray | None
         Selector for values to consider in the statistics, compatible
         with indexing an array with the shape of y_centers and x_centers.
         By default, everything except the last row and last column are used
@@ -379,8 +379,8 @@ class CoMUDF(UDF):
     def with_params(
         cls,
         *,
-        cy: Optional[float] = None,
-        cx: Optional[float] = None,
+        cy: float | None = None,
+        cx: float | None = None,
         r: float = float('inf'),
         ri: float = 0.,
         scan_rotation: float = 0.,
@@ -392,11 +392,11 @@ class CoMUDF(UDF):
 
         Parameters
         ----------
-        cy : Optional[float], by default None
+        cy : float | None, by default None
             Vertical-Centre of the mask applied to the frame, if any, and the
             reference point from which vertical CoM-shifts are calculated. If
             None, cy is set to the frame centre at runtime.
-        cx : Optional[float], by default None
+        cx : float | None, by default None
             Horizontal-Centre of the mask applied to the frame, if any, and the
             reference point from which horizontal CoM-shifts are calculated. If
             None, cx is set to the frame centre at runtime.

@@ -1,9 +1,8 @@
-from typing import Optional
 from contextlib import contextmanager
 
 
 @contextmanager
-def use_gpu(device: Optional[int]):
+def use_gpu(device: int | None):
     if device is None:
         # noop
         yield

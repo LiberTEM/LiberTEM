@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 import sparse
-from typing import Union, TYPE_CHECKING, Optional
+from typing import Union, TYPE_CHECKING
 import sparseconverter
 
 
@@ -17,7 +17,7 @@ def to_dense(a):
         return sparseconverter.for_backend(a, sparseconverter.NUMPY)
 
 
-def to_sparse(a, shape: Optional[Union['Shape', tuple[int, ...]]] = None):
+def to_sparse(a, shape: Union['Shape', tuple[int, ...]] | None = None):
     if isinstance(a, (tuple, list)):
         if all(isinstance(aa, int) for aa in a):
             a = ((a, True),)
@@ -32,7 +32,7 @@ def to_sparse(a, shape: Optional[Union['Shape', tuple[int, ...]]] = None):
         return sparseconverter.for_backend(a, sparseconverter.SPARSE_COO)
 
 
-def sparse_to_coo(a, shape: Optional[Union['Shape', tuple[int, ...]]] = None):
+def sparse_to_coo(a, shape: Union['Shape', tuple[int, ...]] | None = None):
     if a is None or isinstance(a, np.ndarray):
         return a
     return to_sparse(a, shape=shape)

@@ -1,8 +1,8 @@
 import functools
 import logging
-from typing import Union, Callable, Optional
+from collections.abc import Callable
 from collections.abc import Sequence
-from typing_extensions import Literal
+from typing import Literal
 
 import sparse
 import scipy.sparse
@@ -74,7 +74,7 @@ def _build_sparse(m, dtype: npt.DTypeLike, sparse_backend: SparseSupportedT, bac
 def _make_mask_slicer(
     computed_masks: ArrayT,
     dtype: npt.DTypeLike,
-    sparse_backend: Union[Literal[False], SparseSupportedT],
+    sparse_backend: Literal[False] | SparseSupportedT,
     transpose: bool,
     backend: ArrayBackend,
 ):
@@ -121,11 +121,11 @@ class MaskContainer:
     '''
     def __init__(
         self,
-        mask_factories: Union[FactoryT, Sequence[FactoryT]],
-        dtype: Optional[npt.DTypeLike] = None,
-        use_sparse: Optional[Union[bool, SparseSupportedT]] = None,
-        count: Optional[int] = None,
-        backend: Optional[ArrayBackend] = None,
+        mask_factories: FactoryT | Sequence[FactoryT],
+        dtype: npt.DTypeLike | None = None,
+        use_sparse: bool | SparseSupportedT | None = None,
+        count: int | None = None,
+        backend: ArrayBackend | None = None,
         default_sparse: SparseSupportedT = 'scipy.sparse',
     ):
         self.mask_factories = mask_factories
@@ -143,7 +143,7 @@ class MaskContainer:
         # from Python 3.8....
         # assert default_sparse in typing.get_args(SparseSupportedT)
         self._default_sparse = default_sparse
-        self._use_sparse: Union[Literal[False], None, SparseSupportedT]
+        self._use_sparse: Literal[False] | None | SparseSupportedT
         # Try to resolve if we are actually using sparse upfront,
         # this is not always possible as it depends on whether the
         # mask_factories will all return sparse matrices
@@ -243,7 +243,7 @@ class MaskContainer:
             return self._dtype
 
     @property
-    def use_sparse(self) -> Union[SparseSupportedT, Literal[False]]:
+    def use_sparse(self) -> SparseSupportedT | Literal[False]:
         # As far as possible use_sparse was resolved at __init__
         # but if we don't know if the masks are sparse we may still arrive
         # here with self._use_sparse is None
@@ -257,7 +257,7 @@ class MaskContainer:
                 self._use_sparse = False
         return self._use_sparse
 
-    def _compute_masks(self) -> Union[np.ndarray, sparse.COO, sparse.GCXS]:
+    def _compute_masks(self) -> np.ndarray | sparse.COO | sparse.GCXS:
         """
         Call mask factories and combine into a mask stack
 

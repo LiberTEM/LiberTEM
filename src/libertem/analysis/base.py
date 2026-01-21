@@ -1,7 +1,4 @@
-from typing import (
-    Optional, TYPE_CHECKING
-)
-from typing_extensions import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -66,7 +63,7 @@ class Analysis:
         raise NotImplementedError()
 
     def get_udf_results(
-        self, udf_results: UDFResultDict, roi: Optional[np.ndarray],
+        self, udf_results: UDFResultDict, roi: np.ndarray | None,
         damage: "nt.ArrayLike",
     ) -> AnalysisResultSet:
         """
@@ -94,7 +91,7 @@ class Analysis:
         """
         raise NotImplementedError()
 
-    def get_roi(self) -> Optional[np.ndarray]:
+    def get_roi(self) -> np.ndarray | None:
         """
         Get the region of interest the UDF should be run on. For example,
         the parameters could describe some geometry, which this method should

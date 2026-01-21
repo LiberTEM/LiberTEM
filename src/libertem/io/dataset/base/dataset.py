@@ -1,5 +1,4 @@
 import typing
-from typing import Optional
 from collections.abc import Generator, Sequence
 
 import numpy as np
@@ -35,17 +34,17 @@ class DataSet:
 
     def __init__(
         self,
-        io_backend: Optional["IOBackend"] = None,
-        num_partitions: Optional[int] = None,
+        io_backend: typing.Optional["IOBackend"] = None,
+        num_partitions: int | None = None,
     ):
         self._cores = 1
-        self._sync_offset: Optional[int] = 0
+        self._sync_offset: int | None = 0
         self._sync_offset_info = None
         self._image_count = 0
         self._nav_shape_product = 0
         self._io_backend = io_backend
         self._user_num_partitions = num_partitions
-        self._meta: Optional[DataSetMeta] = None
+        self._meta: DataSetMeta | None = None
         self._roi_helper = RoiHelper(ds=self)
 
     def initialize(self, executor) -> "DataSet":
@@ -210,8 +209,8 @@ class DataSet:
         self,
         dtype: "nt.DTypeLike",
         target_size: int,
-        min_num_partitions: Optional[int] = None,
-        containing_shape: Optional[Shape] = None,
+        min_num_partitions: int | None = None,
+        containing_shape: Shape | None = None,
     ) -> tuple[int, ...]:
         """
         Calculate partition shape for the given ``target_size``
@@ -290,14 +289,14 @@ class DataSet:
     def supports_correction(self):
         return True
 
-    def get_decoder(self) -> Optional["Decoder"]:
+    def get_decoder(self) -> typing.Optional["Decoder"]:
         return None
 
-    def get_base_shape(self, roi: Optional[np.ndarray]) -> tuple[int, ...]:
+    def get_base_shape(self, roi: np.ndarray | None) -> tuple[int, ...]:
         return (1,) + (1,) * (self.shape.sig.dims - 1) + (self.shape.sig[-1],)
 
     def adjust_tileshape(
-        self, tileshape: tuple[int, ...], roi: Optional[np.ndarray]
+        self, tileshape: tuple[int, ...], roi: np.ndarray | None
     ) -> tuple[int, ...]:
         """
         Final veto of the DataSet in the tileshape negotiation process,
@@ -308,8 +307,8 @@ class DataSet:
     def need_decode(
         self,
         read_dtype: "nt.DTypeLike",
-        roi: Optional[np.ndarray],
-        corrections: Optional[CorrectionSet],
+        roi: np.ndarray | None,
+        corrections: CorrectionSet | None,
     ) -> bool:
         io_backend = self.get_io_backend().get_impl()
         return io_backend.need_copy(
@@ -327,14 +326,14 @@ class DataSet:
         """
         return 4 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
-    def get_max_io_size(self) -> Optional[int]:
+    def get_max_io_size(self) -> int | None:
         """
         Override this method to implement a custom maximum I/O size (in bytes)
         """
         return None
 
     @property
-    def meta(self) -> Optional["DataSetMeta"]:
+    def meta(self) -> typing.Optional["DataSetMeta"]:
         return self._meta
 
     def get_task_comm_handler(self) -> "TaskCommHandler":

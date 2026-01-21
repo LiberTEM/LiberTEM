@@ -1,4 +1,3 @@
-from typing import Optional
 from libertem.web.notebook_generator.template import TemplateBase
 
 
@@ -11,8 +10,8 @@ class GeneratorHelper(TemplateBase):
     are generated.
     """
 
-    short_name: Optional[str] = None
-    api: Optional[str] = None
+    short_name: str | None = None
+    api: str | None = None
 
     def __init__(self, params):
         self.params = params

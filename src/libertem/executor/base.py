@@ -1,6 +1,7 @@
 import functools
 import asyncio
-from typing import Callable, TYPE_CHECKING, TypeVar, Optional
+from typing import TYPE_CHECKING, TypeVar, Optional
+from collections.abc import Callable
 
 from contextlib import asynccontextmanager
 
@@ -30,7 +31,7 @@ class ResourceError(RuntimeError):
     pass
 
 
-def make_canonical(main_gpu: GPUSpec) -> Optional[int]:
+def make_canonical(main_gpu: GPUSpec) -> int | None:
     '''
     Handle default cases when specifying a main GPU
 
@@ -106,7 +107,7 @@ class BaseJobExecutor(JobExecutor):
         GPU to set in the :class:`~libertem.common.executor.Environment`
         supplied to the task in :meth:`run_process_local`.
     '''
-    def __init__(self, main_process_gpu: Optional[int] = None):
+    def __init__(self, main_process_gpu: int | None = None):
         self._main_process_gpu = main_process_gpu
 
     def get_udf_runner(self) -> type['UDFRunner']:
@@ -119,7 +120,7 @@ class BaseJobExecutor(JobExecutor):
         """
         return AsyncAdapter(wrapped=self, pool=pool)
 
-    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: Optional[dict] = None):
+    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: dict | None = None):
         """
         run a callable :code:`fn` in the context of the current process.
         """

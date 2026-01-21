@@ -1,4 +1,3 @@
-from typing import Optional
 from libertem.common import Shape
 from libertem.common.math import prod
 
@@ -20,7 +19,7 @@ except ModuleNotFoundError:
 def get_partition_shape(
     dataset_shape: Shape,
     target_size_items: int,
-    min_num: Optional[int] = None
+    min_num: int | None = None
 ) -> tuple[int, ...]:
     """
     Calculate partition shape for the given ``target_size_items``

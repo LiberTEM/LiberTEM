@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 from collections.abc import Iterable
 import contextlib
 
@@ -38,7 +38,7 @@ class InlineJobExecutor(BaseJobExecutor):
     debug : bool
         Set this to enable additional serializability checks
 
-    inline_threads : Optional[int]
+    inline_threads : int | None
         How many fine grained threads should be allowed? Leaving this `None` will
         allow one thread per CPU core
     main_process_gpu : int or None, optional
@@ -46,7 +46,7 @@ class InlineJobExecutor(BaseJobExecutor):
     """
     def __init__(
             self, debug=False, inline_threads=None,
-            main_process_gpu: Optional[int] = None, *args, **kwargs):
+            main_process_gpu: int | None = None, *args, **kwargs):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self._debug = debug

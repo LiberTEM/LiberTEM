@@ -3,9 +3,9 @@ import os
 import platform
 from glob import glob, escape
 import logging
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Literal
+from typing_extensions import TypedDict
 from collections.abc import Generator, Sequence
-from typing_extensions import Literal, TypedDict
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 
@@ -754,7 +754,7 @@ class MIBHeaderReader:
     def __init__(
         self,
         path: str,
-        fields: Optional[HeaderDict] = None,
+        fields: HeaderDict | None = None,
         sequence_start: int = 0,
     ):
         self.path = path
@@ -900,7 +900,7 @@ class MIBHeaderReader:
         return self.fields['sequence_first_image'] - self.sequence_start
 
     @property
-    def sequence_start(self) -> Optional[int]:
+    def sequence_start(self) -> int | None:
         return self._sequence_start
 
     @sequence_start.setter
@@ -946,7 +946,7 @@ class MIBFileSet(FileSet):
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
         dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
-        roi: Union[np.ndarray, None] = None,
+        roi: np.ndarray | None = None,
     ):
         fileset_arr = self.get_as_arr()
         bit_depth = self._header['bits_per_pixel']
@@ -1091,7 +1091,7 @@ class MIBDataSet(DataSet):
                     "either nav_shape needs to be passed, or path needs to point to a .hdr file"
                 )
         self._filename_cache = None
-        self._files_sorted: Optional[Sequence[MIBHeaderReader]] = None
+        self._files_sorted: Sequence[MIBHeaderReader] | None = None
         # ._preread_headers() in _do_initialize() filles self._headers
         self._headers = {}
         self._meta = None
@@ -1287,7 +1287,7 @@ class MIBDataSet(DataSet):
             for f in self._files_sorted
         ], header=first_file.fields, frame_header_bytes=header_size)
 
-    def get_base_shape(self, roi: Optional[np.ndarray]) -> tuple[int, ...]:
+    def get_base_shape(self, roi: np.ndarray | None) -> tuple[int, ...]:
         # With R-mode files, we are constrained to tile sizes that are a
         # multiple of 64px in the fastest dimension!
         # If we make sure full "x-lines" are taken, we are fine (this is the

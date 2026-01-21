@@ -1,8 +1,9 @@
 import queue
 from typing import (
-    Callable, Optional, Any, TYPE_CHECKING,
-    TypeVar, Union
+    Any, TYPE_CHECKING,
+    TypeVar, Union, Optional
 )
+from collections.abc import Callable
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager, nullcontext
 import multiprocessing as mp
@@ -10,7 +11,8 @@ import multiprocessing as mp
 import cloudpickle
 from opentelemetry import trace
 import numpy as np
-from typing_extensions import Protocol, Literal
+from typing_extensions import Protocol
+from typing import Literal
 
 from libertem.common.scheduler import WorkerSet
 from libertem.common.threading import set_num_threads, mitigations
@@ -31,7 +33,7 @@ ResourceDef = dict[
     int
 ]
 
-GPUSpec = Optional[Union[int, bool]]
+GPUSpec = Union[int, bool] | None
 
 tracer = trace.get_tracer(__name__)
 
@@ -53,10 +55,10 @@ class Environment:
     '''
     def __init__(
         self,
-        threads_per_worker: Optional[int],
+        threads_per_worker: int | None,
         threaded_executor: bool,
         worker_context: Optional["WorkerContext"] = None,
-        gpu_id: Optional[int] = None,
+        gpu_id: int | None = None,
     ):
         self._threads_per_worker = threads_per_worker
         self._threaded_executor = threaded_executor
@@ -64,7 +66,7 @@ class Environment:
         self._gpu_id = gpu_id
 
     @property
-    def threads_per_worker(self) -> Optional[int]:
+    def threads_per_worker(self) -> int | None:
         """
         int or None : number of threads that a UDF is allowed to use in the `process_*` method.
                       For numba, pyfftw, OMP, MKL, OpenBLAS, this limit is set automatically;
@@ -99,7 +101,7 @@ class Environment:
         return self._worker_context
 
     @property
-    def gpu_id(self) -> Optional[int]:
+    def gpu_id(self) -> int | None:
         """
         ID of the GPU to activate in CuPy when entering the environment,
         as specified in the constructor.
@@ -180,7 +182,7 @@ class JobExecutor:
         """
         raise NotImplementedError()
 
-    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: Optional[dict] = None):
+    def run_process_local(self, task: GenericTaskProtocol, args=(), kwargs: dict | None = None):
         """
         run a callable :code:`fn` in the context of the current process.
         """
@@ -532,11 +534,11 @@ class WorkerQueue:
     def get(
         self,
         block: bool = True,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
     ) -> Generator[tuple[Any, memoryview], None, None]:
         raise NotImplementedError()
 
-    def put(self, header: Any, payload: Optional[memoryview] = None):
+    def put(self, header: Any, payload: memoryview | None = None):
         '''
         Put header and payload into the queue.
         '''
@@ -599,7 +601,7 @@ class SimpleWorkerQueue(WorkerQueue):
     def __init__(self) -> None:
         self.q: queue.Queue = queue.Queue()
 
-    def put(self, header, payload: Optional[memoryview] = None):
+    def put(self, header, payload: memoryview | None = None):
         self.q.put((header, payload))
 
     @contextmanager
@@ -609,7 +611,7 @@ class SimpleWorkerQueue(WorkerQueue):
         self.q.put((header, payload))
 
     @contextmanager
-    def get(self, block: bool = True, timeout: Optional[float] = None):
+    def get(self, block: bool = True, timeout: float | None = None):
         try:
             res = self.q.get(block=block, timeout=timeout)
             yield res
@@ -632,7 +634,7 @@ class SimpleMPWorkerQueue(WorkerQueue):
         self.q: mp.Queue = self._mp_ctx.Queue()
         self._closed = False
 
-    def put(self, header, payload: Optional[memoryview] = None):
+    def put(self, header, payload: memoryview | None = None):
         with tracer.start_as_current_span("SimpleMPWorkerQueue.put") as span:
             header_serialized = cloudpickle.dumps(header)
             payload_serialized = cloudpickle.dumps(payload)
@@ -651,7 +653,7 @@ class SimpleMPWorkerQueue(WorkerQueue):
         self.q.put((header_serialized, payload_serialized))
 
     @contextmanager
-    def get(self, block: bool = True, timeout: Optional[float] = None):
+    def get(self, block: bool = True, timeout: float | None = None):
         try:
             res = self.q.get(block=block, timeout=timeout)
             yield (cloudpickle.loads(res[0]), cloudpickle.loads(res[1]))

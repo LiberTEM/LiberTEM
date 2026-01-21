@@ -29,7 +29,6 @@
 import os
 import struct
 import warnings
-from typing import Optional
 
 import defusedxml.ElementTree as ET
 import numpy as np
@@ -464,9 +463,9 @@ class SEQDataSet(DataSet):
     def __init__(
         self,
         path: str,
-        scan_size: Optional[tuple[int, ...]] = None,
-        nav_shape: Optional[tuple[int, ...]] = None,
-        sig_shape: Optional[tuple[int, ...]] = None,
+        scan_size: tuple[int, ...] | None = None,
+        nav_shape: tuple[int, ...] | None = None,
+        sig_shape: tuple[int, ...] | None = None,
         sync_offset: int = 0,
         io_backend=None,
         num_partitions=None,

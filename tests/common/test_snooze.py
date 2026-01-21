@@ -1,7 +1,7 @@
 import time
 import pytest
 import threading
-from typing import Callable
+from collections.abc import Callable
 
 from libertem.common.snooze import SnoozeManager, keep_alive, SnoozeMessage
 from libertem.common.subscriptions import SubscriptionManager

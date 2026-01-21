@@ -1,6 +1,5 @@
 import os
 import logging
-from typing import Optional
 import warnings
 import contextlib
 
@@ -297,7 +296,7 @@ class SERPartition(BasePartition):
         self._corrections.apply(tile_data, tile_slice)
 
     def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None,
-            array_backend: Optional[ArrayBackend] = None):
+            array_backend: ArrayBackend | None = None):
         if array_backend is None:
             array_backend = self.meta.array_backends[0]
         assert array_backend in (NUMPY, CUDA)

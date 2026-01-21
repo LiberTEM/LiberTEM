@@ -1,4 +1,4 @@
-from typing_extensions import Literal
+from typing import Literal
 from libertem.common.math import prod
 import numpy as np
 

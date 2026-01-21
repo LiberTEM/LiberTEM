@@ -1,5 +1,4 @@
 import functools
-from typing import Optional
 
 import numpy as np
 import numba
@@ -100,9 +99,9 @@ class CorrectionSet:
     """
     def __init__(
         self,
-        dark: Optional[np.ndarray] = None,
-        gain: Optional[np.ndarray] = None,
-        excluded_pixels: Optional[sparse.COO] = None,
+        dark: np.ndarray | None = None,
+        gain: np.ndarray | None = None,
+        excluded_pixels: sparse.COO | None = None,
         allow_empty: bool = False
     ):
         self._dark = dark
@@ -122,13 +121,13 @@ class CorrectionSet:
                 allow_empty=False
             )
 
-    def get_dark_frame(self) -> Optional[np.ndarray]:
+    def get_dark_frame(self) -> np.ndarray | None:
         return self._dark
 
-    def get_gain_map(self) -> Optional[np.ndarray]:
+    def get_gain_map(self) -> np.ndarray | None:
         return self._gain
 
-    def get_excluded_pixels(self) -> Optional[sparse.COO]:
+    def get_excluded_pixels(self) -> sparse.COO | None:
         return self._excluded_pixels
 
     def have_corrections(self) -> bool:

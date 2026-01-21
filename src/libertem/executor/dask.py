@@ -6,7 +6,8 @@ import logging
 import copy
 import time
 import signal
-from typing import Any, Optional, Union, Callable
+from typing import Any
+from collections.abc import Callable
 from collections.abc import Iterable
 import uuid
 
@@ -32,7 +33,7 @@ log = logging.getLogger(__name__)
 
 
 class DaskWorkerContext(WorkerContext):
-    def __init__(self, comms_topic: Optional[str]):
+    def __init__(self, comms_topic: str | None):
         # DaskWorkerContext sends all messages via a single unique topic id
         # which are later unpacked on the client node; this allows us to handle
         # concurrent runs using the same executor with separate comms channels
@@ -61,7 +62,7 @@ class DaskWorkerContext(WorkerContext):
 
 
 @contextlib.contextmanager
-def set_worker_log_level(level: Union[str, int], force: bool = False):
+def set_worker_log_level(level: str | int, force: bool = False):
     """
     Set the dask.distributed log level for any processes spawned
     within the context manager. If force is False, don't overwrite
@@ -101,13 +102,13 @@ def worker_setup(resource, device):
 
 
 def cluster_spec(
-    cpus: Union[int, Iterable[int]],
-    cudas: Union[int, Iterable[int]],
+    cpus: int | Iterable[int],
+    cudas: int | Iterable[int],
     has_cupy: bool,
     name: str = 'default',
     num_service: int = 1,
-    options: Optional[dict] = None,
-    preload: Optional[tuple[str, ...]] = None
+    options: dict | None = None,
+    preload: tuple[str, ...] | None = None
 ):
     '''
     Create a worker specification dictionary for a LiberTEM Dask cluster
@@ -236,7 +237,7 @@ def cluster_spec(
     return workers_spec
 
 
-def _run_task(task, params, task_id, threaded_executor, comms_topic: Optional[str]):
+def _run_task(task, params, task_id, threaded_executor, comms_topic: str | None):
     """
     Very simple wrapper function. As dask internally caches functions that are
     submitted to the cluster in various ways, we need to make sure to
@@ -348,7 +349,7 @@ class CommonDaskMixin:
         idx: int,
         params_handle,
         threaded_executor,
-        comms_topic: Optional[str]
+        comms_topic: str | None
     ):
         if len(workers) == 0:
             raise RuntimeError("no workers available!")
@@ -449,7 +450,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         GPU to use for the environment of process-local tasks
     '''
     def __init__(self, client: dd.Client, is_local: bool = False,
-                lt_resources: bool = None, main_process_gpu: Optional[int] = None):
+                lt_resources: bool = None, main_process_gpu: int | None = None):
         self.is_local = is_local
         self.client = client
         if lt_resources is None:
@@ -784,7 +785,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         # followed by creation of a new Executor without accumulating clusters
 
     @classmethod
-    def connect(cls, scheduler_uri, *args, client_kwargs: Optional[dict] = None, **kwargs):
+    def connect(cls, scheduler_uri, *args, client_kwargs: dict | None = None, **kwargs):
         """
         Connect to a remote dask scheduler.
 
@@ -814,9 +815,9 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
         return cls(client=client, is_local=is_local, *args, **kwargs)
 
     @classmethod
-    def make_local(cls, spec: Optional[dict] = None, cluster_kwargs: Optional[dict] = None,
-            client_kwargs: Optional[dict] = None, preload: Optional[tuple[str]] = None,
-            snooze_timeout: Optional[float] = None, main_process_gpu: GPUSpec = None):
+    def make_local(cls, spec: dict | None = None, cluster_kwargs: dict | None = None,
+            client_kwargs: dict | None = None, preload: tuple[str] | None = None,
+            snooze_timeout: float | None = None, main_process_gpu: GPUSpec = None):
         """
         Spin up a local dask cluster
 
@@ -835,7 +836,7 @@ class DaskJobExecutor(CommonDaskMixin, BaseJobExecutor):
             Passed to :class:`distributed.Client`. Pass
             :code:`client_kwargs={'set_as_default': True}` to set the Client as the
             default Dask scheduler.
-        preload: Optional[Tuple[str]]
+        preload: Tuple[str] | None
             Passed to :func:`cluster_spec` if :code:`spec` is :code:`None`.
         main_process_gpu
             GPU to use for the environment of process-local tasks

@@ -1,9 +1,9 @@
 import math
 import logging
 import warnings
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union
 from collections.abc import Sequence
-from typing_extensions import Literal
+from typing import Literal
 
 import numpy as np
 
@@ -25,7 +25,7 @@ TilingIntent = Union[Literal["partition"], Literal["frame"], Literal["tile"]]
 class TilingScheme:
     def __init__(
         self, slices: list[Slice],
-        tileshape: Shape, dataset_shape: Shape, intent: Optional[TilingIntent] = None, debug=None
+        tileshape: Shape, dataset_shape: Shape, intent: TilingIntent | None = None, debug=None
     ):
         self._slices = slices
         self._tileshape = tileshape
@@ -73,7 +73,7 @@ class TilingScheme:
         cls,
         tileshape: Shape,
         dataset_shape: Shape,
-        intent: Optional[TilingIntent] = None,
+        intent: TilingIntent | None = None,
         debug=None,
     ) -> "TilingScheme":
         """
@@ -130,7 +130,7 @@ class TilingScheme:
         )
 
     @property
-    def intent(self) -> Optional[TilingIntent]:
+    def intent(self) -> TilingIntent | None:
         return self._intent
 
     @property
@@ -186,7 +186,7 @@ class Negotiator:
         io_max_size: int,
         itemsize: int,
         base_shape: tuple[int, ...],
-        corrections: Optional[CorrectionSet],
+        corrections: CorrectionSet | None,
     ):
         sig_shape = shape[1:]
         # we need some wiggle room with the size, because there may be a harder
@@ -226,8 +226,8 @@ class Negotiator:
             dataset,
             read_dtype: "nt.DTypeLike",
             approx_partition_shape: Shape,
-            roi: Optional[np.ndarray] = None,
-            corrections: Optional[CorrectionSet] = None,
+            roi: np.ndarray | None = None,
+            corrections: CorrectionSet | None = None,
     ) -> TilingScheme:
         """
         Generate a :class:`TilingScheme` instance that is
@@ -490,7 +490,7 @@ class Negotiator:
         udfs: Sequence["UDFProtocol"],
         dataset: "DataSet",
         approx_partition_shape: Shape,
-        roi: Optional[np.ndarray],
+        roi: np.ndarray | None,
     ):
         methods = [
             udf.get_method()

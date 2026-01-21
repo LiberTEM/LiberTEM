@@ -1,5 +1,6 @@
 import threading
-from typing import TYPE_CHECKING, Callable, Any, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, NamedTuple
+from collections.abc import Callable
 from collections.abc import Iterable
 import time
 
@@ -250,7 +251,7 @@ class ProgressManager:
         self,
         tasks: Iterable['UDFTask'],
         progress_id: str,
-        reporter: Optional[ProgressReporter] = None,
+        reporter: ProgressReporter | None = None,
     ):
         if not tasks:
             raise ValueError('Cannot display progress for empty tasks')

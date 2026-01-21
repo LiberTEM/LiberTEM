@@ -1,6 +1,6 @@
-from typing import Any, Optional, Union, TYPE_CHECKING, Generic, TypeVar
+from typing import Any, Union, TYPE_CHECKING, Generic, TypeVar
 from collections.abc import Iterable
-from typing_extensions import Literal
+from typing import Literal
 import mmap
 import math
 import functools
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from numpy import typing as nt
 
 BufferKind = Literal['nav', 'sig', 'single']
-BufferLocation = Optional[Literal['device']]
+BufferLocation = Literal['device'] | None
 BufferUse = Literal['private', 'result_only']
 BufferSize = Union[int, tuple[int, ...]]
 
@@ -77,7 +77,7 @@ def zeros_aligned(size: BufferSize, dtype: "nt.DTypeLike") -> np.ndarray:
 
 
 # FIXME: type annotation for cupy.ndarray without importing?
-def to_numpy(a: Union[np.ndarray, Any]) -> np.ndarray:
+def to_numpy(a: np.ndarray | Any) -> np.ndarray:
     # .. versionadded:: 0.6.0
     cuda_device = get_use_cuda()
     if isinstance(a, np.ndarray):
@@ -203,7 +203,7 @@ class ArrayWithMask(Generic[T]):
     to instantiate it.
     """
 
-    def __init__(self, arr: T, mask: Union[np.ndarray, bool]):
+    def __init__(self, arr: T, mask: np.ndarray | bool):
         """
         :meta private:
         """
@@ -381,18 +381,18 @@ class BufferWrapper:
         kind: Literal['nav', 'sig', 'single'],
         extra_shape: tuple[int, ...] = (),
         dtype="float32",
-        where: Union[None, Literal['device']] = None,
-        use: Optional[Literal['private', 'result_only']] = None,
+        where: None | Literal['device'] = None,
+        use: Literal['private', 'result_only'] | None = None,
     ) -> None:
         self._extra_shape = tuple(extra_shape)
         self._kind = kind
         self._dtype = np.dtype(dtype)
         self._where = where
-        self._data: Optional[np.ndarray] = None
+        self._data: np.ndarray | None = None
         # set to True if the data coords are global ds coords
         self._data_coords_global = False
         self._shape = None
-        self._ds_shape: Optional[Shape] = None
+        self._ds_shape: Shape | None = None
         self._ds_partitions = None
         self._roi = None
         self._roi_is_zero = None
@@ -514,7 +514,7 @@ class BufferWrapper:
         return self._dtype
 
     @property
-    def raw_data(self) -> Optional[np.ndarray]:
+    def raw_data(self) -> np.ndarray | None:
         """
         Get the raw data underlying this buffer, which is flattened and
         may be even filtered to a ROI
@@ -525,7 +525,7 @@ class BufferWrapper:
         self,
         valid_nav_mask: np.ndarray,
         dataset_shape: Shape,
-        roi: Optional[np.ndarray] = None,
+        roi: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         Create the default valid mask for this buffer kind, given the "upstream" `valid_nav_mask`.

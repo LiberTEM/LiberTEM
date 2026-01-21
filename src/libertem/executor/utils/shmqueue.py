@@ -2,7 +2,7 @@ import multiprocessing as mp
 import contextlib
 import math
 import queue
-from typing import TYPE_CHECKING, Any, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, NamedTuple
 from collections.abc import Generator
 
 import cloudpickle
@@ -134,14 +134,14 @@ class ShmQueue(WorkerQueue):
         yield payload_shm
         self.q.put((cloudpickle.dumps(header), 'bytes', alloc_handle))
 
-    def put(self, header, payload: Optional[memoryview] = None):
+    def put(self, header, payload: memoryview | None = None):
         """
         Send the (header, payload) tuple via this channel - copying the
         `payload` to a shared memory segment while sending `header` plainly
         via a queue. The header should be `pickle`able.
         """
         if payload is not None:
-            payload_shm: Optional[PoolAllocation] = self._copy_to_shm(payload)
+            payload_shm: PoolAllocation | None = self._copy_to_shm(payload)
         else:
             payload_shm = None
         self.q.put((cloudpickle.dumps(header), 'bytes', payload_shm))
@@ -178,7 +178,7 @@ class ShmQueue(WorkerQueue):
         return shared_memory.SharedMemory(name=name, create=False)
 
     @contextlib.contextmanager
-    def get(self, block: bool = True, timeout: Optional[float] = None):
+    def get(self, block: bool = True, timeout: float | None = None):
         """
         Receive a message. Memory of the payload will be cleaned up after the
         context manager scope, so don't keep references outside of it!
@@ -190,7 +190,7 @@ class ShmQueue(WorkerQueue):
         """
         if self._pool_shm_client is None:
             self._pool_shm_client = PoolShmClient()
-        payload_memview: Optional[memoryview] = None
+        payload_memview: memoryview | None = None
         payload_handle = None
         try:
             header, typ, payload_handle = self.q.get(block=block, timeout=timeout)

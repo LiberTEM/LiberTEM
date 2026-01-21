@@ -1,6 +1,5 @@
 import os
 import typing
-from typing import Optional
 import logging
 
 import numpy as np
@@ -141,12 +140,12 @@ class NPYDataSet(DataSet):
     def __init__(
         self,
         path: str,
-        sig_dims: Optional[int] = 2,
-        nav_shape: Optional[tuple[int, int]] = None,
-        sig_shape: Optional[tuple[int, int]] = None,
+        sig_dims: int | None = 2,
+        nav_shape: tuple[int, int] | None = None,
+        sig_shape: tuple[int, int] | None = None,
         sync_offset: int = 0,
-        io_backend: Optional[IOBackend] = None,
-        num_partitions: Optional[int] = None,
+        io_backend: IOBackend | None = None,
+        num_partitions: int | None = None,
     ):
         super().__init__(
             io_backend=io_backend,
@@ -166,7 +165,7 @@ class NPYDataSet(DataSet):
             raise DataSetException('Must supply one of sig_dims or sig_shape to NPYDataSet')
         self._path = path
         self._sync_offset = sync_offset
-        self._npy_info: typing.Optional[NPYInfo] = None
+        self._npy_info: NPYInfo | None = None
 
     def _get_filesize(self):
         return os.stat(self._path).st_size

@@ -1,5 +1,5 @@
 import math
-from typing import Any, Optional, overload
+from typing import Any, overload
 from collections.abc import Generator, Sequence
 
 import numpy as np
@@ -166,7 +166,7 @@ class Slice:
 
     def get(
         self,
-        arr: Optional[np.ndarray] = None,
+        arr: np.ndarray | None = None,
         sig_only: bool = False,
         nav_only: bool = False
     ):
@@ -373,7 +373,7 @@ class Slice:
             shape=Shape((nav_shape,) + tuple(self.shape.sig), sig_dims=sig_dims)
         )
 
-    def adjust_for_roi(self, roi: Optional[np.ndarray]) -> "Slice":
+    def adjust_for_roi(self, roi: np.ndarray | None) -> "Slice":
         """
         Make a new slice that has origin and shape modified according to `roi`.
         """

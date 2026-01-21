@@ -1,8 +1,8 @@
 from typing import (
-    TYPE_CHECKING, Any, Optional, Union, overload
+    TYPE_CHECKING, Any, Union, overload, Optional
 )
 from collections.abc import Iterable, Generator, Coroutine
-from typing_extensions import Literal
+from typing import Literal
 import os
 import pathlib
 import warnings
@@ -66,7 +66,7 @@ ExecutorSpecType = Literal[
     'pipelined',
 ]
 IterableRoiT = Iterable[tuple[tuple[int, ...], bool]]
-RoiT = Optional[Union[np.ndarray, 'SparseArray', 'spmatrix', tuple[int, ...], IterableRoiT]]
+RoiT = Union[np.ndarray, 'SparseArray', 'spmatrix', tuple[int, ...], IterableRoiT] | None
 
 
 class ResultGenerator:
@@ -222,7 +222,7 @@ class Context:
 
     def __init__(
         self,
-        executor: Optional[JobExecutor] = None,
+        executor: JobExecutor | None = None,
         plot_class: Optional['Live2DPlot'] = None,
     ):
         import traceback
@@ -238,10 +238,10 @@ class Context:
         cls,
         executor_spec: ExecutorSpecType = 'dask',
         *,
-        cpus: Optional[Union[int, Iterable[int]]] = None,
-        gpus: Optional[Union[int, Iterable[int]]] = None,
+        cpus: int | Iterable[int] | None = None,
+        gpus: int | Iterable[int] | None = None,
         plot_class: Optional['Live2DPlot'] = None,
-        snooze_timeout: Optional[float] = None,
+        snooze_timeout: float | None = None,
         main_process_gpu: GPUSpec = None,
     ) -> 'Context':
         '''
@@ -853,9 +853,9 @@ class Context:
     def run(
         self, job: Analysis,
         roi: RoiT = None,
-        progress: Union[bool, ProgressReporter] = False,
-        corrections: Optional[CorrectionSet] = None,
-    ) -> Union[np.ndarray, AnalysisResultSet]:
+        progress: bool | ProgressReporter = False,
+        corrections: CorrectionSet | None = None,
+    ) -> np.ndarray | AnalysisResultSet:
         """
         Run the given :class:`~libertem.analysis.base.Analysis`
         and return the result data.
@@ -913,14 +913,14 @@ class Context:
     def run_udf(
         self,
         dataset: DataSet,
-        udf: Union[UDF, Iterable[UDF]],
+        udf: UDF | Iterable[UDF],
         roi: RoiT = None,
-        corrections: Optional[CorrectionSet] = None,
-        progress: Union[bool, ProgressReporter] = False,
+        corrections: CorrectionSet | None = None,
+        progress: bool | ProgressReporter = False,
         backends=None,
         plots=None,
         sync=True,
-    ) -> Union[RunUDFResultType, RunUDFSyncL, RunUDFAsync, RunUDFAsyncL]:
+    ) -> RunUDFResultType | RunUDFSyncL | RunUDFAsync | RunUDFAsyncL:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
 
@@ -1052,14 +1052,14 @@ class Context:
     def run_udf_iter(
         self,
         dataset: DataSet,
-        udf: Union[UDF, Iterable[UDF]],
+        udf: UDF | Iterable[UDF],
         roi: RoiT = None,
         corrections: CorrectionSet = None,
-        progress: Union[bool, ProgressReporter] = False,
+        progress: bool | ProgressReporter = False,
         backends=None,
         plots=None,
         sync=True,
-    ) -> Union[RunUDFGenType, RunUDFAGenType, RunUDFGenTypeL, RunUDFAGenTypeL]:
+    ) -> RunUDFGenType | RunUDFAGenType | RunUDFGenTypeL | RunUDFAGenTypeL:
         """
         Run :code:`udf` on :code:`dataset`, restricted to the region of interest :code:`roi`.
         Yields partial results after each merge operation.
@@ -1154,10 +1154,10 @@ class Context:
         dataset: DataSet,
         udf: UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: Literal[False],
     ) -> UDFResultDict:
         ...
@@ -1168,10 +1168,10 @@ class Context:
         dataset: DataSet,
         udf: UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: Literal[True],
     ) -> RunUDFGenType: ...
 
@@ -1181,10 +1181,10 @@ class Context:
         dataset: DataSet,
         udf: Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: Literal[False],
     ) -> RunUDFSyncL: ...
 
@@ -1194,10 +1194,10 @@ class Context:
         dataset: DataSet,
         udf: Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: Literal[True],
     ) -> RunUDFGenTypeL: ...
 
@@ -1205,50 +1205,50 @@ class Context:
     def _run_sync(
         self,
         dataset: DataSet,
-        udf: Union[Iterable[UDF], UDF],
+        udf: Iterable[UDF] | UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: Literal[True],
-    ) -> Union[RunUDFGenType, RunUDFGenTypeL]:
+    ) -> RunUDFGenType | RunUDFGenTypeL:
         ...
 
     @overload
     def _run_sync(
         self,
         dataset: DataSet,
-        udf: Union[Iterable[UDF], UDF],
+        udf: Iterable[UDF] | UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: Literal[False],
-    ) -> Union[UDFResultDict, RunUDFSyncL]:
+    ) -> UDFResultDict | RunUDFSyncL:
         ...
 
     @overload
     def _run_sync(
         self,
         dataset: DataSet,
-        udf: Union[Iterable[UDF], UDF],
+        udf: Iterable[UDF] | UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
-        backends: Optional[Any],
-        plots: Optional[Any],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
+        backends: Any | None,
+        plots: Any | None,
         iterate: bool,
-    ) -> Union[UDFResultDict, RunUDFSyncL, RunUDFGenType, RunUDFGenTypeL]: ...
+    ) -> UDFResultDict | RunUDFSyncL | RunUDFGenType | RunUDFGenTypeL: ...
 
     def _run_sync(
         self,
         dataset: DataSet,
-        udf: Union[UDF, Iterable[UDF]],
+        udf: UDF | Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: bool,
@@ -1281,7 +1281,7 @@ class Context:
                 warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")
                 roi = roi.astype(bool)
 
-        progress_reporter: Optional[ProgressReporter]
+        progress_reporter: ProgressReporter | None
         if isinstance(progress, ProgressReporter):
             progress_reporter = progress
             progress = True
@@ -1332,8 +1332,8 @@ class Context:
         dataset: DataSet,
         udf: UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: Literal[False],
@@ -1345,8 +1345,8 @@ class Context:
         dataset: DataSet,
         udf: Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: Literal[False],
@@ -1358,8 +1358,8 @@ class Context:
         dataset: DataSet,
         udf: UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: Literal[True],
@@ -1371,8 +1371,8 @@ class Context:
         dataset: DataSet,
         udf: Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: Literal[True],
@@ -1382,48 +1382,48 @@ class Context:
     def _run_async(
         self,
         dataset: DataSet,
-        udf: Union[UDF, Iterable[UDF]],
+        udf: UDF | Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: Literal[True],
-    ) -> Union[RunUDFAGenTypeL, RunUDFAGenType]: ...
+    ) -> RunUDFAGenTypeL | RunUDFAGenType: ...
 
     @overload
     def _run_async(
         self,
         dataset: DataSet,
-        udf: Union[UDF, Iterable[UDF]],
+        udf: UDF | Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: Literal[False],
-    ) -> Union[RunUDFAsync, RunUDFAsyncL]: ...
+    ) -> RunUDFAsync | RunUDFAsyncL: ...
 
     @overload
     def _run_async(
         self,
         dataset: DataSet,
-        udf: Union[Iterable[UDF], UDF],
+        udf: Iterable[UDF] | UDF,
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: bool,
-    ) -> Union[RunUDFAsync, RunUDFAsyncL, RunUDFAGenType, RunUDFAGenTypeL]: ...
+    ) -> RunUDFAsync | RunUDFAsyncL | RunUDFAGenType | RunUDFAGenTypeL: ...
 
     def _run_async(
         self,
         dataset: DataSet,
-        udf: Union[UDF, Iterable[UDF]],
+        udf: UDF | Iterable[UDF],
         roi: RoiT,
-        corrections: Optional[CorrectionSet],
-        progress: Union[bool, ProgressReporter],
+        corrections: CorrectionSet | None,
+        progress: bool | ProgressReporter,
         backends,
         plots,
         iterate: bool,
@@ -1607,7 +1607,7 @@ class Context:
         )
 
     def map(self, dataset: DataSet, f, roi: RoiT = None,
-            progress: Union[bool, ProgressReporter] = False,
+            progress: bool | ProgressReporter = False,
             corrections: CorrectionSet = None,
             backends=None) -> BufferWrapper:
         '''

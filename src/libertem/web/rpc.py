@@ -1,5 +1,6 @@
 import logging
-from typing import TYPE_CHECKING, Callable, TypeVar, Union
+from typing import TYPE_CHECKING, TypeVar, Union
+from collections.abc import Callable
 
 import uuid
 import typing_extensions

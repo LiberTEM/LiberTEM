@@ -1,7 +1,7 @@
 import functools
 import time
 import random
-from typing import Optional, TypeVar
+from typing import TypeVar
 from collections.abc import Generator
 import multiprocessing as mp
 import sys
@@ -115,7 +115,7 @@ _STOP = object()
 T = TypeVar('T')
 
 
-def echo() -> Generator[Optional[T], T, None]:
+def echo() -> Generator[T | None, T, None]:
     last = None
     while last is not _STOP:
         print(f"yielding {last}")

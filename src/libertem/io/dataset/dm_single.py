@@ -1,7 +1,7 @@
 import os
 import warnings
 import typing
-from typing import Any, Optional
+from typing import Any
 import logging
 
 import ncempy.io.dm
@@ -99,13 +99,13 @@ class SingleDMDataSet(DMDataSet):
     def __init__(
         self,
         path: os.PathLike,
-        nav_shape: Optional[tuple[int, ...]] = None,
-        sig_shape: Optional[tuple[int, ...]] = None,
+        nav_shape: tuple[int, ...] | None = None,
+        sig_shape: tuple[int, ...] | None = None,
         sync_offset: int = 0,
-        io_backend: Optional[IOBackend] = None,
+        io_backend: IOBackend | None = None,
         force_c_order: bool = False,
-        dataset_index: Optional[int] = None,
-        num_partitions: Optional[int] = None,
+        dataset_index: int | None = None,
+        num_partitions: int | None = None,
     ):
         super().__init__(
             io_backend=io_backend,

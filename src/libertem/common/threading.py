@@ -3,7 +3,6 @@ from contextlib import contextmanager
 import os
 import warnings
 import threading
-from typing import Optional
 
 # NOTE: most imports are performed locally in the functions, to
 # make sure these functions are usable as early as possible in the
@@ -193,7 +192,7 @@ class ThreadpoolWrapper:
 
 
 @contextmanager
-def set_num_threads(n: Optional[int]):
+def set_num_threads(n: int | None):
     '''
     Set number of threads in various numerics libraries.
 

@@ -1,7 +1,6 @@
 import os
 import contextlib
 import typing
-from typing import Optional
 import warnings
 import logging
 import time
@@ -89,7 +88,7 @@ class HDF5ArrayDescriptor(typing.NamedTuple):
     name: str
     shape: tuple[int, ...]
     dtype: np.dtype
-    compression: Optional[str]
+    compression: str | None
     chunks: tuple[int, ...]
 
 
@@ -509,7 +508,7 @@ class H5DataSet(DataSet):
         # un-chunked HDF5 seems to prefer larger signal slices, so we aim for 32 4k blocks:
         return 32 * 4096 // np.dtype(self.meta.raw_dtype).itemsize
 
-    def get_max_io_size(self) -> Optional[int]:
+    def get_max_io_size(self) -> int | None:
         if self._chunks is not None:
             # this may result in larger tile depth than necessary, but
             # it needs to be so big to pass the validation of the Negotiator. The tiles
@@ -874,7 +873,7 @@ class H5Partition(Partition):
         self._corrections = corrections
 
     def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32", roi=None,
-            array_backend: Optional[ArrayBackend] = None):
+            array_backend: ArrayBackend | None = None):
         if array_backend is None:
             array_backend = self.meta.array_backends[0]
         assert array_backend in (NUMPY, CUDA)

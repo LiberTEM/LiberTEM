@@ -1,5 +1,3 @@
-import typing
-
 import numpy as np
 
 from libertem.common.math import flat_nonzero
@@ -82,7 +80,7 @@ class FileSet:
     def get_read_ranges(
         self, start_at_frame: int, stop_before_frame: int,
         dtype, tiling_scheme: TilingScheme, sync_offset: int = 0,
-        roi: typing.Union[np.ndarray, None] = None,
+        roi: np.ndarray | None = None,
     ):
         fileset_arr = self.get_as_arr()
         roi_nonzero = None

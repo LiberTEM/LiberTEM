@@ -1,6 +1,5 @@
 import os
 import platform
-from typing import Optional
 
 
 '''
@@ -20,7 +19,7 @@ where an :class:`~libertem.executor.inline.InlineJobExecutor` runs tasks.
 '''
 
 
-def get_use_cuda() -> Optional[int]:
+def get_use_cuda() -> int | None:
     '''
     .. versionadded:: 0.6.0
 

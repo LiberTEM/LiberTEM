@@ -10,7 +10,6 @@ import webbrowser
 import ipaddress
 import urllib.parse
 from functools import partial
-from typing import Optional
 import hmac
 import hashlib
 
@@ -202,7 +201,7 @@ def port_from_sockets(*sockets):
 def run(
     host, port, browser, local_directory, numeric_level,
     token, preload, strict_port, executor_spec, open_ds,
-    snooze_timeout: Optional[float] = None,
+    snooze_timeout: float | None = None,
 ):
     logging.basicConfig(
         level=numeric_level,

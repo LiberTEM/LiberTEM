@@ -1,7 +1,8 @@
 import time
 import logging
 import asyncio
-from typing import TYPE_CHECKING, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, TypeVar
+from collections.abc import Callable
 
 from opentelemetry import trace
 
@@ -264,7 +265,7 @@ class JobEngine:
         analysis_id: str,
         details: AnalysisDetails,
         finished=False,
-        udf_results: Optional[UDFResults] = None
+        udf_results: UDFResults | None = None
     ) -> None:
         if self.state.job_state.is_cancelled(job_id):
             raise JobCancelledError()

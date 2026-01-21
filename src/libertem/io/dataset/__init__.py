@@ -1,10 +1,10 @@
 import typing
-from typing import Union, Any
+from typing import Any
 import pathlib
 from functools import lru_cache
 import importlib
 import warnings
-from typing_extensions import Literal
+from typing import Literal
 import numpy as np
 
 from libertem.io.dataset.base import DataSetException, DataSet
@@ -62,7 +62,7 @@ def _auto_load(
 @typing.overload
 def _auto_load(
     path: str, enable_async: bool, *args, executor, **kwargs,
-) -> typing.Union[DataSet, typing.Awaitable[DataSet]]:
+) -> DataSet | typing.Awaitable[DataSet]:
     ...
 
 
@@ -72,7 +72,7 @@ def _auto_load(path, *args, executor, **kwargs):
             "please specify the `path` argument to allow auto detection"
         )
     detected_params = detect(path, executor=executor)
-    filetype_detected: typing.Optional[str] = detected_params.get('type', None)
+    filetype_detected: str | None = detected_params.get('type', None)
     if filetype_detected is None:
         raise DataSetException(
             "could not determine DataSet type for file '%s'" % path,
@@ -99,7 +99,7 @@ def load(
 @typing.overload
 def load(
     filetype: str, *args, enable_async: bool, executor, **kwargs,
-) -> typing.Union[DataSet, typing.Awaitable[DataSet]]:
+) -> DataSet | typing.Awaitable[DataSet]:
     ...
 
 
@@ -185,7 +185,7 @@ def get_dataset_cls(filetype: str) -> type[DataSet]:
     return cls
 
 
-def get_search_order(path: Union[str, np.ndarray]) -> list[str]:
+def get_search_order(path: str | np.ndarray) -> list[str]:
     """
     Return the keys from filetypes in an order which
     is perhaps optimal for dataset auto-detection
@@ -220,7 +220,7 @@ def get_search_order(path: Union[str, np.ndarray]) -> list[str]:
     return search_order
 
 
-def detect(path: Union[str, np.ndarray], executor) -> dict[str, Any]:
+def detect(path: str | np.ndarray, executor) -> dict[str, Any]:
     """
     Returns dataset's detected type, parameters and
     additional info.

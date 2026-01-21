@@ -2,11 +2,12 @@ from collections import defaultdict, OrderedDict
 from contextlib import contextmanager
 import typing
 from typing import (
-    Any, Optional, Callable,
-    TypeVar, Union, TYPE_CHECKING
+    Any, TypeVar, Union, TYPE_CHECKING, Optional
 )
+from collections.abc import Callable
 from collections.abc import AsyncGenerator, Generator, Iterator, Mapping, Sequence, Iterable
-from typing_extensions import Protocol, Literal
+from typing_extensions import Protocol
+from typing import Literal
 from typing import runtime_checkable
 import warnings
 import logging
@@ -103,7 +104,7 @@ class ResultsForDataSet:
 def _get_dtype(
     udfs: list["UDF"],
     dtype: "nt.DTypeLike",
-    corrections: Optional[CorrectionSet],
+    corrections: CorrectionSet | None,
     array_backends: Iterable[ArrayBackend],
 ) -> "nt.DTypeLike":
     tmp_dtype: "nt.DTypeLike"
@@ -157,7 +158,7 @@ def _format_plan(plan: ExecutionPlan) -> list[str]:
 
 
 def _execution_plan(
-    udfs, ds: Union[DataSet, DataSetMeta], device_class: Optional[DeviceClass] = None,
+    udfs, ds: DataSet | DataSetMeta, device_class: DeviceClass | None = None,
     available_backends: Iterable[ArrayBackend] = BACKENDS
 ) -> tuple[ArrayBackend, ExecutionPlan]:
     '''
@@ -346,18 +347,18 @@ class UDFMeta:
 
     def __init__(
         self,
-        partition_slice: Optional[Slice],
+        partition_slice: Slice | None,
         dataset_shape: Shape,
-        roi: Optional[np.ndarray],
+        roi: np.ndarray | None,
         dataset_dtype: "nt.DTypeLike",
         input_dtype: "nt.DTypeLike",
-        tiling_scheme: Optional[TilingScheme] = None,
+        tiling_scheme: TilingScheme | None = None,
         tiling_index: int = 0,
-        corrections: Optional[CorrectionSet] = None,
-        device_class: Optional[DeviceClass] = None,
-        threads_per_worker: Optional[int] = None,
-        array_backend: Optional[ArrayBackend] = None,
-        valid_nav_mask: Optional[np.ndarray] = None,
+        corrections: CorrectionSet | None = None,
+        device_class: DeviceClass | None = None,
+        threads_per_worker: int | None = None,
+        array_backend: ArrayBackend | None = None,
+        valid_nav_mask: np.ndarray | None = None,
     ):
         self._partition_slice = partition_slice
         self._dataset_shape = dataset_shape
@@ -371,8 +372,8 @@ class UDFMeta:
         if roi is not None:
             roi = roi.reshape(tuple(dataset_shape.nav))
         self._roi = roi
-        self._slice: Optional[Slice] = None
-        self._cached_coordinates: Optional[np.ndarray] = None
+        self._slice: Slice | None = None
+        self._cached_coordinates: np.ndarray | None = None
         if corrections is None:
             corrections = CorrectionSet()
         self._corrections = corrections
@@ -384,7 +385,7 @@ class UDFMeta:
             assert valid_nav_mask.shape[0] == count_nonzero(roi)
 
     @property
-    def slice(self) -> Optional[Slice]:
+    def slice(self) -> Slice | None:
         """
         Slice : A :class:`~libertem.common.slice.Slice` instance that describes the location
                 within the dataset with navigation dimension flattened and reduced to the ROI.
@@ -413,7 +414,7 @@ class UDFMeta:
         return self._dataset_shape
 
     @property
-    def tiling_scheme(self) -> Optional[TilingScheme]:
+    def tiling_scheme(self) -> TilingScheme | None:
         """
         TilingScheme : the tiling scheme that was negotiated
 
@@ -445,7 +446,7 @@ class UDFMeta:
         return self._tiling_scheme[self._tiling_index]
 
     @property
-    def roi(self) -> Optional[np.ndarray]:
+    def roi(self) -> np.ndarray | None:
         """
         numpy.ndarray : Boolean array which limits the elements the UDF is working on.
                      Has a shape of :attr:`dataset_shape.nav`.
@@ -516,7 +517,7 @@ class UDFMeta:
         return self._cached_coordinates[shifted_slice]
 
     @property
-    def threads_per_worker(self) -> Optional[int]:
+    def threads_per_worker(self) -> int | None:
         """
         int or None : number of threads that a UDF is allowed to use in the `process_*` method.
                       For Numba, pyfftw, Torch, NumPy and SciPy (OMP, MKL, OpenBLAS), this limit
@@ -545,7 +546,7 @@ class UDFMeta:
         return self._threads_per_worker
 
     @property
-    def array_backend(self) -> Optional[ArrayBackend]:
+    def array_backend(self) -> ArrayBackend | None:
         """
         Array backend, one of the constants defined in :code:`BACKEND_*`
         constants in :class:`libertem.udf.base.UDF`, or None if not known at
@@ -555,7 +556,7 @@ class UDFMeta:
         """
         return self._array_backend
 
-    def get_valid_nav_mask(self, full_nav: bool = False) -> Optional[np.ndarray]:
+    def get_valid_nav_mask(self, full_nav: bool = False) -> np.ndarray | None:
         """
         Return a mask of the already computed nav positions, as flattened
         1D array.
@@ -586,7 +587,7 @@ class UDFMeta:
         else:
             return self._valid_nav_mask
 
-    def set_valid_nav_mask(self, new_valid_nav_mask: Optional[np.ndarray]):
+    def set_valid_nav_mask(self, new_valid_nav_mask: np.ndarray | None):
         self._valid_nav_mask = new_valid_nav_mask
 
 
@@ -636,7 +637,7 @@ class UDFData:
             self._data
         )
 
-    def __getattr__(self, k: str) -> Union[np.ndarray, BufferWrapper]:
+    def __getattr__(self, k: str) -> np.ndarray | BufferWrapper:
         if k.startswith("_"):
             raise AttributeError("no such attribute: %s" % k)
         try:
@@ -660,8 +661,8 @@ class UDFData:
         self._data[name] = buffer
 
     def get(
-        self, k: str, default: Optional[T] = None
-    ) -> Optional[Union[T, np.ndarray, BufferWrapper]]:
+        self, k: str, default: T | None = None
+    ) -> T | np.ndarray | BufferWrapper | None:
         try:
             return self.__getattr__(k)
         except (KeyError, AttributeError):
@@ -674,7 +675,7 @@ class UDFData:
         else:
             super().__setattr__(k, v)
 
-    def _get_view_or_data(self, k: str) -> Union[np.ndarray, BufferWrapper]:
+    def _get_view_or_data(self, k: str) -> np.ndarray | BufferWrapper:
         if k in self._views:
             return self._views[k]
         res = self._data[k]
@@ -722,7 +723,7 @@ class UDFData:
                 continue
             yield k, buf
 
-    def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray], lib=None) -> None:
+    def allocate_for_part(self, partition: Partition, roi: np.ndarray | None, lib=None) -> None:
         """
         allocate all BufferWrapper instances in this namespace.
         for pre-allocated buffers (i.e. aux data), only set shape and roi
@@ -732,7 +733,7 @@ class UDFData:
         for k, buf in self._get_buffers(filter_allocated=True):
             buf.allocate(lib=lib)
 
-    def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
+    def allocate_for_full(self, dataset: DataSet, roi: np.ndarray | None) -> None:
         ds_partitions = [*dataset.get_partitions()]
         for k, buf in self._get_buffers():
             buf.set_shape_ds(dataset.shape, roi)
@@ -1030,11 +1031,11 @@ class UDFBase(UDFProtocol):
     def get_result_buffers(self) -> dict[str, BufferWrapper]:
         raise NotImplementedError()
 
-    def allocate_for_part(self, partition: Partition, roi: Optional[np.ndarray]) -> None:
+    def allocate_for_part(self, partition: Partition, roi: np.ndarray | None) -> None:
         for ns in [self.results]:
             ns.allocate_for_part(partition, roi, lib=self.xp)
 
-    def allocate_for_full(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
+    def allocate_for_full(self, dataset: DataSet, roi: np.ndarray | None) -> None:
         for ns in [self.params, self.results]:
             ns.allocate_for_full(dataset, roi)
 
@@ -1601,7 +1602,7 @@ class UDF(UDFBase):
         pass
 
     @staticmethod
-    def with_mask(data: np.ndarray, mask: Union[np.ndarray, bool]) -> ArrayWithMask:
+    def with_mask(data: np.ndarray, mask: np.ndarray | bool) -> ArrayWithMask:
         """
         Add a mask to indicate the valid parts in a result. The mask
         should be an array of bools, with a shape matching
@@ -1640,7 +1641,7 @@ class UDF(UDFBase):
         extra_shape: tuple[int, ...] = (),
         dtype: "nt.DTypeLike" = "float32",
         where: BufferLocation = None,
-        use: Optional[BufferUse] = None,
+        use: BufferUse | None = None,
     ) -> BufferWrapper:
         '''
         Use this method to create :class:`~ libertem.common.buffers.BufferWrapper` objects
@@ -1768,8 +1769,8 @@ class UDFParams:
     def __init__(
         self,
         kwargs: list[dict],
-        roi: Optional[np.ndarray],
-        corrections: Optional[CorrectionSet],
+        roi: np.ndarray | None,
+        corrections: CorrectionSet | None,
         tiling_scheme: TilingScheme,
     ):
         """
@@ -1794,8 +1795,8 @@ class UDFParams:
     def from_udfs(
         cls,
         udfs: Iterable[UDF],
-        roi: Optional[np.ndarray],
-        corrections: Optional[CorrectionSet],
+        roi: np.ndarray | None,
+        corrections: CorrectionSet | None,
         tiling_scheme: TilingScheme,
     ):
         kwargs = [udf._kwargs for udf in udfs]
@@ -1822,7 +1823,7 @@ class UDFParams:
         return self._tiling_scheme
 
 
-def _get_canonical_backends(backends: Optional[BackendSpec]) -> Sequence[ArrayBackend]:
+def _get_canonical_backends(backends: BackendSpec | None) -> Sequence[ArrayBackend]:
     """
     Convert from either an iterable of backends or a simple string form into a
     canonical form of Sequence[str]
@@ -1836,7 +1837,7 @@ def _get_canonical_backends(backends: Optional[BackendSpec]) -> Sequence[ArrayBa
 
 def get_resources_for_backends(
     udf_backends: list[BackendSpec],
-    user_backends: Optional[BackendSpec]
+    user_backends: BackendSpec | None
 ) -> ResourceDef:
     """
     Find the resource definition that is appropriate for the backends specified
@@ -1933,7 +1934,7 @@ class UDFTask(TaskProtocol):
         idx: int,
         udf_classes: list[type[UDF]],
         udf_backends: list[BackendSpec],
-        user_backends: Optional[BackendSpec],
+        user_backends: BackendSpec | None,
         runner_cls: type['UDFPartRunner'],
         span_context: "SpanContext",
         task_frames: int,
@@ -2143,7 +2144,7 @@ class UDFPartRunner:
         execution_plan: ExecutionPlan,
         partition: Partition,
         tiling_scheme: TilingScheme,
-        roi: Optional[np.ndarray],
+        roi: np.ndarray | None,
         dtype,
     ) -> None:
         # FIXME pass information on target location (numpy or cupy)
@@ -2156,7 +2157,7 @@ class UDFPartRunner:
         )
 
         # type explicitly to help mypy
-        partition_progress: Union[PartitionProgressTracker, PartitionTrackerNoOp]
+        partition_progress: PartitionProgressTracker | PartitionTrackerNoOp
         if self._progress:
             partition_progress = PartitionProgressTracker(partition)
         else:
@@ -2207,7 +2208,7 @@ class UDFPartRunner:
         self,
         execution_plan: ExecutionPlan,
         partition: Partition,
-        roi: Optional[np.ndarray],
+        roi: np.ndarray | None,
         corrections: CorrectionSet,
         device_class,
         env: Environment,
@@ -2258,7 +2259,7 @@ class UDFPartRunner:
         tile: DataTile,
         array_backend: ArrayBackend,
         device_tile: Any,
-        roi: Optional[np.ndarray],
+        roi: np.ndarray | None,
     ) -> None:
         for udf, udf_method in udfs_and_methods:
             if udf_method == UDFMethod.TILE:
@@ -2375,7 +2376,7 @@ class UDFRunner:
         cls,
         udf: UDF,
         dataset: DataSet,
-        roi: Optional[np.ndarray] = None,
+        roi: np.ndarray | None = None,
     ) -> dict[str, BufferWrapper]:
         """
         Return result buffer declarations for a given UDF/DataSet/roi combination
@@ -2438,7 +2439,7 @@ class UDFRunner:
         if self._debug:
             cloudpickle.loads(cloudpickle.dumps(tasks))
 
-    def _check_preconditions(self, dataset: DataSet, roi: Optional[np.ndarray]) -> None:
+    def _check_preconditions(self, dataset: DataSet, roi: np.ndarray | None) -> None:
         if roi is not None and prod(roi.shape) != prod(dataset.shape.nav):
             raise ValueError(
                 "roi: incompatible shapes: {} (roi) vs {} (dataset)".format(
@@ -2451,9 +2452,9 @@ class UDFRunner:
         dataset: DataSet,
         executor: JobExecutor,
         environment: Environment,
-        roi: Optional[np.ndarray],
-        corrections: Optional[CorrectionSet],
-        backends: Optional[BackendSpec],
+        roi: np.ndarray | None,
+        corrections: CorrectionSet | None,
+        backends: BackendSpec | None,
         dry: bool,
     ) -> tuple[list[UDFTask], UDFParams]:
         self._check_preconditions(dataset, roi)
@@ -2537,11 +2538,11 @@ class UDFRunner:
         self,
         dataset: DataSet,
         executor: JobExecutor,
-        roi: Optional[np.ndarray] = None,
+        roi: np.ndarray | None = None,
         progress: bool = False,
-        corrections: Optional[CorrectionSet] = None,
-        backends: Optional[BackendSpec] = None,
-        main_process_gpu: Optional[int] = None,
+        corrections: CorrectionSet | None = None,
+        backends: BackendSpec | None = None,
+        main_process_gpu: int | None = None,
         dry: bool = False
     ) -> "UDFResults":
         with tracer.start_as_current_span("UDFRunner.run_for_dataset"):
@@ -2563,10 +2564,10 @@ class UDFRunner:
         dataset: DataSet,
         executor: JobExecutor,
         environment: Environment,
-        roi: Optional[np.ndarray] = None,
+        roi: np.ndarray | None = None,
         progress: bool = False,
-        corrections: Optional[CorrectionSet] = None,
-        backends: Optional[BackendSpec] = None,
+        corrections: CorrectionSet | None = None,
+        backends: BackendSpec | None = None,
         dry: bool = False,
     ) -> tuple[
         Iterable[tuple[tuple[UDFData, ...], TaskProtocol]],
@@ -2635,10 +2636,10 @@ class UDFRunner:
         self,
         dataset: DataSet,
         executor: JobExecutor,
-        roi: Optional[np.ndarray] = None,
+        roi: np.ndarray | None = None,
         progress: bool = False,
-        corrections: Optional[CorrectionSet] = None,
-        backends: Optional[BackendSpec] = None,
+        corrections: CorrectionSet | None = None,
+        backends: BackendSpec | None = None,
         dry: bool = False,
         iterate: bool = True,
     ) -> ResultsForDataSet:
@@ -2708,9 +2709,9 @@ class UDFRunner:
         dataset: DataSet,
         executor: JobExecutor,
         cancel_id,
-        roi: Optional[np.ndarray] = None,
-        corrections: Optional[CorrectionSet] = None,
-        backends: Optional[BackendSpec] = None,
+        roi: np.ndarray | None = None,
+        corrections: CorrectionSet | None = None,
+        backends: BackendSpec | None = None,
         progress: bool = False,
         dry: bool = False,
         iterate: bool = True,
@@ -2736,8 +2737,8 @@ class UDFRunner:
     def _make_udf_tasks(
         self,
         dataset: DataSet,
-        roi: Optional[np.ndarray],
-        backends: Optional[BackendSpec]
+        roi: np.ndarray | None,
+        backends: BackendSpec | None
     ) -> Generator[UDFTask, None, None]:
         udf_backends = [
             udf.get_backends()

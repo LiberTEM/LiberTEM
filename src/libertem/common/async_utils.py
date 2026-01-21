@@ -2,7 +2,8 @@ import sys
 import queue
 import asyncio
 import threading
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
+from collections.abc import Callable
 from collections.abc import AsyncGenerator, Generator
 from concurrent.futures import ThreadPoolExecutor
 
@@ -32,7 +33,7 @@ def _wrap_f(f, args, kwargs):
 
 
 async def sync_to_async(
-    fn: Callable[..., T], pool: Optional[ThreadPoolExecutor] = None, *args, **kwargs
+    fn: Callable[..., T], pool: ThreadPoolExecutor | None = None, *args, **kwargs
 ) -> T:
     """
     Run blocking function with `*args`, `**kwargs` in a thread pool.
@@ -60,7 +61,7 @@ async def sync_to_async(
 
 
 async def async_generator(
-    gen: Generator[T, None, None], pool: Optional[ThreadPoolExecutor] = None
+    gen: Generator[T, None, None], pool: ThreadPoolExecutor | None = None
 ) -> AsyncGenerator[T, None]:
     def inner_next(gen):
         try:

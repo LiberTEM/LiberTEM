@@ -4,7 +4,6 @@ import threading
 import itertools
 from unittest import mock
 import sys
-from typing import Optional
 
 import cloudpickle
 import numpy as np
@@ -717,7 +716,7 @@ def _place_results(
     data: np.ndarray,
     nav_shape: tuple[int],
     sync_offset: int = 0,
-    roi: Optional[np.ndarray] = None
+    roi: np.ndarray | None = None
 ) -> np.ndarray:
     """
     Places ravelled data into an array of nav_shape

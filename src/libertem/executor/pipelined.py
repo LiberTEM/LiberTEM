@@ -6,10 +6,12 @@ import functools
 import contextlib
 import multiprocessing as mp
 from typing import (
-    TYPE_CHECKING, Any, Callable, NamedTuple, Optional, TypeVar, Union
+    TYPE_CHECKING, Any, NamedTuple, TypeVar, Union
 )
+from collections.abc import Callable
 from collections.abc import Iterable, Generator
-from typing_extensions import TypedDict, Literal
+from typing_extensions import TypedDict
+from typing import Literal
 import uuid
 import warnings
 import time
@@ -54,7 +56,7 @@ class WorkerQueues(NamedTuple):
 class WorkerSpec(TypedDict):
     name: str
     device_id: int
-    device_kind: Union[Literal['CPU'], Literal['CUDA']]
+    device_kind: Literal['CPU'] | Literal['CUDA']
     worker_idx: int
     has_cupy: bool
 
@@ -107,9 +109,9 @@ class WorkerPool:
     """
     def __init__(self, worker_fn: Callable, spec: list[WorkerSpec]):
         self._worker_q_cls = SimpleMPWorkerQueue
-        self._workers: Optional[list[PoolWorkerInfo]] = []
+        self._workers: list[PoolWorkerInfo] | None = []
         self._worker_fn = worker_fn
-        self._response_q: Optional[SimpleMPWorkerQueue] = self._worker_q_cls()
+        self._response_q: SimpleMPWorkerQueue | None = self._worker_q_cls()
         self._message_q = self._worker_q_cls()
         self._mp_ctx = mp.get_context("spawn")
         self._spec = spec
@@ -557,7 +559,7 @@ def pipelined_worker(
     pin: bool,
     spec: WorkerSpec,
     span_context: "SpanContext",
-    early_setup: Optional[Callable] = None,
+    early_setup: Callable | None = None,
 ):
     """
     Main pipelined worker function.
@@ -708,8 +710,8 @@ def _order_results(results_in: ResultWithID) -> ResultT:
 
 
 def _make_spec(
-    cpus: Union[int, Iterable[int]],
-    cudas: Union[int, Iterable[int]],
+    cpus: int | Iterable[int],
+    cudas: int | Iterable[int],
     has_cupy: bool = False,
 ) -> list[WorkerSpec]:
     """
@@ -824,12 +826,12 @@ class PipelinedExecutor(BaseJobExecutor):
     """
     def __init__(
         self,
-        spec: Optional[list[WorkerSpec]] = None,
+        spec: list[WorkerSpec] | None = None,
         pin_workers: bool = True,
         startup_timeout: float = 30.0,
         cleanup_timeout: float = 10.0,
-        early_setup: Optional[Callable] = None,
-        main_process_gpu: Optional[int] = None,
+        early_setup: Callable | None = None,
+        main_process_gpu: int | None = None,
     ) -> None:
         self._pin_workers = pin_workers
         if spec is None:
@@ -839,7 +841,7 @@ class PipelinedExecutor(BaseJobExecutor):
         self._early_setup = early_setup
 
         # for testing via monkeypatching, for example:
-        self._worker_selector: Optional[WorkerSelector] = None
+        self._worker_selector: WorkerSelector | None = None
 
         # timeout for cleanup, either from exception or when joining processes
         self._cleanup_timeout = cleanup_timeout
@@ -923,8 +925,8 @@ class PipelinedExecutor(BaseJobExecutor):
     @classmethod
     def make_spec(
         cls,
-        cpus: Union[int, Iterable[int]],
-        cudas: Union[int, Iterable[int]],
+        cpus: int | Iterable[int],
+        cudas: int | Iterable[int],
         has_cupy: bool = False,
     ):
         return _make_spec(

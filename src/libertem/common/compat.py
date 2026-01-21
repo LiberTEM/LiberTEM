@@ -1,9 +1,7 @@
-from typing import Optional
-
 import numpy as np
 
 # stolen from scipy:
-copy_if_needed: Optional[bool]
+copy_if_needed: bool | None
 if np.lib.NumpyVersion(np.__version__) >= "2.0.0":
     copy_if_needed = None
 elif np.lib.NumpyVersion(np.__version__) < "1.28.0":

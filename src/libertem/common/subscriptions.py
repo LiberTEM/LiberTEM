@@ -1,6 +1,7 @@
 import uuid
 import time
-from typing import Callable, Any, overload
+from typing import Any, overload
+from collections.abc import Callable
 
 
 class SubscriptionManager:

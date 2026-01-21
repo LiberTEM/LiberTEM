@@ -1,4 +1,5 @@
-from typing import Union, Callable
+from typing import Union
+from collections.abc import Callable
 from collections.abc import Iterable
 
 import numpy as np

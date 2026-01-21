@@ -1,5 +1,5 @@
 import warnings
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 from sparseconverter import ArrayBackend, for_backend
@@ -53,13 +53,13 @@ class Partition:
         meta: DataSetMeta,
         partition_slice: Slice,
         io_backend: IOBackend,
-        decoder: Optional[Decoder],
+        decoder: Decoder | None,
     ):
         self.meta = meta
         self.slice = partition_slice
         self._io_backend = io_backend
         self._decoder = decoder
-        self._idx: Optional[int] = None
+        self._idx: int | None = None
         if partition_slice.shape.nav.dims != 1:
             raise ValueError("nav dims should be flat")
 
@@ -111,7 +111,7 @@ class Partition:
         pass
 
     def get_tiles(self, tiling_scheme, dest_dtype="float32", roi=None,
-            array_backend: Optional[ArrayBackend] = None):
+            array_backend: ArrayBackend | None = None):
         raise NotImplementedError()
 
     def __repr__(self):
@@ -131,7 +131,7 @@ class Partition:
         return self.slice.shape.flatten_nav()
 
     def get_macrotile(self, dest_dtype="float32", roi=None,
-            array_backend: Optional[ArrayBackend] = None):
+            array_backend: ArrayBackend | None = None):
         '''
         Return a single tile for the entire partition.
 
@@ -181,7 +181,7 @@ class Partition:
     def get_ident(self) -> str:
         return f'part-{self._idx}'
 
-    def get_frame_count(self, roi: Optional[np.ndarray] = None) -> int:
+    def get_frame_count(self, roi: np.ndarray | None = None) -> int:
         if roi is None:
             return self.shape.nav.size
         else:
@@ -217,7 +217,7 @@ class BasePartition(Partition):
         self, meta: DataSetMeta, partition_slice: Slice,
         fileset: FileSet, start_frame: int, num_frames: int,
         io_backend: IOBackend,
-        decoder: Optional[Decoder] = None,
+        decoder: Decoder | None = None,
     ):
         super().__init__(
             meta=meta,
@@ -232,7 +232,7 @@ class BasePartition(Partition):
         self._start_frame = start_frame
         self._num_frames = num_frames
         self._corrections = CorrectionSet()
-        self._worker_context: Optional["WorkerContext"] = None
+        self._worker_context: "WorkerContext" | None = None
         if num_frames <= 0:
             raise ValueError("invalid number of frames: %d" % num_frames)
 
@@ -262,14 +262,14 @@ class BasePartition(Partition):
         assert self._io_backend is not None
         return self._io_backend
 
-    def set_corrections(self, corrections: Optional[CorrectionSet]):
+    def set_corrections(self, corrections: CorrectionSet | None):
         self._corrections = corrections
 
     def set_worker_context(self, worker_context: "WorkerContext"):
         self._worker_context = worker_context
 
     def get_tiles(self, tiling_scheme: TilingScheme, dest_dtype="float32",
-            roi=None, array_backend: Optional[ArrayBackend] = None):
+            roi=None, array_backend: ArrayBackend | None = None):
         """
         Return a generator over all DataTiles contained in this Partition.
 

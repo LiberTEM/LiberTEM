@@ -1,10 +1,9 @@
 from io import BytesIO
-from typing import Optional
 
 from PIL import Image
 
 
-def encode_image(result, save_kwargs: Optional[dict] = None) -> BytesIO:
+def encode_image(result, save_kwargs: dict | None = None) -> BytesIO:
     """
     Save the RGBA data in ``result`` to an image with parameters ``save_kwargs``
     passed to ``PIL.Image.save``.

@@ -2,7 +2,7 @@ from io import SEEK_SET
 import math
 import os
 import re
-from typing import IO, TYPE_CHECKING, NamedTuple, Optional
+from typing import IO, TYPE_CHECKING, NamedTuple
 import numpy as np
 from glob import glob, escape
 
@@ -326,11 +326,11 @@ class TVIPSDataSet(DataSet):
     def __init__(
         self,
         path,
-        nav_shape: Optional[tuple[int, ...]] = None,
-        sig_shape: Optional[tuple[int, ...]] = None,
-        sync_offset: Optional[int] = None,
-        io_backend: Optional[IOBackend] = None,
-        num_partitions: Optional[int] = None,
+        nav_shape: tuple[int, ...] | None = None,
+        sig_shape: tuple[int, ...] | None = None,
+        sync_offset: int | None = None,
+        io_backend: IOBackend | None = None,
+        num_partitions: int | None = None,
     ):
         super().__init__(
             io_backend=io_backend,
@@ -341,9 +341,9 @@ class TVIPSDataSet(DataSet):
         self._sync_offset = sync_offset
         self._path = path
         self._filesize = None
-        self._files: Optional[list[str]] = None
+        self._files: list[str] | None = None
         self._frame_counts: dict[str, int] = {}
-        self._series_header: Optional[SeriesHeader] = None
+        self._series_header: SeriesHeader | None = None
 
     def initialize(self, executor: JobExecutor):
         self._filesize = executor.run_function(self._get_filesize)

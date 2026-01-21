@@ -1,6 +1,5 @@
 from collections import namedtuple
 import itertools
-from typing import Union
 from numbers import Number
 
 import dask
@@ -82,7 +81,7 @@ class DaskInplaceWrapper:
             combined_slice = combine_slices_multid(self._slice, key, self._array.shape)
             return self._array[combined_slice]
 
-    def __setitem__(self, key, value: Union[nt.ArrayLike, Number]):
+    def __setitem__(self, key, value: nt.ArrayLike | Number):
         if not np.isscalar(value) and value.size == 1 and not isinstance(value, dask.array.Array):
             # Avoids deprecated Numpy behaviour of implicitly
             # extracting a scalar from an array during assignment

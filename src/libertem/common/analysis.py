@@ -1,7 +1,6 @@
 from io import BytesIO
-from typing import (
-    Callable, Optional, Union
-)
+from typing import Union
+from collections.abc import Callable
 
 import numpy as np
 
@@ -55,7 +54,7 @@ class AnalysisResult:
     def __array__(self, copy=copy_if_needed, dtype=None):
         return np.array(self.raw_data, copy=copy, dtype=dtype)
 
-    def get_image(self, save_kwargs: Optional[dict] = None) -> BytesIO:
+    def get_image(self, save_kwargs: dict | None = None) -> BytesIO:
         from libertem.common.viz import encode_image
         return encode_image(self.visualized, save_kwargs=save_kwargs)
 

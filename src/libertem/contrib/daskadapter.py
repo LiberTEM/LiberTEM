@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sparseconverter import ArrayBackend, NUMPY, for_backend
 import dask
 import dask.array
@@ -22,7 +20,7 @@ def _get_tile_converted(p, dest_dtype, roi, array_backend):
 
 
 def make_dask_array(dataset: DataSet, dtype='float32', roi=None,
-        array_backend: Optional[ArrayBackend] = None):
+        array_backend: ArrayBackend | None = None):
     '''
     Create a Dask array using the DataSet's partitions as blocks.
 

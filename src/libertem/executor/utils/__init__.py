@@ -1,10 +1,9 @@
-from typing import Union
 from collections.abc import Iterable
 import itertools
 import warnings
 
 
-def assign_cudas(cudas: Union[int, Iterable[int]]) -> Iterable[int]:
+def assign_cudas(cudas: int | Iterable[int]) -> Iterable[int]:
     """
     Takes the cudas argument to :code:`cluster_spec` and
     converts it into a properly formatted iterable of CUDA

@@ -1,6 +1,5 @@
-from typing import (
-    Any, Callable, Optional,
-)
+from typing import Any
+from collections.abc import Callable
 from collections.abc import Iterable, Generator
 
 
@@ -58,7 +57,7 @@ class StructDescriptor:
 def flatten_nested(el: Any,
                    unpackable_types: dict[type, Callable[[Iterable],
                                                          Iterable[tuple[Any, Any]]]] = None,
-                   ignore_types: Optional[tuple[type, ...]] = None) -> list[Any]:
+                   ignore_types: tuple[type, ...] | None = None) -> list[Any]:
     """
     Recursively unpack the structure el while the type of el is in
     the mapping unpackable_types, which maps between the types that
@@ -96,7 +95,7 @@ def flatten_nested(el: Any,
 def build_mapping(el: Any,
                   unpackable_types: dict[type, Callable[[Iterable],
                                                         Iterable[tuple[Any, Any]]]] = None,
-                  ignore_types: Optional[tuple[type, ...]] = None,
+                  ignore_types: tuple[type, ...] | None = None,
                   _pos: list[tuple[type, Any]] = None) -> list[list[tuple[type, Any]]]:
     """
     Recursively unpack the structure el and build a flat descriptor of its

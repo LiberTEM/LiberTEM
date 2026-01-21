@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 from collections.abc import Iterable
 import contextlib
 from collections import defaultdict, OrderedDict
@@ -176,9 +176,9 @@ class DelayedUDFRunner(UDFRunner):
 
     def results_for_dataset_sync(self, dataset: DataSet, executor: 'DelayedJobExecutor',
             environment: Environment,
-            roi: Optional[np.ndarray] = None, progress: bool = False,
-            corrections: Optional[CorrectionSet] = None,
-            backends: Optional[BackendSpec] = None,
+            roi: np.ndarray | None = None, progress: bool = False,
+            corrections: CorrectionSet | None = None,
+            backends: BackendSpec | None = None,
             dry: bool = False) -> Iterable[tuple]:
 
         executor.register_master_udfs(self._udfs)
@@ -204,7 +204,7 @@ class DelayedJobExecutor(BaseJobExecutor):
 
     Highly experimental at this time!
     """
-    def __init__(self, main_process_gpu: Optional[int] = None):
+    def __init__(self, main_process_gpu: int | None = None):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self._udfs = None

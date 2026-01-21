@@ -1,7 +1,7 @@
 import os
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import contextlib
 import uuid
 
@@ -16,8 +16,8 @@ logger = logging.getLogger()
 
 def maybe_setup_tracing(
     service_name: str,
-    service_id: Optional[str] = None,
-    otlp_endpoint: Optional[str] = None,
+    service_id: str | None = None,
+    otlp_endpoint: str | None = None,
 ):
     """
     Set up tracing if the OTEL_ENABLE environment variable is set.
@@ -31,8 +31,8 @@ def maybe_setup_tracing(
 
 def setup_tracing(
     service_name: str,
-    service_id: Optional[str] = None,
-    otlp_endpoint: Optional[str] = None,
+    service_id: str | None = None,
+    otlp_endpoint: str | None = None,
 ):
     """
     Set up tracing and span exporting. Call once per process.

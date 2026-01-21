@@ -168,11 +168,11 @@ class RawCSRDataSet(DataSet):
     def __init__(
         self,
         path: str,
-        nav_shape: typing.Optional[tuple[int, ...]] = None,
-        sig_shape: typing.Optional[tuple[int, ...]] = None,
+        nav_shape: tuple[int, ...] | None = None,
+        sig_shape: tuple[int, ...] | None = None,
         sync_offset: int = 0,
         io_backend: typing.Optional["IOBackend"] = None,
-        num_partitions: typing.Optional[int] = None,
+        num_partitions: int | None = None,
     ):
         if io_backend is not None:
             raise NotImplementedError()
@@ -320,15 +320,15 @@ class RawCSRDataSet(DataSet):
     def adjust_tileshape(
         self,
         tileshape: tuple[int, ...],
-        roi: typing.Optional[np.ndarray]
+        roi: np.ndarray | None
     ) -> tuple[int, ...]:
         return (tileshape[0],) + tuple(self._sig_shape)
 
     def need_decode(
         self,
         read_dtype: "nt.DTypeLike",
-        roi: typing.Optional[np.ndarray],
-        corrections: typing.Optional[CorrectionSet]
+        roi: np.ndarray | None,
+        corrections: CorrectionSet | None
     ) -> bool:
         return super().need_decode(read_dtype, roi, corrections)
 
@@ -362,7 +362,7 @@ class RawCSRPartition(Partition):
         self._worker_context = None
         super().__init__(*args, **kwargs)
 
-    def set_corrections(self, corrections: typing.Optional[CorrectionSet]):
+    def set_corrections(self, corrections: CorrectionSet | None):
         if corrections is not None and corrections.have_corrections():
             raise NotImplementedError("corrections not implemented for raw CSR data set")
 
@@ -379,7 +379,7 @@ class RawCSRPartition(Partition):
         tiling_scheme: TilingScheme,
         dest_dtype="float32",
         roi=None,
-        array_backend: typing.Optional[ArrayBackend] = None
+        array_backend: ArrayBackend | None = None
     ):
         assert array_backend == SCIPY_CSR or array_backend is None
         tiling_scheme = tiling_scheme.adjust_for_partition(self)

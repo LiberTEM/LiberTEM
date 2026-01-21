@@ -2,7 +2,6 @@ import contextlib
 import functools
 import logging
 import uuid
-from typing import Optional
 import concurrent.futures
 from typing import Any
 from collections.abc import Iterable
@@ -75,7 +74,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
             self,
             client: concurrent.futures.Executor,
             is_local=False,
-            main_process_gpu: Optional[int] = None):
+            main_process_gpu: int | None = None):
         # Only import if actually instantiated, i.e. will likely be used
         import libertem.preload  # noqa: 401
         self.is_local = is_local
@@ -210,7 +209,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
     @classmethod
     def make_local(
             cls,
-            n_threads: Optional[int] = None,
+            n_threads: int | None = None,
             main_process_gpu: GPUSpec = None
             ):
         """
@@ -220,7 +219,7 @@ class ConcurrentJobExecutor(BaseJobExecutor):
         Parameters
         ----------
 
-        n_threads : Optional[int]
+        n_threads : int | None
             The number of threads to spawn in the executor,
             by default None in which case as many threads as there
             are CPU cores will be spawned.

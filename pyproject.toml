@@ -9,8 +9,9 @@ build-backend = "hatchling.build"
 name = "libertem"
 dynamic = ["version", "readme"]
 description = "Open pixelated STEM framework"
-license = { file = "LICENSE" }
-requires-python = ">=3.9.3"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
 authors = [
     { name = "the LiberTEM team", email = "libertem-dev@googlegroups.com" },
 ]
@@ -25,13 +26,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: JavaScript",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -59,7 +58,6 @@ dependencies = [
     "ncempy>=1.10",
     # Minimum constraints of numba for all Python versions we support
     # See https://numba.readthedocs.io/en/stable/release-notes-overview.html
-    "numba>=0.53;python_version < '3.10'",
     "numba>=0.55;python_version < '3.11' and python_version >= '3.10'",
     "numba>=0.57;python_version < '3.12' and python_version >= '3.11'",
     "numba>=0.59;python_version < '3.13' and python_version >= '3.12'",

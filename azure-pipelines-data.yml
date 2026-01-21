@@ -49,9 +49,9 @@ stages:
         displayName: 'list available data'
 
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.9'
+        displayName: 'Use Python 3.11'
         inputs:
-          versionSpec: '3.9'
+          versionSpec: '3.11'
 
 #      - task: Cache@2
 #        inputs:
@@ -62,7 +62,7 @@ stages:
 #          path: $(PIP_CACHE_DIR)
 #        displayName: 'cache pip packages'
 
-      - bash: python3.9 -m venv venv
+      - bash: python3.11 -m venv venv
         displayName: 'create venv'
 
       - bash: ./venv/bin/pip install tox tox-uv
@@ -92,9 +92,6 @@ stages:
       pool: DataAccess
       strategy:
         matrix:
-          Python39:
-            python.version: '3.9'
-            TOXENV: 'py39-data'
           Python310:
             python.version: '3.10'
             TOXENV: 'py310-data'
@@ -121,7 +118,7 @@ stages:
         inputs:
           versionSpec: '$(python.version)'
 
-      - bash: python3.9 -m venv venv
+      - bash: python3 -m venv venv
         displayName: 'create venv'
 
       - bash: ./venv/bin/pip install tox tox-uv
@@ -157,9 +154,9 @@ stages:
         TOXENV: 'numba_coverage'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.9'
+        displayName: 'Use Python 3.11'
         inputs:
-          versionSpec: '3.9'
+          versionSpec: '3.11'
 
       - bash: pip install -U tox tox-uv
         displayName: 'install requirements'
@@ -182,7 +179,7 @@ stages:
         condition: succeededOrFailed()
         inputs:
           testResultsFiles: 'junit.xml'
-          testRunTitle: 'Publish test results for numba coverage on Python 3.9'
+          testRunTitle: 'Publish test results for numba coverage on Python 3.11'
 
     - job: lint
       pool: DataAccess
@@ -194,9 +191,9 @@ stages:
         TOXENV: '$(TOXENV)'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.9'
+        displayName: 'Use Python 3.11'
         inputs:
-          versionSpec: '3.9'
+          versionSpec: '3.11'
       - bash: apt-get update && apt-get install -y pandoc graphviz
         displayName: install required debian packages
 
@@ -217,9 +214,9 @@ stages:
         TESTDATA_BASE_PATH: '/data/'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.9'
+        displayName: 'Use Python 3.11'
         inputs:
-          versionSpec: '3.9'
+          versionSpec: '3.11'
 
       - checkout: self
       - checkout: LiberTEM-live

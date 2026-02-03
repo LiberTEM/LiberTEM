@@ -2692,7 +2692,6 @@ class UDFRunner:
         def _inner(environment: Environment):
             num_results = 0
             try:
-<<<<<<< HEAD
                 with environment.enter():
                     for part_results, task in result_iter:
                         num_results += 1
@@ -2707,7 +2706,9 @@ class UDFRunner:
                         if iterate:
                             yield self._make_udf_result(
                                 udfs=self._udfs,
-                                damage=damage
+                                damage=damage,
+                                make_copy=copy_needed,
+                                results_lock=self._results_lock,
                             )
                     if num_results == 0 or not iterate:
                         yield self._make_udf_result(

@@ -4,7 +4,7 @@ Installation
 ============
 
 .. note::
-    LiberTEM can currently be used on Python >=3.9.3, 3.10, 3.11, 3.12, 3.13 and 3.14.
+    LiberTEM can currently be used on Python 3.10, 3.11, 3.12, 3.13 and 3.14.
 
     If you would like to install the latest development version, please also
     see :ref:`installing from a git clone`.
@@ -47,7 +47,7 @@ To create a new virtualenv for LiberTEM, you can use the following command:
     $ virtualenv -p python3 ~/libertem-venv/
 
 If multiple Python versions are installed, replace :code:`python3` with 
-:code:`python3.9` or a later version.
+:code:`python3.10` or a later version.
 
 Replace :code:`~/libertem-venv/` with any path where you would like to create
 the venv. You can then activate the virtualenv with

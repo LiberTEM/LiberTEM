@@ -1,5 +1,5 @@
-Python 3.14 support
-===================
+[Feature] Python 3.14 support
+=============================
 
 * Support for Python 3.14 (:pr:`1790`).
 * Internally, rewrite token auth support to properly return the HTTP

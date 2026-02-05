@@ -100,7 +100,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: install dependencies
-        run: python3 -m pip install pip-tools
+        run: python3 -m pip install uv
       - name: generate requirements.txt
         run: cd packaging/docker && ./update_reqs.sh
       - name: Set up Docker Buildx

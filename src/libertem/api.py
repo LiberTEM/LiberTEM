@@ -1252,6 +1252,7 @@ class Context:
         backends,
         plots,
         iterate: bool,
+        copy_needed: bool = False,
     ):
         """
         Run the given UDF(s), either returning the final result (when
@@ -1302,6 +1303,7 @@ class Context:
                 corrections=corrections,
                 backends=backends,
                 iterate=(iterate or enable_plotting),
+                copy_needed=iterate and copy_needed,
             )
 
             def _inner():
@@ -1441,6 +1443,7 @@ class Context:
             backends=backends,
             plots=plots,
             iterate=True,
+            copy_needed=True,
         )
 
         async def _run_async_wrap() -> UDFResultDict:

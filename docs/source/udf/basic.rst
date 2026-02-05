@@ -634,6 +634,11 @@ that leads to undefined behavior. In particular, nested or concurrent execution
 of the same UDF objects must be avoided since it modifies the buffers that are
 allocated internally while a UDF is running.
 
+With :meth:`~libertem.api.Context.run_udf_iter`, for performance reasons, the
+:meth:`~libertem.udf.base.UDF.get_results` method will only be called when
+accessing the :code:`.buffers` attribute. Make sure there are no side effects
+that you rely on!
+
 Asynchronous execution
 ----------------------
 
@@ -651,6 +656,11 @@ passing :code:`sync=False` to :meth:`~libertem.api.Context.run_udf_iter` or
 
     # or the version without intermediate results:
     udf_results = await ctx.run_udf(dataset=dataset, udf=udf, sync=False)
+
+Note that, in case you are using the async mode of
+:meth:`~libertem.api.Context.run_udf_iter`, a copy of the results will be
+performed on accessing the :code:`buffers` attribute, to make sure that
+concurrent access does not result in inconsistent views of results.
 
 See the items below for a more comprehensive demonstration and documentation:
 

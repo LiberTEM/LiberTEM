@@ -3,6 +3,7 @@ from typing import Any
 from collections.abc import Iterable
 import contextlib
 from collections import defaultdict, OrderedDict
+import threading
 
 import numpy as np
 import dask
@@ -35,8 +36,18 @@ class DelayedUDFRunner(UDFRunner):
         super().__init__(udfs, debug=debug)
 
     @staticmethod
-    def _make_udf_result(udfs: Iterable[UDF], damage: BufferWrapper) -> "UDFResults":
-        udf_results = UDFRunner._make_udf_result(udfs, damage)
+    def _make_udf_result(
+        udfs: Iterable[UDF],
+        damage: BufferWrapper,
+        results_lock: threading.Lock,
+        make_copy: bool = False,
+    ) -> "UDFResults":
+        udf_results = UDFRunner._make_udf_result(
+            udfs,
+            damage,
+            results_lock,
+            make_copy,
+        )
         buffers = udf_results.buffers
         damage = udf_results.damage
         new_buffers = tuple(
@@ -51,7 +62,14 @@ class DelayedUDFRunner(UDFRunner):
             damage=damage,
         )
 
-    def _apply_part_result(self, udfs: Iterable[UDF], damage, part_results, task):
+    def _apply_part_result(
+        self,
+        udfs: Iterable[UDF],
+        damage,
+        part_results,
+        task,
+        results_lock: threading.Lock,
+    ):
         for part_results_udf, udf in zip(part_results, udfs):
             # Allow user to define an alternative merge strategy
             # using dask-compatible functions. In the Delayed case we

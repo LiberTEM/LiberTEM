@@ -17,7 +17,7 @@ jusuf_login:
     - login
     - shell
   script:
-    - module load Python/3.12.3
+    - module load Python/3.13.5
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - mkdir -p $MY_JOB_PREFIX/
@@ -55,7 +55,7 @@ cpu:
     - compute
     - slurm
   script:
-    - module load Python/3.12.3
+    - module load Python/3.13.5
     - module load git
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - export MY_VENV=$MY_JOB_PREFIX/venv-main
@@ -87,8 +87,8 @@ cpu_reference_run:
     - compute
     - slurm
   script:
+    - module load Python/3.13.5
     - module load git
-    - module load Python/3.12.3
     - export MY_JOB_PREFIX=/p/scratch/slen/clausen1/cb-libertem-$CI_PIPELINE_ID
     - export MY_VENV=$MY_JOB_PREFIX/venv-ref
     - export TOX_WORK_DIR=$MY_JOB_PREFIX/tox-ref

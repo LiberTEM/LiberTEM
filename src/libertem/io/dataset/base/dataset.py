@@ -100,8 +100,10 @@ class DataSet:
             return max(1, self._user_num_partitions)
         partition_size_float_px = self.MAX_PARTITION_SIZE // 4
         dataset_size_px = prod(self.shape)
-        num: int = max(self._cores, dataset_size_px // partition_size_float_px)
-        return num
+        cores = max(1, self._cores)
+        num = dataset_size_px // partition_size_float_px
+        num_per_core = num // cores + min(1, num % cores)
+        return max(1, num_per_core) * cores
 
     def get_slices(self):
         """
@@ -238,7 +240,8 @@ class DataSet:
         return get_partition_shape(
             dataset_shape=containing_shape,
             target_size_items=target_size // np.dtype(dtype).itemsize,
-            min_num=min_num_partitions
+            min_num=min_num_partitions,
+            num_cores=self._cores,
         )
 
     @classmethod

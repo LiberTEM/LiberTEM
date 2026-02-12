@@ -19,7 +19,8 @@ except ModuleNotFoundError:
 def get_partition_shape(
     dataset_shape: Shape,
     target_size_items: int,
-    min_num: int | None = None
+    min_num: int,
+    num_cores: int
 ) -> tuple[int, ...]:
     """
     Calculate partition shape for the given ``target_size_items``
@@ -35,14 +36,21 @@ def get_partition_shape(
 
     min_num
         minimum number of partitions
+
+    num_cores
+        Number of cores
     """
     sig_size = dataset_shape.sig.size
     current_p_shape: tuple[int, ...] = ()
 
-    if min_num is None:
-        min_num = 1
+    num_cores = max(1, num_cores)
+    num_items = dataset_shape.size / target_size_items
 
-    target_size_items = min(target_size_items, int(dataset_shape.size // min_num))
+    num_per_core = num_items // num_cores + min(1, num_items % num_cores)
+
+    num = max(1, min_num, num_cores * num_per_core)
+
+    target_size_items = int(dataset_shape.size // num)
 
     for dim in reversed(tuple(dataset_shape.nav)):
         proposed_shape = (dim,) + current_p_shape

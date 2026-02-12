@@ -131,7 +131,7 @@ class RawFileDataSet(DataSet):
             io_backend=io_backend,
             num_partitions=num_partitions,
         )
-        # handle backwards-compatability:
+        # handle backwards-compatibility:
         if tileshape is not None:
             warnings.warn(
                 "tileshape argument is ignored and will be removed after 0.6.0",
@@ -150,10 +150,10 @@ class RawFileDataSet(DataSet):
                 raise ValueError("RawFileDataSet can't crop detector anymore, "
                                  "please use EMPAD DataSet")
             detector_size = crop_detector_to
-        self._nav_shape = tuple(nav_shape) if nav_shape else nav_shape
-        self._sig_shape = tuple(sig_shape) if sig_shape else sig_shape
+        self._nav_shape = tuple(nav_shape) if nav_shape is not None else None
+        self._sig_shape = tuple(sig_shape) if sig_shape is not None else None
         self._sync_offset = sync_offset
-        # handle backwards-compatability:
+        # handle backwards-compatibility:
         if scan_size is not None:
             warnings.warn(
                 "scan_size argument is deprecated. please specify nav_shape instead",

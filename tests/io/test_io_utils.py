@@ -10,33 +10,45 @@ def test_partition_shape_1d():
     pshape = get_partition_shape(
         dataset_shape=ds_shape,
         target_size_items=256*1024,
-        min_num=2
+        min_num=2,
+        num_cores=2,
     )
     assert pshape == (7,)
 
 
 def test_partition_shape_1():
-    assert get_partition_shape(Shape((15, 16, 16), sig_dims=2), target_size_items=512) == (
-        (2,)
-    )
+    assert get_partition_shape(
+        Shape((15, 16, 16), sig_dims=2),
+        target_size_items=512,
+        min_num=1,
+        num_cores=1,
+    ) == (2,)
 
 
 def test_partition_shape_2():
-    assert get_partition_shape(Shape((1, 15, 16, 16), sig_dims=2), target_size_items=512) == (
-        (1, 2,)
-    )
+    assert get_partition_shape(
+        Shape((1, 15, 16, 16), sig_dims=2),
+        target_size_items=512,
+        min_num=1,
+        num_cores=1,
+        ) == (1, 2,)
 
 
 def test_partition_shape_3():
-    assert get_partition_shape(Shape((15, 15, 16, 16), sig_dims=2), target_size_items=15*512) == (
-        (2, 15,)
-    )
+    assert get_partition_shape(
+        Shape((15, 15, 16, 16), sig_dims=2),
+        target_size_items=15*512,
+        min_num=1,
+        num_cores=1,
+        ) == (2, 15,)
 
 
 def test_partition_shape_4():
     assert get_partition_shape(
         Shape((128, 15, 15, 16, 16), sig_dims=2),
-        target_size_items=15*512
+        target_size_items=15*512,
+        min_num=1,
+        num_cores=1,
     ) == (
         (1, 2, 15,)
     )
@@ -46,15 +58,61 @@ def test_partition_shape_5():
     assert get_partition_shape(
         Shape((2, 16, 16), sig_dims=2),
         target_size_items=512,
-        min_num=3
-    ) == (
-        (1,)
-    )
+        min_num=3,
+        num_cores=1,
+    ) == (1,)
 
 
 def test_partition_shape_small():
-    assert get_partition_shape(Shape((15, 16, 16), sig_dims=2), target_size_items=4) == (
-        (1,)
+    assert get_partition_shape(
+        Shape((15, 16, 16), sig_dims=2),
+        target_size_items=4,
+        min_num=1,
+        num_cores=1,
+        ) == (1,)
+
+
+def test_partition_shape_cores():
+    assert get_partition_shape(
+        Shape((15, 15, 16, 16), sig_dims=2),
+        target_size_items=15*15*16*16,
+        min_num=1,
+        num_cores=8,
+    ) == (
+        (1, 15,)
+    )
+
+
+def test_partition_shape_cores2():
+    assert get_partition_shape(
+        Shape((15, 15, 16, 16), sig_dims=2),
+        target_size_items=15*15*16*16,
+        min_num=1,
+        num_cores=4,
+    ) == (
+        (3, 15,)
+    )
+
+
+def test_partition_shape_minnum():
+    assert get_partition_shape(
+        Shape((15, 15, 16, 16), sig_dims=2),
+        target_size_items=15*15*16*16,
+        min_num=8,
+        num_cores=1,
+    ) == (
+        (1, 15,)
+    )
+
+
+def test_partition_shape_minnum2():
+    assert get_partition_shape(
+        Shape((15, 15, 16, 16), sig_dims=2),
+        target_size_items=15*15*16*16,
+        min_num=4,
+        num_cores=1,
+    ) == (
+        (3, 15,)
     )
 
 

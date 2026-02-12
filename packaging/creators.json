@@ -181,5 +181,13 @@
         "affiliation": "Jülich Research Centre, Ernst Ruska Centre",
         "contribution": "Scientific advisory, resources, discussion, publications",
         "orcid": "0000-0001-8082-0647"
+    },
+    {
+        "displayname": "Yaocheng Chen",
+        "authorname": "Chen, Yaocheng",
+        "affiliation": "Korea Astronomy and Space Science Institute",
+        "github": "yaochengchen",
+        "contribution": "Fixed typo",
+        "orcid": "0000-0002-8967-4911"
     }
 ]

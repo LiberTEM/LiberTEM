@@ -569,10 +569,10 @@ class CheckXPUDF(UDF):
         }
 
     def xp_is_cupy(self):
-        obj = str(self.xp)
-        is_cupy = 'cupy' in obj
-        is_numpy = 'numpy' in obj
-        assert is_cupy != is_numpy
+        is_numpy = self.xp.__name__ == 'numpy'
+        is_cupy = self.xp.__name__ == 'cupy'
+        if is_numpy == is_cupy:
+            raise RuntimeError(f'numpy/cupy detection failed on self.xp {str(self.xp)}')
         return is_cupy
 
     def process_frame(self, frame):

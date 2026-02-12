@@ -678,6 +678,12 @@ is useful for running code that uses CUDA in a different way, for example
 integration of C++ CUDA code, and allows to skip installation of CuPy in this
 situation.
 
+.. note::
+
+    At this time, using CUDA without CuPy is not actively used within LiberTEM,
+    so this is not well-tested and may need adjustments in practice. Using CUDA
+    through CuPy is the common case.
+
 The :attr:`libertem.udf.base.UDF.xp` property points to the :code:`numpy` or
 :code:`cupy` module, depending which back-end is currently used. By using
 :code:`self.xp` instead of the usual :code:`np` for NumPy, one can write UDFs

@@ -511,3 +511,13 @@ def test_load_stack_dd(local_cluster_ctx, dm_stack_glob):
 def test_bad_params(ds_params_tester, standard_bad_ds_params, dm_3d_glob):
     for params in standard_bad_ds_params:
         ds_params_tester("dm", files=dm_3d_glob, **params)
+
+
+def test_files_argument_error_message_includes_type():
+    with pytest.raises(DataSetException) as excinfo:
+        DMDataSet(files="not-a-list")
+
+    msg = str(excinfo.value)
+    assert "<class 'str'>" in msg
+    assert "{type(files)}" not in msg
+    assert "received" in msg

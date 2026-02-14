@@ -231,8 +231,8 @@ class StackedDMDataSet(DMDataSet):
         self._filesize = None
         self._files = files
         if not isinstance(files, (list, tuple)):
-            raise DataSetException("files argument must be an iterable\
-                                    of file paths, recieved {type(files)}")
+            raise DataSetException(f"files argument must be an iterable of file paths, "
+                                   f"received {type(files)}")
         if len(files) == 0:
             raise DataSetException("need at least one file as input!")
         self._fileset = None

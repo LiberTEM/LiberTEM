@@ -390,7 +390,7 @@ class Slice:
         shape = count_nonzero(roi[s_o:s_o + s_s])
         sig_dims = self.shape.sig.dims
         return Slice(
-            origin=(origin,) + self.origin[-sig_dims:],
+            origin=(origin,) + self.origin[self.shape.nav.dims:],
             shape=Shape((shape,) + tuple(self.shape.sig), sig_dims=sig_dims),
         )
 

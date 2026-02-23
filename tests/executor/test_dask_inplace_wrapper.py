@@ -315,6 +315,9 @@ def test_random_set_with_array(repeat_number, shape, creator):
         print(f'Failed while creating values of shape {target_shape}')
         return
 
+    if set_values.size == 1:
+        set_values = set_values.squeeze()
+
     dask_wrapped.set_slice(sl)
     dask_wrapped[subslice] = set_values
 
@@ -322,8 +325,6 @@ def test_random_set_with_array(repeat_number, shape, creator):
         set_values = set_values.compute()
     except AttributeError:
         pass
-    if set_values.size == 1:
-        set_values = set_values.item()
 
     # Strange-ish case of Dask supporting an assignment but Numpy raises!
     if np.isscalar(slice_into):
@@ -331,4 +332,9 @@ def test_random_set_with_array(repeat_number, shape, creator):
         data[sl] = set_values
     else:
         data[sl][subslice] = set_values
-    assert np.allclose(dask_wrapped.data.compute(), data)
+    try:
+        assert np.allclose(dask_wrapped.data.compute(), data)
+    except Exception:
+        print(repeat_number, shape, creator)
+        print(sl, subslice)
+        raise

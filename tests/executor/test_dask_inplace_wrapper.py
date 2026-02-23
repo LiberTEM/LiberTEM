@@ -331,4 +331,27 @@ def test_random_set_with_array(repeat_number, shape, creator):
         data[sl] = set_values
     else:
         data[sl][subslice] = set_values
-    assert np.allclose(dask_wrapped.data.compute(), data)
+    try:
+        assert np.allclose(dask_wrapped.data.compute(), data)
+    except Exception:
+        print(repeat_number, shape, creator)
+        print(sl, subslice)
+        raise
+
+
+def test_random_set_with_array_reproducer():
+    shape = (16, )
+    dtype = np.float32
+    data, dask_wrapped = get_wrapped_data(shape, dtype)
+
+    sl = (-13, )
+    subslice = None
+    target_shape = data[sl][subslice].shape
+
+    print(target_shape)
+    print(shape, sl, subslice)
+
+    set_values = da.zeros(shape=target_shape)
+    dask_wrapped.set_slice(sl)
+    dask_wrapped[subslice] = set_values
+    dask_wrapped.data.compute()

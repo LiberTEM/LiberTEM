@@ -116,7 +116,7 @@ jobs:
           docker pull python:3.11-slim  # the base image, to make sure we get the latest one
           docker pull ghcr.io/libertem/libertem-dev:latest
       - name: Build and push (libertem/libertem-triage)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: packaging/docker/Dockerfile
           context: .
@@ -125,7 +125,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/libertem/libertem-dev:latest
           cache-to: type=inline
       - name: Build and push (libertem/libertem-dev)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: packaging/docker/Dockerfile
           context: .

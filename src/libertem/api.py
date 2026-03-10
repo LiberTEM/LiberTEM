@@ -9,6 +9,7 @@ import warnings
 import weakref
 import atexit
 import logging
+import copy
 
 from opentelemetry import trace
 import numpy as np
@@ -1276,6 +1277,10 @@ class Context:
             corrections = dataset.get_correction_data()
 
         if roi is not None:
+            # if the user modifies the ROI object after running,
+            # we must make sure we take a copy here so we don't
+            # share with other references to the `roi`:
+            roi = copy.deepcopy(roi)
             roi = sparse_to_coo(roi, dataset.shape.nav)
             if roi.dtype is not np.dtype(bool):
                 warnings.warn(f"ROI dtype is {roi.dtype}, expected bool. Attempting cast to bool.")

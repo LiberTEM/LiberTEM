@@ -846,3 +846,12 @@ def test_multi_implem(lt_ctx):
     method = 'partition'
     res = lt_ctx.run_udf(dataset=ds, udf=MultiImplemUDF(method=method))
     assert (res['val'].data == 64).all()
+
+
+def test_copy_roi(lt_ctx):
+    ds = lt_ctx.load('memory', data=np.ones((2, 2, 4, 4)))
+    roi = ds.roi[0, 0]
+    res = lt_ctx.run_udf(dataset=ds, udf=SumSigUDF(), roi=roi)
+    assert res['intensity']._roi.sum() == 1
+    roi[:] = ds.roi[:, :]
+    assert res['intensity']._roi.sum() == 1

@@ -158,10 +158,7 @@ stages:
         inputs:
           versionSpec: '3.11'
 
-      # - bash: pip install -U tox 'tox-uv<1.33'
-      #   displayName: 'install requirements'
-
-      - bash: pip install -U tox tox-uv && pip list
+      - bash: pip install -U tox 'tox-uv<1.33'
         displayName: 'install requirements'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -169,7 +166,7 @@ stages:
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS) (recreating)'
 
       - ${{ if eq(parameters.recreate_tox, false) }}:
-        - bash: tox -rvv
+        - bash: tox
           displayName: 'Run tox tests $(TOXENV) $(Agent.OS)'
 
       - bash: ./scripts/codecov.sh -f ./coverage.xml

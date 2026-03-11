@@ -65,7 +65,7 @@ stages:
       - bash: python3.11 -m venv venv
         displayName: 'create venv'
 
-      - bash: ./venv/bin/pip install tox tox-uv
+      - bash: ./venv/bin/pip install tox 'tox-uv<1.33'
         displayName: 'install tox'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -121,7 +121,7 @@ stages:
       - bash: python3 -m venv venv
         displayName: 'create venv'
 
-      - bash: ./venv/bin/pip install tox tox-uv
+      - bash: ./venv/bin/pip install tox 'tox-uv<1.33'
         displayName: 'install tox (w/ uv)'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -158,7 +158,7 @@ stages:
         inputs:
           versionSpec: '3.11'
 
-      - bash: pip install -U tox tox-uv
+      - bash: pip install -U tox 'tox-uv<1.33'
         displayName: 'install requirements'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:
@@ -197,7 +197,7 @@ stages:
       - bash: apt-get update && apt-get install -y pandoc graphviz
         displayName: install required debian packages
 
-      - bash: pip install -U tox tox-uv
+      - bash: pip install -U tox 'tox-uv<1.33'
         displayName: 'install requirements'
 
       - ${{ if eq(parameters.recreate_tox, true) }}:

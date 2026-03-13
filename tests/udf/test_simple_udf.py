@@ -15,6 +15,7 @@ from libertem.common.backend import set_use_cpu, set_use_cuda
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 from libertem.udf.sum import SumUDF
+from libertem.api import Context
 
 from utils import _mk_random, ValidationUDF
 
@@ -846,3 +847,39 @@ def test_multi_implem(lt_ctx):
     method = 'partition'
     res = lt_ctx.run_udf(dataset=ds, udf=MultiImplemUDF(method=method))
     assert (res['val'].data == 64).all()
+
+
+class GetResultsCalledError(Exception):
+    pass
+
+
+class GetResultsNotCalledUDF(UDF):
+    def get_result_buffers(self):
+        return {}
+
+    def process_frame(self, frame):
+        pass
+
+    def get_results(self):
+        raise GetResultsCalledError("should not be called")
+
+
+def test_lazy_get_results_not_called(lt_ctx: Context, default_raw):
+    results = lt_ctx.run_udf_iter(
+        dataset=default_raw,
+        udf=GetResultsNotCalledUDF()
+    )
+
+    for res in results:
+        pass
+        # if we accessed `res.buffers`, `get_results` would be called and the
+        # `RuntimeError` would be thrown; see below:
+
+    results = lt_ctx.run_udf_iter(
+        dataset=default_raw,
+        udf=GetResultsNotCalledUDF()
+    )
+
+    with pytest.raises(GetResultsCalledError):
+        for res in results:
+            res.buffers

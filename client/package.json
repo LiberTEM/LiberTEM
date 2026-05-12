@@ -21,7 +21,7 @@
     "redux-saga": "^1.2.3",
     "semantic-ui-css": "git+https://github.com/Semantic-Org/Semantic-UI-CSS.git#01e4a53",
     "semantic-ui-react": "^2.1.4",
-    "styled-components": "^6.0.7",
+    "styled-components": "^6.4.1",
     "uuid": "^9.0.0"
   },
   "scripts": {

@@ -62,6 +62,7 @@ When planning a release, create a new issue with the following checklist:
           in appropriate branch.
     * [ ] License review: compatible with MIT license
     * [ ] Run full CI pipeline, including slow tests, on [Azure DevOps](https://dev.azure.com/LiberTEM/LiberTEM/_build?definitionId=3) and run the [Thorough workflow](https://github.com/LiberTEM/LiberTEM/actions/workflows/thorough.yml) on GitHub Actions
+    * [ ] Run `dist` tests by setting `TESTDATA_BASE_PATH` and `cd packaging/docker && ./test.sh`
     * [ ] Handle deprecation, search the code base for `DeprecationWarning`
           that are supposed to be removed in that release.
     * [ ] GUI dependency update with `npm install`

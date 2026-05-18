@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     python3-pip \
     git
 
-FROM builder0 as builder
+FROM builder0 AS builder
 
 RUN python3.14 -m venv /venv/
 # Update requirements.txt with ./update_reqs.sh
@@ -36,7 +36,7 @@ COPY --from=builder /venv/ /venv/
 COPY . /code/
 RUN --mount=type=cache,target=/root/.cache /venv/bin/uv pip install --python /venv/bin/python /code/
 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 # LiberTEM server
 EXPOSE 9000

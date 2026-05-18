@@ -13,6 +13,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './tests/setup.ts',
   },
+  css: {
+    lightningcss: {
+      errorRecovery: true,
+    },
+  },
   server: {
     proxy: {
       '/api/events/': {

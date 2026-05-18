@@ -356,7 +356,7 @@ information.
 
 For general information on type annotations in Python, including best
 practices, please also see `Static Typing with Python
-<https://typing.readthedocs.io/en/latest/>`_.
+<https://typing.python.org/en/latest/>`_.
 
 Docstrings
 ~~~~~~~~~~

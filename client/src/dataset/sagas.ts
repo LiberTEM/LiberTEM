@@ -76,7 +76,7 @@ export function* doOpenDataset(fullPath: string) {
         if (shouldOpen) {
             yield put(datasetActions.Actions.open(fullPath, cachedParams, detectedParams, detectedInfo));
         }
-    } catch (e) {
+    } catch (_e) {
         yield put(datasetActions.Actions.detectFailed(fullPath));
     }
 }

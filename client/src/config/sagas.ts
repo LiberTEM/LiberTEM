@@ -24,11 +24,11 @@ function* getConfigSaga() {
     try {
         const mergedConfig = mergeLocalStorage(configResponse.config);
         yield put(configActions.Actions.fetched(mergedConfig));
-    } catch (e) {
+    } catch (_e) {
         try {
             clearLocalStorage();
             // eslint-disable-next-line @typescript-eslint/no-shadow
-        } catch (e) {
+        } catch (_e) {
             // ignore any errors clearing local storage...
         }
         const defaultConfig = Object.assign({}, configResponse.config, getDefaultLocalConfig());

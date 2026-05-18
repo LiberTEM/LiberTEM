@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 type ImmutablePrimitive = undefined | null | boolean | string | number | Function;
 
 export type Immutable<T> =
@@ -15,9 +15,8 @@ export type ImmutableObject<T> = { readonly [K in keyof T]: Immutable<T[K]> };
 
 type DeepReadonly<T> =
     T extends Array<infer R> ? DeepReadonlyArray<R> :
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     T extends Function ? T :
-    // eslint-disable-next-line @typescript-eslint/ban-types
     T extends object ? DeepReadonlyObject<T> :
     T;
 

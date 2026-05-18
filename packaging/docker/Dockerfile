@@ -1,25 +1,28 @@
 # syntax=docker/dockerfile:1
-FROM python:3.11-slim AS builder0
+FROM python:3.14-slim AS builder0
 
-RUN apt-get update && apt-get install -y \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
+    apt-get update && apt-get install -y \
     python3-venv \
     python3-pip \
     git
 
 FROM builder0 as builder
 
-RUN python3.11 -m venv /venv/
+RUN python3.14 -m venv /venv/
 # Update requirements.txt with ./update_reqs.sh
 COPY packaging/docker/requirements.txt /requirements.txt
-RUN /venv/bin/pip install -U pip
-RUN /venv/bin/pip install --no-cache wheel && /venv/bin/pip install --no-cache -r /requirements.txt
+RUN --mount=type=cache,target=/root/.cache /venv/bin/pip install uv pip
+RUN --mount=type=cache,target=/root/.cache /venv/bin/uv pip install --python /venv/bin/python wheel && \
+    /venv/bin/uv pip install --python /venv/bin/python -r /requirements.txt
 
 # Only install test requirements if dev is set
 # docker build (...) --build-arg dev=1 (...) for dev build
 ARG dev
 COPY test_requirements.txt /test_requirements.txt
-RUN if [ -z "$dev" ] ; then echo Skipping test requirements ; else \
-/venv/bin/pip install --no-cache -r /test_requirements.txt && /venv/bin/pip install ipyparallel ; fi
+RUN --mount=type=cache,target=/root/.cache if [ -z "$dev" ] ; then echo Skipping test requirements ; else \
+    /venv/bin/uv pip install --python /venv/bin/python -r /test_requirements.txt && /venv/bin/uv pip install --python /venv/bin/python ipyparallel ; fi
 
 
 # to share the "apt-get install" call between stages, we inherit from
@@ -31,7 +34,7 @@ COPY --from=builder /venv/ /venv/
 # Only here so we have only a small delta when the code changes,
 # not the entire venv
 COPY . /code/
-RUN venv/bin/pip install --no-cache /code/
+RUN --mount=type=cache,target=/root/.cache /venv/bin/uv pip install --python /venv/bin/python /code/
 
 ENV PYTHONUNBUFFERED 1
 

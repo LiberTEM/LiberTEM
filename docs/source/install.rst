@@ -68,7 +68,7 @@ the :code:`pip` command at the top of this page.
 
 For more information about virtualenv, for example if you are using a shell
 without :code:`source`, please `refer to the virtualenv documentation
-<https://virtualenv.pypa.io/en/stable/user_guide.html>`_. If you are often
+<https://virtualenv.pypa.io/en/stable/>`_. If you are often
 working with virtualenvs, using a convenience wrapper like `virtualenvwrapper
 <https://virtualenvwrapper.readthedocs.io/en/latest/>`_ is recommended.
 

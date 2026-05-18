@@ -170,7 +170,7 @@ Load data
 .. autoclass:: libertem.udf.raw.PickUDF
     :members:
 
-.. _`auto udf`:
+.. _`ref auto udf`:
 
 AutoUDF
 #######

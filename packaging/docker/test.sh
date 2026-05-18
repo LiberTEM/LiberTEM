@@ -5,5 +5,6 @@ set -e
 trap 'docker compose down' EXIT
 
 ./update_reqs.sh
-docker compose build
-docker compose run tests
+./dist-build.sh
+docker compose down
+docker compose run --rm tests

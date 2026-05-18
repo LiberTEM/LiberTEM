@@ -19,8 +19,10 @@ services:
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
-        source: ../../data
+        source: ${TESTDATA_BASE_PATH}
         target: /data
+        read_only: true
+      - temp_data:/temp_data
     depends_on:
       - scheduler
   worker-2:
@@ -32,8 +34,10 @@ services:
     command: ["/venv/bin/libertem-worker", "tcp://scheduler:8786", "--n-cpus", "2", "--cudas", ""]
     volumes:
       - type: bind
-        source: ../../data
+        source: ${TESTDATA_BASE_PATH}
         target: /data
+        read_only: true
+      - temp_data:/temp_data
     depends_on:
       - scheduler
   ipy-controller:
@@ -59,8 +63,10 @@ services:
     volumes:
       - ipyconfig:/root/.ipython/
       - type: bind
-        source: ../../data
+        source: ${TESTDATA_BASE_PATH}
         target: /data
+        read_only: true
+      - temp_data:/temp_data
     depends_on:
       - scheduler
   ipy-worker-2:
@@ -75,8 +81,10 @@ services:
     volumes:
       - ipyconfig:/root/.ipython/
       - type: bind
-        source: ../../data
+        source: ${TESTDATA_BASE_PATH}
         target: /data
+        read_only: true
+      - temp_data:/temp_data
     depends_on:
       - scheduler
   tests:
@@ -91,12 +99,14 @@ services:
     environment:
       - DASK_SCHEDULER_ADDRESS=tcp://scheduler:8786
       - TESTDATA_BASE_PATH=/data/
+      - TMP_TESTDATA_PATH=/temp_data/
     command: ["/venv/bin/pytest", "tests/", "-m", "dist"]
     volumes:
       - ipyconfig:/root/.ipython/
       - type: bind
-        source: ../../data
+        source: ${TESTDATA_BASE_PATH}
         target: /data
+      - temp_data:/temp_data
     depends_on:
       - scheduler
       - worker-1
@@ -107,3 +117,4 @@ services:
 
 volumes:
   ipyconfig:
+  temp_data:

@@ -359,6 +359,13 @@ def get_testdata_path():
     )
 
 
+def get_tmpdata_path():
+    return os.environ.get(
+        'TMP_TESTDATA_PATH',
+        os.path.join(get_testdata_path(), 'temp_data')
+    )
+
+
 class FakeBackend(IOBackend, id_="fake"):
     def get_impl(self):
         return FakeBackendImpl()

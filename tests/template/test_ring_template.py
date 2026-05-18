@@ -9,13 +9,13 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 from libertem.web.notebook_generator.notebook_generator import notebook_generator
 
-from utils import get_testdata_path
+from utils import get_testdata_path, get_tmpdata_path
 from temp_utils import _get_hdf5_params, create_random_hdf5
 
 
 pytestmark = [pytest.mark.slow]
 
-TMP_TESTDATA_PATH = os.path.join(get_testdata_path(), 'temp_data')
+TMP_TESTDATA_PATH = get_tmpdata_path()
 HAVE_TMP_TESTDATA = os.path.exists(TMP_TESTDATA_PATH)
 
 

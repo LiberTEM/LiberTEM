@@ -29,15 +29,64 @@ Changelog
 0.16.0 (in preparation)
 #######################
 
+Notable changes include GPU processing for operations on the main node (chiefly
+:meth:`libertem.udf.base.UDF.merge` and
+:meth:`libertem.udf.base.UDF.get_results`) through
+:attr:`libertem.udf.base.UDF.xp`. This is targeted at methods like iDPC and iCoM
+where the result is calculated in :meth:`libertem.udf.base.UDF.get_results` with
+Fourier transforms over the displacement vector field that run much faster on
+GPUs compared to CPUs. It is enabled by default and can be controlled with the
+new :code:`main_process_gpu` parameter for
+:meth:`libertem.api.Context.make_with` (:pr:`1759`).
+
+Furthermore, the web interface and live plots now include an outlier filter that
+excludes values from the plot range that are at the very edge of the value
+distribution and very different from the remaining values. This is particularly
+useful for data from detectors where dead pixels are set to the maximum value,
+e.g. Dectris (:issue:`1310` :pr:`1742`).
+
+In case of async iteration over results, we now make sure the merge function is
+not running concurrently with accessing and using the result buffers to make
+sure their state is consistent when accessed. Also, the
+:meth:`~libertem.udf.base.UDF.get_results` method is called lazily, reducing
+overheads (:pr:`1632`).
+
+Many thanks to everyone who helped with this release, and welcome to new
+contributor :user:`yaochengchen` (:pr:`1797,1799`)!
+
+Features
+--------
+
+* Support for Python 3.14 (:pr:`1790`).
+* Optional result-only monitoring buffer in :class:`~libertem.udf.auto.AutoUDF`
+  that can be activated with parameter :code:`monitor=True` to allow monitoring
+  the most recent result during live plotting (:pr:`1750`).
+
+Bugfixes
+--------
+
+* Typo and f-string formatting in
+  :class:`~libertem.io.dataset.dm.StackedDMDataSet` error message (:pr:`1797`).
+* Token auth properly returns the HTTP response in case of errors
+  (:pr:`1790`).
+* The exception type raised by the :code:`'raw_csr'` dataset when encountering
+  invalid TOML changed from :class:`tomli.TOMLDecodeError` to
+  :class:`libertem.io.dataset.raw_csr.TOMLError` since
+  :class:`tomli.TOMLDecodeError` is no longer picklable (:pr:`1789`).
+* Match partition count to cores to split work evenly and reduce "stragglers"
+  that drive up the clock time to finish (:pr:`1796`).
+* Origin length mismatch in :meth:`~libertem.common.slice.Slice.adjust_for_roi`
+  caused by negative slicing when ``sig_dims`` is 0 (:pr:`1799`).
+
 Obsolescence
 ------------
 
-- The modules :code:`libertem.analysis.gridmatching` and
-  :code:`libertem.analysis.fullmatch` are available from
-  :mod:`libertem_blobfinder.common.gridmatching` and
+* The modules :code:`libertem.analysis.gridmatching` and
+  :code:`libertem.analysis.fullmatch` have been removed from LiberTEM 0.16. They
+  are available from :mod:`libertem_blobfinder.common.gridmatching` and
   :mod:`libertem_blobfinder.common.fullmatch` since :mod:`libertem-blobfinder`
-  version 0.6. The original import locations have been removed from LiberTEM
-  0.16. (:issue:`1469`, :pr:`1600,1828`).
+  version 0.6 (:issue:`1469`, :pr:`1600,1828`).
+* Drop Python 3.9 support (:pr:`1791`).
 
 .. _`v0-15-2`:
 

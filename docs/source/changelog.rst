@@ -13,7 +13,7 @@ Changelog
 
 .. _continuous:
 
-0.16.0.dev0
+0.17.0.dev0
 ###########
 
 .. toctree::
@@ -23,6 +23,21 @@ Changelog
 
 
 .. _latest:
+
+.. _`v0-16-0`:
+
+0.16.0 (in preparation)
+#######################
+
+Obsolescence
+------------
+
+- The modules :code:`libertem.analysis.gridmatching` and
+  :code:`libertem.analysis.fullmatch` are available from
+  :mod:`libertem_blobfinder.common.gridmatching` and
+  :mod:`libertem_blobfinder.common.fullmatch` since :mod:`libertem-blobfinder`
+  version 0.6. The original import locations have been removed from LiberTEM
+  0.16. (:issue:`1469`, :pr:`1600,1828`).
 
 .. _`v0-15-2`:
 

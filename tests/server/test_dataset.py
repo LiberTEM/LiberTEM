@@ -92,6 +92,7 @@ async def test_load_raw_fail(base_url, http_client, local_cluster_url, default_t
         assert (
             "No such file or directory" in resp_json['msg']
             or "The system cannot find the path specified" in resp_json['msg']
+            or "WinError 3" in resp_json['msg']
         )
 
 

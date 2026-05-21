@@ -26,8 +26,11 @@ Changelog
 
 .. _`v0-16-0`:
 
-0.16.0 (in preparation)
-#######################
+0.16.0 / 2026-05-19
+###################
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.20283773.svg
+  :target: https://doi.org/10.5281/zenodo.20283773
 
 Notable changes include GPU processing for operations on the main node (chiefly
 :meth:`libertem.udf.base.UDF.merge` and

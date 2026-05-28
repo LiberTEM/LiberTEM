@@ -3,8 +3,8 @@
 set -e
 
 # pin the version so we can compare sha
-curl -Os https://uploader.codecov.io/v0.6.1/linux/codecov
-echo '0c9b79119b0d8dbe7aaf460dc3bd7c3094ceda06e5ae32b0d11a8ff56e2cc5c5 codecov' | sha256sum -c
+curl -Os https://uploader.codecov.io/v0.8.0/linux/codecov
+echo 'b37359013b48fbc3b0790d59fc474a52a260fb96e28e1b2c2ae001dc9b9cc996 codecov' | sha256sum -c
 
 chmod +x codecov
 ./codecov $*

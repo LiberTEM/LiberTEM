@@ -191,9 +191,9 @@ stages:
         TOXENV: '$(TOXENV)'
       steps:
       - task: UsePythonVersion@0
-        displayName: 'Use Python 3.11'
+        displayName: 'Use Python 3.12'
         inputs:
-          versionSpec: '3.11'
+          versionSpec: '3.12'
       - bash: apt-get update && apt-get install -y pandoc graphviz
         displayName: install required debian packages
 

@@ -389,8 +389,8 @@ def _mib_2x2_tile_block(
 
         # the indices are compressed to the selected frames
         compressed_slice = np.array([
-            [slice_offset + inner_indices_start] + [i for i in slice_origin],
-            [inner_indices_stop - inner_indices_start] + [i for i in slice_shape],
+            [slice_offset + inner_indices_start] + [*slice_origin],
+            [inner_indices_stop - inner_indices_start] + [*slice_shape],
         ])
         result.append((slice_idx, compressed_slice, read_ranges))
 

@@ -24,12 +24,12 @@ repos:
 #   hooks:
 #   - id: pyroma
 - repo: https://github.com/asottile/pyupgrade
-  rev: v3.21.2
+  rev: v3.22.0
   hooks:
     - id: pyupgrade
       args: ["--py310-plus"]
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v2.3.1
+  rev: v2.4.0
   hooks:
   - id: mypy
     verbose: true

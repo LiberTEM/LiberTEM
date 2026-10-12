@@ -22,10 +22,7 @@ import defusedxml.ElementTree as ET
 
 try:
     # FIXME: pims/skimage can't deal with numpy2 on python 3.9
-    if int(np.version.version.split('.')[0]) < 2 or sys.version_info >= (3, 10):
-        import pims
-    else:
-        pims = None
+    import pims
 except ModuleNotFoundError:
     pims = None
 

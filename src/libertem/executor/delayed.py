@@ -106,7 +106,7 @@ class DelayedUDFRunner(UDFRunner):
             flat_mapping = delayed_unpack.build_mapping(structure)
 
             src = part_results_udf.get_proxy()
-            src_dict = {k: b for k, b in src._dict.items()}
+            src_dict = {**src._dict}
 
             dest_dict = {}
             for k, b_decl in udf.get_result_buffers().items():

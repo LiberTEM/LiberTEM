@@ -119,10 +119,10 @@ class File:
         skip_end = 0
 
         # cut off any extra data at the end of the file:
-        if size % int(prod(self._sig_shape)):
-            new_mmap_size = self.num_frames * (
-                (itemsize * frame_size) + self._frame_header + self._frame_footer
-            )
+        new_mmap_size = self.num_frames * (
+            (itemsize * frame_size) + self._frame_header + self._frame_footer
+        )
+        if size - file_offset > new_mmap_size:
             skip_end = (size - file_offset) - new_mmap_size
         assert skip_end >= 0
 

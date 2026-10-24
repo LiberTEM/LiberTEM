@@ -325,7 +325,12 @@ class SingleDMDataSet(DMDataSet):
         sig_dims = array_meta['sig_dims']
         self._array_offset = array_meta['offset']
         self._raw_dtype = array_meta['dtype']
-        assert self._raw_dtype is not None and not isinstance(self._raw_dtype, int)
+        # an unconvertible DM data type is passed through as the integer
+        # type code (np.uint32 from ncempy), which np.dtype would accept:
+        if self._raw_dtype is None or isinstance(self._raw_dtype, (int, np.integer)):
+            raise DataSetException(
+                f'Unsupported DM data type: {self._raw_dtype}'
+            )
         array_c_ordered = self._force_c_order or array_meta['c_order']
 
         if not array_c_ordered:

@@ -181,6 +181,9 @@ class MockFileDM:
     def _DM2NPDataType(self, dtype):
         if dtype is None:
             raise OSError('no dtype')
+        if isinstance(dtype, np.integer):
+            # DM type code that ncempy can't convert, like 14 (binary)
+            raise OSError('unsupported dtype')
         return dtype
 
 
@@ -240,6 +243,18 @@ def test_f_order_raises(monkeypatch, dm4_mockfile_f, lt_ctx_fast):
     _patch_filedm(monkeypatch, mock_fileDM)
 
     with pytest.raises(DataSetException):
+        lt_ctx_fast.load('dm', filename)
+
+
+def test_unsupported_dtype_raises(monkeypatch, tmpdir_factory, lt_ctx_fast):
+    datadir = tmpdir_factory.mktemp('data')
+    shape = Shape((4, 8, 16, 24), 2)
+    (array, filename), mock_fileDM = _make_mock_array(datadir, shape, np.uint8, True)
+    # ncempy reports the DM type codes as np.uint32
+    mock_fileDM.dataType = [np.uint32(14)]
+    _patch_filedm(monkeypatch, mock_fileDM)
+
+    with pytest.raises(DataSetException, match='Unsupported DM data type'):
         lt_ctx_fast.load('dm', filename)
 
 

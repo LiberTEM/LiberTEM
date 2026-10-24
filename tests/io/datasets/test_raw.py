@@ -19,7 +19,7 @@ from libertem.common import Shape
 from libertem.common.buffers import reshaped_view
 from libertem.udf.sumsigudf import SumSigUDF
 
-from utils import dataset_correction_verification, ValidationUDF, roi_as_sparse
+from utils import dataset_correction_verification, ValidationUDF, roi_as_sparse, _mk_random
 
 
 @pytest.fixture
@@ -880,3 +880,28 @@ def test_bad_params(ds_params_tester, standard_bad_ds_params, raw_dataset_8x8x8x
         if 'sig_shape' not in params:
             params['sig_shape'] = raw_dataset_8x8x8x8.meta.shape.sig
         ds_params_tester(*args, **params)
+
+
+@pytest.mark.parametrize('footer_bytes', [1000, 65536])
+@pytest.mark.parametrize(
+    'io_backend', (BufferedBackend(), MMapBackend()),
+)
+def test_trailing_data(lt_ctx, tmp_path, footer_bytes, io_backend):
+    # extra bytes after the last full frame should be ignored, including when
+    # the file size happens to be a multiple of the number of pixels per frame
+    data = _mk_random(size=(4, 256, 256), dtype='uint16')
+    path = tmp_path / 'footer.raw'
+    with open(path, 'wb') as f:
+        f.write(data.tobytes())
+        f.write(bytes(footer_bytes))
+
+    ds = lt_ctx.load(
+        'raw',
+        path=str(path),
+        nav_shape=(4,),
+        sig_shape=(256, 256),
+        dtype='uint16',
+        io_backend=io_backend,
+    )
+    res = lt_ctx.run_udf(dataset=ds, udf=PickUDF(), roi=np.ones((4,), dtype=bool))
+    assert np.array_equal(res['intensity'].raw_data, data)
